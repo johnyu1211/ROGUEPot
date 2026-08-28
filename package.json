@@ -1,0 +1,30 @@
+﻿{
+  "name": "pokerogue-discord-bot",
+  "version": "1.0.0",
+  "description": "Discord Bot for PokeRogue with game data integration and features",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "deploy-commands": "tsx scripts/deploy-commands.ts"
+  },
+  "keywords": [
+    "pokerogue",
+    "discord-bot",
+    "pokemon",
+    "discordjs"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.18.0",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.5",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3"
+  }
+}
