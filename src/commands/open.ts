@@ -75,11 +75,11 @@ export const command: Command = {
           new ButtonBuilder()
             .setCustomId(`menu_continue_${userId}`)
             .setLabel("Continue")
-            .setStyle(ButtonStyle.Secondary),
+            .setStyle(ButtonStyle.Primary),
           new ButtonBuilder()
             .setCustomId(`menu_newgame_${userId}`)
             .setLabel("New Game")
-            .setStyle(ButtonStyle.Secondary),
+            .setStyle(ButtonStyle.Success),
           new ButtonBuilder()
             .setCustomId(`menu_loadgame_${userId}`)
             .setLabel("Load Game")
@@ -94,7 +94,7 @@ export const command: Command = {
           new ButtonBuilder()
             .setCustomId(`menu_newgame_${userId}`)
             .setLabel("New Game")
-            .setStyle(ButtonStyle.Secondary),
+            .setStyle(ButtonStyle.Success),
           new ButtonBuilder()
             .setCustomId(`menu_inventory_${userId}`)
             .setLabel("💼")
