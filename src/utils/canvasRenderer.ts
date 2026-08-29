@@ -664,6 +664,37 @@ const TYPE_COLORS: Record<string, string> = {
   dark: "#705848",
 };
 
+const TYPE_NAMES_KO: Record<string, string> = {
+  normal: "노말",
+  fire: "불꽃",
+  water: "물",
+  grass: "풀",
+  electric: "전기",
+  ice: "얼음",
+  fighting: "격투",
+  poison: "독",
+  ground: "땅",
+  flying: "비행",
+  psychic: "에스퍼",
+  bug: "벌레",
+  rock: "바위",
+  ghost: "고스트",
+  dragon: "드래곤",
+  steel: "강철",
+  fairy: "페어리",
+  dark: "악",
+};
+
+const TYPE_TEXT_COLORS: Record<string, string> = {
+  electric: "#1A1A1A",
+  ice: "#1A1A1A",
+  ground: "#1A1A1A",
+  normal: "#1A1A1A",
+  flying: "#1A1A1A",
+  steel: "#1A1A1A",
+  fairy: "#1A1A1A",
+};
+
 /**
  * Renders the Unified Dedicated Pokédex Screen (560x380) with 100% Split Screen
  */
@@ -757,16 +788,24 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
       // Mini Type Badges (Stacked on the right side of slot)
       let bY = sy + 22;
       for (const tName of p.types.slice(0, 2)) {
-        const tColor = TYPE_COLORS[tName.toLowerCase()] || "#777777";
+        const tLower = tName.toLowerCase();
+        const tColor = TYPE_COLORS[tLower] || "#777777";
+        const txtColor = TYPE_TEXT_COLORS[tLower] || "#FFFFFF";
+        const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || tName) : tName.toUpperCase();
+
         ctx.fillStyle = tColor;
         ctx.beginPath();
         ctx.roundRect(sx + 48, bY, 62, 18, 4);
         ctx.fill();
 
-        ctx.font = "bold 10px DungGeunMo";
-        ctx.fillStyle = "#FFFFFF";
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.font = isKo ? "bold 11px DungGeunMo" : "bold 10px DungGeunMo";
+        ctx.fillStyle = txtColor;
         ctx.textAlign = "center";
-        ctx.fillText(tName.toUpperCase(), sx + 48 + 31, bY + 13);
+        ctx.fillText(tDisplay, sx + 48 + 31, bY + 13);
         bY += 22;
       }
     } else {
@@ -799,28 +838,40 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
 
   if (selected) {
     // Header: Dex No & Big Name
-    ctx.font = "bold 20px DungGeunMo";
+    ctx.font = "bold 19px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "left";
     const titleName = (isKo && selected.koreanName) ? `${selected.koreanName} (${selected.name})` : selected.name;
-    ctx.fillText(`#${String(selected.dexNumber).padStart(3, "0")} ${titleName}`, rightX + 6, 32);
+    ctx.fillText(`#${String(selected.dexNumber).padStart(3, "0")} ${titleName}`, rightX + 4, 30);
 
     // Sub-divider line under header
     ctx.strokeStyle = "#382D4F";
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(rightX + 4, 42);
-    ctx.lineTo(rightX + rightW, 42);
+    ctx.moveTo(rightX + 2, 38);
+    ctx.lineTo(rightX + rightW, 38);
     ctx.stroke();
 
-    // Large Sprite Showcase Box (104x104)
-    const showBoxX = rightX + 6;
-    const showBoxY = 52;
-    const showBoxSize = 104;
+    // 5-1. TOP MAIN INFO CARD (Sprite + Types + Abilities)
+    const topCardY = 46;
+    const topCardH = 110;
 
     ctx.fillStyle = "#181429";
     ctx.beginPath();
-    ctx.roundRect(showBoxX, showBoxY, showBoxSize, showBoxSize, 8);
+    ctx.roundRect(rightX, topCardY, rightW, topCardH, 6);
+    ctx.fill();
+    ctx.strokeStyle = "#362B4E";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Sprite Showcase Box
+    const showBoxX = rightX + 8;
+    const showBoxY = topCardY + 9;
+    const showBoxSize = 92;
+
+    ctx.fillStyle = "#120F20";
+    ctx.beginPath();
+    ctx.roundRect(showBoxX, showBoxY, showBoxSize, showBoxSize, 6);
     ctx.fill();
     ctx.strokeStyle = "#4D3860";
     ctx.lineWidth = 1.5;
@@ -834,21 +885,30 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
       ctx.drawImage(bigSprite, showBoxX + (showBoxSize - sprW) / 2, showBoxY + (showBoxSize - sprH) / 2, sprW, sprH);
     }
 
-    // Info Column (Types, Ability, Hidden Ability, BST) next to Sprite
-    const infoX = showBoxX + showBoxSize + 10;
+    // Info Column (Types, Ability, Hidden Ability) next to Sprite
+    const infoX = showBoxX + showBoxSize + 12;
     let typeBadgeX = infoX;
     for (const tName of selected.types) {
-      const tColor = TYPE_COLORS[tName.toLowerCase()] || "#777777";
+      const tLower = tName.toLowerCase();
+      const tColor = TYPE_COLORS[tLower] || "#777777";
+      const txtColor = TYPE_TEXT_COLORS[tLower] || "#FFFFFF";
+      const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || tName) : tName.toUpperCase();
+      const badgeW = isKo ? 46 : 56;
+
       ctx.fillStyle = tColor;
       ctx.beginPath();
-      ctx.roundRect(typeBadgeX, showBoxY, 56, 20, 4);
+      ctx.roundRect(typeBadgeX, topCardY + 12, badgeW, 22, 4);
       ctx.fill();
 
-      ctx.font = "bold 11px DungGeunMo";
-      ctx.fillStyle = "#FFFFFF";
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.font = isKo ? "bold 12px DungGeunMo" : "bold 11px DungGeunMo";
+      ctx.fillStyle = txtColor;
       ctx.textAlign = "center";
-      ctx.fillText(tName.toUpperCase(), typeBadgeX + 28, showBoxY + 15);
-      typeBadgeX += 62;
+      ctx.fillText(tDisplay, typeBadgeX + badgeW / 2, topCardY + 28);
+      typeBadgeX += badgeW + 8;
     }
 
     // Regular Ability Info
@@ -856,59 +916,69 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     ctx.fillStyle = "#CBD5E1";
     ctx.textAlign = "left";
     const abilityName = (selected.primaryAbility || "None").slice(0, 16);
-    ctx.fillText(isKo ? `• 특성: ${abilityName}` : `• Ability: ${abilityName}`, infoX, showBoxY + 40);
+    ctx.fillText(isKo ? `• 특성: ${abilityName}` : `• Ability: ${abilityName}`, infoX, topCardY + 62);
 
     // Hidden Ability Info (HA)
     const hiddenAbilityName = selected.hiddenAbility ? selected.hiddenAbility.slice(0, 14) : (isKo ? "없음" : "None");
     ctx.fillStyle = selected.hiddenAbility ? "#F4A261" : "#77718C";
-    ctx.fillText(isKo ? `• 숨특: ${hiddenAbilityName}` : `• Hidden: ${hiddenAbilityName}`, infoX, showBoxY + 62);
+    ctx.fillText(isKo ? `• 숨특: ${hiddenAbilityName}` : `• Hidden: ${hiddenAbilityName}`, infoX, topCardY + 88);
 
-    // Total Base Stats sum (BST) Highlighted (Compact & No Overflow)
-    const bst = selected.hp + selected.attack + selected.defense + selected.spAttack + selected.spDefense + selected.speed;
-    ctx.font = "bold 14px DungGeunMo";
-    ctx.fillStyle = "#57F287";
-    ctx.fillText(isKo ? `• 총합: ${bst} BST` : `• Total: ${bst} BST`, infoX, showBoxY + 86);
+    // 5-2. BASE STATS 2-COLUMN X 3-ROW GRID (HP/SPE, ATK/SPA, DEF/SPD)
+    const statsCardY = 164;
+    const statsCardH = 106;
 
-    // 6 Base Stats Gauges (HP, ATK, DEF, SPA, SPD, SPE)
-    const statsStartY = 168;
-    const statsList = [
-      { label: "HP", val: selected.hp, color: "#57F287" },
-      { label: isKo ? "공격" : "ATK", val: selected.attack, color: "#F08030" },
-      { label: isKo ? "방어" : "DEF", val: selected.defense, color: "#6890F0" },
-      { label: isKo ? "특공" : "SPA", val: selected.spAttack, color: "#C03028" },
-      { label: isKo ? "특방" : "SPD", val: selected.spDefense, color: "#F85888" },
-      { label: isKo ? "스핏" : "SPE", val: selected.speed, color: "#F8D030" },
+    ctx.fillStyle = "#181429";
+    ctx.beginPath();
+    ctx.roundRect(rightX, statsCardY, rightW, statsCardH, 6);
+    ctx.fill();
+    ctx.strokeStyle = "#362B4E";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    const statsGrid = [
+      // Row 0: HP / SPE
+      { label: "HP", val: selected.hp, color: "#57F287", col: 0, row: 0 },
+      { label: isKo ? "스핏" : "SPE", val: selected.speed, color: "#F8D030", col: 1, row: 0 },
+      // Row 1: ATK / SPA
+      { label: isKo ? "공격" : "ATK", val: selected.attack, color: "#F08030", col: 0, row: 1 },
+      { label: isKo ? "특공" : "SPA", val: selected.spAttack, color: "#C03028", col: 1, row: 1 },
+      // Row 2: DEF / SPD
+      { label: isKo ? "방어" : "DEF", val: selected.defense, color: "#6890F0", col: 0, row: 2 },
+      { label: isKo ? "특방" : "SPD", val: selected.spDefense, color: "#F85888", col: 1, row: 2 },
     ];
 
-    const barMaxW = 180;
-    for (let sIdx = 0; sIdx < statsList.length; sIdx++) {
-      const st = statsList[sIdx];
-      const rowY = statsStartY + sIdx * 32;
+    const barW = 62;
+    for (const st of statsGrid) {
+      const colX = st.col === 0 ? rightX + 10 : rightX + 144;
+      const rowY = statsCardY + 12 + st.row * 30;
 
-      // Label & Value
-      ctx.font = "bold 13px DungGeunMo";
-      ctx.fillStyle = "#FFFFFF";
+      // Label (HP, ATK, DEF, SPE, SPA, SPD)
+      ctx.font = "bold 12px DungGeunMo";
+      ctx.fillStyle = "#A39EBD";
       ctx.textAlign = "left";
-      ctx.fillText(st.label, rightX + 6, rowY + 16);
+      ctx.fillText(st.label, colX, rowY + 12);
 
+      // Value
       ctx.textAlign = "right";
       ctx.fillStyle = st.color;
-      ctx.fillText(String(st.val), rightX + 68, rowY + 16);
+      ctx.fillText(String(st.val), colX + 46, rowY + 12);
 
-      // Gauge Background
-      const gaugeX = rightX + 76;
-      ctx.fillStyle = "#161326";
+      // Bar Background
+      const gaugeX = colX + 52;
+      ctx.fillStyle = "#120F20";
       ctx.beginPath();
-      ctx.roundRect(gaugeX, rowY + 6, barMaxW, 12, 4);
+      ctx.roundRect(gaugeX, rowY + 3, barW, 10, 3);
       ctx.fill();
 
-      // Gauge Fill
-      const fillW = Math.min(barMaxW, Math.max(4, (st.val / 200) * barMaxW));
+      // Bar Fill
+      const fillW = Math.min(barW, Math.max(3, (st.val / 180) * barW));
       ctx.fillStyle = st.color;
       ctx.beginPath();
-      ctx.roundRect(gaugeX, rowY + 6, fillW, 12, 4);
+      ctx.roundRect(gaugeX, rowY + 3, fillW, 10, 3);
       ctx.fill();
     }
+
+    // 5-3. BOTTOM AREA (y = 278 ~ 372): Reserved / Empty Space for future features
   }
 
   // 6. Outer Border Frame (Top Z-Index: Signature Pokédex Red)
