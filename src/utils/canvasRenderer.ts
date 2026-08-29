@@ -729,8 +729,9 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
 
   for (let i = 0; i < 8; i++) {
     const p = items[i];
-    const col = i % 2;
-    const row = Math.floor(i / 2);
+    // Column-major order: Left column (0~3), Right column (4~7)
+    const col = i < 4 ? 0 : 1;
+    const row = i % 4;
     const sx = 10 + col * (slotW + gapX);
     const sy = startListY + row * (slotH + gapY);
     const isSelected = selected && p && selected.dexNumber === p.dexNumber;
@@ -746,13 +747,13 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     ctx.stroke();
 
     if (p) {
-      // Header: Dex No & Name (Up to 5 characters)
+      // Header: Slot Index (1~8) + Dex No & Name
       ctx.font = "bold 11px DungGeunMo";
       ctx.fillStyle = isSelected ? "#FFFFFF" : "#CBD5E1";
       ctx.textAlign = "left";
       const displayName = (isKo && p.koreanName) ? p.koreanName : p.name;
       const dexTag = `#${String(p.dexNumber).padStart(3, "0")}`;
-      ctx.fillText(`${dexTag} ${displayName.slice(0, 5)}`, sx + 6, sy + 15);
+      ctx.fillText(`${i + 1}.${dexTag} ${displayName.slice(0, 4)}`, sx + 5, sy + 15);
 
       // Mini Sprite (Centered in left half area of slot: 56x50)
       const sprite = await getPokemonSprite(p.speciesId);
