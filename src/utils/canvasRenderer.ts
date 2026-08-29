@@ -694,16 +694,16 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
   const totPages = options?.totalPages || 129;
 
   // 1. Dark Retro Background
-  ctx.fillStyle = "#12101F";
+  ctx.fillStyle = "#111018";
   ctx.fillRect(0, 0, width, height);
 
   // 2. TOP BANNER: Full-width Header Bar across the entire Left Half (y: 0 ~ 42)
   const splitX = 262;
-  ctx.fillStyle = "#2D1520";
+  ctx.fillStyle = "#1B172E";
   ctx.fillRect(0, 0, splitX, 42);
 
   // Bottom border line under left header
-  ctx.strokeStyle = "#E63946";
+  ctx.strokeStyle = "#332D48";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.moveTo(0, 42);
@@ -711,13 +711,13 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
   ctx.stroke();
 
   ctx.font = "bold 18px DungGeunMo";
-  ctx.fillStyle = "#E63946";
+  ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "center";
   ctx.fillText(isKo ? "포켓몬 도감" : "POKÉDEX", splitX / 2 - 10, 29);
 
   // Page Indicator Badge on Left Header
   ctx.font = "12px DungGeunMo";
-  ctx.fillStyle = "#CBD5E1";
+  ctx.fillStyle = "#94A3B8";
   ctx.textAlign = "right";
   ctx.fillText(`P.${curPage}/${totPages}`, splitX - 10, 28);
 
@@ -738,13 +738,13 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     const isSelected = selected && p && selected.dexNumber === p.dexNumber;
 
     // Slot Box Background
-    ctx.fillStyle = isSelected ? "#311C2E" : "#1B172E";
+    ctx.fillStyle = isSelected ? "#26203B" : "#161324";
     ctx.beginPath();
     ctx.roundRect(sx, sy, slotW, slotH, 6);
     ctx.fill();
 
-    ctx.strokeStyle = isSelected ? "#E63946" : "#322A4E";
-    ctx.lineWidth = isSelected ? 2 : 1;
+    ctx.strokeStyle = isSelected ? "#94A3B8" : "#28233C";
+    ctx.lineWidth = isSelected ? 1.5 : 1;
     ctx.stroke();
 
     if (p) {
@@ -759,7 +759,7 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
 
       // Right Header: Dex Number (#001) Right-aligned (12px Bold)
       ctx.font = "bold 12px DungGeunMo";
-      ctx.fillStyle = isSelected ? "#F4A261" : "#8E88AB";
+      ctx.fillStyle = isSelected ? "#CBD5E1" : "#716B88";
       ctx.textAlign = "right";
       ctx.fillText(dexTag, sx + slotW - 8, sy + 16);
 
@@ -823,18 +823,11 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
   }
 
   // 4. VERTICAL SPLIT DIVIDER LINE (100% Full Height)
-  ctx.strokeStyle = "#E63946";
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = "#332D48";
+  ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.moveTo(splitX, 0);
   ctx.lineTo(splitX, height);
-  ctx.stroke();
-
-  ctx.strokeStyle = "#1F1B36";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(splitX + 2, 0);
-  ctx.lineTo(splitX + 2, height);
   ctx.stroke();
 
   // 5. RIGHT SIDE: Selected Pokémon Detailed Stats & Showcase
@@ -843,11 +836,11 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
 
   if (selected) {
     // 5-0. Right Header Background Bar (y: 0 ~ 42, matching left header height exactly)
-    ctx.fillStyle = "#1E1733";
+    ctx.fillStyle = "#1B172E";
     ctx.fillRect(splitX + 2, 0, width - splitX - 2, 42);
 
     // Sub-divider line under header at y = 42 (matching left divider exactly)
-    ctx.strokeStyle = "#3D3058";
+    ctx.strokeStyle = "#332D48";
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(splitX + 2, 42);
@@ -865,11 +858,11 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     const topCardY = 48;
     const topCardH = 108;
 
-    ctx.fillStyle = "#181429";
+    ctx.fillStyle = "#161324";
     ctx.beginPath();
     ctx.roundRect(rightX, topCardY, rightW, topCardH, 6);
     ctx.fill();
-    ctx.strokeStyle = "#362B4E";
+    ctx.strokeStyle = "#28233C";
     ctx.lineWidth = 1;
     ctx.stroke();
 
@@ -878,12 +871,12 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     const showBoxSize = 84;
     const showBoxY = topCardY + (topCardH - showBoxSize) / 2;
 
-    ctx.fillStyle = "#120F20";
+    ctx.fillStyle = "#100D1C";
     ctx.beginPath();
     ctx.roundRect(showBoxX, showBoxY, showBoxSize, showBoxSize, 6);
     ctx.fill();
-    ctx.strokeStyle = "#4D3860";
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = "#332D48";
+    ctx.lineWidth = 1;
     ctx.stroke();
 
     const bigSprite = await getPokemonSprite(selected.speciesId);
@@ -932,24 +925,24 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     const statsCardY = 164;
     const statsCardH = 120;
 
-    ctx.fillStyle = "#181429";
+    ctx.fillStyle = "#161324";
     ctx.beginPath();
     ctx.roundRect(rightX, statsCardY, rightW, statsCardH, 6);
     ctx.fill();
-    ctx.strokeStyle = "#362B4E";
+    ctx.strokeStyle = "#28233C";
     ctx.lineWidth = 1;
     ctx.stroke();
 
     const statsGrid = [
       // Row 0: HP / SPE
-      { label: "HP", val: selected.hp, color: "#57F287", col: 0, row: 0 },
-      { label: isKo ? "스핏" : "SPE", val: selected.speed, color: "#F8D030", col: 1, row: 0 },
+      { label: "HP", val: selected.hp, col: 0, row: 0 },
+      { label: isKo ? "스핏" : "SPE", val: selected.speed, col: 1, row: 0 },
       // Row 1: ATK / SPA
-      { label: isKo ? "공격" : "ATK", val: selected.attack, color: "#F08030", col: 0, row: 1 },
-      { label: isKo ? "특공" : "SPA", val: selected.spAttack, color: "#C03028", col: 1, row: 1 },
+      { label: isKo ? "공격" : "ATK", val: selected.attack, col: 0, row: 1 },
+      { label: isKo ? "특공" : "SPA", val: selected.spAttack, col: 1, row: 1 },
       // Row 2: DEF / SPD
-      { label: isKo ? "방어" : "DEF", val: selected.defense, color: "#6890F0", col: 0, row: 2 },
-      { label: isKo ? "특방" : "SPD", val: selected.spDefense, color: "#F85888", col: 1, row: 2 },
+      { label: isKo ? "방어" : "DEF", val: selected.defense, col: 0, row: 2 },
+      { label: isKo ? "특방" : "SPD", val: selected.spDefense, col: 1, row: 2 },
     ];
 
     const barW = 60;
@@ -958,28 +951,28 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
       const colX = st.col === 0 ? rightX + 12 : rightX + 144;
       const rowY = statsCardY + 12 + st.row * 34;
 
-      // Label (HP, ATK, DEF, SPE, SPA, SPD) - Enlarged to 14px Bold
+      // Label (HP, ATK, DEF, SPE, SPA, SPD) - Clean Silver Slate
       ctx.font = "bold 14px DungGeunMo";
-      ctx.fillStyle = "#CBD5E1";
+      ctx.fillStyle = "#94A3B8";
       ctx.textAlign = "left";
       ctx.fillText(st.label, colX, rowY + 14);
 
-      // Value - Enlarged to 15px Bold
+      // Value - Clean Crisp White
       ctx.font = "bold 15px DungGeunMo";
       ctx.textAlign = "right";
-      ctx.fillStyle = st.color;
+      ctx.fillStyle = "#FFFFFF";
       ctx.fillText(String(st.val), colX + 54, rowY + 14);
 
       // Bar Background
       const gaugeX = colX + 60;
-      ctx.fillStyle = "#120F20";
+      ctx.fillStyle = "#100D1C";
       ctx.beginPath();
       ctx.roundRect(gaugeX, rowY + 2, barW, barH, 3);
       ctx.fill();
 
-      // Bar Fill
+      // Bar Fill - Clean Slate/Silver
       const fillW = Math.min(barW, Math.max(3, (st.val / 180) * barW));
-      ctx.fillStyle = st.color;
+      ctx.fillStyle = "#94A3B8";
       ctx.beginPath();
       ctx.roundRect(gaugeX, rowY + 2, fillW, barH, 3);
       ctx.fill();
@@ -1077,10 +1070,10 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     }
   }
 
-  // 6. Outer Border Frame (Top Z-Index: Signature Pokédex Red)
-  ctx.strokeStyle = "#E63946";
-  ctx.lineWidth = 4;
-  ctx.strokeRect(2, 2, width - 4, height - 4);
+  // 6. Outer Border Frame (Clean Dark Slate Border)
+  ctx.strokeStyle = "#332D48";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(1, 1, width - 2, height - 2);
 
   return canvas.toBuffer("image/png");
 }
