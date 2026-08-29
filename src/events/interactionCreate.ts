@@ -301,15 +301,15 @@ async function renderMultiplayerMessageData(client: ExtendedClient, userId: stri
 }
 
 const POKEDEX_REGIONS = [
-  { id: "kanto", nameKo: "🌱 1세대 관동 (Kanto)", nameEn: "🌱 Gen 1: Kanto", startDex: 1, page: 1, desc: "#001 ~ #151 (이상해씨 ~ 뮤)" },
-  { id: "johto", nameKo: "🌿 2세대 성도 (Johto)", nameEn: "🌿 Gen 2: Johto", startDex: 152, page: 20, desc: "#152 ~ #251 (치코리타 ~ 세레비)" },
-  { id: "hoenn", nameKo: "🌊 3세대 호연 (Hoenn)", nameEn: "🌊 Gen 3: Hoenn", startDex: 252, page: 33, desc: "#252 ~ #386 (나무지기 ~ 테오키스)" },
-  { id: "sinnoh", nameKo: "⚡ 4세대 신오 (Sinnoh)", nameEn: "⚡ Gen 4: Sinnoh", startDex: 387, page: 50, desc: "#387 ~ #493 (모부기 ~ 아르세우스)" },
-  { id: "unova", nameKo: "🐉 5세대 하나 (Unova)", nameEn: "🐉 Gen 5: Unova", startDex: 494, page: 63, desc: "#494 ~ #649 (비크티니 ~ 게노세크트)" },
-  { id: "kalos", nameKo: "✨ 6세대 칼로스 (Kalos)", nameEn: "✨ Gen 6: Kalos", startDex: 650, page: 82, desc: "#650 ~ #721 (도치마론 ~ 볼케니온)" },
-  { id: "alola", nameKo: "🌺 7세대 알로라 (Alola)", nameEn: "🌺 Gen 7: Alola", startDex: 722, page: 91, desc: "#722 ~ #809 (나몰빼미 ~ 멜메탈)" },
-  { id: "galar", nameKo: "⚔️ 8세대 가라르/히스이 (Galar)", nameEn: "⚔️ Gen 8: Galar/Hisui", startDex: 810, page: 102, desc: "#810 ~ #905 (흥나숭 ~ 러브로스)" },
-  { id: "paldea", nameKo: "💎 9세대 팔데아 (Paldea)", nameEn: "💎 Gen 9: Paldea", startDex: 906, page: 114, desc: "#906 ~ #1025 (나오하 ~ 복숭악귀)" },
+  { id: "kanto", nameKo: "🌱 1세대 관동 (Kanto)", nameEn: "🌱 Gen 1: Kanto", startDex: 1, page: 1, descKo: "#001 ~ #151 (이상해씨 ~ 뮤)", descEn: "#001 ~ #151 (Bulbasaur ~ Mew)" },
+  { id: "johto", nameKo: "🌿 2세대 성도 (Johto)", nameEn: "🌿 Gen 2: Johto", startDex: 152, page: 20, descKo: "#152 ~ #251 (치코리타 ~ 세레비)", descEn: "#152 ~ #251 (Chikorita ~ Celebi)" },
+  { id: "hoenn", nameKo: "🌊 3세대 호연 (Hoenn)", nameEn: "🌊 Gen 3: Hoenn", startDex: 252, page: 33, descKo: "#252 ~ #386 (나무지기 ~ 테오키스)", descEn: "#252 ~ #386 (Treecko ~ Deoxys)" },
+  { id: "sinnoh", nameKo: "⚡ 4세대 신오 (Sinnoh)", nameEn: "⚡ Gen 4: Sinnoh", startDex: 387, page: 50, descKo: "#387 ~ #493 (모부기 ~ 아르세우스)", descEn: "#387 ~ #493 (Turtwig ~ Arceus)" },
+  { id: "unova", nameKo: "🐉 5세대 하나 (Unova)", nameEn: "🐉 Gen 5: Unova", startDex: 494, page: 63, descKo: "#494 ~ #649 (비크티니 ~ 게노세크트)", descEn: "#494 ~ #649 (Victini ~ Genesect)" },
+  { id: "kalos", nameKo: "✨ 6세대 칼로스 (Kalos)", nameEn: "✨ Gen 6: Kalos", startDex: 650, page: 82, descKo: "#650 ~ #721 (도치마론 ~ 볼케니온)", descEn: "#650 ~ #721 (Chespin ~ Volcanion)" },
+  { id: "alola", nameKo: "🌺 7세대 알로라 (Alola)", nameEn: "🌺 Gen 7: Alola", startDex: 722, page: 91, descKo: "#722 ~ #809 (나몰빼미 ~ 멜메탈)", descEn: "#722 ~ #809 (Rowlet ~ Melmetal)" },
+  { id: "galar", nameKo: "⚔️ 8세대 가라르/히스이 (Galar)", nameEn: "⚔️ Gen 8: Galar/Hisui", startDex: 810, page: 102, descKo: "#810 ~ #905 (흥나숭 ~ 러브로스)", descEn: "#810 ~ #905 (Grookey ~ Enamorus)" },
+  { id: "paldea", nameKo: "💎 9세대 팔데아 (Paldea)", nameEn: "💎 Gen 9: Paldea", startDex: 906, page: 114, descKo: "#906 ~ #1025 (나오하 ~ 복숭악귀)", descEn: "#906 ~ #1025 (Sprigatito ~ Pecharunt)" },
 ];
 
 function createPokedexRegionSelectMenu(fromScreen: "multiplay" | "inventory" | "title", userId: string, isKo: boolean) {
@@ -328,7 +328,7 @@ function createPokedexRegionSelectMenu(fromScreen: "multiplay" | "inventory" | "
         POKEDEX_REGIONS.map((reg) =>
           new StringSelectMenuOptionBuilder()
             .setLabel(isKo ? reg.nameKo : reg.nameEn)
-            .setDescription(reg.desc)
+            .setDescription(isKo ? reg.descKo : reg.descEn)
             .setValue(`${reg.startDex}_${reg.page}`)
         )
       )
