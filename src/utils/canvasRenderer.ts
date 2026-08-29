@@ -879,19 +879,21 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
       ctx.drawImage(bigSprite, showBoxX + (showBoxSize - sprW) / 2, showBoxY + (showBoxSize - sprH) / 2, sprW, sprH);
     }
 
-    // Info Column (Types, Ability, Hidden Ability) next to Sprite
-    const infoX = showBoxX + showBoxSize + 12;
+    // Info Column (Types) next to Sprite
+    const infoX = showBoxX + showBoxSize + 16;
     let typeBadgeX = infoX;
+    const typeBadgeY = topCardY + (topCardH - 22) / 2; // Vertically centered next to sprite
+
     for (const tName of selected.types) {
       const tLower = tName.toLowerCase();
       const tColor = TYPE_COLORS[tLower] || "#777777";
       const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || tName) : tName.toUpperCase();
-      const badgeW = isKo ? 40 : 48;
-      const badgeH = 20;
+      const badgeW = isKo ? 44 : 52;
+      const badgeH = 22;
 
       ctx.fillStyle = tColor;
       ctx.beginPath();
-      ctx.roundRect(typeBadgeX, topCardY + 12, badgeW, badgeH, 4);
+      ctx.roundRect(typeBadgeX, typeBadgeY, badgeW, badgeH, 4);
       ctx.fill();
 
       ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
@@ -902,26 +904,14 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
       ctx.shadowColor = "rgba(0, 0, 0, 0.9)";
       ctx.shadowOffsetY = 1;
       ctx.shadowBlur = 1;
-      ctx.font = isKo ? "bold 12px DungGeunMo" : "bold 10px DungGeunMo";
+      ctx.font = isKo ? "bold 13px DungGeunMo" : "bold 11px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
-      ctx.fillText(tDisplay, typeBadgeX + badgeW / 2, topCardY + 26);
+      ctx.fillText(tDisplay, typeBadgeX + badgeW / 2, typeBadgeY + 16);
       ctx.restore();
 
-      typeBadgeX += badgeW + 8;
+      typeBadgeX += badgeW + 10;
     }
-
-    // Regular Ability Info
-    ctx.font = "13px DungGeunMo";
-    ctx.fillStyle = "#CBD5E1";
-    ctx.textAlign = "left";
-    const abilityName = (selected.primaryAbility || "None").slice(0, 16);
-    ctx.fillText(isKo ? `• 특성: ${abilityName}` : `• Ability: ${abilityName}`, infoX, topCardY + 62);
-
-    // Hidden Ability Info (HA)
-    const hiddenAbilityName = selected.hiddenAbility ? selected.hiddenAbility.slice(0, 14) : (isKo ? "없음" : "None");
-    ctx.fillStyle = selected.hiddenAbility ? "#F4A261" : "#77718C";
-    ctx.fillText(isKo ? `• 숨특: ${hiddenAbilityName}` : `• Hidden: ${hiddenAbilityName}`, infoX, topCardY + 88);
 
     // 5-2. BASE STATS 2-COLUMN X 3-ROW GRID (HP/SPE, ATK/SPA, DEF/SPD)
     const statsCardY = 164;
