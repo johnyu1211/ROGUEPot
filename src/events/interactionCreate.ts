@@ -406,7 +406,7 @@ async function renderPokedexMessageData(
     components.push(selectRow2);
   }
 
-  // ROW 3: Navigation & Back & Region Map (Emoji Only on the Right)
+  // ROW 3: Navigation & Back & Region Map & Search (5 buttons max per row)
   const navRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(`pokedex_page_${Math.max(1, page - 1)}_${selectedDexNo}_${fromScreen}_${userId}`)
@@ -425,6 +425,10 @@ async function renderPokedexMessageData(
     new ButtonBuilder()
       .setCustomId(`pokedex_region_btn_${fromScreen}_${userId}`)
       .setLabel("🗺️")
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`pokedex_search_btn_${fromScreen}_${userId}`)
+      .setLabel("🔍")
       .setStyle(ButtonStyle.Secondary)
   );
   components.push(navRow);
@@ -590,6 +594,44 @@ export const interactionCreateEvent: BotEvent = {
         await interaction.editReply(updatedData);
         return;
       }
+
+      // 1-2. Pokédex Search Modal Submit
+      if (interaction.customId.startsWith("pokedex_search_modal_")) {
+        const query = interaction.fields.getTextInputValue("pokedex_search_input")?.trim();
+        const parts = interaction.customId.split("_");
+        const fromScreen = (parts[3] || "title") as "multiplay" | "inventory" | "title";
+        const profile = saveService.getProfile(interaction.user.id);
+        const isKo = profile.language === "ko";
+
+        if (!query) {
+          await interaction.reply({
+            content: isKo ? "❌ 검색할 포켓몬 도감 번호 또는 이름을 입력해주세요." : "❌ Please enter a Pokémon Dex number or name.",
+            ephemeral: true,
+          });
+          return;
+        }
+
+        await interaction.deferUpdate().catch(() => null);
+
+        const pokeInfo = await getPokemonByQuery(query);
+        if (!pokeInfo) {
+          await interaction.followUp({
+            content: isKo ? `❌ '${query}'에 해당하는 포켓몬을 찾을 수 없습니다.` : `❌ Could not find Pokémon for '${query}'.`,
+            ephemeral: true,
+          });
+          return;
+        }
+
+        const targetDexNo = pokeInfo.dexNumber;
+        const targetPage = Math.ceil(targetDexNo / 8);
+        const client = interaction.client as ExtendedClient;
+
+        const dexData = await renderPokedexMessageData(client, interaction.user.id, targetDexNo, targetPage, fromScreen);
+        await interaction.editReply(dexData).catch(async () => {
+          await interaction.followUp(dexData).catch(() => null);
+        });
+        return;
+      }
     }
 
     // 3. Button Interactions
@@ -725,6 +767,32 @@ export const interactionCreateEvent: BotEvent = {
         const isKo = profile.language === "ko";
         const regionMenuData = createPokedexRegionSelectMenu(fromScreen, interaction.user.id, isKo);
         await interaction.update(regionMenuData);
+        return;
+      }
+
+      // 3-0-8-2. Pokédex Search Button Clicked (🔍)
+      if (customId.startsWith("pokedex_search_btn_")) {
+        const fromScreen = (parts[3] || "title") as "multiplay" | "inventory" | "title";
+        const profile = saveService.getProfile(interaction.user.id);
+        const isKo = profile.language === "ko";
+
+        const modal = new ModalBuilder()
+          .setCustomId(`pokedex_search_modal_${fromScreen}_${interaction.user.id}`)
+          .setTitle(isKo ? "🔍 포켓몬 도감 검색" : "🔍 Search Pokédex");
+
+        const searchInput = new TextInputBuilder()
+          .setCustomId("pokedex_search_input")
+          .setLabel(isKo ? "포켓몬 이름 또는 도감 번호" : "Pokémon Name or Dex Number")
+          .setPlaceholder(isKo ? "예: 681, 킬가르도, aegislash, pikachu" : "e.g. 681, Aegislash, Pikachu, 25")
+          .setStyle(TextInputStyle.Short)
+          .setRequired(true)
+          .setMaxLength(30);
+
+        modal.addComponents(
+          new ActionRowBuilder<TextInputBuilder>().addComponents(searchInput)
+        );
+
+        await interaction.showModal(modal);
         return;
       }
 
