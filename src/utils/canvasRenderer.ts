@@ -841,24 +841,28 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
   const rightW = width - rightX - 10;
 
   if (selected) {
-    // Header: Dex No & Big Name (Enlarged to 21px bold)
-    ctx.font = "bold 21px DungGeunMo";
+    // 5-0. Right Header Background Bar (y: 0 ~ 42, matching left header height exactly)
+    ctx.fillStyle = "#1E1733";
+    ctx.fillRect(splitX + 2, 0, width - splitX - 2, 42);
+
+    // Sub-divider line under header at y = 42 (matching left divider exactly)
+    ctx.strokeStyle = "#3D3058";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(splitX + 2, 42);
+    ctx.lineTo(width, 42);
+    ctx.stroke();
+
+    // Header: Dex No & Big Name (Vertically centered at y = 27, matching left header baseline)
+    ctx.font = "bold 20px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "left";
     const titleName = (isKo && selected.koreanName) ? selected.koreanName : selected.name;
-    ctx.fillText(`#${String(selected.dexNumber).padStart(3, "0")} ${titleName}`, rightX + 4, 30);
+    ctx.fillText(`#${String(selected.dexNumber).padStart(3, "0")} ${titleName}`, rightX + 4, 27);
 
-    // Sub-divider line under header
-    ctx.strokeStyle = "#382D4F";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(rightX + 2, 38);
-    ctx.lineTo(rightX + rightW, 38);
-    ctx.stroke();
-
-    // 5-1. TOP MAIN INFO CARD (Sprite + Types)
-    const topCardY = 46;
-    const topCardH = 110;
+    // 5-1. TOP MAIN INFO CARD (Sprite + Types) (Starting at y = 48, matching left slot grid startListY)
+    const topCardY = 48;
+    const topCardH = 108;
 
     ctx.fillStyle = "#181429";
     ctx.beginPath();
