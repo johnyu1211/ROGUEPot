@@ -396,11 +396,8 @@ export const interactionCreateEvent: BotEvent = {
       if (interaction.customId.startsWith("multi_reg_modal_")) {
         const dexInput = interaction.fields.getTextInputValue("dex_no_input");
         const nicknameInput = interaction.fields.getTextInputValue("nickname_input")?.trim();
-        const levelInput = interaction.fields.getTextInputValue("level_input");
 
         const query = dexInput.trim();
-        const level = parseInt(levelInput, 10) || 50;
-
         const profile = saveService.getProfile(interaction.user.id);
         const isKo = profile.language === "ko";
 
@@ -427,7 +424,7 @@ export const interactionCreateEvent: BotEvent = {
           speciesId: pokeInfo.speciesId,
           name: nicknameInput || pokeInfo.name,
           nickname: nicknameInput || undefined,
-          level: Math.min(100, Math.max(1, level)),
+          level: 50,
           hp: pokeInfo.hp,
           maxHp: pokeInfo.hp,
           moves: ["Tackle", "Signature Move"],
@@ -530,18 +527,9 @@ export const interactionCreateEvent: BotEvent = {
           .setRequired(false)
           .setMaxLength(12);
 
-        const levelInput = new TextInputBuilder()
-          .setCustomId("level_input")
-          .setLabel(isKo ? "레벨 (1 ~ 100 / 기본 50)" : "Level (1 ~ 100 / Default 50)")
-          .setPlaceholder("50")
-          .setStyle(TextInputStyle.Short)
-          .setRequired(false)
-          .setMaxLength(3);
-
         modal.addComponents(
           new ActionRowBuilder<TextInputBuilder>().addComponents(dexInput),
-          new ActionRowBuilder<TextInputBuilder>().addComponents(nicknameInput),
-          new ActionRowBuilder<TextInputBuilder>().addComponents(levelInput)
+          new ActionRowBuilder<TextInputBuilder>().addComponents(nicknameInput)
         );
 
         await interaction.showModal(modal);
