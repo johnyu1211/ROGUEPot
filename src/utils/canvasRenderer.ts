@@ -107,8 +107,8 @@ async function drawPartyRightPanel(
   ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2 + 1, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Username
-  ctx.font = "bold 18px DungGeunMo";
+  // Username (19px font)
+  ctx.font = "bold 19px DungGeunMo";
   ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "left";
   const defaultTrainerName = options?.lang === "ko" ? "트레이너" : "Trainer";
@@ -155,7 +155,7 @@ async function drawPartyRightPanel(
         const sprH = sprite.height * scale;
         ctx.drawImage(sprite, sx + (slotW - sprW) / 2, sy + (slotH - sprH) / 2 - 8, sprW, sprH);
       }
-      ctx.font = "12px DungGeunMo";
+      ctx.font = "13px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
       ctx.fillText(`Lv.${pokemon.level}`, sx + slotW / 2, sy + slotH - 8);
@@ -165,7 +165,7 @@ async function drawPartyRightPanel(
       ctx.arc(sx + slotW / 2, sy + slotH / 2 - 4, 10, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.font = "11px DungGeunMo";
+      ctx.font = "12px DungGeunMo";
       ctx.fillStyle = "#51496D";
       ctx.textAlign = "center";
       ctx.fillText(emptyLabel, sx + slotW / 2, sy + slotH - 8);
@@ -216,7 +216,7 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
     ctx.textAlign = "left";
     ctx.fillText("By PageFaultGames", leftPadding + 4, logoY + logoHeight + 28);
 
-    // 4. Menu List on the Left (Multilingual)
+    // 4. Menu List on the Left (Multilingual, 24px)
     const menuStartY = logoY + logoHeight + 76;
     ctx.font = "24px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
@@ -254,7 +254,7 @@ export interface BagScreenOptions {
 }
 
 /**
- * Renders Trainer Bag UI with Left Menu & Right 6-Party Panel
+ * Renders Trainer Bag UI with Scaled Up Fonts & Clean Highest Wave Info
  */
 export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffer> {
   const width = 560;
@@ -280,7 +280,7 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
   ctx.lineWidth = 1;
   ctx.strokeRect(6, 6, width - 12, height - 12);
 
-  // 3. TOP BANNER: Trainer Bag Header
+  // 3. TOP BANNER: Trainer Bag Header (22px font)
   ctx.fillStyle = "#241F3D";
   ctx.fillRect(8, 8, 275, 42);
 
@@ -288,7 +288,7 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
   ctx.lineWidth = 1;
   ctx.strokeRect(8, 8, 275, 42);
 
-  ctx.font = "bold 20px DungGeunMo";
+  ctx.font = "bold 21px DungGeunMo";
   ctx.fillStyle = "#F4A261";
   ctx.textAlign = "left";
   ctx.fillText(isKo ? "💼 트레이너 포켓" : "💼 TRAINER POCKET", 20, 36);
@@ -305,17 +305,17 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
   ctx.lineWidth = 1.5;
   ctx.strokeRect(leftX, leftY, leftW, leftH);
 
-  // Pocket Title
+  // Pocket Title (Scaled to 17px)
   ctx.fillStyle = "#2D264E";
-  ctx.fillRect(leftX + 2, leftY + 2, leftW - 4, 30);
-  ctx.font = "bold 15px DungGeunMo";
+  ctx.fillRect(leftX + 2, leftY + 2, leftW - 4, 32);
+  ctx.font = "bold 17px DungGeunMo";
   ctx.fillStyle = "#F4A261";
   ctx.textAlign = "center";
-  ctx.fillText(isKo ? "포켓몬 볼트" : "POKÉMON VAULT", leftX + leftW / 2, leftY + 22);
+  ctx.fillText(isKo ? "POKÉMON VAULT" : "POKÉMON VAULT", leftX + leftW / 2, leftY + 23);
 
   const tabs = isKo
     ? [
-        { key: "pokemon", label: "1. 출전 파티" },
+        { key: "pokemon", label: "1. 출전 포켓몬" },
         { key: "pokedex", label: "2. 포켓몬 도감" },
         { key: "records", label: "3. 트레이너 기록" },
       ]
@@ -325,13 +325,14 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
         { key: "records", label: "3. CAREER RECORDS" },
       ];
 
+  // Larger tab boxes (height 52px, font 16px)
   tabs.forEach((t, idx) => {
-    const tabY = leftY + 42 + idx * 56;
+    const tabY = leftY + 44 + idx * 60;
     const isSelected = currentTab === t.key;
 
     ctx.fillStyle = isSelected ? "#4A3E72" : "#141124";
     ctx.beginPath();
-    ctx.roundRect(leftX + 10, tabY, leftW - 20, 44, 6);
+    ctx.roundRect(leftX + 10, tabY, leftW - 20, 48, 8);
     ctx.fill();
 
     if (isSelected) {
@@ -344,39 +345,36 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
       ctx.stroke();
     }
 
-    ctx.font = isSelected ? "bold 13px DungGeunMo" : "13px DungGeunMo";
+    ctx.font = isSelected ? "bold 16px DungGeunMo" : "16px DungGeunMo";
     ctx.fillStyle = isSelected ? "#FFFFFF" : "#8F89AA";
     ctx.textAlign = "left";
-    ctx.fillText((isSelected ? "▶ " : "  ") + t.label, leftX + 18, tabY + 27);
+    ctx.fillText((isSelected ? "▶ " : "  ") + t.label, leftX + 18, tabY + 30);
   });
 
-  // Summary box at bottom of left panel
+  // 4-1. Bottom Info Box: ONLY HIGHEST WAVE (Clean, Bold, Large Font!)
+  const infoBoxY = leftY + 230;
+  const infoBoxH = 62;
+
   ctx.fillStyle = "#141124";
   ctx.beginPath();
-  ctx.roundRect(leftX + 10, leftY + 216, leftW - 20, 76, 6);
+  ctx.roundRect(leftX + 10, infoBoxY, leftW - 20, infoBoxH, 8);
   ctx.fill();
 
-  ctx.strokeStyle = "#383152";
-  ctx.lineWidth = 1;
+  ctx.strokeStyle = "#F4A261";
+  ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  ctx.font = "12px DungGeunMo";
-  ctx.fillStyle = "#F4A261";
-  ctx.textAlign = "left";
-  ctx.fillText(isKo ? "• 출전 슬롯: 6마리" : "• Roster: 6 Battle Slots", leftX + 18, leftY + 240);
-  ctx.fillStyle = "#FFFFFF";
-  ctx.fillText(
-    isKo ? `• 해금 포켓몬: ${options?.unlockedCount ?? 9}마리` : `• Total Unlocked: ${options?.unlockedCount ?? 9} Mons`,
-    leftX + 18,
-    leftY + 262
-  );
-  ctx.fillText(
-    isKo ? `• 최고 웨이브: Wave ${options?.stats?.highestWave ?? 0}` : `• Highest Wave: Wave ${options?.stats?.highestWave ?? 0}`,
-    leftX + 18,
-    leftY + 282
-  );
+  // Highlighted Wave Label & Value
+  ctx.font = "14px DungGeunMo";
+  ctx.fillStyle = "#8F89AA";
+  ctx.textAlign = "center";
+  ctx.fillText(isKo ? "★ 최고 도달 기록" : "★ BEST RUN RECORD", leftX + leftW / 2, infoBoxY + 24);
 
-  // 5. RIGHT SIDE PANEL: Exact 1st Screen Right Panel
+  ctx.font = "bold 18px DungGeunMo";
+  ctx.fillStyle = "#57F287"; // Bright retro green
+  ctx.fillText(`Wave ${options?.stats?.highestWave ?? 0}`, leftX + leftW / 2, infoBoxY + 48);
+
+  // 5. RIGHT SIDE PANEL: 1st Screen Right Panel (Party list for current continue slot)
   await drawPartyRightPanel(ctx, 295, 18, 244, 344, {
     username: options?.username,
     avatarUrl: options?.avatarUrl,
