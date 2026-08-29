@@ -353,6 +353,66 @@ export async function fetchAbilityKoreanName(rawName: string): Promise<string> {
   return formatted;
 }
 
+export interface AbilityDetailInfo {
+  name: string;
+  nameKo: string;
+  descriptionKo: string;
+  descriptionEn: string;
+}
+
+const abilityDetailCache = new Map<string, AbilityDetailInfo>();
+
+export async function getAbilityDetail(rawName: string): Promise<AbilityDetailInfo> {
+  const key = rawName.toLowerCase().replace(/[\s_]+/g, "-");
+  if (abilityDetailCache.has(key)) return abilityDetailCache.get(key)!;
+
+  let nameKo = ABILITY_KO_DICT[key] || rawName;
+  let descriptionKo = "";
+  let descriptionEn = "";
+
+  try {
+    const res = await fetch(`https://pokeapi.co/api/v2/ability/${key}`);
+    if (res.ok) {
+      const data: any = await res.json();
+      const koNameEntry = (data.names || []).find((n: any) => n.language?.name === "ko");
+      if (koNameEntry?.name) nameKo = koNameEntry.name;
+
+      const koFlavor = (data.flavor_text_entries || []).find((f: any) => f.language?.name === "ko");
+      if (koFlavor?.flavor_text) {
+        descriptionKo = koFlavor.flavor_text.replace(/\n/g, " ");
+      } else {
+        const koEffect = (data.effect_entries || []).find((e: any) => e.language?.name === "ko");
+        if (koEffect?.short_effect || koEffect?.effect) {
+          descriptionKo = (koEffect.short_effect || koEffect.effect).replace(/\n/g, " ");
+        }
+      }
+
+      const enFlavor = (data.flavor_text_entries || []).find((f: any) => f.language?.name === "en");
+      if (enFlavor?.flavor_text) {
+        descriptionEn = enFlavor.flavor_text.replace(/\n/g, " ");
+      } else {
+        const enEffect = (data.effect_entries || []).find((e: any) => e.language?.name === "en");
+        if (enEffect?.short_effect || enEffect?.effect) {
+          descriptionEn = (enEffect.short_effect || enEffect.effect).replace(/\n/g, " ");
+        }
+      }
+    }
+  } catch (err) {
+    console.error(`[ABILITY] Error fetching ability details for ${key}:`, err);
+  }
+
+  const formattedEn = rawName.split(/[\s_-]+/).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+  const result: AbilityDetailInfo = {
+    name: formattedEn,
+    nameKo: nameKo || formattedEn,
+    descriptionKo: descriptionKo || `${nameKo || formattedEn} 특성입니다.`,
+    descriptionEn: descriptionEn || `${formattedEn} ability.`,
+  };
+
+  abilityDetailCache.set(key, result);
+  return result;
+}
+
 export function getAbilityKoreanName(rawName: string): string {
   const key = rawName.toLowerCase().replace(/[\s_]+/g, "-");
   return ABILITY_KO_DICT[key] || abilityKoCache.get(key) || rawName;
