@@ -239,10 +239,10 @@ async function drawPartyRightPanel(
   ctx.lineTo(splitX + 2, 380);
   ctx.stroke();
 
-  // 2. USER HEADER (Avatar Circle + Username)
+  // 2. USER HEADER (Avatar Circle + Username aligned to Top Header Bar at y: 0 ~ 42)
   const avatarX = boxX + 6;
-  const avatarY = boxY + 12;
-  const avatarSize = 36;
+  const avatarY = 5;
+  const avatarSize = 32;
 
   if (options?.avatarUrl) {
     try {
@@ -255,40 +255,41 @@ async function drawPartyRightPanel(
       ctx.drawImage(avatarImg, avatarX, avatarY, avatarSize, avatarSize);
       ctx.restore();
     } catch {
-      ctx.fillStyle = "#E63946";
+      ctx.fillStyle = "#554D77";
       ctx.beginPath();
       ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
       ctx.fill();
     }
   } else {
-    ctx.fillStyle = "#E63946";
+    ctx.fillStyle = "#554D77";
     ctx.beginPath();
     ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
     ctx.fill();
   }
-  // Username & Active Status
-  ctx.font = "bold 19px DungGeunMo";
+
+  // Username (Vertically centered at y = 27, matching left header text)
+  ctx.font = "bold 18px DungGeunMo";
   ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "left";
   const defaultTrainerName = isKo ? "트레이너" : "Trainer";
   const nameToDisplay = (options?.username || defaultTrainerName).slice(0, 12);
-  ctx.fillText(nameToDisplay, avatarX + avatarSize + 10, avatarY + 24);
+  ctx.fillText(nameToDisplay, avatarX + avatarSize + 10, 27);
 
-  // Sub-divider line under user header
-  ctx.strokeStyle = "#2E284A";
-  ctx.lineWidth = 1;
+  // Sub-divider line under user header at y = 42 (matching left header divider line)
+  ctx.strokeStyle = options?.borderColor || "#332D48";
+  ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(boxX + 2, boxY + 56);
-  ctx.lineTo(boxX + boxW, boxY + 56);
+  ctx.moveTo(splitX, 42);
+  ctx.lineTo(560, 42);
   ctx.stroke();
 
-  // 3. 2x3 PARTY SLOTS GRID: Open & Seamless Split-screen Style
-  const slotW = 112;
-  const slotH = 88;
-  const startGridY = boxY + 66;
+  // 3. 2x3 PARTY SLOTS GRID: Open & Seamless Split-screen Style (Starting at y = 48)
+  const slotW = 114;
+  const slotH = 96;
+  const startGridY = 48;
   const gapX = 10;
   const gapY = 8;
-  const borderRadius = 10;
+  const borderRadius = 8;
 
   const partyList = options?.party || [];
   const emptyLabel = isKo ? "빈 슬롯" : "Empty";
@@ -512,20 +513,24 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
   ctx.fillStyle = "#161424";
   ctx.fillRect(0, 0, width, height);
 
-  // 2. TOP BANNER: Trainer Bag Header with Vector Bag Icon
-  ctx.fillStyle = "#241F3D";
-  ctx.fillRect(8, 8, 275, 42);
+  // 2. TOP BANNER: Trainer Bag Header with Vector Bag Icon (y: 0 ~ 42)
+  const splitX = 285;
+  ctx.fillStyle = "#1B172E";
+  ctx.fillRect(0, 0, splitX, 42);
 
-  ctx.strokeStyle = "#4D436D";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(8, 8, 275, 42);
+  ctx.strokeStyle = "#332D48";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(0, 42);
+  ctx.lineTo(splitX, 42);
+  ctx.stroke();
 
-  drawVectorBag(ctx, 26, 29, 14, 14, "#F4A261");
+  drawVectorBag(ctx, 22, 21, 14, 14, "#CBD5E1");
 
-  ctx.font = "bold 20px DungGeunMo";
-  ctx.fillStyle = "#F4A261";
+  ctx.font = "bold 18px DungGeunMo";
+  ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "left";
-  ctx.fillText(isKo ? "트레이너 포켓" : "TRAINER POCKET", 44, 36);
+  ctx.fillText(isKo ? "트레이너 포켓" : "TRAINER POCKET", 40, 27);
 
   // 4. LEFT SIDE: Menu / Category Box
   const leftX = 18;
@@ -540,10 +545,10 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
   ctx.strokeRect(leftX, leftY, leftW, leftH);
 
   // Pocket Title
-  ctx.fillStyle = "#2D264E";
+  ctx.fillStyle = "#26203B";
   ctx.fillRect(leftX + 2, leftY + 2, leftW - 4, 32);
   ctx.font = "bold 17px DungGeunMo";
-  ctx.fillStyle = "#F4A261";
+  ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "center";
   ctx.fillText(isKo ? "POKÉMON VAULT" : "POKÉMON VAULT", leftX + leftW / 2, leftY + 23);
 
@@ -563,17 +568,17 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
     const tabY = leftY + 44 + idx * 60;
     const isSelected = currentTab === t.key;
 
-    ctx.fillStyle = isSelected ? "#4A3E72" : "#141124";
+    ctx.fillStyle = isSelected ? "#2E2746" : "#141124";
     ctx.beginPath();
     ctx.roundRect(leftX + 10, tabY, leftW - 20, 48, 8);
     ctx.fill();
 
     if (isSelected) {
-      ctx.strokeStyle = "#F4A261";
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#94A3B8";
+      ctx.lineWidth = 1.5;
       ctx.stroke();
     } else {
-      ctx.strokeStyle = "#2E2847";
+      ctx.strokeStyle = "#28233C";
       ctx.lineWidth = 1;
       ctx.stroke();
     }
@@ -593,18 +598,18 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
   ctx.roundRect(leftX + 10, infoBoxY, leftW - 20, infoBoxH, 8);
   ctx.fill();
 
-  ctx.strokeStyle = "#F4A261";
+  ctx.strokeStyle = "#332D48";
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  drawVectorStar(ctx, leftX + leftW / 2 - 58, infoBoxY + 20, 5, 6, 3, "#F4A261");
+  drawVectorStar(ctx, leftX + leftW / 2 - 58, infoBoxY + 20, 5, 6, 3, "#CBD5E1");
   ctx.font = "14px DungGeunMo";
   ctx.fillStyle = "#8F89AA";
   ctx.textAlign = "center";
   ctx.fillText(isKo ? "최고 도달 기록" : "BEST RUN RECORD", leftX + leftW / 2 + 6, infoBoxY + 24);
 
   ctx.font = "bold 18px DungGeunMo";
-  ctx.fillStyle = "#57F287";
+  ctx.fillStyle = "#FFFFFF";
   ctx.fillText(`Wave ${options?.stats?.highestWave ?? 0}`, leftX + leftW / 2, infoBoxY + 48);
 
   // 5. RIGHT SIDE PANEL: showSlotNumbers is TRUE with WHITE color in Bag Screen
@@ -616,10 +621,10 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
     showSlotNumbers: true,
   });
 
-  // 6. Outer Border Frame (Gold & Wine-Red Border - Top Z-Index)
-  ctx.strokeStyle = "#F4A261";
-  ctx.lineWidth = 4;
-  ctx.strokeRect(2, 2, width - 4, height - 4);
+  // 6. Outer Border Frame (Clean Dark Slate Border)
+  ctx.strokeStyle = "#332D48";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(1, 1, width - 2, height - 2);
 
   return canvas.toBuffer("image/png");
 }
