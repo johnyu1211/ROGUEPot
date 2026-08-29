@@ -1039,16 +1039,6 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     ctx.textAlign = "left";
     ctx.fillText(`${typeTag} ${abName}`, overlayX + 14, overlayY + 24);
 
-    // Header Right Tag: Official English name & Close guide
-    ctx.font = "bold 12px DungGeunMo";
-    ctx.fillStyle = "#CBD5E1";
-    ctx.textAlign = "right";
-    ctx.fillText(
-      isKo ? `영문명: ${abDetail.name} (클릭시 닫힘)` : `Name: ${abDetail.name} (Click to close)`,
-      overlayX + overlayW - 14,
-      overlayY + 24
-    );
-
     // Horizontal divider line under dialog header
     ctx.strokeStyle = isHa ? "rgba(244, 162, 97, 0.35)" : "rgba(112, 214, 255, 0.35)";
     ctx.lineWidth = 1;
@@ -1066,7 +1056,7 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     const words = abDesc.split(" ");
     let line = "";
     let lineY = overlayY + 62;
-    const lineHeight = 22;
+    const lineHeight = 24;
     let linesDrawn = 0;
 
     for (let n = 0; n < words.length; n++) {
@@ -1077,25 +1067,14 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
         line = words[n];
         lineY += lineHeight;
         linesDrawn++;
-        if (linesDrawn >= 3) break;
+        if (linesDrawn >= 4) break;
       } else {
         line = testLine;
       }
     }
-    if (line && linesDrawn < 3) {
+    if (line && linesDrawn < 4) {
       ctx.fillText(line, overlayX + 16, lineY);
     }
-
-    // Bottom Tip Note
-    ctx.font = "12px DungGeunMo";
-    ctx.fillStyle = "#6EE7B7";
-    ctx.fillText(
-      isKo
-        ? "💡 포켓로그 배틀 중 해당 특성의 조건이 충족되면 효과가 자동 발동합니다."
-        : "💡 This ability automatically activates during battle when conditions are met.",
-      overlayX + 16,
-      overlayY + 150
-    );
   }
 
   // 6. Outer Border Frame (Top Z-Index: Signature Pokédex Red)
