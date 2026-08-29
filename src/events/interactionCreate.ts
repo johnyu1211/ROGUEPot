@@ -15,7 +15,7 @@ import { BotEvent, ExtendedClient } from "../types/index.js";
 import { createBaseEmbed, COLORS } from "../utils/embed.js";
 import { renderTitleScreen, renderBagScreen, renderMultiplayerScreen, renderPokedexScreen } from "../utils/canvasRenderer.js";
 import { saveService, PartyPokemon } from "../services/saveService.js";
-import { getPokemonByQuery, getPokemonByDexNumber, getPokemonPage } from "../services/pokeApiService.js";
+import { getPokemonByQuery, getPokemonByDexNumber, getPokemonPage, getAbilityKoreanName } from "../services/pokeApiService.js";
 
 function createStarterSelectMenu(slotId: number, userId: string, fromSource: "title" | "slots" = "title") {
   const profile = saveService.getProfile(userId);
@@ -372,7 +372,37 @@ async function renderPokedexMessageData(
 
   const components: ActionRowBuilder<ButtonBuilder>[] = [];
 
-  // ROW 1: Region Jump [🗺️] & Direct Search [🔍]
+  // ROW 1: Blue Ability Buttons (특성 정보 일렬 표시 - Blue Primary Style)
+  const abilityButtons: ButtonBuilder[] = [];
+  if (selectedPokemon) {
+    const regular = selectedPokemon.regularAbilities || (selectedPokemon.primaryAbility ? [selectedPokemon.primaryAbility] : []);
+    regular.forEach((ab, idx) => {
+      const abName = isKo ? getAbilityKoreanName(ab) : ab;
+      abilityButtons.push(
+        new ButtonBuilder()
+          .setCustomId(`pokedex_ability_reg_${selectedPokemon.dexNumber}_${idx}_${userId}`)
+          .setLabel(isKo ? `특성: ${abName}` : `Ability: ${abName}`)
+          .setStyle(ButtonStyle.Primary)
+      );
+    });
+
+    if (selectedPokemon.hiddenAbility) {
+      const haName = isKo ? getAbilityKoreanName(selectedPokemon.hiddenAbility) : selectedPokemon.hiddenAbility;
+      abilityButtons.push(
+        new ButtonBuilder()
+          .setCustomId(`pokedex_ability_ha_${selectedPokemon.dexNumber}_${userId}`)
+          .setLabel(isKo ? `숨특: ${haName}` : `HA: ${haName}`)
+          .setStyle(ButtonStyle.Primary)
+      );
+    }
+  }
+
+  if (abilityButtons.length > 0) {
+    const abilityRow = new ActionRowBuilder<ButtonBuilder>().addComponents(abilityButtons.slice(0, 5));
+    components.push(abilityRow);
+  }
+
+  // ROW 2: Region Jump [🗺️] & Direct Search [🔍]
   const topUtilityRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(`pokedex_region_btn_${fromScreen}_${userId}`)
@@ -744,6 +774,12 @@ export const interactionCreateEvent: BotEvent = {
         await interaction.editReply(dexData).catch(async () => {
           await interaction.followUp(dexData).catch(() => null);
         });
+        return;
+      }
+
+      // 3-0-6-B. Pokédex Ability Info Button Clicked (No-op or Acknowledge)
+      if (customId.startsWith("pokedex_ability_")) {
+        await interaction.deferUpdate().catch(() => null);
         return;
       }
 
