@@ -714,9 +714,9 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
 
   for (let i = 0; i < 8; i++) {
     const p = items[i];
-    // Column-major order: Col 0 (0~3), Col 1 (4~7)
-    const col = i < 4 ? 0 : 1;
-    const row = i % 4;
+    // Row-major order: Row 0 (1, 2), Row 1 (3, 4), Row 2 (5, 6), Row 3 (7, 8)
+    const row = Math.floor(i / 2);
+    const col = i % 2;
     const sx = 10 + col * (slotW + gapX);
     const sy = startListY + row * (slotH + gapY);
     const isSelected = selected && p && selected.dexNumber === p.dexNumber;
