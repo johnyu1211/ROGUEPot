@@ -155,7 +155,7 @@ async function drawPartyRightPanel(
     // Slot Number Tag (1, 2, 3, 4, 5, 6) in WHITE - Only rendered if showSlotNumbers is TRUE
     if (options?.showSlotNumbers) {
       ctx.font = "bold 12px DungGeunMo";
-      ctx.fillStyle = "#FFFFFF"; // Pure white
+      ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "left";
       ctx.fillText(`${i + 1}`, sx + 8, sy + 16);
     }
@@ -188,7 +188,7 @@ async function drawPartyRightPanel(
 }
 
 /**
- * Renders title card maximized to 560x380 (Slot numbers HIDDEN on 1st screen)
+ * Renders title card maximized to 560x380 (With "Discord Bot version" subtitle)
  */
 export async function renderTitleScreen(options?: TitleScreenOptions): Promise<Buffer> {
   const width = 560;
@@ -224,11 +224,11 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
     const logoY = 40;
     ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
 
-    // Team Name
-    ctx.font = "20px DungGeunMo";
+    // Subtitle: Discord Bot version
+    ctx.font = "19px DungGeunMo";
     ctx.fillStyle = "#F4A261";
     ctx.textAlign = "left";
-    ctx.fillText("By PageFaultGames", leftPadding + 4, logoY + logoHeight + 28);
+    ctx.fillText("Discord Bot version", leftPadding + 4, logoY + logoHeight + 28);
 
     // 4. Menu List on the Left (Multilingual, 24px)
     const menuStartY = logoY + logoHeight + 76;
