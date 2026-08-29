@@ -706,23 +706,29 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
   ctx.fillStyle = "#12101F";
   ctx.fillRect(0, 0, width, height);
 
-  // 2. TOP BANNER: Pokédex Title & Page (Centered)
+  // 2. TOP BANNER: Full-width Header Bar across the entire Left Half (y: 0 ~ 42)
+  const splitX = 262;
   ctx.fillStyle = "#2D1520";
-  ctx.fillRect(8, 8, 246, 36);
+  ctx.fillRect(0, 0, splitX, 42);
+
+  // Bottom border line under left header
   ctx.strokeStyle = "#E63946";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(8, 8, 246, 36);
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(0, 42);
+  ctx.lineTo(splitX, 42);
+  ctx.stroke();
 
   ctx.font = "bold 18px DungGeunMo";
   ctx.fillStyle = "#E63946";
   ctx.textAlign = "center";
-  ctx.fillText(isKo ? "포켓몬 도감" : "POKÉDEX", 8 + 246 / 2 - 10, 32);
+  ctx.fillText(isKo ? "포켓몬 도감" : "POKÉDEX", splitX / 2 - 10, 27);
 
   // Page Indicator Badge on Left Header
   ctx.font = "12px DungGeunMo";
   ctx.fillStyle = "#CBD5E1";
   ctx.textAlign = "right";
-  ctx.fillText(`P.${curPage}/${totPages}`, 246, 31);
+  ctx.fillText(`P.${curPage}/${totPages}`, splitX - 10, 26);
 
   // 3. LEFT SIDE: 8 Pokémon Grid (2 Columns x 4 Rows)
   const startListY = 48;
@@ -818,7 +824,6 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
   }
 
   // 4. VERTICAL SPLIT DIVIDER LINE (100% Full Height)
-  const splitX = 262;
   ctx.strokeStyle = "#E63946";
   ctx.lineWidth = 2;
   ctx.beginPath();
