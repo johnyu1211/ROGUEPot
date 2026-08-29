@@ -282,7 +282,7 @@ async function renderMultiplayerMessageData(client: ExtendedClient, userId: stri
   const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(`multi_register_btn_${userId}`)
-      .setLabel(isKo ? "포켓몬 등록 📝" : "Register Pokémon 📝")
+      .setLabel(isKo ? "포켓몬 등록" : "Register Pokémon")
       .setStyle(ButtonStyle.Success)
   );
 
@@ -517,7 +517,7 @@ export const interactionCreateEvent: BotEvent = {
 
         const modal = new ModalBuilder()
           .setCustomId(`multi_reg_modal_${interaction.user.id}`)
-          .setTitle(isKo ? "📝 포켓몬 엔트리 등록" : "📝 Register Battle Pokémon");
+          .setTitle(isKo ? "포켓몬 엔트리 등록" : "Register Battle Pokémon");
 
         const dexInput = new TextInputBuilder()
           .setCustomId("dex_no_input")
