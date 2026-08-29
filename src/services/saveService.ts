@@ -246,6 +246,21 @@ class SaveService {
     const now = new Date().toISOString();
     db.prepare("UPDATE users SET active_slot_id = ?, updated_at = ? WHERE user_id = ?").run(slotId, now, userId);
   }
+
+  public addBagPokemon(userId: string, pokemon: PartyPokemon): { success: boolean; messageKo: string; messageEn: string } {
+    const profile = this.getProfile(userId);
+    if (!profile.activeSlotId || !profile.slots[profile.activeSlotId]) {
+      return { success: false, messageKo: "활성화된 모험(세이브 슬롯)이 없습니다!", messageEn: "No active adventure slot found!" };
+    }
+    const activeSlot = profile.slots[profile.activeSlotId]!;
+    if (activeSlot.party.length >= 6) {
+      return { success: false, messageKo: "현재 모험 가방 파티(6마리)가 이미 가득 찼습니다!", messageEn: "Active adventure party is already full (6/6)!" };
+    }
+    const updatedParty = [...activeSlot.party, pokemon];
+    const now = new Date().toISOString();
+    db.prepare("UPDATE game_slots SET party = ?, updated_at = ? WHERE user_id = ? AND slot_id = ?").run(JSON.stringify(updatedParty), now, userId, activeSlot.slotId);
+    return { success: true, messageKo: `${pokemon.name}을(를) 모험 가방 파티에 등록했습니다! (${updatedParty.length}/6)`, messageEn: `Added ${pokemon.name} to Adventure Bag! (${updatedParty.length}/6)` };
+  }
 }
 
 export const saveService = SaveService.getInstance();
