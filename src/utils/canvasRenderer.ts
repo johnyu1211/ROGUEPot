@@ -313,37 +313,37 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
   ctx.fillStyle = "#161424";
   ctx.fillRect(0, 0, width, height);
 
-  // 2. Logo Aligned to LEFT
+  // 2. Logo Aligned to LEFT (Balanced Margin from Divider Line)
   const logo = await getLogoImage();
-  const leftPadding = 28;
+  const leftPadding = 16;
 
   if (logo) {
-    const logoWidth = 248;
+    const logoWidth = 232;
     const logoHeight = (logo.height / logo.width) * logoWidth;
     const logoX = leftPadding;
-    const logoY = 40;
+    const logoY = 38;
     ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
 
     // Subtitle: Discord Bot version
-    ctx.font = "19px DungGeunMo";
+    ctx.font = "18px DungGeunMo";
     ctx.fillStyle = "#F4A261";
     ctx.textAlign = "left";
-    ctx.fillText("Discord Bot version", leftPadding + 4, logoY + logoHeight + 28);
+    ctx.fillText("Discord Bot version", leftPadding + 6, logoY + logoHeight + 26);
 
     // 3. Menu List on the Left (Multilingual, 24px)
-    const menuStartY = logoY + logoHeight + 76;
+    const menuStartY = logoY + logoHeight + 72;
     ctx.font = "24px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
 
     if (options?.hasSavedSlots) {
-      ctx.fillText(isKo ? "1. 불러오기" : "1. LOAD GAME", leftPadding + 4, menuStartY);
-      ctx.fillText(isKo ? "2. 새 게임" : "2. NEW GAME", leftPadding + 4, menuStartY + 38);
-      ctx.fillText(isKo ? "3. 멀티플레이" : "3. MULTIPLAY", leftPadding + 4, menuStartY + 76);
-      ctx.fillText(isKo ? "4. 인벤토리" : "4. INVENTORY", leftPadding + 4, menuStartY + 114);
+      ctx.fillText(isKo ? "1. 불러오기" : "1. LOAD GAME", leftPadding + 6, menuStartY);
+      ctx.fillText(isKo ? "2. 새 게임" : "2. NEW GAME", leftPadding + 6, menuStartY + 38);
+      ctx.fillText(isKo ? "3. 멀티플레이" : "3. MULTIPLAY", leftPadding + 6, menuStartY + 76);
+      ctx.fillText(isKo ? "4. 인벤토리" : "4. INVENTORY", leftPadding + 6, menuStartY + 114);
     } else {
-      ctx.fillText(isKo ? "1. 새 게임" : "1. NEW GAME", leftPadding + 4, menuStartY);
-      ctx.fillText(isKo ? "2. 멀티플레이" : "2. MULTIPLAY", leftPadding + 4, menuStartY + 38);
-      ctx.fillText(isKo ? "3. 인벤토리" : "3. INVENTORY", leftPadding + 4, menuStartY + 76);
+      ctx.fillText(isKo ? "1. 새 게임" : "1. NEW GAME", leftPadding + 6, menuStartY);
+      ctx.fillText(isKo ? "2. 멀티플레이" : "2. MULTIPLAY", leftPadding + 6, menuStartY + 38);
+      ctx.fillText(isKo ? "3. 인벤토리" : "3. INVENTORY", leftPadding + 6, menuStartY + 76);
     }
   }
 
