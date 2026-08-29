@@ -56,20 +56,21 @@ export const command: Command = {
       }
 
       const userId = interaction.user.id;
-      const hasActiveRun = saveService.hasActiveRun(userId);
+      const hasSavedSlots = saveService.hasAnySavedSlot(userId);
       const userProfile = saveService.getProfile(userId);
+      const activeRun = userProfile.activeSlotId ? userProfile.slots[userProfile.activeSlotId] : null;
 
       const imageBuffer = await renderTitleScreen({
         username: interaction.user.username,
         avatarUrl: interaction.user.displayAvatarURL({ extension: "png", size: 64 }),
-        hasActiveRun,
-        party: userProfile.activeRun?.party,
+        hasSavedSlots,
+        party: activeRun?.party,
       });
       const attachment = new AttachmentBuilder(imageBuffer, { name: "title.png" });
 
       const actionRow = new ActionRowBuilder<ButtonBuilder>();
 
-      if (hasActiveRun) {
+      if (hasSavedSlots) {
         actionRow.addComponents(
           new ButtonBuilder()
             .setCustomId(`menu_continue_${userId}`)
@@ -79,6 +80,10 @@ export const command: Command = {
             .setCustomId(`menu_newgame_${userId}`)
             .setLabel("New Game")
             .setStyle(ButtonStyle.Success),
+          new ButtonBuilder()
+            .setCustomId(`menu_loadgame_${userId}`)
+            .setLabel("Load Game")
+            .setStyle(ButtonStyle.Secondary),
           new ButtonBuilder()
             .setCustomId(`menu_inventory_${userId}`)
             .setLabel("💼")
