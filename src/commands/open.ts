@@ -10,7 +10,7 @@
   NewsChannel
 } from "discord.js";
 import { Command } from "../types/index.js";
-import { createBaseEmbed, COLORS } from "../utils/embed.js";
+import { COLORS, POKEROGUE_VERSION } from "../utils/embed.js";
 import { renderTitleScreen } from "../utils/canvasRenderer.js";
 import { saveService } from "../services/saveService.js";
 
@@ -61,22 +61,17 @@ export const command: Command = {
       const hasSavedSlots = saveService.hasAnySavedSlot(userId);
       const userProfile = saveService.getProfile(userId);
 
-      // Generate Retro Canvas Image with contextual menu on left & ENTRY on right
+      // Generate Retro Canvas Image
       const imageBuffer = await renderTitleScreen({
         hasSavedSlots,
         unlockedCount: userProfile.unlockedStartersCount,
       });
       const attachment = new AttachmentBuilder(imageBuffer, { name: "title.png" });
 
-      const titleEmbed = createBaseEmbed()
-        .setColor(COLORS.POKEROGUE_RED)
-        .setImage("attachment://title.png");
-
-      // Dynamic Action Row Buttons based on save existence
+      // Dynamic Action Row Buttons
       const actionRow = new ActionRowBuilder<ButtonBuilder>();
 
       if (hasSavedSlots) {
-        // Saved Games Exist -> 1. Continue, 2. New Game, 3. Load Game
         actionRow.addComponents(
           new ButtonBuilder()
             .setCustomId(`menu_continue_${userId}`)
@@ -92,7 +87,6 @@ export const command: Command = {
             .setStyle(ButtonStyle.Secondary)
         );
       } else {
-        // No Saved Games -> ONLY New Game!
         actionRow.addComponents(
           new ButtonBuilder()
             .setCustomId(`menu_newgame_${userId}`)
@@ -101,13 +95,13 @@ export const command: Command = {
         );
       }
 
+      // Send PURE IMAGE + BUTTONS into the thread (NO EMBED WRAPPER)
       await thread.send({
-        embeds: [titleEmbed],
         files: [attachment],
         components: [actionRow],
       });
 
-      // Clean Confirmation Embed
+      // Confirmation Embed with version info
       const sessionNoticeEmbed = new EmbedBuilder()
         .setColor(COLORS.POKEROGUE_BLUE)
         .setTitle("PokeRogue Session Created")
@@ -119,7 +113,10 @@ export const command: Command = {
           "**Legal Disclaimer**\n" +
           "• Pokémon © Nintendo / Creatures Inc. / GAME FREAK inc.\n" +
           "• Non-profit fan-made project with no commercial intent."
-        );
+        )
+        .setFooter({
+          text: `PokéRogue version : ${POKEROGUE_VERSION}`,
+        });
 
       await interaction.editReply({
         content: "",

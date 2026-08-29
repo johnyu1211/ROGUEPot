@@ -5,10 +5,12 @@
   ButtonBuilder,
   ButtonStyle,
   StringSelectMenuBuilder,
-  StringSelectMenuOptionBuilder
+  StringSelectMenuOptionBuilder,
+  AttachmentBuilder
 } from "discord.js";
 import { BotEvent, ExtendedClient } from "../types/index.js";
 import { createBaseEmbed, COLORS } from "../utils/embed.js";
+import { renderTitleScreen } from "../utils/canvasRenderer.js";
 import { saveService } from "../services/saveService.js";
 
 function createStarterSelectMenu(slotId: number, userId: string) {
@@ -45,7 +47,53 @@ function createStarterSelectMenu(slotId: number, userId: string) {
       )
   );
 
-  return { embeds: [starterEmbed], components: [starterSelectMenu] };
+  const backRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`menu_loadgame_${userId}`)
+      .setLabel("◀️ Back to Slots")
+      .setStyle(ButtonStyle.Secondary)
+  );
+
+  return { embeds: [starterEmbed], components: [starterSelectMenu, backRow] };
+}
+
+async function renderTitleMessageData(userId: string) {
+  const hasSavedSlots = saveService.hasAnySavedSlot(userId);
+  const userProfile = saveService.getProfile(userId);
+
+  const imageBuffer = await renderTitleScreen({
+    hasSavedSlots,
+    unlockedCount: userProfile.unlockedStartersCount,
+  });
+  const attachment = new AttachmentBuilder(imageBuffer, { name: "title.png" });
+
+  const actionRow = new ActionRowBuilder<ButtonBuilder>();
+
+  if (hasSavedSlots) {
+    actionRow.addComponents(
+      new ButtonBuilder()
+        .setCustomId(`menu_continue_${userId}`)
+        .setLabel("Continue")
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
+        .setCustomId(`menu_newgame_${userId}`)
+        .setLabel("New Game")
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setCustomId(`menu_loadgame_${userId}`)
+        .setLabel("Load Game")
+        .setStyle(ButtonStyle.Secondary)
+    );
+  } else {
+    actionRow.addComponents(
+      new ButtonBuilder()
+        .setCustomId(`menu_newgame_${userId}`)
+        .setLabel("New Game")
+        .setStyle(ButtonStyle.Success)
+    );
+  }
+
+  return { embeds: [], files: [attachment], components: [actionRow] };
 }
 
 export const interactionCreateEvent: BotEvent = {
@@ -93,11 +141,18 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
+      // 2-0. Back to Title Menu (Pure Image + Buttons)
+      if (customId.startsWith("menu_back_to_title_")) {
+        const titleData = await renderTitleMessageData(interaction.user.id);
+        await interaction.update(titleData);
+        return;
+      }
+
       // 2-1. New Game Button Clicked -> Use first available slot
       if (customId.startsWith("menu_newgame_")) {
         const targetSlot = saveService.getFirstAvailableSlot(interaction.user.id);
         const responseData = createStarterSelectMenu(targetSlot, interaction.user.id);
-        await interaction.reply(responseData);
+        await interaction.update(responseData);
         return;
       }
 
@@ -123,13 +178,25 @@ export const interactionCreateEvent: BotEvent = {
           "Ready for the next battle wave!"
         ).setColor(COLORS.SUCCESS);
 
-        await interaction.reply({
+        const resumeRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`wave_battle_${profile.activeSlotId}_${activeRun.wave}_${interaction.user.id}`)
+            .setLabel(`Enter Wave ${activeRun.wave} ⚔️`)
+            .setStyle(ButtonStyle.Success),
+          new ButtonBuilder()
+            .setCustomId(`menu_back_to_title_${interaction.user.id}`)
+            .setLabel("◀️ Back to Title")
+            .setStyle(ButtonStyle.Secondary)
+        );
+
+        await interaction.update({
           embeds: [continueEmbed],
+          components: [resumeRow],
         });
         return;
       }
 
-      // 2-3. Load Game Button Clicked -> List 3 Slots
+      // 2-3. Load Game Button Clicked -> List 3 Slots + Back Button!
       if (customId.startsWith("menu_loadgame_")) {
         const profile = saveService.getProfile(interaction.user.id);
 
@@ -144,19 +211,23 @@ export const interactionCreateEvent: BotEvent = {
         const slotButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
           new ButtonBuilder()
             .setCustomId(`slot_select_1_${interaction.user.id}`)
-            .setLabel("Slot 1")
+            .setLabel("Slot 1 🎮")
             .setStyle(profile.slots[1] ? ButtonStyle.Primary : ButtonStyle.Secondary),
           new ButtonBuilder()
             .setCustomId(`slot_select_2_${interaction.user.id}`)
-            .setLabel("Slot 2")
+            .setLabel("Slot 2 🎮")
             .setStyle(profile.slots[2] ? ButtonStyle.Primary : ButtonStyle.Secondary),
           new ButtonBuilder()
             .setCustomId(`slot_select_3_${interaction.user.id}`)
-            .setLabel("Slot 3")
-            .setStyle(profile.slots[3] ? ButtonStyle.Primary : ButtonStyle.Secondary)
+            .setLabel("Slot 3 🎮")
+            .setStyle(profile.slots[3] ? ButtonStyle.Primary : ButtonStyle.Secondary),
+          new ButtonBuilder()
+            .setCustomId(`menu_back_to_title_${interaction.user.id}`)
+            .setLabel("◀️ Back")
+            .setStyle(ButtonStyle.Danger)
         );
 
-        await interaction.reply({
+        await interaction.update({
           embeds: [slotEmbed],
           components: [slotButtons],
         });
@@ -170,9 +241,9 @@ export const interactionCreateEvent: BotEvent = {
         const slotData = profile.slots[slotNum];
 
         if (!slotData) {
-          // EMPTY SLOT -> Apply exact same New Game starter selection logic!
+          // EMPTY SLOT -> Apply New Game starter selection logic!
           const responseData = createStarterSelectMenu(slotNum, interaction.user.id);
-          await interaction.reply(responseData);
+          await interaction.update(responseData);
         } else {
           // EXISTING SAVE DATA -> Options to resume or overwrite
           const existingSlotEmbed = createBaseEmbed(
@@ -187,15 +258,19 @@ export const interactionCreateEvent: BotEvent = {
           const slotActionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
             new ButtonBuilder()
               .setCustomId(`slot_resume_${slotNum}_${interaction.user.id}`)
-              .setLabel(`Resume Slot #${slotNum}`)
+              .setLabel(`Resume Slot #${slotNum} ▶️`)
               .setStyle(ButtonStyle.Success),
             new ButtonBuilder()
               .setCustomId(`slot_overwrite_${slotNum}_${interaction.user.id}`)
-              .setLabel(`Overwrite (New Game)`)
-              .setStyle(ButtonStyle.Danger)
+              .setLabel(`Overwrite (New Game) ⚠️`)
+              .setStyle(ButtonStyle.Danger),
+            new ButtonBuilder()
+              .setCustomId(`menu_loadgame_${interaction.user.id}`)
+              .setLabel("◀️ Back")
+              .setStyle(ButtonStyle.Secondary)
           );
 
-          await interaction.reply({
+          await interaction.update({
             embeds: [existingSlotEmbed],
             components: [slotActionRow],
           });
@@ -206,17 +281,31 @@ export const interactionCreateEvent: BotEvent = {
       // 2-5. Resume Existing Slot
       if (customId.startsWith("slot_resume_")) {
         const slotNum = parseInt(parts[2], 10) || 1;
+        saveService.setActiveSlot(interaction.user.id, slotNum);
         const profile = saveService.getProfile(interaction.user.id);
-        profile.activeSlotId = slotNum;
         const activeRun = profile.slots[slotNum]!;
 
         const resumedEmbed = createBaseEmbed(
           `Resumed Slot #${slotNum}`,
-          `Resumed your run on Wave ${activeRun.wave} (${activeRun.biome})!`
+          `Resumed your run on Wave ${activeRun.wave} (${activeRun.biome})!\n\n` +
+          `• **Leader**: ${activeRun.party[0]?.name || activeRun.starter}\n` +
+          `• **Money**: ₩${activeRun.money}`
         ).setColor(COLORS.SUCCESS);
 
-        await interaction.reply({
+        const resumeActionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`wave_battle_${slotNum}_${activeRun.wave}_${interaction.user.id}`)
+            .setLabel(`Enter Wave ${activeRun.wave} ⚔️`)
+            .setStyle(ButtonStyle.Success),
+          new ButtonBuilder()
+            .setCustomId(`menu_back_to_title_${interaction.user.id}`)
+            .setLabel("◀️ Back to Title")
+            .setStyle(ButtonStyle.Secondary)
+        );
+
+        await interaction.update({
           embeds: [resumedEmbed],
+          components: [resumeActionRow],
         });
         return;
       }
@@ -225,7 +314,7 @@ export const interactionCreateEvent: BotEvent = {
       if (customId.startsWith("slot_overwrite_")) {
         const slotNum = parseInt(parts[2], 10) || 1;
         const responseData = createStarterSelectMenu(slotNum, interaction.user.id);
-        await interaction.reply(responseData);
+        await interaction.update(responseData);
         return;
       }
     }
@@ -256,7 +345,11 @@ export const interactionCreateEvent: BotEvent = {
           new ButtonBuilder()
             .setCustomId(`wave_battle_${slotNum}_1_${interaction.user.id}`)
             .setLabel("Enter Wave 1 Battle ⚔️")
-            .setStyle(ButtonStyle.Success)
+            .setStyle(ButtonStyle.Success),
+          new ButtonBuilder()
+            .setCustomId(`menu_back_to_title_${interaction.user.id}`)
+            .setLabel("◀️ Title Menu")
+            .setStyle(ButtonStyle.Secondary)
         );
 
         await interaction.update({
