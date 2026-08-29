@@ -915,7 +915,7 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
 
     // 5-2. BASE STATS 2-COLUMN X 3-ROW GRID (HP/SPE, ATK/SPA, DEF/SPD)
     const statsCardY = 164;
-    const statsCardH = 106;
+    const statsCardH = 120;
 
     ctx.fillStyle = "#181429";
     ctx.beginPath();
@@ -937,34 +937,36 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
       { label: isKo ? "특방" : "SPD", val: selected.spDefense, color: "#F85888", col: 1, row: 2 },
     ];
 
-    const barW = 62;
+    const barW = 60;
+    const barH = 12;
     for (const st of statsGrid) {
-      const colX = st.col === 0 ? rightX + 10 : rightX + 144;
-      const rowY = statsCardY + 12 + st.row * 30;
+      const colX = st.col === 0 ? rightX + 12 : rightX + 144;
+      const rowY = statsCardY + 12 + st.row * 34;
 
-      // Label (HP, ATK, DEF, SPE, SPA, SPD)
-      ctx.font = "bold 12px DungGeunMo";
-      ctx.fillStyle = "#A39EBD";
+      // Label (HP, ATK, DEF, SPE, SPA, SPD) - Enlarged to 14px Bold
+      ctx.font = "bold 14px DungGeunMo";
+      ctx.fillStyle = "#CBD5E1";
       ctx.textAlign = "left";
-      ctx.fillText(st.label, colX, rowY + 12);
+      ctx.fillText(st.label, colX, rowY + 14);
 
-      // Value
+      // Value - Enlarged to 15px Bold
+      ctx.font = "bold 15px DungGeunMo";
       ctx.textAlign = "right";
       ctx.fillStyle = st.color;
-      ctx.fillText(String(st.val), colX + 46, rowY + 12);
+      ctx.fillText(String(st.val), colX + 54, rowY + 14);
 
       // Bar Background
-      const gaugeX = colX + 52;
+      const gaugeX = colX + 60;
       ctx.fillStyle = "#120F20";
       ctx.beginPath();
-      ctx.roundRect(gaugeX, rowY + 3, barW, 10, 3);
+      ctx.roundRect(gaugeX, rowY + 2, barW, barH, 3);
       ctx.fill();
 
       // Bar Fill
       const fillW = Math.min(barW, Math.max(3, (st.val / 180) * barW));
       ctx.fillStyle = st.color;
       ctx.beginPath();
-      ctx.roundRect(gaugeX, rowY + 3, fillW, 10, 3);
+      ctx.roundRect(gaugeX, rowY + 2, fillW, barH, 3);
       ctx.fill();
     }
 
