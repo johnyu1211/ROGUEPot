@@ -1,4 +1,4 @@
-﻿import { createCanvas, loadImage, GlobalFonts, Image } from "@napi-rs/canvas";
+import { createCanvas, loadImage, GlobalFonts, Image } from "@napi-rs/canvas";
 import path from "path";
 import fs from "fs";
 
@@ -323,16 +323,16 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
 
   // Header Bar
   ctx.fillStyle = isComplete ? "#1F3D2B" : "#3D2B1F";
-  ctx.fillRect(leftX + 2, leftY + 2, leftW - 4, 32);
-  ctx.font = "bold 15px DungGeunMo";
+  ctx.fillRect(leftX + 2, leftY + 2, leftW - 4, 34);
+  ctx.font = "bold 17px DungGeunMo";
   ctx.fillStyle = isComplete ? "#57F287" : "#F4A261";
   ctx.textAlign = "center";
   ctx.fillText(
     isComplete
-      ? (isKo ? "✔ 배틀 엔트리 준비됨" : "✔ BATTLE ENTRY READY")
+      ? (isKo ? "✔ 배틀 엔트리 완성됨" : "✔ BATTLE ENTRY READY")
       : (isKo ? "⚠️ 포켓몬 엔트리를 완성해주세요" : "⚠️ COMPLETE YOUR ENTRY"),
     leftX + leftW / 2,
-    leftY + 23
+    leftY + 24
   );
 
   // Guide Body Box
@@ -344,42 +344,47 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
   ctx.lineWidth = 1;
   ctx.stroke();
 
-  ctx.font = "bold 14px DungGeunMo";
+  ctx.font = "bold 17px DungGeunMo";
   ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "left";
-  ctx.fillText(isKo ? "📝 전국도감 포켓몬 등록" : "📝 National Dex Registration", leftX + 20, leftY + 70);
+  ctx.fillText(isKo ? "📝 전국도감 포켓몬 등록" : "📝 National Dex Registration", leftX + 18, leftY + 70);
 
-  ctx.font = "12px DungGeunMo";
-  ctx.fillStyle = "#8F96CC";
+  ctx.font = "15px DungGeunMo";
+  ctx.fillStyle = "#CBD5E1";
   if (isKo) {
-    ctx.fillText("• 전국도감 번호(1~1025)로", leftX + 20, leftY + 98);
-    ctx.fillText("  원하는 포켓몬을 자유롭게 등록!", leftX + 20, leftY + 118);
-    ctx.fillText("• 예: 6(리자몽), 25(피카츄),", leftX + 20, leftY + 142);
-    ctx.fillText("  491(다크라이), 150(뮤츠) 등", leftX + 20, leftY + 162);
-    ctx.fillText(`• 등록 현황: ${registeredCount} / 6 마리`, leftX + 20, leftY + 192);
+    ctx.fillText("• 전국도감 번호(1~1025)로", leftX + 18, leftY + 98);
+    ctx.fillText("  원하는 포켓몬을 자유 등록!", leftX + 18, leftY + 120);
+    ctx.fillText("• 예: 6(리자몽), 25(피카츄),", leftX + 18, leftY + 144);
+    ctx.fillText("  491(다크라이), 150(뮤츠) 등", leftX + 18, leftY + 166);
+    ctx.font = "bold 15px DungGeunMo";
+    ctx.fillStyle = "#57F287";
+    ctx.fillText(`• 등록 현황: ${registeredCount} / 6 마리`, leftX + 18, leftY + 196);
   } else {
-    ctx.fillText("• Register any Pokémon using its", leftX + 20, leftY + 98);
-    ctx.fillText("  National Pokédex # (1 ~ 1025)!", leftX + 20, leftY + 118);
-    ctx.fillText("• e.g. #6 (Charizard), #25 (Pikachu)", leftX + 20, leftY + 142);
-    ctx.fillText("  #491 (Darkrai), #150 (Mewtwo)", leftX + 20, leftY + 162);
-    ctx.fillText(`• Team Roster: ${registeredCount} / 6 Ready`, leftX + 20, leftY + 192);
+    ctx.fillText("• Register any Pokémon using its", leftX + 18, leftY + 98);
+    ctx.fillText("  National Pokédex # (1 ~ 1025)!", leftX + 18, leftY + 120);
+    ctx.fillText("• e.g. #6 (Charizard), #25 (Pikachu)", leftX + 18, leftY + 144);
+    ctx.fillText("  #491 (Darkrai), #150 (Mewtwo)", leftX + 18, leftY + 166);
+    ctx.font = "bold 15px DungGeunMo";
+    ctx.fillStyle = "#57F287";
+    ctx.fillText(`• Team Roster: ${registeredCount} / 6 Ready`, leftX + 18, leftY + 196);
   }
 
   // Quick Action Hint Box
   ctx.fillStyle = "#1F234D";
   ctx.beginPath();
-  ctx.roundRect(leftX + 10, leftY + 222, leftW - 20, 70, 8);
+  ctx.roundRect(leftX + 10, leftY + 220, leftW - 20, 74, 8);
   ctx.fill();
   ctx.strokeStyle = "#5865F2";
-  ctx.lineWidth = 1;
+  ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  ctx.font = "bold 13px DungGeunMo";
-  ctx.fillStyle = "#5865F2";
+  ctx.font = "bold 15px DungGeunMo";
+  ctx.fillStyle = "#F4A261";
   ctx.textAlign = "center";
-  ctx.fillText(isKo ? "👇 아래 [포켓몬 등록] 버튼을 눌러" : "👇 Click [Register Pokémon] below", leftX + leftW / 2, leftY + 248);
+  ctx.fillText(isKo ? "👇 아래 [포켓몬 등록] 클릭" : "👇 Click [Register Pokémon] below", leftX + leftW / 2, leftY + 248);
+  ctx.font = "bold 14px DungGeunMo";
   ctx.fillStyle = "#FFFFFF";
-  ctx.fillText(isKo ? "도감번호와 레벨을 입력하세요!" : "to enter Dex No. and Level!", leftX + leftW / 2, leftY + 272);
+  ctx.fillText(isKo ? "도감번호와 레벨을 입력하세요!" : "to enter Dex No. and Level!", leftX + leftW / 2, leftY + 274);
 
   // 5. RIGHT SIDE PANEL: Multiplayer Team (with slot numbers 1~6 and Blurple border)
   await drawPartyRightPanel(ctx, 295, 18, 244, 344, {
