@@ -1,7 +1,7 @@
 import { createCanvas, loadImage, GlobalFonts, Image } from "@napi-rs/canvas";
 import path from "path";
 import fs from "fs";
-import { DexPokemonInfo } from "../services/pokeApiService.js";
+import { DexPokemonInfo, getAbilityDetail } from "../services/pokeApiService.js";
 
 // Register custom pixel dot font
 const fontPath = path.resolve(process.cwd(), "assets/fonts/DungGeunMo.ttf");
@@ -629,6 +629,7 @@ export interface PokedexScreenOptions {
   pageList?: DexPokemonInfo[];
   currentPage?: number;
   totalPages?: number;
+  activeAbility?: string;
   lang?: "en" | "ko";
 }
 
@@ -984,7 +985,75 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
       ctx.fill();
     }
 
-    // 5-3. BOTTOM AREA (y = 278 ~ 372): Reserved / Empty Space for future features
+    // 5-3. BOTTOM AREA (y = 290 ~ 372): Ability Dialog / Text Box
+    const botCardY = 290;
+    const botCardH = 82;
+
+    ctx.fillStyle = "#141024";
+    ctx.beginPath();
+    ctx.roundRect(rightX, botCardY, rightW, botCardH, 6);
+    ctx.fill();
+    ctx.strokeStyle = "#3E2F5B";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Determine target ability to showcase
+    const defaultAbility = (selected.regularAbilities && selected.regularAbilities[0]) || selected.primaryAbility || selected.hiddenAbility || "None";
+    const targetAbility = options?.activeAbility || defaultAbility;
+    const isHa = selected.hiddenAbility && targetAbility.toLowerCase() === selected.hiddenAbility.toLowerCase();
+
+    const abDetail = await getAbilityDetail(targetAbility);
+    const abName = isKo ? abDetail.nameKo : abDetail.name;
+    const abDesc = isKo ? abDetail.descriptionKo : abDetail.descriptionEn;
+    const typeTag = isHa ? (isKo ? "🌟 [숨특]" : "🌟 [HA]") : (isKo ? "⚡ [특성]" : "⚡ [Ability]");
+
+    // Title inside text box
+    ctx.font = "bold 13px DungGeunMo";
+    ctx.fillStyle = isHa ? "#F4A261" : "#70D6FF";
+    ctx.textAlign = "left";
+    ctx.fillText(`${typeTag} ${abName}`, rightX + 10, botCardY + 18);
+
+    ctx.font = "11px DungGeunMo";
+    ctx.fillStyle = "#8E88AB";
+    ctx.textAlign = "right";
+    ctx.fillText(abDetail.name, rightX + rightW - 10, botCardY + 18);
+
+    // Inner subtle divider line
+    ctx.strokeStyle = "#251D3B";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(rightX + 8, botCardY + 24);
+    ctx.lineTo(rightX + rightW - 8, botCardY + 24);
+    ctx.stroke();
+
+    // Effect Description Text (Wrapped nicely into 2~3 lines)
+    ctx.font = "12px DungGeunMo";
+    ctx.fillStyle = "#E2E8F0";
+    ctx.textAlign = "left";
+
+    const maxTextW = rightW - 20;
+    const words = abDesc.split(" ");
+    let line = "";
+    let lineY = botCardY + 42;
+    const lineHeight = 16;
+    let linesDrawn = 0;
+
+    for (let n = 0; n < words.length; n++) {
+      const testLine = line + (line ? " " : "") + words[n];
+      const metrics = ctx.measureText(testLine);
+      if (metrics.width > maxTextW && n > 0) {
+        ctx.fillText(line, rightX + 10, lineY);
+        line = words[n];
+        lineY += lineHeight;
+        linesDrawn++;
+        if (linesDrawn >= 2) break;
+      } else {
+        line = testLine;
+      }
+    }
+    if (line && linesDrawn < 2) {
+      ctx.fillText(line, rightX + 10, lineY);
+    }
   }
 
   // 6. Outer Border Frame (Top Z-Index: Signature Pokédex Red)

@@ -349,7 +349,8 @@ async function renderPokedexMessageData(
   userId: string,
   selectedDexNo: number = 1,
   page: number = 1,
-  fromScreen: "multiplay" | "inventory" | "title" = "title"
+  fromScreen: "multiplay" | "inventory" | "title" = "title",
+  activeAbility?: string
 ) {
   const profile = saveService.getProfile(userId);
   const isKo = profile.language === "ko";
@@ -361,18 +362,24 @@ async function renderPokedexMessageData(
     selectedPokemon = (await getPokemonByDexNumber(selectedDexNo)) || items[0] || null;
   }
 
+  const defaultAbility = selectedPokemon
+    ? ((selectedPokemon.regularAbilities && selectedPokemon.regularAbilities[0]) || selectedPokemon.primaryAbility || selectedPokemon.hiddenAbility || "None")
+    : "None";
+  const currentAbility = activeAbility || defaultAbility;
+
   const imageBuffer = await renderPokedexScreen({
     selectedPokemon,
     pageList: items,
     currentPage: page,
     totalPages,
+    activeAbility: currentAbility,
     lang: profile.language,
   });
   const attachment = new AttachmentBuilder(imageBuffer, { name: "pokedex.png" });
 
   const components: ActionRowBuilder<ButtonBuilder>[] = [];
 
-  // ROW 1: Blue Ability Buttons (특성 정보 일렬 표시 - Blue Primary Style)
+  // ROW 1: Ability Buttons (선택된 특성은 Primary 파란색, 다른 특성은 Secondary 회색)
   const abilityButtons: ButtonBuilder[] = [];
   if (selectedPokemon) {
     const regularEn = selectedPokemon.regularAbilities || (selectedPokemon.primaryAbility ? [selectedPokemon.primaryAbility] : []);
@@ -380,11 +387,12 @@ async function renderPokedexMessageData(
 
     regularEn.forEach((ab, idx) => {
       const abName = isKo ? (regularKo[idx] || getAbilityKoreanName(ab)) : ab;
+      const isSelectedAbility = currentAbility.toLowerCase() === ab.toLowerCase();
       abilityButtons.push(
         new ButtonBuilder()
-          .setCustomId(`pokedex_ability_reg_${encodeURIComponent(ab)}_${userId}`)
+          .setCustomId(`pokedex_ability_reg_${encodeURIComponent(ab)}_${selectedPokemon.dexNumber}_${page}_${fromScreen}_${userId}`)
           .setLabel(isKo ? `특성: ${abName}` : `Ability: ${abName}`)
-          .setStyle(ButtonStyle.Primary)
+          .setStyle(isSelectedAbility ? ButtonStyle.Primary : ButtonStyle.Secondary)
       );
     });
 
@@ -392,11 +400,12 @@ async function renderPokedexMessageData(
       const haName = isKo
         ? (selectedPokemon.hiddenAbilityKo || getAbilityKoreanName(selectedPokemon.hiddenAbility))
         : selectedPokemon.hiddenAbility;
+      const isSelectedHa = currentAbility.toLowerCase() === selectedPokemon.hiddenAbility.toLowerCase();
       abilityButtons.push(
         new ButtonBuilder()
-          .setCustomId(`pokedex_ability_ha_${encodeURIComponent(selectedPokemon.hiddenAbility)}_${userId}`)
+          .setCustomId(`pokedex_ability_ha_${encodeURIComponent(selectedPokemon.hiddenAbility)}_${selectedPokemon.dexNumber}_${page}_${fromScreen}_${userId}`)
           .setLabel(isKo ? `숨특: ${haName}` : `HA: ${haName}`)
-          .setStyle(ButtonStyle.Primary)
+          .setStyle(isSelectedHa ? ButtonStyle.Primary : ButtonStyle.Secondary)
       );
     }
   }
@@ -783,34 +792,20 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 3-0-6-B. Pokédex Ability Info Button Clicked (Show Detailed Ephemeral Pop-up Modal)
+      // 3-0-6-B. Pokédex Ability Info Button Clicked (Switch Active Ability Dialog on Canvas)
       if (customId.startsWith("pokedex_ability_")) {
-        const isHa = customId.startsWith("pokedex_ability_ha_");
-        const rawAbility = decodeURIComponent(parts[3] || "");
-        const profile = saveService.getProfile(interaction.user.id);
-        const isKo = profile.language === "ko";
+        await interaction.deferUpdate().catch(() => null);
+        try {
+          const rawAbility = decodeURIComponent(parts[3] || "");
+          const dexNo = parseInt(parts[4], 10) || 1;
+          const page = parseInt(parts[5], 10) || 1;
+          const fromScreen = (parts[6] || "title") as "multiplay" | "inventory" | "title";
 
-        const detail = await getAbilityDetail(rawAbility);
-        const abilityName = isKo ? detail.nameKo : detail.name;
-        const abilityDesc = isKo ? detail.descriptionKo : detail.descriptionEn;
-        const typeBadge = isHa
-          ? (isKo ? "🌟 **숨겨진 특성 (Hidden Ability)**" : "🌟 **Hidden Ability (HA)**")
-          : (isKo ? "⚡ **일반 특성 (Regular Ability)**" : "⚡ **Regular Ability**");
-
-        const abilityEmbed = createBaseEmbed(
-          isKo ? `✨ 특성 상세 정보: ${abilityName}` : `✨ Ability Details: ${abilityName}`,
-          `${typeBadge}\n\n` +
-          `• **공식 영문명**: \`${detail.name}\`\n\n` +
-          `**📖 특성 효과**:\n> ${abilityDesc}\n\n` +
-          (isKo
-            ? "💡 *포켓로그 배틀 중 해당 특성의 조건이 충족되면 효과가 자동 발동합니다.*"
-            : "💡 *This ability automatically activates during battle when conditions are met.*")
-        ).setColor(COLORS.POKEROGUE_BLUE);
-
-        await interaction.reply({
-          embeds: [abilityEmbed],
-          ephemeral: true,
-        });
+          const dexData = await renderPokedexMessageData(client, interaction.user.id, dexNo, page, fromScreen, rawAbility);
+          await interaction.editReply(dexData);
+        } catch (err) {
+          console.error("[POKEDEX] Error switching ability on canvas:", err);
+        }
         return;
       }
 
