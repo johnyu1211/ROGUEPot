@@ -4,14 +4,14 @@ export interface DexPokemonInfo {
   name: string;
   koreanName?: string;
   types: string[];
+  abilities?: string[];
+  primaryAbility?: string;
   hp: number;
   attack: number;
   defense: number;
   spAttack: number;
   spDefense: number;
   speed: number;
-  height?: number; // in dm
-  weight?: number; // in hg
 }
 
 const dexCache = new Map<number, DexPokemonInfo>();
@@ -111,6 +111,9 @@ export async function getPokemonByDexNumber(dexNo: number): Promise<DexPokemonIn
     const speciesId = data.name.toLowerCase();
     const formattedName = data.name.charAt(0).toUpperCase() + data.name.slice(1);
     const types = data.types.map((t: any) => t.type.name);
+    const abilities = data.abilities?.map((a: any) => a.ability.name) || [];
+    const rawPrimaryAbility = abilities[0] || "None";
+    const primaryAbility = rawPrimaryAbility.charAt(0).toUpperCase() + rawPrimaryAbility.slice(1).replace(/-/g, " ");
 
     const getStat = (name: string) => data.stats.find((s: any) => s.stat.name === name)?.base_stat || 50;
 
@@ -127,14 +130,14 @@ export async function getPokemonByDexNumber(dexNo: number): Promise<DexPokemonIn
       name: formattedName,
       koreanName: DEX_TO_KOREAN_DICT[dexNo],
       types,
+      abilities,
+      primaryAbility,
       hp,
       attack,
       defense,
       spAttack,
       spDefense,
       speed,
-      height: data.height,
-      weight: data.weight,
     };
 
     dexCache.set(dexNo, info);

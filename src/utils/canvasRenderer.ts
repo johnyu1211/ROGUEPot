@@ -781,37 +781,35 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
       ctx.drawImage(bigSprite, showBoxX + (showBoxSize - sprW) / 2, showBoxY + (showBoxSize - sprH) / 2, sprW, sprH);
     }
 
-    // Info Column (Types, Height, Weight) next to Sprite
+    // Info Column (Types, Ability, BST) next to Sprite
     const infoX = showBoxX + showBoxSize + 12;
     let typeBadgeX = infoX;
     for (const tName of selected.types) {
       const tColor = TYPE_COLORS[tName.toLowerCase()] || "#777777";
       ctx.fillStyle = tColor;
       ctx.beginPath();
-      ctx.roundRect(typeBadgeX, showBoxY + 4, 62, 22, 5);
+      ctx.roundRect(typeBadgeX, showBoxY + 2, 60, 22, 5);
       ctx.fill();
 
       ctx.font = "bold 12px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
-      ctx.fillText(tName.toUpperCase(), typeBadgeX + 31, showBoxY + 19);
-      typeBadgeX += 68;
+      ctx.fillText(tName.toUpperCase(), typeBadgeX + 30, showBoxY + 17);
+      typeBadgeX += 66;
     }
 
-    // Height & Weight info
+    // Ability Info
     ctx.font = "14px DungGeunMo";
     ctx.fillStyle = "#CBD5E1";
     ctx.textAlign = "left";
-    const heightM = ((selected.height || 10) / 10).toFixed(1);
-    const weightKg = ((selected.weight || 100) / 10).toFixed(1);
-    ctx.fillText(isKo ? `• 키: ${heightM} m` : `• Height: ${heightM} m`, infoX, showBoxY + 54);
-    ctx.fillText(isKo ? `• 몸무게: ${weightKg} kg` : `• Weight: ${weightKg} kg`, infoX, showBoxY + 78);
+    const abilityName = selected.primaryAbility || "None";
+    ctx.fillText(isKo ? `• 특성: ${abilityName}` : `• Ability: ${abilityName}`, infoX, showBoxY + 54);
 
-    // Total Base Stats sum
+    // Total Base Stats sum (BST) Highlighted
     const bst = selected.hp + selected.attack + selected.defense + selected.spAttack + selected.spDefense + selected.speed;
-    ctx.font = "bold 14px DungGeunMo";
+    ctx.font = "bold 15px DungGeunMo";
     ctx.fillStyle = "#57F287";
-    ctx.fillText(isKo ? `• 종족값 총합: ${bst}` : `• Base Stat Total: ${bst}`, infoX, showBoxY + 100);
+    ctx.fillText(isKo ? `• 종족값 총합: ${bst} (BST)` : `• Base Stat Total: ${bst}`, infoX, showBoxY + 84);
 
     // 6 Base Stats Gauges (HP, ATK, DEF, SPA, SPD, SPE)
     const statsStartY = 168;
