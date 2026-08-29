@@ -386,7 +386,7 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
   ctx.fillText(isKo ? "👇 아래 [포켓몬 등록] 클릭" : "👇 Click [Register Pokémon] below", leftX + leftW / 2, leftY + 248);
   ctx.font = "bold 14px DungGeunMo";
   ctx.fillStyle = "#FFFFFF";
-  ctx.fillText(isKo ? "도감번호와 레벨을 입력하세요!" : "to enter Dex No. and Level!", leftX + leftW / 2, leftY + 274);
+  ctx.fillText(isKo ? "포켓몬 이름/별명을 등록하세요!" : "to register your Pokémon!", leftX + leftW / 2, leftY + 274);
 
   // 5. RIGHT SIDE PANEL: Multiplayer Team (with slot numbers 1~6 and Blurple border)
   await drawPartyRightPanel(ctx, 295, 18, 244, 344, {
