@@ -171,21 +171,21 @@ async function drawPartyRightPanel(
 ) {
   const isKo = options?.lang === "ko";
 
-  // 1. VERTICAL SPLIT DIVIDER LINE (Separates Left Menu from Right Party Panel)
+  // 1. VERTICAL SPLIT DIVIDER LINE (100% Full Height from Top to Bottom)
   const splitX = boxX - 10;
   ctx.strokeStyle = options?.borderColor || "#383152";
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(splitX, 10);
-  ctx.lineTo(splitX, 370);
+  ctx.moveTo(splitX, 0);
+  ctx.lineTo(splitX, 380);
   ctx.stroke();
 
-  // Subtle inner accent line for depth
+  // Subtle inner accent line for depth (100% Full Height)
   ctx.strokeStyle = "#1F1B36";
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(splitX + 2, 12);
-  ctx.lineTo(splitX + 2, 368);
+  ctx.moveTo(splitX + 2, 0);
+  ctx.lineTo(splitX + 2, 380);
   ctx.stroke();
 
   // 2. USER HEADER (Avatar Circle + Username)
