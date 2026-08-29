@@ -390,7 +390,7 @@ async function renderPokedexMessageData(
         new ButtonBuilder()
           .setCustomId(`pokedex_ability_reg_${nextAbilityParam}_${selectedPokemon.dexNumber}_${page}_${fromScreen}_${userId}`)
           .setLabel(isKo ? `특성: ${abName}` : `Ability: ${abName}`)
-          .setStyle(isSelectedAbility ? ButtonStyle.Primary : ButtonStyle.Secondary)
+          .setStyle(isSelectedAbility ? ButtonStyle.Danger : ButtonStyle.Primary)
       );
     });
 
@@ -404,7 +404,7 @@ async function renderPokedexMessageData(
         new ButtonBuilder()
           .setCustomId(`pokedex_ability_ha_${nextHaParam}_${selectedPokemon.dexNumber}_${page}_${fromScreen}_${userId}`)
           .setLabel(isKo ? `숨특: ${haName}` : `HA: ${haName}`)
-          .setStyle(isSelectedHa ? ButtonStyle.Primary : ButtonStyle.Secondary)
+          .setStyle(isSelectedHa ? ButtonStyle.Danger : ButtonStyle.Primary)
       );
     }
   }
