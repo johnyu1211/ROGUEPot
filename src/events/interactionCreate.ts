@@ -278,21 +278,21 @@ async function renderTitleMessageData(client: ExtendedClient, userId: string) {
   });
   const attachment = new AttachmentBuilder(imageBuffer, { name: "title.png" });
 
-  // ROW 1: Main Game Actions
+  // ROW 1: Main Game Actions (1. Load Game / 2. New Game / 3. Multiplay)
   const mainActionRow = new ActionRowBuilder<ButtonBuilder>();
   if (hasSavedSlots) {
     mainActionRow.addComponents(
       new ButtonBuilder()
-        .setCustomId(`menu_continue_${userId}`)
-        .setLabel(isKo ? "이어하기" : "Continue")
+        .setCustomId(`menu_loadgame_${userId}`)
+        .setLabel(isKo ? "불러오기" : "Load Game")
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setCustomId(`menu_newgame_${userId}`)
         .setLabel(isKo ? "새 게임" : "New Game")
         .setStyle(ButtonStyle.Success),
       new ButtonBuilder()
-        .setCustomId(`menu_loadgame_${userId}`)
-        .setLabel(isKo ? "불러오기" : "Load Game")
+        .setCustomId(`menu_multiplay_${userId}`)
+        .setLabel(isKo ? "멀티플레이" : "Multiplay")
         .setStyle(ButtonStyle.Secondary)
     );
   } else {
@@ -300,7 +300,11 @@ async function renderTitleMessageData(client: ExtendedClient, userId: string) {
       new ButtonBuilder()
         .setCustomId(`menu_newgame_${userId}`)
         .setLabel(isKo ? "새 게임" : "New Game")
-        .setStyle(ButtonStyle.Success)
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
+        .setCustomId(`menu_multiplay_${userId}`)
+        .setLabel(isKo ? "멀티플레이" : "Multiplay")
+        .setStyle(ButtonStyle.Secondary)
     );
   }
 
@@ -397,7 +401,30 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 2-0-4. Bag Tab Switching
+      // 2-0-4. Multiplay Button Clicked (Preparation Notice)
+      if (customId.startsWith("menu_multiplay_")) {
+        const profile = saveService.getProfile(interaction.user.id);
+        const isKo = profile.language === "ko";
+
+        const multiEmbed = createBaseEmbed(
+          isKo ? "🌐 멀티플레이 모드 (개발 중)" : "🌐 Multiplayer Mode (Coming Soon)",
+          isKo
+            ? "동료 트레이너들과 함께 보스 레이드를 펼치고 배틀을 진행하는 **멀티플레이어 협동/대전 모드**가 곧 공개됩니다!\n\n" +
+              "• **예정 기능**: 협동 레이드 배틀, 트레이너 대전, 포켓몬 교환소\n" +
+              "• 현재는 **싱글 플레이 모험**을 즐겨주세요!"
+            : "Co-op Raid Battles and PvP Trainer Duels are currently under active development!\n\n" +
+              "• **Upcoming Features**: Co-op Boss Raids, PvP Arena, Trading Post\n" +
+              "• Please enjoy the classic single-player mode for now!"
+        ).setColor(COLORS.POKEROGUE_BLUE);
+
+        await interaction.reply({
+          embeds: [multiEmbed],
+          ephemeral: true,
+        });
+        return;
+      }
+
+      // 2-0-5. Bag Tab Switching
       if (customId.startsWith("bag_tab_")) {
         const tabType = parts[2] as "pokemon" | "pokedex" | "records";
         const bagData = await renderBagMessageData(client, interaction.user.id, tabType);
@@ -405,7 +432,7 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 2-0-5. Bag Specific Pokemon Slot Inspected (Slot 1~6)
+      // 2-0-6. Bag Specific Pokemon Slot Inspected (Slot 1~6)
       if (customId.startsWith("bag_slot_")) {
         const slotIdx = parseInt(parts[2], 10) - 1;
         const profile = saveService.getProfile(interaction.user.id);
@@ -451,55 +478,7 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 2-2. Continue Button Clicked
-      if (customId.startsWith("menu_continue_")) {
-        const profile = saveService.getProfile(interaction.user.id);
-        const activeRun = profile.activeSlotId ? profile.slots[profile.activeSlotId] : null;
-
-        if (!activeRun) {
-          await interaction.reply({
-            content: "No active save data found to continue. Please select 'New Game'.",
-            ephemeral: true,
-          });
-          return;
-        }
-
-        const isKo = profile.language === "ko";
-
-        const continueEmbed = createBaseEmbed(
-          isKo ? `이어서 하기 - 슬롯 #${profile.activeSlotId}` : `Resumed Run - Slot #${profile.activeSlotId}`,
-          isKo
-            ? `• **바이옴**: ${activeRun.biome}\n` +
-              `• **현재 웨이브**: Wave ${activeRun.wave}\n` +
-              `• **선두 포켓몬**: ${activeRun.party[0]?.name || activeRun.starter}\n` +
-              `• **소지금**: ₩${activeRun.money}\n\n` +
-              "다음 전투 웨이브로 진입할 준비가 되었습니다!"
-            : `• **Biome**: ${activeRun.biome}\n` +
-              `• **Current Wave**: Wave ${activeRun.wave}\n` +
-              `• **Starter / Lead**: ${activeRun.party[0]?.name || activeRun.starter}\n` +
-              `• **Money**: ₩${activeRun.money}\n\n` +
-              "Ready for the next battle wave!"
-        ).setColor(COLORS.SUCCESS);
-
-        const resumeRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-          new ButtonBuilder()
-            .setCustomId(`wave_battle_${profile.activeSlotId}_${activeRun.wave}_${interaction.user.id}`)
-            .setLabel(isKo ? `Wave ${activeRun.wave} 진입 ⚔️` : `Enter Wave ${activeRun.wave} ⚔️`)
-            .setStyle(ButtonStyle.Success),
-          new ButtonBuilder()
-            .setCustomId(`menu_back_to_title_${interaction.user.id}`)
-            .setLabel(isKo ? "◀️ 메인 메뉴로" : "◀️ Back to Title")
-            .setStyle(ButtonStyle.Danger)
-        );
-
-        await interaction.update({
-          embeds: [continueEmbed],
-          components: [resumeRow],
-        });
-        return;
-      }
-
-      // 2-3. Load Game Button Clicked
+      // 2-2. Load Game Button Clicked (Now 1st Button on Title!)
       if (customId.startsWith("menu_loadgame_")) {
         const screenData = renderSlotsScreenData(interaction.user.id);
         await interaction.update(screenData);

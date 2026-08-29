@@ -70,21 +70,21 @@ export const command: Command = {
       });
       const attachment = new AttachmentBuilder(imageBuffer, { name: "title.png" });
 
-      // ROW 1: Main Game Actions
+      // ROW 1: Main Game Actions (1. Load Game / 2. New Game / 3. Multiplay)
       const mainActionRow = new ActionRowBuilder<ButtonBuilder>();
       if (hasSavedSlots) {
         mainActionRow.addComponents(
           new ButtonBuilder()
-            .setCustomId(`menu_continue_${userId}`)
-            .setLabel(isKo ? "이어하기" : "Continue")
+            .setCustomId(`menu_loadgame_${userId}`)
+            .setLabel(isKo ? "불러오기" : "Load Game")
             .setStyle(ButtonStyle.Primary),
           new ButtonBuilder()
             .setCustomId(`menu_newgame_${userId}`)
             .setLabel(isKo ? "새 게임" : "New Game")
             .setStyle(ButtonStyle.Success),
           new ButtonBuilder()
-            .setCustomId(`menu_loadgame_${userId}`)
-            .setLabel(isKo ? "불러오기" : "Load Game")
+            .setCustomId(`menu_multiplay_${userId}`)
+            .setLabel(isKo ? "멀티플레이" : "Multiplay")
             .setStyle(ButtonStyle.Secondary)
         );
       } else {
@@ -92,7 +92,11 @@ export const command: Command = {
           new ButtonBuilder()
             .setCustomId(`menu_newgame_${userId}`)
             .setLabel(isKo ? "새 게임" : "New Game")
-            .setStyle(ButtonStyle.Success)
+            .setStyle(ButtonStyle.Success),
+          new ButtonBuilder()
+            .setCustomId(`menu_multiplay_${userId}`)
+            .setLabel(isKo ? "멀티플레이" : "Multiplay")
+            .setStyle(ButtonStyle.Secondary)
         );
       }
 
