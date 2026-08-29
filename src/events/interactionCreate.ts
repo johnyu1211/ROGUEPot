@@ -424,24 +424,10 @@ async function renderPokedexMessageData(
       .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Secondary);
   };
 
-  // ROW 2: Pokemon 1, 2 + Blue Region Jump [🗺️] + Blue Search [🔍]
+  // ROW 2: Pokemon 1, 2 + [+📦] + [+💼]
   const row2Btns = [createPokeBtn(items[0], 0), createPokeBtn(items[1], 1)].filter(Boolean) as ButtonBuilder[];
-  row2Btns.push(
-    new ButtonBuilder()
-      .setCustomId(`pokedex_region_btn_${fromScreen}_${userId}`)
-      .setLabel("🗺️")
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setCustomId(`pokedex_search_btn_${fromScreen}_${userId}`)
-      .setLabel("🔍")
-      .setStyle(ButtonStyle.Primary)
-  );
-  components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row2Btns));
-
-  // ROW 3: Pokemon 3, 4 + [+📦] + [+💼]
-  const row3Btns = [createPokeBtn(items[2], 2), createPokeBtn(items[3], 3)].filter(Boolean) as ButtonBuilder[];
   if (selectedPokemon) {
-    row3Btns.push(
+    row2Btns.push(
       new ButtonBuilder()
         .setCustomId(`pokedex_add_multi_${selectedPokemon.dexNumber}_${page}_${fromScreen}_${userId}`)
         .setLabel("+📦")
@@ -452,6 +438,20 @@ async function renderPokedexMessageData(
         .setStyle(ButtonStyle.Success)
     );
   }
+  components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row2Btns));
+
+  // ROW 3: Pokemon 3, 4 + Blue Region Jump [🗺️] + Blue Search [🔍]
+  const row3Btns = [createPokeBtn(items[2], 2), createPokeBtn(items[3], 3)].filter(Boolean) as ButtonBuilder[];
+  row3Btns.push(
+    new ButtonBuilder()
+      .setCustomId(`pokedex_region_btn_${fromScreen}_${userId}`)
+      .setLabel("🗺️")
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId(`pokedex_search_btn_${fromScreen}_${userId}`)
+      .setLabel("🔍")
+      .setStyle(ButtonStyle.Primary)
+  );
   components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row3Btns));
 
   // ROW 4: Pokemon 5, 6 + Fast Backward 3 Pages [◀◀◀] + Fast Forward 3 Pages [▶▶▶]
