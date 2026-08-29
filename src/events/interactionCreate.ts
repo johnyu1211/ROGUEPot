@@ -372,22 +372,8 @@ async function renderPokedexMessageData(
 
   const components: ActionRowBuilder<ButtonBuilder>[] = [];
 
-  // ROW 1: Navigation & Back & Region Jump & Search (Top Control Row)
-  const navRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId(`pokedex_page_${Math.max(1, page - 1)}_${selectedDexNo}_${fromScreen}_${userId}`)
-      .setLabel("◀ 이전")
-      .setStyle(ButtonStyle.Secondary)
-      .setDisabled(page <= 1),
-    new ButtonBuilder()
-      .setCustomId(`pokedex_page_${Math.min(totalPages, page + 1)}_${selectedDexNo}_${fromScreen}_${userId}`)
-      .setLabel("다음 ▶")
-      .setStyle(ButtonStyle.Secondary)
-      .setDisabled(page >= totalPages),
-    new ButtonBuilder()
-      .setCustomId(`pokedex_back_${fromScreen}_${userId}`)
-      .setLabel("↩️")
-      .setStyle(ButtonStyle.Danger),
+  // ROW 1: Region Jump [🗺️] & Direct Search [🔍]
+  const topUtilityRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(`pokedex_region_btn_${fromScreen}_${userId}`)
       .setLabel("🗺️")
@@ -397,7 +383,7 @@ async function renderPokedexMessageData(
       .setLabel("🔍")
       .setStyle(ButtonStyle.Secondary)
   );
-  components.push(navRow);
+  components.push(topUtilityRow);
 
   // ROW 2: Pokemon 1~4 Buttons
   const row1Items = items.slice(0, 4);
@@ -432,6 +418,35 @@ async function renderPokedexMessageData(
     });
     components.push(selectRow2);
   }
+
+  // ROW 4: Fast Backward 3 Pages, Prev, Next, Fast Forward 3 Pages, Return
+  const navRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`pokedex_page_${Math.max(1, page - 3)}_${selectedDexNo}_${fromScreen}_${userId}`)
+      .setLabel("⏪ 3")
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(page <= 1),
+    new ButtonBuilder()
+      .setCustomId(`pokedex_page_${Math.max(1, page - 1)}_${selectedDexNo}_${fromScreen}_${userId}`)
+      .setLabel("◀ 이전")
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(page <= 1),
+    new ButtonBuilder()
+      .setCustomId(`pokedex_page_${Math.min(totalPages, page + 1)}_${selectedDexNo}_${fromScreen}_${userId}`)
+      .setLabel("다음 ▶")
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(page >= totalPages),
+    new ButtonBuilder()
+      .setCustomId(`pokedex_page_${Math.min(totalPages, page + 3)}_${selectedDexNo}_${fromScreen}_${userId}`)
+      .setLabel("3 ⏩")
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(page >= totalPages),
+    new ButtonBuilder()
+      .setCustomId(`pokedex_back_${fromScreen}_${userId}`)
+      .setLabel("↩️")
+      .setStyle(ButtonStyle.Danger)
+  );
+  components.push(navRow);
 
   return { embeds: [], files: [attachment], components };
 }
