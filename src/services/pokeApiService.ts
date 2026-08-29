@@ -36,8 +36,41 @@ const KOREAN_POKEMON_DICT: Record<string, number> = {
   "꼬부기": 7,
   "어니부기": 8,
   "거북왕": 9,
+  "캐터피": 10,
+  "단데기": 11,
+  "버터플": 12,
+  "뿔충이": 13,
+  "딱충이": 14,
+  "독침붕": 15,
+  "구구": 16,
+  "피죤": 17,
+  "피죤투": 18,
+  "꼬렛": 19,
+  "레트라": 20,
+  "깨비참": 21,
+  "깨비드릴조": 22,
+  "아보": 23,
+  "아보크": 24,
   "피카츄": 25,
   "라이츄": 26,
+  "모래두지": 27,
+  "고지": 28,
+  "니드런♀": 29,
+  "니드런(암)": 29,
+  "니드런암": 29,
+  "니드리나": 30,
+  "니드퀸": 31,
+  "니드런♂": 32,
+  "니드런(수)": 32,
+  "니드런수": 32,
+  "니드리노": 33,
+  "니드킹": 34,
+  "삐삐": 35,
+  "픽시": 36,
+  "식스테일": 37,
+  "나인테일": 38,
+  "푸린": 39,
+  "푸크린": 40,
   "이브이": 133,
   "부스터": 136,
   "쥬피썬더": 135,
@@ -50,6 +83,10 @@ const KOREAN_POKEMON_DICT: Record<string, number> = {
   "망나뇽": 149,
   "뮤츠": 150,
   "뮤": 151,
+  "마임맨": 122,
+  "칠색조": 250,
+  "흉내내": 439,
+  "폴리곤Z": 474,
   "치코리타": 152,
   "브케인": 155,
   "리어코": 158,
@@ -110,7 +147,17 @@ export async function getPokemonByDexNumber(dexNo: number): Promise<DexPokemonIn
 
     const data: any = await res.json();
     const speciesId = data.name.toLowerCase();
-    const formattedName = data.name.charAt(0).toUpperCase() + data.name.slice(1);
+
+    // Pretty English Formatted Name
+    let formattedName = data.name.charAt(0).toUpperCase() + data.name.slice(1);
+    if (speciesId === "nidoran-f") formattedName = "Nidoran ♀";
+    else if (speciesId === "nidoran-m") formattedName = "Nidoran ♂";
+    else if (speciesId === "mr-mime") formattedName = "Mr. Mime";
+    else if (speciesId === "mime-jr") formattedName = "Mime Jr.";
+    else if (speciesId === "mr-rime") formattedName = "Mr. Rime";
+    else if (speciesId === "ho-oh") formattedName = "Ho-Oh";
+    else if (speciesId === "porygon-z") formattedName = "Porygon-Z";
+    else if (speciesId === "type-null") formattedName = "Type: Null";
     const types = data.types.map((t: any) => t.type.name);
 
     const regularAbilities: string[] = [];
@@ -161,9 +208,9 @@ export async function getPokemonByDexNumber(dexNo: number): Promise<DexPokemonIn
 }
 
 /**
- * Fetches a list of Pokémon for a Pokédex page (e.g. 5 per page)
+ * Fetches a list of Pokémon for a Pokédex page (e.g. 8 per page)
  */
-export async function getPokemonPage(page: number = 1, pageSize: number = 5): Promise<{ total: number; totalPages: number; items: DexPokemonInfo[] }> {
+export async function getPokemonPage(page: number = 1, pageSize: number = 8): Promise<{ total: number; totalPages: number; items: DexPokemonInfo[] }> {
   const total = 1025;
   const totalPages = Math.ceil(total / pageSize);
   const validPage = Math.max(1, Math.min(totalPages, page));

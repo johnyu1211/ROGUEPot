@@ -43,7 +43,27 @@ export interface TitleScreenOptions {
  */
 export async function getPokemonSprite(pokemonName: string): Promise<Image | null> {
   try {
-    const url = `https://play.pokemonshowdown.com/sprites/gen5/${pokemonName.toLowerCase().replace(/[^a-z0-9-]/g, "")}.png`;
+    let clean = pokemonName.toLowerCase().trim();
+    if (clean === "nidoran-f" || clean === "nidoran_f" || clean === "nidoran♀") clean = "nidoranf";
+    else if (clean === "nidoran-m" || clean === "nidoran_m" || clean === "nidoran♂") clean = "nidoranm";
+    else if (clean === "mr-mime" || clean === "mr.-mime" || clean === "mr mime") clean = "mrmime";
+    else if (clean === "mime-jr" || clean === "mime-jr." || clean === "mime jr") clean = "mimejr";
+    else if (clean === "mr-rime" || clean === "mr.-rime" || clean === "mr rime") clean = "mrrime";
+    else if (clean === "ho-oh") clean = "hooh";
+    else if (clean === "porygon-z") clean = "porygonz";
+    else if (clean === "jangmo-o") clean = "jangmoo";
+    else if (clean === "hakamo-o") clean = "hakamoo";
+    else if (clean === "kommo-o") clean = "kommoo";
+    else if (clean === "type-null" || clean === "type: null") clean = "typenull";
+    else if (clean.startsWith("tapu-")) clean = clean.replace("tapu-", "tapu");
+    else if (clean.startsWith("tapu ")) clean = clean.replace("tapu ", "tapu");
+    else if (clean === "wo-chien") clean = "wochien";
+    else if (clean === "chien-pao") clean = "chienpao";
+    else if (clean === "ting-lu") clean = "tinglu";
+    else if (clean === "chi-yu") clean = "chiyu";
+    else clean = clean.replace(/[^a-z0-9]/g, "");
+
+    const url = `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`;
     return await loadImage(url);
   } catch (err) {
     console.error(`[CANVAS] Failed to load sprite for ${pokemonName}:`, err);
@@ -629,7 +649,7 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
   const items = options?.pageList || [];
   const selected = options?.selectedPokemon || items[0] || null;
   const curPage = options?.currentPage || 1;
-  const totPages = options?.totalPages || 205;
+  const totPages = options?.totalPages || 129;
 
   // 1. Dark Retro Background
   ctx.fillStyle = "#12101F";
@@ -637,38 +657,41 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
 
   // 2. TOP BANNER: Pokédex Title & Page (Centered)
   ctx.fillStyle = "#2D1520";
-  ctx.fillRect(8, 8, 246, 38);
+  ctx.fillRect(8, 8, 246, 36);
   ctx.strokeStyle = "#E63946";
   ctx.lineWidth = 1;
-  ctx.strokeRect(8, 8, 246, 38);
+  ctx.strokeRect(8, 8, 246, 36);
 
   ctx.font = "bold 18px DungGeunMo";
   ctx.fillStyle = "#E63946";
   ctx.textAlign = "center";
-  ctx.fillText(isKo ? "포켓몬 도감" : "POKÉDEX", 8 + 246 / 2, 33);
+  ctx.fillText(isKo ? "포켓몬 도감" : "POKÉDEX", 8 + 246 / 2 - 10, 32);
 
   // Page Indicator Badge on Left Header
   ctx.font = "12px DungGeunMo";
   ctx.fillStyle = "#CBD5E1";
   ctx.textAlign = "right";
-  ctx.fillText(`P.${curPage}/${totPages}`, 246, 32);
+  ctx.fillText(`P.${curPage}/${totPages}`, 246, 31);
 
-  // 3. LEFT SIDE: 5 Pokémon List Items
-  const listX = 12;
-  const startListY = 52;
-  const slotW = 240;
-  const slotH = 58;
-  const slotGap = 6;
+  // 3. LEFT SIDE: 8 Pokémon Grid (2 Columns x 4 Rows)
+  const startListY = 48;
+  const slotW = 118;
+  const slotH = 76;
+  const gapX = 6;
+  const gapY = 6;
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 8; i++) {
     const p = items[i];
-    const sy = startListY + i * (slotH + slotGap);
+    const col = i % 2;
+    const row = Math.floor(i / 2);
+    const sx = 10 + col * (slotW + gapX);
+    const sy = startListY + row * (slotH + gapY);
     const isSelected = selected && p && selected.dexNumber === p.dexNumber;
 
     // Slot Box Background
-    ctx.fillStyle = isSelected ? "#2E1A2C" : "#1B172E";
+    ctx.fillStyle = isSelected ? "#311C2E" : "#1B172E";
     ctx.beginPath();
-    ctx.roundRect(listX, sy, slotW, slotH, 8);
+    ctx.roundRect(sx, sy, slotW, slotH, 6);
     ctx.fill();
 
     ctx.strokeStyle = isSelected ? "#E63946" : "#322A4E";
@@ -676,51 +699,51 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     ctx.stroke();
 
     if (p) {
-      // Mini Sprite
-      const sprite = await getPokemonSprite(p.speciesId);
-      if (sprite) {
-        const scale = 0.85;
-        const sprW = sprite.width * scale;
-        const sprH = sprite.height * scale;
-        ctx.drawImage(sprite, listX + 6 + (40 - sprW) / 2, sy + (slotH - sprH) / 2, sprW, sprH);
-      }
-
-      // Dex Number & Name
-      ctx.font = "bold 13px DungGeunMo";
+      // Header: Dex No & Short Name
+      ctx.font = "bold 11px DungGeunMo";
       ctx.fillStyle = isSelected ? "#FFFFFF" : "#CBD5E1";
       ctx.textAlign = "left";
       const displayName = (isKo && p.koreanName) ? p.koreanName : p.name;
       const dexTag = `#${String(p.dexNumber).padStart(3, "0")}`;
-      ctx.fillText(`${dexTag} ${displayName}`, listX + 50, sy + 24);
+      ctx.fillText(`${dexTag} ${displayName.slice(0, 4)}`, sx + 6, sy + 15);
 
-      // Mini Type Badges
-      let badgeX = listX + 50;
-      for (const tName of p.types) {
+      if (isSelected) {
+        // Selection Arrow Marker
+        ctx.font = "bold 11px DungGeunMo";
+        ctx.fillStyle = "#E63946";
+        ctx.textAlign = "right";
+        ctx.fillText("▶", sx + slotW - 6, sy + 15);
+      }
+
+      // Mini Sprite (Centered-Left in slot)
+      const sprite = await getPokemonSprite(p.speciesId);
+      if (sprite) {
+        const scale = 0.72;
+        const sprW = sprite.width * scale;
+        const sprH = sprite.height * scale;
+        ctx.drawImage(sprite, sx + 4 + (40 - sprW) / 2, sy + 20 + (50 - sprH) / 2, sprW, sprH);
+      }
+
+      // Mini Type Badges (Stacked on the right side of slot)
+      let bY = sy + 22;
+      for (const tName of p.types.slice(0, 2)) {
         const tColor = TYPE_COLORS[tName.toLowerCase()] || "#777777";
         ctx.fillStyle = tColor;
         ctx.beginPath();
-        ctx.roundRect(badgeX, sy + 32, 44, 16, 4);
+        ctx.roundRect(sx + 48, bY, 62, 18, 4);
         ctx.fill();
 
         ctx.font = "bold 10px DungGeunMo";
         ctx.fillStyle = "#FFFFFF";
         ctx.textAlign = "center";
-        ctx.fillText(tName.toUpperCase(), badgeX + 22, sy + 44);
-        badgeX += 48;
-      }
-
-      if (isSelected) {
-        // Selection Arrow Marker
-        ctx.font = "bold 14px DungGeunMo";
-        ctx.fillStyle = "#E63946";
-        ctx.textAlign = "right";
-        ctx.fillText("▶", listX + slotW - 8, sy + 34);
+        ctx.fillText(tName.toUpperCase(), sx + 48 + 31, bY + 13);
+        bY += 22;
       }
     } else {
-      ctx.font = "13px DungGeunMo";
+      ctx.font = "12px DungGeunMo";
       ctx.fillStyle = "#4D4566";
       ctx.textAlign = "center";
-      ctx.fillText("---", listX + slotW / 2, sy + 34);
+      ctx.fillText("---", sx + slotW / 2, sy + slotH / 2 + 4);
     }
   }
 
