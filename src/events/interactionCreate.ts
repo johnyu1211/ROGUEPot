@@ -127,7 +127,7 @@ function renderSettingsMessageData(userId: string) {
   const langRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(`settings_lang_en_${userId}`)
-      .setLabel("English 🇺🇸")
+      .setLabel("English 🌐")
       .setStyle(!isKo ? ButtonStyle.Primary : ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId(`settings_lang_ko_${userId}`)
