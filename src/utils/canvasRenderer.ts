@@ -735,17 +735,17 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
       const displayName = (isKo && p.koreanName) ? p.koreanName : p.name;
       const dexTag = `#${String(p.dexNumber).padStart(3, "0")}`;
 
-      // Left Header: Pokemon Name (14px Bold)
-      ctx.font = "bold 14px DungGeunMo";
+      // Left Header: Slot Number + Pokemon Name (13px Bold)
+      ctx.font = "bold 13px DungGeunMo";
       ctx.fillStyle = isSelected ? "#FFFFFF" : "#E2E8F0";
       ctx.textAlign = "left";
-      ctx.fillText(displayName.slice(0, 5), sx + 8, sy + 16);
+      ctx.fillText(`${i + 1}. ${displayName.slice(0, 5)}`, sx + 6, sy + 16);
 
       // Right Header: Dex Number (#001) Right-aligned (12px Bold)
       ctx.font = "bold 12px DungGeunMo";
       ctx.fillStyle = isSelected ? "#FFFFFF" : "#7E869B";
       ctx.textAlign = "right";
-      ctx.fillText(dexTag, sx + slotW - 8, sy + 16);
+      ctx.fillText(dexTag, sx + slotW - 6, sy + 16);
 
       // Mini Sprite (Centered in left half area: 50x48)
       const sprite = await getPokemonSprite(p.speciesId);
