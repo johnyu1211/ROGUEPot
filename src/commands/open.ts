@@ -70,10 +70,10 @@ export const command: Command = {
       });
       const attachment = new AttachmentBuilder(imageBuffer, { name: "title.png" });
 
-      const actionRow = new ActionRowBuilder<ButtonBuilder>();
-
+      // ROW 1: Main Game Actions
+      const mainActionRow = new ActionRowBuilder<ButtonBuilder>();
       if (hasSavedSlots) {
-        actionRow.addComponents(
+        mainActionRow.addComponents(
           new ButtonBuilder()
             .setCustomId(`menu_continue_${userId}`)
             .setLabel(isKo ? "이어하기" : "Continue")
@@ -85,36 +85,32 @@ export const command: Command = {
           new ButtonBuilder()
             .setCustomId(`menu_loadgame_${userId}`)
             .setLabel(isKo ? "불러오기" : "Load Game")
-            .setStyle(ButtonStyle.Secondary),
-          new ButtonBuilder()
-            .setCustomId(`menu_inventory_${userId}`)
-            .setLabel("💼")
-            .setStyle(ButtonStyle.Secondary),
-          new ButtonBuilder()
-            .setCustomId(`menu_settings_${userId}`)
-            .setLabel("⚙️")
             .setStyle(ButtonStyle.Secondary)
         );
       } else {
-        actionRow.addComponents(
+        mainActionRow.addComponents(
           new ButtonBuilder()
             .setCustomId(`menu_newgame_${userId}`)
             .setLabel(isKo ? "새 게임" : "New Game")
-            .setStyle(ButtonStyle.Success),
-          new ButtonBuilder()
-            .setCustomId(`menu_inventory_${userId}`)
-            .setLabel("💼")
-            .setStyle(ButtonStyle.Secondary),
-          new ButtonBuilder()
-            .setCustomId(`menu_settings_${userId}`)
-            .setLabel("⚙️")
-            .setStyle(ButtonStyle.Secondary)
+            .setStyle(ButtonStyle.Success)
         );
       }
 
+      // ROW 2: Utility & Settings Actions
+      const subActionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`menu_inventory_${userId}`)
+          .setLabel("💼")
+          .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+          .setCustomId(`menu_settings_${userId}`)
+          .setLabel("⚙️")
+          .setStyle(ButtonStyle.Secondary)
+      );
+
       await thread.send({
         files: [attachment],
-        components: [actionRow],
+        components: [mainActionRow, subActionRow],
       });
 
       const sessionNoticeEmbed = new EmbedBuilder()
