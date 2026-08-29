@@ -115,18 +115,19 @@ export const command: Command = {
 
       const sessionNoticeEmbed = new EmbedBuilder()
         .setColor(COLORS.POKEROGUE_BLUE)
-        .setTitle("PokeRogue Session Created")
+        .setTitle("🎮 PokéRogue Game Session Created")
         .setDescription(
           `<#${thread.id}>\n\n` +
           "━━━━━━━━━━━━━━━━━━━━━━\n" +
           "**Open Source & Attribution**\n" +
-          "• Unofficial fan bot built referencing **[PokéRogue](https://github.com/pagefaultgames/pokerogue)** (GNU AGPL-3.0).\n\n" +
+          "• **PokéRogue** is an open-source rogue-lite game developed by **[PageFaultGames](https://github.com/pagefaultgames/pokerogue)**.\n" +
+          "• ROGUEPot is an unofficial fan companion bot built under the **GNU AGPL-3.0** open-source license.\n\n" +
           "**Legal Disclaimer**\n" +
           "• Pokémon © Nintendo / Creatures Inc. / GAME FREAK inc.\n" +
           "• Non-profit fan-made project with no commercial intent."
         )
         .setFooter({
-          text: `PokéRogue version : ${POKEROGUE_VERSION}`,
+          text: `PokéRogue Engine Version : ${POKEROGUE_VERSION}`,
         });
 
       await interaction.editReply({
