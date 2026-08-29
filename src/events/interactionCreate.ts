@@ -427,6 +427,14 @@ export const interactionCreateEvent: BotEvent = {
           level: 50,
           hp: pokeInfo.hp,
           maxHp: pokeInfo.hp,
+          ivs: {
+            hp: 31,
+            atk: 31,
+            def: 31,
+            spa: 31,
+            spd: 31,
+            spe: 31,
+          },
           moves: ["Tackle", "Signature Move"],
         };
 
