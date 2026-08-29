@@ -845,7 +845,7 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     ctx.font = "bold 21px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "left";
-    const titleName = (isKo && selected.koreanName) ? `${selected.koreanName} (${selected.name})` : selected.name;
+    const titleName = (isKo && selected.koreanName) ? selected.koreanName : selected.name;
     ctx.fillText(`#${String(selected.dexNumber).padStart(3, "0")} ${titleName}`, rightX + 4, 30);
 
     // Sub-divider line under header
