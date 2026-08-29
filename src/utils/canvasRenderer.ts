@@ -1005,7 +1005,7 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     const abDetail = await getAbilityDetail(targetAbility);
     const abName = isKo ? abDetail.nameKo : abDetail.name;
     const abDesc = isKo ? abDetail.descriptionKo : abDetail.descriptionEn;
-    const typeTag = isHa ? (isKo ? "🌟 [숨특]" : "🌟 [HA]") : (isKo ? "⚡ [특성]" : "⚡ [Ability]");
+    const typeTag = isHa ? (isKo ? "[숨특]" : "[HA]") : (isKo ? "[특성]" : "[Ability]");
 
     // Title inside text box
     ctx.font = "bold 13px DungGeunMo";
