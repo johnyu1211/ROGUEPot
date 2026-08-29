@@ -423,34 +423,40 @@ async function renderPokedexMessageData(
   );
   components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(topRowButtons.slice(0, 5)));
 
-  // ROW 3: Pokemon 1~4 Buttons
+  // Compute max name length across 8 items to equalize button widths with un-trimmed Braille blank (\u2800)
+  const allNames = items.map((p) => ((isKo && p.koreanName) ? p.koreanName : p.name).slice(0, 6));
+  const maxNameLen = Math.max(...allNames.map((n) => n.length), 4);
+
+  // ROW 2: Pokemon 1~4 Buttons (Uniform Widths)
   const row1Items = items.slice(0, 4);
   if (row1Items.length > 0) {
     const selectRow1 = new ActionRowBuilder<ButtonBuilder>();
     row1Items.forEach((p, idx) => {
       const isSelected = selectedPokemon && selectedPokemon.dexNumber === p.dexNumber;
-      const name = (isKo && p.koreanName) ? p.koreanName : p.name;
+      const rawName = ((isKo && p.koreanName) ? p.koreanName : p.name).slice(0, 6);
+      const paddedName = rawName.padEnd(maxNameLen, "\u2800");
       selectRow1.addComponents(
         new ButtonBuilder()
           .setCustomId(`pokedex_select_${p.dexNumber}_${page}_${fromScreen}_${userId}`)
-          .setLabel(`${idx + 1}. ${name.slice(0, 5)}`)
+          .setLabel(`${idx + 1}. ${paddedName}`)
           .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Secondary)
       );
     });
     components.push(selectRow1);
   }
 
-  // ROW 4: Pokemon 5~8 Buttons
+  // ROW 3: Pokemon 5~8 Buttons (Uniform Widths)
   const row2Items = items.slice(4, 8);
   if (row2Items.length > 0) {
     const selectRow2 = new ActionRowBuilder<ButtonBuilder>();
     row2Items.forEach((p, idx) => {
       const isSelected = selectedPokemon && selectedPokemon.dexNumber === p.dexNumber;
-      const name = (isKo && p.koreanName) ? p.koreanName : p.name;
+      const rawName = ((isKo && p.koreanName) ? p.koreanName : p.name).slice(0, 6);
+      const paddedName = rawName.padEnd(maxNameLen, "\u2800");
       selectRow2.addComponents(
         new ButtonBuilder()
           .setCustomId(`pokedex_select_${p.dexNumber}_${page}_${fromScreen}_${userId}`)
-          .setLabel(`${idx + 5}. ${name.slice(0, 5)}`)
+          .setLabel(`${idx + 5}. ${paddedName}`)
           .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Secondary)
       );
     });
