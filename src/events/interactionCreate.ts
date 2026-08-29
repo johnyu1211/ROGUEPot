@@ -522,7 +522,7 @@ export const interactionCreateEvent: BotEvent = {
         const dexInput = new TextInputBuilder()
           .setCustomId("dex_no_input")
           .setLabel(isKo ? "포켓몬 이름 또는 도감 번호" : "Pokémon Name or Dex Number")
-          .setPlaceholder(isKo ? "예: 샤미드, 루카리오, 이어롭, 25, 491" : "e.g. Vaporeon, Lucario, Lopunny, 25, 491")
+          .setPlaceholder(isKo ? "예: 샤미드, 루카리오, 피카츄, 25, 491" : "e.g. Vaporeon, Lucario, Pikachu, 25, 491")
           .setStyle(TextInputStyle.Short)
           .setRequired(true)
           .setMaxLength(20);
