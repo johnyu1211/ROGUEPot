@@ -1,4 +1,4 @@
-﻿# 🎮 ROGUEPot (PokeRogue on Discord)
+# 🎮 ROGUEPot (PokeRogue on Discord)
 
 **ROGUEPot**은 [PokeRogue](https://github.com/pagefaultgames/pokerogue) 로그라이크 포켓몬 게임을 디스코드에서 직접 플레이할 수 있도록 제공하는 디스코드 게임 봇입니다.
 
@@ -70,11 +70,26 @@ npm run deploy-commands
 
 ---
 
-## 📜 License & Disclaimer
+---
+
+## 📜 Credits & Acknowledgements
+
+This project is a non-profit fan-made creation and proudly uses and references the following open-source resources and communities:
+
+* **[PokéRogue](https://github.com/pagefaultgames/pokerogue)**: The incredible browser-based Pokémon roguelite game developed by PageFaultGames.
+* **[Pokémon Showdown](https://pokemonshowdown.com/)**: Gen 5 animated and pixel sprites CDN & Pokémon battle mechanics.
+* **[PokéAPI](https://pokeapi.co/)**: Comprehensive RESTful Pokémon data API.
+* **[PMD SpriteCollab (SpriteCollab)](https://sprites.pmdcollab.org/)**: Pokémon Mystery Dungeon sprite repository & community portraits, distributed under [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/). Special thanks to all contributing pixel artists!
+* **[DungGeunMo Font](https://github.com/hurss/dunggeunmo)**: High-quality retro Korean pixel dot font.
+
+---
+
+## ⚖️ License & Disclaimer
 
 ### License
 This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**. See the [LICENSE](LICENSE) file for details.
 
 ### Disclaimer
-- **ROGUEPot** is an unofficial, non-profit fan-made project built with references to [PokeRogue](https://github.com/pagefaultgames/pokerogue).
-- Pokémon and Pokémon character names are trademarks of Nintendo, Creatures Inc., and GAME FREAK Inc.
+* **ROGUEPot** is an unofficial, non-profit fan-made project created for educational and community entertainment purposes.
+* Pokémon and Pokémon character names, sprites, and audio are trademarks and copyrights of **Nintendo**, **Creatures Inc.**, and **GAME FREAK Inc.**
+* This project is not affiliated with, endorsed by, or sponsored by Nintendo or Game Freak.
