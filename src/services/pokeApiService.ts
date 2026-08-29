@@ -16,11 +16,22 @@ export interface DexPokemonInfo {
   spAttack: number;
   spDefense: number;
   speed: number;
+  genusKo?: string;
+  flavorTextKo?: string;
+  flavorTextEn?: string;
+}
+
+export interface SpeciesInfo {
+  genusKo?: string;
+  genusEn?: string;
+  flavorTextKo?: string;
+  flavorTextEn?: string;
 }
 
 const dexCache = new Map<number, DexPokemonInfo>();
 const nameCache = new Map<string, DexPokemonInfo>();
 const abilityKoCache = new Map<string, string>();
+const speciesCache = new Map<number, SpeciesInfo>();
 
 // Comprehensive Pokémon 1~9 Gen Ability English to Korean mapping dictionary
 export const ABILITY_KO_DICT: Record<string, string> = {
@@ -416,6 +427,52 @@ export async function getAbilityDetail(rawName: string): Promise<AbilityDetailIn
 export function getAbilityKoreanName(rawName: string): string {
   const key = rawName.toLowerCase().replace(/[\s_]+/g, "-");
   return ABILITY_KO_DICT[key] || abilityKoCache.get(key) || rawName;
+}
+
+export async function getPokemonSpeciesInfo(dexNo: number): Promise<SpeciesInfo> {
+  if (speciesCache.has(dexNo)) return speciesCache.get(dexNo)!;
+
+  try {
+    const res = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${dexNo}`);
+    if (res.ok) {
+      const data: any = await res.json();
+
+      // Genus (분류)
+      const koGenusEntry = (data.genera || []).find((g: any) => g.language?.name === "ko");
+      const enGenusEntry = (data.genera || []).find((g: any) => g.language?.name === "en");
+
+      // Flavor texts (find latest Korean flavor text)
+      const koFlavors = (data.flavor_text_entries || []).filter((f: any) => f.language?.name === "ko");
+      const lastKoFlavor = koFlavors.length > 0 ? koFlavors[koFlavors.length - 1].flavor_text : undefined;
+
+      const enFlavors = (data.flavor_text_entries || []).filter((f: any) => f.language?.name === "en");
+      const lastEnFlavor = enFlavors.length > 0 ? enFlavors[enFlavors.length - 1].flavor_text : undefined;
+
+      const cleanKo = lastKoFlavor ? lastKoFlavor.replace(/[\n\f\r]+/g, " ").replace(/\s{2,}/g, " ").trim() : undefined;
+      const cleanEn = lastEnFlavor ? lastEnFlavor.replace(/[\n\f\r]+/g, " ").replace(/\s{2,}/g, " ").trim() : undefined;
+
+      const result: SpeciesInfo = {
+        genusKo: koGenusEntry?.genus,
+        genusEn: enGenusEntry?.genus,
+        flavorTextKo: cleanKo,
+        flavorTextEn: cleanEn,
+      };
+
+      speciesCache.set(dexNo, result);
+      return result;
+    }
+  } catch (err) {
+    console.error(`[SPECIES] Failed to fetch species for #${dexNo}:`, err);
+  }
+
+  const fallback: SpeciesInfo = {
+    genusKo: "포켓몬",
+    genusEn: "Pokémon",
+    flavorTextKo: "포켓몬 도감에 등록된 포켓몬입니다.",
+    flavorTextEn: "A Pokémon registered in the Pokédex.",
+  };
+  speciesCache.set(dexNo, fallback);
+  return fallback;
 }
 
 import { POKEMON_NAMES_KO, POKEMON_NAME_TO_DEX } from "../data/pokemonNamesKo.js";
