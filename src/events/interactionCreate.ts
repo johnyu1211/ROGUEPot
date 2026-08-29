@@ -283,11 +283,7 @@ async function renderMultiplayerMessageData(client: ExtendedClient, userId: stri
     new ButtonBuilder()
       .setCustomId(`multi_register_btn_${userId}`)
       .setLabel(isKo ? "포켓몬 등록 📝" : "Register Pokémon 📝")
-      .setStyle(ButtonStyle.Success),
-    new ButtonBuilder()
-      .setCustomId(`multi_clear_btn_${userId}`)
-      .setLabel(isKo ? "엔트리 비우기 🔄" : "Clear Entry 🔄")
-      .setStyle(ButtonStyle.Danger)
+      .setStyle(ButtonStyle.Success)
   );
 
   const backRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -548,14 +544,6 @@ export const interactionCreateEvent: BotEvent = {
         );
 
         await interaction.showModal(modal);
-        return;
-      }
-
-      // 3-0-6. Multiplayer Clear Team Button
-      if (customId.startsWith("multi_clear_btn_")) {
-        saveService.clearMultiplayerTeam(interaction.user.id);
-        const multiData = await renderMultiplayerMessageData(client, interaction.user.id);
-        await interaction.update(multiData);
         return;
       }
 
