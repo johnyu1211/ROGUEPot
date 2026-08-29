@@ -747,34 +747,34 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     ctx.stroke();
 
     if (p) {
-      // Header: Dex No & Name (Up to 5 characters)
-      ctx.font = "bold 11px DungGeunMo";
+      // Header: Dex No & Name (Enlarged to 13px bold)
+      ctx.font = "bold 13px DungGeunMo";
       ctx.fillStyle = isSelected ? "#FFFFFF" : "#CBD5E1";
       ctx.textAlign = "left";
       const displayName = (isKo && p.koreanName) ? p.koreanName : p.name;
       const dexTag = `#${String(p.dexNumber).padStart(3, "0")}`;
-      ctx.fillText(`${dexTag} ${displayName.slice(0, 5)}`, sx + 6, sy + 15);
+      ctx.fillText(`${dexTag} ${displayName.slice(0, 5)}`, sx + 6, sy + 16);
 
-      // Mini Sprite (Centered in left half area of slot: 56x50)
+      // Mini Sprite (Smaller scale 0.58 in 48x46 area)
       const sprite = await getPokemonSprite(p.speciesId);
       if (sprite) {
-        const scale = 0.78;
+        const scale = 0.58;
         const sprW = sprite.width * scale;
         const sprH = sprite.height * scale;
-        const sprAreaW = 56;
-        const sprAreaH = 50;
+        const sprAreaW = 48;
+        const sprAreaH = 46;
         ctx.drawImage(
           sprite,
           sx + 6 + (sprAreaW - sprW) / 2,
-          sy + 18 + (sprAreaH - sprH) / 2,
+          sy + 20 + (sprAreaH - sprH) / 2,
           sprW,
           sprH
         );
       }
 
-      // Mini Type Badges (Compact 40x18 on the right side of slot, vertically balanced)
+      // Mini Type Badges (Compact 42x18 on the right side of slot, vertically balanced)
       const typeCount = Math.min(2, p.types.length);
-      const badgeW = 40;
+      const badgeW = 42;
       const badgeH = 18;
       const badgeX = sx + slotW - badgeW - 6;
 
@@ -834,8 +834,8 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
   const rightW = width - rightX - 10;
 
   if (selected) {
-    // Header: Dex No & Big Name
-    ctx.font = "bold 19px DungGeunMo";
+    // Header: Dex No & Big Name (Enlarged to 21px bold)
+    ctx.font = "bold 21px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "left";
     const titleName = (isKo && selected.koreanName) ? `${selected.koreanName} (${selected.name})` : selected.name;
@@ -849,7 +849,7 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     ctx.lineTo(rightX + rightW, 38);
     ctx.stroke();
 
-    // 5-1. TOP MAIN INFO CARD (Sprite + Types + Abilities)
+    // 5-1. TOP MAIN INFO CARD (Sprite + Types)
     const topCardY = 46;
     const topCardH = 110;
 
@@ -861,10 +861,10 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Sprite Showcase Box
-    const showBoxX = rightX + 8;
-    const showBoxY = topCardY + 9;
-    const showBoxSize = 92;
+    // Sprite Showcase Box (Compact 82x82)
+    const showBoxX = rightX + 10;
+    const showBoxSize = 84;
+    const showBoxY = topCardY + (topCardH - showBoxSize) / 2;
 
     ctx.fillStyle = "#120F20";
     ctx.beginPath();
@@ -876,23 +876,23 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
 
     const bigSprite = await getPokemonSprite(selected.speciesId);
     if (bigSprite) {
-      const scale = 1.8;
+      const scale = 1.5;
       const sprW = bigSprite.width * scale;
       const sprH = bigSprite.height * scale;
       ctx.drawImage(bigSprite, showBoxX + (showBoxSize - sprW) / 2, showBoxY + (showBoxSize - sprH) / 2, sprW, sprH);
     }
 
-    // Info Column (Types) next to Sprite
+    // Info Column (Types) next to Sprite (Enlarged 15px bold badges)
     const infoX = showBoxX + showBoxSize + 16;
     let typeBadgeX = infoX;
-    const typeBadgeY = topCardY + (topCardH - 22) / 2; // Vertically centered next to sprite
+    const badgeW = isKo ? 48 : 56;
+    const badgeH = 26;
+    const typeBadgeY = topCardY + (topCardH - badgeH) / 2;
 
     for (const tName of selected.types) {
       const tLower = tName.toLowerCase();
       const tColor = TYPE_COLORS[tLower] || "#777777";
       const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || tName) : tName.toUpperCase();
-      const badgeW = isKo ? 44 : 52;
-      const badgeH = 22;
 
       ctx.fillStyle = tColor;
       ctx.beginPath();
@@ -907,10 +907,10 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
       ctx.shadowColor = "rgba(0, 0, 0, 0.9)";
       ctx.shadowOffsetY = 1;
       ctx.shadowBlur = 1;
-      ctx.font = isKo ? "bold 13px DungGeunMo" : "bold 11px DungGeunMo";
+      ctx.font = isKo ? "bold 15px DungGeunMo" : "bold 12px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
-      ctx.fillText(tDisplay, typeBadgeX + badgeW / 2, typeBadgeY + 16);
+      ctx.fillText(tDisplay, typeBadgeX + badgeW / 2, typeBadgeY + 18);
       ctx.restore();
 
       typeBadgeX += badgeW + 10;
