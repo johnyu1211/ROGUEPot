@@ -31,6 +31,7 @@ export interface GameSlot {
 
 export interface UserProfile {
   userId: string;
+  language: "en" | "ko";
   dexData: Record<string, any>;
   starterData: Record<string, any>;
   vouchers: Record<string, number>;
@@ -62,8 +63,8 @@ class SaveService {
     if (!userRow) {
       const now = new Date().toISOString();
       db.prepare(`
-        INSERT INTO users (user_id, dex_data, starter_data, vouchers, total_runs, highest_wave, active_slot_id, created_at, updated_at)
-        VALUES (?, '{}', '{}', '{"regular": 0, "plus": 0, "premium": 0, "gold": 0}', 0, 0, NULL, ?, ?)
+        INSERT INTO users (user_id, language, dex_data, starter_data, vouchers, total_runs, highest_wave, active_slot_id, created_at, updated_at)
+        VALUES (?, 'en', '{}', '{}', '{"regular": 0, "plus": 0, "premium": 0, "gold": 0}', 0, 0, NULL, ?, ?)
       `).run(userId, now, now);
     }
 
@@ -93,6 +94,7 @@ class SaveService {
 
     return {
       userId,
+      language: (updatedUserRow.language as "en" | "ko") || "en",
       dexData: JSON.parse(updatedUserRow.dex_data || "{}"),
       starterData,
       vouchers: JSON.parse(updatedUserRow.vouchers || "{}"),
@@ -102,6 +104,12 @@ class SaveService {
       unlockedStartersCount: unlockedCount,
       slots,
     };
+  }
+
+  public setLanguage(userId: string, language: "en" | "ko"): void {
+    const now = new Date().toISOString();
+    this.getProfile(userId);
+    db.prepare("UPDATE users SET language = ?, updated_at = ? WHERE user_id = ?").run(language, now, userId);
   }
 
   public hasAnySavedSlot(userId: string): boolean {
