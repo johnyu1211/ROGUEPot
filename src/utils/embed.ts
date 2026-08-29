@@ -11,12 +11,15 @@ export const COLORS = {
   POKEROGUE_GOLD: 0xf4a261,
 } as const;
 
+export const POKEROGUE_VERSION = "v1.12.1.0";
+export const POKEROGUE_LOGO_URL = "https://raw.githubusercontent.com/pagefaultgames/pokerogue/main/public/images/logo.png";
+
 export function createBaseEmbed(title?: string, description?: string): EmbedBuilder {
   const embed = new EmbedBuilder()
     .setColor(COLORS.POKEROGUE_RED)
     .setTimestamp()
     .setFooter({
-      text: "ROGUEPot | PokeRogue Companion",
+      text: `PokéRogue version : ${POKEROGUE_VERSION}`,
     });
 
   if (title) embed.setTitle(title);
