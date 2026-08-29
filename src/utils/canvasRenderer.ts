@@ -408,11 +408,6 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
     showSlotNumbers: false,
   });
 
-  // 5. Outer Border Frame flush to edge (Top Z-Index)
-  ctx.strokeStyle = "#E63946";
-  ctx.lineWidth = 4;
-  ctx.strokeRect(2, 2, width - 4, height - 4);
-
   return canvas.toBuffer("image/png");
 }
 
@@ -444,24 +439,24 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
   ctx.fillStyle = "#141226";
   ctx.fillRect(0, 0, width, height);
 
-  // 2. TOP BANNER: Full-width Header Bar across the entire Left Half (y: 0 ~ 54)
+  // 2. TOP BANNER: Full-width Header Bar across the entire Left Half (y: 0 ~ 42)
   const splitX = 285;
   ctx.fillStyle = "#1B1E3D";
-  ctx.fillRect(0, 0, splitX, 54);
+  ctx.fillRect(0, 0, splitX, 42);
 
   // Bottom border line under left header
   ctx.strokeStyle = "#5865F2";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(0, 54);
-  ctx.lineTo(splitX, 54);
+  ctx.moveTo(0, 42);
+  ctx.lineTo(splitX, 42);
   ctx.stroke();
 
   // Header Title Centered in Left Half
-  ctx.font = "bold 20px DungGeunMo";
+  ctx.font = "bold 18px DungGeunMo";
   ctx.fillStyle = "#5865F2";
   ctx.textAlign = "center";
-  ctx.fillText(isKo ? "멀티플레이 로비" : "MULTIPLAYER LOBBY", splitX / 2, 34);
+  ctx.fillText(isKo ? "멀티플레이 로비" : "MULTIPLAYER LOBBY", splitX / 2, 28);
 
   // 3. LEFT SIDE: Clean minimal area (Ready for lobby/matchmaking)
   // Left side is kept clear and minimal as requested
@@ -475,11 +470,6 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
     showSlotNumbers: true,
     borderColor: "#5865F2",
   });
-
-  // 5. Outer Border Frame (Top Z-Index: Overlays on top of the vertical split line)
-  ctx.strokeStyle = "#5865F2";
-  ctx.lineWidth = 4;
-  ctx.strokeRect(2, 2, width - 4, height - 4);
 
   return canvas.toBuffer("image/png");
 }
@@ -620,11 +610,6 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
     lang: options?.lang,
     showSlotNumbers: true,
   });
-
-  // 6. Outer Border Frame (Clean Dark Slate Border)
-  ctx.strokeStyle = "#332D48";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(1, 1, width - 2, height - 2);
 
   return canvas.toBuffer("image/png");
 }
@@ -940,14 +925,14 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
 
     const statsGrid = [
       // Row 0: HP / SPE
-      { label: "HP", val: selected.hp, col: 0, row: 0 },
-      { label: isKo ? "스핏" : "SPE", val: selected.speed, col: 1, row: 0 },
+      { label: "HP", val: selected.hp, color: "#57F287", col: 0, row: 0 },
+      { label: isKo ? "스핏" : "SPE", val: selected.speed, color: "#F8D030", col: 1, row: 0 },
       // Row 1: ATK / SPA
-      { label: isKo ? "공격" : "ATK", val: selected.attack, col: 0, row: 1 },
-      { label: isKo ? "특공" : "SPA", val: selected.spAttack, col: 1, row: 1 },
+      { label: isKo ? "공격" : "ATK", val: selected.attack, color: "#F08030", col: 0, row: 1 },
+      { label: isKo ? "특공" : "SPA", val: selected.spAttack, color: "#C03028", col: 1, row: 1 },
       // Row 2: DEF / SPD
-      { label: isKo ? "방어" : "DEF", val: selected.defense, col: 0, row: 2 },
-      { label: isKo ? "특방" : "SPD", val: selected.spDefense, col: 1, row: 2 },
+      { label: isKo ? "방어" : "DEF", val: selected.defense, color: "#6890F0", col: 0, row: 2 },
+      { label: isKo ? "특방" : "SPD", val: selected.spDefense, color: "#F85888", col: 1, row: 2 },
     ];
 
     const barW = 60;
@@ -962,10 +947,10 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
       ctx.textAlign = "left";
       ctx.fillText(st.label, colX, rowY + 14);
 
-      // Value - Clean Crisp White
+      // Value - Colorful Stat Color
       ctx.font = "bold 15px DungGeunMo";
       ctx.textAlign = "right";
-      ctx.fillStyle = "#FFFFFF";
+      ctx.fillStyle = st.color;
       ctx.fillText(String(st.val), colX + 54, rowY + 14);
 
       // Bar Background
@@ -975,9 +960,9 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
       ctx.roundRect(gaugeX, rowY + 2, barW, barH, 3);
       ctx.fill();
 
-      // Bar Fill - Clean Slate/Silver
+      // Bar Fill - Colorful Stat Color
       const fillW = Math.min(barW, Math.max(3, (st.val / 180) * barW));
-      ctx.fillStyle = "#94A3B8";
+      ctx.fillStyle = st.color;
       ctx.beginPath();
       ctx.roundRect(gaugeX, rowY + 2, fillW, barH, 3);
       ctx.fill();
@@ -1074,11 +1059,6 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
       ctx.fillText(line, overlayX + 16, lineY);
     }
   }
-
-  // 6. Outer Border Frame (Clean Dark Slate Border)
-  ctx.strokeStyle = "#332D48";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(1, 1, width - 2, height - 2);
 
   return canvas.toBuffer("image/png");
 }
