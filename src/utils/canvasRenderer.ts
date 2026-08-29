@@ -327,10 +327,10 @@ async function drawPartyRightPanel(
         const sprH = sprite.height * scale;
         ctx.drawImage(sprite, sx + (slotW - sprW) / 2, sy + (slotH - sprH) / 2 - 8, sprW, sprH);
       }
-      ctx.font = "12px DungGeunMo";
+      ctx.font = "bold 12px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
-      const displayLabel = pokemon.nickname ? pokemon.nickname.slice(0, 6) : `Lv.${pokemon.level}`;
+      const displayLabel = (pokemon.nickname || pokemon.name || "Pokemon").slice(0, 6);
       ctx.fillText(displayLabel, sx + slotW / 2, sy + slotH - 8);
     } else {
       ctx.fillStyle = "#201B36";
