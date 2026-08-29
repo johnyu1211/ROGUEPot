@@ -38,6 +38,7 @@ export interface UserProfile {
   totalRuns: number;
   highestWave: number;
   activeSlotId: number | null;
+  multiplayerTeam: PartyPokemon[];
   unlockedStartersCount: number;
   slots: Record<number, GameSlot | null>;
 }
@@ -63,8 +64,8 @@ class SaveService {
     if (!userRow) {
       const now = new Date().toISOString();
       db.prepare(`
-        INSERT INTO users (user_id, language, dex_data, starter_data, vouchers, total_runs, highest_wave, active_slot_id, created_at, updated_at)
-        VALUES (?, 'en', '{}', '{}', '{"regular": 0, "plus": 0, "premium": 0, "gold": 0}', 0, 0, NULL, ?, ?)
+        INSERT INTO users (user_id, language, dex_data, starter_data, vouchers, total_runs, highest_wave, active_slot_id, multiplayer_team, created_at, updated_at)
+        VALUES (?, 'en', '{}', '{}', '{"regular": 0, "plus": 0, "premium": 0, "gold": 0}', 0, 0, NULL, '[]', ?, ?)
       `).run(userId, now, now);
     }
 
@@ -91,6 +92,7 @@ class SaveService {
 
     const starterData = JSON.parse(updatedUserRow.starter_data || "{}");
     const unlockedCount = Math.max(9, Object.keys(starterData).length);
+    const multiplayerTeam: PartyPokemon[] = JSON.parse(updatedUserRow.multiplayer_team || "[]");
 
     return {
       userId,
@@ -101,6 +103,7 @@ class SaveService {
       totalRuns: updatedUserRow.total_runs,
       highestWave: updatedUserRow.highest_wave,
       activeSlotId: updatedUserRow.active_slot_id,
+      multiplayerTeam,
       unlockedStartersCount: unlockedCount,
       slots,
     };
@@ -110,6 +113,26 @@ class SaveService {
     const now = new Date().toISOString();
     this.getProfile(userId);
     db.prepare("UPDATE users SET language = ?, updated_at = ? WHERE user_id = ?").run(language, now, userId);
+  }
+
+  public setMultiplayerPokemon(userId: string, slotIndex: number, pokemon: PartyPokemon): PartyPokemon[] {
+    const profile = this.getProfile(userId);
+    const team = [...profile.multiplayerTeam];
+    team[slotIndex] = pokemon;
+    const now = new Date().toISOString();
+
+    db.prepare("UPDATE users SET multiplayer_team = ?, updated_at = ? WHERE user_id = ?").run(
+      JSON.stringify(team),
+      now,
+      userId
+    );
+    return team;
+  }
+
+  public clearMultiplayerTeam(userId: string): void {
+    const now = new Date().toISOString();
+    this.getProfile(userId);
+    db.prepare("UPDATE users SET multiplayer_team = '[]', updated_at = ? WHERE user_id = ?").run(now, userId);
   }
 
   public hasAnySavedSlot(userId: string): boolean {
