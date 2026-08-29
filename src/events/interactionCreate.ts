@@ -131,11 +131,19 @@ function renderSettingsMessageData(userId: string) {
       ? "게임 플레이 환경과 언어를 설정하세요.\n\n" +
         `• **현재 언어 (Language)**: 🇰🇷 **한국어 (Korean)**\n` +
         `• **버전**: v1.12.1.0\n` +
-        "━━━━━━━━━━━━━━━━━━━━━━"
+        "━━━━━━━━━━━━━━━━━━━━━━\n" +
+        "**출처 및 크레딧 (Credits & Sources)**\n" +
+        "• **PokéRogue**: PageFaultGames\n" +
+        "• **Sprites**: [Showdown](https://pokemonshowdown.com/) & [PMD SpriteCollab](https://sprites.pmdcollab.org/)\n" +
+        "• **Data**: [PokéAPI](https://pokeapi.co/)"
       : "Configure your game preferences and interface language.\n\n" +
         `• **Current Language**: 🌐 **English**\n` +
         `• **Engine Version**: v1.12.1.0\n` +
-        "━━━━━━━━━━━━━━━━━━━━━━"
+        "━━━━━━━━━━━━━━━━━━━━━━\n" +
+        "**Credits & Sources**\n" +
+        "• **PokéRogue**: PageFaultGames\n" +
+        "• **Sprites**: [Showdown](https://pokemonshowdown.com/) & [PMD SpriteCollab](https://sprites.pmdcollab.org/)\n" +
+        "• **Data**: [PokéAPI](https://pokeapi.co/)"
   ).setColor(COLORS.POKEROGUE_GOLD);
 
   const langRow = new ActionRowBuilder<ButtonBuilder>().addComponents(

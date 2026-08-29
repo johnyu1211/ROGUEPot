@@ -1,4 +1,4 @@
-﻿import {
+import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
   AttachmentBuilder,
@@ -123,12 +123,14 @@ export const command: Command = {
         .setDescription(
           `<#${thread.id}>\n\n` +
           "━━━━━━━━━━━━━━━━━━━━━━\n" +
-          "**Open Source & Attribution**\n" +
-          "• **PokéRogue** is an open-source rogue-lite game developed by **[PageFaultGames](https://github.com/pagefaultgames/pokerogue)**.\n" +
-          "• ROGUEPot is an unofficial fan companion bot built under the **GNU AGPL-3.0** open-source license.\n\n" +
+          "**Open Source & Credits**\n" +
+          "• **Game Engine**: [PokéRogue](https://github.com/pagefaultgames/pokerogue) (PageFaultGames)\n" +
+          "• **Battle Sprites**: [Pokémon Showdown](https://pokemonshowdown.com/)\n" +
+          "• **PMD Sprites & Portraits**: [PMD SpriteCollab](https://sprites.pmdcollab.org/) (CC BY-NC 4.0)\n" +
+          "• **Pokémon Data**: [PokéAPI](https://pokeapi.co/)\n\n" +
           "**Legal Disclaimer**\n" +
           "• Pokémon © Nintendo / Creatures Inc. / GAME FREAK inc.\n" +
-          "• Non-profit fan-made project with no commercial intent."
+          "• Non-profit fan-made companion bot under GNU AGPL-3.0."
         )
         .setFooter({
           text: `PokéRogue Engine Version : ${POKEROGUE_VERSION}`,
