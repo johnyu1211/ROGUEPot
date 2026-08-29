@@ -288,3 +288,212 @@ export async function renderDotTestCard(): Promise<Buffer> {
 
   return canvas.toBuffer("image/png");
 }
+
+export interface BagScreenOptions {
+  username?: string;
+  tab?: "pokedex" | "starters" | "items" | "records";
+  dexCount?: number;
+  totalDex?: number;
+  unlockedCount?: number;
+  vouchers?: { regular: number; plus: number; premium: number; gold: number };
+  stats?: { totalRuns: number; highestWave: number };
+}
+
+/**
+ * Renders a Classic Retro Pokémon Trainer Bag UI (560x380)
+ */
+export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffer> {
+  const width = 560;
+  const height = 380;
+  const canvas = createCanvas(width, height);
+  const ctx = canvas.getContext("2d");
+
+  ctx.imageSmoothingEnabled = false;
+
+  const currentTab = options?.tab || "items";
+
+  // 1. Background Fill (Retro Trainer Bag Dark Indigo)
+  ctx.fillStyle = "#141226";
+  ctx.fillRect(0, 0, width, height);
+
+  // 2. Outer Bag Frame (Gold & Wine-Red Border)
+  ctx.strokeStyle = "#F4A261";
+  ctx.lineWidth = 4;
+  ctx.strokeRect(2, 2, width - 4, height - 4);
+
+  ctx.strokeStyle = "#E63946";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(6, 6, width - 12, height - 12);
+
+  // 3. TOP BANNER: Trainer Bag Header
+  ctx.fillStyle = "#241F3D";
+  ctx.fillRect(8, 8, width - 16, 42);
+
+  ctx.strokeStyle = "#4D436D";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(8, 8, width - 16, 42);
+
+  ctx.font = "bold 20px DungGeunMo";
+  ctx.fillStyle = "#F4A261";
+  ctx.textAlign = "left";
+  ctx.fillText("🎒 TRAINER'S BAG", 24, 36);
+
+  ctx.font = "16px DungGeunMo";
+  ctx.fillStyle = "#FFFFFF";
+  ctx.textAlign = "right";
+  const userTitle = (options?.username || "Trainer") + "'s Pocket";
+  ctx.fillText(userTitle, width - 24, 36);
+
+  // 4. LEFT SIDE: Pockets & Tabs List
+  const leftX = 18;
+  const leftY = 60;
+  const leftW = 210;
+  const leftH = 302;
+
+  ctx.fillStyle = "#1B1730";
+  ctx.fillRect(leftX, leftY, leftW, leftH);
+  ctx.strokeStyle = "#383152";
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(leftX, leftY, leftW, leftH);
+
+  // Pocket Title
+  ctx.fillStyle = "#2D264E";
+  ctx.fillRect(leftX + 2, leftY + 2, leftW - 4, 30);
+  ctx.font = "bold 15px DungGeunMo";
+  ctx.fillStyle = "#F4A261";
+  ctx.textAlign = "center";
+  ctx.fillText("POCKETS (가방 주머니)", leftX + leftW / 2, leftY + 22);
+
+  const tabs = [
+    { key: "items", label: "1. ITEMS & VOUCHERS" },
+    { key: "starters", label: "2. STARTERS (스타팅)" },
+    { key: "pokedex", label: "3. POKÉDEX (도감)" },
+    { key: "records", label: "4. CAREER RECORDS" },
+  ];
+
+  tabs.forEach((t, idx) => {
+    const tabY = leftY + 44 + idx * 58;
+    const isSelected = currentTab === t.key;
+
+    // Tab button box
+    ctx.fillStyle = isSelected ? "#4A3E72" : "#141124";
+    ctx.beginPath();
+    ctx.roundRect(leftX + 10, tabY, leftW - 20, 46, 6);
+    ctx.fill();
+
+    if (isSelected) {
+      ctx.strokeStyle = "#F4A261";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    } else {
+      ctx.strokeStyle = "#2E2847";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    ctx.font = isSelected ? "bold 13px DungGeunMo" : "13px DungGeunMo";
+    ctx.fillStyle = isSelected ? "#FFFFFF" : "#8F89AA";
+    ctx.textAlign = "left";
+    ctx.fillText((isSelected ? "▶ " : "  ") + t.label, leftX + 18, tabY + 28);
+  });
+
+  // 5. RIGHT SIDE: Detailed Pocket Content Screen
+  const rightX = 240;
+  const rightY = 60;
+  const rightW = 302;
+  const rightH = 302;
+
+  ctx.fillStyle = "#1A162F";
+  ctx.fillRect(rightX, rightY, rightW, rightH);
+  ctx.strokeStyle = "#4D436D";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(rightX, rightY, rightW, rightH);
+
+  // Header of Right Content
+  ctx.fillStyle = "#2B244A";
+  ctx.fillRect(rightX + 2, rightY + 2, rightW - 4, 32);
+
+  ctx.font = "bold 16px DungGeunMo";
+  ctx.fillStyle = "#F4A261";
+  ctx.textAlign = "left";
+
+  const vouchers = options?.vouchers || { regular: 0, plus: 0, premium: 0, gold: 0 };
+  const stats = options?.stats || { totalRuns: 0, highestWave: 0 };
+  const unlocked = options?.unlockedCount ?? 9;
+
+  if (currentTab === "items") {
+    ctx.fillText("🎟️ GACHA VOUCHERS & ITEMS", rightX + 14, rightY + 23);
+
+    const voucherItems = [
+      { name: "Regular Voucher (1x Pull)", count: vouchers.regular || 0, color: "#E0E0E0" },
+      { name: "Plus Voucher (5x Pulls)", count: vouchers.plus || 0, color: "#57F287" },
+      { name: "Premium Voucher (10x Pulls)", count: vouchers.premium || 0, color: "#5865F2" },
+      { name: "Gold Voucher (25x Pulls)", count: vouchers.gold || 0, color: "#FEE75C" },
+    ];
+
+    voucherItems.forEach((item, idx) => {
+      const itemY = rightY + 48 + idx * 56;
+
+      ctx.fillStyle = "#120F22";
+      ctx.beginPath();
+      ctx.roundRect(rightX + 12, itemY, rightW - 24, 46, 6);
+      ctx.fill();
+
+      ctx.strokeStyle = "#383152";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.font = "14px DungGeunMo";
+      ctx.fillStyle = item.color;
+      ctx.textAlign = "left";
+      ctx.fillText(`• ${item.name}`, rightX + 24, itemY + 28);
+
+      ctx.font = "bold 15px DungGeunMo";
+      ctx.fillStyle = "#FFFFFF";
+      ctx.textAlign = "right";
+      ctx.fillText(`x${item.count}`, rightX + rightW - 24, itemY + 28);
+    });
+  } else if (currentTab === "starters") {
+    ctx.fillText("👾 STARTER POKÉMON ROSTER", rightX + 14, rightY + 23);
+
+    ctx.font = "15px DungGeunMo";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "left";
+    ctx.fillText(`• Unlocked Starters: ${unlocked} / 586`, rightX + 20, rightY + 70);
+    ctx.fillText("• Starter Candies: Available per species", rightX + 20, rightY + 105);
+    ctx.fillText("• Passive Skills: Unlockable via Candies", rightX + 20, rightY + 140);
+    ctx.fillText("• Cost Reductions: Upgradeable", rightX + 20, rightY + 175);
+
+    // Starter icons sample
+    const sampleStarters = ["bulbasaur", "charmander", "squirtle"];
+    for (let i = 0; i < sampleStarters.length; i++) {
+      const spr = await getPokemonSprite(sampleStarters[i]);
+      if (spr) {
+        ctx.drawImage(spr, rightX + 25 + i * 85, rightY + 205, spr.width * 1.1, spr.height * 1.1);
+      }
+    }
+  } else if (currentTab === "pokedex") {
+    ctx.fillText("📖 NATIONAL POKÉDEX", rightX + 14, rightY + 23);
+
+    ctx.font = "15px DungGeunMo";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "left";
+    ctx.fillText("• Seen Pokémon: 3 / 1025", rightX + 20, rightY + 75);
+    ctx.fillText("• Caught Pokémon: 3 / 1025", rightX + 20, rightY + 115);
+    ctx.fillText("• Shiny Tier 1 (Yellow): 0", rightX + 20, rightY + 155);
+    ctx.fillText("• Shiny Tier 2 (Blue): 0", rightX + 20, rightY + 195);
+    ctx.fillText("• Shiny Tier 3 (Red): 0", rightX + 20, rightY + 235);
+  } else {
+    ctx.fillText("🏆 TRAINER CAREER RECORDS", rightX + 14, rightY + 23);
+
+    ctx.font = "15px DungGeunMo";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "left";
+    ctx.fillText(`• Total Runs Attempted: ${stats.totalRuns}`, rightX + 20, rightY + 80);
+    ctx.fillText(`• Highest Wave Reached: Wave ${stats.highestWave}`, rightX + 20, rightY + 125);
+    ctx.fillText("• Classic Mode Clears: 0", rightX + 20, rightY + 170);
+    ctx.fillText("• Endless Mode Unlocked: Locked 🔒", rightX + 20, rightY + 215);
+  }
+
+  return canvas.toBuffer("image/png");
+}
