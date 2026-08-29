@@ -1,4 +1,4 @@
-﻿import { db, initDatabase } from "./db.js";
+import { db, initDatabase } from "./db.js";
 
 // Initialize database schema on startup
 initDatabase();
@@ -113,6 +113,35 @@ class SaveService {
     const now = new Date().toISOString();
     this.getProfile(userId);
     db.prepare("UPDATE users SET language = ?, updated_at = ? WHERE user_id = ?").run(language, now, userId);
+  }
+
+  public addMultiplayerPokemon(userId: string, pokemon: PartyPokemon): { success: boolean; slotIndex: number; team: PartyPokemon[] } {
+    const profile = this.getProfile(userId);
+    const team = [...profile.multiplayerTeam];
+
+    // Find first empty slot among 0..5
+    let targetIndex = -1;
+    for (let i = 0; i < 6; i++) {
+      if (!team[i]) {
+        targetIndex = i;
+        break;
+      }
+    }
+
+    if (targetIndex === -1) {
+      // All 6 slots are occupied!
+      return { success: false, slotIndex: -1, team };
+    }
+
+    team[targetIndex] = pokemon;
+    const now = new Date().toISOString();
+    db.prepare("UPDATE users SET multiplayer_team = ?, updated_at = ? WHERE user_id = ?").run(
+      JSON.stringify(team),
+      now,
+      userId
+    );
+
+    return { success: true, slotIndex: targetIndex, team };
   }
 
   public setMultiplayerPokemon(userId: string, slotIndex: number, pokemon: PartyPokemon): PartyPokemon[] {

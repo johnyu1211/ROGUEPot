@@ -347,23 +347,23 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
   ctx.font = "bold 17px DungGeunMo";
   ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "left";
-  ctx.fillText(isKo ? "📝 전국도감 포켓몬 등록" : "📝 National Dex Registration", leftX + 18, leftY + 70);
+  ctx.fillText(isKo ? "📝 포켓몬 엔트리 등록" : "📝 Battle Entry Registration", leftX + 18, leftY + 70);
 
   ctx.font = "15px DungGeunMo";
   ctx.fillStyle = "#CBD5E1";
   if (isKo) {
-    ctx.fillText("• 전국도감 번호(1~1025)로", leftX + 18, leftY + 98);
+    ctx.fillText("• 도감번호 또는 고유 이름으로", leftX + 18, leftY + 98);
     ctx.fillText("  원하는 포켓몬을 자유 등록!", leftX + 18, leftY + 120);
-    ctx.fillText("• 예: 6(리자몽), 25(피카츄),", leftX + 18, leftY + 144);
-    ctx.fillText("  491(다크라이), 150(뮤츠) 등", leftX + 18, leftY + 166);
+    ctx.fillText("• 예: 샤미드(134), 루카리오(448),", leftX + 18, leftY + 144);
+    ctx.fillText("  이어롭(428), 피카츄(25) 등", leftX + 18, leftY + 166);
     ctx.font = "bold 15px DungGeunMo";
     ctx.fillStyle = "#57F287";
     ctx.fillText(`• 등록 현황: ${registeredCount} / 6 마리`, leftX + 18, leftY + 196);
   } else {
-    ctx.fillText("• Register any Pokémon using its", leftX + 18, leftY + 98);
-    ctx.fillText("  National Pokédex # (1 ~ 1025)!", leftX + 18, leftY + 120);
-    ctx.fillText("• e.g. #6 (Charizard), #25 (Pikachu)", leftX + 18, leftY + 144);
-    ctx.fillText("  #491 (Darkrai), #150 (Mewtwo)", leftX + 18, leftY + 166);
+    ctx.fillText("• Register by Dex # or Name", leftX + 18, leftY + 98);
+    ctx.fillText("  to build your dream battle team!", leftX + 18, leftY + 120);
+    ctx.fillText("• e.g. Vaporeon (#134), Lucario,", leftX + 18, leftY + 144);
+    ctx.fillText("  Lopunny (#428), Pikachu (#25)", leftX + 18, leftY + 166);
     ctx.font = "bold 15px DungGeunMo";
     ctx.fillStyle = "#57F287";
     ctx.fillText(`• Team Roster: ${registeredCount} / 6 Ready`, leftX + 18, leftY + 196);

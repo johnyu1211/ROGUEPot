@@ -15,7 +15,7 @@ import { BotEvent, ExtendedClient } from "../types/index.js";
 import { createBaseEmbed, COLORS } from "../utils/embed.js";
 import { renderTitleScreen, renderBagScreen, renderMultiplayerScreen } from "../utils/canvasRenderer.js";
 import { saveService, PartyPokemon } from "../services/saveService.js";
-import { getPokemonByDexNumber } from "../services/pokeApiService.js";
+import { getPokemonByQuery } from "../services/pokeApiService.js";
 
 function createStarterSelectMenu(slotId: number, userId: string, fromSource: "title" | "slots" = "title") {
   const profile = saveService.getProfile(userId);
@@ -391,31 +391,21 @@ export const interactionCreateEvent: BotEvent = {
       return;
     }
 
-    // 2. Modal Submits (Multiplayer Pokemon Registration)
+    // 2. Modal Submits (Multiplayer Pokemon Registration - Auto Sequential Slots)
     if (interaction.isModalSubmit()) {
       if (interaction.customId.startsWith("multi_reg_modal_")) {
-        const slotInput = interaction.fields.getTextInputValue("slot_no_input");
         const dexInput = interaction.fields.getTextInputValue("dex_no_input");
         const levelInput = interaction.fields.getTextInputValue("level_input");
 
-        const slotNo = parseInt(slotInput, 10);
-        const dexNo = parseInt(dexInput, 10);
+        const query = dexInput.trim();
         const level = parseInt(levelInput, 10) || 50;
 
         const profile = saveService.getProfile(interaction.user.id);
         const isKo = profile.language === "ko";
 
-        if (isNaN(slotNo) || slotNo < 1 || slotNo > 6) {
+        if (!query) {
           await interaction.reply({
-            content: isKo ? "❌ 슬롯 번호는 1에서 6 사이의 숫자여야 합니다." : "❌ Slot number must be between 1 and 6.",
-            ephemeral: true,
-          });
-          return;
-        }
-
-        if (isNaN(dexNo) || dexNo < 1 || dexNo > 1025) {
-          await interaction.reply({
-            content: isKo ? "❌ 전국도감 번호는 1에서 1025 사이여야 합니다." : "❌ National Dex number must be between 1 and 1025.",
+            content: isKo ? "❌ 포켓몬 도감 번호 또는 이름을 입력해주세요." : "❌ Please enter a Pokémon Dex number or name.",
             ephemeral: true,
           });
           return;
@@ -423,10 +413,10 @@ export const interactionCreateEvent: BotEvent = {
 
         await interaction.deferUpdate();
 
-        const pokeInfo = await getPokemonByDexNumber(dexNo);
+        const pokeInfo = await getPokemonByQuery(query);
         if (!pokeInfo) {
           await interaction.followUp({
-            content: isKo ? `❌ 도감 번호 #${dexNo}번 포켓몬을 찾을 수 없습니다.` : `❌ Could not find Pokemon with Dex #${dexNo}.`,
+            content: isKo ? `❌ '${query}'에 해당하는 포켓몬을 찾을 수 없습니다.` : `❌ Could not find Pokémon for '${query}'.`,
             ephemeral: true,
           });
           return;
@@ -441,7 +431,16 @@ export const interactionCreateEvent: BotEvent = {
           moves: ["Tackle", "Signature Move"],
         };
 
-        saveService.setMultiplayerPokemon(interaction.user.id, slotNo - 1, newPokemon);
+        const result = saveService.addMultiplayerPokemon(interaction.user.id, newPokemon);
+        if (!result.success) {
+          await interaction.followUp({
+            content: isKo
+              ? "❌ 멀티플레이 6개 엔트리가 이미 꽉 찼습니다! (전체 6마리 완성)"
+              : "❌ All 6 Battle Roster slots are already filled!",
+            ephemeral: true,
+          });
+          return;
+        }
 
         const client = interaction.client as ExtendedClient;
         const updatedData = await renderMultiplayerMessageData(client, interaction.user.id);
@@ -513,32 +512,23 @@ export const interactionCreateEvent: BotEvent = {
           .setCustomId(`multi_reg_modal_${interaction.user.id}`)
           .setTitle(isKo ? "📝 포켓몬 엔트리 등록" : "📝 Register Battle Pokémon");
 
-        const slotInput = new TextInputBuilder()
-          .setCustomId("slot_no_input")
-          .setLabel(isKo ? "등록할 슬롯 번호 (1 ~ 6)" : "Slot Number (1 ~ 6)")
-          .setPlaceholder("1")
-          .setStyle(TextInputStyle.Short)
-          .setRequired(true)
-          .setMaxLength(1);
-
         const dexInput = new TextInputBuilder()
           .setCustomId("dex_no_input")
-          .setLabel(isKo ? "전국도감 번호 (1 ~ 1025)" : "National Dex Number (1 ~ 1025)")
-          .setPlaceholder(isKo ? "예: 6(리자몽), 25(피카츄), 491(다크라이)" : "e.g. 6 (Charizard), 25 (Pikachu), 491 (Darkrai)")
+          .setLabel(isKo ? "포켓몬 이름 또는 도감 번호" : "Pokémon Name or Dex Number")
+          .setPlaceholder(isKo ? "예: 샤미드, 루카리오, 이어롭, 25, 491" : "e.g. Vaporeon, Lucario, Lopunny, 25, 491")
           .setStyle(TextInputStyle.Short)
           .setRequired(true)
-          .setMaxLength(4);
+          .setMaxLength(20);
 
         const levelInput = new TextInputBuilder()
           .setCustomId("level_input")
-          .setLabel(isKo ? "레벨 (1 ~ 100)" : "Level (1 ~ 100)")
+          .setLabel(isKo ? "레벨 (1 ~ 100 / 기본 50)" : "Level (1 ~ 100 / Default 50)")
           .setPlaceholder("50")
           .setStyle(TextInputStyle.Short)
           .setRequired(false)
           .setMaxLength(3);
 
         modal.addComponents(
-          new ActionRowBuilder<TextInputBuilder>().addComponents(slotInput),
           new ActionRowBuilder<TextInputBuilder>().addComponents(dexInput),
           new ActionRowBuilder<TextInputBuilder>().addComponents(levelInput)
         );
