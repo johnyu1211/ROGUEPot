@@ -119,18 +119,33 @@ export const command: Command = {
 
       const sessionNoticeEmbed = new EmbedBuilder()
         .setColor(COLORS.POKEROGUE_BLUE)
-        .setTitle("🎮 PokéRogue Game Session Created")
+        .setTitle(isKo ? "🎮 PokéRogue 게임 세션 생성 완료" : "🎮 PokéRogue Game Session Created")
         .setDescription(
           `<#${thread.id}>\n\n` +
           "━━━━━━━━━━━━━━━━━━━━━━\n" +
-          "**Open Source & Credits**\n" +
-          "• **Game Engine**: [PokéRogue](https://github.com/pagefaultgames/pokerogue) (PageFaultGames)\n" +
-          "• **Battle Sprites**: [Pokémon Showdown](https://pokemonshowdown.com/)\n" +
-          "• **PMD Sprites & Portraits**: [PMD SpriteCollab](https://sprites.pmdcollab.org/) (CC BY-NC 4.0)\n" +
-          "• **Pokémon Data**: [PokéAPI](https://pokeapi.co/)\n\n" +
-          "**Legal Disclaimer**\n" +
-          "• Pokémon © Nintendo / Creatures Inc. / GAME FREAK inc.\n" +
-          "• Non-profit fan-made companion bot under GNU AGPL-3.0."
+          (isKo
+            ? "⚠️ **데이터 및 세션 유실 면책 고지**\n" +
+              "• 봇 업데이트/재부팅, 디스코드 상호작용 세션 만료(15분) 및 서버 점검 등으로 인해 진행 중이던 게임 데이터나 배틀 세션이 유실될 수 있으며, 이에 대해 개발팀은 일절 책임을 지지 않습니다.\n" +
+              "• 중요 진행 상황은 슬롯에 안전하게 자주 저장해 주시기 바랍니다.\n\n" +
+              "**📜 오픈소스 & 크레딧**\n" +
+              "• **게임 엔진**: [PokéRogue](https://github.com/pagefaultgames/pokerogue) (PageFaultGames)\n" +
+              "• **배틀 스프라이트**: [Pokémon Showdown](https://pokemonshowdown.com/)\n" +
+              "• **PMD 도트/포트레이트**: [PMD SpriteCollab](https://sprites.pmdcollab.org/) (CC BY-NC 4.0)\n" +
+              "• **포켓몬 데이터**: [PokéAPI](https://pokeapi.co/)\n\n" +
+              "**⚖️ 법적 면책 조항**\n" +
+              "• Pokémon © Nintendo / Creatures Inc. / GAME FREAK inc.\n" +
+              "• 비상업적 팬메이드 봇 (GNU AGPL-3.0 라이선스 적용)."
+            : "⚠️ **Data & Session Loss Disclaimer**\n" +
+              "• The developers assume NO responsibility for any loss of game progress or active battle sessions caused by bot updates, restarts, Discord session timeouts (15m), or server downtime.\n" +
+              "• Please save your important game progress to save slots regularly.\n\n" +
+              "**📜 Open Source & Credits**\n" +
+              "• **Game Engine**: [PokéRogue](https://github.com/pagefaultgames/pokerogue) (PageFaultGames)\n" +
+              "• **Battle Sprites**: [Pokémon Showdown](https://pokemonshowdown.com/)\n" +
+              "• **PMD Sprites & Portraits**: [PMD SpriteCollab](https://sprites.pmdcollab.org/) (CC BY-NC 4.0)\n" +
+              "• **Pokémon Data**: [PokéAPI](https://pokeapi.co/)\n\n" +
+              "**⚖️ Legal Disclaimer**\n" +
+              "• Pokémon © Nintendo / Creatures Inc. / GAME FREAK inc.\n" +
+              "• Non-profit fan-made companion bot under GNU AGPL-3.0.")
         )
         .setFooter({
           text: `PokéRogue Engine Version : ${POKEROGUE_VERSION}`,
