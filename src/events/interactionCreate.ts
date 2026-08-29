@@ -456,22 +456,22 @@ async function renderPokedexMessageData(
   // ROW 4: Fast Backward 3 Pages (◀◀◀), Prev, Next, Fast Forward 3 Pages (▶▶▶), Return (↩️)
   const navRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
-      .setCustomId(`pokedex_page_${Math.max(1, page - 3)}_${selectedDexNo}_${fromScreen}_${userId}`)
+      .setCustomId(`pokedex_jumpback_${Math.max(1, page - 3)}_${selectedDexNo}_${fromScreen}_${userId}`)
       .setLabel("◀◀◀")
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(page <= 1),
     new ButtonBuilder()
-      .setCustomId(`pokedex_page_${Math.max(1, page - 1)}_${selectedDexNo}_${fromScreen}_${userId}`)
+      .setCustomId(`pokedex_pageprev_${Math.max(1, page - 1)}_${selectedDexNo}_${fromScreen}_${userId}`)
       .setLabel(isKo ? "◀ 이전" : "◀ Prev")
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(page <= 1),
     new ButtonBuilder()
-      .setCustomId(`pokedex_page_${Math.min(totalPages, page + 1)}_${selectedDexNo}_${fromScreen}_${userId}`)
+      .setCustomId(`pokedex_pagenext_${Math.min(totalPages, page + 1)}_${selectedDexNo}_${fromScreen}_${userId}`)
       .setLabel(isKo ? "다음 ▶" : "Next ▶")
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(page >= totalPages),
     new ButtonBuilder()
-      .setCustomId(`pokedex_page_${Math.min(totalPages, page + 3)}_${selectedDexNo}_${fromScreen}_${userId}`)
+      .setCustomId(`pokedex_jumpfwd_${Math.min(totalPages, page + 3)}_${selectedDexNo}_${fromScreen}_${userId}`)
       .setLabel("▶▶▶")
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(page >= totalPages),
@@ -805,8 +805,14 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 3-0-8. Pokédex Page Switch (Prev / Next)
-      if (customId.startsWith("pokedex_page_")) {
+      // 3-0-8. Pokédex Page Switch (Prev / Next / Jump)
+      if (
+        customId.startsWith("pokedex_page_") ||
+        customId.startsWith("pokedex_pageprev_") ||
+        customId.startsWith("pokedex_pagenext_") ||
+        customId.startsWith("pokedex_jumpback_") ||
+        customId.startsWith("pokedex_jumpfwd_")
+      ) {
         await interaction.deferUpdate().catch(() => null);
         try {
           const targetPage = parseInt(parts[2], 10) || 1;
