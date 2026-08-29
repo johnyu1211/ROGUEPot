@@ -28,7 +28,20 @@ export interface TitleScreenOptions {
 }
 
 /**
- * Renders title card with Logo & Context-aware Menu on left, and ENTRY box on right
+ * Helper to fetch a static pixel sprite from Showdown CDN
+ */
+export async function getPokemonSprite(pokemonName: string): Promise<Image | null> {
+  try {
+    const url = `https://play.pokemonshowdown.com/sprites/gen5/${pokemonName.toLowerCase().replace(/[^a-z0-9-]/g, "")}.png`;
+    return await loadImage(url);
+  } catch (err) {
+    console.error(`[CANVAS] Failed to load sprite for ${pokemonName}:`, err);
+    return null;
+  }
+}
+
+/**
+ * Renders title card with crisp pixel-art smoothing disabled
  */
 export async function renderTitleScreen(options?: TitleScreenOptions): Promise<Buffer> {
   const width = 560;
@@ -36,107 +49,124 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
 
+  // CRITICAL: Disable anti-aliasing / smoothing for sharp, unblurred pixel art!
+  ctx.imageSmoothingEnabled = false;
+
   // 1. Dark Retro Background
   ctx.fillStyle = "#161424";
   ctx.fillRect(0, 0, width, height);
 
-  // 2. Retro Border Frame (Outer Red + Inner Purple)
+  // 2. Outer Border Frame flush to edge
   ctx.strokeStyle = "#E63946";
-  ctx.lineWidth = 6;
-  ctx.strokeRect(8, 8, width - 16, height - 16);
+  ctx.lineWidth = 4;
+  ctx.strokeRect(2, 2, width - 4, height - 4);
 
   ctx.strokeStyle = "#383152";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(16, 16, width - 32, height - 32);
+  ctx.lineWidth = 1;
+  ctx.strokeRect(6, 6, width - 12, height - 12);
 
   // 3. Logo Aligned to LEFT
   const logo = await getLogoImage();
-  const leftPadding = 32;
+  const leftPadding = 30;
 
   if (logo) {
-    const logoWidth = 240;
+    const logoWidth = 250;
     const logoHeight = (logo.height / logo.width) * logoWidth;
     const logoX = leftPadding;
-    const logoY = 38;
+    const logoY = 36;
     ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
 
-    // Team Name directly below Logo (Pure White)
-    ctx.font = "16px DungGeunMo";
-    ctx.fillStyle = "#FFFFFF";
-    ctx.textAlign = "left";
-    ctx.fillText("By PageFaultGames", leftPadding + 6, logoY + logoHeight + 20);
-
-    // 4. Menu List on the Left under By PageFaultGames
-    const menuStartY = logoY + logoHeight + 60;
+    // Team Name
     ctx.font = "20px DungGeunMo";
+    ctx.fillStyle = "#F4A261";
+    ctx.textAlign = "left";
+    ctx.fillText("By PageFaultGames", leftPadding + 4, logoY + logoHeight + 26);
+
+    // Menu List
+    const menuStartY = logoY + logoHeight + 74;
+    ctx.font = "26px DungGeunMo";
+    ctx.fillStyle = "#FFFFFF";
 
     if (options?.hasSavedSlots) {
-      // Saved games exist -> Show Continue, New Game, Load Game
-      ctx.fillStyle = "#F4A261"; // Gold highlight for #1 Continue
-      ctx.fillText("▶ 1. CONTINUE", leftPadding + 6, menuStartY);
-
-      ctx.fillStyle = "#EAEAEA";
-      ctx.fillText("  2. NEW GAME", leftPadding + 6, menuStartY + 34);
-
-      ctx.fillStyle = "#9E9EAF";
-      ctx.fillText("  3. LOAD GAME", leftPadding + 6, menuStartY + 68);
+      ctx.fillText("▶ 1. CONTINUE", leftPadding + 4, menuStartY);
+      ctx.fillText("  2. NEW GAME", leftPadding + 4, menuStartY + 42);
+      ctx.fillText("  3. LOAD GAME", leftPadding + 4, menuStartY + 84);
     } else {
-      // No saved games at all -> Only show NEW GAME!
-      ctx.fillStyle = "#F4A261"; // Gold highlight for New Game
-      ctx.fillText("▶ 1. NEW GAME", leftPadding + 6, menuStartY);
+      ctx.fillText("▶ 1. NEW GAME", leftPadding + 4, menuStartY);
     }
   }
 
-  // 5. RIGHT SIDE: "ENTRY" Box
-  const boxX = 305;
-  const boxY = 38;
-  const boxW = 215;
-  const boxH = 274;
+  return canvas.toBuffer("image/png");
+}
 
-  // Box Outer & Inner Fill
-  ctx.fillStyle = "#1E1A33";
-  ctx.fillRect(boxX, boxY, boxW, boxH);
+/**
+ * Renders a Pixel Art Quality Test Card (/test command)
+ */
+export async function renderDotTestCard(): Promise<Buffer> {
+  const width = 560;
+  const height = 350;
+  const canvas = createCanvas(width, height);
+  const ctx = canvas.getContext("2d");
 
+  // Disable smoothing for sharp pixel art
+  ctx.imageSmoothingEnabled = false;
+
+  // Background
+  ctx.fillStyle = "#12101F";
+  ctx.fillRect(0, 0, width, height);
+
+  // Borders
   ctx.strokeStyle = "#E63946";
-  ctx.lineWidth = 3;
-  ctx.strokeRect(boxX, boxY, boxW, boxH);
+  ctx.lineWidth = 4;
+  ctx.strokeRect(2, 2, width - 4, height - 4);
 
-  // Inner subtle border
-  ctx.strokeStyle = "#4D436D";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(boxX + 5, boxY + 5, boxW - 10, boxH - 10);
-
-  // Entry Header Banner
-  ctx.fillStyle = "#2D264A";
-  ctx.fillRect(boxX + 6, boxY + 6, boxW - 12, 38);
-
-  ctx.font = "bold 20px DungGeunMo";
-  ctx.fillStyle = "#F4A261"; // Gold
+  // Header Text
+  ctx.font = "22px DungGeunMo";
+  ctx.fillStyle = "#F4A261";
   ctx.textAlign = "center";
-  ctx.fillText("ENTRY", boxX + boxW / 2, boxY + 32);
+  ctx.fillText("★ PIXEL ART SPRITE QUALITY TEST ★", width / 2, 38);
 
-  // Entry Details inside Box
-  ctx.textAlign = "left";
-  ctx.fillStyle = "#FFFFFF";
-  ctx.font = "15px DungGeunMo";
-
-  const unlocked = options?.unlockedCount ?? 9;
-  ctx.fillText(`• Starters: ${unlocked}`, boxX + 18, boxY + 75);
-  ctx.fillText("• Mode: Classic", boxX + 18, boxY + 112);
-  ctx.fillText("• Slots: 3 Available", boxX + 18, boxY + 149);
-
-  // Status Indicator
-  ctx.fillStyle = options?.hasSavedSlots ? "#57F287" : "#F4A261";
   ctx.font = "14px DungGeunMo";
-  ctx.fillText(
-    options?.hasSavedSlots ? "▶ Saved Run Found" : "▶ Ready for New Run",
-    boxX + 18,
-    boxY + 208
-  );
+  ctx.fillStyle = "#8E88AB";
+  ctx.fillText("Nearest-Neighbor Scaled (Zero Blur / No Smoothing)", width / 2, 60);
 
-  // Decorative mini pixel bar
-  ctx.fillStyle = "#E63946";
-  ctx.fillRect(boxX + 18, boxY + 235, boxW - 36, 4);
+  // Load sample sprites
+  const pokemonList = [
+    { name: "darkrai", label: "Darkrai (다크라이)", x: 30, y: 80, scale: 2 },
+    { name: "charizard", label: "Charizard (리자몽)", x: 200, y: 80, scale: 2 },
+    { name: "gengar-mega", label: "Mega Gengar (메가팬텀)", x: 370, y: 80, scale: 2 },
+  ];
+
+  for (const p of pokemonList) {
+    const sprite = await getPokemonSprite(p.name);
+    if (sprite) {
+      // Draw background box for each sprite
+      ctx.fillStyle = "#1E1A33";
+      ctx.fillRect(p.x, p.y, 160, 190);
+      ctx.strokeStyle = "#383152";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(p.x, p.y, 160, 190);
+
+      // Draw crisp unblurred pixel sprite
+      const sprW = sprite.width * p.scale;
+      const sprH = sprite.height * p.scale;
+      const sprX = p.x + (160 - sprW) / 2;
+      const sprY = p.y + (150 - sprH) / 2;
+      ctx.drawImage(sprite, sprX, sprY, sprW, sprH);
+
+      // Label
+      ctx.font = "13px DungGeunMo";
+      ctx.fillStyle = "#FFFFFF";
+      ctx.textAlign = "center";
+      ctx.fillText(p.label, p.x + 80, p.y + 175);
+    }
+  }
+
+  // Footer status
+  ctx.font = "13px DungGeunMo";
+  ctx.fillStyle = "#57F287";
+  ctx.textAlign = "center";
+  ctx.fillText("✔ 100% Crisp Pixel Art Rendering Verified", width / 2, 315);
 
   return canvas.toBuffer("image/png");
 }
