@@ -831,14 +831,13 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     ctx.lineTo(width, 42);
     ctx.stroke();
 
-    // Header: Dex No & Big Name (Vertically centered at y = 29, matching left header baseline)
-    ctx.font = "bold 20px DungGeunMo";
-    ctx.fillStyle = "#FFFFFF";
+    // Right Header Title (Consistent Top Baseline with Left Header)
+    ctx.font = "bold 18px DungGeunMo";
+    ctx.fillStyle = "#CBD5E1";
     ctx.textAlign = "left";
-    const titleName = (isKo && selected.koreanName) ? selected.koreanName : selected.name;
-    ctx.fillText(`#${String(selected.dexNumber).padStart(3, "0")} ${titleName}`, rightX + 4, 29);
+    ctx.fillText(isKo ? "포켓몬 상세 정보" : "POKÉMON DETAILS", rightX + 6, 28);
 
-    // 5-1. TOP MAIN INFO CARD (Sprite + Types) (y: 48 ~ 156)
+    // 5-1. TOP MAIN INFO CARD (Sprite Box + Dex Number & Name + Types) (y: 48 ~ 156)
     const topCardY = 48;
     const topCardH = 108;
 
@@ -850,7 +849,7 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Sprite Showcase Box (Compact 82x82)
+    // Sprite Showcase Box (Compact 84x84)
     const showBoxX = rightX + 10;
     const showBoxSize = 84;
     const showBoxY = topCardY + (topCardH - showBoxSize) / 2;
@@ -871,12 +870,27 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
       ctx.drawImage(bigSprite, showBoxX + (showBoxSize - sprW) / 2, showBoxY + (showBoxSize - sprH) / 2, sprW, sprH);
     }
 
-    // Info Column (Types) next to Sprite (Enlarged 15px bold badges)
-    const infoX = showBoxX + showBoxSize + 16;
+    // Info Column next to Sprite (Dex Number + Name + Types)
+    const infoX = showBoxX + showBoxSize + 14;
+    const titleName = (isKo && selected.koreanName) ? selected.koreanName : selected.name;
+    const dexTag = `#${String(selected.dexNumber).padStart(3, "0")}`;
+
+    // 1. Top Row: #001 (Dex Tag in Silver) + Pokémon Name (Bold White 20px)
+    ctx.font = "bold 15px DungGeunMo";
+    ctx.fillStyle = "#8E96AB";
+    ctx.textAlign = "left";
+    ctx.fillText(dexTag, infoX, topCardY + 36);
+
+    const tagWidth = ctx.measureText(dexTag).width;
+    ctx.font = "bold 20px DungGeunMo";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText(titleName, infoX + tagWidth + 8, topCardY + 36);
+
+    // 2. Bottom Row: Type Badges (Enlarged 15px bold badges)
     let typeBadgeX = infoX;
     const badgeW = isKo ? 48 : 56;
     const badgeH = 26;
-    const typeBadgeY = topCardY + (topCardH - badgeH) / 2;
+    const typeBadgeY = topCardY + 56;
 
     for (const tName of selected.types) {
       const tLower = tName.toLowerCase();
@@ -902,7 +916,7 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
       ctx.fillText(tDisplay, typeBadgeX + badgeW / 2, typeBadgeY + 18);
       ctx.restore();
 
-      typeBadgeX += badgeW + 10;
+      typeBadgeX += badgeW + 8;
     }
 
     // 5-2. BASE STATS 2-COLUMN X 3-ROW GRID (HP/SPE, ATK/SPA, DEF/SPD, y: 164 ~ 284)
