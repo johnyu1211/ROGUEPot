@@ -372,55 +372,7 @@ async function renderPokedexMessageData(
 
   const components: ActionRowBuilder<ButtonBuilder>[] = [];
 
-  // ROW 1: Pokemon 1~4 Buttons + [🗺️] Region Jump Button (Max 5 buttons)
-  const row1Items = items.slice(0, 4);
-  if (row1Items.length > 0) {
-    const selectRow1 = new ActionRowBuilder<ButtonBuilder>();
-    row1Items.forEach((p, idx) => {
-      const isSelected = selectedPokemon && selectedPokemon.dexNumber === p.dexNumber;
-      const name = (isKo && p.koreanName) ? p.koreanName : p.name;
-      selectRow1.addComponents(
-        new ButtonBuilder()
-          .setCustomId(`pokedex_select_${p.dexNumber}_${page}_${fromScreen}_${userId}`)
-          .setLabel(`${idx + 1}. ${name.slice(0, 5)}`)
-          .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Secondary)
-      );
-    });
-    // 5th Button on Row 1: Region Jump [🗺️]
-    selectRow1.addComponents(
-      new ButtonBuilder()
-        .setCustomId(`pokedex_region_btn_${fromScreen}_${userId}`)
-        .setLabel("🗺️")
-        .setStyle(ButtonStyle.Secondary)
-    );
-    components.push(selectRow1);
-  }
-
-  // ROW 2: Pokemon 5~8 Buttons + [🔍] Search Button (Max 5 buttons)
-  const row2Items = items.slice(4, 8);
-  if (row2Items.length > 0) {
-    const selectRow2 = new ActionRowBuilder<ButtonBuilder>();
-    row2Items.forEach((p, idx) => {
-      const isSelected = selectedPokemon && selectedPokemon.dexNumber === p.dexNumber;
-      const name = (isKo && p.koreanName) ? p.koreanName : p.name;
-      selectRow2.addComponents(
-        new ButtonBuilder()
-          .setCustomId(`pokedex_select_${p.dexNumber}_${page}_${fromScreen}_${userId}`)
-          .setLabel(`${idx + 5}. ${name.slice(0, 5)}`)
-          .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Secondary)
-      );
-    });
-    // 5th Button on Row 2: Search Modal [🔍]
-    selectRow2.addComponents(
-      new ButtonBuilder()
-        .setCustomId(`pokedex_search_btn_${fromScreen}_${userId}`)
-        .setLabel("🔍")
-        .setStyle(ButtonStyle.Secondary)
-    );
-    components.push(selectRow2);
-  }
-
-  // ROW 3: Page Navigation & Back
+  // ROW 1: Navigation & Back & Region Jump & Search (Top Control Row)
   const navRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(`pokedex_page_${Math.max(1, page - 1)}_${selectedDexNo}_${fromScreen}_${userId}`)
@@ -435,9 +387,51 @@ async function renderPokedexMessageData(
     new ButtonBuilder()
       .setCustomId(`pokedex_back_${fromScreen}_${userId}`)
       .setLabel("↩️")
-      .setStyle(ButtonStyle.Danger)
+      .setStyle(ButtonStyle.Danger),
+    new ButtonBuilder()
+      .setCustomId(`pokedex_region_btn_${fromScreen}_${userId}`)
+      .setLabel("🗺️")
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`pokedex_search_btn_${fromScreen}_${userId}`)
+      .setLabel("🔍")
+      .setStyle(ButtonStyle.Secondary)
   );
   components.push(navRow);
+
+  // ROW 2: Pokemon 1~4 Buttons
+  const row1Items = items.slice(0, 4);
+  if (row1Items.length > 0) {
+    const selectRow1 = new ActionRowBuilder<ButtonBuilder>();
+    row1Items.forEach((p, idx) => {
+      const isSelected = selectedPokemon && selectedPokemon.dexNumber === p.dexNumber;
+      const name = (isKo && p.koreanName) ? p.koreanName : p.name;
+      selectRow1.addComponents(
+        new ButtonBuilder()
+          .setCustomId(`pokedex_select_${p.dexNumber}_${page}_${fromScreen}_${userId}`)
+          .setLabel(`${idx + 1}. ${name.slice(0, 5)}`)
+          .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Secondary)
+      );
+    });
+    components.push(selectRow1);
+  }
+
+  // ROW 3: Pokemon 5~8 Buttons
+  const row2Items = items.slice(4, 8);
+  if (row2Items.length > 0) {
+    const selectRow2 = new ActionRowBuilder<ButtonBuilder>();
+    row2Items.forEach((p, idx) => {
+      const isSelected = selectedPokemon && selectedPokemon.dexNumber === p.dexNumber;
+      const name = (isKo && p.koreanName) ? p.koreanName : p.name;
+      selectRow2.addComponents(
+        new ButtonBuilder()
+          .setCustomId(`pokedex_select_${p.dexNumber}_${page}_${fromScreen}_${userId}`)
+          .setLabel(`${idx + 5}. ${name.slice(0, 5)}`)
+          .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Secondary)
+      );
+    });
+    components.push(selectRow2);
+  }
 
   return { embeds: [], files: [attachment], components };
 }
