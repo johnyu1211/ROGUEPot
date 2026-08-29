@@ -11,6 +11,43 @@ import { BotEvent, ExtendedClient } from "../types/index.js";
 import { createBaseEmbed, COLORS } from "../utils/embed.js";
 import { saveService } from "../services/saveService.js";
 
+function createStarterSelectMenu(slotId: number, userId: string) {
+  const starterEmbed = createBaseEmbed(
+    `[Slot ${slotId}] Choose Your Starter Pokémon`,
+    "Select your starter Pokémon to begin your PokéRogue adventure!\n\n" +
+    "🌱 **Bulbasaur (#0001)** - Grass/Poison | Cost: 3 | Balanced & Status Moves\n" +
+    "🔥 **Charmander (#0004)** - Fire | Cost: 3 | High Firepower & Offense\n" +
+    "💧 **Squirtle (#0007)** - Water | Cost: 3 | High Defense & Tanky"
+  )
+    .setColor(COLORS.POKEROGUE_GOLD)
+    .setImage("https://play.pokemonshowdown.com/sprites/ani/charmander.gif");
+
+  const starterSelectMenu = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+    new StringSelectMenuBuilder()
+      .setCustomId(`starter_select_${slotId}_${userId}`)
+      .setPlaceholder("Select a starter Pokémon...")
+      .addOptions(
+        new StringSelectMenuOptionBuilder()
+          .setLabel("Bulbasaur (이상해씨)")
+          .setDescription("Cost: 3 | Grass/Poison | Overgrow")
+          .setValue("bulbasaur")
+          .setEmoji("🌱"),
+        new StringSelectMenuOptionBuilder()
+          .setLabel("Charmander (파이리)")
+          .setDescription("Cost: 3 | Fire | Blaze")
+          .setValue("charmander")
+          .setEmoji("🔥"),
+        new StringSelectMenuOptionBuilder()
+          .setLabel("Squirtle (꼬부기)")
+          .setDescription("Cost: 3 | Water | Torrent")
+          .setValue("squirtle")
+          .setEmoji("💧")
+      )
+  );
+
+  return { embeds: [starterEmbed], components: [starterSelectMenu] };
+}
+
 export const interactionCreateEvent: BotEvent = {
   name: Events.InteractionCreate,
   async execute(interaction: Interaction) {
@@ -45,8 +82,6 @@ export const interactionCreateEvent: BotEvent = {
     // 2. Button Interactions
     if (interaction.isButton()) {
       const customId = interaction.customId;
-
-      // Ownership Verification
       const parts = customId.split("_");
       const ownerId = parts[parts.length - 1];
 
@@ -58,45 +93,11 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 2-1. New Game Button Clicked
+      // 2-1. New Game Button Clicked -> Use first available slot
       if (customId.startsWith("menu_newgame_")) {
-        const starterEmbed = createBaseEmbed(
-          "Choose Your Starter Pokémon",
-          "Select your starter Pokémon to begin your PokéRogue adventure!\n\n" +
-          "🌱 **Bulbasaur (#0001)** - Grass/Poison | Cost: 3 | Balanced & Status Moves\n" +
-          "🔥 **Charmander (#0004)** - Fire | Cost: 3 | High Firepower & Offense\n" +
-          "💧 **Squirtle (#0007)** - Water | Cost: 3 | High Defense & Tanky"
-        )
-          .setColor(COLORS.POKEROGUE_GOLD)
-          .setImage("https://play.pokemonshowdown.com/sprites/ani/charmander.gif");
-
-        const starterSelectMenu = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-          new StringSelectMenuBuilder()
-            .setCustomId(`starter_select_${interaction.user.id}`)
-            .setPlaceholder("Select a starter Pokémon...")
-            .addOptions(
-              new StringSelectMenuOptionBuilder()
-                .setLabel("Bulbasaur (이상해씨)")
-                .setDescription("Cost: 3 | Grass/Poison | Overgrow")
-                .setValue("bulbasaur")
-                .setEmoji("🌱"),
-              new StringSelectMenuOptionBuilder()
-                .setLabel("Charmander (파이리)")
-                .setDescription("Cost: 3 | Fire | Blaze")
-                .setValue("charmander")
-                .setEmoji("🔥"),
-              new StringSelectMenuOptionBuilder()
-                .setLabel("Squirtle (꼬부기)")
-                .setDescription("Cost: 3 | Water | Torrent")
-                .setValue("squirtle")
-                .setEmoji("💧")
-            )
-        );
-
-        await interaction.reply({
-          embeds: [starterEmbed],
-          components: [starterSelectMenu],
-        });
+        const targetSlot = saveService.getFirstAvailableSlot(interaction.user.id);
+        const responseData = createStarterSelectMenu(targetSlot, interaction.user.id);
+        await interaction.reply(responseData);
         return;
       }
 
@@ -113,22 +114,31 @@ export const interactionCreateEvent: BotEvent = {
           return;
         }
 
+        const continueEmbed = createBaseEmbed(
+          `Resumed Run - Slot #${profile.activeSlotId}`,
+          `• **Biome**: ${activeRun.biome}\n` +
+          `• **Current Wave**: Wave ${activeRun.wave}\n` +
+          `• **Starter / Lead**: ${activeRun.party[0]?.name || activeRun.starter}\n` +
+          `• **Money**: ₩${activeRun.money}\n\n` +
+          "Ready for the next battle wave!"
+        ).setColor(COLORS.SUCCESS);
+
         await interaction.reply({
-          content: `Resuming Run from Slot #${profile.activeSlotId} (Wave ${activeRun.wave})...`,
+          embeds: [continueEmbed],
         });
         return;
       }
 
-      // 2-3. Load Game Button Clicked (3 Slots)
+      // 2-3. Load Game Button Clicked -> List 3 Slots
       if (customId.startsWith("menu_loadgame_")) {
         const profile = saveService.getProfile(interaction.user.id);
 
         const slotEmbed = createBaseEmbed(
-          "Load Game Slots (3 Slots)",
-          "Select a save slot to load or overwrite:\n\n" +
-          `• **Slot 1**: ${profile.slots[1] ? `Wave ${profile.slots[1]!.wave} - ${profile.slots[1]!.biome}` : "*Empty Slot*"}\n` +
-          `• **Slot 2**: ${profile.slots[2] ? `Wave ${profile.slots[2]!.wave} - ${profile.slots[2]!.biome}` : "*Empty Slot*"}\n` +
-          `• **Slot 3**: ${profile.slots[3] ? `Wave ${profile.slots[3]!.wave} - ${profile.slots[3]!.biome}` : "*Empty Slot*"}`
+          "Save Slots (3 Slots)",
+          "Select a slot below. If empty, you can start a new game in that slot.\n\n" +
+          `• **Slot 1**: ${profile.slots[1] ? `Wave ${profile.slots[1]!.wave} (${profile.slots[1]!.starter})` : "*[ Empty Slot ]*"}\n` +
+          `• **Slot 2**: ${profile.slots[2] ? `Wave ${profile.slots[2]!.wave} (${profile.slots[2]!.starter})` : "*[ Empty Slot ]*"}\n` +
+          `• **Slot 3**: ${profile.slots[3] ? `Wave ${profile.slots[3]!.wave} (${profile.slots[3]!.starter})` : "*[ Empty Slot ]*"}`
         ).setColor(COLORS.PRIMARY);
 
         const slotButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -149,7 +159,109 @@ export const interactionCreateEvent: BotEvent = {
         await interaction.reply({
           embeds: [slotEmbed],
           components: [slotButtons],
-          ephemeral: true,
+        });
+        return;
+      }
+
+      // 2-4. Specific Slot Selected (Slot 1, 2, 3)
+      if (customId.startsWith("slot_select_")) {
+        const slotNum = parseInt(parts[2], 10) || 1;
+        const profile = saveService.getProfile(interaction.user.id);
+        const slotData = profile.slots[slotNum];
+
+        if (!slotData) {
+          // EMPTY SLOT -> Apply exact same New Game starter selection logic!
+          const responseData = createStarterSelectMenu(slotNum, interaction.user.id);
+          await interaction.reply(responseData);
+        } else {
+          // EXISTING SAVE DATA -> Options to resume or overwrite
+          const existingSlotEmbed = createBaseEmbed(
+            `Slot #${slotNum} Details`,
+            `• **Starter**: ${slotData.party[0]?.name || slotData.starter}\n` +
+            `• **Wave**: Wave ${slotData.wave}\n` +
+            `• **Biome**: ${slotData.biome}\n` +
+            `• **Saved At**: ${new Date(slotData.updatedAt).toLocaleString()}\n\n` +
+            "Would you like to resume this run or overwrite it with a new game?"
+          ).setColor(COLORS.PRIMARY);
+
+          const slotActionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+            new ButtonBuilder()
+              .setCustomId(`slot_resume_${slotNum}_${interaction.user.id}`)
+              .setLabel(`Resume Slot #${slotNum}`)
+              .setStyle(ButtonStyle.Success),
+            new ButtonBuilder()
+              .setCustomId(`slot_overwrite_${slotNum}_${interaction.user.id}`)
+              .setLabel(`Overwrite (New Game)`)
+              .setStyle(ButtonStyle.Danger)
+          );
+
+          await interaction.reply({
+            embeds: [existingSlotEmbed],
+            components: [slotActionRow],
+          });
+        }
+        return;
+      }
+
+      // 2-5. Resume Existing Slot
+      if (customId.startsWith("slot_resume_")) {
+        const slotNum = parseInt(parts[2], 10) || 1;
+        const profile = saveService.getProfile(interaction.user.id);
+        profile.activeSlotId = slotNum;
+        const activeRun = profile.slots[slotNum]!;
+
+        const resumedEmbed = createBaseEmbed(
+          `Resumed Slot #${slotNum}`,
+          `Resumed your run on Wave ${activeRun.wave} (${activeRun.biome})!`
+        ).setColor(COLORS.SUCCESS);
+
+        await interaction.reply({
+          embeds: [resumedEmbed],
+        });
+        return;
+      }
+
+      // 2-6. Overwrite Slot -> Open starter selection for that slot
+      if (customId.startsWith("slot_overwrite_")) {
+        const slotNum = parseInt(parts[2], 10) || 1;
+        const responseData = createStarterSelectMenu(slotNum, interaction.user.id);
+        await interaction.reply(responseData);
+        return;
+      }
+    }
+
+    // 3. String Select Menu Interactions (Starter Picked)
+    if (interaction.isStringSelectMenu()) {
+      const customId = interaction.customId;
+      if (customId.startsWith("starter_select_")) {
+        const parts = customId.split("_");
+        const slotNum = parseInt(parts[2], 10) || 1;
+        const selectedSpecies = interaction.values[0];
+
+        // Start new run in this slot!
+        const newRun = saveService.startNewRun(interaction.user.id, slotNum, selectedSpecies);
+
+        const runStartedEmbed = createBaseEmbed(
+          `🎮 Adventure Begins in Slot #${slotNum}!`,
+          `You chose **${newRun.party[0].name}** as your starter!\n\n` +
+          `• **Current Biome**: ${newRun.biome}\n` +
+          `• **Starting Wave**: Wave 1\n` +
+          `• **Starting Balance**: ₩${newRun.money}\n\n` +
+          "Your journey into PokéRogue starts now!"
+        )
+          .setColor(COLORS.SUCCESS)
+          .setImage(`https://play.pokemonshowdown.com/sprites/ani/${selectedSpecies}.gif`);
+
+        const battleStartRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`wave_battle_${slotNum}_1_${interaction.user.id}`)
+            .setLabel("Enter Wave 1 Battle ⚔️")
+            .setStyle(ButtonStyle.Success)
+        );
+
+        await interaction.update({
+          embeds: [runStartedEmbed],
+          components: [battleStartRow],
         });
         return;
       }
