@@ -530,7 +530,7 @@ export const interactionCreateEvent: BotEvent = {
         const nicknameInput = new TextInputBuilder()
           .setCustomId("nickname_input")
           .setLabel(isKo ? "포켓몬 별명 (선택)" : "Nickname (Optional)")
-          .setPlaceholder(isKo ? "예: 미드미드, 파동의용사, 에이스" : "e.g. Hydro, Hero, MyAce")
+          .setPlaceholder(isKo ? "예: 메가뿅, 에비뿅, 파라뿅" : "e.g. Megaree, Hitmee, Parasee")
           .setStyle(TextInputStyle.Short)
           .setRequired(false)
           .setMaxLength(12);

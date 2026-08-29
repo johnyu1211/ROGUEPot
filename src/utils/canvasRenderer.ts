@@ -354,18 +354,16 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
   ctx.font = "15px DungGeunMo";
   ctx.fillStyle = "#CBD5E1";
   if (isKo) {
-    ctx.fillText("• 도감번호 또는 고유 이름으로", leftX + 18, leftY + 98);
-    ctx.fillText("  원하는 포켓몬을 자유 등록!", leftX + 18, leftY + 120);
-    ctx.fillText("• 예: 샤미드(134), 루카리오(448),", leftX + 18, leftY + 144);
-    ctx.fillText("  이어롭(428), 피카츄(25) 등", leftX + 18, leftY + 166);
+    ctx.fillText("• 포켓몬 이름/도감번호 등록!", leftX + 18, leftY + 98);
+    ctx.fillText("• 예: 샤미드, 루카리오, 이어롭", leftX + 18, leftY + 120);
+    ctx.fillText("• 별명: 메가뿅, 에비뿅, 파라뿅", leftX + 18, leftY + 144);
     ctx.font = "bold 15px DungGeunMo";
     ctx.fillStyle = "#57F287";
     ctx.fillText(`• 등록 현황: ${registeredCount} / 6 마리`, leftX + 18, leftY + 196);
   } else {
-    ctx.fillText("• Register by Dex # or Name", leftX + 18, leftY + 98);
-    ctx.fillText("  to build your dream battle team!", leftX + 18, leftY + 120);
-    ctx.fillText("• e.g. Vaporeon (#134), Lucario,", leftX + 18, leftY + 144);
-    ctx.fillText("  Lopunny (#428), Pikachu (#25)", leftX + 18, leftY + 166);
+    ctx.fillText("• Register by Dex # or Name!", leftX + 18, leftY + 98);
+    ctx.fillText("• e.g. Vaporeon, Lucario, Lopunny", leftX + 18, leftY + 120);
+    ctx.fillText("• Nick: Megaree, Hitmee, Parasee", leftX + 18, leftY + 144);
     ctx.font = "bold 15px DungGeunMo";
     ctx.fillStyle = "#57F287";
     ctx.fillText(`• Team Roster: ${registeredCount} / 6 Ready`, leftX + 18, leftY + 196);
