@@ -119,7 +119,7 @@ async function renderBagMessageData(
       .setStyle(tab === "items" ? ButtonStyle.Primary : ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId(`bag_tab_starters_${userId}`)
-      .setLabel("Starters 👾")
+      .setLabel("Pokémon 👾")
       .setStyle(tab === "starters" ? ButtonStyle.Primary : ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId(`bag_tab_pokedex_${userId}`)
