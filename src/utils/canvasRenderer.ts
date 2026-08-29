@@ -464,12 +464,12 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
   ctx.fillStyle = "#CBD5E1";
   if (isKo) {
     ctx.fillText("• 포켓몬 이름/도감번호 등록", leftX + 18, leftY + 104);
-    ctx.fillText("• 예: 샤미드, 루카리오, 이어롭", leftX + 18, leftY + 130);
+    ctx.fillText("• 예: 샤미드, 루카리오, 피카츄", leftX + 18, leftY + 130);
     ctx.fillText("• 별명: 메가뿅, 에비뿅, 파라뿅", leftX + 18, leftY + 156);
     ctx.fillText("• 1번부터 6번까지 자동 배치!", leftX + 18, leftY + 180);
   } else {
     ctx.fillText("• Register by Name or Dex #", leftX + 18, leftY + 104);
-    ctx.fillText("• e.g. Vaporeon, Lucario", leftX + 18, leftY + 130);
+    ctx.fillText("• e.g. Vaporeon, Lucario, Pikachu", leftX + 18, leftY + 130);
     ctx.fillText("• Nick: Megaree, Hitmee", leftX + 18, leftY + 156);
     ctx.fillText("• Auto-fills Slots 1 to 6!", leftX + 18, leftY + 180);
   }
