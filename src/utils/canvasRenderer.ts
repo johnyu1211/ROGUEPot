@@ -356,6 +356,7 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
   const ctx = canvas.getContext("2d");
 
   ctx.imageSmoothingEnabled = false;
+  ctx.textRendering = "optimizeSpeed";
 
   const isKo = options?.lang === "ko";
 
@@ -431,6 +432,7 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
   const ctx = canvas.getContext("2d");
 
   ctx.imageSmoothingEnabled = false;
+  ctx.textRendering = "optimizeSpeed";
 
   const isKo = options?.lang === "ko";
   const party = options?.party || [];
@@ -454,13 +456,11 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
   ctx.lineTo(splitX, 54);
   ctx.stroke();
 
-  // Header Title & Icon Centered in Left Half
-  drawVectorGlobe(ctx, splitX / 2 - 76, 27, 10, "#5865F2");
-
+  // Header Title Centered in Left Half
   ctx.font = "bold 20px DungGeunMo";
   ctx.fillStyle = "#5865F2";
   ctx.textAlign = "center";
-  ctx.fillText(isKo ? "멀티플레이 로비" : "MULTIPLAYER LOBBY", splitX / 2 + 10, 34);
+  ctx.fillText(isKo ? "멀티플레이 로비" : "MULTIPLAYER LOBBY", splitX / 2, 34);
 
   // 3. LEFT SIDE: Clean minimal area (Ready for lobby/matchmaking)
   // Left side is kept clear and minimal as requested
@@ -503,6 +503,7 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
   const ctx = canvas.getContext("2d");
 
   ctx.imageSmoothingEnabled = false;
+  ctx.textRendering = "optimizeSpeed";
 
   const isKo = options?.lang === "ko";
   const currentTab = options?.tab || "pokemon";
@@ -683,6 +684,7 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
   const ctx = canvas.getContext("2d");
 
   ctx.imageSmoothingEnabled = false;
+  ctx.textRendering = "optimizeSpeed";
 
   const isKo = options?.lang === "ko";
   const items = options?.pageList || [];
