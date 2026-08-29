@@ -112,6 +112,11 @@ const KOREAN_POKEMON_DICT: Record<string, number> = {
   "조로아크": 571,
   "개구마르": 656,
   "개굴닌자": 658,
+  "냐오닉스": 678,
+  "킬가르도": 681,
+  "호바귀": 710,
+  "펌킨인": 711,
+  "지가르데": 718,
   "나몰빼미": 722,
   "따라큐": 778,
   "흥나숭": 810,
@@ -158,6 +163,16 @@ export async function getPokemonByDexNumber(dexNo: number): Promise<DexPokemonIn
     else if (speciesId === "ho-oh") formattedName = "Ho-Oh";
     else if (speciesId === "porygon-z") formattedName = "Porygon-Z";
     else if (speciesId === "type-null") formattedName = "Type: Null";
+    else if (speciesId === "aegislash-shield" || speciesId === "aegislash-blade") formattedName = "Aegislash";
+    else if (speciesId === "meowstic-male" || speciesId === "meowstic-female") formattedName = "Meowstic";
+    else if (speciesId === "pumpkaboo-average") formattedName = "Pumpkaboo";
+    else if (speciesId === "gourgeist-average") formattedName = "Gourgeist";
+    else if (speciesId === "zygarde-50") formattedName = "Zygarde";
+    else if (speciesId.startsWith("tapu-")) formattedName = "Tapu " + speciesId.split("-")[1].charAt(0).toUpperCase() + speciesId.split("-")[1].slice(1);
+    else if (speciesId.includes("-")) {
+      const basePart = speciesId.split("-")[0];
+      formattedName = basePart.charAt(0).toUpperCase() + basePart.slice(1);
+    }
     const types = data.types.map((t: any) => t.type.name);
 
     const regularAbilities: string[] = [];
