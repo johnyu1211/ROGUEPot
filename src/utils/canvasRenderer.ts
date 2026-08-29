@@ -224,19 +224,11 @@ async function drawPartyRightPanel(
 
   // 1. VERTICAL SPLIT DIVIDER LINE (100% Full Height from Top to Bottom)
   const splitX = boxX - 10;
-  ctx.strokeStyle = options?.borderColor || "#383152";
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = "#2C2C2C";
+  ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.moveTo(splitX, 0);
   ctx.lineTo(splitX, 380);
-  ctx.stroke();
-
-  // Subtle inner accent line for depth (100% Full Height)
-  ctx.strokeStyle = "#1F1B36";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(splitX + 2, 0);
-  ctx.lineTo(splitX + 2, 380);
   ctx.stroke();
 
   // 2. USER HEADER (Avatar Circle + Username aligned to Top Header Bar at y: 0 ~ 42)
@@ -255,13 +247,13 @@ async function drawPartyRightPanel(
       ctx.drawImage(avatarImg, avatarX, avatarY, avatarSize, avatarSize);
       ctx.restore();
     } catch {
-      ctx.fillStyle = "#554D77";
+      ctx.fillStyle = "#333333";
       ctx.beginPath();
       ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
       ctx.fill();
     }
   } else {
-    ctx.fillStyle = "#554D77";
+    ctx.fillStyle = "#333333";
     ctx.beginPath();
     ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
     ctx.fill();
@@ -276,7 +268,7 @@ async function drawPartyRightPanel(
   ctx.fillText(nameToDisplay, avatarX + avatarSize + 10, 27);
 
   // Sub-divider line under user header at y = 42 (matching left header divider line)
-  ctx.strokeStyle = options?.borderColor || "#332D48";
+  ctx.strokeStyle = "#2C2C2C";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.moveTo(splitX, 42);
@@ -300,21 +292,21 @@ async function drawPartyRightPanel(
     const sx = boxX + 4 + col * (slotW + gapX);
     const sy = startGridY + row * (slotH + gapY);
 
-    // Borderless Rounded Slot Box Fill
-    ctx.fillStyle = "#120F24";
+    // Borderless Rounded Slot Box Fill (True Neutral Dark Charcoal)
+    ctx.fillStyle = "#181818";
     ctx.beginPath();
     ctx.roundRect(sx, sy, slotW, slotH, borderRadius);
     ctx.fill();
 
-    // Slot Subtle Edge Glow / Border
-    ctx.strokeStyle = "#25203D";
+    // Slot Subtle Edge Border
+    ctx.strokeStyle = "#2A2A2A";
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Slot Number Tag (1, 2, 3, 4, 5, 6) in WHITE
+    // Slot Number Tag (1, 2, 3, 4, 5, 6) in Silver White
     if (options?.showSlotNumbers) {
       ctx.font = "bold 12px DungGeunMo";
-      ctx.fillStyle = "#FFFFFF";
+      ctx.fillStyle = "#A0A0A0";
       ctx.textAlign = "left";
       ctx.fillText(`${i + 1}`, sx + 8, sy + 16);
     }
@@ -334,13 +326,13 @@ async function drawPartyRightPanel(
       const displayLabel = (pokemon.nickname || pokemon.name || "Pokemon").slice(0, 6);
       ctx.fillText(displayLabel, sx + slotW / 2, sy + slotH - 8);
     } else {
-      ctx.fillStyle = "#201B36";
+      ctx.fillStyle = "#222222";
       ctx.beginPath();
       ctx.arc(sx + slotW / 2, sy + slotH / 2 - 4, 10, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.font = "12px DungGeunMo";
-      ctx.fillStyle = "#51496D";
+      ctx.fillStyle = "#666666";
       ctx.textAlign = "center";
       ctx.fillText(emptyLabel, sx + slotW / 2, sy + slotH - 8);
     }
@@ -361,8 +353,8 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
 
   const isKo = options?.lang === "ko";
 
-  // 1. Dark Retro Background
-  ctx.fillStyle = "#161424";
+  // 1. Dark Retro Background (True Neutral Dark Charcoal)
+  ctx.fillStyle = "#121212";
   ctx.fillRect(0, 0, width, height);
 
   // 2. Logo Aligned to LEFT (Balanced Margin from Divider Line)
@@ -378,7 +370,7 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
 
     // Subtitle: Discord Bot version
     ctx.font = "18px DungGeunMo";
-    ctx.fillStyle = "#F4A261";
+    ctx.fillStyle = "#A0A0A0";
     ctx.textAlign = "left";
     ctx.fillText("Discord Bot version", leftPadding + 6, logoY + logoHeight + 26);
 
@@ -419,7 +411,7 @@ export interface MultiplayerScreenOptions {
 }
 
 /**
- * Renders Multiplayer Screen with Discord Blurple (#5865F2) Border & Entry Notice
+ * Renders Multiplayer Screen with Clean Neutral Theme
  */
 export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions): Promise<Buffer> {
   const width = 560;
@@ -435,17 +427,17 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
   const registeredCount = party.filter(Boolean).length;
   const isComplete = registeredCount >= 1; // At least 1 Pokemon registered
 
-  // 1. Dark Retro Background
-  ctx.fillStyle = "#141226";
+  // 1. Dark Retro Background (True Neutral Dark Charcoal)
+  ctx.fillStyle = "#121212";
   ctx.fillRect(0, 0, width, height);
 
   // 2. TOP BANNER: Full-width Header Bar across the entire Left Half (y: 0 ~ 42)
   const splitX = 285;
-  ctx.fillStyle = "#1B1E3D";
+  ctx.fillStyle = "#181818";
   ctx.fillRect(0, 0, splitX, 42);
 
   // Bottom border line under left header
-  ctx.strokeStyle = "#5865F2";
+  ctx.strokeStyle = "#2C2C2C";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.moveTo(0, 42);
@@ -454,21 +446,20 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
 
   // Header Title Centered in Left Half
   ctx.font = "bold 18px DungGeunMo";
-  ctx.fillStyle = "#5865F2";
+  ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "center";
   ctx.fillText(isKo ? "멀티플레이 로비" : "MULTIPLAYER LOBBY", splitX / 2, 28);
 
   // 3. LEFT SIDE: Clean minimal area (Ready for lobby/matchmaking)
   // Left side is kept clear and minimal as requested
 
-  // 4. RIGHT SIDE PANEL: Multiplayer Team (with slot numbers 1~6 and Blurple border)
+  // 4. RIGHT SIDE PANEL: Multiplayer Team (with slot numbers 1~6)
   await drawPartyRightPanel(ctx, 295, 18, 244, 344, {
     username: options?.username,
     avatarUrl: options?.avatarUrl,
     party: options?.party,
     lang: options?.lang,
     showSlotNumbers: true,
-    borderColor: "#5865F2",
   });
 
   return canvas.toBuffer("image/png");
@@ -499,16 +490,16 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
   const isKo = options?.lang === "ko";
   const currentTab = options?.tab || "pokemon";
 
-  // 1. Dark Retro Background
-  ctx.fillStyle = "#161424";
+  // 1. Dark Retro Background (True Neutral Dark Charcoal)
+  ctx.fillStyle = "#121212";
   ctx.fillRect(0, 0, width, height);
 
   // 2. TOP BANNER: Trainer Bag Header with Vector Bag Icon (y: 0 ~ 42)
   const splitX = 285;
-  ctx.fillStyle = "#1B172E";
+  ctx.fillStyle = "#181818";
   ctx.fillRect(0, 0, splitX, 42);
 
-  ctx.strokeStyle = "#332D48";
+  ctx.strokeStyle = "#2C2C2C";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.moveTo(0, 42);
@@ -528,14 +519,14 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
   const leftW = 265;
   const leftH = 304;
 
-  ctx.fillStyle = "#1B1730";
+  ctx.fillStyle = "#181818";
   ctx.fillRect(leftX, leftY, leftW, leftH);
-  ctx.strokeStyle = "#383152";
+  ctx.strokeStyle = "#2C2C2C";
   ctx.lineWidth = 1.5;
   ctx.strokeRect(leftX, leftY, leftW, leftH);
 
   // Pocket Title
-  ctx.fillStyle = "#26203B";
+  ctx.fillStyle = "#222222";
   ctx.fillRect(leftX + 2, leftY + 2, leftW - 4, 32);
   ctx.font = "bold 17px DungGeunMo";
   ctx.fillStyle = "#FFFFFF";
@@ -558,23 +549,23 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
     const tabY = leftY + 44 + idx * 60;
     const isSelected = currentTab === t.key;
 
-    ctx.fillStyle = isSelected ? "#2E2746" : "#141124";
+    ctx.fillStyle = isSelected ? "#282828" : "#141414";
     ctx.beginPath();
     ctx.roundRect(leftX + 10, tabY, leftW - 20, 48, 8);
     ctx.fill();
 
     if (isSelected) {
-      ctx.strokeStyle = "#94A3B8";
+      ctx.strokeStyle = "#555555";
       ctx.lineWidth = 1.5;
       ctx.stroke();
     } else {
-      ctx.strokeStyle = "#28233C";
+      ctx.strokeStyle = "#222222";
       ctx.lineWidth = 1;
       ctx.stroke();
     }
 
     ctx.font = isSelected ? "bold 16px DungGeunMo" : "16px DungGeunMo";
-    ctx.fillStyle = isSelected ? "#FFFFFF" : "#8F89AA";
+    ctx.fillStyle = isSelected ? "#FFFFFF" : "#888888";
     ctx.textAlign = "left";
     ctx.fillText((isSelected ? "▶ " : "  ") + t.label, leftX + 18, tabY + 30);
   });
@@ -583,18 +574,18 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
   const infoBoxY = leftY + 230;
   const infoBoxH = 62;
 
-  ctx.fillStyle = "#141124";
+  ctx.fillStyle = "#141414";
   ctx.beginPath();
   ctx.roundRect(leftX + 10, infoBoxY, leftW - 20, infoBoxH, 8);
   ctx.fill();
 
-  ctx.strokeStyle = "#332D48";
+  ctx.strokeStyle = "#2C2C2C";
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
   drawVectorStar(ctx, leftX + leftW / 2 - 58, infoBoxY + 20, 5, 6, 3, "#CBD5E1");
   ctx.font = "14px DungGeunMo";
-  ctx.fillStyle = "#8F89AA";
+  ctx.fillStyle = "#888888";
   ctx.textAlign = "center";
   ctx.fillText(isKo ? "최고 도달 기록" : "BEST RUN RECORD", leftX + leftW / 2 + 6, infoBoxY + 24);
 
@@ -683,17 +674,17 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
   const curPage = options?.currentPage || 1;
   const totPages = options?.totalPages || 129;
 
-  // 1. Dark Retro Background
-  ctx.fillStyle = "#111018";
+  // 1. Dark Retro Background (True Neutral Dark Charcoal)
+  ctx.fillStyle = "#121212";
   ctx.fillRect(0, 0, width, height);
 
   // 2. TOP BANNER: Full-width Header Bar across the entire Left Half (y: 0 ~ 42)
   const splitX = 262;
-  ctx.fillStyle = "#1B172E";
+  ctx.fillStyle = "#181818";
   ctx.fillRect(0, 0, splitX, 42);
 
   // Bottom border line under left header
-  ctx.strokeStyle = "#332D48";
+  ctx.strokeStyle = "#2C2C2C";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.moveTo(0, 42);
@@ -707,7 +698,7 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
 
   // Page Indicator Badge on Left Header
   ctx.font = "12px DungGeunMo";
-  ctx.fillStyle = "#94A3B8";
+  ctx.fillStyle = "#888888";
   ctx.textAlign = "right";
   ctx.fillText(`P.${curPage}/${totPages}`, splitX - 10, 28);
 
@@ -727,13 +718,13 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     const sy = startListY + row * (slotH + gapY);
     const isSelected = selected && p && selected.dexNumber === p.dexNumber;
 
-    // Slot Box Background
-    ctx.fillStyle = isSelected ? "#26203B" : "#161324";
+    // Slot Box Background (True Neutral Dark Charcoal)
+    ctx.fillStyle = isSelected ? "#282828" : "#181818";
     ctx.beginPath();
     ctx.roundRect(sx, sy, slotW, slotH, 6);
     ctx.fill();
 
-    ctx.strokeStyle = isSelected ? "#94A3B8" : "#28233C";
+    ctx.strokeStyle = isSelected ? "#666666" : "#282828";
     ctx.lineWidth = isSelected ? 1.5 : 1;
     ctx.stroke();
 
@@ -743,13 +734,13 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
 
       // Left Header: Pokemon Name (14px Bold)
       ctx.font = "bold 14px DungGeunMo";
-      ctx.fillStyle = isSelected ? "#FFFFFF" : "#F1F5F9";
+      ctx.fillStyle = isSelected ? "#FFFFFF" : "#E0E0E0";
       ctx.textAlign = "left";
       ctx.fillText(displayName.slice(0, 5), sx + 8, sy + 16);
 
       // Right Header: Dex Number (#001) Right-aligned (12px Bold)
       ctx.font = "bold 12px DungGeunMo";
-      ctx.fillStyle = isSelected ? "#CBD5E1" : "#716B88";
+      ctx.fillStyle = isSelected ? "#CCCCCC" : "#777777";
       ctx.textAlign = "right";
       ctx.fillText(dexTag, sx + slotW - 8, sy + 16);
 
@@ -806,14 +797,14 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
       }
     } else {
       ctx.font = "12px DungGeunMo";
-      ctx.fillStyle = "#4D4566";
+      ctx.fillStyle = "#444444";
       ctx.textAlign = "center";
       ctx.fillText("---", sx + slotW / 2, sy + slotH / 2 + 4);
     }
   }
 
   // 4. VERTICAL SPLIT DIVIDER LINE (100% Full Height)
-  ctx.strokeStyle = "#332D48";
+  ctx.strokeStyle = "#2C2C2C";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.moveTo(splitX, 0);
@@ -826,11 +817,11 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
 
   if (selected) {
     // 5-0. Right Header Background Bar (y: 0 ~ 42, matching left header height exactly)
-    ctx.fillStyle = "#1B172E";
+    ctx.fillStyle = "#181818";
     ctx.fillRect(splitX + 2, 0, width - splitX - 2, 42);
 
     // Sub-divider line under header at y = 42 (matching left divider exactly)
-    ctx.strokeStyle = "#332D48";
+    ctx.strokeStyle = "#2C2C2C";
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(splitX + 2, 42);
@@ -848,11 +839,11 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     const topCardY = 48;
     const topCardH = 108;
 
-    ctx.fillStyle = "#161324";
+    ctx.fillStyle = "#181818";
     ctx.beginPath();
     ctx.roundRect(rightX, topCardY, rightW, topCardH, 6);
     ctx.fill();
-    ctx.strokeStyle = "#28233C";
+    ctx.strokeStyle = "#282828";
     ctx.lineWidth = 1;
     ctx.stroke();
 
@@ -861,11 +852,11 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     const showBoxSize = 84;
     const showBoxY = topCardY + (topCardH - showBoxSize) / 2;
 
-    ctx.fillStyle = "#100D1C";
+    ctx.fillStyle = "#101010";
     ctx.beginPath();
     ctx.roundRect(showBoxX, showBoxY, showBoxSize, showBoxSize, 6);
     ctx.fill();
-    ctx.strokeStyle = "#332D48";
+    ctx.strokeStyle = "#2C2C2C";
     ctx.lineWidth = 1;
     ctx.stroke();
 
@@ -915,11 +906,11 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     const statsCardY = 164;
     const statsCardH = 120;
 
-    ctx.fillStyle = "#161324";
+    ctx.fillStyle = "#181818";
     ctx.beginPath();
     ctx.roundRect(rightX, statsCardY, rightW, statsCardH, 6);
     ctx.fill();
-    ctx.strokeStyle = "#28233C";
+    ctx.strokeStyle = "#282828";
     ctx.lineWidth = 1;
     ctx.stroke();
 
@@ -943,7 +934,7 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
 
       // Label (HP, ATK, DEF, SPE, SPA, SPD) - Clean Silver Slate
       ctx.font = "bold 14px DungGeunMo";
-      ctx.fillStyle = "#94A3B8";
+      ctx.fillStyle = "#888888";
       ctx.textAlign = "left";
       ctx.fillText(st.label, colX, rowY + 14);
 
@@ -955,7 +946,7 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
 
       // Bar Background
       const gaugeX = colX + 60;
-      ctx.fillStyle = "#100D1C";
+      ctx.fillStyle = "#101010";
       ctx.beginPath();
       ctx.roundRect(gaugeX, rowY + 2, barW, barH, 3);
       ctx.fill();
