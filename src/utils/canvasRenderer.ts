@@ -247,7 +247,7 @@ export interface BagScreenOptions {
 }
 
 /**
- * Renders Trainer Bag UI with Left Menu & Right 6-Party Panel
+ * Renders Trainer Bag UI with Left Menu & Right 6-Party Panel (Pure English)
  */
 export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffer> {
   const width = 560;
@@ -297,18 +297,18 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
   ctx.lineWidth = 1.5;
   ctx.strokeRect(leftX, leftY, leftW, leftH);
 
-  // Pocket Title
+  // Pocket Title (Pure English)
   ctx.fillStyle = "#2D264E";
   ctx.fillRect(leftX + 2, leftY + 2, leftW - 4, 30);
   ctx.font = "bold 15px DungGeunMo";
   ctx.fillStyle = "#F4A261";
   ctx.textAlign = "center";
-  ctx.fillText("POKÉMON VAULT (보유 현황)", leftX + leftW / 2, leftY + 22);
+  ctx.fillText("POKÉMON VAULT", leftX + leftW / 2, leftY + 22);
 
   const tabs = [
-    { key: "pokemon", label: "1. ACTIVE PARTY (출전 파티)" },
-    { key: "pokedex", label: "2. POKÉDEX (도감 기록)" },
-    { key: "records", label: "3. CAREER (트레이너 기록)" },
+    { key: "pokemon", label: "1. ACTIVE PARTY" },
+    { key: "pokedex", label: "2. POKÉDEX" },
+    { key: "records", label: "3. CAREER RECORDS" },
   ];
 
   tabs.forEach((t, idx) => {
@@ -336,7 +336,7 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
     ctx.fillText((isSelected ? "▶ " : "  ") + t.label, leftX + 18, tabY + 27);
   });
 
-  // Summary box at bottom of left panel
+  // Summary box at bottom of left panel (Pure English)
   ctx.fillStyle = "#141124";
   ctx.beginPath();
   ctx.roundRect(leftX + 10, leftY + 216, leftW - 20, 76, 6);
@@ -354,7 +354,7 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
   ctx.fillText(`• Total Unlocked: ${options?.unlockedCount ?? 9} Mons`, leftX + 18, leftY + 262);
   ctx.fillText(`• Highest Wave: Wave ${options?.stats?.highestWave ?? 0}`, leftX + 18, leftY + 282);
 
-  // 5. RIGHT SIDE PANEL: Exact 1st Screen Right Panel (User Header + 2x3 Pokemon Party Slots)
+  // 5. RIGHT SIDE PANEL: Exact 1st Screen Right Panel
   await drawPartyRightPanel(ctx, 295, 18, 244, 344, {
     username: options?.username,
     avatarUrl: options?.avatarUrl,
@@ -392,9 +392,9 @@ export async function renderDotTestCard(): Promise<Buffer> {
   ctx.fillText("Nearest-Neighbor Scaled (Zero Blur / No Smoothing)", width / 2, 60);
 
   const pokemonList = [
-    { name: "darkrai", label: "Darkrai (다크라이)", x: 30, y: 80, scale: 2 },
-    { name: "charizard", label: "Charizard (리자몽)", x: 200, y: 80, scale: 2 },
-    { name: "gengar-mega", label: "Mega Gengar (메가팬텀)", x: 370, y: 80, scale: 2 },
+    { name: "darkrai", label: "Darkrai", x: 30, y: 80, scale: 2 },
+    { name: "charizard", label: "Charizard", x: 200, y: 80, scale: 2 },
+    { name: "gengar-mega", label: "Mega Gengar", x: 370, y: 80, scale: 2 },
   ];
 
   for (const p of pokemonList) {
