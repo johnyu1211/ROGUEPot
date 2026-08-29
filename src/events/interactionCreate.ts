@@ -438,17 +438,17 @@ async function renderPokedexMessageData(
   );
   components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row2Btns));
 
-  // ROW 3: Pokemon 3, 4 + [+박스] + [+가방]
+  // ROW 3: Pokemon 3, 4 + [➕📦] + [➕💼]
   const row3Btns = [createPokeBtn(items[2], 2), createPokeBtn(items[3], 3)].filter(Boolean) as ButtonBuilder[];
   if (selectedPokemon) {
     row3Btns.push(
       new ButtonBuilder()
         .setCustomId(`pokedex_add_multi_${selectedPokemon.dexNumber}_${page}_${fromScreen}_${userId}`)
-        .setLabel(isKo ? "+박스" : "+Box")
+        .setLabel("➕📦")
         .setStyle(ButtonStyle.Success),
       new ButtonBuilder()
         .setCustomId(`pokedex_add_bag_${selectedPokemon.dexNumber}_${page}_${fromScreen}_${userId}`)
-        .setLabel(isKo ? "+가방" : "+Bag")
+        .setLabel("➕💼")
         .setStyle(ButtonStyle.Success)
     );
   }
