@@ -430,11 +430,11 @@ async function renderPokedexMessageData(
     row2Btns.push(
       new ButtonBuilder()
         .setCustomId(`pokedex_add_multi_${selectedPokemon.dexNumber}_${page}_${fromScreen}_${userId}`)
-        .setLabel("+📦")
+        .setLabel("\u2800+📦\u2800")
         .setStyle(ButtonStyle.Success),
       new ButtonBuilder()
         .setCustomId(`pokedex_add_bag_${selectedPokemon.dexNumber}_${page}_${fromScreen}_${userId}`)
-        .setLabel("+💼")
+        .setLabel("\u2800+💼\u2800")
         .setStyle(ButtonStyle.Success)
     );
   }
@@ -445,26 +445,26 @@ async function renderPokedexMessageData(
   row3Btns.push(
     new ButtonBuilder()
       .setCustomId(`pokedex_region_btn_${fromScreen}_${userId}`)
-      .setLabel("🗺️")
+      .setLabel("\u3000🗺️\u3000")
       .setStyle(ButtonStyle.Primary),
     new ButtonBuilder()
       .setCustomId(`pokedex_search_btn_${fromScreen}_${userId}`)
-      .setLabel("🔍")
+      .setLabel("\u3000🔍\u3000")
       .setStyle(ButtonStyle.Primary)
   );
   components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row3Btns));
 
-  // ROW 4: Pokemon 5, 6 + Fast Backward 3 Pages [ \u3000◀◀◀ ] + Fast Forward 3 Pages [ ▶▶▶\u3000 ]
+  // ROW 4: Pokemon 5, 6 + Fast Backward 3 Pages [ ◀◀◀ ] + Fast Forward 3 Pages [ ▶▶▶ ]
   const row4Btns = [createPokeBtn(items[4], 4), createPokeBtn(items[5], 5)].filter(Boolean) as ButtonBuilder[];
   row4Btns.push(
     new ButtonBuilder()
       .setCustomId(`pokedex_jumpback_${Math.max(1, page - 3)}_${selectedDexNo}_${fromScreen}_${userId}`)
-      .setLabel("\u3000◀◀◀")
+      .setLabel("\u2800◀◀◀\u2800")
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(page <= 1),
     new ButtonBuilder()
       .setCustomId(`pokedex_jumpfwd_${Math.min(totalPages, page + 3)}_${selectedDexNo}_${fromScreen}_${userId}`)
-      .setLabel("▶▶▶\u3000")
+      .setLabel("\u2800▶▶▶\u2800")
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(page >= totalPages)
   );
