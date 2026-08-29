@@ -60,11 +60,14 @@ export const command: Command = {
       const userId = interaction.user.id;
       const hasSavedSlots = saveService.hasAnySavedSlot(userId);
       const userProfile = saveService.getProfile(userId);
+      const activeRun = userProfile.activeSlotId ? userProfile.slots[userProfile.activeSlotId] : null;
 
-      // Generate Retro Canvas Image
+      // Generate Retro Canvas Image with Avatar & 6 Party Slots
       const imageBuffer = await renderTitleScreen({
+        username: interaction.user.username,
+        avatarUrl: interaction.user.displayAvatarURL({ extension: "png", size: 64 }),
         hasSavedSlots,
-        unlockedCount: userProfile.unlockedStartersCount,
+        party: activeRun?.party,
       });
       const attachment = new AttachmentBuilder(imageBuffer, { name: "title.png" });
 
@@ -95,7 +98,7 @@ export const command: Command = {
         );
       }
 
-      // Send PURE IMAGE + BUTTONS into the thread (NO EMBED WRAPPER)
+      // Send PURE IMAGE + BUTTONS into the thread
       await thread.send({
         files: [attachment],
         components: [actionRow],

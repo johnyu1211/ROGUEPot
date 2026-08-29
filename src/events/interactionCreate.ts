@@ -57,13 +57,20 @@ function createStarterSelectMenu(slotId: number, userId: string) {
   return { embeds: [starterEmbed], components: [starterSelectMenu, backRow] };
 }
 
-async function renderTitleMessageData(userId: string) {
+async function renderTitleMessageData(client: ExtendedClient, userId: string) {
   const hasSavedSlots = saveService.hasAnySavedSlot(userId);
   const userProfile = saveService.getProfile(userId);
+  const activeRun = userProfile.activeSlotId ? userProfile.slots[userProfile.activeSlotId] : null;
+
+  const user = client.users.cache.get(userId) || (await client.users.fetch(userId).catch(() => null));
+  const avatarUrl = user?.displayAvatarURL({ extension: "png", size: 64 });
+  const username = user?.username || "Trainer";
 
   const imageBuffer = await renderTitleScreen({
+    username,
+    avatarUrl,
     hasSavedSlots,
-    unlockedCount: userProfile.unlockedStartersCount,
+    party: activeRun?.party,
   });
   const attachment = new AttachmentBuilder(imageBuffer, { name: "title.png" });
 
@@ -141,9 +148,11 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
+      const client = interaction.client as ExtendedClient;
+
       // 2-0. Back to Title Menu (Pure Image + Buttons)
       if (customId.startsWith("menu_back_to_title_")) {
-        const titleData = await renderTitleMessageData(interaction.user.id);
+        const titleData = await renderTitleMessageData(client, interaction.user.id);
         await interaction.update(titleData);
         return;
       }
@@ -206,7 +215,7 @@ export const interactionCreateEvent: BotEvent = {
           `• **Slot 1**: ${profile.slots[1] ? `Wave ${profile.slots[1]!.wave} (${profile.slots[1]!.starter})` : "*[ Empty Slot ]*"}\n` +
           `• **Slot 2**: ${profile.slots[2] ? `Wave ${profile.slots[2]!.wave} (${profile.slots[2]!.starter})` : "*[ Empty Slot ]*"}\n` +
           `• **Slot 3**: ${profile.slots[3] ? `Wave ${profile.slots[3]!.wave} (${profile.slots[3]!.starter})` : "*[ Empty Slot ]*"}`
-        ).setColor(COLORS.PRIMARY);
+        ).setColor(COLORS.POKEROGUE_RED);
 
         const slotButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
           new ButtonBuilder()
@@ -253,7 +262,7 @@ export const interactionCreateEvent: BotEvent = {
             `• **Biome**: ${slotData.biome}\n` +
             `• **Saved At**: ${new Date(slotData.updatedAt).toLocaleString()}\n\n` +
             "Would you like to resume this run or overwrite it with a new game?"
-          ).setColor(COLORS.PRIMARY);
+          ).setColor(COLORS.POKEROGUE_RED);
 
           const slotActionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
             new ButtonBuilder()
