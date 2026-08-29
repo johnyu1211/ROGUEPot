@@ -750,40 +750,45 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     ctx.stroke();
 
     if (p) {
-      // Header: Dex No & Short Name
+      // Header: Dex No & Name (Up to 5 characters)
       ctx.font = "bold 11px DungGeunMo";
       ctx.fillStyle = isSelected ? "#FFFFFF" : "#CBD5E1";
       ctx.textAlign = "left";
       const displayName = (isKo && p.koreanName) ? p.koreanName : p.name;
       const dexTag = `#${String(p.dexNumber).padStart(3, "0")}`;
-      ctx.fillText(`${dexTag} ${displayName.slice(0, 4)}`, sx + 6, sy + 15);
+      ctx.fillText(`${dexTag} ${displayName.slice(0, 5)}`, sx + 6, sy + 15);
 
-      if (isSelected) {
-        // Selection Arrow Marker
-        ctx.font = "bold 11px DungGeunMo";
-        ctx.fillStyle = "#E63946";
-        ctx.textAlign = "right";
-        ctx.fillText("▶", sx + slotW - 6, sy + 15);
-      }
-
-      // Mini Sprite (Centered-Left in slot)
+      // Mini Sprite (Centered in left half area of slot: 56x50)
       const sprite = await getPokemonSprite(p.speciesId);
       if (sprite) {
-        const scale = 0.72;
+        const scale = 0.78;
         const sprW = sprite.width * scale;
         const sprH = sprite.height * scale;
-        ctx.drawImage(sprite, sx + 4 + (40 - sprW) / 2, sy + 20 + (50 - sprH) / 2, sprW, sprH);
+        const sprAreaW = 56;
+        const sprAreaH = 50;
+        ctx.drawImage(
+          sprite,
+          sx + 6 + (sprAreaW - sprW) / 2,
+          sy + 18 + (sprAreaH - sprH) / 2,
+          sprW,
+          sprH
+        );
       }
 
-      // Mini Type Badges (Compact 36x17 on the right side of slot)
-      let bY = sy + 22;
-      for (const tName of p.types.slice(0, 2)) {
+      // Mini Type Badges (Compact 40x18 on the right side of slot, vertically balanced)
+      const typeCount = Math.min(2, p.types.length);
+      const badgeW = 40;
+      const badgeH = 18;
+      const badgeX = sx + slotW - badgeW - 6;
+
+      for (let tIdx = 0; tIdx < typeCount; tIdx++) {
+        const tName = p.types[tIdx];
         const tLower = tName.toLowerCase();
         const tColor = TYPE_COLORS[tLower] || "#777777";
         const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || tName) : tName.slice(0, 4).toUpperCase();
-        const badgeW = 38;
-        const badgeH = 17;
-        const badgeX = sx + slotW - badgeW - 6;
+        
+        // Single type: centered at y=34 | Dual types: y=22, y=44
+        const bY = typeCount === 1 ? sy + 34 : sy + 22 + tIdx * 22;
 
         ctx.fillStyle = tColor;
         ctx.beginPath();
@@ -798,13 +803,11 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
         ctx.shadowColor = "rgba(0, 0, 0, 0.9)";
         ctx.shadowOffsetY = 1;
         ctx.shadowBlur = 1;
-        ctx.font = "bold 10px DungGeunMo";
+        ctx.font = isKo ? "bold 11px DungGeunMo" : "bold 10px DungGeunMo";
         ctx.fillStyle = "#FFFFFF";
         ctx.textAlign = "center";
-        ctx.fillText(tDisplay, badgeX + badgeW / 2, bY + 12);
+        ctx.fillText(tDisplay, badgeX + badgeW / 2, bY + 13);
         ctx.restore();
-
-        bY += 21;
       }
     } else {
       ctx.font = "12px DungGeunMo";
