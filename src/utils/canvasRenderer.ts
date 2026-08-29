@@ -991,33 +991,33 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     ctx.fill();
     ctx.restore();
 
-    // Window Double Border Frame (Refined Retro Style)
-    ctx.strokeStyle = isHa ? "#F4A261" : "#60A5FA";
+    // Window Double Border Frame (Soft Off-White Silver Retro Style)
+    ctx.strokeStyle = "#CBD5E1";
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.roundRect(overlayX, overlayY, overlayW, overlayH, 8);
     ctx.stroke();
 
-    ctx.strokeStyle = "#2D3246";
+    ctx.strokeStyle = "#334155";
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.roundRect(overlayX + 3, overlayY + 3, overlayW - 6, overlayH - 6, 6);
     ctx.stroke();
 
     // Dialog Window Header Bar (y: overlayY ~ overlayY + 34)
-    ctx.fillStyle = "#1A1D2A";
+    ctx.fillStyle = "#1E2438";
     ctx.beginPath();
     ctx.roundRect(overlayX + 4, overlayY + 4, overlayW - 8, 30, [5, 5, 0, 0]);
     ctx.fill();
 
-    // Header Title: [특성] 심록
+    // Header Title: [특성] 심록 (Soft Off-White)
     ctx.font = "bold 15px DungGeunMo";
-    ctx.fillStyle = isHa ? "#F4A261" : "#60A5FA";
+    ctx.fillStyle = "#F1F5F9";
     ctx.textAlign = "left";
     ctx.fillText(`${typeTag} ${abName}`, overlayX + 14, overlayY + 24);
 
     // Horizontal divider line under dialog header
-    ctx.strokeStyle = "#2D3246";
+    ctx.strokeStyle = "#334155";
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(overlayX + 4, overlayY + 34);
@@ -1026,7 +1026,7 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
 
     // Effect Description Text (Wrapped nicely across 500px wide box)
     ctx.font = "14px DungGeunMo";
-    ctx.fillStyle = "#FFFFFF";
+    ctx.fillStyle = "#F8FAFC";
     ctx.textAlign = "left";
 
     const maxTextW = overlayW - 28;
