@@ -1,4 +1,4 @@
-﻿import {
+import {
   Events,
   Interaction,
   ActionRowBuilder,
@@ -6,12 +6,16 @@
   ButtonStyle,
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
-  AttachmentBuilder
+  AttachmentBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle
 } from "discord.js";
 import { BotEvent, ExtendedClient } from "../types/index.js";
 import { createBaseEmbed, COLORS } from "../utils/embed.js";
 import { renderTitleScreen, renderBagScreen, renderMultiplayerScreen } from "../utils/canvasRenderer.js";
-import { saveService } from "../services/saveService.js";
+import { saveService, PartyPokemon } from "../services/saveService.js";
+import { getPokemonByDexNumber } from "../services/pokeApiService.js";
 
 function createStarterSelectMenu(slotId: number, userId: string, fromSource: "title" | "slots" = "title") {
   const profile = saveService.getProfile(userId);
@@ -261,7 +265,6 @@ async function renderBagMessageData(
 
 async function renderMultiplayerMessageData(client: ExtendedClient, userId: string) {
   const profile = saveService.getProfile(userId);
-  const activeRun = profile.activeSlotId ? profile.slots[profile.activeSlotId] : null;
   const isKo = profile.language === "ko";
 
   const user = client.users.cache.get(userId) || (await client.users.fetch(userId).catch(() => null));
@@ -271,10 +274,21 @@ async function renderMultiplayerMessageData(client: ExtendedClient, userId: stri
   const imageBuffer = await renderMultiplayerScreen({
     username,
     avatarUrl,
-    party: activeRun?.party,
+    party: profile.multiplayerTeam,
     lang: profile.language,
   });
   const attachment = new AttachmentBuilder(imageBuffer, { name: "multiplay.png" });
+
+  const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`multi_register_btn_${userId}`)
+      .setLabel(isKo ? "포켓몬 등록 📝" : "Register Pokémon 📝")
+      .setStyle(ButtonStyle.Success),
+    new ButtonBuilder()
+      .setCustomId(`multi_clear_btn_${userId}`)
+      .setLabel(isKo ? "엔트리 비우기 🔄" : "Clear Entry 🔄")
+      .setStyle(ButtonStyle.Danger)
+  );
 
   const backRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
@@ -283,7 +297,7 @@ async function renderMultiplayerMessageData(client: ExtendedClient, userId: stri
       .setStyle(ButtonStyle.Danger)
   );
 
-  return { embeds: [], files: [attachment], components: [backRow] };
+  return { embeds: [], files: [attachment], components: [actionRow, backRow] };
 }
 
 async function renderTitleMessageData(client: ExtendedClient, userId: string) {
@@ -381,7 +395,66 @@ export const interactionCreateEvent: BotEvent = {
       return;
     }
 
-    // 2. Button Interactions
+    // 2. Modal Submits (Multiplayer Pokemon Registration)
+    if (interaction.isModalSubmit()) {
+      if (interaction.customId.startsWith("multi_reg_modal_")) {
+        const slotInput = interaction.fields.getTextInputValue("slot_no_input");
+        const dexInput = interaction.fields.getTextInputValue("dex_no_input");
+        const levelInput = interaction.fields.getTextInputValue("level_input");
+
+        const slotNo = parseInt(slotInput, 10);
+        const dexNo = parseInt(dexInput, 10);
+        const level = parseInt(levelInput, 10) || 50;
+
+        const profile = saveService.getProfile(interaction.user.id);
+        const isKo = profile.language === "ko";
+
+        if (isNaN(slotNo) || slotNo < 1 || slotNo > 6) {
+          await interaction.reply({
+            content: isKo ? "❌ 슬롯 번호는 1에서 6 사이의 숫자여야 합니다." : "❌ Slot number must be between 1 and 6.",
+            ephemeral: true,
+          });
+          return;
+        }
+
+        if (isNaN(dexNo) || dexNo < 1 || dexNo > 1025) {
+          await interaction.reply({
+            content: isKo ? "❌ 전국도감 번호는 1에서 1025 사이여야 합니다." : "❌ National Dex number must be between 1 and 1025.",
+            ephemeral: true,
+          });
+          return;
+        }
+
+        await interaction.deferUpdate();
+
+        const pokeInfo = await getPokemonByDexNumber(dexNo);
+        if (!pokeInfo) {
+          await interaction.followUp({
+            content: isKo ? `❌ 도감 번호 #${dexNo}번 포켓몬을 찾을 수 없습니다.` : `❌ Could not find Pokemon with Dex #${dexNo}.`,
+            ephemeral: true,
+          });
+          return;
+        }
+
+        const newPokemon: PartyPokemon = {
+          speciesId: pokeInfo.speciesId,
+          name: pokeInfo.name,
+          level: Math.min(100, Math.max(1, level)),
+          hp: pokeInfo.hp,
+          maxHp: pokeInfo.hp,
+          moves: ["Tackle", "Signature Move"],
+        };
+
+        saveService.setMultiplayerPokemon(interaction.user.id, slotNo - 1, newPokemon);
+
+        const client = interaction.client as ExtendedClient;
+        const updatedData = await renderMultiplayerMessageData(client, interaction.user.id);
+        await interaction.editReply(updatedData);
+        return;
+      }
+    }
+
+    // 3. Button Interactions
     if (interaction.isButton()) {
       const customId = interaction.customId;
       const parts = customId.split("_");
@@ -397,28 +470,28 @@ export const interactionCreateEvent: BotEvent = {
 
       const client = interaction.client as ExtendedClient;
 
-      // 2-0. Back to Title Menu
+      // 3-0. Back to Title Menu
       if (customId.startsWith("menu_back_to_title_")) {
         const titleData = await renderTitleMessageData(client, interaction.user.id);
         await interaction.update(titleData);
         return;
       }
 
-      // 2-0-1. Inventory Bag Button Clicked
+      // 3-0-1. Inventory Bag Button Clicked
       if (customId.startsWith("menu_inventory_")) {
         const bagData = await renderBagMessageData(client, interaction.user.id, "pokemon");
         await interaction.update(bagData);
         return;
       }
 
-      // 2-0-2. Settings Button Clicked (⚙️)
+      // 3-0-2. Settings Button Clicked (⚙️)
       if (customId.startsWith("menu_settings_")) {
         const settingsData = renderSettingsMessageData(interaction.user.id);
         await interaction.update(settingsData);
         return;
       }
 
-      // 2-0-3. Switch Language (English / 한국어)
+      // 3-0-3. Switch Language (English / 한국어)
       if (customId.startsWith("settings_lang_")) {
         const lang = parts[2] as "en" | "ko";
         saveService.setLanguage(interaction.user.id, lang);
@@ -428,8 +501,59 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 2-0-4. Multiplay Button Clicked (Render Multiplayer Canvas with Discord Blurple #5865F2 border!)
+      // 3-0-4. Multiplay Button Clicked
       if (customId.startsWith("menu_multiplay_")) {
+        const multiData = await renderMultiplayerMessageData(client, interaction.user.id);
+        await interaction.update(multiData);
+        return;
+      }
+
+      // 3-0-5. Multiplayer Register Pokemon Button (Open Modal)
+      if (customId.startsWith("multi_register_btn_")) {
+        const profile = saveService.getProfile(interaction.user.id);
+        const isKo = profile.language === "ko";
+
+        const modal = new ModalBuilder()
+          .setCustomId(`multi_reg_modal_${interaction.user.id}`)
+          .setTitle(isKo ? "📝 포켓몬 엔트리 등록" : "📝 Register Battle Pokémon");
+
+        const slotInput = new TextInputBuilder()
+          .setCustomId("slot_no_input")
+          .setLabel(isKo ? "등록할 슬롯 번호 (1 ~ 6)" : "Slot Number (1 ~ 6)")
+          .setPlaceholder("1")
+          .setStyle(TextInputStyle.Short)
+          .setRequired(true)
+          .setMaxLength(1);
+
+        const dexInput = new TextInputBuilder()
+          .setCustomId("dex_no_input")
+          .setLabel(isKo ? "전국도감 번호 (1 ~ 1025)" : "National Dex Number (1 ~ 1025)")
+          .setPlaceholder(isKo ? "예: 6(리자몽), 25(피카츄), 491(다크라이)" : "e.g. 6 (Charizard), 25 (Pikachu), 491 (Darkrai)")
+          .setStyle(TextInputStyle.Short)
+          .setRequired(true)
+          .setMaxLength(4);
+
+        const levelInput = new TextInputBuilder()
+          .setCustomId("level_input")
+          .setLabel(isKo ? "레벨 (1 ~ 100)" : "Level (1 ~ 100)")
+          .setPlaceholder("50")
+          .setStyle(TextInputStyle.Short)
+          .setRequired(false)
+          .setMaxLength(3);
+
+        modal.addComponents(
+          new ActionRowBuilder<TextInputBuilder>().addComponents(slotInput),
+          new ActionRowBuilder<TextInputBuilder>().addComponents(dexInput),
+          new ActionRowBuilder<TextInputBuilder>().addComponents(levelInput)
+        );
+
+        await interaction.showModal(modal);
+        return;
+      }
+
+      // 3-0-6. Multiplayer Clear Team Button
+      if (customId.startsWith("multi_clear_btn_")) {
+        saveService.clearMultiplayerTeam(interaction.user.id);
         const multiData = await renderMultiplayerMessageData(client, interaction.user.id);
         await interaction.update(multiData);
         return;

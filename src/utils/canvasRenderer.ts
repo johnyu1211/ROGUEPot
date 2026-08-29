@@ -108,7 +108,7 @@ async function drawPartyRightPanel(
   }
 
   // Avatar Border Ring
-  ctx.strokeStyle = "#5865F2";
+  ctx.strokeStyle = options?.borderColor || "#F4A261";
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2 + 1, 0, Math.PI * 2);
@@ -139,7 +139,7 @@ async function drawPartyRightPanel(
   const borderRadius = 10;
 
   const partyList = options?.party || [];
-  const emptyLabel = options?.lang === "ko" ? "빈 슬롯" : "Empty";
+  const emptyLabel = options?.lang === "ko" ? "+ 등록" : "+ Register";
 
   for (let i = 0; i < 6; i++) {
     const col = i % 2;
@@ -153,7 +153,7 @@ async function drawPartyRightPanel(
     ctx.roundRect(sx, sy, slotW, slotH, borderRadius);
     ctx.fill();
 
-    // Slot Number Tag (1, 2, 3, 4, 5, 6) in WHITE - Only rendered if showSlotNumbers is TRUE
+    // Slot Number Tag (1, 2, 3, 4, 5, 6) in WHITE
     if (options?.showSlotNumbers) {
       ctx.font = "bold 12px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
@@ -181,7 +181,7 @@ async function drawPartyRightPanel(
       ctx.fill();
 
       ctx.font = "12px DungGeunMo";
-      ctx.fillStyle = "#51496D";
+      ctx.fillStyle = "#5865F2"; // Blurple register hint
       ctx.textAlign = "center";
       ctx.fillText(emptyLabel, sx + slotW / 2, sy + slotH - 8);
     }
@@ -189,7 +189,7 @@ async function drawPartyRightPanel(
 }
 
 /**
- * Renders title card maximized to 560x380 (Red Border #E63946)
+ * Renders title card maximized to 560x380
  */
 export async function renderTitleScreen(options?: TitleScreenOptions): Promise<Buffer> {
   const width = 560;
@@ -268,7 +268,7 @@ export interface MultiplayerScreenOptions {
 }
 
 /**
- * Renders Multiplayer Screen with Discord Blurple (#5865F2) Border
+ * Renders Multiplayer Screen with Discord Blurple (#5865F2) Border & Entry Notice
  */
 export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions): Promise<Buffer> {
   const width = 560;
@@ -279,6 +279,9 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
   ctx.imageSmoothingEnabled = false;
 
   const isKo = options?.lang === "ko";
+  const party = options?.party || [];
+  const registeredCount = party.filter(Boolean).length;
+  const isComplete = registeredCount >= 1; // At least 1 Pokemon registered
 
   // 1. Dark Retro Background
   ctx.fillStyle = "#141226";
@@ -306,7 +309,7 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
   ctx.textAlign = "left";
   ctx.fillText(isKo ? "🌐 멀티플레이 로비" : "🌐 MULTIPLAYER LOBBY", 20, 36);
 
-  // 4. LEFT SIDE: Multiplayer Options / Room Frame
+  // 4. LEFT SIDE: Multiplayer Status / Entry Registration Notice
   const leftX = 18;
   const leftY = 58;
   const leftW = 265;
@@ -318,21 +321,73 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
   ctx.lineWidth = 1.5;
   ctx.strokeRect(leftX, leftY, leftW, leftH);
 
-  // Mode Header
-  ctx.fillStyle = "#262B5E";
+  // Header Bar
+  ctx.fillStyle = isComplete ? "#1F3D2B" : "#3D2B1F";
   ctx.fillRect(leftX + 2, leftY + 2, leftW - 4, 32);
-  ctx.font = "bold 16px DungGeunMo";
-  ctx.fillStyle = "#FFFFFF";
+  ctx.font = "bold 15px DungGeunMo";
+  ctx.fillStyle = isComplete ? "#57F287" : "#F4A261";
   ctx.textAlign = "center";
-  ctx.fillText(isKo ? "ONLINE MATCHMAKING" : "ONLINE MATCHMAKING", leftX + leftW / 2, leftY + 23);
+  ctx.fillText(
+    isComplete
+      ? (isKo ? "✔ 배틀 엔트리 준비됨" : "✔ BATTLE ENTRY READY")
+      : (isKo ? "⚠️ 포켓몬 엔트리를 완성해주세요" : "⚠️ COMPLETE YOUR ENTRY"),
+    leftX + leftW / 2,
+    leftY + 23
+  );
 
-  // 5. RIGHT SIDE PANEL: Exact Right Party Panel with Discord Blurple accents
+  // Guide Body Box
+  ctx.fillStyle = "#121326";
+  ctx.beginPath();
+  ctx.roundRect(leftX + 10, leftY + 44, leftW - 20, 168, 8);
+  ctx.fill();
+  ctx.strokeStyle = isComplete ? "#2E5E3D" : "#5E432E";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.font = "bold 14px DungGeunMo";
+  ctx.fillStyle = "#FFFFFF";
+  ctx.textAlign = "left";
+  ctx.fillText(isKo ? "📝 전국도감 포켓몬 등록" : "📝 National Dex Registration", leftX + 20, leftY + 70);
+
+  ctx.font = "12px DungGeunMo";
+  ctx.fillStyle = "#8F96CC";
+  if (isKo) {
+    ctx.fillText("• 전국도감 번호(1~1025)로", leftX + 20, leftY + 98);
+    ctx.fillText("  원하는 포켓몬을 자유롭게 등록!", leftX + 20, leftY + 118);
+    ctx.fillText("• 예: 6(리자몽), 25(피카츄),", leftX + 20, leftY + 142);
+    ctx.fillText("  491(다크라이), 150(뮤츠) 등", leftX + 20, leftY + 162);
+    ctx.fillText(`• 등록 현황: ${registeredCount} / 6 마리`, leftX + 20, leftY + 192);
+  } else {
+    ctx.fillText("• Register any Pokémon using its", leftX + 20, leftY + 98);
+    ctx.fillText("  National Pokédex # (1 ~ 1025)!", leftX + 20, leftY + 118);
+    ctx.fillText("• e.g. #6 (Charizard), #25 (Pikachu)", leftX + 20, leftY + 142);
+    ctx.fillText("  #491 (Darkrai), #150 (Mewtwo)", leftX + 20, leftY + 162);
+    ctx.fillText(`• Team Roster: ${registeredCount} / 6 Ready`, leftX + 20, leftY + 192);
+  }
+
+  // Quick Action Hint Box
+  ctx.fillStyle = "#1F234D";
+  ctx.beginPath();
+  ctx.roundRect(leftX + 10, leftY + 222, leftW - 20, 70, 8);
+  ctx.fill();
+  ctx.strokeStyle = "#5865F2";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.font = "bold 13px DungGeunMo";
+  ctx.fillStyle = "#5865F2";
+  ctx.textAlign = "center";
+  ctx.fillText(isKo ? "👇 아래 [포켓몬 등록] 버튼을 눌러" : "👇 Click [Register Pokémon] below", leftX + leftW / 2, leftY + 248);
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fillText(isKo ? "도감번호와 레벨을 입력하세요!" : "to enter Dex No. and Level!", leftX + leftW / 2, leftY + 272);
+
+  // 5. RIGHT SIDE PANEL: Multiplayer Team (with slot numbers 1~6 and Blurple border)
   await drawPartyRightPanel(ctx, 295, 18, 244, 344, {
     username: options?.username,
     avatarUrl: options?.avatarUrl,
     party: options?.party,
     lang: options?.lang,
-    showSlotNumbers: false,
+    showSlotNumbers: true,
     borderColor: "#5865F2",
   });
 

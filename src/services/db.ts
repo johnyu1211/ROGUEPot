@@ -13,7 +13,7 @@ export const db = new Database(dbPath);
 db.pragma("journal_mode = WAL");
 
 export function initDatabase(): void {
-  // 1. Users Table with language column
+  // 1. Users Table with language & multiplayer_team column
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
       user_id TEXT PRIMARY KEY,
@@ -24,17 +24,19 @@ export function initDatabase(): void {
       total_runs INTEGER NOT NULL DEFAULT 0,
       highest_wave INTEGER NOT NULL DEFAULT 0,
       active_slot_id INTEGER DEFAULT NULL,
+      multiplayer_team TEXT NOT NULL DEFAULT '[]',
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
   `);
 
-  // Migrate language column if missing in existing db
+  // Migrate columns if missing in existing db
   try {
     db.exec(`ALTER TABLE users ADD COLUMN language TEXT NOT NULL DEFAULT 'en';`);
-  } catch {
-    // Column already exists
-  }
+  } catch {}
+  try {
+    db.exec(`ALTER TABLE users ADD COLUMN multiplayer_team TEXT NOT NULL DEFAULT '[]';`);
+  } catch {}
 
   // 2. Game Slots Table
   db.exec(`
