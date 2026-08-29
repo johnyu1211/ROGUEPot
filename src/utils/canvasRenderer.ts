@@ -312,16 +312,7 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
   ctx.fillStyle = "#161424";
   ctx.fillRect(0, 0, width, height);
 
-  // 2. Outer Border Frame flush to edge (Zero gap)
-  ctx.strokeStyle = "#E63946";
-  ctx.lineWidth = 4;
-  ctx.strokeRect(2, 2, width - 4, height - 4);
-
-  ctx.strokeStyle = "#383152";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(6, 6, width - 12, height - 12);
-
-  // 3. Logo Aligned to LEFT
+  // 2. Logo Aligned to LEFT
   const logo = await getLogoImage();
   const leftPadding = 28;
 
@@ -338,7 +329,7 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
     ctx.textAlign = "left";
     ctx.fillText("Discord Bot version", leftPadding + 4, logoY + logoHeight + 28);
 
-    // 4. Menu List on the Left (Multilingual, 24px)
+    // 3. Menu List on the Left (Multilingual, 24px)
     const menuStartY = logoY + logoHeight + 76;
     ctx.font = "24px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
@@ -355,7 +346,7 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
     }
   }
 
-  // 5. RIGHT SIDE PANEL: showSlotNumbers is FALSE on Title Screen
+  // 4. RIGHT SIDE PANEL: showSlotNumbers is FALSE on Title Screen
   await drawPartyRightPanel(ctx, 295, 18, 244, 344, {
     username: options?.username,
     avatarUrl: options?.avatarUrl,
@@ -363,6 +354,15 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
     lang: options?.lang,
     showSlotNumbers: false,
   });
+
+  // 5. Outer Border Frame flush to edge (Top Z-Index)
+  ctx.strokeStyle = "#E63946";
+  ctx.lineWidth = 4;
+  ctx.strokeRect(2, 2, width - 4, height - 4);
+
+  ctx.strokeStyle = "#383152";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(6, 6, width - 12, height - 12);
 
   return canvas.toBuffer("image/png");
 }
@@ -394,16 +394,7 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
   ctx.fillStyle = "#141226";
   ctx.fillRect(0, 0, width, height);
 
-  // 2. Outer Border Frame (Discord Theme Blurple #5865F2)
-  ctx.strokeStyle = "#5865F2";
-  ctx.lineWidth = 4;
-  ctx.strokeRect(2, 2, width - 4, height - 4);
-
-  ctx.strokeStyle = "#2D315E";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(6, 6, width - 12, height - 12);
-
-  // 3. TOP BANNER: Multiplayer Lobby Header (Centered)
+  // 2. TOP BANNER: Multiplayer Lobby Header (Centered)
   ctx.fillStyle = "#1E2247";
   ctx.fillRect(8, 8, 275, 42);
 
@@ -418,10 +409,10 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
   ctx.textAlign = "center";
   ctx.fillText(isKo ? "멀티플레이 로비" : "MULTIPLAYER LOBBY", 8 + 275 / 2 + 10, 36);
 
-  // 4. LEFT SIDE: Clean minimal area (Ready for lobby/matchmaking)
+  // 3. LEFT SIDE: Clean minimal area (Ready for lobby/matchmaking)
   // Left side is kept clear and minimal as requested
 
-  // 5. RIGHT SIDE PANEL: Multiplayer Team (with slot numbers 1~6 and Blurple border)
+  // 4. RIGHT SIDE PANEL: Multiplayer Team (with slot numbers 1~6 and Blurple border)
   await drawPartyRightPanel(ctx, 295, 18, 244, 344, {
     username: options?.username,
     avatarUrl: options?.avatarUrl,
@@ -430,6 +421,15 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
     showSlotNumbers: true,
     borderColor: "#5865F2",
   });
+
+  // 5. Outer Border Frame (Top Z-Index: Overlays on top of the vertical split line)
+  ctx.strokeStyle = "#5865F2";
+  ctx.lineWidth = 4;
+  ctx.strokeRect(2, 2, width - 4, height - 4);
+
+  ctx.strokeStyle = "#2D315E";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(6, 6, width - 12, height - 12);
 
   return canvas.toBuffer("image/png");
 }
@@ -462,16 +462,7 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
   ctx.fillStyle = "#161424";
   ctx.fillRect(0, 0, width, height);
 
-  // 2. Outer Border Frame (Gold & Wine-Red Border)
-  ctx.strokeStyle = "#F4A261";
-  ctx.lineWidth = 4;
-  ctx.strokeRect(2, 2, width - 4, height - 4);
-
-  ctx.strokeStyle = "#383152";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(6, 6, width - 12, height - 12);
-
-  // 3. TOP BANNER: Trainer Bag Header with Vector Bag Icon
+  // 2. TOP BANNER: Trainer Bag Header with Vector Bag Icon
   ctx.fillStyle = "#241F3D";
   ctx.fillRect(8, 8, 275, 42);
 
@@ -574,6 +565,15 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
     lang: options?.lang,
     showSlotNumbers: true,
   });
+
+  // 6. Outer Border Frame (Gold & Wine-Red Border - Top Z-Index)
+  ctx.strokeStyle = "#F4A261";
+  ctx.lineWidth = 4;
+  ctx.strokeRect(2, 2, width - 4, height - 4);
+
+  ctx.strokeStyle = "#383152";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(6, 6, width - 12, height - 12);
 
   return canvas.toBuffer("image/png");
 }
