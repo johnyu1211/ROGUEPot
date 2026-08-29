@@ -302,14 +302,14 @@ async function renderMultiplayerMessageData(client: ExtendedClient, userId: stri
 
 const POKEDEX_REGIONS = [
   { id: "kanto", nameKo: "🌱 1세대 관동 (Kanto)", nameEn: "🌱 Gen 1: Kanto", startDex: 1, page: 1, descKo: "#001 ~ #151 (이상해씨 ~ 뮤)", descEn: "#001 ~ #151 (Bulbasaur ~ Mew)" },
-  { id: "johto", nameKo: "🏯 2세대 성도 (Johto)", nameEn: "🏯 Gen 2: Johto", startDex: 152, page: 38, descKo: "#152 ~ #251 (치코리타 ~ 세레비)", descEn: "#152 ~ #251 (Chikorita ~ Celebi)" },
-  { id: "hoenn", nameKo: "☄️ 3세대 호연 (Hoenn)", nameEn: "☄️ Gen 3: Hoenn", startDex: 252, page: 63, descKo: "#252 ~ #386 (나무지기 ~ 테오키스)", descEn: "#252 ~ #386 (Treecko ~ Deoxys)" },
-  { id: "sinnoh", nameKo: "🏛️ 4세대 신오 (Sinnoh)", nameEn: "🏛️ Gen 4: Sinnoh", startDex: 387, page: 97, descKo: "#387 ~ #493 (모부기 ~ 아르세우스)", descEn: "#387 ~ #493 (Turtwig ~ Arceus)" },
-  { id: "unova", nameKo: "☯︎ 5세대 하나 (Unova)", nameEn: "☯︎ Gen 5: Unova", startDex: 494, page: 124, descKo: "#494 ~ #649 (비크티니 ~ 게노세크트)", descEn: "#494 ~ #649 (Victini ~ Genesect)" },
-  { id: "kalos", nameKo: "✨ 6세대 칼로스 (Kalos)", nameEn: "✨ Gen 6: Kalos", startDex: 650, page: 163, descKo: "#650 ~ #721 (도치마론 ~ 볼케니온)", descEn: "#650 ~ #721 (Chespin ~ Volcanion)" },
-  { id: "alola", nameKo: "🏝️ 7세대 알로라 (Alola)", nameEn: "🏝️ Gen 7: Alola", startDex: 722, page: 181, descKo: "#722 ~ #809 (나몰빼미 ~ 멜메탈)", descEn: "#722 ~ #809 (Rowlet ~ Melmetal)" },
-  { id: "galar", nameKo: "⚔️ 8세대 가라르/히스이 (Galar)", nameEn: "⚔️ Gen 8: Galar/Hisui", startDex: 810, page: 203, descKo: "#810 ~ #905 (흥나숭 ~ 러브로스)", descEn: "#810 ~ #905 (Grookey ~ Enamorus)" },
-  { id: "paldea", nameKo: "💎 9세대 팔데아 (Paldea)", nameEn: "💎 Gen 9: Paldea", startDex: 906, page: 227, descKo: "#906 ~ #1025 (나오하 ~ 복숭악귀)", descEn: "#906 ~ #1025 (Sprigatito ~ Pecharunt)" },
+  { id: "johto", nameKo: "🏯 2세대 성도 (Johto)", nameEn: "🏯 Gen 2: Johto", startDex: 152, page: 20, descKo: "#152 ~ #251 (치코리타 ~ 세레비)", descEn: "#152 ~ #251 (Chikorita ~ Celebi)" },
+  { id: "hoenn", nameKo: "☄️ 3세대 호연 (Hoenn)", nameEn: "☄️ Gen 3: Hoenn", startDex: 252, page: 33, descKo: "#252 ~ #386 (나무지기 ~ 테오키스)", descEn: "#252 ~ #386 (Treecko ~ Deoxys)" },
+  { id: "sinnoh", nameKo: "🏛️ 4세대 신오 (Sinnoh)", nameEn: "🏛️ Gen 4: Sinnoh", startDex: 387, page: 50, descKo: "#387 ~ #493 (모부기 ~ 아르세우스)", descEn: "#387 ~ #493 (Turtwig ~ Arceus)" },
+  { id: "unova", nameKo: "☯︎ 5세대 하나 (Unova)", nameEn: "☯︎ Gen 5: Unova", startDex: 494, page: 63, descKo: "#494 ~ #649 (비크티니 ~ 게노세크트)", descEn: "#494 ~ #649 (Victini ~ Genesect)" },
+  { id: "kalos", nameKo: "✨ 6세대 칼로스 (Kalos)", nameEn: "✨ Gen 6: Kalos", startDex: 650, page: 82, descKo: "#650 ~ #721 (도치마론 ~ 볼케니온)", descEn: "#650 ~ #721 (Chespin ~ Volcanion)" },
+  { id: "alola", nameKo: "🏝️ 7세대 알로라 (Alola)", nameEn: "🏝️ Gen 7: Alola", startDex: 722, page: 91, descKo: "#722 ~ #809 (나몰빼미 ~ 멜메탈)", descEn: "#722 ~ #809 (Rowlet ~ Melmetal)" },
+  { id: "galar", nameKo: "⚔️ 8세대 가라르/히스이 (Galar)", nameEn: "⚔️ Gen 8: Galar/Hisui", startDex: 810, page: 102, descKo: "#810 ~ #905 (흥나숭 ~ 러브로스)", descEn: "#810 ~ #905 (Grookey ~ Enamorus)" },
+  { id: "paldea", nameKo: "💎 9세대 팔데아 (Paldea)", nameEn: "💎 Gen 9: Paldea", startDex: 906, page: 114, descKo: "#906 ~ #1025 (나오하 ~ 복숭악귀)", descEn: "#906 ~ #1025 (Sprigatito ~ Pecharunt)" },
 ];
 
 function createPokedexRegionSelectMenu(fromScreen: "multiplay" | "inventory" | "title", userId: string, isKo: boolean) {
@@ -355,8 +355,8 @@ async function renderPokedexMessageData(
   const profile = saveService.getProfile(userId);
   const isKo = profile.language === "ko";
 
-  // 4 Pokémon per page (Top Half 2x2 Grid)
-  const { total, totalPages, items } = await getPokemonPage(page, 4);
+  // Full 8 Pokémon per page (2 Columns x 4 Rows)
+  const { total, totalPages, items } = await getPokemonPage(page, 8);
 
   let selectedPokemon = items.find((p) => p.dexNumber === selectedDexNo);
   if (!selectedPokemon) {
@@ -427,7 +427,7 @@ async function renderPokedexMessageData(
   );
   components.push(topUtilityRow);
 
-  // ROW 3: Pokemon 1~4 Buttons (Only 4 Pokemon per page)
+  // ROW 3: Pokemon 1~4 Buttons
   const row1Items = items.slice(0, 4);
   if (row1Items.length > 0) {
     const selectRow1 = new ActionRowBuilder<ButtonBuilder>();
@@ -444,7 +444,24 @@ async function renderPokedexMessageData(
     components.push(selectRow1);
   }
 
-  // ROW 4: Fast Backward 3 Pages (◀◀◀), Prev, Next, Fast Forward 3 Pages (▶▶▶), Return (↩️)
+  // ROW 4: Pokemon 5~8 Buttons
+  const row2Items = items.slice(4, 8);
+  if (row2Items.length > 0) {
+    const selectRow2 = new ActionRowBuilder<ButtonBuilder>();
+    row2Items.forEach((p, idx) => {
+      const isSelected = selectedPokemon && selectedPokemon.dexNumber === p.dexNumber;
+      const name = (isKo && p.koreanName) ? p.koreanName : p.name;
+      selectRow2.addComponents(
+        new ButtonBuilder()
+          .setCustomId(`pokedex_select_${p.dexNumber}_${page}_${fromScreen}_${userId}`)
+          .setLabel(`${idx + 5}. ${name.slice(0, 5)}`)
+          .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Secondary)
+      );
+    });
+    components.push(selectRow2);
+  }
+
+  // ROW 5: Fast Backward 3 Pages (◀◀◀), Prev, Next, Fast Forward 3 Pages (▶▶▶), Return (↩️)
   const navRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(`pokedex_jumpback_${Math.max(1, page - 3)}_${selectedDexNo}_${fromScreen}_${userId}`)
@@ -663,7 +680,7 @@ export const interactionCreateEvent: BotEvent = {
         }
 
         const targetDexNo = pokeInfo.dexNumber;
-        const targetPage = Math.ceil(targetDexNo / 4);
+        const targetPage = Math.ceil(targetDexNo / 8);
         const client = interaction.client as ExtendedClient;
 
         const dexData = await renderPokedexMessageData(client, interaction.user.id, targetDexNo, targetPage, fromScreen);
@@ -819,7 +836,7 @@ export const interactionCreateEvent: BotEvent = {
         await interaction.deferUpdate().catch(() => null);
         try {
           const targetPage = parseInt(parts[2], 10) || 1;
-          const currentDexNo = parseInt(parts[3], 10) || ((targetPage - 1) * 4 + 1);
+          const currentDexNo = parseInt(parts[3], 10) || ((targetPage - 1) * 8 + 1);
           const fromScreen = (parts[4] || "title") as "multiplay" | "inventory" | "title";
 
           const dexData = await renderPokedexMessageData(client, interaction.user.id, currentDexNo, targetPage, fromScreen, undefined);
