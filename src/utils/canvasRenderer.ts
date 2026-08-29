@@ -644,24 +644,24 @@ export interface PokedexScreenOptions {
 }
 
 const TYPE_COLORS: Record<string, string> = {
-  normal: "#A8A878",
-  fire: "#F08030",
-  water: "#6890F0",
-  grass: "#78C850",
-  electric: "#F8D030",
-  ice: "#98D8D8",
-  fighting: "#C03028",
-  poison: "#A040A0",
-  ground: "#E0C068",
-  flying: "#A890F0",
-  psychic: "#F85888",
-  bug: "#A8B820",
-  rock: "#B8A038",
-  ghost: "#705898",
-  dragon: "#7038F8",
-  steel: "#B8B8D0",
-  fairy: "#EE99AC",
-  dark: "#705848",
+  normal: "#929DA3",
+  fire: "#E65A28",
+  water: "#3873B8",
+  grass: "#4A993F",
+  electric: "#D69F0A",
+  ice: "#4CB0BE",
+  fighting: "#CE4069",
+  poison: "#9343B0",
+  ground: "#BA6828",
+  flying: "#768FD4",
+  psychic: "#EB4E56",
+  bug: "#85B020",
+  rock: "#A8945A",
+  ghost: "#5269AC",
+  dragon: "#096DC4",
+  steel: "#5A8EA1",
+  fairy: "#DB68D3",
+  dark: "#5A5366",
 };
 
 const TYPE_NAMES_KO: Record<string, string> = {
@@ -683,16 +683,6 @@ const TYPE_NAMES_KO: Record<string, string> = {
   steel: "강철",
   fairy: "페어리",
   dark: "악",
-};
-
-const TYPE_TEXT_COLORS: Record<string, string> = {
-  electric: "#1A1A1A",
-  ice: "#1A1A1A",
-  ground: "#1A1A1A",
-  normal: "#1A1A1A",
-  flying: "#1A1A1A",
-  steel: "#1A1A1A",
-  fairy: "#1A1A1A",
 };
 
 /**
@@ -785,28 +775,36 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
         ctx.drawImage(sprite, sx + 4 + (40 - sprW) / 2, sy + 20 + (50 - sprH) / 2, sprW, sprH);
       }
 
-      // Mini Type Badges (Stacked on the right side of slot)
+      // Mini Type Badges (Compact 36x17 on the right side of slot)
       let bY = sy + 22;
       for (const tName of p.types.slice(0, 2)) {
         const tLower = tName.toLowerCase();
         const tColor = TYPE_COLORS[tLower] || "#777777";
-        const txtColor = TYPE_TEXT_COLORS[tLower] || "#FFFFFF";
-        const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || tName) : tName.toUpperCase();
+        const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || tName) : tName.slice(0, 4).toUpperCase();
+        const badgeW = 38;
+        const badgeH = 17;
+        const badgeX = sx + slotW - badgeW - 6;
 
         ctx.fillStyle = tColor;
         ctx.beginPath();
-        ctx.roundRect(sx + 48, bY, 62, 18, 4);
+        ctx.roundRect(badgeX, bY, badgeW, badgeH, 3);
         ctx.fill();
 
         ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
         ctx.lineWidth = 1;
         ctx.stroke();
 
-        ctx.font = isKo ? "bold 11px DungGeunMo" : "bold 10px DungGeunMo";
-        ctx.fillStyle = txtColor;
+        ctx.save();
+        ctx.shadowColor = "rgba(0, 0, 0, 0.9)";
+        ctx.shadowOffsetY = 1;
+        ctx.shadowBlur = 1;
+        ctx.font = "bold 10px DungGeunMo";
+        ctx.fillStyle = "#FFFFFF";
         ctx.textAlign = "center";
-        ctx.fillText(tDisplay, sx + 48 + 31, bY + 13);
-        bY += 22;
+        ctx.fillText(tDisplay, badgeX + badgeW / 2, bY + 12);
+        ctx.restore();
+
+        bY += 21;
       }
     } else {
       ctx.font = "12px DungGeunMo";
@@ -891,23 +889,29 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     for (const tName of selected.types) {
       const tLower = tName.toLowerCase();
       const tColor = TYPE_COLORS[tLower] || "#777777";
-      const txtColor = TYPE_TEXT_COLORS[tLower] || "#FFFFFF";
       const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || tName) : tName.toUpperCase();
-      const badgeW = isKo ? 46 : 56;
+      const badgeW = isKo ? 40 : 48;
+      const badgeH = 20;
 
       ctx.fillStyle = tColor;
       ctx.beginPath();
-      ctx.roundRect(typeBadgeX, topCardY + 12, badgeW, 22, 4);
+      ctx.roundRect(typeBadgeX, topCardY + 12, badgeW, badgeH, 4);
       ctx.fill();
 
       ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
       ctx.lineWidth = 1;
       ctx.stroke();
 
-      ctx.font = isKo ? "bold 12px DungGeunMo" : "bold 11px DungGeunMo";
-      ctx.fillStyle = txtColor;
+      ctx.save();
+      ctx.shadowColor = "rgba(0, 0, 0, 0.9)";
+      ctx.shadowOffsetY = 1;
+      ctx.shadowBlur = 1;
+      ctx.font = isKo ? "bold 12px DungGeunMo" : "bold 10px DungGeunMo";
+      ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
-      ctx.fillText(tDisplay, typeBadgeX + badgeW / 2, topCardY + 28);
+      ctx.fillText(tDisplay, typeBadgeX + badgeW / 2, topCardY + 26);
+      ctx.restore();
+
       typeBadgeX += badgeW + 8;
     }
 
