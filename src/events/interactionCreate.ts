@@ -64,7 +64,7 @@ function createStarterSelectMenu(slotId: number, userId: string, fromSource: "ti
   const backRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(backCustomId)
-      .setLabel("🔙")
+      .setLabel("↩️")
       .setStyle(ButtonStyle.Danger)
   );
 
@@ -106,7 +106,7 @@ function renderSlotsScreenData(userId: string) {
       .setStyle(ButtonStyle.Danger),
     new ButtonBuilder()
       .setCustomId(`menu_back_to_title_${userId}`)
-      .setLabel("🔙")
+      .setLabel("↩️")
       .setStyle(ButtonStyle.Danger)
   );
 
@@ -152,7 +152,7 @@ function renderSettingsMessageData(userId: string) {
   const backRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(`menu_back_to_title_${userId}`)
-      .setLabel("🔙")
+      .setLabel("↩️")
       .setStyle(ButtonStyle.Danger)
   );
 
@@ -254,7 +254,7 @@ async function renderBagMessageData(
   const backRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(`menu_back_to_title_${userId}`)
-      .setLabel("🔙")
+      .setLabel("↩️")
       .setStyle(ButtonStyle.Danger)
   );
 
@@ -293,7 +293,7 @@ async function renderMultiplayerMessageData(client: ExtendedClient, userId: stri
   const backRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(`menu_back_to_title_${userId}`)
-      .setLabel("🔙")
+      .setLabel("↩️")
       .setStyle(ButtonStyle.Danger)
   );
 
@@ -337,7 +337,7 @@ function createPokedexRegionSelectMenu(fromScreen: "multiplay" | "inventory" | "
   const cancelRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(`pokedex_page_1_1_${fromScreen}_${userId}`)
-      .setLabel("🔙")
+      .setLabel("↩️")
       .setStyle(ButtonStyle.Secondary)
   );
 
@@ -420,7 +420,7 @@ async function renderPokedexMessageData(
       .setDisabled(page >= totalPages),
     new ButtonBuilder()
       .setCustomId(`pokedex_back_${fromScreen}_${userId}`)
-      .setLabel("🔙")
+      .setLabel("↩️")
       .setStyle(ButtonStyle.Danger),
     new ButtonBuilder()
       .setCustomId(`pokedex_region_btn_${fromScreen}_${userId}`)
@@ -848,7 +848,7 @@ export const interactionCreateEvent: BotEvent = {
             .setDisabled(!profile.slots[3]),
           new ButtonBuilder()
             .setCustomId(`menu_loadgame_${interaction.user.id}`)
-            .setLabel("🔙")
+            .setLabel("↩️")
             .setStyle(ButtonStyle.Secondary)
         );
 
@@ -906,7 +906,7 @@ export const interactionCreateEvent: BotEvent = {
               .setStyle(ButtonStyle.Danger),
             new ButtonBuilder()
               .setCustomId(`menu_loadgame_${interaction.user.id}`)
-              .setLabel("🔙")
+              .setLabel("↩️")
               .setStyle(ButtonStyle.Secondary)
           );
 
@@ -944,7 +944,7 @@ export const interactionCreateEvent: BotEvent = {
             .setStyle(ButtonStyle.Success),
           new ButtonBuilder()
             .setCustomId(`menu_back_to_title_${interaction.user.id}`)
-            .setLabel("🔙")
+            .setLabel("↩️")
             .setStyle(ButtonStyle.Danger)
         );
 
@@ -1000,7 +1000,7 @@ export const interactionCreateEvent: BotEvent = {
             .setStyle(ButtonStyle.Success),
           new ButtonBuilder()
             .setCustomId(`menu_back_to_title_${interaction.user.id}`)
-            .setLabel("🔙")
+            .setLabel("↩️")
             .setStyle(ButtonStyle.Danger)
         );
 
