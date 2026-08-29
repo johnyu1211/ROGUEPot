@@ -411,10 +411,6 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
   ctx.lineWidth = 4;
   ctx.strokeRect(2, 2, width - 4, height - 4);
 
-  ctx.strokeStyle = "#383152";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(6, 6, width - 12, height - 12);
-
   return canvas.toBuffer("image/png");
 }
 
@@ -483,10 +479,6 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
   ctx.strokeStyle = "#5865F2";
   ctx.lineWidth = 4;
   ctx.strokeRect(2, 2, width - 4, height - 4);
-
-  ctx.strokeStyle = "#2D315E";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(6, 6, width - 12, height - 12);
 
   return canvas.toBuffer("image/png");
 }
@@ -627,10 +619,6 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
   ctx.strokeStyle = "#F4A261";
   ctx.lineWidth = 4;
   ctx.strokeRect(2, 2, width - 4, height - 4);
-
-  ctx.strokeStyle = "#383152";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(6, 6, width - 12, height - 12);
 
   return canvas.toBuffer("image/png");
 }
@@ -997,10 +985,6 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
   ctx.strokeStyle = "#E63946";
   ctx.lineWidth = 4;
   ctx.strokeRect(2, 2, width - 4, height - 4);
-
-  ctx.strokeStyle = "#383152";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(6, 6, width - 12, height - 12);
 
   return canvas.toBuffer("image/png");
 }
