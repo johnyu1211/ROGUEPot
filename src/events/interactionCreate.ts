@@ -375,9 +375,11 @@ async function renderPokedexMessageData(
   // ROW 1: Blue Ability Buttons (특성 정보 일렬 표시 - Blue Primary Style)
   const abilityButtons: ButtonBuilder[] = [];
   if (selectedPokemon) {
-    const regular = selectedPokemon.regularAbilities || (selectedPokemon.primaryAbility ? [selectedPokemon.primaryAbility] : []);
-    regular.forEach((ab, idx) => {
-      const abName = isKo ? getAbilityKoreanName(ab) : ab;
+    const regularEn = selectedPokemon.regularAbilities || (selectedPokemon.primaryAbility ? [selectedPokemon.primaryAbility] : []);
+    const regularKo = selectedPokemon.regularAbilitiesKo || [];
+
+    regularEn.forEach((ab, idx) => {
+      const abName = isKo ? (regularKo[idx] || getAbilityKoreanName(ab)) : ab;
       abilityButtons.push(
         new ButtonBuilder()
           .setCustomId(`pokedex_ability_reg_${selectedPokemon.dexNumber}_${idx}_${userId}`)
@@ -387,7 +389,9 @@ async function renderPokedexMessageData(
     });
 
     if (selectedPokemon.hiddenAbility) {
-      const haName = isKo ? getAbilityKoreanName(selectedPokemon.hiddenAbility) : selectedPokemon.hiddenAbility;
+      const haName = isKo
+        ? (selectedPokemon.hiddenAbilityKo || getAbilityKoreanName(selectedPokemon.hiddenAbility))
+        : selectedPokemon.hiddenAbility;
       abilityButtons.push(
         new ButtonBuilder()
           .setCustomId(`pokedex_ability_ha_${selectedPokemon.dexNumber}_${userId}`)
