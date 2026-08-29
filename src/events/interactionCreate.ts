@@ -460,12 +460,12 @@ async function renderPokedexMessageData(
     new ButtonBuilder()
       .setCustomId(`pokedex_jumpback_${Math.max(1, page - 3)}_${selectedDexNo}_${fromScreen}_${userId}`)
       .setLabel("<<<")
-      .setStyle(ButtonStyle.Secondary)
+      .setStyle(ButtonStyle.Primary)
       .setDisabled(page <= 1),
     new ButtonBuilder()
       .setCustomId(`pokedex_jumpfwd_${Math.min(totalPages, page + 3)}_${selectedDexNo}_${fromScreen}_${userId}`)
       .setLabel(">>>")
-      .setStyle(ButtonStyle.Secondary)
+      .setStyle(ButtonStyle.Primary)
       .setDisabled(page >= totalPages)
   );
   components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row4Btns));
@@ -481,12 +481,12 @@ async function renderPokedexMessageData(
     new ButtonBuilder()
       .setCustomId(`pokedex_pageprev_${Math.max(1, page - 1)}_${selectedDexNo}_${fromScreen}_${userId}`)
       .setLabel("<")
-      .setStyle(ButtonStyle.Secondary)
+      .setStyle(ButtonStyle.Primary)
       .setDisabled(page <= 1),
     new ButtonBuilder()
       .setCustomId(`pokedex_pagenext_${Math.min(totalPages, page + 1)}_${selectedDexNo}_${fromScreen}_${userId}`)
       .setLabel(">")
-      .setStyle(ButtonStyle.Secondary)
+      .setStyle(ButtonStyle.Primary)
       .setDisabled(page >= totalPages),
     new ButtonBuilder()
       .setCustomId(`pokedex_back_${fromScreen}_${userId}`)
