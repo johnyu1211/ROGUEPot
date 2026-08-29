@@ -395,20 +395,26 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
   ctx.fillStyle = "#141226";
   ctx.fillRect(0, 0, width, height);
 
-  // 2. TOP BANNER: Multiplayer Lobby Header (Centered)
-  ctx.fillStyle = "#1E2247";
-  ctx.fillRect(8, 8, 275, 42);
+  // 2. TOP BANNER: Full-width Header Bar across the entire Left Half (y: 0 ~ 54)
+  const splitX = 285;
+  ctx.fillStyle = "#1B1E3D";
+  ctx.fillRect(0, 0, splitX, 54);
 
+  // Bottom border line under left header
   ctx.strokeStyle = "#5865F2";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(8, 8, 275, 42);
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(0, 54);
+  ctx.lineTo(splitX, 54);
+  ctx.stroke();
 
-  drawVectorGlobe(ctx, 38, 29, 10, "#5865F2");
+  // Header Title & Icon Centered in Left Half
+  drawVectorGlobe(ctx, splitX / 2 - 76, 27, 10, "#5865F2");
 
   ctx.font = "bold 20px DungGeunMo";
   ctx.fillStyle = "#5865F2";
   ctx.textAlign = "center";
-  ctx.fillText(isKo ? "멀티플레이 로비" : "MULTIPLAYER LOBBY", 8 + 275 / 2 + 10, 36);
+  ctx.fillText(isKo ? "멀티플레이 로비" : "MULTIPLAYER LOBBY", splitX / 2 + 10, 34);
 
   // 3. LEFT SIDE: Clean minimal area (Ready for lobby/matchmaking)
   // Left side is kept clear and minimal as requested
