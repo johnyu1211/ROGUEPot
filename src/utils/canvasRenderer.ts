@@ -152,7 +152,7 @@ export function drawVectorBag(ctx: any, cx: number, cy: number, w: number, h: nu
 }
 
 /**
- * Reusable helper to draw the 6-Pokemon Party Panel (User Header + 2x3 Rounded Slots Grid)
+ * Reusable helper to draw the 6-Pokemon Party Split-Screen Panel (Vertical Split Line + Open Grid)
  */
 async function drawPartyRightPanel(
   ctx: any,
@@ -169,22 +169,29 @@ async function drawPartyRightPanel(
     borderColor?: string;
   }
 ) {
-  // Panel Background & Frame
-  ctx.fillStyle = "#1E1A33";
-  ctx.fillRect(boxX, boxY, boxW, boxH);
+  const isKo = options?.lang === "ko";
 
-  ctx.strokeStyle = options?.borderColor || "#4D436D";
+  // 1. VERTICAL SPLIT DIVIDER LINE (Separates Left Menu from Right Party Panel)
+  const splitX = boxX - 10;
+  ctx.strokeStyle = options?.borderColor || "#383152";
   ctx.lineWidth = 2;
-  ctx.strokeRect(boxX, boxY, boxW, boxH);
+  ctx.beginPath();
+  ctx.moveTo(splitX, 10);
+  ctx.lineTo(splitX, 370);
+  ctx.stroke();
 
-  ctx.strokeStyle = "#2E2847";
+  // Subtle inner accent line for depth
+  ctx.strokeStyle = "#1F1B36";
   ctx.lineWidth = 1;
-  ctx.strokeRect(boxX + 3, boxY + 3, boxW - 6, boxH - 6);
+  ctx.beginPath();
+  ctx.moveTo(splitX + 2, 12);
+  ctx.lineTo(splitX + 2, 368);
+  ctx.stroke();
 
-  // USER HEADER (Avatar Circle + Username)
-  const avatarX = boxX + 14;
-  const avatarY = boxY + 14;
-  const avatarSize = 34;
+  // 2. USER HEADER (Avatar Circle + Username)
+  const avatarX = boxX + 6;
+  const avatarY = boxY + 12;
+  const avatarSize = 36;
 
   if (options?.avatarUrl) {
     try {
@@ -208,52 +215,49 @@ async function drawPartyRightPanel(
     ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
     ctx.fill();
   }
-
-  // Avatar Border Ring
-  ctx.strokeStyle = options?.borderColor || "#F4A261";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2 + 1, 0, Math.PI * 2);
-  ctx.stroke();
-
-  // Username
+  // Username & Active Status
   ctx.font = "bold 19px DungGeunMo";
   ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "left";
-  const defaultTrainerName = options?.lang === "ko" ? "트레이너" : "Trainer";
+  const defaultTrainerName = isKo ? "트레이너" : "Trainer";
   const nameToDisplay = (options?.username || defaultTrainerName).slice(0, 12);
-  ctx.fillText(nameToDisplay, avatarX + avatarSize + 10, avatarY + 23);
+  ctx.fillText(nameToDisplay, avatarX + avatarSize + 10, avatarY + 24);
 
-  // Sub-divider line
-  ctx.strokeStyle = "#383152";
+  // Sub-divider line under user header
+  ctx.strokeStyle = "#2E284A";
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(boxX + 8, boxY + 56);
-  ctx.lineTo(boxX + boxW - 8, boxY + 56);
+  ctx.moveTo(boxX + 2, boxY + 56);
+  ctx.lineTo(boxX + boxW, boxY + 56);
   ctx.stroke();
 
-  // 2x3 PARTY SLOTS GRID: Height 84px per slot
-  const slotW = 107;
-  const slotH = 84;
-  const startGridY = boxY + 64;
-  const gapX = 8;
+  // 3. 2x3 PARTY SLOTS GRID: Open & Seamless Split-screen Style
+  const slotW = 112;
+  const slotH = 88;
+  const startGridY = boxY + 66;
+  const gapX = 10;
   const gapY = 8;
   const borderRadius = 10;
 
   const partyList = options?.party || [];
-  const emptyLabel = options?.lang === "ko" ? "빈 슬롯" : "Empty";
+  const emptyLabel = isKo ? "빈 슬롯" : "Empty";
 
   for (let i = 0; i < 6; i++) {
     const col = i % 2;
     const row = Math.floor(i / 2);
-    const sx = boxX + 11 + col * (slotW + gapX);
+    const sx = boxX + 4 + col * (slotW + gapX);
     const sy = startGridY + row * (slotH + gapY);
 
     // Borderless Rounded Slot Box Fill
-    ctx.fillStyle = "#141124";
+    ctx.fillStyle = "#120F24";
     ctx.beginPath();
     ctx.roundRect(sx, sy, slotW, slotH, borderRadius);
     ctx.fill();
+
+    // Slot Subtle Edge Glow / Border
+    ctx.strokeStyle = "#25203D";
+    ctx.lineWidth = 1;
+    ctx.stroke();
 
     // Slot Number Tag (1, 2, 3, 4, 5, 6) in WHITE
     if (options?.showSlotNumbers) {
@@ -267,7 +271,7 @@ async function drawPartyRightPanel(
     if (pokemon) {
       const sprite = await getPokemonSprite(pokemon.speciesId);
       if (sprite) {
-        const scale = 1.15;
+        const scale = 1.2;
         const sprW = sprite.width * scale;
         const sprH = sprite.height * scale;
         ctx.drawImage(sprite, sx + (slotW - sprW) / 2, sy + (slotH - sprH) / 2 - 8, sprW, sprH);
@@ -276,9 +280,9 @@ async function drawPartyRightPanel(
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
       const displayLabel = pokemon.nickname ? pokemon.nickname.slice(0, 6) : `Lv.${pokemon.level}`;
-      ctx.fillText(displayLabel, sx + slotW / 2, sy + slotH - 7);
+      ctx.fillText(displayLabel, sx + slotW / 2, sy + slotH - 8);
     } else {
-      ctx.fillStyle = "#26203D";
+      ctx.fillStyle = "#201B36";
       ctx.beginPath();
       ctx.arc(sx + slotW / 2, sy + slotH / 2 - 4, 10, 0, Math.PI * 2);
       ctx.fill();
