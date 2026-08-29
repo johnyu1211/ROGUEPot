@@ -409,13 +409,9 @@ async function renderPokedexMessageData(
     }
   }
 
-  if (abilityButtons.length > 0) {
-    const abilityRow = new ActionRowBuilder<ButtonBuilder>().addComponents(abilityButtons.slice(0, 5));
-    components.push(abilityRow);
-  }
-
-  // ROW 2: Region Jump [🗺️] & Direct Search [🔍]
-  const topUtilityRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+  // ROW 1: Abilities (1~3) + Region Jump [🗺️] + Search [🔍] (Combined into 1 slim Row of max 5 buttons)
+  const topRowButtons: ButtonBuilder[] = [...abilityButtons];
+  topRowButtons.push(
     new ButtonBuilder()
       .setCustomId(`pokedex_region_btn_${fromScreen}_${userId}`)
       .setLabel("🗺️")
@@ -425,7 +421,7 @@ async function renderPokedexMessageData(
       .setLabel("🔍")
       .setStyle(ButtonStyle.Secondary)
   );
-  components.push(topUtilityRow);
+  components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(topRowButtons.slice(0, 5)));
 
   // ROW 3: Pokemon 1~4 Buttons
   const row1Items = items.slice(0, 4);

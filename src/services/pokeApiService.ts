@@ -373,43 +373,169 @@ export interface AbilityDetailInfo {
 
 const abilityDetailCache = new Map<string, AbilityDetailInfo>();
 
+// Enhanced Numerical & Competitive Ability Descriptions (Korean & English)
+export const ABILITY_DETAILED_DESC_KO: Record<string, string> = {
+  "hustle": "공격은 높지만 [1.5배(50%) 상승] 빗나가기 [명중률 20% 하락] 쉽다.",
+  "huge-power": "자신의 물리 공격의 위력이 올라간다. [실수치 2.0배(100% 상승)]",
+  "pure-power": "자신의 물리 공격의 위력이 올라간다. [실수치 2.0배(100% 상승)]",
+  "speed-boost": "매 턴 스피드가 올라간다. [매 턴 종료 시 스피드 +1랭크(1.5배 ➡️ 2.0배...)]",
+  "technician": "위력이 낮은 기술의 위력을 높여서 공격한다. [위력 60 이하 기술 1.5배(50%) 상승]",
+  "overgrow": "위급할 때 풀타입 기술의 위력이 올라간다. [HP 1/3 이하 시 풀 기술 위력 1.5배]",
+  "blaze": "위급할 때 불꽃타입 기술의 위력이 올라간다. [HP 1/3 이하 시 불꽃 기술 위력 1.5배]",
+  "torrent": "위급할 때 물타입 기술의 위력이 올라간다. [HP 1/3 이하 시 물 기술 위력 1.5배]",
+  "swarm": "위급할 때 벌레타입 기술의 위력이 올라간다. [HP 1/3 이하 시 벌레 기술 위력 1.5배]",
+  "adaptability": "타입과 일치하는 기술의 위력이 더욱 올라간다. [자속 보정 1.5배 ➡️ 2.0배]",
+  "sheer-force": "추가 효과가 있는 기술을 높은 위력으로 쓴다. [추가 효과 소멸 대신 위력 1.3배(30%) 상승]",
+  "tough-claws": "직접 공격하는 기술의 위력이 올라간다. [직접 접촉기 위력 1.3배(30%) 상승]",
+  "strong-jaw": "턱을 써서 무는 기술의 위력이 올라간다. [물기 기술 위력 1.5배(50%) 상승]",
+  "mega-launcher": "파동 기술의 위력이 올라간다. [파동 및 포 기술 위력 1.5배(50%) 상승]",
+  "iron-fist": "펀치 기술의 위력이 올라간다. [펀치 기술 위력 1.2배(20%) 상승]",
+  "sharpness": "베기 기술의 위력이 올라간다. [베기 기술 위력 1.5배(50%) 상승]",
+  "regenerator": "다른 포켓몬으로 교체하면 HP가 회복된다. [교체 시 최대 HP의 33.3%(1/3) 회복]",
+  "multiscale": "HP가 꽉 찼을 때 받는 대미지가 줄어든다. [피해량 50%(반감) 감소]",
+  "shadow-shield": "HP가 꽉 찼을 때 받는 대미지가 줄어든다. [피해량 50%(반감) 감소]",
+  "fluffy": "직접 공격의 대미지를 반감하지만 불꽃 공격은 2배가 된다. [접촉기 50% 감소 / 불꽃 2.0배]",
+  "poison-heal": "독 상태가 되면 대미지 대신 HP가 회복된다. [매 턴 최대 HP의 12.5%(1/8) 회복]",
+  "magic-guard": "직접 공격 외의 대미지를 받지 않는다. [날씨/상태이상/스락/반동 피해 무효]",
+  "intimidate": "배틀에 나오면 상대의 공격을 떨어뜨린다. [등장 시 상대 공격 -1랭크(2/3배)]",
+  "moxie": "상대를 쓰러뜨리면 공격이 올라간다. [상대 격파 시 공격 +1랭크(1.5배)]",
+  "beast-boost": "상대를 쓰러뜨릴 때마다 가장 높은 능력이 올라간다. [격파 시 최고 스탯 +1랭크]",
+  "chilling-neigh": "상대를 쓰러뜨리면 공격이 올라간다. [상대 격파 시 공격 +1랭크]",
+  "grim-neigh": "상대를 쓰러뜨리면 특수공격이 올라간다. [상대 격파 시 특공 +1랭크]",
+  "soul-heart": "포켓몬이 쓰러질 때마다 특수공격이 올라간다. [필드 포켓몬 기절 시 특공 +1랭크]",
+  "defiant": "상대에 의해 능력치가 떨어지면 공격이 크게 올라간다. [능력치 하락 시 공격 +2랭크(2.0배)]",
+  "competitive": "상대에 의해 능력치가 떨어지면 특수공격이 크게 올라간다. [능력치 하락 시 특공 +2랭크(2.0배)]",
+  "contrary": "능력 변화의 상승과 하락이 반대로 적용된다. [랭크업 ➡️ 랭크다운 / 랭크다운 ➡️ 랭크업]",
+  "prankster": "자신의 변화 기술을 먼저 쓸 수 있다. [변화 기술 우선도 +1 (악타입 대상 무효)]",
+  "guts": "상태이상이 되면 공격이 올라가며 화상 페널티를 무시한다. [공격 1.5배(50%) 상승]",
+  "marvel-scale": "상태이상이 되면 방어가 올라간다. [방어 1.5배(50%) 상승]",
+  "quick-feet": "상태이상이 되면 스피드가 올라가며 마비 페널티를 무시한다. [스피드 1.5배(50%) 상승]",
+  "toxic-boost": "독 상태가 되면 물리 공격의 위력이 올라간다. [물리 기술 위력 1.5배(50%) 상승]",
+  "flare-boost": "화상 상태가 되면 특수 공격의 위력이 올라간다. [특수 기술 위력 1.5배(50%) 상승]",
+  "drizzle": "배틀에 나오면 비를 내리게 한다. [등장 시 5턴간 비 소환 (물 기술 1.5배 / 불꽃 반감)]",
+  "drought": "배틀에 나오면 햇살을 강하게 비춘다. [등장 시 5턴간 쾌청 소환 (불꽃 기술 1.5배 / 물 반감)]",
+  "sand-stream": "배틀에 나오면 모래바람을 일으킨다. [등장 시 5턴간 모래바람 (바위타입 특방 1.5배)]",
+  "snow-warning": "배틀에 나오면 눈을 내리게 한다. [등장 시 5턴간 설경 소환 (얼음타입 방어 1.5배)]",
+  "electric-surge": "배틀에 나오면 일렉트릭필드를 깐다. [등장 시 5턴간 전기필드 (전기 기술 1.3배)]",
+  "grassy-surge": "배틀에 나오면 그래스필드를 깐다. [등장 시 5턴간 풀필드 (풀 기술 1.3배 / 매턴 HP 1/16 회복)]",
+  "psychic-surge": "배틀에 나오면 사이코필드를 깐다. [등장 시 5턴간 사이코필드 (에스퍼 기술 1.3배 / 선공기 무효)]",
+  "misty-surge": "배틀에 나오면 미스트필드를 깐다. [등장 시 5턴간 안개필드 (드래곤 피해 반감 / 상태이상 방지)]",
+  "supreme-overlord": "쓰러진 아군이 많을수록 기술 위력이 올라간다. [쓰러진 아군 1마리당 위력 +10% (최대 +50%)]",
+  "protosynthesis": "쾌청 날씨이거나 부스트에너지를 지니면 가장 높은 능력이 올라간다. [최고 스탯 1.3배 (스피드는 1.5배)]",
+  "quark-drive": "일렉트릭필드이거나 부스트에너지를 지니면 가장 높은 능력이 올라간다. [최고 스탯 1.3배 (스피드는 1.5배)]",
+  "unaware": "상대의 랭크 변화를 무시하고 공격하거나 방어한다. [상대의 공/방/특공/특방 랭크업 무시]",
+  "simple": "자신의 랭크 변화 수치가 2배로 적용된다. [1랭크 상승/하락 ➡️ 2랭크 상승/하락]",
+  "analytic": "상대보다 나중에 공격하면 기술의 위력이 올라간다. [후공 시 위력 1.3배(30%) 상승]",
+  "infiltrator": "상대의 장막과 대타출동을 통과하여 공격한다. [리플렉터/빛의장막/오로라베일/대타 무시]",
+  "levitate": "땅에 떠 있어서 땅타입 공격을 받지 않는다. [땅타입 공격 / 압정로드 / 필드 효과 무효]",
+  "water-bubble": "물 기술 위력이 2배가 되고 불꽃 피해를 반감하며 화상에 걸리지 않는다. [물 2.0배 / 불꽃 50%]",
+  "fur-coat": "물리 기술로 받는 대미지가 절반이 된다. [물리 방어력 실수치 2.0배(100% 상승)]",
+  "ice-scales": "특수 기술로 받는 대미지가 절반이 된다. [특수 대미지 50% 반감]",
+  "wonder-guard": "효과가 굉장한 약점 기술 외에는 대미지를 받지 않는다. [2배 이상 약점 외 모든 직접공격 무효]",
+  "oblivious": "헤롱헤롱과 도발 상태가 되지 않는다. [유혹 / 도발 / 헤롱헤롱 면역]",
+  "own-tempo": "혼란 상태가 되지 않고 위협을 무시한다. [혼란 및 위협 면역]",
+  "immunity": "독 상태가 되지 않는다. [독 및 맹독 면역]",
+  "limber": "마비 상태가 되지 않는다. [마비 면역]",
+  "insomnia": "잠듦 상태가 되지 않는다. [수면 및 하품 면역]",
+  "vital-spirit": "잠듦 상태가 되지 않는다. [수면 및 하품 면역]",
+  "water-veil": "화상 상태가 되지 않는다. [화상 면역]",
+  "magma-armor": "얼음 상태가 되지 않는다. [동빙 면역]",
+  "sturdy": "일격필살 기술을 무효화하며 HP가 가득 찼을 때 기절할 공격을 버틴다. [기합의띠 효과]",
+  "serene-grace": "기술의 추가 효과가 나타날 확률이 2배가 된다. [풀죽음/상태이상 발동률 2배]",
+  "reckless": "반동 대미지를 받는 기술의 위력이 올라간다. [반동 공격기 위력 1.2배(20%) 상승]",
+  "rock-head": "공격을 가해도 반동 대미지를 받지 않는다. [반동 피해 완전 무효]",
+  "magic-bounce": "자신이 받는 변화 기술을 상대에게 되받아친다. [스락/하품/도발/상태이상 반사]",
+  "chlorophyll": "날씨가 맑을 때 스피드가 2배가 된다. [쾌청 시 스피드 2.0배(100% 상승)]",
+  "swift-swim": "날씨가 비일 때 스피드가 2배가 된다. [비 시 스피드 2.0배(100% 상승)]",
+  "sand-rush": "모래바람일 때 스피드가 2배가 된다. [모래바람 시 스피드 2.0배(100% 상승)]",
+  "slush-rush": "눈이나 싸라기눈일 때 스피드가 2배가 된다. [설경 시 스피드 2.0배(100% 상승)]",
+  "solar-power": "날씨가 맑을 때 특수공격이 올라가지만 매 턴 HP가 깎인다. [특공 1.5배 / 매턴 HP 1/8 감소]",
+  "dry-skin": "비일 때 HP를 회복하고 물을 무효화하지만 불꽃에 약해진다. [물 무효 및 25% 회복 / 불꽃 1.25배]",
+  "water-absorb": "물타입 공격을 받으면 대미지 대신 HP가 회복된다. [물 무효 및 최대 HP의 25% 회복]",
+  "volt-absorb": "전기타입 공격을 받으면 대미지 대신 HP가 회복된다. [전기 무효 및 최대 HP의 25% 회복]",
+  "flash-fire": "불꽃타입 공격을 받으면 무효화하고 불꽃 기술의 위력이 올라간다. [불꽃 무효 및 불꽃 위력 1.5배]",
+  "sap-sipper": "풀타입 공격을 받으면 무효화하고 공격이 올라간다. [풀 무효 및 공격 +1랭크]",
+  "lightning-rod": "전기타입 공격을 자신에게 끌어당겨 무효화하고 특수공격이 올라간다. [전기 무효 및 특공 +1랭크]",
+  "storm-drain": "물타입 공격을 자신에게 끌어당겨 무효화하고 특수공격이 올라간다. [물 무효 및 특공 +1랭크]",
+  "motor-drive": "전기타입 공격을 받으면 무효화하고 스피드가 올라간다. [전기 무효 및 스피드 +1랭크]",
+};
+
+export const ABILITY_DETAILED_DESC_EN: Record<string, string> = {
+  "hustle": "Boosts Attack [1.5x (+50%)], but lowers physical move accuracy by 20%.",
+  "huge-power": "Doubles the Pokémon's physical Attack stat [2.0x (+100%)].",
+  "pure-power": "Doubles the Pokémon's physical Attack stat [2.0x (+100%)].",
+  "speed-boost": "Its Speed stat is boosted every turn [+1 stage (1.5x ➡️ 2.0x...)].",
+  "technician": "Powers up the Pokémon's weaker moves [Moves with power <= 60 get 1.5x].",
+  "overgrow": "Powers up Grass-type moves in a pinch [HP <= 1/3: 1.5x power].",
+  "blaze": "Powers up Fire-type moves in a pinch [HP <= 1/3: 1.5x power].",
+  "torrent": "Powers up Water-type moves in a pinch [HP <= 1/3: 1.5x power].",
+  "swarm": "Powers up Bug-type moves in a pinch [HP <= 1/3: 1.5x power].",
+  "adaptability": "Powers up moves of the same type [STAB bonus 1.5x ➡️ 2.0x].",
+  "sheer-force": "Removes move secondary effects to boost move power by 1.3x (+30%).",
+  "tough-claws": "Powers up moves that make direct contact [1.3x (+30%)].",
+  "strong-jaw": "The Pokémon's strong jaw boosts the power of biting moves [1.5x (+50%)].",
+  "mega-launcher": "Powers up aura and pulse moves [1.5x (+50%)].",
+  "iron-fist": "Powers up punching moves [1.2x (+20%)].",
+  "sharpness": "Powers up slicing moves [1.5x (+50%)].",
+  "regenerator": "Restores HP when withdrawn from battle [33.3% (1/3) max HP].",
+  "multiscale": "Reduces damage taken when HP is full [50% damage reduction].",
+  "shadow-shield": "Reduces damage taken when HP is full [50% damage reduction].",
+  "fluffy": "Halves damage from contact moves [50%], but doubles Fire move damage [2.0x].",
+  "poison-heal": "Restores HP when poisoned [12.5% (1/8) max HP per turn].",
+  "magic-guard": "The Pokémon only takes damage from direct attacks.",
+  "intimidate": "Lowers opposing Pokémon's Attack stat when entering battle [-1 stage (2/3x)].",
+  "moxie": "Boosts Attack after knocking out any Pokémon [+1 stage (1.5x)].",
+  "defiant": "Sharply boosts Attack when stats are lowered by opponents [+2 stages (2.0x)].",
+  "competitive": "Sharply boosts Sp. Atk when stats are lowered by opponents [+2 stages (2.0x)].",
+  "contrary": "Reverses all stat changes.",
+  "prankster": "Gives priority to status moves [+1 priority, fails against Dark types].",
+  "guts": "Boosts Attack if the Pokémon has a status condition [1.5x (+50%)].",
+};
+
 export async function getAbilityDetail(rawName: string): Promise<AbilityDetailInfo> {
   const key = rawName.toLowerCase().replace(/[\s_]+/g, "-");
   if (abilityDetailCache.has(key)) return abilityDetailCache.get(key)!;
 
   let nameKo = ABILITY_KO_DICT[key] || rawName;
-  let descriptionKo = "";
-  let descriptionEn = "";
+  let descriptionKo = ABILITY_DETAILED_DESC_KO[key] || "";
+  let descriptionEn = ABILITY_DETAILED_DESC_EN[key] || "";
 
-  try {
-    const res = await fetch(`https://pokeapi.co/api/v2/ability/${key}`);
-    if (res.ok) {
-      const data: any = await res.json();
-      const koNameEntry = (data.names || []).find((n: any) => n.language?.name === "ko");
-      if (koNameEntry?.name) nameKo = koNameEntry.name;
+  // If not in custom detailed dictionary, fetch from PokeAPI
+  if (!descriptionKo || !descriptionEn) {
+    try {
+      const res = await fetch(`https://pokeapi.co/api/v2/ability/${key}`);
+      if (res.ok) {
+        const data: any = await res.json();
+        const koNameEntry = (data.names || []).find((n: any) => n.language?.name === "ko");
+        if (koNameEntry?.name) nameKo = koNameEntry.name;
 
-      const koFlavor = (data.flavor_text_entries || []).find((f: any) => f.language?.name === "ko");
-      if (koFlavor?.flavor_text) {
-        descriptionKo = koFlavor.flavor_text.replace(/\n/g, " ");
-      } else {
-        const koEffect = (data.effect_entries || []).find((e: any) => e.language?.name === "ko");
-        if (koEffect?.short_effect || koEffect?.effect) {
-          descriptionKo = (koEffect.short_effect || koEffect.effect).replace(/\n/g, " ");
+        if (!descriptionKo) {
+          const koFlavor = (data.flavor_text_entries || []).find((f: any) => f.language?.name === "ko");
+          if (koFlavor?.flavor_text) {
+            descriptionKo = koFlavor.flavor_text.replace(/\n/g, " ");
+          } else {
+            const koEffect = (data.effect_entries || []).find((e: any) => e.language?.name === "ko");
+            if (koEffect?.short_effect || koEffect?.effect) {
+              descriptionKo = (koEffect.short_effect || koEffect.effect).replace(/\n/g, " ");
+            }
+          }
+        }
+
+        if (!descriptionEn) {
+          const enFlavor = (data.flavor_text_entries || []).find((f: any) => f.language?.name === "en");
+          if (enFlavor?.flavor_text) {
+            descriptionEn = enFlavor.flavor_text.replace(/\n/g, " ");
+          } else {
+            const enEffect = (data.effect_entries || []).find((e: any) => e.language?.name === "en");
+            if (enEffect?.short_effect || enEffect?.effect) {
+              descriptionEn = (enEffect.short_effect || enEffect.effect).replace(/\n/g, " ");
+            }
+          }
         }
       }
-
-      const enFlavor = (data.flavor_text_entries || []).find((f: any) => f.language?.name === "en");
-      if (enFlavor?.flavor_text) {
-        descriptionEn = enFlavor.flavor_text.replace(/\n/g, " ");
-      } else {
-        const enEffect = (data.effect_entries || []).find((e: any) => e.language?.name === "en");
-        if (enEffect?.short_effect || enEffect?.effect) {
-          descriptionEn = (enEffect.short_effect || enEffect.effect).replace(/\n/g, " ");
-        }
-      }
+    } catch (err) {
+      console.error(`[ABILITY] Error fetching ability details for ${key}:`, err);
     }
-  } catch (err) {
-    console.error(`[ABILITY] Error fetching ability details for ${key}:`, err);
   }
 
   const formattedEn = rawName.split(/[\s_-]+/).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
