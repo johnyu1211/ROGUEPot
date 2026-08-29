@@ -36,13 +36,11 @@ export const command: Command = {
       return;
     }
 
-    // Defer reply
     await interaction.deferReply({ ephemeral: true });
 
     try {
       const threadName = `${interaction.user.username}'s PokéRogue`;
 
-      // Create thread
       let thread;
       if (channel instanceof TextChannel || channel instanceof NewsChannel) {
         thread = await channel.threads.create({
@@ -62,7 +60,6 @@ export const command: Command = {
       const userProfile = saveService.getProfile(userId);
       const activeRun = userProfile.activeSlotId ? userProfile.slots[userProfile.activeSlotId] : null;
 
-      // Generate Retro Canvas Image with Avatar & 6 Party Slots
       const imageBuffer = await renderTitleScreen({
         username: interaction.user.username,
         avatarUrl: interaction.user.displayAvatarURL({ extension: "png", size: 64 }),
@@ -71,7 +68,6 @@ export const command: Command = {
       });
       const attachment = new AttachmentBuilder(imageBuffer, { name: "title.png" });
 
-      // Dynamic Action Row Buttons
       const actionRow = new ActionRowBuilder<ButtonBuilder>();
 
       if (hasSavedSlots) {
@@ -87,6 +83,10 @@ export const command: Command = {
           new ButtonBuilder()
             .setCustomId(`menu_loadgame_${userId}`)
             .setLabel("Load Game")
+            .setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder()
+            .setCustomId(`menu_inventory_${userId}`)
+            .setLabel("🎒 Inventory")
             .setStyle(ButtonStyle.Secondary)
         );
       } else {
@@ -94,17 +94,19 @@ export const command: Command = {
           new ButtonBuilder()
             .setCustomId(`menu_newgame_${userId}`)
             .setLabel("New Game")
-            .setStyle(ButtonStyle.Success)
+            .setStyle(ButtonStyle.Success),
+          new ButtonBuilder()
+            .setCustomId(`menu_inventory_${userId}`)
+            .setLabel("🎒 Inventory")
+            .setStyle(ButtonStyle.Secondary)
         );
       }
 
-      // Send PURE IMAGE + BUTTONS into the thread
       await thread.send({
         files: [attachment],
         components: [actionRow],
       });
 
-      // Confirmation Embed with version info
       const sessionNoticeEmbed = new EmbedBuilder()
         .setColor(COLORS.POKEROGUE_BLUE)
         .setTitle("PokeRogue Session Created")

@@ -49,7 +49,7 @@ export async function getPokemonSprite(pokemonName: string): Promise<Image | nul
 }
 
 /**
- * Renders title card maximized to 560x380 for maximum Discord presence
+ * Renders title card maximized to 560x380
  */
 export async function renderTitleScreen(options?: TitleScreenOptions): Promise<Buffer> {
   const width = 560;
@@ -91,20 +91,22 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
     ctx.fillText("By PageFaultGames", leftPadding + 4, logoY + logoHeight + 28);
 
     // 4. Menu List on the Left
-    const menuStartY = logoY + logoHeight + 82;
-    ctx.font = "26px DungGeunMo";
+    const menuStartY = logoY + logoHeight + 76;
+    ctx.font = "24px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
 
     if (options?.hasSavedSlots) {
       ctx.fillText("1. CONTINUE", leftPadding + 4, menuStartY);
-      ctx.fillText("2. NEW GAME", leftPadding + 4, menuStartY + 46);
-      ctx.fillText("3. LOAD GAME", leftPadding + 4, menuStartY + 92);
+      ctx.fillText("2. NEW GAME", leftPadding + 4, menuStartY + 38);
+      ctx.fillText("3. LOAD GAME", leftPadding + 4, menuStartY + 76);
+      ctx.fillText("4. INVENTORY", leftPadding + 4, menuStartY + 114);
     } else {
       ctx.fillText("1. NEW GAME", leftPadding + 4, menuStartY);
+      ctx.fillText("2. INVENTORY", leftPadding + 4, menuStartY + 42);
     }
   }
 
-  // 5. RIGHT SIDE PANEL: User Header + 2x3 Pokemon Party Slots (Maximized Height 344px)
+  // 5. RIGHT SIDE PANEL: User Header + 2x3 Pokemon Party Slots
   const boxX = 295;
   const boxY = 18;
   const boxW = 244;
@@ -197,7 +199,6 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
 
     const pokemon = partyList[i];
     if (pokemon) {
-      // Draw Pokemon Sprite
       const sprite = await getPokemonSprite(pokemon.speciesId);
       if (sprite) {
         const scale = 1.15;
@@ -205,13 +206,11 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
         const sprH = sprite.height * scale;
         ctx.drawImage(sprite, sx + (slotW - sprW) / 2, sy + (slotH - sprH) / 2 - 8, sprW, sprH);
       }
-      // Pure White Level tag
       ctx.font = "12px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
       ctx.fillText(`Lv.${pokemon.level}`, sx + slotW / 2, sy + slotH - 8);
     } else {
-      // Empty Slot Pokeball Indicator
       ctx.fillStyle = "#26203D";
       ctx.beginPath();
       ctx.arc(sx + slotW / 2, sy + slotH / 2 - 4, 10, 0, Math.PI * 2);
