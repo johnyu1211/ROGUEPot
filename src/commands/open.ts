@@ -59,12 +59,14 @@ export const command: Command = {
       const hasSavedSlots = saveService.hasAnySavedSlot(userId);
       const userProfile = saveService.getProfile(userId);
       const activeRun = userProfile.activeSlotId ? userProfile.slots[userProfile.activeSlotId] : null;
+      const isKo = userProfile.language === "ko";
 
       const imageBuffer = await renderTitleScreen({
         username: interaction.user.username,
         avatarUrl: interaction.user.displayAvatarURL({ extension: "png", size: 64 }),
         hasSavedSlots,
         party: activeRun?.party,
+        lang: userProfile.language,
       });
       const attachment = new AttachmentBuilder(imageBuffer, { name: "title.png" });
 
@@ -74,30 +76,38 @@ export const command: Command = {
         actionRow.addComponents(
           new ButtonBuilder()
             .setCustomId(`menu_continue_${userId}`)
-            .setLabel("Continue")
+            .setLabel(isKo ? "이어하기" : "Continue")
             .setStyle(ButtonStyle.Primary),
           new ButtonBuilder()
             .setCustomId(`menu_newgame_${userId}`)
-            .setLabel("New Game")
+            .setLabel(isKo ? "새 게임" : "New Game")
             .setStyle(ButtonStyle.Success),
           new ButtonBuilder()
             .setCustomId(`menu_loadgame_${userId}`)
-            .setLabel("Load Game")
+            .setLabel(isKo ? "불러오기" : "Load Game")
             .setStyle(ButtonStyle.Secondary),
           new ButtonBuilder()
             .setCustomId(`menu_inventory_${userId}`)
             .setLabel("💼")
+            .setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder()
+            .setCustomId(`menu_settings_${userId}`)
+            .setLabel("⚙️")
             .setStyle(ButtonStyle.Secondary)
         );
       } else {
         actionRow.addComponents(
           new ButtonBuilder()
             .setCustomId(`menu_newgame_${userId}`)
-            .setLabel("New Game")
+            .setLabel(isKo ? "새 게임" : "New Game")
             .setStyle(ButtonStyle.Success),
           new ButtonBuilder()
             .setCustomId(`menu_inventory_${userId}`)
             .setLabel("💼")
+            .setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder()
+            .setCustomId(`menu_settings_${userId}`)
+            .setLabel("⚙️")
             .setStyle(ButtonStyle.Secondary)
         );
       }

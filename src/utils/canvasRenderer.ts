@@ -33,6 +33,7 @@ export interface TitleScreenOptions {
   teamName?: string;
   hasSavedSlots?: boolean;
   party?: TitleScreenPartyPokemon[];
+  lang?: "en" | "ko";
 }
 
 /**
@@ -57,7 +58,7 @@ async function drawPartyRightPanel(
   boxY: number,
   boxW: number,
   boxH: number,
-  options?: { username?: string; avatarUrl?: string; party?: TitleScreenPartyPokemon[] }
+  options?: { username?: string; avatarUrl?: string; party?: TitleScreenPartyPokemon[]; lang?: "en" | "ko" }
 ) {
   // Panel Background & Frame
   ctx.fillStyle = "#1E1A33";
@@ -110,7 +111,8 @@ async function drawPartyRightPanel(
   ctx.font = "bold 18px DungGeunMo";
   ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "left";
-  const nameToDisplay = (options?.username || "Trainer").slice(0, 12);
+  const defaultTrainerName = options?.lang === "ko" ? "트레이너" : "Trainer";
+  const nameToDisplay = (options?.username || defaultTrainerName).slice(0, 12);
   ctx.fillText(nameToDisplay, avatarX + avatarSize + 10, avatarY + 23);
 
   // Sub-divider line
@@ -130,6 +132,7 @@ async function drawPartyRightPanel(
   const borderRadius = 10;
 
   const partyList = options?.party || [];
+  const emptyLabel = options?.lang === "ko" ? "빈 슬롯" : "Empty";
 
   for (let i = 0; i < 6; i++) {
     const col = i % 2;
@@ -165,7 +168,7 @@ async function drawPartyRightPanel(
       ctx.font = "11px DungGeunMo";
       ctx.fillStyle = "#51496D";
       ctx.textAlign = "center";
-      ctx.fillText("Empty", sx + slotW / 2, sy + slotH - 8);
+      ctx.fillText(emptyLabel, sx + slotW / 2, sy + slotH - 8);
     }
   }
 }
@@ -180,6 +183,8 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
   const ctx = canvas.getContext("2d");
 
   ctx.imageSmoothingEnabled = false;
+
+  const isKo = options?.lang === "ko";
 
   // 1. Dark Retro Background
   ctx.fillStyle = "#161424";
@@ -211,19 +216,19 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
     ctx.textAlign = "left";
     ctx.fillText("By PageFaultGames", leftPadding + 4, logoY + logoHeight + 28);
 
-    // 4. Menu List on the Left
+    // 4. Menu List on the Left (Multilingual)
     const menuStartY = logoY + logoHeight + 76;
     ctx.font = "24px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
 
     if (options?.hasSavedSlots) {
-      ctx.fillText("1. CONTINUE", leftPadding + 4, menuStartY);
-      ctx.fillText("2. NEW GAME", leftPadding + 4, menuStartY + 38);
-      ctx.fillText("3. LOAD GAME", leftPadding + 4, menuStartY + 76);
-      ctx.fillText("4. INVENTORY", leftPadding + 4, menuStartY + 114);
+      ctx.fillText(isKo ? "1. 이어하기" : "1. CONTINUE", leftPadding + 4, menuStartY);
+      ctx.fillText(isKo ? "2. 새 게임" : "2. NEW GAME", leftPadding + 4, menuStartY + 38);
+      ctx.fillText(isKo ? "3. 불러오기" : "3. LOAD GAME", leftPadding + 4, menuStartY + 76);
+      ctx.fillText(isKo ? "4. 인벤토리" : "4. INVENTORY", leftPadding + 4, menuStartY + 114);
     } else {
-      ctx.fillText("1. NEW GAME", leftPadding + 4, menuStartY);
-      ctx.fillText("2. INVENTORY", leftPadding + 4, menuStartY + 42);
+      ctx.fillText(isKo ? "1. 새 게임" : "1. NEW GAME", leftPadding + 4, menuStartY);
+      ctx.fillText(isKo ? "2. 인벤토리" : "2. INVENTORY", leftPadding + 4, menuStartY + 42);
     }
   }
 
@@ -232,6 +237,7 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
     username: options?.username,
     avatarUrl: options?.avatarUrl,
     party: options?.party,
+    lang: options?.lang,
   });
 
   return canvas.toBuffer("image/png");
@@ -244,10 +250,11 @@ export interface BagScreenOptions {
   party?: TitleScreenPartyPokemon[];
   unlockedCount?: number;
   stats?: { totalRuns: number; highestWave: number };
+  lang?: "en" | "ko";
 }
 
 /**
- * Renders Trainer Bag UI with Left Menu & Right 6-Party Panel (Pure English)
+ * Renders Trainer Bag UI with Left Menu & Right 6-Party Panel
  */
 export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffer> {
   const width = 560;
@@ -257,6 +264,7 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
 
   ctx.imageSmoothingEnabled = false;
 
+  const isKo = options?.lang === "ko";
   const currentTab = options?.tab || "pokemon";
 
   // 1. Dark Retro Background
@@ -283,7 +291,7 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
   ctx.font = "bold 20px DungGeunMo";
   ctx.fillStyle = "#F4A261";
   ctx.textAlign = "left";
-  ctx.fillText("💼 TRAINER POCKET", 20, 36);
+  ctx.fillText(isKo ? "💼 트레이너 포켓" : "💼 TRAINER POCKET", 20, 36);
 
   // 4. LEFT SIDE: Menu / Category Box
   const leftX = 18;
@@ -297,19 +305,25 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
   ctx.lineWidth = 1.5;
   ctx.strokeRect(leftX, leftY, leftW, leftH);
 
-  // Pocket Title (Pure English)
+  // Pocket Title
   ctx.fillStyle = "#2D264E";
   ctx.fillRect(leftX + 2, leftY + 2, leftW - 4, 30);
   ctx.font = "bold 15px DungGeunMo";
   ctx.fillStyle = "#F4A261";
   ctx.textAlign = "center";
-  ctx.fillText("POKÉMON VAULT", leftX + leftW / 2, leftY + 22);
+  ctx.fillText(isKo ? "포켓몬 볼트" : "POKÉMON VAULT", leftX + leftW / 2, leftY + 22);
 
-  const tabs = [
-    { key: "pokemon", label: "1. ACTIVE PARTY" },
-    { key: "pokedex", label: "2. POKÉDEX" },
-    { key: "records", label: "3. CAREER RECORDS" },
-  ];
+  const tabs = isKo
+    ? [
+        { key: "pokemon", label: "1. 출전 파티" },
+        { key: "pokedex", label: "2. 포켓몬 도감" },
+        { key: "records", label: "3. 트레이너 기록" },
+      ]
+    : [
+        { key: "pokemon", label: "1. ACTIVE PARTY" },
+        { key: "pokedex", label: "2. POKÉDEX" },
+        { key: "records", label: "3. CAREER RECORDS" },
+      ];
 
   tabs.forEach((t, idx) => {
     const tabY = leftY + 42 + idx * 56;
@@ -336,7 +350,7 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
     ctx.fillText((isSelected ? "▶ " : "  ") + t.label, leftX + 18, tabY + 27);
   });
 
-  // Summary box at bottom of left panel (Pure English)
+  // Summary box at bottom of left panel
   ctx.fillStyle = "#141124";
   ctx.beginPath();
   ctx.roundRect(leftX + 10, leftY + 216, leftW - 20, 76, 6);
@@ -349,16 +363,25 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
   ctx.font = "12px DungGeunMo";
   ctx.fillStyle = "#F4A261";
   ctx.textAlign = "left";
-  ctx.fillText("• Roster: 6 Battle Slots", leftX + 18, leftY + 240);
+  ctx.fillText(isKo ? "• 출전 슬롯: 6마리" : "• Roster: 6 Battle Slots", leftX + 18, leftY + 240);
   ctx.fillStyle = "#FFFFFF";
-  ctx.fillText(`• Total Unlocked: ${options?.unlockedCount ?? 9} Mons`, leftX + 18, leftY + 262);
-  ctx.fillText(`• Highest Wave: Wave ${options?.stats?.highestWave ?? 0}`, leftX + 18, leftY + 282);
+  ctx.fillText(
+    isKo ? `• 해금 포켓몬: ${options?.unlockedCount ?? 9}마리` : `• Total Unlocked: ${options?.unlockedCount ?? 9} Mons`,
+    leftX + 18,
+    leftY + 262
+  );
+  ctx.fillText(
+    isKo ? `• 최고 웨이브: Wave ${options?.stats?.highestWave ?? 0}` : `• Highest Wave: Wave ${options?.stats?.highestWave ?? 0}`,
+    leftX + 18,
+    leftY + 282
+  );
 
   // 5. RIGHT SIDE PANEL: Exact 1st Screen Right Panel
   await drawPartyRightPanel(ctx, 295, 18, 244, 344, {
     username: options?.username,
     avatarUrl: options?.avatarUrl,
     party: options?.party,
+    lang: options?.lang,
   });
 
   return canvas.toBuffer("image/png");
