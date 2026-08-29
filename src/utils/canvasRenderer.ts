@@ -781,35 +781,40 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
       ctx.drawImage(bigSprite, showBoxX + (showBoxSize - sprW) / 2, showBoxY + (showBoxSize - sprH) / 2, sprW, sprH);
     }
 
-    // Info Column (Types, Ability, BST) next to Sprite
-    const infoX = showBoxX + showBoxSize + 12;
+    // Info Column (Types, Ability, Hidden Ability, BST) next to Sprite
+    const infoX = showBoxX + showBoxSize + 10;
     let typeBadgeX = infoX;
     for (const tName of selected.types) {
       const tColor = TYPE_COLORS[tName.toLowerCase()] || "#777777";
       ctx.fillStyle = tColor;
       ctx.beginPath();
-      ctx.roundRect(typeBadgeX, showBoxY + 2, 60, 22, 5);
+      ctx.roundRect(typeBadgeX, showBoxY, 56, 20, 4);
       ctx.fill();
 
-      ctx.font = "bold 12px DungGeunMo";
+      ctx.font = "bold 11px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
-      ctx.fillText(tName.toUpperCase(), typeBadgeX + 30, showBoxY + 17);
-      typeBadgeX += 66;
+      ctx.fillText(tName.toUpperCase(), typeBadgeX + 28, showBoxY + 15);
+      typeBadgeX += 62;
     }
 
-    // Ability Info
-    ctx.font = "14px DungGeunMo";
+    // Regular Ability Info
+    ctx.font = "13px DungGeunMo";
     ctx.fillStyle = "#CBD5E1";
     ctx.textAlign = "left";
-    const abilityName = selected.primaryAbility || "None";
-    ctx.fillText(isKo ? `• 특성: ${abilityName}` : `• Ability: ${abilityName}`, infoX, showBoxY + 54);
+    const abilityName = (selected.primaryAbility || "None").slice(0, 16);
+    ctx.fillText(isKo ? `• 특성: ${abilityName}` : `• Ability: ${abilityName}`, infoX, showBoxY + 40);
 
-    // Total Base Stats sum (BST) Highlighted
+    // Hidden Ability Info (HA)
+    const hiddenAbilityName = selected.hiddenAbility ? selected.hiddenAbility.slice(0, 14) : (isKo ? "없음" : "None");
+    ctx.fillStyle = selected.hiddenAbility ? "#F4A261" : "#77718C";
+    ctx.fillText(isKo ? `• 숨특: ${hiddenAbilityName}` : `• Hidden: ${hiddenAbilityName}`, infoX, showBoxY + 62);
+
+    // Total Base Stats sum (BST) Highlighted (Compact & No Overflow)
     const bst = selected.hp + selected.attack + selected.defense + selected.spAttack + selected.spDefense + selected.speed;
-    ctx.font = "bold 15px DungGeunMo";
+    ctx.font = "bold 14px DungGeunMo";
     ctx.fillStyle = "#57F287";
-    ctx.fillText(isKo ? `• 종족값 총합: ${bst} (BST)` : `• Base Stat Total: ${bst}`, infoX, showBoxY + 84);
+    ctx.fillText(isKo ? `• 총합: ${bst} BST` : `• Total: ${bst} BST`, infoX, showBoxY + 86);
 
     // 6 Base Stats Gauges (HP, ATK, DEF, SPA, SPD, SPE)
     const statsStartY = 168;

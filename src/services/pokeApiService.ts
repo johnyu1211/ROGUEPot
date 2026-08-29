@@ -6,6 +6,7 @@ export interface DexPokemonInfo {
   types: string[];
   abilities?: string[];
   primaryAbility?: string;
+  hiddenAbility?: string;
   hp: number;
   attack: number;
   defense: number;
@@ -111,9 +112,19 @@ export async function getPokemonByDexNumber(dexNo: number): Promise<DexPokemonIn
     const speciesId = data.name.toLowerCase();
     const formattedName = data.name.charAt(0).toUpperCase() + data.name.slice(1);
     const types = data.types.map((t: any) => t.type.name);
-    const abilities = data.abilities?.map((a: any) => a.ability.name) || [];
-    const rawPrimaryAbility = abilities[0] || "None";
-    const primaryAbility = rawPrimaryAbility.charAt(0).toUpperCase() + rawPrimaryAbility.slice(1).replace(/-/g, " ");
+
+    const regularAbilities: string[] = [];
+    let hiddenAbility: string | undefined;
+
+    for (const a of data.abilities || []) {
+      const formatted = a.ability.name.charAt(0).toUpperCase() + a.ability.name.slice(1).replace(/-/g, " ");
+      if (a.is_hidden) {
+        hiddenAbility = formatted;
+      } else {
+        regularAbilities.push(formatted);
+      }
+    }
+    const primaryAbility = regularAbilities.join(" / ") || "None";
 
     const getStat = (name: string) => data.stats.find((s: any) => s.stat.name === name)?.base_stat || 50;
 
@@ -130,8 +141,9 @@ export async function getPokemonByDexNumber(dexNo: number): Promise<DexPokemonIn
       name: formattedName,
       koreanName: DEX_TO_KOREAN_DICT[dexNo],
       types,
-      abilities,
+      abilities: (data.abilities || []).map((a: any) => a.ability.name),
       primaryAbility,
+      hiddenAbility,
       hp,
       attack,
       defense,
