@@ -712,13 +712,13 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
   ctx.font = "bold 18px DungGeunMo";
   ctx.fillStyle = "#E63946";
   ctx.textAlign = "center";
-  ctx.fillText(isKo ? "포켓몬 도감" : "POKÉDEX", splitX / 2 - 10, 27);
+  ctx.fillText(isKo ? "포켓몬 도감" : "POKÉDEX", splitX / 2 - 10, 29);
 
   // Page Indicator Badge on Left Header
   ctx.font = "12px DungGeunMo";
   ctx.fillStyle = "#CBD5E1";
   ctx.textAlign = "right";
-  ctx.fillText(`P.${curPage}/${totPages}`, splitX - 10, 26);
+  ctx.fillText(`P.${curPage}/${totPages}`, splitX - 10, 28);
 
   // 3. LEFT SIDE: 8 Pokémon Grid (2 Columns x 4 Rows)
   const startListY = 48;
@@ -853,12 +853,12 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     ctx.lineTo(width, 42);
     ctx.stroke();
 
-    // Header: Dex No & Big Name (Vertically centered at y = 27, matching left header baseline)
+    // Header: Dex No & Big Name (Vertically centered at y = 29, matching left header baseline)
     ctx.font = "bold 20px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "left";
     const titleName = (isKo && selected.koreanName) ? selected.koreanName : selected.name;
-    ctx.fillText(`#${String(selected.dexNumber).padStart(3, "0")} ${titleName}`, rightX + 4, 27);
+    ctx.fillText(`#${String(selected.dexNumber).padStart(3, "0")} ${titleName}`, rightX + 4, 29);
 
     // 5-1. TOP MAIN INFO CARD (Sprite + Types) (Starting at y = 48, matching left slot grid startListY)
     const topCardY = 48;
