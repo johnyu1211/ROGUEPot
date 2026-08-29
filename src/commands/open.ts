@@ -1,23 +1,27 @@
 ﻿import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
+  AttachmentBuilder,
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  EmbedBuilder,
   TextChannel,
   NewsChannel
 } from "discord.js";
 import { Command } from "../types/index.js";
-import { createBaseEmbed, COLORS, POKEROGUE_LOGO_URL } from "../utils/embed.js";
+import { createBaseEmbed, COLORS } from "../utils/embed.js";
+import { renderTitleScreen } from "../utils/canvasRenderer.js";
+import { saveService } from "../services/saveService.js";
 
 export const command: Command = {
   data: new SlashCommandBuilder()
     .setName("open")
-    .setDescription("포켓로그 전용 개인 게임 스레드를 열고 타이틀 화면을 엽니다."),
+    .setDescription("Open a dedicated PokéRogue game thread and title screen."),
   async execute(interaction: ChatInputCommandInteraction) {
     if (!interaction.guild || !interaction.channel) {
       await interaction.reply({
-        content: "❌ 서버 내의 텍스트 채널에서만 게임 스레드를 열 수 있습니다.",
+        content: "You can only open a game thread within a server text channel.",
         ephemeral: true,
       });
       return;
@@ -26,7 +30,7 @@ export const command: Command = {
     const channel = interaction.channel;
     if (channel.isThread()) {
       await interaction.reply({
-        content: "❌ 이미 스레드 안에 있습니다! 새로운 스레드는 일반 텍스트 채널에서 열어주세요.",
+        content: "You are already inside a thread! Please use /open in a standard text channel.",
         ephemeral: true,
       });
       return;
@@ -36,7 +40,7 @@ export const command: Command = {
     await interaction.deferReply({ ephemeral: true });
 
     try {
-      const threadName = `🎮 ${interaction.user.username}의 PokéRogue`;
+      const threadName = `${interaction.user.username}'s PokéRogue`;
 
       // Create thread
       let thread;
@@ -44,44 +48,91 @@ export const command: Command = {
         thread = await channel.threads.create({
           name: threadName,
           autoArchiveDuration: 60,
-          reason: `${interaction.user.tag} PokeRogue Game Session`,
+          reason: `${interaction.user.tag} PokéRogue Game Session`,
         });
       } else {
         await interaction.editReply({
-          content: "❌ 현재 채널에서는 스레드를 생성할 수 없습니다.",
+          content: "Cannot create a thread in this channel type.",
         });
         return;
       }
 
-      // Title Screen Embed (Clean title, logo, no greeting)
+      const userId = interaction.user.id;
+      const hasActiveRun = saveService.hasActiveRun(userId);
+      const userProfile = saveService.getProfile(userId);
+
+      // Generate Retro Canvas Image with ENTRY box on right
+      const imageBuffer = await renderTitleScreen({
+        hasContinue: hasActiveRun,
+        unlockedCount: userProfile.unlockedStartersCount,
+      });
+      const attachment = new AttachmentBuilder(imageBuffer, { name: "title.png" });
+
       const titleEmbed = createBaseEmbed()
         .setColor(COLORS.POKEROGUE_RED)
-        .setImage(POKEROGUE_LOGO_URL);
+        .setImage("attachment://title.png");
 
-      const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder()
-          .setCustomId(`game_start_${interaction.user.id}`)
-          .setLabel("새로운 런 시작 🚀")
-          .setStyle(ButtonStyle.Success),
-        new ButtonBuilder()
-          .setCustomId(`game_help_${interaction.user.id}`)
-          .setLabel("게임 방법 📖")
-          .setStyle(ButtonStyle.Secondary)
-      );
+      // Dynamic Action Row Buttons based on save existence
+      const actionRow = new ActionRowBuilder<ButtonBuilder>();
+
+      if (hasActiveRun) {
+        // Case B: Has Previous Game -> 1. Continue, 2. New Game, 3. Load Game
+        actionRow.addComponents(
+          new ButtonBuilder()
+            .setCustomId(`menu_continue_${userId}`)
+            .setLabel("Continue")
+            .setStyle(ButtonStyle.Success),
+          new ButtonBuilder()
+            .setCustomId(`menu_newgame_${userId}`)
+            .setLabel("New Game")
+            .setStyle(ButtonStyle.Primary),
+          new ButtonBuilder()
+            .setCustomId(`menu_loadgame_${userId}`)
+            .setLabel("Load Game")
+            .setStyle(ButtonStyle.Secondary)
+        );
+      } else {
+        // Case A: No Previous Game -> 1. New Game, 2. Load Game
+        actionRow.addComponents(
+          new ButtonBuilder()
+            .setCustomId(`menu_newgame_${userId}`)
+            .setLabel("New Game")
+            .setStyle(ButtonStyle.Success),
+          new ButtonBuilder()
+            .setCustomId(`menu_loadgame_${userId}`)
+            .setLabel("Load Game")
+            .setStyle(ButtonStyle.Secondary)
+        );
+      }
 
       await thread.send({
         embeds: [titleEmbed],
+        files: [attachment],
         components: [actionRow],
       });
 
-      // Ephemeral confirmation to user
+      // Clean Confirmation Embed
+      const sessionNoticeEmbed = new EmbedBuilder()
+        .setColor(COLORS.POKEROGUE_BLUE)
+        .setTitle("PokeRogue Session Created")
+        .setDescription(
+          `<#${thread.id}>\n\n` +
+          "━━━━━━━━━━━━━━━━━━━━━━\n" +
+          "**Open Source & Attribution**\n" +
+          "• Unofficial fan bot built referencing **[PokéRogue](https://github.com/pagefaultgames/pokerogue)** (GNU AGPL-3.0).\n\n" +
+          "**Legal Disclaimer**\n" +
+          "• Pokémon © Nintendo / Creatures Inc. / GAME FREAK inc.\n" +
+          "• Non-profit fan-made project with no commercial intent."
+        );
+
       await interaction.editReply({
-        content: `✅ 게임 스레드가 생성되었습니다! 👉 <#${thread.id}> 채널로 이동하여 플레이를 시작하세요.`,
+        content: "",
+        embeds: [sessionNoticeEmbed],
       });
     } catch (error) {
       console.error("[ERROR] Failed to create thread:", error);
       await interaction.editReply({
-        content: "❌ 스레드를 생성하는 도중 오류가 발생했습니다. 봇의 '스레드 생성(Create Threads)' 권한을 확인해주세요.",
+        content: "An error occurred while creating the thread. Please check the bot's 'Create Public/Private Threads' permissions.",
       });
     }
   },

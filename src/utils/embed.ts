@@ -1,6 +1,5 @@
 ﻿import { EmbedBuilder } from "discord.js";
 
-// PokeRogue theme colors
 export const COLORS = {
   PRIMARY: 0x5865f2,
   SUCCESS: 0x57f287,
@@ -12,12 +11,11 @@ export const COLORS = {
 } as const;
 
 export const POKEROGUE_VERSION = "v1.12.1.0";
-export const POKEROGUE_LOGO_URL = "https://raw.githubusercontent.com/pagefaultgames/pokerogue/main/public/images/logo.png";
+export const POKEROGUE_LOGO_URL = "https://pokerogue.net/images/logo.png";
 
 export function createBaseEmbed(title?: string, description?: string): EmbedBuilder {
   const embed = new EmbedBuilder()
     .setColor(COLORS.POKEROGUE_RED)
-    .setTimestamp()
     .setFooter({
       text: `PokéRogue version : ${POKEROGUE_VERSION}`,
     });
