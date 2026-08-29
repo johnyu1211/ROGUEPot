@@ -50,7 +50,7 @@ export async function getPokemonSprite(pokemonName: string): Promise<Image | nul
 }
 
 /**
- * Reusable helper to draw the 6-Pokemon Party Panel (User Header + 2x3 Rounded Slots Grid with Numbers 1~6)
+ * Reusable helper to draw the 6-Pokemon Party Panel (User Header + 2x3 Rounded Slots Grid)
  */
 async function drawPartyRightPanel(
   ctx: any,
@@ -58,7 +58,13 @@ async function drawPartyRightPanel(
   boxY: number,
   boxW: number,
   boxH: number,
-  options?: { username?: string; avatarUrl?: string; party?: TitleScreenPartyPokemon[]; lang?: "en" | "ko" }
+  options?: {
+    username?: string;
+    avatarUrl?: string;
+    party?: TitleScreenPartyPokemon[];
+    lang?: "en" | "ko";
+    showSlotNumbers?: boolean;
+  }
 ) {
   // Panel Background & Frame
   ctx.fillStyle = "#1E1A33";
@@ -123,7 +129,7 @@ async function drawPartyRightPanel(
   ctx.lineTo(boxX + boxW - 8, boxY + 56);
   ctx.stroke();
 
-  // 2x3 PARTY SLOTS GRID: Height 84px per slot with Numbers 1~6
+  // 2x3 PARTY SLOTS GRID: Height 84px per slot
   const slotW = 107;
   const slotH = 84;
   const startGridY = boxY + 64;
@@ -146,11 +152,13 @@ async function drawPartyRightPanel(
     ctx.roundRect(sx, sy, slotW, slotH, borderRadius);
     ctx.fill();
 
-    // Slot Number Tag (1, 2, 3, 4, 5, 6) in top-left corner
-    ctx.font = "bold 12px DungGeunMo";
-    ctx.fillStyle = "#F4A261"; // Gold highlight number
-    ctx.textAlign = "left";
-    ctx.fillText(`${i + 1}`, sx + 8, sy + 16);
+    // Slot Number Tag (1, 2, 3, 4, 5, 6) in WHITE - Only rendered if showSlotNumbers is TRUE
+    if (options?.showSlotNumbers) {
+      ctx.font = "bold 12px DungGeunMo";
+      ctx.fillStyle = "#FFFFFF"; // Pure white
+      ctx.textAlign = "left";
+      ctx.fillText(`${i + 1}`, sx + 8, sy + 16);
+    }
 
     const pokemon = partyList[i];
     if (pokemon) {
@@ -180,7 +188,7 @@ async function drawPartyRightPanel(
 }
 
 /**
- * Renders title card maximized to 560x380
+ * Renders title card maximized to 560x380 (Slot numbers HIDDEN on 1st screen)
  */
 export async function renderTitleScreen(options?: TitleScreenOptions): Promise<Buffer> {
   const width = 560;
@@ -238,12 +246,13 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
     }
   }
 
-  // 5. RIGHT SIDE PANEL: User Header + 2x3 Pokemon Party Slots
+  // 5. RIGHT SIDE PANEL: showSlotNumbers is FALSE on Title Screen
   await drawPartyRightPanel(ctx, 295, 18, 244, 344, {
     username: options?.username,
     avatarUrl: options?.avatarUrl,
     party: options?.party,
     lang: options?.lang,
+    showSlotNumbers: false,
   });
 
   return canvas.toBuffer("image/png");
@@ -260,7 +269,7 @@ export interface BagScreenOptions {
 }
 
 /**
- * Renders Trainer Bag UI with Scaled Up Fonts & Clean Highest Wave Info
+ * Renders Trainer Bag UI with WHITE slot numbers 1~6 on right panel
  */
 export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffer> {
   const width = 560;
@@ -286,7 +295,7 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
   ctx.lineWidth = 1;
   ctx.strokeRect(6, 6, width - 12, height - 12);
 
-  // 3. TOP BANNER: Trainer Bag Header (22px font)
+  // 3. TOP BANNER: Trainer Bag Header
   ctx.fillStyle = "#241F3D";
   ctx.fillRect(8, 8, 275, 42);
 
@@ -311,7 +320,7 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
   ctx.lineWidth = 1.5;
   ctx.strokeRect(leftX, leftY, leftW, leftH);
 
-  // Pocket Title (Scaled to 17px)
+  // Pocket Title
   ctx.fillStyle = "#2D264E";
   ctx.fillRect(leftX + 2, leftY + 2, leftW - 4, 32);
   ctx.font = "bold 17px DungGeunMo";
@@ -331,7 +340,6 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
         { key: "records", label: "3. CAREER RECORDS" },
       ];
 
-  // Larger tab boxes
   tabs.forEach((t, idx) => {
     const tabY = leftY + 44 + idx * 60;
     const isSelected = currentTab === t.key;
@@ -379,12 +387,13 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
   ctx.fillStyle = "#57F287";
   ctx.fillText(`Wave ${options?.stats?.highestWave ?? 0}`, leftX + leftW / 2, infoBoxY + 48);
 
-  // 5. RIGHT SIDE PANEL: 1st Screen Right Panel with Numbers 1~6
+  // 5. RIGHT SIDE PANEL: showSlotNumbers is TRUE with WHITE color in Bag Screen
   await drawPartyRightPanel(ctx, 295, 18, 244, 344, {
     username: options?.username,
     avatarUrl: options?.avatarUrl,
     party: options?.party,
     lang: options?.lang,
+    showSlotNumbers: true,
   });
 
   return canvas.toBuffer("image/png");
