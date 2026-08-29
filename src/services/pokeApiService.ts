@@ -5,6 +5,7 @@ export interface DexPokemonInfo {
   koreanName?: string;
   types: string[];
   abilities?: string[];
+  regularAbilities?: string[];
   primaryAbility?: string;
   hiddenAbility?: string;
   hp: number;
@@ -17,6 +18,80 @@ export interface DexPokemonInfo {
 
 const dexCache = new Map<number, DexPokemonInfo>();
 const nameCache = new Map<string, DexPokemonInfo>();
+
+// Ability English to Korean mapping dictionary
+export const ABILITY_KO_DICT: Record<string, string> = {
+  "overgrow": "심록",
+  "blaze": "맹화",
+  "torrent": "급류",
+  "shield-dust": "인분",
+  "shed-skin": "탈피",
+  "compound-eyes": "복안",
+  "tinted-lens": "색안경",
+  "swarm": "벌레의알림",
+  "sniper": "스나이퍼",
+  "keen-eye": "날카로운눈",
+  "tangled-feet": "갈지자걸음",
+  "big-pecks": "부풀린가슴",
+  "run-away": "도주",
+  "guts": "근성",
+  "hustle": "의욕",
+  "intimidate": "위협",
+  "unnerve": "긴장감",
+  "static": "정전기",
+  "lightning-rod": "피뢰침",
+  "sand-veil": "모래숨기",
+  "sand-rush": "모래헤치기",
+  "poison-point": "독가시",
+  "rivalry": "투쟁심",
+  "sheer-force": "우격다짐",
+  "cute-charm": "헤롱헤롱바디",
+  "magic-guard": "매직가드",
+  "friend-guard": "프렌드가드",
+  "unaware": "천진",
+  "flash-fire": "타오르는불꽃",
+  "drought": "가뭄",
+  "competitive": "승기",
+  "levitate": "부유",
+  "water-absorb": "저수",
+  "volt-absorb": "축전",
+  "hydration": "촉촉바디",
+  "chlorophyll": "엽록소",
+  "solar-power": "선파워",
+  "rain-dish": "젖은접시",
+  "inner-focus": "정신력",
+  "limber": "유연",
+  "scrappy": "배짱",
+  "prankster": "짓궂은마음",
+  "adaptability": "적응력",
+  "technician": "테크니션",
+  "super-luck": "대운",
+  "insomnia": "불면",
+  "frisk": "통찰",
+  "shadow-tag": "그림자밟기",
+  "synchronize": "동기화",
+  "trace": "트레이스",
+  "speed-boost": "가속",
+  "rock-head": "돌머리",
+  "sturdy": "옹골참",
+  "moxie": "자기과신",
+  "beast-boost": "비스트부스트",
+  "protosynthesis": "고대활성",
+  "quark-drive": "쿼크차지",
+  "supreme-overlord": "총대장",
+  "good-as-gold": "황금몸",
+  "vessel-of-ruin": "재앙의그릇",
+  "sword-of-ruin": "재앙의검",
+  "tablets-of-ruin": "재앙의목간",
+  "beads-of-ruin": "재앙의구슬",
+  "tera-shift": "테라스텔라",
+  "zero-to-hero": "마이티체인지",
+};
+
+export function getAbilityKoreanName(rawName: string): string {
+  const key = rawName.toLowerCase().replace(/[\s_]+/g, "-");
+  return ABILITY_KO_DICT[key] || rawName;
+}
 
 // Reverse dictionary for fast Korean name lookup by Dex Number
 const DEX_TO_KOREAN_DICT: Record<number, string> = {};
@@ -204,6 +279,7 @@ export async function getPokemonByDexNumber(dexNo: number): Promise<DexPokemonIn
       koreanName: DEX_TO_KOREAN_DICT[dexNo],
       types,
       abilities: (data.abilities || []).map((a: any) => a.ability.name),
+      regularAbilities,
       primaryAbility,
       hiddenAbility,
       hp,
