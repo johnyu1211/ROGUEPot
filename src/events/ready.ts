@@ -5,7 +5,7 @@ export const readyEvent: BotEvent = {
   name: Events.ClientReady,
   once: true,
   execute(client: Client) {
-    console.log(`[READY] Logged in as ${client.user?.tag}!`);
-    client.user?.setActivity("PokeRogue", { type: ActivityType.Playing });
+    console.log(`[READY] ROGUEPot logged in as ${client.user?.tag}!`);
+    client.user?.setActivity("PokeRogue | ROGUEPot", { type: ActivityType.Playing });
   },
 };

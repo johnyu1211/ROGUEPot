@@ -1,5 +1,6 @@
 ﻿import { EmbedBuilder } from "discord.js";
 
+// PokeRogue theme colors
 export const COLORS = {
   PRIMARY: 0x5865f2,
   SUCCESS: 0x57f287,
@@ -15,7 +16,7 @@ export function createBaseEmbed(title?: string, description?: string): EmbedBuil
     .setColor(COLORS.POKEROGUE_RED)
     .setTimestamp()
     .setFooter({
-      text: "PokeRogue Discord Bot",
+      text: "ROGUEPot | PokeRogue Companion",
     });
 
   if (title) embed.setTitle(title);

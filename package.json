@@ -1,5 +1,5 @@
 ﻿{
-  "name": "pokerogue-discord-bot",
+  "name": "roguepot",
   "version": "1.0.0",
   "description": "Discord Bot for PokeRogue with game data integration and features",
   "main": "dist/index.js",

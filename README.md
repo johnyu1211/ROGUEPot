@@ -1,13 +1,13 @@
-﻿# PokeRogue Discord Bot
+﻿# 🎮 ROGUEPot (PokeRogue Discord Bot)
 
-[PokeRogue](https://github.com/pagefaultgames/pokerogue) 기반의 디스코드 봇 프로젝트입니다.
+**ROGUEPot**은 [PokeRogue](https://github.com/pagefaultgames/pokerogue) 게임 데이터를 기반으로 다양한 편의 기능과 게임 정보를 제공하는 디스코드 봇입니다.
 
 ---
 
 ## 📁 프로젝트 구조
 
 ```
-PokerogueBot/
+ROGUEPot/
 ├── .env.example            # 환경변수 템플릿
 ├── .env                    # 환경변수 설정 파일
 ├── LICENSE                 # GNU AGPL v3 라이선스 파일
@@ -32,7 +32,7 @@ PokerogueBot/
 ## ⚙️ 사전 설정 (Discord Developer Portal)
 
 1. [Discord Developer Portal](https://discord.com/developers/applications)에 접속하여 로그인합니다.
-2. **New Application**을 클릭하여 애플리케이션을 생성합니다.
+2. **New Application**을 클릭하여 **`ROGUEPot`** 애플리케이션을 생성합니다.
 3. 좌측 메뉴 **Bot** 탭:
    - **Reset Token**을 눌러 토큰을 복사하여 `.env` 파일의 `DISCORD_TOKEN`에 입력합니다.
 4. 좌측 메뉴 **General Information** 또는 **OAuth2** 탭:
@@ -76,5 +76,5 @@ npm run deploy-commands
 This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**. See the [LICENSE](LICENSE) file for details.
 
 ### Disclaimer
-- This is an unofficial, non-profit fan-made project built with references to [PokeRogue](https://github.com/pagefaultgames/pokerogue).
+- **ROGUEPot** is an unofficial, non-profit fan-made project built with references to [PokeRogue](https://github.com/pagefaultgames/pokerogue).
 - Pokémon and Pokémon character names are trademarks of Nintendo, Creatures Inc., and GAME FREAK Inc.
