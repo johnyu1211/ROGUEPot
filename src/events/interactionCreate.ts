@@ -57,6 +57,43 @@ function createStarterSelectMenu(slotId: number, userId: string) {
   return { embeds: [starterEmbed], components: [starterSelectMenu, backRow] };
 }
 
+function renderSlotsScreenData(userId: string) {
+  const profile = saveService.getProfile(userId);
+
+  const slotEmbed = createBaseEmbed(
+    "Save Slots (3 Slots)",
+    "Select a slot below. If empty, you can start a new game in that slot.\n\n" +
+    `• **Slot 1**: ${profile.slots[1] ? `Wave ${profile.slots[1]!.wave} (${profile.slots[1]!.starter})` : "*[ Empty Slot ]*"}\n` +
+    `• **Slot 2**: ${profile.slots[2] ? `Wave ${profile.slots[2]!.wave} (${profile.slots[2]!.starter})` : "*[ Empty Slot ]*"}\n` +
+    `• **Slot 3**: ${profile.slots[3] ? `Wave ${profile.slots[3]!.wave} (${profile.slots[3]!.starter})` : "*[ Empty Slot ]*"}`
+  ).setColor(COLORS.POKEROGUE_RED);
+
+  const slotButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`slot_select_1_${userId}`)
+      .setLabel("Slot 1 🎮")
+      .setStyle(profile.slots[1] ? ButtonStyle.Primary : ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`slot_select_2_${userId}`)
+      .setLabel("Slot 2 🎮")
+      .setStyle(profile.slots[2] ? ButtonStyle.Primary : ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`slot_select_3_${userId}`)
+      .setLabel("Slot 3 🎮")
+      .setStyle(profile.slots[3] ? ButtonStyle.Primary : ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`menu_delete_mode_${userId}`)
+      .setLabel("🗑️")
+      .setStyle(ButtonStyle.Danger),
+    new ButtonBuilder()
+      .setCustomId(`menu_back_to_title_${userId}`)
+      .setLabel("◀️ Back")
+      .setStyle(ButtonStyle.Secondary)
+  );
+
+  return { embeds: [slotEmbed], components: [slotButtons] };
+}
+
 async function renderTitleMessageData(client: ExtendedClient, userId: string) {
   const hasSavedSlots = saveService.hasAnySavedSlot(userId);
   const userProfile = saveService.getProfile(userId);
@@ -150,7 +187,7 @@ export const interactionCreateEvent: BotEvent = {
 
       const client = interaction.client as ExtendedClient;
 
-      // 2-0. Back to Title Menu (Pure Image + Buttons)
+      // 2-0. Back to Title Menu
       if (customId.startsWith("menu_back_to_title_")) {
         const titleData = await renderTitleMessageData(client, interaction.user.id);
         await interaction.update(titleData);
@@ -205,45 +242,66 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 2-3. Load Game Button Clicked -> List 3 Slots + Back Button!
+      // 2-3. Load Game Button Clicked -> List 3 Slots + Trash + Back Button!
       if (customId.startsWith("menu_loadgame_")) {
+        const screenData = renderSlotsScreenData(interaction.user.id);
+        await interaction.update(screenData);
+        return;
+      }
+
+      // 2-4. Trash / Delete Mode Clicked
+      if (customId.startsWith("menu_delete_mode_")) {
         const profile = saveService.getProfile(interaction.user.id);
 
-        const slotEmbed = createBaseEmbed(
-          "Save Slots (3 Slots)",
-          "Select a slot below. If empty, you can start a new game in that slot.\n\n" +
-          `• **Slot 1**: ${profile.slots[1] ? `Wave ${profile.slots[1]!.wave} (${profile.slots[1]!.starter})` : "*[ Empty Slot ]*"}\n` +
-          `• **Slot 2**: ${profile.slots[2] ? `Wave ${profile.slots[2]!.wave} (${profile.slots[2]!.starter})` : "*[ Empty Slot ]*"}\n` +
-          `• **Slot 3**: ${profile.slots[3] ? `Wave ${profile.slots[3]!.wave} (${profile.slots[3]!.starter})` : "*[ Empty Slot ]*"}`
+        const deleteEmbed = createBaseEmbed(
+          "🗑️ Delete Save Slot",
+          "Select the slot you want to **permanently delete**.\n*(Note: This action cannot be undone)*\n\n" +
+          `• **Slot 1**: ${profile.slots[1] ? `Wave ${profile.slots[1]!.wave} (${profile.slots[1]!.starter})` : "*[ Empty ]*"}\n` +
+          `• **Slot 2**: ${profile.slots[2] ? `Wave ${profile.slots[2]!.wave} (${profile.slots[2]!.starter})` : "*[ Empty ]*"}\n` +
+          `• **Slot 3**: ${profile.slots[3] ? `Wave ${profile.slots[3]!.wave} (${profile.slots[3]!.starter})` : "*[ Empty ]*"}`
         ).setColor(COLORS.POKEROGUE_RED);
 
-        const slotButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        const deleteButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
           new ButtonBuilder()
-            .setCustomId(`slot_select_1_${interaction.user.id}`)
-            .setLabel("Slot 1 🎮")
-            .setStyle(profile.slots[1] ? ButtonStyle.Primary : ButtonStyle.Secondary),
-          new ButtonBuilder()
-            .setCustomId(`slot_select_2_${interaction.user.id}`)
-            .setLabel("Slot 2 🎮")
-            .setStyle(profile.slots[2] ? ButtonStyle.Primary : ButtonStyle.Secondary),
-          new ButtonBuilder()
-            .setCustomId(`slot_select_3_${interaction.user.id}`)
-            .setLabel("Slot 3 🎮")
-            .setStyle(profile.slots[3] ? ButtonStyle.Primary : ButtonStyle.Secondary),
-          new ButtonBuilder()
-            .setCustomId(`menu_back_to_title_${interaction.user.id}`)
-            .setLabel("◀️ Back")
+            .setCustomId(`slot_delete_confirm_1_${interaction.user.id}`)
+            .setLabel("Delete Slot 1 🗑️")
             .setStyle(ButtonStyle.Danger)
+            .setDisabled(!profile.slots[1]),
+          new ButtonBuilder()
+            .setCustomId(`slot_delete_confirm_2_${interaction.user.id}`)
+            .setLabel("Delete Slot 2 🗑️")
+            .setStyle(ButtonStyle.Danger)
+            .setDisabled(!profile.slots[2]),
+          new ButtonBuilder()
+            .setCustomId(`slot_delete_confirm_3_${interaction.user.id}`)
+            .setLabel("Delete Slot 3 🗑️")
+            .setStyle(ButtonStyle.Danger)
+            .setDisabled(!profile.slots[3]),
+          new ButtonBuilder()
+            .setCustomId(`menu_loadgame_${interaction.user.id}`)
+            .setLabel("◀️ Cancel")
+            .setStyle(ButtonStyle.Secondary)
         );
 
         await interaction.update({
-          embeds: [slotEmbed],
-          components: [slotButtons],
+          embeds: [deleteEmbed],
+          components: [deleteButtons],
         });
         return;
       }
 
-      // 2-4. Specific Slot Selected (Slot 1, 2, 3)
+      // 2-5. Slot Delete Confirmed
+      if (customId.startsWith("slot_delete_confirm_")) {
+        const slotNum = parseInt(parts[3], 10) || 1;
+        saveService.deleteSlot(interaction.user.id, slotNum);
+
+        // Re-render slots screen with updated data
+        const screenData = renderSlotsScreenData(interaction.user.id);
+        await interaction.update(screenData);
+        return;
+      }
+
+      // 2-6. Specific Slot Selected (Slot 1, 2, 3)
       if (customId.startsWith("slot_select_")) {
         const slotNum = parseInt(parts[2], 10) || 1;
         const profile = saveService.getProfile(interaction.user.id);
@@ -287,7 +345,7 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 2-5. Resume Existing Slot
+      // 2-7. Resume Existing Slot
       if (customId.startsWith("slot_resume_")) {
         const slotNum = parseInt(parts[2], 10) || 1;
         saveService.setActiveSlot(interaction.user.id, slotNum);
@@ -319,7 +377,7 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 2-6. Overwrite Slot -> Open starter selection for that slot
+      // 2-8. Overwrite Slot -> Open starter selection for that slot
       if (customId.startsWith("slot_overwrite_")) {
         const slotNum = parseInt(parts[2], 10) || 1;
         const responseData = createStarterSelectMenu(slotNum, interaction.user.id);

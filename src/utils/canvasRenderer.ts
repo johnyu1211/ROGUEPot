@@ -49,11 +49,11 @@ export async function getPokemonSprite(pokemonName: string): Promise<Image | nul
 }
 
 /**
- * Renders title card with Logo on left and User Profile + 6-Pokemon Party Grid on right
+ * Renders title card maximized to 560x380 for maximum Discord presence
  */
 export async function renderTitleScreen(options?: TitleScreenOptions): Promise<Buffer> {
   const width = 560;
-  const height = 350;
+  const height = 380;
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
 
@@ -78,37 +78,37 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
   const leftPadding = 28;
 
   if (logo) {
-    const logoWidth = 245;
+    const logoWidth = 248;
     const logoHeight = (logo.height / logo.width) * logoWidth;
     const logoX = leftPadding;
-    const logoY = 36;
+    const logoY = 40;
     ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
 
     // Team Name
     ctx.font = "20px DungGeunMo";
     ctx.fillStyle = "#F4A261";
     ctx.textAlign = "left";
-    ctx.fillText("By PageFaultGames", leftPadding + 4, logoY + logoHeight + 26);
+    ctx.fillText("By PageFaultGames", leftPadding + 4, logoY + logoHeight + 28);
 
     // 4. Menu List on the Left
-    const menuStartY = logoY + logoHeight + 74;
+    const menuStartY = logoY + logoHeight + 82;
     ctx.font = "26px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
 
     if (options?.hasSavedSlots) {
       ctx.fillText("1. CONTINUE", leftPadding + 4, menuStartY);
-      ctx.fillText("2. NEW GAME", leftPadding + 4, menuStartY + 42);
-      ctx.fillText("3. LOAD GAME", leftPadding + 4, menuStartY + 84);
+      ctx.fillText("2. NEW GAME", leftPadding + 4, menuStartY + 46);
+      ctx.fillText("3. LOAD GAME", leftPadding + 4, menuStartY + 92);
     } else {
       ctx.fillText("1. NEW GAME", leftPadding + 4, menuStartY);
     }
   }
 
-  // 5. RIGHT SIDE PANEL: User Header + 2x3 Pokemon Party Slots
+  // 5. RIGHT SIDE PANEL: User Header + 2x3 Pokemon Party Slots (Maximized Height 344px)
   const boxX = 295;
-  const boxY = 20;
+  const boxY = 18;
   const boxW = 244;
-  const boxH = 310;
+  const boxH = 344;
 
   // Panel Background & Frame
   ctx.fillStyle = "#1E1A33";
@@ -124,8 +124,8 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
 
   // 5-1. USER HEADER (Avatar Circle + Username)
   const avatarX = boxX + 14;
-  const avatarY = boxY + 12;
-  const avatarSize = 32;
+  const avatarY = boxY + 14;
+  const avatarSize = 34;
 
   // Draw Avatar
   if (options?.avatarUrl) {
@@ -139,14 +139,12 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
       ctx.drawImage(avatarImg, avatarX, avatarY, avatarSize, avatarSize);
       ctx.restore();
     } catch {
-      // Fallback Circle
       ctx.fillStyle = "#E63946";
       ctx.beginPath();
       ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
       ctx.fill();
     }
   } else {
-    // Default Trainer Icon Circle
     ctx.fillStyle = "#E63946";
     ctx.beginPath();
     ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
@@ -165,22 +163,23 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
   ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "left";
   const nameToDisplay = (options?.username || "Trainer").slice(0, 12);
-  ctx.fillText(nameToDisplay, avatarX + avatarSize + 10, avatarY + 22);
+  ctx.fillText(nameToDisplay, avatarX + avatarSize + 10, avatarY + 23);
 
   // Sub-divider line
   ctx.strokeStyle = "#383152";
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(boxX + 8, boxY + 52);
-  ctx.lineTo(boxX + boxW - 8, boxY + 52);
+  ctx.moveTo(boxX + 8, boxY + 56);
+  ctx.lineTo(boxX + boxW - 8, boxY + 56);
   ctx.stroke();
 
-  // 5-2. 2x3 PARTY SLOTS GRID (6 Slots)
+  // 5-2. 2x3 PARTY SLOTS GRID: Maximized Height 84px per slot
   const slotW = 107;
-  const slotH = 75;
-  const startGridY = boxY + 58;
+  const slotH = 84;
+  const startGridY = boxY + 64;
   const gapX = 8;
   const gapY = 8;
+  const borderRadius = 10;
 
   const partyList = options?.party || [];
 
@@ -190,50 +189,38 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
     const sx = boxX + 11 + col * (slotW + gapX);
     const sy = startGridY + row * (slotH + gapY);
 
-    // Slot Box Fill
+    // Borderless Rounded Slot Box Fill
     ctx.fillStyle = "#141124";
-    ctx.fillRect(sx, sy, slotW, slotH);
-
-    // Slot Frame
-    ctx.strokeStyle = "#383152";
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(sx, sy, slotW, slotH);
-
-    // Inner subtle box
-    ctx.strokeStyle = "#25203D";
-    ctx.lineWidth = 1;
-    ctx.strokeRect(sx + 2, sy + 2, slotW - 4, slotH - 4);
+    ctx.beginPath();
+    ctx.roundRect(sx, sy, slotW, slotH, borderRadius);
+    ctx.fill();
 
     const pokemon = partyList[i];
     if (pokemon) {
       // Draw Pokemon Sprite
       const sprite = await getPokemonSprite(pokemon.speciesId);
       if (sprite) {
-        const scale = 1.1;
+        const scale = 1.15;
         const sprW = sprite.width * scale;
         const sprH = sprite.height * scale;
-        ctx.drawImage(sprite, sx + (slotW - sprW) / 2, sy + (slotH - sprH) / 2 - 6, sprW, sprH);
+        ctx.drawImage(sprite, sx + (slotW - sprW) / 2, sy + (slotH - sprH) / 2 - 8, sprW, sprH);
       }
-      // Mini Level tag
-      ctx.font = "11px DungGeunMo";
-      ctx.fillStyle = "#F4A261";
+      // Pure White Level tag
+      ctx.font = "12px DungGeunMo";
+      ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
-      ctx.fillText(`Lv.${pokemon.level}`, sx + slotW / 2, sy + slotH - 6);
+      ctx.fillText(`Lv.${pokemon.level}`, sx + slotW / 2, sy + slotH - 8);
     } else {
       // Empty Slot Pokeball Indicator
-      ctx.fillStyle = "#2D264A";
+      ctx.fillStyle = "#26203D";
       ctx.beginPath();
-      ctx.arc(sx + slotW / 2, sy + slotH / 2, 10, 0, Math.PI * 2);
+      ctx.arc(sx + slotW / 2, sy + slotH / 2 - 4, 10, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.strokeStyle = "#4D436D";
-      ctx.lineWidth = 1;
-      ctx.stroke();
-
       ctx.font = "11px DungGeunMo";
-      ctx.fillStyle = "#5E567D";
+      ctx.fillStyle = "#51496D";
       ctx.textAlign = "center";
-      ctx.fillText("Empty", sx + slotW / 2, sy + slotH - 6);
+      ctx.fillText("Empty", sx + slotW / 2, sy + slotH - 8);
     }
   }
 

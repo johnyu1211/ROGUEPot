@@ -142,7 +142,6 @@ class SaveService {
       },
     ];
 
-    // Ensure user exists
     this.getProfile(userId);
 
     // Save into SQLite
@@ -151,7 +150,6 @@ class SaveService {
       VALUES (?, ?, 'Classic', 1, 'Town', ?, ?, '{}', 1000, 0, ?, ?)
     `).run(userId, slotId, starterSpecies, JSON.stringify(initialParty), now, now);
 
-    // Update active slot and increment total runs
     db.prepare(`
       UPDATE users SET active_slot_id = ?, total_runs = total_runs + 1, updated_at = ? WHERE user_id = ?
     `).run(slotId, now, userId);
@@ -168,6 +166,19 @@ class SaveService {
       score: 0,
       updatedAt: now,
     };
+  }
+
+  public deleteSlot(userId: string, slotId: number): boolean {
+    const info = db.prepare("DELETE FROM game_slots WHERE user_id = ? AND slot_id = ?").run(userId, slotId);
+
+    const profile = this.getProfile(userId);
+    if (profile.activeSlotId === slotId) {
+      const remainingSlots = Object.values(profile.slots).filter((s) => s !== null && s.slotId !== slotId);
+      const newActiveId = remainingSlots.length > 0 ? remainingSlots[0]!.slotId : null;
+      db.prepare("UPDATE users SET active_slot_id = ? WHERE user_id = ?").run(newActiveId, userId);
+    }
+
+    return info.changes > 0;
   }
 
   public setActiveSlot(userId: string, slotId: number): void {
