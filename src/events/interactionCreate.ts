@@ -423,9 +423,10 @@ async function renderPokedexMessageData(
   );
   components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(topRowButtons.slice(0, 5)));
 
-  // Compute max name length across 8 items to equalize button widths with un-trimmed Braille blank (\u2800)
+  // Compute max name length across 8 items to equalize button widths with exact Full-Width Space (\u3000)
+  const padChar = isKo ? "\u3000" : " ";
   const allNames = items.map((p) => ((isKo && p.koreanName) ? p.koreanName : p.name).slice(0, 6));
-  const maxNameLen = Math.max(...allNames.map((n) => n.length), 4);
+  const maxNameLen = Math.max(...allNames.map((n) => n.length), 5);
 
   // ROW 2: Pokemon 1~4 Buttons (Uniform Widths)
   const row1Items = items.slice(0, 4);
@@ -434,7 +435,7 @@ async function renderPokedexMessageData(
     row1Items.forEach((p, idx) => {
       const isSelected = selectedPokemon && selectedPokemon.dexNumber === p.dexNumber;
       const rawName = ((isKo && p.koreanName) ? p.koreanName : p.name).slice(0, 6);
-      const paddedName = rawName.padEnd(maxNameLen, "\u2800");
+      const paddedName = rawName.padEnd(maxNameLen, padChar);
       selectRow1.addComponents(
         new ButtonBuilder()
           .setCustomId(`pokedex_select_${p.dexNumber}_${page}_${fromScreen}_${userId}`)
@@ -452,7 +453,7 @@ async function renderPokedexMessageData(
     row2Items.forEach((p, idx) => {
       const isSelected = selectedPokemon && selectedPokemon.dexNumber === p.dexNumber;
       const rawName = ((isKo && p.koreanName) ? p.koreanName : p.name).slice(0, 6);
-      const paddedName = rawName.padEnd(maxNameLen, "\u2800");
+      const paddedName = rawName.padEnd(maxNameLen, padChar);
       selectRow2.addComponents(
         new ButtonBuilder()
           .setCustomId(`pokedex_select_${p.dexNumber}_${page}_${fromScreen}_${userId}`)
