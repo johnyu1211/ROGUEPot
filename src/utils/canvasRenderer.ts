@@ -51,6 +51,107 @@ export async function getPokemonSprite(pokemonName: string): Promise<Image | nul
 }
 
 /**
+ * Draws a clean vector Globe Icon for Multiplayer Header
+ */
+export function drawVectorGlobe(ctx: any, cx: number, cy: number, r: number, color: string = "#5865F2") {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cx - r, cy);
+  ctx.lineTo(cx + r, cy);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, r * 0.5, r, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/**
+ * Draws a clean vector Warning Triangle Icon
+ */
+export function drawVectorWarning(ctx: any, cx: number, cy: number, size: number, color: string = "#F4A261") {
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - size);
+  ctx.lineTo(cx + size * 0.9, cy + size * 0.7);
+  ctx.lineTo(cx - size * 0.9, cy + size * 0.7);
+  ctx.closePath();
+  ctx.stroke();
+  ctx.fillRect(cx - 1, cy - size * 0.35, 2, size * 0.45);
+  ctx.fillRect(cx - 1, cy + size * 0.35, 2, 2);
+  ctx.restore();
+}
+
+/**
+ * Draws a clean vector Check Circle Icon
+ */
+export function drawVectorCheck(ctx: any, cx: number, cy: number, r: number, color: string = "#57F287") {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cx - r * 0.45, cy);
+  ctx.lineTo(cx - r * 0.1, cy + r * 0.35);
+  ctx.lineTo(cx + r * 0.45, cy - r * 0.35);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/**
+ * Draws a clean vector Star Icon
+ */
+export function drawVectorStar(ctx: any, cx: number, cy: number, spikes: number, outerRadius: number, innerRadius: number, color: string = "#F4A261") {
+  ctx.save();
+  let rot = (Math.PI / 2) * 3;
+  let x = cx;
+  let y = cy;
+  const step = Math.PI / spikes;
+
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - outerRadius);
+  for (let i = 0; i < spikes; i++) {
+    x = cx + Math.cos(rot) * outerRadius;
+    y = cy + Math.sin(rot) * outerRadius;
+    ctx.lineTo(x, y);
+    rot += step;
+
+    x = cx + Math.cos(rot) * innerRadius;
+    y = cy + Math.sin(rot) * innerRadius;
+    ctx.lineTo(x, y);
+    rot += step;
+  }
+  ctx.lineTo(cx, cy - outerRadius);
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.restore();
+}
+
+/**
+ * Draws a clean vector Bag Icon
+ */
+export function drawVectorBag(ctx: any, cx: number, cy: number, w: number, h: number, color: string = "#F4A261") {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(cx - w / 2, cy - h / 4, w, h * 0.75);
+  ctx.beginPath();
+  ctx.arc(cx, cy - h / 4, w * 0.28, Math.PI, 0);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/**
  * Reusable helper to draw the 6-Pokemon Party Panel (User Header + 2x3 Rounded Slots Grid)
  */
 async function drawPartyRightPanel(
@@ -298,7 +399,7 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
   ctx.lineWidth = 1;
   ctx.strokeRect(6, 6, width - 12, height - 12);
 
-  // 3. TOP BANNER: Multiplayer Lobby Header
+  // 3. TOP BANNER: Multiplayer Lobby Header with Vector Globe Icon
   ctx.fillStyle = "#1E2247";
   ctx.fillRect(8, 8, 275, 42);
 
@@ -306,10 +407,12 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
   ctx.lineWidth = 1;
   ctx.strokeRect(8, 8, 275, 42);
 
-  ctx.font = "bold 21px DungGeunMo";
+  drawVectorGlobe(ctx, 28, 29, 11, "#5865F2");
+
+  ctx.font = "bold 20px DungGeunMo";
   ctx.fillStyle = "#5865F2";
   ctx.textAlign = "left";
-  ctx.fillText(isKo ? "🌐 멀티플레이 로비" : "🌐 MULTIPLAYER LOBBY", 20, 36);
+  ctx.fillText(isKo ? "멀티플레이 로비" : "MULTIPLAYER LOBBY", 48, 36);
 
   // 4. LEFT SIDE: Multiplayer Status / Entry Registration Notice
   const leftX = 18;
@@ -323,21 +426,25 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
   ctx.lineWidth = 1.5;
   ctx.strokeRect(leftX, leftY, leftW, leftH);
 
-  // Header Bar
+  // Header Bar with Vector Check / Warning Icon
   ctx.fillStyle = isComplete ? "#1F3D2B" : "#3D2B1F";
   ctx.fillRect(leftX + 2, leftY + 2, leftW - 4, 32);
-  ctx.font = "bold 16px DungGeunMo";
-  ctx.fillStyle = isComplete ? "#57F287" : "#F4A261";
-  ctx.textAlign = "center";
-  ctx.fillText(
-    isComplete
-      ? (isKo ? "✔ 배틀 엔트리 완성됨" : "✔ BATTLE ENTRY READY")
-      : (isKo ? "⚠️ 포켓몬 엔트리를 완성해주세요" : "⚠️ COMPLETE YOUR ENTRY"),
-    leftX + leftW / 2,
-    leftY + 23
-  );
 
-  // Guide Body Box (Y: 98, H: 168)
+  if (isComplete) {
+    drawVectorCheck(ctx, leftX + 22, leftY + 17, 7, "#57F287");
+    ctx.font = "bold 15px DungGeunMo";
+    ctx.fillStyle = "#57F287";
+    ctx.textAlign = "left";
+    ctx.fillText(isKo ? "배틀 엔트리 완성됨" : "BATTLE ENTRY READY", leftX + 36, leftY + 23);
+  } else {
+    drawVectorWarning(ctx, leftX + 20, leftY + 17, 7, "#F4A261");
+    ctx.font = "bold 15px DungGeunMo";
+    ctx.fillStyle = "#F4A261";
+    ctx.textAlign = "left";
+    ctx.fillText(isKo ? "엔트리 등록 필요" : "COMPLETE ENTRY", leftX + 34, leftY + 23);
+  }
+
+  // Guide Body Box (Y: 98, H: 172)
   ctx.fillStyle = "#121326";
   ctx.beginPath();
   ctx.roundRect(leftX + 8, leftY + 40, leftW - 16, 172, 8);
@@ -349,7 +456,7 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
   ctx.font = "bold 16px DungGeunMo";
   ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "left";
-  ctx.fillText(isKo ? "📝 포켓몬 엔트리 등록" : "📝 Battle Entry Registration", leftX + 18, leftY + 64);
+  ctx.fillText(isKo ? "포켓몬 엔트리 등록" : "Battle Entry Registration", leftX + 18, leftY + 64);
 
   // Divider line inside guide box
   ctx.strokeStyle = "#25284B";
@@ -389,7 +496,7 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
   ctx.font = "bold 14px DungGeunMo";
   ctx.fillStyle = "#F4A261";
   ctx.textAlign = "center";
-  ctx.fillText(isKo ? "👇 아래 [포켓몬 등록] 클릭" : "👇 Click [Register Pokémon] below", leftX + leftW / 2, leftY + 248);
+  ctx.fillText(isKo ? "[포켓몬 등록] 버튼을 눌러" : "Click [Register Pokémon] below", leftX + leftW / 2, leftY + 248);
   ctx.font = "13px DungGeunMo";
   ctx.fillStyle = "#FFFFFF";
   ctx.fillText(isKo ? "이름과 별명을 등록하세요!" : "to register your Pokémon!", leftX + leftW / 2, leftY + 274);
@@ -444,7 +551,7 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
   ctx.lineWidth = 1;
   ctx.strokeRect(6, 6, width - 12, height - 12);
 
-  // 3. TOP BANNER: Trainer Bag Header
+  // 3. TOP BANNER: Trainer Bag Header with Vector Bag Icon
   ctx.fillStyle = "#241F3D";
   ctx.fillRect(8, 8, 275, 42);
 
@@ -452,10 +559,12 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
   ctx.lineWidth = 1;
   ctx.strokeRect(8, 8, 275, 42);
 
-  ctx.font = "bold 21px DungGeunMo";
+  drawVectorBag(ctx, 26, 29, 14, 14, "#F4A261");
+
+  ctx.font = "bold 20px DungGeunMo";
   ctx.fillStyle = "#F4A261";
   ctx.textAlign = "left";
-  ctx.fillText(isKo ? "💼 트레이너 포켓" : "💼 TRAINER POCKET", 20, 36);
+  ctx.fillText(isKo ? "트레이너 포켓" : "TRAINER POCKET", 44, 36);
 
   // 4. LEFT SIDE: Menu / Category Box
   const leftX = 18;
@@ -527,10 +636,11 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
+  drawVectorStar(ctx, leftX + leftW / 2 - 58, infoBoxY + 20, 5, 6, 3, "#F4A261");
   ctx.font = "14px DungGeunMo";
   ctx.fillStyle = "#8F89AA";
   ctx.textAlign = "center";
-  ctx.fillText(isKo ? "★ 최고 도달 기록" : "★ BEST RUN RECORD", leftX + leftW / 2, infoBoxY + 24);
+  ctx.fillText(isKo ? "최고 도달 기록" : "BEST RUN RECORD", leftX + leftW / 2 + 6, infoBoxY + 24);
 
   ctx.font = "bold 18px DungGeunMo";
   ctx.fillStyle = "#57F287";
