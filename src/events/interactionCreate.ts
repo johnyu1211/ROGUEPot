@@ -409,19 +409,10 @@ async function renderPokedexMessageData(
     }
   }
 
-  // ROW 1: Abilities (1~3) + Blue Region Jump [🗺️] + Blue Search [🔍]
-  const topRowButtons: ButtonBuilder[] = [...abilityButtons];
-  topRowButtons.push(
-    new ButtonBuilder()
-      .setCustomId(`pokedex_region_btn_${fromScreen}_${userId}`)
-      .setLabel("🗺️")
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setCustomId(`pokedex_search_btn_${fromScreen}_${userId}`)
-      .setLabel("🔍")
-      .setStyle(ButtonStyle.Primary)
-  );
-  components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(topRowButtons.slice(0, 5)));
+  // ROW 1: Abilities (1~3)
+  if (abilityButtons.length > 0) {
+    components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(abilityButtons.slice(0, 5)));
+  }
 
   // Helper to create pokemon button
   const createPokeBtn = (p: typeof items[0], idx: number) => {
@@ -433,25 +424,53 @@ async function renderPokedexMessageData(
       .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Secondary);
   };
 
-  // ROW 2: Pokemon 1, 2
-  const row1Btns = [createPokeBtn(items[0], 0), createPokeBtn(items[1], 1)].filter(Boolean) as ButtonBuilder[];
-  if (row1Btns.length > 0) {
-    components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row1Btns));
-  }
+  // ROW 2: Pokemon 1, 2 + Blue Region Jump [🗺️] + Blue Search [🔍]
+  const row2Btns = [createPokeBtn(items[0], 0), createPokeBtn(items[1], 1)].filter(Boolean) as ButtonBuilder[];
+  row2Btns.push(
+    new ButtonBuilder()
+      .setCustomId(`pokedex_region_btn_${fromScreen}_${userId}`)
+      .setLabel("🗺️")
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId(`pokedex_search_btn_${fromScreen}_${userId}`)
+      .setLabel("🔍")
+      .setStyle(ButtonStyle.Primary)
+  );
+  components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row2Btns));
 
-  // ROW 3: Pokemon 3, 4
-  const row2Btns = [createPokeBtn(items[2], 2), createPokeBtn(items[3], 3)].filter(Boolean) as ButtonBuilder[];
-  if (row2Btns.length > 0) {
-    components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row2Btns));
+  // ROW 3: Pokemon 3, 4 + [+박스] + [+가방]
+  const row3Btns = [createPokeBtn(items[2], 2), createPokeBtn(items[3], 3)].filter(Boolean) as ButtonBuilder[];
+  if (selectedPokemon) {
+    row3Btns.push(
+      new ButtonBuilder()
+        .setCustomId(`pokedex_add_multi_${selectedPokemon.dexNumber}_${page}_${fromScreen}_${userId}`)
+        .setLabel(isKo ? "+박스" : "+Box")
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
+        .setCustomId(`pokedex_add_bag_${selectedPokemon.dexNumber}_${page}_${fromScreen}_${userId}`)
+        .setLabel(isKo ? "+가방" : "+Bag")
+        .setStyle(ButtonStyle.Success)
+    );
   }
+  components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row3Btns));
 
-  // ROW 4: Pokemon 5, 6
-  const row3Btns = [createPokeBtn(items[4], 4), createPokeBtn(items[5], 5)].filter(Boolean) as ButtonBuilder[];
-  if (row3Btns.length > 0) {
-    components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row3Btns));
-  }
+  // ROW 4: Pokemon 5, 6 + Fast Backward 3 Pages [◀◀◀] + Fast Forward 3 Pages [▶▶▶]
+  const row4Btns = [createPokeBtn(items[4], 4), createPokeBtn(items[5], 5)].filter(Boolean) as ButtonBuilder[];
+  row4Btns.push(
+    new ButtonBuilder()
+      .setCustomId(`pokedex_jumpback_${Math.max(1, page - 3)}_${selectedDexNo}_${fromScreen}_${userId}`)
+      .setLabel("◀◀◀")
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(page <= 1),
+    new ButtonBuilder()
+      .setCustomId(`pokedex_jumpfwd_${Math.min(totalPages, page + 3)}_${selectedDexNo}_${fromScreen}_${userId}`)
+      .setLabel("▶▶▶")
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(page >= totalPages)
+  );
+  components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row4Btns));
 
-  // ROW 5: Pokemon 7, 8 + Navigation (◀ Prev, Next ▶, ↩️ Back) (Total max 5 buttons)
+  // ROW 5: Pokemon 7, 8 + [◀ 이전] + [다음 ▶] + [↩️ 뒤로가기]
   const lastRowBtns: ButtonBuilder[] = [];
   const btn7 = createPokeBtn(items[6], 6);
   const btn8 = createPokeBtn(items[7], 7);
@@ -461,12 +480,12 @@ async function renderPokedexMessageData(
   lastRowBtns.push(
     new ButtonBuilder()
       .setCustomId(`pokedex_pageprev_${Math.max(1, page - 1)}_${selectedDexNo}_${fromScreen}_${userId}`)
-      .setLabel(isKo ? "◀ 이전" : "◀ Prev")
+      .setLabel("◀")
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(page <= 1),
     new ButtonBuilder()
       .setCustomId(`pokedex_pagenext_${Math.min(totalPages, page + 1)}_${selectedDexNo}_${fromScreen}_${userId}`)
-      .setLabel(isKo ? "다음 ▶" : "Next ▶")
+      .setLabel("▶")
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(page >= totalPages),
     new ButtonBuilder()
@@ -474,7 +493,6 @@ async function renderPokedexMessageData(
       .setLabel("↩️")
       .setStyle(ButtonStyle.Danger)
   );
-
   components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(lastRowBtns.slice(0, 5)));
 
   return { embeds: [], files: [attachment], attachments: [], components };
@@ -830,6 +848,69 @@ export const interactionCreateEvent: BotEvent = {
           await interaction.editReply(dexData);
         } catch (err) {
           console.error("[POKEDEX] Error switching page in pokedex:", err);
+        }
+        return;
+      }
+
+      // 3-0-8-A. Pokédex Add to Multiplayer Team (+박스)
+      if (customId.startsWith("pokedex_add_multi_")) {
+        const dexNo = parseInt(parts[3], 10) || 1;
+        const poke = await getPokemonByDexNumber(dexNo);
+        const profile = saveService.getProfile(interaction.user.id);
+        const isKo = profile.language === "ko";
+
+        if (poke) {
+          const pokeName = (isKo && poke.koreanName) ? poke.koreanName : poke.name;
+          const partyPoke: PartyPokemon = {
+            speciesId: poke.speciesId,
+            name: pokeName,
+            level: 50,
+            hp: poke.hp * 2 + 110,
+            maxHp: poke.hp * 2 + 110,
+            moves: ["Tackle", "Quick Attack"],
+          };
+          const result = saveService.addMultiplayerPokemon(interaction.user.id, partyPoke);
+          if (result.success) {
+            await interaction.reply({
+              content: isKo
+                ? `✅ **${pokeName}**(을)를 멀티플레이 박스(슬롯 ${result.slotIndex + 1})에 등록했습니다!`
+                : `✅ Added **${pokeName}** to Multiplayer Box (Slot ${result.slotIndex + 1})!`,
+              ephemeral: true,
+            });
+          } else {
+            await interaction.reply({
+              content: isKo
+                ? "❌ 멀티플레이 박스 6마리 엔트리가 이미 가득 찼습니다!"
+                : "❌ Multiplayer box is already full (6/6)!",
+              ephemeral: true,
+            });
+          }
+        }
+        return;
+      }
+
+      // 3-0-8-B. Pokédex Add to Adventure Party (+가방)
+      if (customId.startsWith("pokedex_add_bag_")) {
+        const dexNo = parseInt(parts[3], 10) || 1;
+        const poke = await getPokemonByDexNumber(dexNo);
+        const profile = saveService.getProfile(interaction.user.id);
+        const isKo = profile.language === "ko";
+
+        if (poke) {
+          const pokeName = (isKo && poke.koreanName) ? poke.koreanName : poke.name;
+          const partyPoke: PartyPokemon = {
+            speciesId: poke.speciesId,
+            name: pokeName,
+            level: 25,
+            hp: poke.hp + 50,
+            maxHp: poke.hp + 50,
+            moves: ["Tackle", "Growl"],
+          };
+          const result = saveService.addBagPokemon(interaction.user.id, partyPoke);
+          await interaction.reply({
+            content: isKo ? result.messageKo : result.messageEn,
+            ephemeral: true,
+          });
         }
         return;
       }
