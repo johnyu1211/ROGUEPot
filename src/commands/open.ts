@@ -58,12 +58,12 @@ export const command: Command = {
       }
 
       const userId = interaction.user.id;
-      const hasActiveRun = saveService.hasActiveRun(userId);
+      const hasSavedSlots = saveService.hasAnySavedSlot(userId);
       const userProfile = saveService.getProfile(userId);
 
-      // Generate Retro Canvas Image with ENTRY box on right
+      // Generate Retro Canvas Image with contextual menu on left & ENTRY on right
       const imageBuffer = await renderTitleScreen({
-        hasContinue: hasActiveRun,
+        hasSavedSlots,
         unlockedCount: userProfile.unlockedStartersCount,
       });
       const attachment = new AttachmentBuilder(imageBuffer, { name: "title.png" });
@@ -75,8 +75,8 @@ export const command: Command = {
       // Dynamic Action Row Buttons based on save existence
       const actionRow = new ActionRowBuilder<ButtonBuilder>();
 
-      if (hasActiveRun) {
-        // Case B: Has Previous Game -> 1. Continue, 2. New Game, 3. Load Game
+      if (hasSavedSlots) {
+        // Saved Games Exist -> 1. Continue, 2. New Game, 3. Load Game
         actionRow.addComponents(
           new ButtonBuilder()
             .setCustomId(`menu_continue_${userId}`)
@@ -92,16 +92,12 @@ export const command: Command = {
             .setStyle(ButtonStyle.Secondary)
         );
       } else {
-        // Case A: No Previous Game -> 1. New Game, 2. Load Game
+        // No Saved Games -> ONLY New Game!
         actionRow.addComponents(
           new ButtonBuilder()
             .setCustomId(`menu_newgame_${userId}`)
             .setLabel("New Game")
-            .setStyle(ButtonStyle.Success),
-          new ButtonBuilder()
-            .setCustomId(`menu_loadgame_${userId}`)
-            .setLabel("Load Game")
-            .setStyle(ButtonStyle.Secondary)
+            .setStyle(ButtonStyle.Success)
         );
       }
 
