@@ -13,9 +13,9 @@ import {
 } from "discord.js";
 import { BotEvent, ExtendedClient } from "../types/index.js";
 import { createBaseEmbed, COLORS } from "../utils/embed.js";
-import { renderTitleScreen, renderBagScreen, renderMultiplayerScreen } from "../utils/canvasRenderer.js";
+import { renderTitleScreen, renderBagScreen, renderMultiplayerScreen, renderPokedexScreen } from "../utils/canvasRenderer.js";
 import { saveService, PartyPokemon } from "../services/saveService.js";
-import { getPokemonByQuery } from "../services/pokeApiService.js";
+import { getPokemonByQuery, getPokemonByDexNumber, getPokemonPage } from "../services/pokeApiService.js";
 
 function createStarterSelectMenu(slotId: number, userId: string, fromSource: "title" | "slots" = "title") {
   const profile = saveService.getProfile(userId);
@@ -308,6 +308,66 @@ async function renderMultiplayerMessageData(client: ExtendedClient, userId: stri
   return { embeds: [], files: [attachment], components: [actionRow, backRow] };
 }
 
+async function renderPokedexMessageData(
+  client: ExtendedClient,
+  userId: string,
+  selectedDexNo: number = 1,
+  page: number = 1,
+  fromScreen: "multiplay" | "inventory" | "title" = "title"
+) {
+  const profile = saveService.getProfile(userId);
+  const isKo = profile.language === "ko";
+
+  const { total, totalPages, items } = await getPokemonPage(page, 5);
+
+  let selectedPokemon = items.find((p) => p.dexNumber === selectedDexNo);
+  if (!selectedPokemon) {
+    selectedPokemon = (await getPokemonByDexNumber(selectedDexNo)) || items[0] || null;
+  }
+
+  const imageBuffer = await renderPokedexScreen({
+    selectedPokemon,
+    pageList: items,
+    currentPage: page,
+    totalPages,
+    lang: profile.language,
+  });
+  const attachment = new AttachmentBuilder(imageBuffer, { name: "pokedex.png" });
+
+  // ROW 1: 5 Pokemon select buttons
+  const selectRow = new ActionRowBuilder<ButtonBuilder>();
+  items.forEach((p, idx) => {
+    const isSelected = selectedPokemon && selectedPokemon.dexNumber === p.dexNumber;
+    const name = (isKo && p.koreanName) ? p.koreanName : p.name;
+    selectRow.addComponents(
+      new ButtonBuilder()
+        .setCustomId(`pokedex_select_${p.dexNumber}_${page}_${fromScreen}_${userId}`)
+        .setLabel(`${idx + 1}. ${name.slice(0, 7)}`)
+        .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Secondary)
+    );
+  });
+
+  // ROW 2: Navigation & Back to previous screen
+  const navRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`pokedex_page_${Math.max(1, page - 1)}_${selectedDexNo}_${fromScreen}_${userId}`)
+      .setLabel("◀ 이전")
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(page <= 1),
+    new ButtonBuilder()
+      .setCustomId(`pokedex_page_${Math.min(totalPages, page + 1)}_${selectedDexNo}_${fromScreen}_${userId}`)
+      .setLabel("다음 ▶")
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(page >= totalPages),
+    new ButtonBuilder()
+      .setCustomId(`pokedex_back_${fromScreen}_${userId}`)
+      .setLabel(isKo ? "◀️ 뒤로가기" : "◀️ Back")
+      .setStyle(ButtonStyle.Danger)
+  );
+
+  return { embeds: [], files: [attachment], components: [selectRow, navRow] };
+}
+
 async function renderTitleMessageData(client: ExtendedClient, userId: string) {
   const hasSavedSlots = saveService.hasAnySavedSlot(userId);
   const userProfile = saveService.getProfile(userId);
@@ -556,16 +616,62 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 3-0-6. Multiplayer Pokédex Button Clicked
+      // 3-0-6. Multiplayer Pokédex Button Clicked (Opens Unified Pokédex with fromScreen='multiplay')
       if (customId.startsWith("multi_pokedex_btn_")) {
-        const bagData = await renderBagMessageData(client, interaction.user.id, "pokedex");
-        await interaction.update(bagData);
+        const dexData = await renderPokedexMessageData(client, interaction.user.id, 1, 1, "multiplay");
+        await interaction.update(dexData);
         return;
+      }
+
+      // 3-0-7. Pokédex Select Pokémon
+      if (customId.startsWith("pokedex_select_")) {
+        const dexNo = parseInt(parts[2], 10) || 1;
+        const page = parseInt(parts[3], 10) || 1;
+        const fromScreen = (parts[4] || "title") as "multiplay" | "inventory" | "title";
+
+        const dexData = await renderPokedexMessageData(client, interaction.user.id, dexNo, page, fromScreen);
+        await interaction.update(dexData);
+        return;
+      }
+
+      // 3-0-8. Pokédex Page Switch (Prev / Next)
+      if (customId.startsWith("pokedex_page_")) {
+        const targetPage = parseInt(parts[2], 10) || 1;
+        const currentDexNo = parseInt(parts[3], 10) || ((targetPage - 1) * 5 + 1);
+        const fromScreen = (parts[4] || "title") as "multiplay" | "inventory" | "title";
+
+        const dexData = await renderPokedexMessageData(client, interaction.user.id, currentDexNo, targetPage, fromScreen);
+        await interaction.update(dexData);
+        return;
+      }
+
+      // 3-0-9. Pokédex Back Button (Context-Aware Back Navigation)
+      if (customId.startsWith("pokedex_back_")) {
+        const fromScreen = (parts[2] || "title") as "multiplay" | "inventory" | "title";
+
+        if (fromScreen === "multiplay") {
+          const multiData = await renderMultiplayerMessageData(client, interaction.user.id);
+          await interaction.update(multiData);
+          return;
+        } else if (fromScreen === "inventory") {
+          const bagData = await renderBagMessageData(client, interaction.user.id, "pokemon");
+          await interaction.update(bagData);
+          return;
+        } else {
+          const titleData = await renderTitleMessageData(client, interaction.user.id);
+          await interaction.update(titleData);
+          return;
+        }
       }
 
       // 2-0-5. Bag Tab Switching
       if (customId.startsWith("bag_tab_")) {
         const tabType = parts[2] as "pokemon" | "pokedex" | "records";
+        if (tabType === "pokedex") {
+          const dexData = await renderPokedexMessageData(client, interaction.user.id, 1, 1, "inventory");
+          await interaction.update(dexData);
+          return;
+        }
         const bagData = await renderBagMessageData(client, interaction.user.id, tabType);
         await interaction.update(bagData);
         return;

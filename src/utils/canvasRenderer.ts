@@ -1,6 +1,7 @@
 import { createCanvas, loadImage, GlobalFonts, Image } from "@napi-rs/canvas";
 import path from "path";
 import fs from "fs";
+import { DexPokemonInfo } from "../services/pokeApiService.js";
 
 // Register custom pixel dot font
 const fontPath = path.resolve(process.cwd(), "assets/fonts/DungGeunMo.ttf");
@@ -568,6 +569,288 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
 
   // 6. Outer Border Frame (Gold & Wine-Red Border - Top Z-Index)
   ctx.strokeStyle = "#F4A261";
+  ctx.lineWidth = 4;
+  ctx.strokeRect(2, 2, width - 4, height - 4);
+
+  ctx.strokeStyle = "#383152";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(6, 6, width - 12, height - 12);
+
+  return canvas.toBuffer("image/png");
+}
+
+export interface PokedexScreenOptions {
+  selectedPokemon?: DexPokemonInfo | null;
+  pageList?: DexPokemonInfo[];
+  currentPage?: number;
+  totalPages?: number;
+  lang?: "en" | "ko";
+}
+
+const TYPE_COLORS: Record<string, string> = {
+  normal: "#A8A878",
+  fire: "#F08030",
+  water: "#6890F0",
+  grass: "#78C850",
+  electric: "#F8D030",
+  ice: "#98D8D8",
+  fighting: "#C03028",
+  poison: "#A040A0",
+  ground: "#E0C068",
+  flying: "#A890F0",
+  psychic: "#F85888",
+  bug: "#A8B820",
+  rock: "#B8A038",
+  ghost: "#705898",
+  dragon: "#7038F8",
+  steel: "#B8B8D0",
+  fairy: "#EE99AC",
+  dark: "#705848",
+};
+
+/**
+ * Renders the Unified Dedicated Pokédex Screen (560x380) with 100% Split Screen
+ */
+export async function renderPokedexScreen(options?: PokedexScreenOptions): Promise<Buffer> {
+  const width = 560;
+  const height = 380;
+  const canvas = createCanvas(width, height);
+  const ctx = canvas.getContext("2d");
+
+  ctx.imageSmoothingEnabled = false;
+
+  const isKo = options?.lang === "ko";
+  const items = options?.pageList || [];
+  const selected = options?.selectedPokemon || items[0] || null;
+  const curPage = options?.currentPage || 1;
+  const totPages = options?.totalPages || 205;
+
+  // 1. Dark Retro Background
+  ctx.fillStyle = "#12101F";
+  ctx.fillRect(0, 0, width, height);
+
+  // 2. TOP BANNER: Pokédex Title & Page (Centered)
+  ctx.fillStyle = "#2D1520";
+  ctx.fillRect(8, 8, 246, 38);
+  ctx.strokeStyle = "#E63946";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(8, 8, 246, 38);
+
+  ctx.font = "bold 18px DungGeunMo";
+  ctx.fillStyle = "#E63946";
+  ctx.textAlign = "center";
+  ctx.fillText(isKo ? "포켓몬 도감" : "POKÉDEX", 8 + 246 / 2, 33);
+
+  // Page Indicator Badge on Left Header
+  ctx.font = "12px DungGeunMo";
+  ctx.fillStyle = "#CBD5E1";
+  ctx.textAlign = "right";
+  ctx.fillText(`P.${curPage}/${totPages}`, 246, 32);
+
+  // 3. LEFT SIDE: 5 Pokémon List Items
+  const listX = 12;
+  const startListY = 52;
+  const slotW = 240;
+  const slotH = 58;
+  const slotGap = 6;
+
+  for (let i = 0; i < 5; i++) {
+    const p = items[i];
+    const sy = startListY + i * (slotH + slotGap);
+    const isSelected = selected && p && selected.dexNumber === p.dexNumber;
+
+    // Slot Box Background
+    ctx.fillStyle = isSelected ? "#2E1A2C" : "#1B172E";
+    ctx.beginPath();
+    ctx.roundRect(listX, sy, slotW, slotH, 8);
+    ctx.fill();
+
+    ctx.strokeStyle = isSelected ? "#E63946" : "#322A4E";
+    ctx.lineWidth = isSelected ? 2 : 1;
+    ctx.stroke();
+
+    if (p) {
+      // Mini Sprite
+      const sprite = await getPokemonSprite(p.speciesId);
+      if (sprite) {
+        const scale = 0.85;
+        const sprW = sprite.width * scale;
+        const sprH = sprite.height * scale;
+        ctx.drawImage(sprite, listX + 6 + (40 - sprW) / 2, sy + (slotH - sprH) / 2, sprW, sprH);
+      }
+
+      // Dex Number & Name
+      ctx.font = "bold 13px DungGeunMo";
+      ctx.fillStyle = isSelected ? "#FFFFFF" : "#CBD5E1";
+      ctx.textAlign = "left";
+      const displayName = (isKo && p.koreanName) ? p.koreanName : p.name;
+      const dexTag = `#${String(p.dexNumber).padStart(3, "0")}`;
+      ctx.fillText(`${dexTag} ${displayName}`, listX + 50, sy + 24);
+
+      // Mini Type Badges
+      let badgeX = listX + 50;
+      for (const tName of p.types) {
+        const tColor = TYPE_COLORS[tName.toLowerCase()] || "#777777";
+        ctx.fillStyle = tColor;
+        ctx.beginPath();
+        ctx.roundRect(badgeX, sy + 32, 44, 16, 4);
+        ctx.fill();
+
+        ctx.font = "bold 10px DungGeunMo";
+        ctx.fillStyle = "#FFFFFF";
+        ctx.textAlign = "center";
+        ctx.fillText(tName.toUpperCase(), badgeX + 22, sy + 44);
+        badgeX += 48;
+      }
+
+      if (isSelected) {
+        // Selection Arrow Marker
+        ctx.font = "bold 14px DungGeunMo";
+        ctx.fillStyle = "#E63946";
+        ctx.textAlign = "right";
+        ctx.fillText("▶", listX + slotW - 8, sy + 34);
+      }
+    } else {
+      ctx.font = "13px DungGeunMo";
+      ctx.fillStyle = "#4D4566";
+      ctx.textAlign = "center";
+      ctx.fillText("---", listX + slotW / 2, sy + 34);
+    }
+  }
+
+  // 4. VERTICAL SPLIT DIVIDER LINE (100% Full Height)
+  const splitX = 262;
+  ctx.strokeStyle = "#E63946";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(splitX, 0);
+  ctx.lineTo(splitX, height);
+  ctx.stroke();
+
+  ctx.strokeStyle = "#1F1B36";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(splitX + 2, 0);
+  ctx.lineTo(splitX + 2, height);
+  ctx.stroke();
+
+  // 5. RIGHT SIDE: Selected Pokémon Detailed Stats & Showcase
+  const rightX = 274;
+  const rightW = width - rightX - 10;
+
+  if (selected) {
+    // Header: Dex No & Big Name
+    ctx.font = "bold 20px DungGeunMo";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "left";
+    const titleName = (isKo && selected.koreanName) ? `${selected.koreanName} (${selected.name})` : selected.name;
+    ctx.fillText(`#${String(selected.dexNumber).padStart(3, "0")} ${titleName}`, rightX + 6, 32);
+
+    // Sub-divider line under header
+    ctx.strokeStyle = "#382D4F";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(rightX + 4, 42);
+    ctx.lineTo(rightX + rightW, 42);
+    ctx.stroke();
+
+    // Large Sprite Showcase Box (104x104)
+    const showBoxX = rightX + 6;
+    const showBoxY = 52;
+    const showBoxSize = 104;
+
+    ctx.fillStyle = "#181429";
+    ctx.beginPath();
+    ctx.roundRect(showBoxX, showBoxY, showBoxSize, showBoxSize, 8);
+    ctx.fill();
+    ctx.strokeStyle = "#4D3860";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    const bigSprite = await getPokemonSprite(selected.speciesId);
+    if (bigSprite) {
+      const scale = 1.8;
+      const sprW = bigSprite.width * scale;
+      const sprH = bigSprite.height * scale;
+      ctx.drawImage(bigSprite, showBoxX + (showBoxSize - sprW) / 2, showBoxY + (showBoxSize - sprH) / 2, sprW, sprH);
+    }
+
+    // Info Column (Types, Height, Weight) next to Sprite
+    const infoX = showBoxX + showBoxSize + 12;
+    let typeBadgeX = infoX;
+    for (const tName of selected.types) {
+      const tColor = TYPE_COLORS[tName.toLowerCase()] || "#777777";
+      ctx.fillStyle = tColor;
+      ctx.beginPath();
+      ctx.roundRect(typeBadgeX, showBoxY + 4, 62, 22, 5);
+      ctx.fill();
+
+      ctx.font = "bold 12px DungGeunMo";
+      ctx.fillStyle = "#FFFFFF";
+      ctx.textAlign = "center";
+      ctx.fillText(tName.toUpperCase(), typeBadgeX + 31, showBoxY + 19);
+      typeBadgeX += 68;
+    }
+
+    // Height & Weight info
+    ctx.font = "14px DungGeunMo";
+    ctx.fillStyle = "#CBD5E1";
+    ctx.textAlign = "left";
+    const heightM = ((selected.height || 10) / 10).toFixed(1);
+    const weightKg = ((selected.weight || 100) / 10).toFixed(1);
+    ctx.fillText(isKo ? `• 키: ${heightM} m` : `• Height: ${heightM} m`, infoX, showBoxY + 54);
+    ctx.fillText(isKo ? `• 몸무게: ${weightKg} kg` : `• Weight: ${weightKg} kg`, infoX, showBoxY + 78);
+
+    // Total Base Stats sum
+    const bst = selected.hp + selected.attack + selected.defense + selected.spAttack + selected.spDefense + selected.speed;
+    ctx.font = "bold 14px DungGeunMo";
+    ctx.fillStyle = "#57F287";
+    ctx.fillText(isKo ? `• 종족값 총합: ${bst}` : `• Base Stat Total: ${bst}`, infoX, showBoxY + 100);
+
+    // 6 Base Stats Gauges (HP, ATK, DEF, SPA, SPD, SPE)
+    const statsStartY = 168;
+    const statsList = [
+      { label: "HP", val: selected.hp, color: "#57F287" },
+      { label: isKo ? "공격" : "ATK", val: selected.attack, color: "#F08030" },
+      { label: isKo ? "방어" : "DEF", val: selected.defense, color: "#6890F0" },
+      { label: isKo ? "특공" : "SPA", val: selected.spAttack, color: "#C03028" },
+      { label: isKo ? "특방" : "SPD", val: selected.spDefense, color: "#F85888" },
+      { label: isKo ? "스핏" : "SPE", val: selected.speed, color: "#F8D030" },
+    ];
+
+    const barMaxW = 180;
+    for (let sIdx = 0; sIdx < statsList.length; sIdx++) {
+      const st = statsList[sIdx];
+      const rowY = statsStartY + sIdx * 32;
+
+      // Label & Value
+      ctx.font = "bold 13px DungGeunMo";
+      ctx.fillStyle = "#FFFFFF";
+      ctx.textAlign = "left";
+      ctx.fillText(st.label, rightX + 6, rowY + 16);
+
+      ctx.textAlign = "right";
+      ctx.fillStyle = st.color;
+      ctx.fillText(String(st.val), rightX + 68, rowY + 16);
+
+      // Gauge Background
+      const gaugeX = rightX + 76;
+      ctx.fillStyle = "#161326";
+      ctx.beginPath();
+      ctx.roundRect(gaugeX, rowY + 6, barMaxW, 12, 4);
+      ctx.fill();
+
+      // Gauge Fill
+      const fillW = Math.min(barMaxW, Math.max(4, (st.val / 200) * barMaxW));
+      ctx.fillStyle = st.color;
+      ctx.beginPath();
+      ctx.roundRect(gaugeX, rowY + 6, fillW, 12, 4);
+      ctx.fill();
+    }
+  }
+
+  // 6. Outer Border Frame (Top Z-Index: Signature Pokédex Red)
+  ctx.strokeStyle = "#E63946";
   ctx.lineWidth = 4;
   ctx.strokeRect(2, 2, width - 4, height - 4);
 
