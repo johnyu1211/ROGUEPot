@@ -482,7 +482,7 @@ async function renderPokedexMessageData(
   );
   components.push(navRow);
 
-  return { embeds: [], files: [attachment], components };
+  return { embeds: [], files: [attachment], attachments: [], components };
 }
 
 async function renderTitleMessageData(client: ExtendedClient, userId: string) {
@@ -774,10 +774,12 @@ export const interactionCreateEvent: BotEvent = {
       // 3-0-6. Multiplayer Pokédex Button Clicked (Opens Unified Pokédex with fromScreen='multiplay')
       if (customId.startsWith("multi_pokedex_btn_")) {
         await interaction.deferUpdate().catch(() => null);
-        const dexData = await renderPokedexMessageData(client, interaction.user.id, 1, 1, "multiplay");
-        await interaction.editReply(dexData).catch(async () => {
-          await interaction.followUp(dexData).catch(() => null);
-        });
+        try {
+          const dexData = await renderPokedexMessageData(client, interaction.user.id, 1, 1, "multiplay");
+          await interaction.editReply(dexData);
+        } catch (err) {
+          console.error("[POKEDEX] Error rendering pokedex from multiplay:", err);
+        }
         return;
       }
 
@@ -790,28 +792,32 @@ export const interactionCreateEvent: BotEvent = {
       // 3-0-7. Pokédex Select Pokémon
       if (customId.startsWith("pokedex_select_")) {
         await interaction.deferUpdate().catch(() => null);
-        const dexNo = parseInt(parts[2], 10) || 1;
-        const page = parseInt(parts[3], 10) || 1;
-        const fromScreen = (parts[4] || "title") as "multiplay" | "inventory" | "title";
+        try {
+          const dexNo = parseInt(parts[2], 10) || 1;
+          const page = parseInt(parts[3], 10) || 1;
+          const fromScreen = (parts[4] || "title") as "multiplay" | "inventory" | "title";
 
-        const dexData = await renderPokedexMessageData(client, interaction.user.id, dexNo, page, fromScreen);
-        await interaction.editReply(dexData).catch(async () => {
-          await interaction.followUp(dexData).catch(() => null);
-        });
+          const dexData = await renderPokedexMessageData(client, interaction.user.id, dexNo, page, fromScreen);
+          await interaction.editReply(dexData);
+        } catch (err) {
+          console.error("[POKEDEX] Error selecting pokemon in pokedex:", err);
+        }
         return;
       }
 
       // 3-0-8. Pokédex Page Switch (Prev / Next)
       if (customId.startsWith("pokedex_page_")) {
         await interaction.deferUpdate().catch(() => null);
-        const targetPage = parseInt(parts[2], 10) || 1;
-        const currentDexNo = parseInt(parts[3], 10) || ((targetPage - 1) * 8 + 1);
-        const fromScreen = (parts[4] || "title") as "multiplay" | "inventory" | "title";
+        try {
+          const targetPage = parseInt(parts[2], 10) || 1;
+          const currentDexNo = parseInt(parts[3], 10) || ((targetPage - 1) * 8 + 1);
+          const fromScreen = (parts[4] || "title") as "multiplay" | "inventory" | "title";
 
-        const dexData = await renderPokedexMessageData(client, interaction.user.id, currentDexNo, targetPage, fromScreen);
-        await interaction.editReply(dexData).catch(async () => {
-          await interaction.followUp(dexData).catch(() => null);
-        });
+          const dexData = await renderPokedexMessageData(client, interaction.user.id, currentDexNo, targetPage, fromScreen);
+          await interaction.editReply(dexData);
+        } catch (err) {
+          console.error("[POKEDEX] Error switching page in pokedex:", err);
+        }
         return;
       }
 
