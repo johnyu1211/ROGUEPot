@@ -10,7 +10,7 @@
 } from "discord.js";
 import { BotEvent, ExtendedClient } from "../types/index.js";
 import { createBaseEmbed, COLORS } from "../utils/embed.js";
-import { renderTitleScreen } from "../utils/canvasRenderer.js";
+import { renderTitleScreen, renderBagScreen } from "../utils/canvasRenderer.js";
 import { saveService } from "../services/saveService.js";
 
 function createStarterSelectMenu(slotId: number, userId: string) {
@@ -92,6 +92,53 @@ function renderSlotsScreenData(userId: string) {
   );
 
   return { embeds: [slotEmbed], components: [slotButtons] };
+}
+
+async function renderBagMessageData(
+  client: ExtendedClient,
+  userId: string,
+  tab: "pokedex" | "starters" | "items" | "records" = "items"
+) {
+  const profile = saveService.getProfile(userId);
+  const user = client.users.cache.get(userId) || (await client.users.fetch(userId).catch(() => null));
+  const username = user?.username || "Trainer";
+
+  const imageBuffer = await renderBagScreen({
+    username,
+    tab,
+    unlockedCount: profile.unlockedStartersCount,
+    vouchers: profile.vouchers as any,
+    stats: { totalRuns: profile.totalRuns, highestWave: profile.highestWave },
+  });
+  const attachment = new AttachmentBuilder(imageBuffer, { name: "bag.png" });
+
+  const tabRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`bag_tab_items_${userId}`)
+      .setLabel("Items 🎟️")
+      .setStyle(tab === "items" ? ButtonStyle.Primary : ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`bag_tab_starters_${userId}`)
+      .setLabel("Starters 👾")
+      .setStyle(tab === "starters" ? ButtonStyle.Primary : ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`bag_tab_pokedex_${userId}`)
+      .setLabel("Pokédex 📖")
+      .setStyle(tab === "pokedex" ? ButtonStyle.Primary : ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`bag_tab_records_${userId}`)
+      .setLabel("Records 🏆")
+      .setStyle(tab === "records" ? ButtonStyle.Primary : ButtonStyle.Secondary)
+  );
+
+  const backRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`menu_back_to_title_${userId}`)
+      .setLabel("◀️ Back to Title")
+      .setStyle(ButtonStyle.Secondary)
+  );
+
+  return { embeds: [], files: [attachment], components: [tabRow, backRow] };
 }
 
 async function renderTitleMessageData(client: ExtendedClient, userId: string) {
@@ -202,38 +249,18 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 2-0-1. Inventory Button Clicked
+      // 2-0-1. Inventory Bag Button Clicked -> Render Retro Trainer Bag Canvas Screen!
       if (customId.startsWith("menu_inventory_")) {
-        const profile = saveService.getProfile(interaction.user.id);
-        const vouchers = profile.vouchers || { regular: 0, plus: 0, premium: 0, gold: 0 };
+        const bagData = await renderBagMessageData(client, interaction.user.id, "items");
+        await interaction.update(bagData);
+        return;
+      }
 
-        const inventoryEmbed = createBaseEmbed(
-          `🎒 ${interaction.user.username}'s Inventory & Vault`,
-          "View your global account items, vouchers, and trainer statistics.\n\n" +
-          "━━━━━━━━━━━━━━━━━━━━━━\n" +
-          "**🎟️ Egg Gacha Vouchers**\n" +
-          `• Regular Voucher: **${vouchers.regular || 0}**\n` +
-          `• Plus Voucher (5x): **${vouchers.plus || 0}**\n` +
-          `• Premium Voucher (10x): **${vouchers.premium || 0}**\n` +
-          `• Gold Voucher (25x): **${vouchers.gold || 0}**\n\n` +
-          "**📊 Account Career Statistics**\n" +
-          `• Unlocked Starters: **${profile.unlockedStartersCount}** Pokémon\n` +
-          `• Total Runs Attempted: **${profile.totalRuns}**\n` +
-          `• Highest Wave Reached: **Wave ${profile.highestWave}**\n` +
-          "━━━━━━━━━━━━━━━━━━━━━━"
-        ).setColor(COLORS.POKEROGUE_GOLD);
-
-        const inventoryRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-          new ButtonBuilder()
-            .setCustomId(`menu_back_to_title_${interaction.user.id}`)
-            .setLabel("◀️ Back to Title")
-            .setStyle(ButtonStyle.Secondary)
-        );
-
-        await interaction.update({
-          embeds: [inventoryEmbed],
-          components: [inventoryRow],
-        });
+      // 2-0-2. Bag Tab Switching
+      if (customId.startsWith("bag_tab_")) {
+        const tabType = parts[2] as "pokedex" | "starters" | "items" | "records";
+        const bagData = await renderBagMessageData(client, interaction.user.id, tabType);
+        await interaction.update(bagData);
         return;
       }
 
