@@ -480,12 +480,12 @@ async function renderPokedexMessageData(
   lastRowBtns.push(
     new ButtonBuilder()
       .setCustomId(`pokedex_pageprev_${Math.max(1, page - 1)}_${selectedDexNo}_${fromScreen}_${userId}`)
-      .setLabel("\u3000\u3000◀")
+      .setLabel("\u2800\u2800◀")
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(page <= 1),
     new ButtonBuilder()
       .setCustomId(`pokedex_pagenext_${Math.min(totalPages, page + 1)}_${selectedDexNo}_${fromScreen}_${userId}`)
-      .setLabel("▶\u3000\u3000")
+      .setLabel("▶\u2800\u2800")
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(page >= totalPages),
     new ButtonBuilder()
