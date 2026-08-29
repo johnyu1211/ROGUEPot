@@ -1,14 +1,24 @@
-﻿export interface DexPokemonInfo {
+export interface DexPokemonInfo {
   dexNumber: number;
   speciesId: string;
   name: string;
   koreanName?: string;
   types: string[];
   hp: number;
+  attack: number;
+  defense: number;
+  spAttack: number;
+  spDefense: number;
+  speed: number;
+  height?: number; // in dm
+  weight?: number; // in hg
 }
 
 const dexCache = new Map<number, DexPokemonInfo>();
 const nameCache = new Map<string, DexPokemonInfo>();
+
+// Reverse dictionary for fast Korean name lookup by Dex Number
+const DEX_TO_KOREAN_DICT: Record<number, string> = {};
 
 // Common / Popular Korean Pokemon name to Dex Number mappings
 const KOREAN_POKEMON_DICT: Record<string, number> = {
@@ -79,6 +89,13 @@ const KOREAN_POKEMON_DICT: Record<string, number> = {
   "복숭악귀": 1025,
 };
 
+// Build reverse dictionary
+for (const [kName, dNo] of Object.entries(KOREAN_POKEMON_DICT)) {
+  if (!DEX_TO_KOREAN_DICT[dNo]) {
+    DEX_TO_KOREAN_DICT[dNo] = kName;
+  }
+}
+
 /**
  * Fetches Pokémon data by National Pokédex number (1 ~ 1025)
  */
@@ -94,14 +111,30 @@ export async function getPokemonByDexNumber(dexNo: number): Promise<DexPokemonIn
     const speciesId = data.name.toLowerCase();
     const formattedName = data.name.charAt(0).toUpperCase() + data.name.slice(1);
     const types = data.types.map((t: any) => t.type.name);
-    const hp = data.stats.find((s: any) => s.stat.name === "hp")?.base_stat || 50;
+
+    const getStat = (name: string) => data.stats.find((s: any) => s.stat.name === name)?.base_stat || 50;
+
+    const hp = getStat("hp");
+    const attack = getStat("attack");
+    const defense = getStat("defense");
+    const spAttack = getStat("special-attack");
+    const spDefense = getStat("special-defense");
+    const speed = getStat("speed");
 
     const info: DexPokemonInfo = {
       dexNumber: dexNo,
       speciesId,
       name: formattedName,
+      koreanName: DEX_TO_KOREAN_DICT[dexNo],
       types,
       hp,
+      attack,
+      defense,
+      spAttack,
+      spDefense,
+      speed,
+      height: data.height,
+      weight: data.weight,
     };
 
     dexCache.set(dexNo, info);
@@ -110,6 +143,28 @@ export async function getPokemonByDexNumber(dexNo: number): Promise<DexPokemonIn
     console.error(`[POKEAPI] Failed to fetch Pokemon for Dex #${dexNo}:`, error);
     return null;
   }
+}
+
+/**
+ * Fetches a list of Pokémon for a Pokédex page (e.g. 5 per page)
+ */
+export async function getPokemonPage(page: number = 1, pageSize: number = 5): Promise<{ total: number; totalPages: number; items: DexPokemonInfo[] }> {
+  const total = 1025;
+  const totalPages = Math.ceil(total / pageSize);
+  const validPage = Math.max(1, Math.min(totalPages, page));
+
+  const startDex = (validPage - 1) * pageSize + 1;
+  const endDex = Math.min(total, startDex + pageSize - 1);
+
+  const promises: Promise<DexPokemonInfo | null>[] = [];
+  for (let i = startDex; i <= endDex; i++) {
+    promises.push(getPokemonByDexNumber(i));
+  }
+
+  const results = await Promise.all(promises);
+  const items = results.filter((p): p is DexPokemonInfo => p !== null);
+
+  return { total, totalPages, items };
 }
 
 /**
@@ -141,23 +196,11 @@ export async function getPokemonByQuery(query: string): Promise<DexPokemonInfo |
     const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${clean}`);
     if (res.ok) {
       const data: any = await res.json();
-      const dexNo = data.id;
-      const speciesId = data.name.toLowerCase();
-      const formattedName = data.name.charAt(0).toUpperCase() + data.name.slice(1);
-      const types = data.types.map((t: any) => t.type.name);
-      const hp = data.stats.find((s: any) => s.stat.name === "hp")?.base_stat || 50;
-
-      const info: DexPokemonInfo = {
-        dexNumber: dexNo,
-        speciesId,
-        name: formattedName,
-        types,
-        hp,
-      };
-
-      dexCache.set(dexNo, info);
-      nameCache.set(clean, info);
-      return info;
+      const info = await getPokemonByDexNumber(data.id);
+      if (info) {
+        nameCache.set(clean, info);
+        return info;
+      }
     }
   } catch {}
 
