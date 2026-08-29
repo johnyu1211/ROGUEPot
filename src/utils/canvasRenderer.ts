@@ -188,7 +188,7 @@ async function drawPartyRightPanel(
 }
 
 /**
- * Renders title card maximized to 560x380 (With "Discord Bot version" subtitle)
+ * Renders title card maximized to 560x380 (1. LOAD GAME, 2. NEW GAME, 3. MULTIPLAY, 4. INVENTORY)
  */
 export async function renderTitleScreen(options?: TitleScreenOptions): Promise<Buffer> {
   const width = 560;
@@ -236,13 +236,14 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
     ctx.fillStyle = "#FFFFFF";
 
     if (options?.hasSavedSlots) {
-      ctx.fillText(isKo ? "1. 이어하기" : "1. CONTINUE", leftPadding + 4, menuStartY);
+      ctx.fillText(isKo ? "1. 불러오기" : "1. LOAD GAME", leftPadding + 4, menuStartY);
       ctx.fillText(isKo ? "2. 새 게임" : "2. NEW GAME", leftPadding + 4, menuStartY + 38);
-      ctx.fillText(isKo ? "3. 불러오기" : "3. LOAD GAME", leftPadding + 4, menuStartY + 76);
+      ctx.fillText(isKo ? "3. 멀티플레이" : "3. MULTIPLAY", leftPadding + 4, menuStartY + 76);
       ctx.fillText(isKo ? "4. 인벤토리" : "4. INVENTORY", leftPadding + 4, menuStartY + 114);
     } else {
       ctx.fillText(isKo ? "1. 새 게임" : "1. NEW GAME", leftPadding + 4, menuStartY);
-      ctx.fillText(isKo ? "2. 인벤토리" : "2. INVENTORY", leftPadding + 4, menuStartY + 42);
+      ctx.fillText(isKo ? "2. 멀티플레이" : "2. MULTIPLAY", leftPadding + 4, menuStartY + 38);
+      ctx.fillText(isKo ? "3. 인벤토리" : "3. INVENTORY", leftPadding + 4, menuStartY + 76);
     }
   }
 
