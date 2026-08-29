@@ -366,7 +366,7 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
 
   const tabs = [
     { key: "items", label: "1. ITEMS & VOUCHERS" },
-    { key: "starters", label: "2. STARTERS (스타팅)" },
+    { key: "starters", label: "2. POKÉMON (포켓몬)" },
     { key: "pokedex", label: "3. POKÉDEX (도감)" },
     { key: "records", label: "4. CAREER RECORDS" },
   ];
@@ -454,12 +454,12 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
       ctx.fillText(`x${item.count}`, rightX + rightW - 24, itemY + 28);
     });
   } else if (currentTab === "starters") {
-    ctx.fillText("👾 STARTER POKÉMON ROSTER", rightX + 14, rightY + 23);
+    ctx.fillText("👾 POKÉMON ROSTER", rightX + 14, rightY + 23);
 
     ctx.font = "15px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "left";
-    ctx.fillText(`• Unlocked Starters: ${unlocked} / 586`, rightX + 20, rightY + 70);
+    ctx.fillText(`• Unlocked Pokémon: ${unlocked} / 586`, rightX + 20, rightY + 70);
     ctx.fillText("• Starter Candies: Available per species", rightX + 20, rightY + 105);
     ctx.fillText("• Passive Skills: Unlockable via Candies", rightX + 20, rightY + 140);
     ctx.fillText("• Cost Reductions: Upgradeable", rightX + 20, rightY + 175);
