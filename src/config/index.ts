@@ -10,16 +10,8 @@ export const config = {
 };
 
 export function validateConfig(): void {
-  const missing: string[] = [];
   if (!config.discordToken || config.discordToken === "your_discord_bot_token_here") {
-    missing.push("DISCORD_TOKEN");
-  }
-  if (!config.clientId || config.clientId === "your_discord_client_id_here") {
-    missing.push("CLIENT_ID");
-  }
-
-  if (missing.length > 0) {
-    console.warn(`[CONFIG WARNING] Missing or default environment variables: ${missing.join(", ")}`);
-    console.warn("Please update your .env file with your Discord Bot credentials.");
+    console.warn("[CONFIG WARNING] DISCORD_TOKEN is missing or not set in .env.");
+    console.warn("Please add your bot token to the .env file.");
   }
 }
