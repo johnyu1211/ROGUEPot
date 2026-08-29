@@ -4,7 +4,8 @@ import { pokerogueService } from "./services/pokerogueService.js";
 
 async function main() {
   console.log("==========================================");
-  console.log("       PokeRogue Discord Bot Starting     ");
+  console.log("          🎮 ROGUEPot Bot Starting        ");
+  console.log("       PokeRogue Discord Companion        ");
   console.log("==========================================");
 
   validateConfig();
