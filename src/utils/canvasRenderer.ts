@@ -140,7 +140,7 @@ async function drawPartyRightPanel(
   const borderRadius = 10;
 
   const partyList = options?.party || [];
-  const emptyLabel = options?.lang === "ko" ? "+ 등록" : "+ Register";
+  const emptyLabel = options?.lang === "ko" ? "빈 슬롯" : "Empty";
 
   for (let i = 0; i < 6; i++) {
     const col = i % 2;
@@ -183,7 +183,7 @@ async function drawPartyRightPanel(
       ctx.fill();
 
       ctx.font = "12px DungGeunMo";
-      ctx.fillStyle = "#5865F2"; // Blurple register hint
+      ctx.fillStyle = "#51496D";
       ctx.textAlign = "center";
       ctx.fillText(emptyLabel, sx + slotW / 2, sy + slotH - 8);
     }
