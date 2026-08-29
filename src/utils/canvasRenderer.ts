@@ -418,78 +418,8 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
   ctx.textAlign = "center";
   ctx.fillText(isKo ? "멀티플레이 로비" : "MULTIPLAYER LOBBY", 8 + 275 / 2 + 10, 36);
 
-  // 4. LEFT SIDE: Multiplayer Guide & Action Box
-  const leftX = 18;
-  const leftY = 58;
-  const leftW = 265;
-  const leftH = 304;
-
-  ctx.fillStyle = "#181A36";
-  ctx.fillRect(leftX, leftY, leftW, leftH);
-  ctx.strokeStyle = "#32376E";
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(leftX, leftY, leftW, leftH);
-
-  // Panel Title Bar
-  ctx.fillStyle = "#222754";
-  ctx.fillRect(leftX + 2, leftY + 2, leftW - 4, 34);
-  ctx.font = "bold 16px DungGeunMo";
-  ctx.fillStyle = "#FFFFFF";
-  ctx.textAlign = "center";
-  ctx.fillText(isKo ? "배틀 엔트리 가이드" : "BATTLE ROSTER GUIDE", leftX + leftW / 2, leftY + 24);
-
-  // Guide Body Box (Y: 100, H: 146)
-  ctx.fillStyle = "#121326";
-  ctx.beginPath();
-  ctx.roundRect(leftX + 8, leftY + 44, leftW - 16, 150, 8);
-  ctx.fill();
-  ctx.strokeStyle = "#2D315E";
-  ctx.lineWidth = 1;
-  ctx.stroke();
-
-  ctx.font = "bold 16px DungGeunMo";
-  ctx.fillStyle = "#57F287";
-  ctx.textAlign = "left";
-  ctx.fillText(isKo ? "차곡차곡 자동 등록" : "Auto Slot Registration", leftX + 18, leftY + 70);
-
-  // Divider line inside guide box
-  ctx.strokeStyle = "#25284B";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(leftX + 18, leftY + 80);
-  ctx.lineTo(leftX + leftW - 18, leftY + 80);
-  ctx.stroke();
-
-  ctx.font = "14px DungGeunMo";
-  ctx.fillStyle = "#CBD5E1";
-  if (isKo) {
-    ctx.fillText("• 포켓몬 이름/도감번호 등록", leftX + 18, leftY + 104);
-    ctx.fillText("• 예: 샤미드, 루카리오, 피카츄", leftX + 18, leftY + 130);
-    ctx.fillText("• 별명: 메가뿅, 에비뿅, 파라뿅", leftX + 18, leftY + 156);
-    ctx.fillText("• 1번부터 6번까지 자동 배치!", leftX + 18, leftY + 180);
-  } else {
-    ctx.fillText("• Register by Name or Dex #", leftX + 18, leftY + 104);
-    ctx.fillText("• e.g. Vaporeon, Lucario, Pikachu", leftX + 18, leftY + 130);
-    ctx.fillText("• Nick: Megaree, Hitmee", leftX + 18, leftY + 156);
-    ctx.fillText("• Auto-fills Slots 1 to 6!", leftX + 18, leftY + 180);
-  }
-
-  // Quick Action Hint Box (Y: 260, H: 88)
-  ctx.fillStyle = "#1F234D";
-  ctx.beginPath();
-  ctx.roundRect(leftX + 8, leftY + 204, leftW - 16, 88, 8);
-  ctx.fill();
-  ctx.strokeStyle = "#5865F2";
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-
-  ctx.font = "bold 15px DungGeunMo";
-  ctx.fillStyle = "#F4A261";
-  ctx.textAlign = "center";
-  ctx.fillText(isKo ? "[포켓몬 등록] 버튼을 눌러" : "Click [Register Pokémon] below", leftX + leftW / 2, leftY + 236);
-  ctx.font = "14px DungGeunMo";
-  ctx.fillStyle = "#FFFFFF";
-  ctx.fillText(isKo ? "이름과 별명을 등록하세요!" : "to register your Pokémon!", leftX + leftW / 2, leftY + 264);
+  // 4. LEFT SIDE: Clean minimal area (Ready for lobby/matchmaking)
+  // Left side is kept clear and minimal as requested
 
   // 5. RIGHT SIDE PANEL: Multiplayer Team (with slot numbers 1~6 and Blurple border)
   await drawPartyRightPanel(ctx, 295, 18, 244, 344, {
