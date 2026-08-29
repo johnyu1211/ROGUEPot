@@ -41,7 +41,7 @@ export async function getPokemonSprite(pokemonName: string): Promise<Image | nul
 }
 
 /**
- * Renders title card with crisp pixel-art smoothing disabled
+ * Renders title card without arrow prefixes
  */
 export async function renderTitleScreen(options?: TitleScreenOptions): Promise<Buffer> {
   const width = 560;
@@ -49,7 +49,7 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
 
-  // CRITICAL: Disable anti-aliasing / smoothing for sharp, unblurred pixel art!
+  // Disable anti-aliasing / smoothing for sharp, unblurred pixel art
   ctx.imageSmoothingEnabled = false;
 
   // 1. Dark Retro Background
@@ -82,19 +82,21 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
     ctx.textAlign = "left";
     ctx.fillText("By PageFaultGames", leftPadding + 4, logoY + logoHeight + 26);
 
-    // Menu List
+    // 4. Menu List on the Left (No arrow prefix)
     const menuStartY = logoY + logoHeight + 74;
     ctx.font = "26px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
 
     if (options?.hasSavedSlots) {
-      ctx.fillText("▶ 1. CONTINUE", leftPadding + 4, menuStartY);
-      ctx.fillText("  2. NEW GAME", leftPadding + 4, menuStartY + 42);
-      ctx.fillText("  3. LOAD GAME", leftPadding + 4, menuStartY + 84);
+      ctx.fillText("1. CONTINUE", leftPadding + 4, menuStartY);
+      ctx.fillText("2. NEW GAME", leftPadding + 4, menuStartY + 42);
+      ctx.fillText("3. LOAD GAME", leftPadding + 4, menuStartY + 84);
     } else {
-      ctx.fillText("▶ 1. NEW GAME", leftPadding + 4, menuStartY);
+      ctx.fillText("1. NEW GAME", leftPadding + 4, menuStartY);
     }
   }
+
+  // 5. RIGHT SIDE: Clean open canvas
 
   return canvas.toBuffer("image/png");
 }
@@ -140,21 +142,18 @@ export async function renderDotTestCard(): Promise<Buffer> {
   for (const p of pokemonList) {
     const sprite = await getPokemonSprite(p.name);
     if (sprite) {
-      // Draw background box for each sprite
       ctx.fillStyle = "#1E1A33";
       ctx.fillRect(p.x, p.y, 160, 190);
       ctx.strokeStyle = "#383152";
       ctx.lineWidth = 2;
       ctx.strokeRect(p.x, p.y, 160, 190);
 
-      // Draw crisp unblurred pixel sprite
       const sprW = sprite.width * p.scale;
       const sprH = sprite.height * p.scale;
       const sprX = p.x + (160 - sprW) / 2;
       const sprY = p.y + (150 - sprH) / 2;
       ctx.drawImage(sprite, sprX, sprY, sprW, sprH);
 
-      // Label
       ctx.font = "13px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
