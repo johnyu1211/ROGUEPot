@@ -459,12 +459,12 @@ async function renderPokedexMessageData(
   row4Btns.push(
     new ButtonBuilder()
       .setCustomId(`pokedex_jumpback_${Math.max(1, page - 3)}_${selectedDexNo}_${fromScreen}_${userId}`)
-      .setLabel("\u2800◀◀◀\u2800")
+      .setLabel("◀◀◀")
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(page <= 1),
     new ButtonBuilder()
       .setCustomId(`pokedex_jumpfwd_${Math.min(totalPages, page + 3)}_${selectedDexNo}_${fromScreen}_${userId}`)
-      .setLabel("\u2800▶▶▶\u2800")
+      .setLabel("▶▶▶")
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(page >= totalPages)
   );
