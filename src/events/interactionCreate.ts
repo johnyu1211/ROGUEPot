@@ -60,19 +60,11 @@ function createStarterSelectMenu(slotId: number, userId: string, fromSource: "ti
   );
 
   const backCustomId = fromSource === "title" ? `menu_back_to_title_${userId}` : `menu_loadgame_${userId}`;
-  const backLabel =
-    fromSource === "title"
-      ? isKo
-        ? "◀️ 메인 메뉴로"
-        : "◀️ Back to Title"
-      : isKo
-      ? "◀️ 슬롯 목록으로"
-      : "◀️ Back to Slots";
 
   const backRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(backCustomId)
-      .setLabel(backLabel)
+      .setLabel("🔙")
       .setStyle(ButtonStyle.Danger)
   );
 
@@ -114,7 +106,7 @@ function renderSlotsScreenData(userId: string) {
       .setStyle(ButtonStyle.Danger),
     new ButtonBuilder()
       .setCustomId(`menu_back_to_title_${userId}`)
-      .setLabel(isKo ? "◀️ 뒤로" : "◀️ Back")
+      .setLabel("🔙")
       .setStyle(ButtonStyle.Danger)
   );
 
@@ -160,7 +152,7 @@ function renderSettingsMessageData(userId: string) {
   const backRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(`menu_back_to_title_${userId}`)
-      .setLabel(isKo ? "◀️ 메인 메뉴로" : "◀️ Back to Title")
+      .setLabel("🔙")
       .setStyle(ButtonStyle.Danger)
   );
 
@@ -262,7 +254,7 @@ async function renderBagMessageData(
   const backRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(`menu_back_to_title_${userId}`)
-      .setLabel(isKo ? "◀️ 메인 메뉴로" : "◀️ Back to Title")
+      .setLabel("🔙")
       .setStyle(ButtonStyle.Danger)
   );
 
@@ -301,7 +293,7 @@ async function renderMultiplayerMessageData(client: ExtendedClient, userId: stri
   const backRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(`menu_back_to_title_${userId}`)
-      .setLabel(isKo ? "◀️ 메인 메뉴로" : "◀️ Back to Title")
+      .setLabel("🔙")
       .setStyle(ButtonStyle.Danger)
   );
 
@@ -345,7 +337,7 @@ function createPokedexRegionSelectMenu(fromScreen: "multiplay" | "inventory" | "
   const cancelRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(`pokedex_page_1_1_${fromScreen}_${userId}`)
-      .setLabel(isKo ? "◀️ 도감으로 돌아가기" : "◀️ Back to Pokédex")
+      .setLabel("🔙")
       .setStyle(ButtonStyle.Secondary)
   );
 
@@ -428,7 +420,7 @@ async function renderPokedexMessageData(
       .setDisabled(page >= totalPages),
     new ButtonBuilder()
       .setCustomId(`pokedex_back_${fromScreen}_${userId}`)
-      .setLabel(isKo ? "◀️ 뒤로가기" : "◀️ Back")
+      .setLabel("🔙")
       .setStyle(ButtonStyle.Danger),
     new ButtonBuilder()
       .setCustomId(`pokedex_region_btn_${fromScreen}_${userId}`)
@@ -856,7 +848,7 @@ export const interactionCreateEvent: BotEvent = {
             .setDisabled(!profile.slots[3]),
           new ButtonBuilder()
             .setCustomId(`menu_loadgame_${interaction.user.id}`)
-            .setLabel(isKo ? "◀️ 취소" : "◀️ Cancel")
+            .setLabel("🔙")
             .setStyle(ButtonStyle.Secondary)
         );
 
@@ -914,7 +906,7 @@ export const interactionCreateEvent: BotEvent = {
               .setStyle(ButtonStyle.Danger),
             new ButtonBuilder()
               .setCustomId(`menu_loadgame_${interaction.user.id}`)
-              .setLabel(isKo ? "◀️ 뒤로" : "◀️ Back")
+              .setLabel("🔙")
               .setStyle(ButtonStyle.Secondary)
           );
 
@@ -952,7 +944,7 @@ export const interactionCreateEvent: BotEvent = {
             .setStyle(ButtonStyle.Success),
           new ButtonBuilder()
             .setCustomId(`menu_back_to_title_${interaction.user.id}`)
-            .setLabel(isKo ? "◀️ 메인 메뉴로" : "◀️ Back to Title")
+            .setLabel("🔙")
             .setStyle(ButtonStyle.Danger)
         );
 
@@ -1008,7 +1000,7 @@ export const interactionCreateEvent: BotEvent = {
             .setStyle(ButtonStyle.Success),
           new ButtonBuilder()
             .setCustomId(`menu_back_to_title_${interaction.user.id}`)
-            .setLabel(isKo ? "◀️ 메인 메뉴" : "◀️ Title Menu")
+            .setLabel("🔙")
             .setStyle(ButtonStyle.Danger)
         );
 
