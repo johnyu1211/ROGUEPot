@@ -224,7 +224,8 @@ async function drawPartyRightPanel(
 
   // 1. VERTICAL SPLIT DIVIDER LINE (100% Full Height from Top to Bottom)
   const splitX = boxX - 10;
-  ctx.strokeStyle = "#2D3246";
+  const themeBorder = options?.borderColor || "#2D3246";
+  ctx.strokeStyle = themeBorder;
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.moveTo(splitX, 0);
@@ -247,13 +248,13 @@ async function drawPartyRightPanel(
       ctx.drawImage(avatarImg, avatarX, avatarY, avatarSize, avatarSize);
       ctx.restore();
     } catch {
-      ctx.fillStyle = "#363C52";
+      ctx.fillStyle = themeBorder;
       ctx.beginPath();
       ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
       ctx.fill();
     }
   } else {
-    ctx.fillStyle = "#363C52";
+    ctx.fillStyle = themeBorder;
     ctx.beginPath();
     ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
     ctx.fill();
@@ -268,7 +269,7 @@ async function drawPartyRightPanel(
   ctx.fillText(nameToDisplay, avatarX + avatarSize + 10, 27);
 
   // Sub-divider line under user header at y = 42 (matching left header divider line)
-  ctx.strokeStyle = "#2D3246";
+  ctx.strokeStyle = themeBorder;
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.moveTo(splitX, 42);
@@ -292,21 +293,21 @@ async function drawPartyRightPanel(
     const sx = splitX + 8 + col * (slotW + gapX);
     const sy = startGridY + row * (slotH + gapY);
 
-    // Borderless Rounded Slot Box Fill (Refined Dark Midnight Slate)
-    ctx.fillStyle = "#181B26";
+    // Borderless Rounded Slot Box Fill (Refined Dark Theme)
+    ctx.fillStyle = options?.borderColor ? "#161928" : "#181B26";
     ctx.beginPath();
     ctx.roundRect(sx, sy, slotW, slotH, borderRadius);
     ctx.fill();
 
     // Slot Subtle Edge Border
-    ctx.strokeStyle = "#282D3D";
+    ctx.strokeStyle = options?.borderColor ? "#282E48" : "#282D3D";
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Slot Number Tag (1, 2, 3, 4, 5, 6) in Silver White
+    // Slot Number Tag (1, 2, 3, 4, 5, 6)
     if (options?.showSlotNumbers) {
       ctx.font = "bold 13px DungGeunMo";
-      ctx.fillStyle = "#8E96AB";
+      ctx.fillStyle = options?.borderColor || "#8E96AB";
       ctx.textAlign = "left";
       ctx.fillText(`${i + 1}`, sx + 9, sy + 17);
     }
@@ -353,7 +354,7 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
 
   const isKo = options?.lang === "ko";
 
-  // 1. Dark Retro Background (Refined Dark Midnight)
+  // 1. Dark Retro Background
   ctx.fillStyle = "#13151F";
   ctx.fillRect(0, 0, width, height);
 
@@ -411,7 +412,7 @@ export interface MultiplayerScreenOptions {
 }
 
 /**
- * Renders Multiplayer Screen with Clean Theme
+ * Renders Multiplayer Screen with Signature Blurple Theme
  */
 export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions): Promise<Buffer> {
   const width = 560;
@@ -427,17 +428,17 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
   const registeredCount = party.filter(Boolean).length;
   const isComplete = registeredCount >= 1; // At least 1 Pokemon registered
 
-  // 1. Dark Retro Background (Refined Dark Midnight)
-  ctx.fillStyle = "#13151F";
+  // 1. Dark Retro Background (Discord Blurple Deep Night)
+  ctx.fillStyle = "#111322";
   ctx.fillRect(0, 0, width, height);
 
   // 2. TOP BANNER: Full-width Header Bar across the entire Left Half (y: 0 ~ 42)
   const splitX = 285;
-  ctx.fillStyle = "#1A1D2A";
+  ctx.fillStyle = "#181C34";
   ctx.fillRect(0, 0, splitX, 42);
 
-  // Bottom border line under left header
-  ctx.strokeStyle = "#2D3246";
+  // Bottom border line under left header (Blurple)
+  ctx.strokeStyle = "#5865F2";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.moveTo(0, 42);
@@ -453,13 +454,14 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
   // 3. LEFT SIDE: Clean minimal area (Ready for lobby/matchmaking)
   // Left side is kept clear and minimal as requested
 
-  // 4. RIGHT SIDE PANEL: Multiplayer Team (with slot numbers 1~6)
+  // 4. RIGHT SIDE PANEL: Multiplayer Team (with slot numbers 1~6 and Blurple theme)
   await drawPartyRightPanel(ctx, 295, 18, 244, 344, {
     username: options?.username,
     avatarUrl: options?.avatarUrl,
     party: options?.party,
     lang: options?.lang,
     showSlotNumbers: true,
+    borderColor: "#5865F2",
   });
 
   return canvas.toBuffer("image/png");
@@ -476,7 +478,7 @@ export interface BagScreenOptions {
 }
 
 /**
- * Renders Trainer Bag UI with WHITE slot numbers 1~6 on right panel
+ * Renders Trainer Bag UI with Signature Gold Amber & Pocket Theme
  */
 export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffer> {
   const width = 560;
@@ -490,16 +492,16 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
   const isKo = options?.lang === "ko";
   const currentTab = options?.tab || "pokemon";
 
-  // 1. Dark Retro Background (Refined Dark Midnight)
-  ctx.fillStyle = "#13151F";
+  // 1. Dark Retro Background (Warm Deep Night)
+  ctx.fillStyle = "#14121A";
   ctx.fillRect(0, 0, width, height);
 
   // 2. TOP BANNER: Trainer Bag Header with Vector Bag Icon (y: 0 ~ 42)
   const splitX = 285;
-  ctx.fillStyle = "#1A1D2A";
+  ctx.fillStyle = "#201B28";
   ctx.fillRect(0, 0, splitX, 42);
 
-  ctx.strokeStyle = "#2D3246";
+  ctx.strokeStyle = "#F4A261";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.moveTo(0, 42);
@@ -509,7 +511,7 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
   drawVectorBag(ctx, 22, 21, 14, 14, "#F4A261");
 
   ctx.font = "bold 18px DungGeunMo";
-  ctx.fillStyle = "#FFFFFF";
+  ctx.fillStyle = "#F4A261";
   ctx.textAlign = "left";
   ctx.fillText(isKo ? "트레이너 포켓" : "TRAINER POCKET", 40, 27);
 
@@ -519,14 +521,14 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
   const leftW = 265;
   const leftH = 304;
 
-  ctx.fillStyle = "#181B26";
+  ctx.fillStyle = "#191522";
   ctx.fillRect(leftX, leftY, leftW, leftH);
-  ctx.strokeStyle = "#282D3D";
+  ctx.strokeStyle = "#2B2338";
   ctx.lineWidth = 1.5;
   ctx.strokeRect(leftX, leftY, leftW, leftH);
 
   // Pocket Title
-  ctx.fillStyle = "#222738";
+  ctx.fillStyle = "#282034";
   ctx.fillRect(leftX + 2, leftY + 2, leftW - 4, 32);
   ctx.font = "bold 17px DungGeunMo";
   ctx.fillStyle = "#F4A261";
@@ -549,7 +551,7 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
     const tabY = leftY + 44 + idx * 60;
     const isSelected = currentTab === t.key;
 
-    ctx.fillStyle = isSelected ? "#262C3E" : "#141620";
+    ctx.fillStyle = isSelected ? "#2C223A" : "#14111C";
     ctx.beginPath();
     ctx.roundRect(leftX + 10, tabY, leftW - 20, 48, 8);
     ctx.fill();
@@ -559,13 +561,13 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
       ctx.lineWidth = 1.5;
       ctx.stroke();
     } else {
-      ctx.strokeStyle = "#232736";
+      ctx.strokeStyle = "#231C2E";
       ctx.lineWidth = 1;
       ctx.stroke();
     }
 
     ctx.font = isSelected ? "bold 16px DungGeunMo" : "16px DungGeunMo";
-    ctx.fillStyle = isSelected ? "#FFFFFF" : "#8E96AB";
+    ctx.fillStyle = isSelected ? "#FFFFFF" : "#968CA8";
     ctx.textAlign = "left";
     ctx.fillText((isSelected ? "▶ " : "  ") + t.label, leftX + 18, tabY + 30);
   });
@@ -574,18 +576,18 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
   const infoBoxY = leftY + 230;
   const infoBoxH = 62;
 
-  ctx.fillStyle = "#141620";
+  ctx.fillStyle = "#14111C";
   ctx.beginPath();
   ctx.roundRect(leftX + 10, infoBoxY, leftW - 20, infoBoxH, 8);
   ctx.fill();
 
-  ctx.strokeStyle = "#2D3246";
+  ctx.strokeStyle = "#F4A261";
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
   drawVectorStar(ctx, leftX + leftW / 2 - 58, infoBoxY + 20, 5, 6, 3, "#F4A261");
   ctx.font = "14px DungGeunMo";
-  ctx.fillStyle = "#8E96AB";
+  ctx.fillStyle = "#968CA8";
   ctx.textAlign = "center";
   ctx.fillText(isKo ? "최고 도달 기록" : "BEST RUN RECORD", leftX + leftW / 2 + 6, infoBoxY + 24);
 
@@ -600,6 +602,7 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
     party: options?.party,
     lang: options?.lang,
     showSlotNumbers: true,
+    borderColor: "#F4A261",
   });
 
   return canvas.toBuffer("image/png");
