@@ -1,8 +1,10 @@
 ﻿import { Collection } from "discord.js";
 import { Command } from "../types/index.js";
 import { command as pingCommand } from "./ping.js";
+import { command as openCommand } from "./open.js";
 
 export const commandList: Command[] = [
+  openCommand,
   pingCommand,
 ];
 
