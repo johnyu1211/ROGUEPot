@@ -17,7 +17,7 @@
     "discordjs"
   ],
   "author": "",
-  "license": "MIT",
+  "license": "AGPL-3.0-or-later",
   "dependencies": {
     "discord.js": "^14.18.0",
     "dotenv": "^16.4.7"
