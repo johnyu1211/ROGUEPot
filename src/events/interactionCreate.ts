@@ -119,7 +119,7 @@ function renderSettingsMessageData(userId: string) {
         `• **버전**: v1.12.1.0\n` +
         "━━━━━━━━━━━━━━━━━━━━━━"
       : "Configure your game preferences and interface language.\n\n" +
-        `• **Current Language**: 🇺🇸 **English**\n` +
+        `• **Current Language**: 🌐 **English**\n` +
         `• **Engine Version**: v1.12.1.0\n` +
         "━━━━━━━━━━━━━━━━━━━━━━"
   ).setColor(COLORS.POKEROGUE_GOLD);
