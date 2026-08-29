@@ -721,18 +721,18 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
   ctx.textAlign = "right";
   ctx.fillText(`P.${curPage}/${totPages}`, splitX - 10, 28);
 
-  // 3. LEFT SIDE: 8 Pokémon Grid (2 Columns x 4 Rows)
+  // 3. TOP-LEFT: 4 Pokémon Grid (2 Columns x 2 Rows)
   const startListY = 48;
   const slotW = 118;
-  const slotH = 76;
+  const slotH = 72;
   const gapX = 6;
   const gapY = 6;
 
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 4; i++) {
     const p = items[i];
-    // Column-major order: Left column (0~3), Right column (4~7)
-    const col = i < 4 ? 0 : 1;
-    const row = i % 4;
+    // Column-major order: Col 0 (0~1), Col 1 (2~3)
+    const col = i < 2 ? 0 : 1;
+    const row = i % 2;
     const sx = 10 + col * (slotW + gapX);
     const sy = startListY + row * (slotH + gapY);
     const isSelected = selected && p && selected.dexNumber === p.dexNumber;
@@ -763,18 +763,18 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
       ctx.textAlign = "right";
       ctx.fillText(dexTag, sx + slotW - 8, sy + 16);
 
-      // Mini Sprite (Centered in left half area: 50x48)
+      // Mini Sprite (Centered in left half area: 50x46)
       const sprite = await getPokemonSprite(p.speciesId);
       if (sprite) {
-        const scale = 0.64;
+        const scale = 0.62;
         const sprW = sprite.width * scale;
         const sprH = sprite.height * scale;
         const sprAreaW = 50;
-        const sprAreaH = 48;
+        const sprAreaH = 46;
         ctx.drawImage(
           sprite,
           sx + 6 + (sprAreaW - sprW) / 2,
-          sy + 22 + (sprAreaH - sprH) / 2,
+          sy + 20 + (sprAreaH - sprH) / 2,
           sprW,
           sprH
         );
@@ -792,8 +792,8 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
         const tColor = TYPE_COLORS[tLower] || "#777777";
         const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || tName) : tName.slice(0, 4).toUpperCase();
         
-        // Single type: centered at y=34 | Dual types: y=22, y=45
-        const bY = typeCount === 1 ? sy + 34 : sy + 22 + tIdx * 23;
+        // Single type: centered at y=32 | Dual types: y=22, y=44
+        const bY = typeCount === 1 ? sy + 32 : sy + 22 + tIdx * 23;
 
         ctx.fillStyle = tColor;
         ctx.beginPath();
@@ -822,22 +822,22 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     }
   }
 
-  // 4. VERTICAL SPLIT DIVIDER LINE (100% Full Height)
+  // 4. VERTICAL SPLIT DIVIDER LINE (Top Half Only: y: 0 ~ 205)
   ctx.strokeStyle = "#E63946";
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(splitX, 0);
-  ctx.lineTo(splitX, height);
+  ctx.lineTo(splitX, 205);
   ctx.stroke();
 
   ctx.strokeStyle = "#1F1B36";
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(splitX + 2, 0);
-  ctx.lineTo(splitX + 2, height);
+  ctx.lineTo(splitX + 2, 205);
   ctx.stroke();
 
-  // 5. RIGHT SIDE: Selected Pokémon Detailed Stats & Showcase
+  // 5. TOP-RIGHT: Selected Pokémon Sprite & Stats Showcase (y: 48 ~ 198)
   const rightX = 274;
   const rightW = width - rightX - 10;
 
@@ -861,22 +861,10 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     const titleName = (isKo && selected.koreanName) ? selected.koreanName : selected.name;
     ctx.fillText(`#${String(selected.dexNumber).padStart(3, "0")} ${titleName}`, rightX + 4, 29);
 
-    // 5-1. TOP MAIN INFO CARD (Sprite + Types) (Starting at y = 48, matching left slot grid startListY)
-    const topCardY = 48;
-    const topCardH = 108;
-
-    ctx.fillStyle = "#181429";
-    ctx.beginPath();
-    ctx.roundRect(rightX, topCardY, rightW, topCardH, 6);
-    ctx.fill();
-    ctx.strokeStyle = "#362B4E";
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    // Sprite Showcase Box (Compact 82x82)
-    const showBoxX = rightX + 10;
-    const showBoxSize = 84;
-    const showBoxY = topCardY + (topCardH - showBoxSize) / 2;
+    // 5-1. Sprite Box (70x70) & Type Badges
+    const showBoxX = rightX;
+    const showBoxY = 48;
+    const showBoxSize = 70;
 
     ctx.fillStyle = "#120F20";
     ctx.beginPath();
@@ -888,18 +876,17 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
 
     const bigSprite = await getPokemonSprite(selected.speciesId);
     if (bigSprite) {
-      const scale = 1.5;
+      const scale = 1.35;
       const sprW = bigSprite.width * scale;
       const sprH = bigSprite.height * scale;
       ctx.drawImage(bigSprite, showBoxX + (showBoxSize - sprW) / 2, showBoxY + (showBoxSize - sprH) / 2, sprW, sprH);
     }
 
-    // Info Column (Types) next to Sprite (Enlarged 15px bold badges)
-    const infoX = showBoxX + showBoxSize + 16;
-    let typeBadgeX = infoX;
+    // Type Badges next to Sprite
+    let typeBadgeX = showBoxX + showBoxSize + 12;
     const badgeW = isKo ? 48 : 56;
-    const badgeH = 26;
-    const typeBadgeY = topCardY + (topCardH - badgeH) / 2;
+    const badgeH = 24;
+    const typeBadgeY = 71;
 
     for (const tName of selected.types) {
       const tLower = tName.toLowerCase();
@@ -919,18 +906,18 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
       ctx.shadowColor = "rgba(0, 0, 0, 0.9)";
       ctx.shadowOffsetY = 1;
       ctx.shadowBlur = 1;
-      ctx.font = isKo ? "bold 15px DungGeunMo" : "bold 12px DungGeunMo";
+      ctx.font = isKo ? "bold 13px DungGeunMo" : "bold 11px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
-      ctx.fillText(tDisplay, typeBadgeX + badgeW / 2, typeBadgeY + 18);
+      ctx.fillText(tDisplay, typeBadgeX + badgeW / 2, typeBadgeY + 17);
       ctx.restore();
 
-      typeBadgeX += badgeW + 10;
+      typeBadgeX += badgeW + 8;
     }
 
-    // 5-2. BASE STATS 2-COLUMN X 3-ROW GRID (HP/SPE, ATK/SPA, DEF/SPD)
-    const statsCardY = 164;
-    const statsCardH = 120;
+    // 5-2. Compact Base Stats Grid (2 Columns x 3 Rows, y: 124 ~ 198)
+    const statsCardY = 124;
+    const statsCardH = 74;
 
     ctx.fillStyle = "#181429";
     ctx.beginPath();
@@ -952,107 +939,181 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
       { label: isKo ? "특방" : "SPD", val: selected.spDefense, color: "#F85888", col: 1, row: 2 },
     ];
 
-    const barW = 60;
-    const barH = 12;
+    const barW = 46;
+    const barH = 9;
     for (const st of statsGrid) {
-      const colX = st.col === 0 ? rightX + 12 : rightX + 144;
-      const rowY = statsCardY + 12 + st.row * 34;
+      const colX = st.col === 0 ? rightX + 8 : rightX + 144;
+      const rowY = statsCardY + 6 + st.row * 22;
 
-      // Label (HP, ATK, DEF, SPE, SPA, SPD) - Enlarged to 14px Bold
-      ctx.font = "bold 14px DungGeunMo";
+      // Label (HP, ATK, DEF, SPE, SPA, SPD)
+      ctx.font = "bold 12px DungGeunMo";
       ctx.fillStyle = "#CBD5E1";
       ctx.textAlign = "left";
-      ctx.fillText(st.label, colX, rowY + 14);
+      ctx.fillText(st.label, colX, rowY + 12);
 
-      // Value - Enlarged to 15px Bold
-      ctx.font = "bold 15px DungGeunMo";
+      // Value
+      ctx.font = "bold 13px DungGeunMo";
       ctx.textAlign = "right";
       ctx.fillStyle = st.color;
-      ctx.fillText(String(st.val), colX + 54, rowY + 14);
+      ctx.fillText(String(st.val), colX + 44, rowY + 12);
 
       // Bar Background
-      const gaugeX = colX + 60;
+      const gaugeX = colX + 48;
       ctx.fillStyle = "#120F20";
       ctx.beginPath();
-      ctx.roundRect(gaugeX, rowY + 2, barW, barH, 3);
+      ctx.roundRect(gaugeX, rowY + 3, barW, barH, 2);
       ctx.fill();
 
       // Bar Fill
       const fillW = Math.min(barW, Math.max(3, (st.val / 180) * barW));
       ctx.fillStyle = st.color;
       ctx.beginPath();
-      ctx.roundRect(gaugeX, rowY + 2, fillW, barH, 3);
+      ctx.roundRect(gaugeX, rowY + 3, fillW, barH, 2);
       ctx.fill();
     }
+  }
 
-    // 5-3. BOTTOM AREA (y = 290 ~ 372): Ability Dialog / Text Box
-    const botCardY = 290;
-    const botCardH = 82;
+  // 6. HORIZONTAL MIDDLE DIVIDER LINE (y = 205)
+  ctx.strokeStyle = "#E63946";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(0, 205);
+  ctx.lineTo(width, 205);
+  ctx.stroke();
 
-    ctx.fillStyle = "#141024";
-    ctx.beginPath();
-    ctx.roundRect(rightX, botCardY, rightW, botCardH, 6);
-    ctx.fill();
-    ctx.strokeStyle = "#3E2F5B";
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
+  // 7. BOTTOM FULL-WIDTH DIALOG BOX (y: 213 ~ 368, w: 540, h: 155)
+  const botBoxX = 10;
+  const botBoxY = 213;
+  const botBoxW = width - 20;
+  const botBoxH = 155;
 
-    // Determine target ability to showcase
-    const defaultAbility = (selected.regularAbilities && selected.regularAbilities[0]) || selected.primaryAbility || selected.hiddenAbility || "None";
-    const targetAbility = options?.activeAbility || defaultAbility;
-    const isHa = selected.hiddenAbility && targetAbility.toLowerCase() === selected.hiddenAbility.toLowerCase();
+  ctx.fillStyle = "#141024";
+  ctx.beginPath();
+  ctx.roundRect(botBoxX, botBoxY, botBoxW, botBoxH, 6);
+  ctx.fill();
+  ctx.strokeStyle = "#3E2F5B";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
 
-    const abDetail = await getAbilityDetail(targetAbility);
-    const abName = isKo ? abDetail.nameKo : abDetail.name;
-    const abDesc = isKo ? abDetail.descriptionKo : abDetail.descriptionEn;
-    const typeTag = isHa ? (isKo ? "[숨특]" : "[HA]") : (isKo ? "[특성]" : "[Ability]");
+  if (selected) {
+    const hasActiveAbility = !!options?.activeAbility;
 
-    // Title inside text box
-    ctx.font = "bold 13px DungGeunMo";
-    ctx.fillStyle = isHa ? "#F4A261" : "#70D6FF";
-    ctx.textAlign = "left";
-    ctx.fillText(`${typeTag} ${abName}`, rightX + 10, botCardY + 18);
+    if (!hasActiveAbility) {
+      // Idle State: Guide text
+      ctx.font = "bold 14px DungGeunMo";
+      ctx.fillStyle = "#8E88AB";
+      ctx.textAlign = "left";
+      ctx.fillText(isKo ? "[특성 정보 안내]" : "[Ability Information Guide]", botBoxX + 14, botBoxY + 22);
 
-    ctx.font = "11px DungGeunMo";
-    ctx.fillStyle = "#8E88AB";
-    ctx.textAlign = "right";
-    ctx.fillText(abDetail.name, rightX + rightW - 10, botCardY + 18);
+      ctx.font = "11px DungGeunMo";
+      ctx.fillStyle = "#5E5577";
+      ctx.textAlign = "right";
+      ctx.fillText("STATUS: IDLE", botBoxX + botBoxW - 14, botBoxY + 22);
 
-    // Inner subtle divider line
-    ctx.strokeStyle = "#251D3B";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(rightX + 8, botCardY + 24);
-    ctx.lineTo(rightX + rightW - 8, botCardY + 24);
-    ctx.stroke();
+      // Inner divider line
+      ctx.strokeStyle = "#251D3B";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(botBoxX + 12, botBoxY + 32);
+      ctx.lineTo(botBoxX + botBoxW - 12, botBoxY + 32);
+      ctx.stroke();
 
-    // Effect Description Text (Wrapped nicely into 2~3 lines)
-    ctx.font = "12px DungGeunMo";
-    ctx.fillStyle = "#E2E8F0";
-    ctx.textAlign = "left";
+      // Guide description
+      ctx.font = "13px DungGeunMo";
+      ctx.fillStyle = "#94A3B8";
+      ctx.textAlign = "left";
+      ctx.fillText(
+        isKo
+          ? "상단에 위치한 [특성] 또는 [숨특] 버튼을 클릭하면"
+          : "Click on any [Ability] or [HA] button above to view",
+        botBoxX + 16,
+        botBoxY + 58
+      );
+      ctx.fillText(
+        isKo
+          ? "해당 특성의 상세한 공식 효과 및 배틀 발동 조건이 이 대화창에 실시간으로 표시됩니다."
+          : "its detailed battle mechanics and trigger conditions in this dialogue box.",
+        botBoxX + 16,
+        botBoxY + 84
+      );
 
-    const maxTextW = rightW - 20;
-    const words = abDesc.split(" ");
-    let line = "";
-    let lineY = botCardY + 42;
-    const lineHeight = 16;
-    let linesDrawn = 0;
+      ctx.font = "12px DungGeunMo";
+      ctx.fillStyle = "#64748B";
+      ctx.fillText(
+        isKo
+          ? "* 포켓로그 모험 중 배틀 상황 및 조건 충족 시 특성 효과가 자동 적용됩니다."
+          : "* Ability effects are automatically applied during PokéRogue battles.",
+        botBoxX + 16,
+        botBoxY + 122
+      );
+    } else {
+      // Active State: Detailed Ability Showcase
+      const targetAbility = options.activeAbility!;
+      const isHa = selected.hiddenAbility && targetAbility.toLowerCase() === selected.hiddenAbility.toLowerCase();
 
-    for (let n = 0; n < words.length; n++) {
-      const testLine = line + (line ? " " : "") + words[n];
-      const metrics = ctx.measureText(testLine);
-      if (metrics.width > maxTextW && n > 0) {
-        ctx.fillText(line, rightX + 10, lineY);
-        line = words[n];
-        lineY += lineHeight;
-        linesDrawn++;
-        if (linesDrawn >= 2) break;
-      } else {
-        line = testLine;
+      const abDetail = await getAbilityDetail(targetAbility);
+      const abName = isKo ? abDetail.nameKo : abDetail.name;
+      const abDesc = isKo ? abDetail.descriptionKo : abDetail.descriptionEn;
+      const typeTag = isHa ? (isKo ? "[숨특]" : "[HA]") : (isKo ? "[특성]" : "[Ability]");
+
+      // Header inside text box
+      ctx.font = "bold 15px DungGeunMo";
+      ctx.fillStyle = isHa ? "#F4A261" : "#70D6FF";
+      ctx.textAlign = "left";
+      ctx.fillText(`${typeTag} ${abName}`, botBoxX + 14, botBoxY + 24);
+
+      ctx.font = "bold 12px DungGeunMo";
+      ctx.fillStyle = "#A5B4FC";
+      ctx.textAlign = "right";
+      ctx.fillText(isKo ? `영문명: ${abDetail.name}` : `Name: ${abDetail.name}`, botBoxX + botBoxW - 14, botBoxY + 24);
+
+      // Inner divider line
+      ctx.strokeStyle = "#2D2248";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(botBoxX + 12, botBoxY + 34);
+      ctx.lineTo(botBoxX + botBoxW - 12, botBoxY + 34);
+      ctx.stroke();
+
+      // Effect Description Text (Wrapped across wide 510px width)
+      ctx.font = "14px DungGeunMo";
+      ctx.fillStyle = "#FFFFFF";
+      ctx.textAlign = "left";
+
+      const maxTextW = botBoxW - 28;
+      const words = abDesc.split(" ");
+      let line = "";
+      let lineY = botBoxY + 58;
+      const lineHeight = 22;
+      let linesDrawn = 0;
+
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + (line ? " " : "") + words[n];
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxTextW && n > 0) {
+          ctx.fillText(line, botBoxX + 16, lineY);
+          line = words[n];
+          lineY += lineHeight;
+          linesDrawn++;
+          if (linesDrawn >= 3) break;
+        } else {
+          line = testLine;
+        }
       }
-    }
-    if (line && linesDrawn < 2) {
-      ctx.fillText(line, rightX + 10, lineY);
+      if (line && linesDrawn < 3) {
+        ctx.fillText(line, botBoxX + 16, lineY);
+      }
+
+      // Bottom Tip Line
+      ctx.font = "12px DungGeunMo";
+      ctx.fillStyle = "#6EE7B7";
+      ctx.fillText(
+        isKo
+          ? "💡 포켓로그 배틀 중 해당 특성의 조건이 충족되면 효과가 자동 발동합니다."
+          : "💡 This ability automatically activates during battle when conditions are met.",
+        botBoxX + 16,
+        botBoxY + 132
+      );
     }
   }
 
