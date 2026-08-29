@@ -24,6 +24,7 @@ async function getLogoImage(): Promise<Image | null> {
 export interface TitleScreenPartyPokemon {
   speciesId: string;
   name: string;
+  nickname?: string;
   level: number;
 }
 
@@ -170,10 +171,11 @@ async function drawPartyRightPanel(
         const sprH = sprite.height * scale;
         ctx.drawImage(sprite, sx + (slotW - sprW) / 2, sy + (slotH - sprH) / 2 - 8, sprW, sprH);
       }
-      ctx.font = "13px DungGeunMo";
+      ctx.font = "12px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
-      ctx.fillText(`Lv.${pokemon.level}`, sx + slotW / 2, sy + slotH - 8);
+      const displayLabel = pokemon.nickname ? pokemon.nickname.slice(0, 6) : `Lv.${pokemon.level}`;
+      ctx.fillText(displayLabel, sx + slotW / 2, sy + slotH - 7);
     } else {
       ctx.fillStyle = "#26203D";
       ctx.beginPath();

@@ -395,6 +395,7 @@ export const interactionCreateEvent: BotEvent = {
     if (interaction.isModalSubmit()) {
       if (interaction.customId.startsWith("multi_reg_modal_")) {
         const dexInput = interaction.fields.getTextInputValue("dex_no_input");
+        const nicknameInput = interaction.fields.getTextInputValue("nickname_input")?.trim();
         const levelInput = interaction.fields.getTextInputValue("level_input");
 
         const query = dexInput.trim();
@@ -424,7 +425,8 @@ export const interactionCreateEvent: BotEvent = {
 
         const newPokemon: PartyPokemon = {
           speciesId: pokeInfo.speciesId,
-          name: pokeInfo.name,
+          name: nicknameInput || pokeInfo.name,
+          nickname: nicknameInput || undefined,
           level: Math.min(100, Math.max(1, level)),
           hp: pokeInfo.hp,
           maxHp: pokeInfo.hp,
@@ -520,6 +522,14 @@ export const interactionCreateEvent: BotEvent = {
           .setRequired(true)
           .setMaxLength(20);
 
+        const nicknameInput = new TextInputBuilder()
+          .setCustomId("nickname_input")
+          .setLabel(isKo ? "포켓몬 별명 (선택)" : "Nickname (Optional)")
+          .setPlaceholder(isKo ? "예: 미드미드, 파동의용사, 에이스" : "e.g. Hydro, Hero, MyAce")
+          .setStyle(TextInputStyle.Short)
+          .setRequired(false)
+          .setMaxLength(12);
+
         const levelInput = new TextInputBuilder()
           .setCustomId("level_input")
           .setLabel(isKo ? "레벨 (1 ~ 100 / 기본 50)" : "Level (1 ~ 100 / Default 50)")
@@ -530,6 +540,7 @@ export const interactionCreateEvent: BotEvent = {
 
         modal.addComponents(
           new ActionRowBuilder<TextInputBuilder>().addComponents(dexInput),
+          new ActionRowBuilder<TextInputBuilder>().addComponents(nicknameInput),
           new ActionRowBuilder<TextInputBuilder>().addComponents(levelInput)
         );
 

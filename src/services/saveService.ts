@@ -6,6 +6,7 @@ initDatabase();
 export interface PartyPokemon {
   speciesId: string;
   name: string;
+  nickname?: string;
   level: number;
   hp: number;
   maxHp: number;
