@@ -291,7 +291,11 @@ async function renderMultiplayerMessageData(client: ExtendedClient, userId: stri
     new ButtonBuilder()
       .setCustomId(`multi_register_btn_${userId}`)
       .setLabel(isKo ? "포켓몬 등록" : "Register Pokémon")
-      .setStyle(ButtonStyle.Success)
+      .setStyle(ButtonStyle.Success),
+    new ButtonBuilder()
+      .setCustomId(`multi_pokedex_btn_${userId}`)
+      .setLabel(isKo ? "도감" : "Pokédex")
+      .setStyle(ButtonStyle.Primary)
   );
 
   const backRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -549,6 +553,13 @@ export const interactionCreateEvent: BotEvent = {
         );
 
         await interaction.showModal(modal);
+        return;
+      }
+
+      // 3-0-6. Multiplayer Pokédex Button Clicked
+      if (customId.startsWith("multi_pokedex_btn_")) {
+        const bagData = await renderBagMessageData(client, interaction.user.id, "pokedex");
+        await interaction.update(bagData);
         return;
       }
 
