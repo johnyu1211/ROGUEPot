@@ -171,10 +171,11 @@ async function renderBagMessageData(
 
   const components: ActionRowBuilder<ButtonBuilder>[] = [];
 
-  // When POKÉMON tab is selected, render 1~6 Slot selection buttons!
+  // When POKÉMON tab is selected, render 2x3 Slot buttons matching the canvas grid!
   if (tab === "pokemon") {
     const party = activeRun?.party || [];
 
+    // ROW 1: Slots 1 & 2
     const slotRow1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
         .setCustomId(`bag_slot_1_${userId}`)
@@ -185,20 +186,25 @@ async function renderBagMessageData(
         .setCustomId(`bag_slot_2_${userId}`)
         .setLabel(party[1] ? `2. ${party[1].name.split(" ")[0]}` : "2. Empty")
         .setStyle(party[1] ? ButtonStyle.Primary : ButtonStyle.Secondary)
-        .setDisabled(!party[1]),
+        .setDisabled(!party[1])
+    );
+
+    // ROW 2: Slots 3 & 4
+    const slotRow2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
         .setCustomId(`bag_slot_3_${userId}`)
         .setLabel(party[2] ? `3. ${party[2].name.split(" ")[0]}` : "3. Empty")
         .setStyle(party[2] ? ButtonStyle.Primary : ButtonStyle.Secondary)
-        .setDisabled(!party[2])
-    );
-
-    const slotRow2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        .setDisabled(!party[2]),
       new ButtonBuilder()
         .setCustomId(`bag_slot_4_${userId}`)
         .setLabel(party[3] ? `4. ${party[3].name.split(" ")[0]}` : "4. Empty")
         .setStyle(party[3] ? ButtonStyle.Primary : ButtonStyle.Secondary)
-        .setDisabled(!party[3]),
+        .setDisabled(!party[3])
+    );
+
+    // ROW 3: Slots 5 & 6
+    const slotRow3 = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
         .setCustomId(`bag_slot_5_${userId}`)
         .setLabel(party[4] ? `5. ${party[4].name.split(" ")[0]}` : "5. Empty")
@@ -211,10 +217,10 @@ async function renderBagMessageData(
         .setDisabled(!party[5])
     );
 
-    components.push(slotRow1, slotRow2);
+    components.push(slotRow1, slotRow2, slotRow3);
   }
 
-  // Tab navigation row
+  // ROW 4 (or Row 1 on other tabs): Tab Navigation
   const tabRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(`bag_tab_pokemon_${userId}`)
@@ -230,6 +236,7 @@ async function renderBagMessageData(
       .setStyle(tab === "records" ? ButtonStyle.Primary : ButtonStyle.Secondary)
   );
 
+  // ROW 5 (or Row 2 on other tabs): Back to Title
   const backRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(`menu_back_to_title_${userId}`)
