@@ -72,19 +72,19 @@ function renderSlotsScreenData(userId: string) {
     new ButtonBuilder()
       .setCustomId(`slot_select_1_${userId}`)
       .setLabel("Slot 1 🎮")
-      .setStyle(profile.slots[1] ? ButtonStyle.Primary : ButtonStyle.Secondary),
+      .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId(`slot_select_2_${userId}`)
       .setLabel("Slot 2 🎮")
-      .setStyle(profile.slots[2] ? ButtonStyle.Primary : ButtonStyle.Secondary),
+      .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId(`slot_select_3_${userId}`)
       .setLabel("Slot 3 🎮")
-      .setStyle(profile.slots[3] ? ButtonStyle.Primary : ButtonStyle.Secondary),
+      .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId(`menu_delete_mode_${userId}`)
       .setLabel("🗑️")
-      .setStyle(ButtonStyle.Danger),
+      .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId(`menu_back_to_title_${userId}`)
       .setLabel("◀️ Back")
@@ -116,19 +116,19 @@ async function renderBagMessageData(
     new ButtonBuilder()
       .setCustomId(`bag_tab_items_${userId}`)
       .setLabel("Items 🎟️")
-      .setStyle(tab === "items" ? ButtonStyle.Primary : ButtonStyle.Secondary),
+      .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId(`bag_tab_starters_${userId}`)
       .setLabel("Pokémon 👾")
-      .setStyle(tab === "starters" ? ButtonStyle.Primary : ButtonStyle.Secondary),
+      .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId(`bag_tab_pokedex_${userId}`)
       .setLabel("Pokédex 📖")
-      .setStyle(tab === "pokedex" ? ButtonStyle.Primary : ButtonStyle.Secondary),
+      .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId(`bag_tab_records_${userId}`)
       .setLabel("Records 🏆")
-      .setStyle(tab === "records" ? ButtonStyle.Primary : ButtonStyle.Secondary)
+      .setStyle(ButtonStyle.Secondary)
   );
 
   const backRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -165,11 +165,11 @@ async function renderTitleMessageData(client: ExtendedClient, userId: string) {
       new ButtonBuilder()
         .setCustomId(`menu_continue_${userId}`)
         .setLabel("Continue")
-        .setStyle(ButtonStyle.Success),
+        .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
         .setCustomId(`menu_newgame_${userId}`)
         .setLabel("New Game")
-        .setStyle(ButtonStyle.Primary),
+        .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
         .setCustomId(`menu_loadgame_${userId}`)
         .setLabel("Load Game")
@@ -184,7 +184,7 @@ async function renderTitleMessageData(client: ExtendedClient, userId: string) {
       new ButtonBuilder()
         .setCustomId(`menu_newgame_${userId}`)
         .setLabel("New Game")
-        .setStyle(ButtonStyle.Success),
+        .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
         .setCustomId(`menu_inventory_${userId}`)
         .setLabel("💼")
@@ -249,7 +249,7 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 2-0-1. Inventory Bag Button Clicked -> Render Retro Trainer Bag Canvas Screen!
+      // 2-0-1. Inventory Bag Button Clicked
       if (customId.startsWith("menu_inventory_")) {
         const bagData = await renderBagMessageData(client, interaction.user.id, "items");
         await interaction.update(bagData);
@@ -298,7 +298,7 @@ export const interactionCreateEvent: BotEvent = {
           new ButtonBuilder()
             .setCustomId(`wave_battle_${profile.activeSlotId}_${activeRun.wave}_${interaction.user.id}`)
             .setLabel(`Enter Wave ${activeRun.wave} ⚔️`)
-            .setStyle(ButtonStyle.Success),
+            .setStyle(ButtonStyle.Secondary),
           new ButtonBuilder()
             .setCustomId(`menu_back_to_title_${interaction.user.id}`)
             .setLabel("◀️ Back to Title")
@@ -335,17 +335,17 @@ export const interactionCreateEvent: BotEvent = {
           new ButtonBuilder()
             .setCustomId(`slot_delete_confirm_1_${interaction.user.id}`)
             .setLabel("Delete Slot 1 🗑️")
-            .setStyle(ButtonStyle.Danger)
+            .setStyle(ButtonStyle.Secondary)
             .setDisabled(!profile.slots[1]),
           new ButtonBuilder()
             .setCustomId(`slot_delete_confirm_2_${interaction.user.id}`)
             .setLabel("Delete Slot 2 🗑️")
-            .setStyle(ButtonStyle.Danger)
+            .setStyle(ButtonStyle.Secondary)
             .setDisabled(!profile.slots[2]),
           new ButtonBuilder()
             .setCustomId(`slot_delete_confirm_3_${interaction.user.id}`)
             .setLabel("Delete Slot 3 🗑️")
-            .setStyle(ButtonStyle.Danger)
+            .setStyle(ButtonStyle.Secondary)
             .setDisabled(!profile.slots[3]),
           new ButtonBuilder()
             .setCustomId(`menu_loadgame_${interaction.user.id}`)
@@ -393,11 +393,11 @@ export const interactionCreateEvent: BotEvent = {
             new ButtonBuilder()
               .setCustomId(`slot_resume_${slotNum}_${interaction.user.id}`)
               .setLabel(`Resume Slot #${slotNum} ▶️`)
-              .setStyle(ButtonStyle.Success),
+              .setStyle(ButtonStyle.Secondary),
             new ButtonBuilder()
               .setCustomId(`slot_overwrite_${slotNum}_${interaction.user.id}`)
               .setLabel(`Overwrite (New Game) ⚠️`)
-              .setStyle(ButtonStyle.Danger),
+              .setStyle(ButtonStyle.Secondary),
             new ButtonBuilder()
               .setCustomId(`menu_loadgame_${interaction.user.id}`)
               .setLabel("◀️ Back")
@@ -430,7 +430,7 @@ export const interactionCreateEvent: BotEvent = {
           new ButtonBuilder()
             .setCustomId(`wave_battle_${slotNum}_${activeRun.wave}_${interaction.user.id}`)
             .setLabel(`Enter Wave ${activeRun.wave} ⚔️`)
-            .setStyle(ButtonStyle.Success),
+            .setStyle(ButtonStyle.Secondary),
           new ButtonBuilder()
             .setCustomId(`menu_back_to_title_${interaction.user.id}`)
             .setLabel("◀️ Back to Title")
@@ -478,7 +478,7 @@ export const interactionCreateEvent: BotEvent = {
           new ButtonBuilder()
             .setCustomId(`wave_battle_${slotNum}_1_${interaction.user.id}`)
             .setLabel("Enter Wave 1 Battle ⚔️")
-            .setStyle(ButtonStyle.Success),
+            .setStyle(ButtonStyle.Secondary),
           new ButtonBuilder()
             .setCustomId(`menu_back_to_title_${interaction.user.id}`)
             .setLabel("◀️ Title Menu")
