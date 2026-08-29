@@ -727,7 +727,7 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     ctx.roundRect(sx, sy, slotW, slotH, 6);
     ctx.fill();
 
-    ctx.strokeStyle = isSelected ? "#F4A261" : "#282D3D";
+    ctx.strokeStyle = isSelected ? "#FFFFFF" : "#282D3D";
     ctx.lineWidth = isSelected ? 1.5 : 1;
     ctx.stroke();
 
@@ -743,7 +743,7 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
 
       // Right Header: Dex Number (#001) Right-aligned (12px Bold)
       ctx.font = "bold 12px DungGeunMo";
-      ctx.fillStyle = isSelected ? "#F4A261" : "#7E869B";
+      ctx.fillStyle = isSelected ? "#FFFFFF" : "#7E869B";
       ctx.textAlign = "right";
       ctx.fillText(dexTag, sx + slotW - 8, sy + 16);
 
