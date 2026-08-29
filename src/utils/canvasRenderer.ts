@@ -64,13 +64,14 @@ async function drawPartyRightPanel(
     party?: TitleScreenPartyPokemon[];
     lang?: "en" | "ko";
     showSlotNumbers?: boolean;
+    borderColor?: string;
   }
 ) {
   // Panel Background & Frame
   ctx.fillStyle = "#1E1A33";
   ctx.fillRect(boxX, boxY, boxW, boxH);
 
-  ctx.strokeStyle = "#4D436D";
+  ctx.strokeStyle = options?.borderColor || "#4D436D";
   ctx.lineWidth = 2;
   ctx.strokeRect(boxX, boxY, boxW, boxH);
 
@@ -107,7 +108,7 @@ async function drawPartyRightPanel(
   }
 
   // Avatar Border Ring
-  ctx.strokeStyle = "#F4A261";
+  ctx.strokeStyle = "#5865F2";
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2 + 1, 0, Math.PI * 2);
@@ -188,7 +189,7 @@ async function drawPartyRightPanel(
 }
 
 /**
- * Renders title card maximized to 560x380 (1. LOAD GAME, 2. NEW GAME, 3. MULTIPLAY, 4. INVENTORY)
+ * Renders title card maximized to 560x380 (Red Border #E63946)
  */
 export async function renderTitleScreen(options?: TitleScreenOptions): Promise<Buffer> {
   const width = 560;
@@ -254,6 +255,85 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
     party: options?.party,
     lang: options?.lang,
     showSlotNumbers: false,
+  });
+
+  return canvas.toBuffer("image/png");
+}
+
+export interface MultiplayerScreenOptions {
+  username?: string;
+  avatarUrl?: string;
+  party?: TitleScreenPartyPokemon[];
+  lang?: "en" | "ko";
+}
+
+/**
+ * Renders Multiplayer Screen with Discord Blurple (#5865F2) Border
+ */
+export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions): Promise<Buffer> {
+  const width = 560;
+  const height = 380;
+  const canvas = createCanvas(width, height);
+  const ctx = canvas.getContext("2d");
+
+  ctx.imageSmoothingEnabled = false;
+
+  const isKo = options?.lang === "ko";
+
+  // 1. Dark Retro Background
+  ctx.fillStyle = "#141226";
+  ctx.fillRect(0, 0, width, height);
+
+  // 2. Outer Border Frame (Discord Theme Blurple #5865F2)
+  ctx.strokeStyle = "#5865F2";
+  ctx.lineWidth = 4;
+  ctx.strokeRect(2, 2, width - 4, height - 4);
+
+  ctx.strokeStyle = "#2D315E";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(6, 6, width - 12, height - 12);
+
+  // 3. TOP BANNER: Multiplayer Lobby Header
+  ctx.fillStyle = "#1E2247";
+  ctx.fillRect(8, 8, 275, 42);
+
+  ctx.strokeStyle = "#5865F2";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(8, 8, 275, 42);
+
+  ctx.font = "bold 21px DungGeunMo";
+  ctx.fillStyle = "#5865F2";
+  ctx.textAlign = "left";
+  ctx.fillText(isKo ? "🌐 멀티플레이 로비" : "🌐 MULTIPLAYER LOBBY", 20, 36);
+
+  // 4. LEFT SIDE: Multiplayer Options / Room Frame
+  const leftX = 18;
+  const leftY = 58;
+  const leftW = 265;
+  const leftH = 304;
+
+  ctx.fillStyle = "#181A36";
+  ctx.fillRect(leftX, leftY, leftW, leftH);
+  ctx.strokeStyle = "#32376E";
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(leftX, leftY, leftW, leftH);
+
+  // Mode Header
+  ctx.fillStyle = "#262B5E";
+  ctx.fillRect(leftX + 2, leftY + 2, leftW - 4, 32);
+  ctx.font = "bold 16px DungGeunMo";
+  ctx.fillStyle = "#FFFFFF";
+  ctx.textAlign = "center";
+  ctx.fillText(isKo ? "ONLINE MATCHMAKING" : "ONLINE MATCHMAKING", leftX + leftW / 2, leftY + 23);
+
+  // 5. RIGHT SIDE PANEL: Exact Right Party Panel with Discord Blurple accents
+  await drawPartyRightPanel(ctx, 295, 18, 244, 344, {
+    username: options?.username,
+    avatarUrl: options?.avatarUrl,
+    party: options?.party,
+    lang: options?.lang,
+    showSlotNumbers: false,
+    borderColor: "#5865F2",
   });
 
   return canvas.toBuffer("image/png");

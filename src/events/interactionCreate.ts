@@ -10,7 +10,7 @@
 } from "discord.js";
 import { BotEvent, ExtendedClient } from "../types/index.js";
 import { createBaseEmbed, COLORS } from "../utils/embed.js";
-import { renderTitleScreen, renderBagScreen } from "../utils/canvasRenderer.js";
+import { renderTitleScreen, renderBagScreen, renderMultiplayerScreen } from "../utils/canvasRenderer.js";
 import { saveService } from "../services/saveService.js";
 
 function createStarterSelectMenu(slotId: number, userId: string, fromSource: "title" | "slots" = "title") {
@@ -259,6 +259,33 @@ async function renderBagMessageData(
   return { embeds: [], files: [attachment], components };
 }
 
+async function renderMultiplayerMessageData(client: ExtendedClient, userId: string) {
+  const profile = saveService.getProfile(userId);
+  const activeRun = profile.activeSlotId ? profile.slots[profile.activeSlotId] : null;
+  const isKo = profile.language === "ko";
+
+  const user = client.users.cache.get(userId) || (await client.users.fetch(userId).catch(() => null));
+  const username = user?.username || "Trainer";
+  const avatarUrl = user?.displayAvatarURL({ extension: "png", size: 64 });
+
+  const imageBuffer = await renderMultiplayerScreen({
+    username,
+    avatarUrl,
+    party: activeRun?.party,
+    lang: profile.language,
+  });
+  const attachment = new AttachmentBuilder(imageBuffer, { name: "multiplay.png" });
+
+  const backRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`menu_back_to_title_${userId}`)
+      .setLabel(isKo ? "◀️ 메인 메뉴로" : "◀️ Back to Title")
+      .setStyle(ButtonStyle.Danger)
+  );
+
+  return { embeds: [], files: [attachment], components: [backRow] };
+}
+
 async function renderTitleMessageData(client: ExtendedClient, userId: string) {
   const hasSavedSlots = saveService.hasAnySavedSlot(userId);
   const userProfile = saveService.getProfile(userId);
@@ -401,26 +428,10 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 2-0-4. Multiplay Button Clicked (Preparation Notice)
+      // 2-0-4. Multiplay Button Clicked (Render Multiplayer Canvas with Discord Blurple #5865F2 border!)
       if (customId.startsWith("menu_multiplay_")) {
-        const profile = saveService.getProfile(interaction.user.id);
-        const isKo = profile.language === "ko";
-
-        const multiEmbed = createBaseEmbed(
-          isKo ? "🌐 멀티플레이 모드 (개발 중)" : "🌐 Multiplayer Mode (Coming Soon)",
-          isKo
-            ? "동료 트레이너들과 함께 보스 레이드를 펼치고 배틀을 진행하는 **멀티플레이어 협동/대전 모드**가 곧 공개됩니다!\n\n" +
-              "• **예정 기능**: 협동 레이드 배틀, 트레이너 대전, 포켓몬 교환소\n" +
-              "• 현재는 **싱글 플레이 모험**을 즐겨주세요!"
-            : "Co-op Raid Battles and PvP Trainer Duels are currently under active development!\n\n" +
-              "• **Upcoming Features**: Co-op Boss Raids, PvP Arena, Trading Post\n" +
-              "• Please enjoy the classic single-player mode for now!"
-        ).setColor(COLORS.POKEROGUE_BLUE);
-
-        await interaction.reply({
-          embeds: [multiEmbed],
-          ephemeral: true,
-        });
+        const multiData = await renderMultiplayerMessageData(client, interaction.user.id);
+        await interaction.update(multiData);
         return;
       }
 
@@ -478,7 +489,7 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 2-2. Load Game Button Clicked (Now 1st Button on Title!)
+      // 2-2. Load Game Button Clicked (1st Button on Title!)
       if (customId.startsWith("menu_loadgame_")) {
         const screenData = renderSlotsScreenData(interaction.user.id);
         await interaction.update(screenData);
