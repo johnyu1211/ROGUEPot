@@ -126,6 +126,10 @@ async function renderTitleMessageData(client: ExtendedClient, userId: string) {
       new ButtonBuilder()
         .setCustomId(`menu_loadgame_${userId}`)
         .setLabel("Load Game")
+        .setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder()
+        .setCustomId(`menu_inventory_${userId}`)
+        .setLabel("🎒 Inventory")
         .setStyle(ButtonStyle.Secondary)
     );
   } else {
@@ -133,7 +137,11 @@ async function renderTitleMessageData(client: ExtendedClient, userId: string) {
       new ButtonBuilder()
         .setCustomId(`menu_newgame_${userId}`)
         .setLabel("New Game")
-        .setStyle(ButtonStyle.Success)
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
+        .setCustomId(`menu_inventory_${userId}`)
+        .setLabel("🎒 Inventory")
+        .setStyle(ButtonStyle.Secondary)
     );
   }
 
@@ -194,7 +202,42 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 2-1. New Game Button Clicked -> Use first available slot
+      // 2-0-1. Inventory Button Clicked
+      if (customId.startsWith("menu_inventory_")) {
+        const profile = saveService.getProfile(interaction.user.id);
+        const vouchers = profile.vouchers || { regular: 0, plus: 0, premium: 0, gold: 0 };
+
+        const inventoryEmbed = createBaseEmbed(
+          `🎒 ${interaction.user.username}'s Inventory & Vault`,
+          "View your global account items, vouchers, and trainer statistics.\n\n" +
+          "━━━━━━━━━━━━━━━━━━━━━━\n" +
+          "**🎟️ Egg Gacha Vouchers**\n" +
+          `• Regular Voucher: **${vouchers.regular || 0}**\n` +
+          `• Plus Voucher (5x): **${vouchers.plus || 0}**\n` +
+          `• Premium Voucher (10x): **${vouchers.premium || 0}**\n` +
+          `• Gold Voucher (25x): **${vouchers.gold || 0}**\n\n` +
+          "**📊 Account Career Statistics**\n" +
+          `• Unlocked Starters: **${profile.unlockedStartersCount}** Pokémon\n` +
+          `• Total Runs Attempted: **${profile.totalRuns}**\n` +
+          `• Highest Wave Reached: **Wave ${profile.highestWave}**\n` +
+          "━━━━━━━━━━━━━━━━━━━━━━"
+        ).setColor(COLORS.POKEROGUE_GOLD);
+
+        const inventoryRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`menu_back_to_title_${interaction.user.id}`)
+            .setLabel("◀️ Back to Title")
+            .setStyle(ButtonStyle.Secondary)
+        );
+
+        await interaction.update({
+          embeds: [inventoryEmbed],
+          components: [inventoryRow],
+        });
+        return;
+      }
+
+      // 2-1. New Game Button Clicked
       if (customId.startsWith("menu_newgame_")) {
         const targetSlot = saveService.getFirstAvailableSlot(interaction.user.id);
         const responseData = createStarterSelectMenu(targetSlot, interaction.user.id);
@@ -242,7 +285,7 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 2-3. Load Game Button Clicked -> List 3 Slots + Trash + Back Button!
+      // 2-3. Load Game Button Clicked
       if (customId.startsWith("menu_loadgame_")) {
         const screenData = renderSlotsScreenData(interaction.user.id);
         await interaction.update(screenData);
@@ -295,7 +338,6 @@ export const interactionCreateEvent: BotEvent = {
         const slotNum = parseInt(parts[3], 10) || 1;
         saveService.deleteSlot(interaction.user.id, slotNum);
 
-        // Re-render slots screen with updated data
         const screenData = renderSlotsScreenData(interaction.user.id);
         await interaction.update(screenData);
         return;
@@ -308,11 +350,9 @@ export const interactionCreateEvent: BotEvent = {
         const slotData = profile.slots[slotNum];
 
         if (!slotData) {
-          // EMPTY SLOT -> Apply New Game starter selection logic!
           const responseData = createStarterSelectMenu(slotNum, interaction.user.id);
           await interaction.update(responseData);
         } else {
-          // EXISTING SAVE DATA -> Options to resume or overwrite
           const existingSlotEmbed = createBaseEmbed(
             `Slot #${slotNum} Details`,
             `• **Starter**: ${slotData.party[0]?.name || slotData.starter}\n` +
@@ -377,7 +417,7 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 2-8. Overwrite Slot -> Open starter selection for that slot
+      // 2-8. Overwrite Slot
       if (customId.startsWith("slot_overwrite_")) {
         const slotNum = parseInt(parts[2], 10) || 1;
         const responseData = createStarterSelectMenu(slotNum, interaction.user.id);
@@ -394,7 +434,6 @@ export const interactionCreateEvent: BotEvent = {
         const slotNum = parseInt(parts[2], 10) || 1;
         const selectedSpecies = interaction.values[0];
 
-        // Start new run in this slot!
         const newRun = saveService.startNewRun(interaction.user.id, slotNum, selectedSpecies);
 
         const runStartedEmbed = createBaseEmbed(
