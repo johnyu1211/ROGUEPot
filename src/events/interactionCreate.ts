@@ -169,10 +169,56 @@ async function renderBagMessageData(
   });
   const attachment = new AttachmentBuilder(imageBuffer, { name: "bag.png" });
 
+  const components: ActionRowBuilder<ButtonBuilder>[] = [];
+
+  // When POKÉMON tab is selected, render 1~6 Slot selection buttons!
+  if (tab === "pokemon") {
+    const party = activeRun?.party || [];
+
+    const slotRow1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`bag_slot_1_${userId}`)
+        .setLabel(party[0] ? `1. ${party[0].name.split(" ")[0]}` : "1. Empty")
+        .setStyle(party[0] ? ButtonStyle.Primary : ButtonStyle.Secondary)
+        .setDisabled(!party[0]),
+      new ButtonBuilder()
+        .setCustomId(`bag_slot_2_${userId}`)
+        .setLabel(party[1] ? `2. ${party[1].name.split(" ")[0]}` : "2. Empty")
+        .setStyle(party[1] ? ButtonStyle.Primary : ButtonStyle.Secondary)
+        .setDisabled(!party[1]),
+      new ButtonBuilder()
+        .setCustomId(`bag_slot_3_${userId}`)
+        .setLabel(party[2] ? `3. ${party[2].name.split(" ")[0]}` : "3. Empty")
+        .setStyle(party[2] ? ButtonStyle.Primary : ButtonStyle.Secondary)
+        .setDisabled(!party[2])
+    );
+
+    const slotRow2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`bag_slot_4_${userId}`)
+        .setLabel(party[3] ? `4. ${party[3].name.split(" ")[0]}` : "4. Empty")
+        .setStyle(party[3] ? ButtonStyle.Primary : ButtonStyle.Secondary)
+        .setDisabled(!party[3]),
+      new ButtonBuilder()
+        .setCustomId(`bag_slot_5_${userId}`)
+        .setLabel(party[4] ? `5. ${party[4].name.split(" ")[0]}` : "5. Empty")
+        .setStyle(party[4] ? ButtonStyle.Primary : ButtonStyle.Secondary)
+        .setDisabled(!party[4]),
+      new ButtonBuilder()
+        .setCustomId(`bag_slot_6_${userId}`)
+        .setLabel(party[5] ? `6. ${party[5].name.split(" ")[0]}` : "6. Empty")
+        .setStyle(party[5] ? ButtonStyle.Primary : ButtonStyle.Secondary)
+        .setDisabled(!party[5])
+    );
+
+    components.push(slotRow1, slotRow2);
+  }
+
+  // Tab navigation row
   const tabRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(`bag_tab_pokemon_${userId}`)
-      .setLabel(isKo ? "포켓몬 👾" : "Pokémon 👾")
+      .setLabel(isKo ? "출전 포켓몬 👾" : "Pokémon 👾")
       .setStyle(tab === "pokemon" ? ButtonStyle.Primary : ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId(`bag_tab_pokedex_${userId}`)
@@ -191,7 +237,9 @@ async function renderBagMessageData(
       .setStyle(ButtonStyle.Danger)
   );
 
-  return { embeds: [], files: [attachment], components: [tabRow, backRow] };
+  components.push(tabRow, backRow);
+
+  return { embeds: [], files: [attachment], components };
 }
 
 async function renderTitleMessageData(client: ExtendedClient, userId: string) {
@@ -213,10 +261,10 @@ async function renderTitleMessageData(client: ExtendedClient, userId: string) {
   });
   const attachment = new AttachmentBuilder(imageBuffer, { name: "title.png" });
 
-  const actionRow = new ActionRowBuilder<ButtonBuilder>();
-
+  // ROW 1: Main Game Actions
+  const mainActionRow = new ActionRowBuilder<ButtonBuilder>();
   if (hasSavedSlots) {
-    actionRow.addComponents(
+    mainActionRow.addComponents(
       new ButtonBuilder()
         .setCustomId(`menu_continue_${userId}`)
         .setLabel(isKo ? "이어하기" : "Continue")
@@ -228,34 +276,30 @@ async function renderTitleMessageData(client: ExtendedClient, userId: string) {
       new ButtonBuilder()
         .setCustomId(`menu_loadgame_${userId}`)
         .setLabel(isKo ? "불러오기" : "Load Game")
-        .setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder()
-        .setCustomId(`menu_inventory_${userId}`)
-        .setLabel("💼")
-        .setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder()
-        .setCustomId(`menu_settings_${userId}`)
-        .setLabel("⚙️")
         .setStyle(ButtonStyle.Secondary)
     );
   } else {
-    actionRow.addComponents(
+    mainActionRow.addComponents(
       new ButtonBuilder()
         .setCustomId(`menu_newgame_${userId}`)
         .setLabel(isKo ? "새 게임" : "New Game")
-        .setStyle(ButtonStyle.Success),
-      new ButtonBuilder()
-        .setCustomId(`menu_inventory_${userId}`)
-        .setLabel("💼")
-        .setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder()
-        .setCustomId(`menu_settings_${userId}`)
-        .setLabel("⚙️")
-        .setStyle(ButtonStyle.Secondary)
+        .setStyle(ButtonStyle.Success)
     );
   }
 
-  return { embeds: [], files: [attachment], components: [actionRow] };
+  // ROW 2: Utility & Settings Actions
+  const subActionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`menu_inventory_${userId}`)
+      .setLabel("💼")
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`menu_settings_${userId}`)
+      .setLabel("⚙️")
+      .setStyle(ButtonStyle.Secondary)
+  );
+
+  return { embeds: [], files: [attachment], components: [mainActionRow, subActionRow] };
 }
 
 export const interactionCreateEvent: BotEvent = {
@@ -341,6 +385,44 @@ export const interactionCreateEvent: BotEvent = {
         const tabType = parts[2] as "pokemon" | "pokedex" | "records";
         const bagData = await renderBagMessageData(client, interaction.user.id, tabType);
         await interaction.update(bagData);
+        return;
+      }
+
+      // 2-0-5. Bag Specific Pokemon Slot Inspected (Slot 1~6)
+      if (customId.startsWith("bag_slot_")) {
+        const slotIdx = parseInt(parts[2], 10) - 1;
+        const profile = saveService.getProfile(interaction.user.id);
+        const activeRun = profile.activeSlotId ? profile.slots[profile.activeSlotId] : null;
+        const isKo = profile.language === "ko";
+
+        const pokemon = activeRun?.party[slotIdx];
+        if (!pokemon) {
+          await interaction.reply({
+            content: isKo ? "해당 슬롯은 비어있습니다." : "This slot is empty.",
+            ephemeral: true,
+          });
+          return;
+        }
+
+        const detailEmbed = createBaseEmbed(
+          isKo ? `[슬롯 ${slotIdx + 1}] ${pokemon.name} 상세 정보` : `[Slot ${slotIdx + 1}] ${pokemon.name} Details`,
+          isKo
+            ? `• **레벨**: Lv.${pokemon.level}\n` +
+              `• **체력 (HP)**: ${pokemon.hp} / ${pokemon.maxHp}\n` +
+              `• **보유 기술**: ${pokemon.moves?.join(", ") || "몸통박치기, 울음소리"}\n` +
+              `• **특성**: 심록 / 맹화 / 급류\n`
+            : `• **Level**: Lv.${pokemon.level}\n` +
+              `• **HP**: ${pokemon.hp} / ${pokemon.maxHp}\n` +
+              `• **Moves**: ${pokemon.moves?.join(", ") || "Tackle, Growl"}\n` +
+              `• **Ability**: Standard Starter Ability\n`
+        )
+          .setColor(COLORS.POKEROGUE_GOLD)
+          .setImage(`https://play.pokemonshowdown.com/sprites/ani/${pokemon.speciesId}.gif`);
+
+        await interaction.reply({
+          embeds: [detailEmbed],
+          ephemeral: true,
+        });
         return;
       }
 

@@ -50,7 +50,7 @@ export async function getPokemonSprite(pokemonName: string): Promise<Image | nul
 }
 
 /**
- * Reusable helper to draw the 6-Pokemon Party Panel (User Header + 2x3 Rounded Slots Grid)
+ * Reusable helper to draw the 6-Pokemon Party Panel (User Header + 2x3 Rounded Slots Grid with Numbers 1~6)
  */
 async function drawPartyRightPanel(
   ctx: any,
@@ -107,7 +107,7 @@ async function drawPartyRightPanel(
   ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2 + 1, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Username (19px font)
+  // Username
   ctx.font = "bold 19px DungGeunMo";
   ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "left";
@@ -123,7 +123,7 @@ async function drawPartyRightPanel(
   ctx.lineTo(boxX + boxW - 8, boxY + 56);
   ctx.stroke();
 
-  // 2x3 PARTY SLOTS GRID: Height 84px per slot
+  // 2x3 PARTY SLOTS GRID: Height 84px per slot with Numbers 1~6
   const slotW = 107;
   const slotH = 84;
   const startGridY = boxY + 64;
@@ -145,6 +145,12 @@ async function drawPartyRightPanel(
     ctx.beginPath();
     ctx.roundRect(sx, sy, slotW, slotH, borderRadius);
     ctx.fill();
+
+    // Slot Number Tag (1, 2, 3, 4, 5, 6) in top-left corner
+    ctx.font = "bold 12px DungGeunMo";
+    ctx.fillStyle = "#F4A261"; // Gold highlight number
+    ctx.textAlign = "left";
+    ctx.fillText(`${i + 1}`, sx + 8, sy + 16);
 
     const pokemon = partyList[i];
     if (pokemon) {
@@ -325,7 +331,7 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
         { key: "records", label: "3. CAREER RECORDS" },
       ];
 
-  // Larger tab boxes (height 52px, font 16px)
+  // Larger tab boxes
   tabs.forEach((t, idx) => {
     const tabY = leftY + 44 + idx * 60;
     const isSelected = currentTab === t.key;
@@ -351,7 +357,7 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
     ctx.fillText((isSelected ? "▶ " : "  ") + t.label, leftX + 18, tabY + 30);
   });
 
-  // 4-1. Bottom Info Box: ONLY HIGHEST WAVE (Clean, Bold, Large Font!)
+  // 4-1. Bottom Info Box: ONLY HIGHEST WAVE
   const infoBoxY = leftY + 230;
   const infoBoxH = 62;
 
@@ -364,17 +370,16 @@ export async function renderBagScreen(options?: BagScreenOptions): Promise<Buffe
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // Highlighted Wave Label & Value
   ctx.font = "14px DungGeunMo";
   ctx.fillStyle = "#8F89AA";
   ctx.textAlign = "center";
   ctx.fillText(isKo ? "★ 최고 도달 기록" : "★ BEST RUN RECORD", leftX + leftW / 2, infoBoxY + 24);
 
   ctx.font = "bold 18px DungGeunMo";
-  ctx.fillStyle = "#57F287"; // Bright retro green
+  ctx.fillStyle = "#57F287";
   ctx.fillText(`Wave ${options?.stats?.highestWave ?? 0}`, leftX + leftW / 2, infoBoxY + 48);
 
-  // 5. RIGHT SIDE PANEL: 1st Screen Right Panel (Party list for current continue slot)
+  // 5. RIGHT SIDE PANEL: 1st Screen Right Panel with Numbers 1~6
   await drawPartyRightPanel(ctx, 295, 18, 244, 344, {
     username: options?.username,
     avatarUrl: options?.avatarUrl,
