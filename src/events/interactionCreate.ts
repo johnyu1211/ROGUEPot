@@ -308,6 +308,50 @@ async function renderMultiplayerMessageData(client: ExtendedClient, userId: stri
   return { embeds: [], files: [attachment], components: [actionRow, backRow] };
 }
 
+const POKEDEX_REGIONS = [
+  { id: "kanto", nameKo: "🌱 1세대 관동 (Kanto)", nameEn: "🌱 Gen 1: Kanto", startDex: 1, page: 1, desc: "#001 ~ #151 (이상해씨 ~ 뮤)" },
+  { id: "johto", nameKo: "🌿 2세대 성도 (Johto)", nameEn: "🌿 Gen 2: Johto", startDex: 152, page: 20, desc: "#152 ~ #251 (치코리타 ~ 세레비)" },
+  { id: "hoenn", nameKo: "🌊 3세대 호연 (Hoenn)", nameEn: "🌊 Gen 3: Hoenn", startDex: 252, page: 33, desc: "#252 ~ #386 (나무지기 ~ 테오키스)" },
+  { id: "sinnoh", nameKo: "⚡ 4세대 신오 (Sinnoh)", nameEn: "⚡ Gen 4: Sinnoh", startDex: 387, page: 50, desc: "#387 ~ #493 (모부기 ~ 아르세우스)" },
+  { id: "unova", nameKo: "🐉 5세대 하나 (Unova)", nameEn: "🐉 Gen 5: Unova", startDex: 494, page: 63, desc: "#494 ~ #649 (비크티니 ~ 게노세크트)" },
+  { id: "kalos", nameKo: "✨ 6세대 칼로스 (Kalos)", nameEn: "✨ Gen 6: Kalos", startDex: 650, page: 82, desc: "#650 ~ #721 (도치마론 ~ 볼케니온)" },
+  { id: "alola", nameKo: "🌺 7세대 알로라 (Alola)", nameEn: "🌺 Gen 7: Alola", startDex: 722, page: 91, desc: "#722 ~ #809 (나몰빼미 ~ 멜메탈)" },
+  { id: "galar", nameKo: "⚔️ 8세대 가라르/히스이 (Galar)", nameEn: "⚔️ Gen 8: Galar/Hisui", startDex: 810, page: 102, desc: "#810 ~ #905 (흥나숭 ~ 러브로스)" },
+  { id: "paldea", nameKo: "💎 9세대 팔데아 (Paldea)", nameEn: "💎 Gen 9: Paldea", startDex: 906, page: 114, desc: "#906 ~ #1025 (나오하 ~ 복숭악귀)" },
+];
+
+function createPokedexRegionSelectMenu(fromScreen: "multiplay" | "inventory" | "title", userId: string, isKo: boolean) {
+  const embed = createBaseEmbed(
+    isKo ? "🗺️ 탐색할 지방(세대)을 선택하세요" : "🗺️ Select a Pokémon Region (Generation)",
+    isKo
+      ? "이동하고 싶은 포켓몬 세대 / 지방을 선택하면 해당 도감 페이지로 즉시 점프합니다!"
+      : "Choose a Generation / Region to jump directly to its Pokédex section!"
+  ).setColor(COLORS.POKEROGUE_GOLD);
+
+  const selectMenu = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+    new StringSelectMenuBuilder()
+      .setCustomId(`pokedex_region_select_${fromScreen}_${userId}`)
+      .setPlaceholder(isKo ? "탐색할 지방을 선택하세요..." : "Select a region...")
+      .addOptions(
+        POKEDEX_REGIONS.map((reg) =>
+          new StringSelectMenuOptionBuilder()
+            .setLabel(isKo ? reg.nameKo : reg.nameEn)
+            .setDescription(reg.desc)
+            .setValue(`${reg.startDex}_${reg.page}`)
+        )
+      )
+  );
+
+  const cancelRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`pokedex_page_1_1_${fromScreen}_${userId}`)
+      .setLabel(isKo ? "◀️ 도감으로 돌아가기" : "◀️ Back to Pokédex")
+      .setStyle(ButtonStyle.Secondary)
+  );
+
+  return { embeds: [embed], files: [], components: [selectMenu, cancelRow] };
+}
+
 async function renderPokedexMessageData(
   client: ExtendedClient,
   userId: string,
@@ -370,13 +414,17 @@ async function renderPokedexMessageData(
     components.push(selectRow2);
   }
 
-  // ROW 3: Navigation & Back to previous screen
+  // ROW 3: Navigation & Region Select & Back
   const navRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(`pokedex_page_${Math.max(1, page - 1)}_${selectedDexNo}_${fromScreen}_${userId}`)
       .setLabel("◀ 이전")
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(page <= 1),
+    new ButtonBuilder()
+      .setCustomId(`pokedex_region_btn_${fromScreen}_${userId}`)
+      .setLabel(isKo ? "🗺️ 지방 선택" : "🗺️ Region")
+      .setStyle(ButtonStyle.Success),
     new ButtonBuilder()
       .setCustomId(`pokedex_page_${Math.min(totalPages, page + 1)}_${selectedDexNo}_${fromScreen}_${userId}`)
       .setLabel("다음 ▶")
@@ -678,6 +726,16 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
+      // 3-0-8-1. Pokédex Region Select Button Clicked (🗺️)
+      if (customId.startsWith("pokedex_region_btn_")) {
+        const fromScreen = (parts[3] || "title") as "multiplay" | "inventory" | "title";
+        const profile = saveService.getProfile(interaction.user.id);
+        const isKo = profile.language === "ko";
+        const regionMenuData = createPokedexRegionSelectMenu(fromScreen, interaction.user.id, isKo);
+        await interaction.update(regionMenuData);
+        return;
+      }
+
       // 3-0-9. Pokédex Back Button (Context-Aware Back Navigation)
       if (customId.startsWith("pokedex_back_")) {
         await interaction.deferUpdate().catch(() => null);
@@ -957,6 +1015,23 @@ export const interactionCreateEvent: BotEvent = {
         await interaction.update({
           embeds: [runStartedEmbed],
           components: [battleStartRow],
+        });
+        return;
+      }
+
+      // 4-2. Pokédex Region Jump Selection (1~9 Gen National Dex Jump)
+      if (interaction.customId.startsWith("pokedex_region_select_")) {
+        await interaction.deferUpdate().catch(() => null);
+        const parts = interaction.customId.split("_");
+        const fromScreen = (parts[3] || "title") as "multiplay" | "inventory" | "title";
+        const [startDexStr, pageStr] = interaction.values[0].split("_");
+        const targetStartDex = parseInt(startDexStr, 10) || 1;
+        const targetPage = parseInt(pageStr, 10) || 1;
+
+        const client = interaction.client as ExtendedClient;
+        const dexData = await renderPokedexMessageData(client, interaction.user.id, targetStartDex, targetPage, fromScreen);
+        await interaction.editReply(dexData).catch(async () => {
+          await interaction.followUp(dexData).catch(() => null);
         });
         return;
       }
