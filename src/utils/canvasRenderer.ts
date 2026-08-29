@@ -1008,39 +1008,39 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     ctx.shadowOffsetY = 4;
 
     // Window Solid Background
-    ctx.fillStyle = "#110D20";
+    ctx.fillStyle = "#12111A";
     ctx.beginPath();
     ctx.roundRect(overlayX, overlayY, overlayW, overlayH, 8);
     ctx.fill();
     ctx.restore();
 
-    // Window Double Border Frame (Retro RPG Style)
-    ctx.strokeStyle = isHa ? "#F4A261" : "#70D6FF";
-    ctx.lineWidth = 2;
+    // Window Double Border Frame (Clean Monochrome Retro Style)
+    ctx.strokeStyle = "#94A3B8";
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.roundRect(overlayX, overlayY, overlayW, overlayH, 8);
     ctx.stroke();
 
-    ctx.strokeStyle = "#3D2E56";
+    ctx.strokeStyle = "#334155";
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.roundRect(overlayX + 3, overlayY + 3, overlayW - 6, overlayH - 6, 6);
     ctx.stroke();
 
     // Dialog Window Header Bar (y: overlayY ~ overlayY + 34)
-    ctx.fillStyle = isHa ? "rgba(244, 162, 97, 0.12)" : "rgba(112, 214, 255, 0.12)";
+    ctx.fillStyle = "#1E2233";
     ctx.beginPath();
     ctx.roundRect(overlayX + 4, overlayY + 4, overlayW - 8, 30, [5, 5, 0, 0]);
     ctx.fill();
 
     // Header Title: [특성] 심록
     ctx.font = "bold 15px DungGeunMo";
-    ctx.fillStyle = isHa ? "#F4A261" : "#70D6FF";
+    ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "left";
     ctx.fillText(`${typeTag} ${abName}`, overlayX + 14, overlayY + 24);
 
     // Horizontal divider line under dialog header
-    ctx.strokeStyle = isHa ? "rgba(244, 162, 97, 0.35)" : "rgba(112, 214, 255, 0.35)";
+    ctx.strokeStyle = "#334155";
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(overlayX + 4, overlayY + 34);
@@ -1049,7 +1049,7 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
 
     // Effect Description Text (Wrapped nicely across 500px wide box)
     ctx.font = "14px DungGeunMo";
-    ctx.fillStyle = "#FFFFFF";
+    ctx.fillStyle = "#F1F5F9";
     ctx.textAlign = "left";
 
     const maxTextW = overlayW - 28;
