@@ -86,7 +86,7 @@ export const command: Command = {
             .setStyle(ButtonStyle.Secondary),
           new ButtonBuilder()
             .setCustomId(`menu_inventory_${userId}`)
-            .setLabel("🎒 Inventory")
+            .setLabel("💼")
             .setStyle(ButtonStyle.Secondary)
         );
       } else {
@@ -97,7 +97,7 @@ export const command: Command = {
             .setStyle(ButtonStyle.Success),
           new ButtonBuilder()
             .setCustomId(`menu_inventory_${userId}`)
-            .setLabel("🎒 Inventory")
+            .setLabel("💼")
             .setStyle(ButtonStyle.Secondary)
         );
       }

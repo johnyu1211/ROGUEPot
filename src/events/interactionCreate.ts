@@ -129,7 +129,7 @@ async function renderTitleMessageData(client: ExtendedClient, userId: string) {
         .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
         .setCustomId(`menu_inventory_${userId}`)
-        .setLabel("🎒 Inventory")
+        .setLabel("💼")
         .setStyle(ButtonStyle.Secondary)
     );
   } else {
@@ -140,7 +140,7 @@ async function renderTitleMessageData(client: ExtendedClient, userId: string) {
         .setStyle(ButtonStyle.Success),
       new ButtonBuilder()
         .setCustomId(`menu_inventory_${userId}`)
-        .setLabel("🎒 Inventory")
+        .setLabel("💼")
         .setStyle(ButtonStyle.Secondary)
     );
   }
