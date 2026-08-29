@@ -1,7 +1,7 @@
 import { createCanvas, loadImage, GlobalFonts, Image } from "@napi-rs/canvas";
 import path from "path";
 import fs from "fs";
-import { DexPokemonInfo, getAbilityDetail } from "../services/pokeApiService.js";
+import { DexPokemonInfo, getAbilityDetail, getPokemonSpeciesInfo } from "../services/pokeApiService.js";
 
 // Register custom pixel dot font
 const fontPath = path.resolve(process.cwd(), "assets/fonts/DungGeunMo.ttf");
@@ -819,27 +819,9 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
   const rightW = width - rightX - 10;
 
   if (selected) {
-    // 5-0. Right Header Background Bar (y: 0 ~ 42, matching left header height exactly)
-    ctx.fillStyle = "#1A1D2A";
-    ctx.fillRect(splitX + 2, 0, width - splitX - 2, 42);
-
-    // Sub-divider line under header at y = 42 (matching left divider exactly)
-    ctx.strokeStyle = "#2D3246";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(splitX + 2, 42);
-    ctx.lineTo(width, 42);
-    ctx.stroke();
-
-    // Right Header Title (Consistent Top Baseline with Left Header)
-    ctx.font = "bold 18px DungGeunMo";
-    ctx.fillStyle = "#CBD5E1";
-    ctx.textAlign = "left";
-    ctx.fillText(isKo ? "포켓몬 상세 정보" : "POKÉMON DETAILS", rightX + 6, 28);
-
-    // 5-1. TOP MAIN INFO CARD (Sprite Box + Dex Number & Name + Types) (y: 48 ~ 156)
-    const topCardY = 48;
-    const topCardH = 108;
+    // 5-1. TOP MAIN INFO CARD (Sprite Box + Dex Number & Name & Genus + Types) (y: 10 ~ 98)
+    const topCardY = 10;
+    const topCardH = 88;
 
     ctx.fillStyle = "#181B26";
     ctx.beginPath();
@@ -849,10 +831,10 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Sprite Showcase Box (Compact 84x84)
-    const showBoxX = rightX + 10;
-    const showBoxSize = 84;
-    const showBoxY = topCardY + (topCardH - showBoxSize) / 2;
+    // Sprite Showcase Box (Compact 72x72)
+    const showBoxX = rightX + 8;
+    const showBoxSize = 72;
+    const showBoxY = topCardY + 8;
 
     ctx.fillStyle = "#12141C";
     ctx.beginPath();
@@ -864,33 +846,43 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
 
     const bigSprite = await getPokemonSprite(selected.speciesId);
     if (bigSprite) {
-      const scale = 1.5;
+      const scale = 1.35;
       const sprW = bigSprite.width * scale;
       const sprH = bigSprite.height * scale;
       ctx.drawImage(bigSprite, showBoxX + (showBoxSize - sprW) / 2, showBoxY + (showBoxSize - sprH) / 2, sprW, sprH);
     }
 
-    // Info Column next to Sprite (Dex Number + Name + Types)
-    const infoX = showBoxX + showBoxSize + 14;
+    // Info Column next to Sprite (Dex Number + Name + Genus + Types)
+    const infoX = showBoxX + showBoxSize + 12;
     const titleName = (isKo && selected.koreanName) ? selected.koreanName : selected.name;
     const dexTag = `#${String(selected.dexNumber).padStart(3, "0")}`;
 
-    // 1. Top Row: #001 (Dex Tag in Silver) + Pokémon Name (Bold White 20px)
-    ctx.font = "bold 15px DungGeunMo";
+    const speciesInfo = await getPokemonSpeciesInfo(selected.dexNumber);
+    const genusText = isKo ? speciesInfo.genusKo : speciesInfo.genusEn;
+
+    // 1. Top Row: #001 (Dex Tag in Slate) + Pokémon Name (Bold White 18px) + Genus
+    ctx.font = "bold 13px DungGeunMo";
     ctx.fillStyle = "#8E96AB";
     ctx.textAlign = "left";
-    ctx.fillText(dexTag, infoX, topCardY + 36);
+    ctx.fillText(dexTag, infoX, topCardY + 28);
 
     const tagWidth = ctx.measureText(dexTag).width;
-    ctx.font = "bold 20px DungGeunMo";
+    ctx.font = "bold 18px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
-    ctx.fillText(titleName, infoX + tagWidth + 8, topCardY + 36);
+    ctx.fillText(titleName, infoX + tagWidth + 6, topCardY + 28);
 
-    // 2. Bottom Row: Type Badges (Enlarged 15px bold badges)
+    if (genusText) {
+      const nameWidth = ctx.measureText(titleName).width;
+      ctx.font = "12px DungGeunMo";
+      ctx.fillStyle = "#8E96AB";
+      ctx.fillText(`(${genusText})`, infoX + tagWidth + 6 + nameWidth + 6, topCardY + 28);
+    }
+
+    // 2. Bottom Row: Type Badges (46x24 badges)
     let typeBadgeX = infoX;
-    const badgeW = isKo ? 48 : 56;
-    const badgeH = 26;
-    const typeBadgeY = topCardY + 56;
+    const badgeW = isKo ? 46 : 52;
+    const badgeH = 24;
+    const typeBadgeY = topCardY + 48;
 
     for (const tName of selected.types) {
       const tLower = tName.toLowerCase();
@@ -910,18 +902,18 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
       ctx.shadowColor = "rgba(0, 0, 0, 0.9)";
       ctx.shadowOffsetY = 1;
       ctx.shadowBlur = 1;
-      ctx.font = isKo ? "bold 15px DungGeunMo" : "bold 12px DungGeunMo";
+      ctx.font = isKo ? "bold 13px DungGeunMo" : "bold 11px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
-      ctx.fillText(tDisplay, typeBadgeX + badgeW / 2, typeBadgeY + 18);
+      ctx.fillText(tDisplay, typeBadgeX + badgeW / 2, typeBadgeY + 16);
       ctx.restore();
 
       typeBadgeX += badgeW + 8;
     }
 
-    // 5-2. BASE STATS 2-COLUMN X 3-ROW GRID (HP/SPE, ATK/SPA, DEF/SPD, y: 164 ~ 284)
-    const statsCardY = 164;
-    const statsCardH = 120;
+    // 5-2. BASE STATS 2-COLUMN X 3-ROW GRID (HP/SPE, ATK/SPA, DEF/SPD, y: 104 ~ 222)
+    const statsCardY = 104;
+    const statsCardH = 118;
 
     ctx.fillStyle = "#181B26";
     ctx.beginPath();
@@ -947,7 +939,7 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     const barH = 12;
     for (const st of statsGrid) {
       const colX = st.col === 0 ? rightX + 12 : rightX + 144;
-      const rowY = statsCardY + 12 + st.row * 34;
+      const rowY = statsCardY + 12 + st.row * 33;
 
       // Label (HP, ATK, DEF, SPE, SPA, SPD) - Clean Slate
       ctx.font = "bold 14px DungGeunMo";
@@ -974,6 +966,64 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
       ctx.beginPath();
       ctx.roundRect(gaugeX, rowY + 2, fillW, barH, 3);
       ctx.fill();
+    }
+
+    // 5-3. BOTTOM FLAVOR TEXT CARD (y: 228 ~ 370, matching bottom of left list)
+    const flavorCardY = 228;
+    const flavorCardH = 142;
+
+    ctx.fillStyle = "#181B26";
+    ctx.beginPath();
+    ctx.roundRect(rightX, flavorCardY, rightW, flavorCardH, 6);
+    ctx.fill();
+    ctx.strokeStyle = "#282D3D";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Flavor Header: 📖 도감 설명
+    ctx.font = "bold 13px DungGeunMo";
+    ctx.fillStyle = "#CBD5E1";
+    ctx.textAlign = "left";
+    ctx.fillText(isKo ? "📖 포켓몬 도감 설명" : "📖 POKÉDEX ENTRY", rightX + 10, flavorCardY + 18);
+
+    // Sub-divider line under flavor header
+    ctx.strokeStyle = "#282D3D";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(rightX + 8, flavorCardY + 26);
+    ctx.lineTo(rightX + rightW - 8, flavorCardY + 26);
+    ctx.stroke();
+
+    // Flavor Text (Official Pokémon Flavor Text Description)
+    const flavorText = (isKo ? speciesInfo.flavorTextKo : speciesInfo.flavorTextEn) ||
+      (isKo ? "포켓몬 도감에 등록된 포켓몬입니다." : "A Pokémon registered in the Pokédex.");
+
+    ctx.font = "13px DungGeunMo";
+    ctx.fillStyle = "#F1F5F9";
+    ctx.textAlign = "left";
+
+    const maxTextW = rightW - 20;
+    const words = flavorText.split(" ");
+    let line = "";
+    let lineY = flavorCardY + 46;
+    const lineHeight = 21;
+    let linesDrawn = 0;
+
+    for (let n = 0; n < words.length; n++) {
+      const testLine = line + (line ? " " : "") + words[n];
+      const metrics = ctx.measureText(testLine);
+      if (metrics.width > maxTextW && n > 0) {
+        ctx.fillText(line, rightX + 10, lineY);
+        line = words[n];
+        lineY += lineHeight;
+        linesDrawn++;
+        if (linesDrawn >= 4) break;
+      } else {
+        line = testLine;
+      }
+    }
+    if (line && linesDrawn < 4) {
+      ctx.fillText(line, rightX + 10, lineY);
     }
   }
 
