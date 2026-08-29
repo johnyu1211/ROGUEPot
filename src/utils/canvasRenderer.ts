@@ -325,8 +325,8 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
 
   // Header Bar
   ctx.fillStyle = isComplete ? "#1F3D2B" : "#3D2B1F";
-  ctx.fillRect(leftX + 2, leftY + 2, leftW - 4, 34);
-  ctx.font = "bold 17px DungGeunMo";
+  ctx.fillRect(leftX + 2, leftY + 2, leftW - 4, 32);
+  ctx.font = "bold 16px DungGeunMo";
   ctx.fillStyle = isComplete ? "#57F287" : "#F4A261";
   ctx.textAlign = "center";
   ctx.fillText(
@@ -334,57 +334,65 @@ export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions
       ? (isKo ? "✔ 배틀 엔트리 완성됨" : "✔ BATTLE ENTRY READY")
       : (isKo ? "⚠️ 포켓몬 엔트리를 완성해주세요" : "⚠️ COMPLETE YOUR ENTRY"),
     leftX + leftW / 2,
-    leftY + 24
+    leftY + 23
   );
 
-  // Guide Body Box
+  // Guide Body Box (Y: 98, H: 168)
   ctx.fillStyle = "#121326";
   ctx.beginPath();
-  ctx.roundRect(leftX + 10, leftY + 44, leftW - 20, 168, 8);
+  ctx.roundRect(leftX + 8, leftY + 40, leftW - 16, 172, 8);
   ctx.fill();
   ctx.strokeStyle = isComplete ? "#2E5E3D" : "#5E432E";
   ctx.lineWidth = 1;
   ctx.stroke();
 
-  ctx.font = "bold 17px DungGeunMo";
+  ctx.font = "bold 16px DungGeunMo";
   ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "left";
-  ctx.fillText(isKo ? "📝 포켓몬 엔트리 등록" : "📝 Battle Entry Registration", leftX + 18, leftY + 70);
+  ctx.fillText(isKo ? "📝 포켓몬 엔트리 등록" : "📝 Battle Entry Registration", leftX + 18, leftY + 64);
 
-  ctx.font = "15px DungGeunMo";
+  // Divider line inside guide box
+  ctx.strokeStyle = "#25284B";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(leftX + 18, leftY + 74);
+  ctx.lineTo(leftX + leftW - 18, leftY + 74);
+  ctx.stroke();
+
+  ctx.font = "14px DungGeunMo";
   ctx.fillStyle = "#CBD5E1";
   if (isKo) {
-    ctx.fillText("• 포켓몬 이름/도감번호 등록!", leftX + 18, leftY + 98);
+    ctx.fillText("• 포켓몬 이름/도감번호 등록", leftX + 18, leftY + 96);
     ctx.fillText("• 예: 샤미드, 루카리오, 이어롭", leftX + 18, leftY + 120);
     ctx.fillText("• 별명: 메가뿅, 에비뿅, 파라뿅", leftX + 18, leftY + 144);
     ctx.font = "bold 15px DungGeunMo";
     ctx.fillStyle = "#57F287";
-    ctx.fillText(`• 등록 현황: ${registeredCount} / 6 마리`, leftX + 18, leftY + 196);
+    ctx.fillText(`• 등록 현황: ${registeredCount} / 6 마리`, leftX + 18, leftY + 182);
   } else {
-    ctx.fillText("• Register by Dex # or Name!", leftX + 18, leftY + 98);
-    ctx.fillText("• e.g. Vaporeon, Lucario, Lopunny", leftX + 18, leftY + 120);
-    ctx.fillText("• Nick: Megaree, Hitmee, Parasee", leftX + 18, leftY + 144);
+    ctx.fillText("• Register by Name or Dex #", leftX + 18, leftY + 96);
+    ctx.fillText("• e.g. Vaporeon, Lucario", leftX + 18, leftY + 120);
+    ctx.fillText("• Nick: Megaree, Hitmee", leftX + 18, leftY + 144);
     ctx.font = "bold 15px DungGeunMo";
     ctx.fillStyle = "#57F287";
-    ctx.fillText(`• Team Roster: ${registeredCount} / 6 Ready`, leftX + 18, leftY + 196);
+    ctx.fillText(`• Team Roster: ${registeredCount} / 6 Ready`, leftX + 18, leftY + 182);
   }
 
-  // Quick Action Hint Box
+  // Quick Action Hint Box (Y: 278, H: 76)
   ctx.fillStyle = "#1F234D";
   ctx.beginPath();
-  ctx.roundRect(leftX + 10, leftY + 220, leftW - 20, 74, 8);
+  ctx.roundRect(leftX + 8, leftY + 220, leftW - 16, 76, 8);
   ctx.fill();
   ctx.strokeStyle = "#5865F2";
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  ctx.font = "bold 15px DungGeunMo";
+  ctx.font = "bold 14px DungGeunMo";
   ctx.fillStyle = "#F4A261";
   ctx.textAlign = "center";
   ctx.fillText(isKo ? "👇 아래 [포켓몬 등록] 클릭" : "👇 Click [Register Pokémon] below", leftX + leftW / 2, leftY + 248);
-  ctx.font = "bold 14px DungGeunMo";
+  ctx.font = "13px DungGeunMo";
   ctx.fillStyle = "#FFFFFF";
-  ctx.fillText(isKo ? "포켓몬 이름/별명을 등록하세요!" : "to register your Pokémon!", leftX + leftW / 2, leftY + 274);
+  ctx.fillText(isKo ? "이름과 별명을 등록하세요!" : "to register your Pokémon!", leftX + leftW / 2, leftY + 274);
 
   // 5. RIGHT SIDE PANEL: Multiplayer Team (with slot numbers 1~6 and Blurple border)
   await drawPartyRightPanel(ctx, 295, 18, 244, 344, {
