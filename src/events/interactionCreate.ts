@@ -13,7 +13,7 @@ import { createBaseEmbed, COLORS } from "../utils/embed.js";
 import { renderTitleScreen, renderBagScreen } from "../utils/canvasRenderer.js";
 import { saveService } from "../services/saveService.js";
 
-function createStarterSelectMenu(slotId: number, userId: string) {
+function createStarterSelectMenu(slotId: number, userId: string, fromSource: "title" | "slots" = "title") {
   const profile = saveService.getProfile(userId);
   const isKo = profile.language === "ko";
 
@@ -55,10 +55,20 @@ function createStarterSelectMenu(slotId: number, userId: string) {
       )
   );
 
+  const backCustomId = fromSource === "title" ? `menu_back_to_title_${userId}` : `menu_loadgame_${userId}`;
+  const backLabel =
+    fromSource === "title"
+      ? isKo
+        ? "◀️ 메인 메뉴로"
+        : "◀️ Back to Title"
+      : isKo
+      ? "◀️ 슬롯 목록으로"
+      : "◀️ Back to Slots";
+
   const backRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
-      .setCustomId(`menu_loadgame_${userId}`)
-      .setLabel(isKo ? "◀️ 슬롯 목록으로" : "◀️ Back to Slots")
+      .setCustomId(backCustomId)
+      .setLabel(backLabel)
       .setStyle(ButtonStyle.Danger)
   );
 
@@ -433,10 +443,10 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 2-1. New Game Button Clicked
+      // 2-1. New Game Button Clicked from Title (Back destination: TITLE)
       if (customId.startsWith("menu_newgame_")) {
         const targetSlot = saveService.getFirstAvailableSlot(interaction.user.id);
-        const responseData = createStarterSelectMenu(targetSlot, interaction.user.id);
+        const responseData = createStarterSelectMenu(targetSlot, interaction.user.id, "title");
         await interaction.update(responseData);
         return;
       }
@@ -550,7 +560,7 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 2-6. Specific Slot Selected (Slot 1, 2, 3)
+      // 2-6. Specific Slot Selected (Slot 1, 2, 3) (Empty Slot -> Back to Slots)
       if (customId.startsWith("slot_select_")) {
         const slotNum = parseInt(parts[2], 10) || 1;
         const profile = saveService.getProfile(interaction.user.id);
@@ -558,7 +568,7 @@ export const interactionCreateEvent: BotEvent = {
         const isKo = profile.language === "ko";
 
         if (!slotData) {
-          const responseData = createStarterSelectMenu(slotNum, interaction.user.id);
+          const responseData = createStarterSelectMenu(slotNum, interaction.user.id, "slots");
           await interaction.update(responseData);
         } else {
           const existingSlotEmbed = createBaseEmbed(
@@ -636,10 +646,10 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 2-8. Overwrite Slot
+      // 2-8. Overwrite Slot (Back destination: SLOTS)
       if (customId.startsWith("slot_overwrite_")) {
         const slotNum = parseInt(parts[2], 10) || 1;
-        const responseData = createStarterSelectMenu(slotNum, interaction.user.id);
+        const responseData = createStarterSelectMenu(slotNum, interaction.user.id, "slots");
         await interaction.update(responseData);
         return;
       }
