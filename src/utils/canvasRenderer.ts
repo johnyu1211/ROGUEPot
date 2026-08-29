@@ -275,12 +275,12 @@ async function drawPartyRightPanel(
   ctx.lineTo(560, 42);
   ctx.stroke();
 
-  // 3. 2x3 PARTY SLOTS GRID: Open & Seamless Split-screen Style (Starting at y = 48)
-  const slotW = 114;
-  const slotH = 96;
+  // 3. 2x3 PARTY SLOTS GRID: Packed Full-Fit Style (124x102, y: 48 ~ 366)
+  const slotW = 124;
+  const slotH = 102;
   const startGridY = 48;
-  const gapX = 10;
-  const gapY = 8;
+  const gapX = 8;
+  const gapY = 6;
   const borderRadius = 8;
 
   const partyList = options?.party || [];
@@ -289,7 +289,7 @@ async function drawPartyRightPanel(
   for (let i = 0; i < 6; i++) {
     const col = i % 2;
     const row = Math.floor(i / 2);
-    const sx = boxX + 4 + col * (slotW + gapX);
+    const sx = splitX + 8 + col * (slotW + gapX);
     const sy = startGridY + row * (slotH + gapY);
 
     // Borderless Rounded Slot Box Fill (True Neutral Dark Charcoal)
@@ -305,25 +305,25 @@ async function drawPartyRightPanel(
 
     // Slot Number Tag (1, 2, 3, 4, 5, 6) in Silver White
     if (options?.showSlotNumbers) {
-      ctx.font = "bold 12px DungGeunMo";
+      ctx.font = "bold 13px DungGeunMo";
       ctx.fillStyle = "#A0A0A0";
       ctx.textAlign = "left";
-      ctx.fillText(`${i + 1}`, sx + 8, sy + 16);
+      ctx.fillText(`${i + 1}`, sx + 9, sy + 17);
     }
 
     const pokemon = partyList[i];
     if (pokemon) {
       const sprite = await getPokemonSprite(pokemon.speciesId);
       if (sprite) {
-        const scale = 1.2;
+        const scale = 1.35;
         const sprW = sprite.width * scale;
         const sprH = sprite.height * scale;
         ctx.drawImage(sprite, sx + (slotW - sprW) / 2, sy + (slotH - sprH) / 2 - 8, sprW, sprH);
       }
-      ctx.font = "bold 12px DungGeunMo";
+      ctx.font = "bold 13px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
-      const displayLabel = (pokemon.nickname || pokemon.name || "Pokemon").slice(0, 6);
+      const displayLabel = (pokemon.nickname || pokemon.name || "Pokemon").slice(0, 7);
       ctx.fillText(displayLabel, sx + slotW / 2, sy + slotH - 8);
     } else {
       ctx.fillStyle = "#222222";
