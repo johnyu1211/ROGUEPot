@@ -1,6 +1,6 @@
-﻿# 🎮 ROGUEPot (PokeRogue Discord Bot)
+﻿# 🎮 ROGUEPot (PokeRogue on Discord)
 
-**ROGUEPot**은 [PokeRogue](https://github.com/pagefaultgames/pokerogue) 게임 데이터를 기반으로 다양한 편의 기능과 게임 정보를 제공하는 디스코드 봇입니다.
+**ROGUEPot**은 [PokeRogue](https://github.com/pagefaultgames/pokerogue) 로그라이크 포켓몬 게임을 디스코드에서 직접 플레이할 수 있도록 제공하는 디스코드 게임 봇입니다.
 
 ---
 
@@ -22,7 +22,7 @@ ROGUEPot/
     ├── core/               # Discord Client 인스턴스화 및 핸들러 등록
     ├── commands/           # 슬래시 커맨드 핸들러 목록
     ├── events/             # 디스코드 이벤트 핸들러 (ready, interaction 등)
-    ├── services/           # Pokerogue 데이터 및 비즈니스 로직
+    ├── services/           # Pokerogue 게임 엔진 & 데이터 서비스
     ├── types/              # TypeScript 인터페이스 및 타입 정의
     └── utils/              # Embed 생성기 및 유틸리티
 ```
