@@ -980,11 +980,11 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Flavor Header: 📖 도감 설명
+    // Flavor Header: 포켓몬 도감 설명
     ctx.font = "bold 13px DungGeunMo";
     ctx.fillStyle = "#CBD5E1";
     ctx.textAlign = "left";
-    ctx.fillText(isKo ? "📖 포켓몬 도감 설명" : "📖 POKÉDEX ENTRY", rightX + 10, flavorCardY + 18);
+    ctx.fillText(isKo ? "포켓몬 도감 설명" : "POKÉDEX ENTRY", rightX + 10, flavorCardY + 18);
 
     // Sub-divider line under flavor header
     ctx.strokeStyle = "#282D3D";
