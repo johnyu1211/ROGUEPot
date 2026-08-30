@@ -1966,32 +1966,20 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     ctx.fillText(isKo ? t.labelKo : t.labelEn, tX + tabW / 2, tabY + tabH / 2);
   });
 
-  // Candy Badge on Top Right (y: 11 ~ 37)
+  // Candy Counter on Top Right (y: 24, No Box, Natural Spacing)
   const candyText = `${candies}`;
-  ctx.font = "bold 13px DungGeunMo";
+  ctx.font = "bold 14px DungGeunMo";
   const cTextW = ctx.measureText(candyText).width;
-  const badgeW = cTextW + 34;
-  const badgeH = 26;
-  const badgeX = panelX + panelW - badgeW - 6;
-  const badgeY = 11;
+  const rightMargin = panelX + panelW - 10;
 
-  ctx.fillStyle = "#10121A";
-  ctx.beginPath();
-  ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 4);
-  ctx.fill();
-  ctx.strokeStyle = "#2B3144";
-  ctx.lineWidth = 1;
-  ctx.stroke();
-
-  // Candy Vector Icon (Tilted, striped, frilled wrapper)
-  drawCandyIcon(ctx, badgeX + 13, badgeY + badgeH / 2, 5.5, "#F59E0B", "#FEF08A");
-
-  // Candy Count Text
+  // Candy Count Text (Right Aligned)
   ctx.textBaseline = "middle";
-  ctx.font = "bold 13px DungGeunMo";
   ctx.fillStyle = "#FCD34D";
-  ctx.textAlign = "left";
-  ctx.fillText(candyText, badgeX + 25, badgeY + badgeH / 2);
+  ctx.textAlign = "right";
+  ctx.fillText(candyText, rightMargin, 24);
+
+  // Candy Vector Icon (Tilted, striped, frilled wrapper) with clean gap
+  drawCandyIcon(ctx, rightMargin - cTextW - 16, 24, 6.0, "#F59E0B", "#FEF08A");
 
   // =========================================================================
   // TAB 1: MOVES TAB (Detailed Move Inspector)
