@@ -579,7 +579,7 @@ async function renderGenSelectMessageData(
     return new ButtonBuilder()
       .setCustomId(`starter_pickgen_${g}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel(isKo ? info.nameKo : info.nameEn)
-      .setStyle(isSelected ? ButtonStyle.Danger : ButtonStyle.Primary);
+      .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Secondary);
   };
 
   const components: ActionRowBuilder<ButtonBuilder>[] = [
@@ -680,7 +680,7 @@ async function renderStarterSelectMessageData(
     new ButtonBuilder()
       .setCustomId(`starter_open_gen_menu_${gen}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel(isKo ? "📂 세대" : "📂 Gen")
-      .setStyle(ButtonStyle.Primary),
+      .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId(`starter_toggleshiny_${gen}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel(isShinyMode ? "✨ 이로치 ON" : "✨ 이로치")
