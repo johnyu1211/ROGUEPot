@@ -1342,6 +1342,87 @@ export interface StarterSelectScreenOptions {
 }
 
 /**
+ * Draws PokéRogue / Official style Move Category Icon (Physical 💥, Special 🌀, Status ☯️)
+ */
+function drawMoveCategoryIcon(ctx: any, x: number, y: number, category?: "physical" | "special" | "status") {
+  if (!category) return;
+  const w = 18;
+  const h = 17;
+
+  if (category === "physical") {
+    // Physical: Vibrant Red-Orange + 8-Point Starburst Spark
+    ctx.fillStyle = "#E0502E";
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, 3);
+    ctx.fill();
+
+    ctx.fillStyle = "#FFFFFF";
+    ctx.beginPath();
+    const cx = x + w / 2;
+    const cy = y + h / 2;
+    const outerR = 5.2;
+    const innerR = 2.4;
+    const points = 8;
+    for (let p = 0; p < points * 2; p++) {
+      const r = p % 2 === 0 ? outerR : innerR;
+      const angle = (p * Math.PI) / points;
+      const px = cx + Math.cos(angle) * r;
+      const py = cy + Math.sin(angle) * r;
+      if (p === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fill();
+  } else if (category === "special") {
+    // Special: Indigo-Blue + Dual Concentric Rings
+    ctx.fillStyle = "#3B69B0";
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, 3);
+    ctx.fill();
+
+    const cx = x + w / 2;
+    const cy = y + h / 2;
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 1.3;
+
+    // Outer Ring
+    ctx.beginPath();
+    ctx.arc(cx, cy, 4.5, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Inner Core
+    ctx.fillStyle = "#FFFFFF";
+    ctx.beginPath();
+    ctx.arc(cx, cy, 2, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (category === "status") {
+    // Status: Slate-Gray + Yin-Yang Swirl
+    ctx.fillStyle = "#6B7C96";
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, 3);
+    ctx.fill();
+
+    const cx = x + w / 2;
+    const cy = y + h / 2;
+    // Dual Swirl / Yin-Yang Circle
+    ctx.fillStyle = "#FFFFFF";
+    ctx.beginPath();
+    ctx.arc(cx, cy, 4.5, 0, Math.PI);
+    ctx.fill();
+
+    ctx.fillStyle = "#6B7C96";
+    ctx.beginPath();
+    ctx.arc(cx - 2.2, cy, 2.25, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#FFFFFF";
+    ctx.beginPath();
+    ctx.arc(cx + 2.2, cy, 2.25, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+/**
  * Renders the PokéRogue-style Dedicated Starter Selection & Party Builder Screen (560x380)
  */
 export async function renderStarterSelectScreen(options: StarterSelectScreenOptions): Promise<Buffer> {
@@ -1700,7 +1781,9 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     for (let mIdx = 0; mIdx < 4; mIdx++) {
       const rawMove = sel.starterMoves[mIdx] || "---";
       const moveKey = rawMove.toLowerCase().replace(/[\s_]+/g, "-");
-      const mDisplay = isKo ? (MOVES_DATA[moveKey]?.nameKo || rawMove) : rawMove;
+      const moveInfo = MOVES_DATA[moveKey];
+      const mDisplay = isKo ? (moveInfo?.nameKo || rawMove) : rawMove;
+      const category = moveInfo?.category;
 
       const mCol = mIdx % 2;
       const mRow = Math.floor(mIdx / 2);
@@ -1715,11 +1798,25 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       ctx.lineWidth = 1;
       ctx.stroke();
 
-      ctx.textBaseline = "middle";
-      ctx.font = "bold 14px DungGeunMo";
-      ctx.fillStyle = rawMove === "---" ? "#475569" : "#F8FAFC";
-      ctx.textAlign = "center";
-      ctx.fillText(mDisplay, mX + moveChipW / 2, mY + moveChipH / 2);
+      if (rawMove === "---" || !category) {
+        ctx.textBaseline = "middle";
+        ctx.font = "bold 14px DungGeunMo";
+        ctx.fillStyle = "#475569";
+        ctx.textAlign = "center";
+        ctx.fillText(mDisplay, mX + moveChipW / 2, mY + moveChipH / 2);
+      } else {
+        // Draw Move Category Icon (Left aligned)
+        const iconX = mX + 5;
+        const iconY = mY + (moveChipH - 17) / 2;
+        drawMoveCategoryIcon(ctx, iconX, iconY, category);
+
+        // Move Name Text (Aligned next to category icon)
+        ctx.textBaseline = "middle";
+        ctx.font = "bold 13px DungGeunMo";
+        ctx.fillStyle = "#F8FAFC";
+        ctx.textAlign = "left";
+        ctx.fillText(mDisplay, mX + 27, mY + moveChipH / 2);
+      }
     }
   }
 
