@@ -745,18 +745,18 @@ async function renderStarterSelectMessageData(
   ];
   components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row1Btns));
 
-  // ROW 2: Starters 1, 2 + [+추가] + [-제거]
+  // ROW 2: Starters 1, 2 + [+⚪] + [-⚪]
   const row2Btns: ButtonBuilder[] = [
     createSlotBtn(0),
     createSlotBtn(1),
     new ButtonBuilder()
       .setCustomId(`starter_add_${selectedStarter.dexNumber}_${gen}_${safePage}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
-      .setLabel(isKo ? "+파티추가" : "+Add")
+      .setLabel("+⚪")
       .setStyle(ButtonStyle.Success)
       .setDisabled(!canAdd),
     new ButtonBuilder()
       .setCustomId(`starter_rem_${selectedStarter.dexNumber}_${gen}_${safePage}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
-      .setLabel(isKo ? "-제거" : "-Remove")
+      .setLabel("-⚪")
       .setStyle(ButtonStyle.Danger)
       .setDisabled(!isAlreadyInParty)
   ];
