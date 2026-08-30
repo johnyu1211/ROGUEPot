@@ -1595,12 +1595,6 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     ctx.fillStyle = "#FFFFFF";
     ctx.fillText(isKo ? sel.nameKo : sel.name, nameX, 26);
 
-    // Right-aligned Big Cost in Header (Top Right of Card)
-    ctx.font = "bold 22px DungGeunMo";
-    ctx.fillStyle = selHasPassive ? "#34D399" : "#22C55E";
-    ctx.textAlign = "right";
-    ctx.fillText(`${effectiveSelCost}C`, rightX + rightW, 26);
-
     // Type Badges below Name (e.g. [풀] [독])
     const types = sel.types && sel.types.length > 0 ? sel.types : ["normal"];
     let typeBadgeX = infoX;
