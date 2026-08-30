@@ -605,6 +605,61 @@ async function renderGenSelectMessageData(
   return { embeds: [], files: [attachment], attachments: [], components };
 }
 
+interface PartyItemState {
+  dexNumber: number;
+  shinyTier: number; // 0, 1, 2, 3
+  useHiddenAbility: boolean;
+  usePassive: boolean;
+}
+
+function parsePartyParam(param: string | number[] | undefined, userStarters?: Map<string, any>): PartyItemState[] {
+  if (!param || param === "empty") return [];
+  if (Array.isArray(param)) {
+    return param.map((dex) => {
+      const s = getStarterByDexNumber(dex);
+      const prog = s && userStarters ? userStarters.get(s.speciesId) : null;
+      return {
+        dexNumber: dex,
+        shinyTier: prog?.shinyTier || 0,
+        useHiddenAbility: prog?.hasHiddenAbility || false,
+        usePassive: prog?.passiveUnlocked || false,
+      };
+    });
+  }
+  return String(param)
+    .split("-")
+    .map((chunk) => {
+      const parts = chunk.split(":");
+      const dexNumber = parseInt(parts[0], 10);
+      if (!dexNumber) return null;
+      const s = getStarterByDexNumber(dexNumber);
+      if (!s) return null;
+      const prog = userStarters ? userStarters.get(s.speciesId) : null;
+      const defShinyTier = prog?.shinyTier || 0;
+      const defHa = prog?.hasHiddenAbility || false;
+      const defPassive = prog?.passiveUnlocked || false;
+
+      const shinyTier = parts[1] !== undefined ? parseInt(parts[1], 10) : defShinyTier;
+      const useHiddenAbility = parts[2] !== undefined ? parts[2] === "1" : defHa;
+      const usePassive = parts[3] !== undefined ? parts[3] === "1" : defPassive;
+
+      return {
+        dexNumber,
+        shinyTier,
+        useHiddenAbility,
+        usePassive,
+      };
+    })
+    .filter(Boolean) as PartyItemState[];
+}
+
+function serializePartyParam(states: PartyItemState[]): string {
+  if (!states || states.length === 0) return "empty";
+  return states
+    .map((st) => `${st.dexNumber}:${st.shinyTier}:${st.useHiddenAbility ? 1 : 0}:${st.usePassive ? 1 : 0}`)
+    .join("-");
+}
+
 async function renderStarterSelectMessageData(
   client: ExtendedClient,
   userId: string,
@@ -612,7 +667,7 @@ async function renderStarterSelectMessageData(
   gen: number = 0,
   page: number = 1,
   selectedDexNo: number = 1,
-  partyDexList: number[] = [],
+  partyParamInput: string | number[] = "empty",
   isShinyFilter: boolean = false,
   isHaFilter: boolean = false,
   isPassiveFilter: boolean = false
@@ -620,6 +675,8 @@ async function renderStarterSelectMessageData(
   const profile = saveService.getProfile(userId);
   const isKo = profile.language === "ko";
   const userStarters = getUserStarters(userId);
+  const partyStates = parsePartyParam(partyParamInput, userStarters);
+  const partyDexList = partyStates.map((p) => p.dexNumber);
 
   // 1. Filter Starters List based on generation and ONLY UNLOCKED starters owned by user
   let allStarters = getStartersByGen(gen).filter((s) => userStarters.get(s.speciesId)?.isUnlocked);
@@ -661,22 +718,19 @@ async function renderStarterSelectMessageData(
   const selIsUnlocked = selProgress ? selProgress.isUnlocked : true;
   const selHasPassive = selProgress?.passiveUnlocked || false;
 
-  const selectedParty: StarterSelectPartyItem[] = partyDexList
-    .map((dex) => {
-      const s = getStarterByDexNumber(dex);
+  const selectedParty: StarterSelectPartyItem[] = partyStates
+    .map((st) => {
+      const s = getStarterByDexNumber(st.dexNumber);
       if (!s) return null;
-      const prog = userStarters.get(s.speciesId);
-      const isShiny = (prog?.shinyTier || 0) > 0;
-      const useHiddenAbility = prog?.hasHiddenAbility || false;
-      const usePassive = prog?.passiveUnlocked || false;
       return {
         dexNumber: s.dexNumber,
         speciesId: s.speciesId,
         name: isKo ? s.nameKo : s.name,
-        cost: usePassive ? s.reducedCost : s.cost,
-        isShiny,
-        useHiddenAbility,
-        usePassive,
+        cost: st.usePassive ? s.reducedCost : s.cost,
+        isShiny: st.shinyTier > 0,
+        shinyTier: st.shinyTier,
+        useHiddenAbility: st.useHiddenAbility,
+        usePassive: st.usePassive,
       };
     })
     .filter(Boolean) as StarterSelectPartyItem[];
@@ -703,7 +757,7 @@ async function renderStarterSelectMessageData(
   });
 
   const attachment = new AttachmentBuilder(imageBuffer, { name: "starter_select.png" });
-  const partyParam = partyDexList.join("-") || "empty";
+  const partyParam = serializePartyParam(partyStates);
   const flagsParam = `${isShinyFilter ? 1 : 0}_${isHaFilter ? 1 : 0}_${isPassiveFilter ? 1 : 0}`;
 
   // Helper to create slot button
@@ -725,13 +779,13 @@ async function renderStarterSelectMessageData(
 
   const components: ActionRowBuilder<ButtonBuilder>[] = [];
 
-  // ROW 1: 4 Core Filter Toggles ([ 📂 세대 ] [ ✨ 이로치 ] [ 🔓 패시브 ] [ 🌟 숨특 ])
-  const hasGenFilter = gen >= 1;
+  // ROW 1: [Generation Pick] + [✨ Shiny] + [🔓 Passive] + [🌟 HA]
+  const genLabel = gen <= 0 ? (isKo ? "📁 전체" : "📁 ALL") : (isKo ? `📁 ${gen}세대` : `📁 Gen ${gen}`);
   const row1Btns: ButtonBuilder[] = [
     new ButtonBuilder()
-      .setCustomId(`starter_open_gen_menu_${gen}_${safePage}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
-      .setLabel(isKo ? (hasGenFilter ? `📂 ${gen}세대` : "📂 세대") : (hasGenFilter ? `📂 Gen ${gen}` : "📂 Gen"))
-      .setStyle(hasGenFilter ? ButtonStyle.Primary : ButtonStyle.Secondary),
+      .setCustomId(`starter_genmenu_${gen}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+      .setLabel(genLabel)
+      .setStyle(ButtonStyle.Primary),
     new ButtonBuilder()
       .setCustomId(`starter_toggleshiny_${gen}_${safePage}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel(isKo ? (isShinyFilter ? "✨ 이로치 ON" : "✨ 이로치") : (isShinyFilter ? "✨ Shiny ON" : "✨ Shiny"))
@@ -760,7 +814,7 @@ async function renderStarterSelectMessageData(
       .setCustomId(`starter_openparty_${selectedStarter.dexNumber}_${gen}_${safePage}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel("Party")
       .setStyle(ButtonStyle.Primary)
-      .setDisabled(partyDexList.length === 0)
+      .setDisabled(partyStates.length === 0)
   ];
   components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row2Btns));
 
@@ -824,7 +878,7 @@ async function renderPartyViewMessageData(
   gen: number = 0,
   page: number = 1,
   selectedDexNo: number = 1,
-  partyDexList: number[] = [],
+  partyParamInput: string | number[] = "empty",
   isShinyFilter: boolean = false,
   isHaFilter: boolean = false,
   isPassiveFilter: boolean = false,
@@ -833,23 +887,21 @@ async function renderPartyViewMessageData(
   const profile = saveService.getProfile(userId);
   const isKo = profile.language === "ko";
   const userStarters = getUserStarters(userId);
+  const partyStates = parsePartyParam(partyParamInput, userStarters);
 
-  const selectedParty: StarterSelectPartyItem[] = partyDexList
-    .map((dex) => {
-      const s = getStarterByDexNumber(dex);
+  const selectedParty: StarterSelectPartyItem[] = partyStates
+    .map((st) => {
+      const s = getStarterByDexNumber(st.dexNumber);
       if (!s) return null;
-      const prog = userStarters.get(s.speciesId);
-      const isShiny = (prog?.shinyTier || 0) > 0;
-      const useHiddenAbility = prog?.hasHiddenAbility || false;
-      const usePassive = prog?.passiveUnlocked || false;
       return {
         dexNumber: s.dexNumber,
         speciesId: s.speciesId,
         name: isKo ? s.nameKo : s.name,
-        cost: usePassive ? s.reducedCost : s.cost,
-        isShiny,
-        useHiddenAbility,
-        usePassive,
+        cost: st.usePassive ? s.reducedCost : s.cost,
+        isShiny: st.shinyTier > 0,
+        shinyTier: st.shinyTier,
+        useHiddenAbility: st.useHiddenAbility,
+        usePassive: st.usePassive,
       };
     })
     .filter(Boolean) as StarterSelectPartyItem[];
@@ -879,7 +931,7 @@ async function renderPartyViewMessageData(
   });
 
   const attachment = new AttachmentBuilder(imageBuffer, { name: "party_view.png" });
-  const partyParam = partyDexList.join("-") || "empty";
+  const partyParam = serializePartyParam(partyStates);
   const flagsParam = `${isShinyFilter ? 1 : 0}_${isHaFilter ? 1 : 0}_${isPassiveFilter ? 1 : 0}`;
 
   // Helper to create Party Slot Selector Button
@@ -919,7 +971,48 @@ async function renderPartyViewMessageData(
     )
   );
 
-  // ROW 3: Remove Selected [-⚪] + [START] + [↩️ Back to Starter Select]
+  // ROW 3: Customization Action Toggles for Inspected Member (✨ Shiny Tier, 🌟 HA, 🔓 Passive)
+  const inspectedProg = inspectedStarter ? userStarters.get(inspectedStarter.speciesId) : null;
+  const maxShinyTier = inspectedProg?.shinyTier || 0;
+  const curShinyTier = activePartyMember?.shinyTier || 0;
+  const hasHa = inspectedProg?.hasHiddenAbility || false;
+  const curUseHa = activePartyMember?.useHiddenAbility || false;
+  const hasPassive = inspectedProg?.passiveUnlocked || false;
+  const curUsePassive = activePartyMember?.usePassive || false;
+
+  const shinyBtnLabel = isKo
+    ? (curShinyTier > 0 ? `✨ 이로치 T${curShinyTier}` : "✨ 일반 외형")
+    : (curShinyTier > 0 ? `✨ Shiny T${curShinyTier}` : "✨ Normal Form");
+
+  const haBtnLabel = isKo
+    ? (hasHa ? (curUseHa ? `🌟 [숨특] ${inspectedStarter.hiddenAbilityKo}` : `🌟 [특성] ${inspectedStarter.abilityKo}`) : "🔒 숨특 잠김")
+    : (hasHa ? (curUseHa ? `🌟 [HA] ${inspectedStarter.hiddenAbility}` : `🌟 [Ab] ${inspectedStarter.ability}`) : "🔒 HA Locked");
+
+  const passBtnLabel = isKo
+    ? (hasPassive ? (curUsePassive ? "🔓 패시브 ON (-1C)" : "🔓 패시브 OFF") : "🔒 패시브 잠김")
+    : (hasPassive ? (curUsePassive ? "🔓 Passive ON (-1C)" : "🔓 Passive OFF") : "🔒 Passive Locked");
+
+  components.push(
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`party_toggleshiny_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+        .setLabel(shinyBtnLabel)
+        .setStyle(curShinyTier > 0 ? ButtonStyle.Primary : ButtonStyle.Secondary)
+        .setDisabled(maxShinyTier === 0),
+      new ButtonBuilder()
+        .setCustomId(`party_toggleha_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+        .setLabel(haBtnLabel)
+        .setStyle(curUseHa ? ButtonStyle.Danger : ButtonStyle.Secondary)
+        .setDisabled(!hasHa),
+      new ButtonBuilder()
+        .setCustomId(`party_togglepass_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+        .setLabel(passBtnLabel)
+        .setStyle(curUsePassive ? ButtonStyle.Success : ButtonStyle.Secondary)
+        .setDisabled(!hasPassive)
+    )
+  );
+
+  // ROW 4: Remove Member [-⚪]
   const removeTargetDex = activePartyMember ? activePartyMember.dexNumber : 0;
   components.push(
     new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -1703,7 +1796,99 @@ export const interactionCreateEvent: BotEvent = {
         const isHa = parts[9] === "1";
         const isPassive = parts[10] === "1";
 
-        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, partyDexList, isShiny, isHa, isPassive, targetIdx);
+        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, partyRaw, isShiny, isHa, isPassive, targetIdx);
+        await interaction.update(partyData);
+        return;
+      }
+
+      // 2-1-P2-A. Toggle Shiny Tier for inspected party member (✨)
+      if (customId.startsWith("party_toggleshiny_")) {
+        const currentIdx = parseInt(parts[2], 10) || 0;
+        const gen = parseInt(parts[3], 10) || 0;
+        const page = parseInt(parts[4], 10) || 1;
+        const dexNo = parseInt(parts[5], 10) || 1;
+        const slotId = parseInt(parts[6], 10) || 1;
+        const partyRaw = parts[7] || "empty";
+        const isShiny = parts[8] === "1";
+        const isHa = parts[9] === "1";
+        const isPassive = parts[10] === "1";
+
+        const userStarters = getUserStarters(interaction.user.id);
+        const partyStates = parsePartyParam(partyRaw, userStarters);
+        const targetMember = partyStates[currentIdx];
+
+        if (targetMember) {
+          const s = getStarterByDexNumber(targetMember.dexNumber);
+          const prog = s ? userStarters.get(s.speciesId) : null;
+          const maxShinyTier = prog?.shinyTier || 0;
+
+          if (maxShinyTier > 0) {
+            targetMember.shinyTier = (targetMember.shinyTier + 1) % (maxShinyTier + 1);
+          }
+        }
+
+        const newPartyParam = serializePartyParam(partyStates);
+        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, currentIdx);
+        await interaction.update(partyData);
+        return;
+      }
+
+      // 2-1-P2-B. Toggle Hidden Ability (HA) for inspected party member (🌟)
+      if (customId.startsWith("party_toggleha_")) {
+        const currentIdx = parseInt(parts[2], 10) || 0;
+        const gen = parseInt(parts[3], 10) || 0;
+        const page = parseInt(parts[4], 10) || 1;
+        const dexNo = parseInt(parts[5], 10) || 1;
+        const slotId = parseInt(parts[6], 10) || 1;
+        const partyRaw = parts[7] || "empty";
+        const isShiny = parts[8] === "1";
+        const isHa = parts[9] === "1";
+        const isPassive = parts[10] === "1";
+
+        const userStarters = getUserStarters(interaction.user.id);
+        const partyStates = parsePartyParam(partyRaw, userStarters);
+        const targetMember = partyStates[currentIdx];
+
+        if (targetMember) {
+          const s = getStarterByDexNumber(targetMember.dexNumber);
+          const prog = s ? userStarters.get(s.speciesId) : null;
+          if (prog?.hasHiddenAbility) {
+            targetMember.useHiddenAbility = !targetMember.useHiddenAbility;
+          }
+        }
+
+        const newPartyParam = serializePartyParam(partyStates);
+        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, currentIdx);
+        await interaction.update(partyData);
+        return;
+      }
+
+      // 2-1-P2-C. Toggle Passive for inspected party member (🔓)
+      if (customId.startsWith("party_togglepass_")) {
+        const currentIdx = parseInt(parts[2], 10) || 0;
+        const gen = parseInt(parts[3], 10) || 0;
+        const page = parseInt(parts[4], 10) || 1;
+        const dexNo = parseInt(parts[5], 10) || 1;
+        const slotId = parseInt(parts[6], 10) || 1;
+        const partyRaw = parts[7] || "empty";
+        const isShiny = parts[8] === "1";
+        const isHa = parts[9] === "1";
+        const isPassive = parts[10] === "1";
+
+        const userStarters = getUserStarters(interaction.user.id);
+        const partyStates = parsePartyParam(partyRaw, userStarters);
+        const targetMember = partyStates[currentIdx];
+
+        if (targetMember) {
+          const s = getStarterByDexNumber(targetMember.dexNumber);
+          const prog = s ? userStarters.get(s.speciesId) : null;
+          if (prog?.passiveUnlocked) {
+            targetMember.usePassive = !targetMember.usePassive;
+          }
+        }
+
+        const newPartyParam = serializePartyParam(partyStates);
+        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, currentIdx);
         await interaction.update(partyData);
         return;
       }
@@ -1717,22 +1902,24 @@ export const interactionCreateEvent: BotEvent = {
         const dexNo = parseInt(parts[6], 10) || 1;
         const slotId = parseInt(parts[7], 10) || 1;
         const partyRaw = parts[8] || "empty";
-        const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
         const isShiny = parts[9] === "1";
         const isHa = parts[10] === "1";
         const isPassive = parts[11] === "1";
 
-        const updatedList = partyDexList.filter((d) => d !== targetDex);
+        const userStarters = getUserStarters(interaction.user.id);
+        const partyStates = parsePartyParam(partyRaw, userStarters);
+        const updatedList = partyStates.filter((p) => p.dexNumber !== targetDex);
 
         if (updatedList.length === 0) {
           // If no party members left, go back to starter selection screen!
-          const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, page, dexNo, updatedList, isShiny, isHa, isPassive);
+          const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, page, dexNo, "empty", isShiny, isHa, isPassive);
           await interaction.update(starterData);
           return;
         }
 
         const nextIdx = Math.min(currentIdx, updatedList.length - 1);
-        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, updatedList, isShiny, isHa, isPassive, nextIdx);
+        const newPartyParam = serializePartyParam(updatedList);
+        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, nextIdx);
         await interaction.update(partyData);
         return;
       }
@@ -1744,12 +1931,11 @@ export const interactionCreateEvent: BotEvent = {
         const dexNo = parseInt(parts[5], 10) || 1;
         const slotId = parseInt(parts[6], 10) || 1;
         const partyRaw = parts[7] || "empty";
-        const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
         const isShiny = parts[8] === "1";
         const isHa = parts[9] === "1";
         const isPassive = parts[10] === "1";
 
-        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, page, dexNo, partyDexList, isShiny, isHa, isPassive);
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, page, dexNo, partyRaw, isShiny, isHa, isPassive);
         await interaction.update(starterData);
         return;
       }
@@ -1761,14 +1947,16 @@ export const interactionCreateEvent: BotEvent = {
         const page = parseInt(parts[4], 10) || 1;
         const slotId = parseInt(parts[5], 10) || 1;
         const partyRaw = parts[6] || "empty";
-        const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
         const isShiny = parts[7] === "1";
         const isHa = parts[8] === "1";
         const isPassive = parts[9] === "1";
 
-        const updatedList = partyDexList.filter((d) => d !== dexNo);
+        const userStarters = getUserStarters(interaction.user.id);
+        const partyStates = parsePartyParam(partyRaw, userStarters);
+        const updatedList = partyStates.filter((d) => d.dexNumber !== dexNo);
+        const newPartyParam = serializePartyParam(updatedList);
 
-        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, page, dexNo, updatedList, isShiny, isHa, isPassive);
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive);
         await interaction.update(starterData);
         return;
       }
@@ -1777,23 +1965,17 @@ export const interactionCreateEvent: BotEvent = {
       if (customId.startsWith("starter_start_")) {
         const slotId = parseInt(parts[2], 10) || 1;
         const partyRaw = parts[3] || "empty";
-        const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
-        const isShiny = parts[4] === "1";
-        const isHa = parts[5] === "1";
-        const isPassive = parts[6] === "1";
-
-        if (partyDexList.length === 0) return;
-
         const userStarters = getUserStarters(interaction.user.id);
-        const starterParty: PartyPokemon[] = partyDexList.map((dex) => {
-          const s = getStarterByDexNumber(dex)!;
-          const prog = userStarters.get(s.speciesId);
-          const hasShiny = (prog?.shinyTier || 0) > 0;
-          const hasHa = prog?.hasHiddenAbility || false;
-          const chosenAbility = (hasHa && s.hiddenAbilityKo) ? s.hiddenAbilityKo : s.abilityKo;
+        const partyStates = parsePartyParam(partyRaw, userStarters);
+
+        if (partyStates.length === 0) return;
+
+        const starterParty: PartyPokemon[] = partyStates.map((st) => {
+          const s = getStarterByDexNumber(st.dexNumber)!;
+          const chosenAbility = (st.useHiddenAbility && s.hiddenAbilityKo) ? s.hiddenAbilityKo : s.abilityKo;
           return {
             speciesId: s.speciesId,
-            name: (hasShiny ? "✨ " : "") + s.nameKo,
+            name: (st.shinyTier > 0 ? "✨ " : "") + s.nameKo,
             level: 5,
             hp: 20,
             maxHp: 20,
