@@ -592,7 +592,7 @@ async function renderGenSelectMessageData(
     // Row 4: Back to Starter Select
     new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
-        .setCustomId(`starter_pickgen_${currentGen}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+        .setCustomId(`starter_genback_${currentGen}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
         .setLabel(isKo ? "↩️ 스타팅 선택으로 돌아가기" : "↩️ Back to Starter Select")
         .setStyle(ButtonStyle.Secondary)
     ),
@@ -1291,8 +1291,8 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 2-1-H. Pick Specific Generation from Gen Menu
-      if (customId.startsWith("starter_pickgen_")) {
+      // 2-1-H. Pick Specific Generation from Gen Menu or Back Button
+      if (customId.startsWith("starter_pickgen_") || customId.startsWith("starter_genback_")) {
         const chosenGen = parseInt(parts[2], 10) || 1;
         const slotId = parseInt(parts[3], 10) || 1;
         const partyRaw = parts[4] || "empty";
