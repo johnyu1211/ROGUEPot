@@ -13,9 +13,10 @@ import {
 } from "discord.js";
 import { BotEvent, ExtendedClient } from "../types/index.js";
 import { createBaseEmbed, COLORS } from "../utils/embed.js";
-import { renderTitleScreen, renderBagScreen, renderMultiplayerScreen, renderPokedexScreen, getPokemonSprite, isSpriteCached } from "../utils/canvasRenderer.js";
+import { renderTitleScreen, renderBagScreen, renderMultiplayerScreen, renderPokedexScreen, renderStarterSelectScreen, StarterSelectPartyItem, getPokemonSprite, isSpriteCached } from "../utils/canvasRenderer.js";
 import { saveService, PartyPokemon } from "../services/saveService.js";
 import { getPokemonByQuery, getPokemonByDexNumber, getPokemonPage, getAbilityKoreanName, getAbilityDetail } from "../services/pokeApiService.js";
+import { STARTER_DATABASE, getStartersByGen, getStarterByDexNumber, DEFAULT_MAX_COST, StarterEntry } from "../data/starterCosts.js";
 
 function createStarterSelectMenu(slotId: number, userId: string, fromSource: "title" | "slots" = "title") {
   const profile = saveService.getProfile(userId);
@@ -554,6 +555,148 @@ async function handlePokedexInteractionUpdate(
   }
 }
 
+async function renderStarterSelectMessageData(
+  client: ExtendedClient,
+  userId: string,
+  slotId: number = 1,
+  gen: number = 1,
+  selectedDexNo: number = 1,
+  partyDexList: number[] = []
+) {
+  const profile = saveService.getProfile(userId);
+  const isKo = profile.language === "ko";
+
+  const genStarters = getStartersByGen(gen);
+  const selectedStarter = getStarterByDexNumber(selectedDexNo) || genStarters[0] || STARTER_DATABASE[0];
+
+  const selectedParty: StarterSelectPartyItem[] = partyDexList
+    .map((dex) => {
+      const s = getStarterByDexNumber(dex);
+      if (!s) return null;
+      return {
+        dexNumber: s.dexNumber,
+        speciesId: s.speciesId,
+        name: isKo ? s.nameKo : s.name,
+        cost: s.cost,
+      };
+    })
+    .filter(Boolean) as StarterSelectPartyItem[];
+
+  const currentCost = selectedParty.reduce((sum, p) => sum + p.cost, 0);
+  const isAlreadyInParty = partyDexList.includes(selectedStarter.dexNumber);
+  const canAdd = !isAlreadyInParty && selectedParty.length < 6 && (currentCost + selectedStarter.cost <= DEFAULT_MAX_COST);
+  const canStart = selectedParty.length >= 1 && currentCost <= DEFAULT_MAX_COST;
+
+  const imageBuffer = await renderStarterSelectScreen({
+    selectedStarter,
+    currentGen: gen,
+    startersList: genStarters,
+    selectedParty,
+    maxCost: DEFAULT_MAX_COST,
+    lang: profile.language,
+  });
+
+  const attachment = new AttachmentBuilder(imageBuffer, { name: "starter_select.png" });
+  const partyParam = partyDexList.join("-") || "empty";
+
+  // Helper to create slot button
+  const createSlotBtn = (idx: number) => {
+    const s = genStarters[idx];
+    if (!s) {
+      return new ButtonBuilder()
+        .setCustomId(`starter_empty_${idx}_${userId}`)
+        .setLabel(`${idx + 1}`)
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(true);
+    }
+    const isSelected = selectedStarter.dexNumber === s.dexNumber;
+    return new ButtonBuilder()
+      .setCustomId(`starter_sel_${s.dexNumber}_${gen}_${slotId}_${partyParam}_${userId}`)
+      .setLabel(`${idx + 1}`)
+      .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Secondary);
+  };
+
+  const components: ActionRowBuilder<ButtonBuilder>[] = [];
+
+  // ROW 1: Generation Tabs (1 ~ 5)
+  const row1Btns: ButtonBuilder[] = [1, 2, 3, 4, 5].map((g) =>
+    new ButtonBuilder()
+      .setCustomId(`starter_gen_${g}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${userId}`)
+      .setLabel(`G${g}`)
+      .setStyle(g === gen ? ButtonStyle.Danger : ButtonStyle.Secondary)
+  );
+  components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row1Btns));
+
+  // ROW 2: Starters 1, 2 + [+추가] + [-제거]
+  const row2Btns: ButtonBuilder[] = [
+    createSlotBtn(0),
+    createSlotBtn(1),
+    new ButtonBuilder()
+      .setCustomId(`starter_add_${selectedStarter.dexNumber}_${gen}_${slotId}_${partyParam}_${userId}`)
+      .setLabel(isKo ? "+파티추가" : "+Add")
+      .setStyle(ButtonStyle.Success)
+      .setDisabled(!canAdd),
+    new ButtonBuilder()
+      .setCustomId(`starter_rem_${selectedStarter.dexNumber}_${gen}_${slotId}_${partyParam}_${userId}`)
+      .setLabel(isKo ? "-제거" : "-Remove")
+      .setStyle(ButtonStyle.Danger)
+      .setDisabled(!isAlreadyInParty)
+  ];
+  components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row2Btns));
+
+  // ROW 3: Starters 3, 4 + Generation Tabs (6 ~ 8)
+  const row3Btns: ButtonBuilder[] = [
+    createSlotBtn(2),
+    createSlotBtn(3),
+    ...([6, 7, 8].map((g) =>
+      new ButtonBuilder()
+        .setCustomId(`starter_gen_${g}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${userId}`)
+        .setLabel(`G${g}`)
+        .setStyle(g === gen ? ButtonStyle.Danger : ButtonStyle.Secondary)
+    ))
+  ];
+  components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row3Btns));
+
+  // ROW 4: Starters 5, 6 + G9 + Prev Gen / Next Gen
+  const row4Btns: ButtonBuilder[] = [
+    createSlotBtn(4),
+    createSlotBtn(5),
+    new ButtonBuilder()
+      .setCustomId(`starter_gen_9_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${userId}`)
+      .setLabel(`G9`)
+      .setStyle(gen === 9 ? ButtonStyle.Danger : ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`starter_gen_${Math.max(1, gen - 1)}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${userId}`)
+      .setLabel("<")
+      .setStyle(ButtonStyle.Primary)
+      .setDisabled(gen <= 1),
+    new ButtonBuilder()
+      .setCustomId(`starter_gen_${Math.min(9, gen + 1)}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${userId}`)
+      .setLabel(">")
+      .setStyle(ButtonStyle.Primary)
+      .setDisabled(gen >= 9)
+  ];
+  components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row4Btns));
+
+  // ROW 5: Starters 7, 8 + 🚀 모험 시작 + ↩️ 뒤로가기
+  const row5Btns: ButtonBuilder[] = [
+    createSlotBtn(6),
+    createSlotBtn(7),
+    new ButtonBuilder()
+      .setCustomId(`starter_start_${slotId}_${partyParam}_${userId}`)
+      .setLabel(isKo ? "🚀모험 시작!" : "🚀Start Adventure!")
+      .setStyle(ButtonStyle.Success)
+      .setDisabled(!canStart),
+    new ButtonBuilder()
+      .setCustomId(`starter_back_title_${userId}`)
+      .setLabel("↩️")
+      .setStyle(ButtonStyle.Secondary)
+  ];
+  components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row5Btns));
+
+  return { embeds: [], files: [attachment], attachments: [], components };
+}
+
 async function renderTitleMessageData(client: ExtendedClient, userId: string) {
   const hasSavedSlots = saveService.hasAnySavedSlot(userId);
   const userProfile = saveService.getProfile(userId);
@@ -603,11 +746,15 @@ async function renderTitleMessageData(client: ExtendedClient, userId: string) {
     );
   }
 
-  // ROW 2: Utility & Settings Actions
+  // ROW 2: Utility & Settings Actions (Bag, Egg Gacha, Settings)
   const subActionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(`menu_inventory_${userId}`)
       .setLabel("💼")
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`menu_egg_gacha_${userId}`)
+      .setLabel("🥚")
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId(`menu_settings_${userId}`)
@@ -1055,11 +1202,105 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 2-1. New Game Button Clicked from Title (Back destination: TITLE)
+      // 2-1. New Game Button Clicked from Title (Pure Canvas Starter Select Screen)
       if (customId.startsWith("menu_newgame_")) {
         const targetSlot = saveService.getFirstAvailableSlot(interaction.user.id);
-        const responseData = createStarterSelectMenu(targetSlot, interaction.user.id, "title");
-        await interaction.update(responseData);
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, targetSlot, 1, 1, []);
+        await interaction.update(starterData);
+        return;
+      }
+
+      // 2-1-A. Starter Select Pokemon Item Clicked
+      if (customId.startsWith("starter_sel_")) {
+        const dexNo = parseInt(parts[2], 10) || 1;
+        const gen = parseInt(parts[3], 10) || 1;
+        const slotId = parseInt(parts[4], 10) || 1;
+        const partyRaw = parts[5] || "empty";
+        const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
+
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, dexNo, partyDexList);
+        await interaction.update(starterData);
+        return;
+      }
+
+      // 2-1-B. Starter Generation Tab Switch
+      if (customId.startsWith("starter_gen_")) {
+        const gen = parseInt(parts[2], 10) || 1;
+        const slotId = parseInt(parts[4], 10) || 1;
+        const partyRaw = parts[5] || "empty";
+        const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
+
+        const genStarters = getStartersByGen(gen);
+        const firstStarterDex = genStarters[0]?.dexNumber || 1;
+
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, firstStarterDex, partyDexList);
+        await interaction.update(starterData);
+        return;
+      }
+
+      // 2-1-C. Starter Add to Party (+파티추가)
+      if (customId.startsWith("starter_add_")) {
+        const dexNo = parseInt(parts[2], 10) || 1;
+        const gen = parseInt(parts[3], 10) || 1;
+        const slotId = parseInt(parts[4], 10) || 1;
+        const partyRaw = parts[5] || "empty";
+        const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
+
+        if (!partyDexList.includes(dexNo) && partyDexList.length < 6) {
+          partyDexList.push(dexNo);
+        }
+
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, dexNo, partyDexList);
+        await interaction.update(starterData);
+        return;
+      }
+
+      // 2-1-D. Starter Remove from Party (-제거)
+      if (customId.startsWith("starter_rem_")) {
+        const dexNo = parseInt(parts[2], 10) || 1;
+        const gen = parseInt(parts[3], 10) || 1;
+        const slotId = parseInt(parts[4], 10) || 1;
+        const partyRaw = parts[5] || "empty";
+        const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
+
+        const updatedList = partyDexList.filter((d) => d !== dexNo);
+
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, dexNo, updatedList);
+        await interaction.update(starterData);
+        return;
+      }
+
+      // 2-1-E. Starter Launch Adventure (🚀 모험 시작!)
+      if (customId.startsWith("starter_start_")) {
+        const slotId = parseInt(parts[2], 10) || 1;
+        const partyRaw = parts[3] || "empty";
+        const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
+
+        if (partyDexList.length === 0) return;
+
+        const starterParty: PartyPokemon[] = partyDexList.map((dex) => {
+          const s = getStarterByDexNumber(dex)!;
+          return {
+            speciesId: s.speciesId,
+            name: s.nameKo,
+            level: 5,
+            hp: 20,
+            maxHp: 20,
+            moves: s.starterMoves,
+          };
+        });
+
+        saveService.createNewRunWithParty(interaction.user.id, slotId, starterParty);
+
+        const titleData = await renderTitleMessageData(client, interaction.user.id);
+        await interaction.update(titleData);
+        return;
+      }
+
+      // 2-1-F. Starter Back to Title (↩️)
+      if (customId.startsWith("starter_back_title_")) {
+        const titleData = await renderTitleMessageData(client, interaction.user.id);
+        await interaction.update(titleData);
         return;
       }
 
@@ -1132,8 +1373,8 @@ export const interactionCreateEvent: BotEvent = {
         const isKo = profile.language === "ko";
 
         if (!slotData) {
-          const responseData = createStarterSelectMenu(slotNum, interaction.user.id, "slots");
-          await interaction.update(responseData);
+          const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotNum, 1, 1, []);
+          await interaction.update(starterData);
         } else {
           const existingSlotEmbed = createBaseEmbed(
             isKo ? `슬롯 #${slotNum} 상세 정보` : `Slot #${slotNum} Details`,
@@ -1170,6 +1411,14 @@ export const interactionCreateEvent: BotEvent = {
             components: [slotActionRow],
           });
         }
+        return;
+      }
+
+      // 2-6-B. Overwrite Existing Slot (Opens Starter Select Screen for that slot)
+      if (customId.startsWith("slot_overwrite_")) {
+        const slotNum = parseInt(parts[2], 10) || 1;
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotNum, 1, 1, []);
+        await interaction.update(starterData);
         return;
       }
 

@@ -2,6 +2,7 @@ import { createCanvas, loadImage, GlobalFonts, Image } from "@napi-rs/canvas";
 import path from "path";
 import fs from "fs";
 import { DexPokemonInfo, getAbilityDetail, getPokemonSpeciesInfo } from "../services/pokeApiService.js";
+import { StarterEntry } from "../data/starterCosts.js";
 
 // Register custom pixel dot font
 const fontPath = path.resolve(process.cwd(), "assets/fonts/DungGeunMo.ttf");
@@ -1264,6 +1265,369 @@ export async function renderDotTestCard(): Promise<Buffer> {
   ctx.fillStyle = "#57F287";
   ctx.textAlign = "center";
   ctx.fillText("✔ 100% Crisp Pixel Art Rendering Verified", width / 2, 315);
+
+  return canvas.toBuffer("image/png");
+}
+
+export interface StarterSelectPartyItem {
+  dexNumber: number;
+  speciesId: string;
+  name: string;
+  cost: number;
+}
+
+export interface StarterSelectScreenOptions {
+  selectedStarter: StarterEntry;
+  currentGen: number;
+  startersList: StarterEntry[];
+  selectedParty: StarterSelectPartyItem[];
+  maxCost?: number;
+  lang?: "en" | "ko";
+}
+
+/**
+ * Renders the PokéRogue-style Dedicated Starter Selection & Party Builder Screen (560x380)
+ */
+export async function renderStarterSelectScreen(options: StarterSelectScreenOptions): Promise<Buffer> {
+  const width = 560;
+  const height = 380;
+  const canvas = createCanvas(width, height);
+  const ctx = canvas.getContext("2d");
+
+  ctx.imageSmoothingEnabled = false;
+  ctx.textRendering = "optimizeSpeed";
+
+  const isKo = options.lang === "ko";
+  const sel = options.selectedStarter;
+  const gen = options.currentGen;
+  const list = options.startersList || [];
+  const party = options.selectedParty || [];
+  const maxCost = options.maxCost || 10;
+  const currentCost = party.reduce((sum, p) => sum + p.cost, 0);
+
+  // 0. PRELOAD SPRITES IN PARALLEL
+  const [listSprites, selectedSprite, partySprites] = await Promise.all([
+    Promise.all(list.map((s) => (s ? getPokemonSprite(s.speciesId) : Promise.resolve(null)))),
+    sel ? getPokemonSprite(sel.speciesId) : Promise.resolve(null),
+    Promise.all(party.map((p) => (p ? getPokemonSprite(p.speciesId) : Promise.resolve(null)))),
+  ]);
+
+  // 1. Dark Retro Background
+  ctx.fillStyle = "#13151F";
+  ctx.fillRect(0, 0, width, height);
+
+  // 2. TOP BANNER (Left Side Header Bar)
+  const splitX = 262;
+  ctx.fillStyle = "#1A1D2A";
+  ctx.fillRect(0, 0, splitX, 42);
+
+  ctx.strokeStyle = "#2D3246";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(0, 42);
+  ctx.lineTo(splitX, 42);
+  ctx.stroke();
+
+  ctx.font = "bold 16px DungGeunMo";
+  ctx.fillStyle = "#FFFFFF";
+  ctx.textAlign = "left";
+  ctx.fillText(isKo ? "스타팅 포켓몬 선택" : "STARTER SELECT", 12, 28);
+
+  // Gen Badge
+  ctx.fillStyle = "#5865F2";
+  ctx.beginPath();
+  ctx.roundRect(splitX - 60, 10, 50, 22, 4);
+  ctx.fill();
+  ctx.font = "bold 12px DungGeunMo";
+  ctx.fillStyle = "#FFFFFF";
+  ctx.textAlign = "center";
+  ctx.fillText(`GEN ${gen}`, splitX - 35, 26);
+
+  // 3. LEFT SIDE: 8 Starters Grid (2 Columns x 4 Rows, y: 48 ~ 370)
+  const startListY = 48;
+  const slotW = 118;
+  const slotH = 76;
+  const gapX = 6;
+  const gapY = 6;
+
+  for (let i = 0; i < 8; i++) {
+    const s = list[i];
+    const row = Math.floor(i / 2);
+    const col = i % 2;
+    const sx = 10 + col * (slotW + gapX);
+    const sy = startListY + row * (slotH + gapY);
+    const isSelected = sel && s && sel.dexNumber === s.dexNumber;
+    const isAlreadyInParty = s && party.some((p) => p.dexNumber === s.dexNumber);
+
+    ctx.fillStyle = isSelected ? "#222738" : "#181B26";
+    ctx.beginPath();
+    ctx.roundRect(sx, sy, slotW, slotH, 6);
+    ctx.fill();
+
+    ctx.strokeStyle = isSelected ? "#5865F2" : (isAlreadyInParty ? "#22C55E" : "#282D3D");
+    ctx.lineWidth = isSelected ? 2 : 1;
+    ctx.stroke();
+
+    if (s) {
+      const displayName = isKo ? s.nameKo : s.name;
+
+      // Slot Number + Name
+      ctx.font = "bold 13px DungGeunMo";
+      ctx.fillStyle = isSelected ? "#FFFFFF" : "#E2E8F0";
+      ctx.textAlign = "left";
+      ctx.fillText(`${i + 1}. ${displayName.slice(0, 4)}`, sx + 6, sy + 16);
+
+      // Cost Badge (Gold Orange)
+      ctx.fillStyle = "#D97706";
+      ctx.beginPath();
+      ctx.roundRect(sx + slotW - 32, sy + 4, 26, 16, 3);
+      ctx.fill();
+      ctx.font = "bold 11px DungGeunMo";
+      ctx.fillStyle = "#FFFFFF";
+      ctx.textAlign = "center";
+      ctx.fillText(`${s.cost}C`, sx + slotW - 19, sy + 16);
+
+      // Sprite
+      const sprite = listSprites[i];
+      const sprAreaW = 48;
+      const sprAreaH = 48;
+      const sprX = sx + 6;
+      const sprY = sy + 22;
+
+      if (sprite) {
+        const scale = 0.62;
+        const sprW = sprite.width * scale;
+        const sprH = sprite.height * scale;
+        ctx.drawImage(sprite, sprX + (sprAreaW - sprW) / 2, sprY + (sprAreaH - sprH) / 2, sprW, sprH);
+      }
+
+      // Party Check Badge or Gen tag
+      if (isAlreadyInParty) {
+        ctx.fillStyle = "#22C55E";
+        ctx.beginPath();
+        ctx.roundRect(sx + slotW - 48, sy + slotH - 22, 42, 16, 3);
+        ctx.fill();
+        ctx.font = "bold 11px DungGeunMo";
+        ctx.fillStyle = "#FFFFFF";
+        ctx.textAlign = "center";
+        ctx.fillText(isKo ? "선택됨" : "ADDED", sx + slotW - 27, sy + slotH - 10);
+      } else {
+        ctx.font = "11px DungGeunMo";
+        ctx.fillStyle = "#64748B";
+        ctx.textAlign = "right";
+        ctx.fillText(`#${String(s.dexNumber).padStart(3, "0")}`, sx + slotW - 6, sy + slotH - 10);
+      }
+    } else {
+      ctx.font = "12px DungGeunMo";
+      ctx.fillStyle = "#334155";
+      ctx.textAlign = "center";
+      ctx.fillText("---", sx + slotW / 2, sy + slotH / 2 + 4);
+    }
+  }
+
+  // 4. VERTICAL SPLIT LINE
+  ctx.strokeStyle = "#2D3246";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(splitX, 0);
+  ctx.lineTo(splitX, height);
+  ctx.stroke();
+
+  // 5. RIGHT SIDE: Top Preview Card & Bottom Party Builder Card
+  const rightX = 274;
+  const rightW = width - rightX - 10;
+
+  // 5-1. TOP PREVIEW CARD (y: 10 ~ 165, h: 155)
+  const topCardY = 10;
+  const topCardH = 155;
+
+  ctx.fillStyle = "#181B26";
+  ctx.beginPath();
+  ctx.roundRect(rightX, topCardY, rightW, topCardH, 6);
+  ctx.fill();
+  ctx.strokeStyle = "#282D3D";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  if (sel) {
+    // Sprite Box (64x64)
+    const showBoxX = rightX + 8;
+    const showBoxY = topCardY + 8;
+    const showBoxSize = 64;
+
+    ctx.fillStyle = "#12141C";
+    ctx.beginPath();
+    ctx.roundRect(showBoxX, showBoxY, showBoxSize, showBoxSize, 6);
+    ctx.fill();
+    ctx.strokeStyle = "#2D3246";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    if (selectedSprite) {
+      const scale = 1.2;
+      const sprW = selectedSprite.width * scale;
+      const sprH = selectedSprite.height * scale;
+      ctx.drawImage(selectedSprite, showBoxX + (showBoxSize - sprW) / 2, showBoxY + (showBoxSize - sprH) / 2, sprW, sprH);
+    }
+
+    // Name + Dex + Cost next to sprite
+    const infoX = showBoxX + showBoxSize + 10;
+    const titleName = isKo ? sel.nameKo : sel.name;
+    const dexTag = `#${String(sel.dexNumber).padStart(3, "0")}`;
+
+    ctx.font = "bold 13px DungGeunMo";
+    ctx.fillStyle = "#8E96AB";
+    ctx.textAlign = "left";
+    ctx.fillText(dexTag, infoX, topCardY + 24);
+
+    const tagW = ctx.measureText(dexTag).width;
+    ctx.font = "bold 16px DungGeunMo";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText(titleName, infoX + tagW + 6, topCardY + 24);
+
+    // Cost Pill
+    ctx.fillStyle = "#D97706";
+    ctx.beginPath();
+    ctx.roundRect(infoX, topCardY + 34, 60, 18, 3);
+    ctx.fill();
+    ctx.font = "bold 11px DungGeunMo";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "center";
+    ctx.fillText(`COST: ${sel.cost}`, infoX + 30, topCardY + 47);
+
+    // Starter Moves Title
+    ctx.font = "bold 12px DungGeunMo";
+    ctx.fillStyle = "#94A3B8";
+    ctx.textAlign = "left";
+    ctx.fillText(isKo ? "시작 기술 (Starter Moves)" : "Starter Moves", rightX + 10, topCardY + 84);
+
+    // Move Chips (2x2 Grid, width: 122 each)
+    const moveChipW = (rightW - 26) / 2;
+    const moveChipH = 24;
+    for (let mIdx = 0; mIdx < 4; mIdx++) {
+      const mName = sel.starterMoves[mIdx] || "---";
+      const mCol = mIdx % 2;
+      const mRow = Math.floor(mIdx / 2);
+      const mX = rightX + 10 + mCol * (moveChipW + 6);
+      const mY = topCardY + 96 + mRow * (moveChipH + 4);
+
+      ctx.fillStyle = "#12141C";
+      ctx.beginPath();
+      ctx.roundRect(mX, mY, moveChipW, moveChipH, 3);
+      ctx.fill();
+      ctx.strokeStyle = "#282D3D";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.font = "12px DungGeunMo";
+      ctx.fillStyle = mName === "---" ? "#475569" : "#E2E8F0";
+      ctx.textAlign = "center";
+      ctx.fillText(mName, mX + moveChipW / 2, mY + 16);
+    }
+  }
+
+  // 5-2. BOTTOM PARTY BUILDER CARD (y: 172 ~ 370, h: 198)
+  const bottomCardY = 172;
+  const bottomCardH = 198;
+
+  ctx.fillStyle = "#181B26";
+  ctx.beginPath();
+  ctx.roundRect(rightX, bottomCardY, rightW, bottomCardH, 6);
+  ctx.fill();
+  ctx.strokeStyle = "#282D3D";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Party Header + Cost Bar
+  ctx.font = "bold 13px DungGeunMo";
+  ctx.fillStyle = "#F1F5F9";
+  ctx.textAlign = "left";
+  ctx.fillText(isKo ? "파티 편성 (선택된 스타팅)" : "Selected Party", rightX + 10, bottomCardY + 20);
+
+  // Cost Counter text
+  const isOverCost = currentCost > maxCost;
+  const costColor = isOverCost ? "#EF4444" : (currentCost >= 8 ? "#F59E0B" : "#22C55E");
+  ctx.font = "bold 13px DungGeunMo";
+  ctx.fillStyle = costColor;
+  ctx.textAlign = "right";
+  ctx.fillText(`${isKo ? "코스트" : "Cost"}: ${currentCost} / ${maxCost}`, rightX + rightW - 10, bottomCardY + 20);
+
+  // Cost Gauge Bar (Width: rightW - 20)
+  const gaugeW = rightW - 20;
+  const gaugeH = 6;
+  const gaugeX = rightX + 10;
+  const gaugeY = bottomCardY + 28;
+
+  ctx.fillStyle = "#12141C";
+  ctx.beginPath();
+  ctx.roundRect(gaugeX, gaugeY, gaugeW, gaugeH, 3);
+  ctx.fill();
+
+  const fillRatio = Math.min(1.0, currentCost / maxCost);
+  const fillW = Math.max(fillRatio > 0 ? 4 : 0, fillRatio * gaugeW);
+  ctx.fillStyle = costColor;
+  ctx.beginPath();
+  ctx.roundRect(gaugeX, gaugeY, fillW, gaugeH, 3);
+  ctx.fill();
+
+  // 6 Party Slots Grid (3 Columns x 2 Rows)
+  const partySlotW = (rightW - 28) / 3;
+  const partySlotH = 64;
+  const partyStartX = rightX + 10;
+  const partyStartY = bottomCardY + 42;
+  const partyGapX = 4;
+  const partyGapY = 6;
+
+  for (let pIdx = 0; pIdx < 6; pIdx++) {
+    const member = party[pIdx];
+    const pCol = pIdx % 3;
+    const pRow = Math.floor(pIdx / 3);
+    const pX = partyStartX + pCol * (partySlotW + partyGapX);
+    const pY = partyStartY + pRow * (partySlotH + partyGapY);
+
+    ctx.fillStyle = member ? "#1E2438" : "#12141C";
+    ctx.beginPath();
+    ctx.roundRect(pX, pY, partySlotW, partySlotH, 4);
+    ctx.fill();
+
+    ctx.strokeStyle = member ? "#384260" : "#242A3D";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    if (member) {
+      // Mini Sprite (Centered)
+      const pSprite = partySprites[pIdx];
+      if (pSprite) {
+        const scale = 0.58;
+        const sprW = pSprite.width * scale;
+        const sprH = pSprite.height * scale;
+        ctx.drawImage(pSprite, pX + (partySlotW - sprW) / 2, pY + 2 + (36 - sprH) / 2, sprW, sprH);
+      }
+
+      // Member Name + Cost Badge
+      ctx.font = "bold 11px DungGeunMo";
+      ctx.fillStyle = "#FFFFFF";
+      ctx.textAlign = "center";
+      ctx.fillText(member.name.slice(0, 4), pX + partySlotW / 2, pY + 44);
+
+      ctx.fillStyle = "#D97706";
+      ctx.beginPath();
+      ctx.roundRect(pX + (partySlotW - 24) / 2, pY + 48, 24, 13, 2);
+      ctx.fill();
+      ctx.font = "bold 10px DungGeunMo";
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillText(`${member.cost}C`, pX + partySlotW / 2, pY + 58);
+    } else {
+      // Empty Slot Marker
+      ctx.font = "16px DungGeunMo";
+      ctx.fillStyle = "#334155";
+      ctx.textAlign = "center";
+      ctx.fillText("+", pX + partySlotW / 2, pY + 30);
+      ctx.font = "10px DungGeunMo";
+      ctx.fillStyle = "#475569";
+      ctx.fillText(isKo ? `슬롯 ${pIdx + 1}` : `Slot ${pIdx + 1}`, pX + partySlotW / 2, pY + 48);
+    }
+  }
 
   return canvas.toBuffer("image/png");
 }
