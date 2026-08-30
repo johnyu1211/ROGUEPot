@@ -16,7 +16,7 @@
     "pokemon",
     "discordjs"
   ],
-  "author": "johnyu",
+  "author": "John",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
     "@napi-rs/canvas": "^1.0.8",
