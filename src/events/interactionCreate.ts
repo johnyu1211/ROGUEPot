@@ -884,7 +884,7 @@ async function renderPartyViewMessageData(
   isHaFilter: boolean = false,
   isPassiveFilter: boolean = false,
   selectedPartyIdx: number = 0,
-  partyTab: PartyViewTab = "summary",
+  partyTab: PartyViewTab = "moves",
   selectedMoveIdx: number = 0
 ) {
   const profile = saveService.getProfile(userId);
@@ -976,25 +976,7 @@ async function renderPartyViewMessageData(
     )
   );
 
-  // ROW 3: Tab Switchers (📜 Summary / ⚔️ Moves / ✨ Shiny)
-  components.push(
-    new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder()
-        .setCustomId(`party_tab_summary_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${selectedMoveIdx}_${userId}`)
-        .setLabel(isKo ? "📜 스펙/요약" : "📜 Summary")
-        .setStyle(partyTab === "summary" ? ButtonStyle.Primary : ButtonStyle.Secondary),
-      new ButtonBuilder()
-        .setCustomId(`party_tab_moves_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${selectedMoveIdx}_${userId}`)
-        .setLabel(isKo ? "⚔️ 기술 관리" : "⚔️ Moves")
-        .setStyle(partyTab === "moves" ? ButtonStyle.Primary : ButtonStyle.Secondary),
-      new ButtonBuilder()
-        .setCustomId(`party_tab_shiny_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${selectedMoveIdx}_${userId}`)
-        .setLabel(isKo ? "✨ 이로치 폼" : "✨ Shiny Form")
-        .setStyle(partyTab === "shiny" ? ButtonStyle.Primary : ButtonStyle.Secondary)
-    )
-  );
-
-  // ROW 4: Context Sub-Actions based on active tab
+  // ROW 3: Tab Switchers (⚔️ Moves / ✨ Shiny) + Ability/Passive Toggles
   const inspectedProg = inspectedStarter ? userStarters.get(inspectedStarter.speciesId) : null;
   const maxShinyTier = inspectedProg?.shinyTier || 0;
   const curShinyTier = activePartyMember?.shinyTier || 0;
@@ -1003,26 +985,39 @@ async function renderPartyViewMessageData(
   const hasPassive = inspectedProg?.passiveUnlocked || false;
   const curUsePassive = activePartyMember?.usePassive || false;
 
-  if (partyTab === "moves") {
-    // Moves Tab: 4 Move Selector Buttons
-    const moveButtons: ButtonBuilder[] = [];
-    for (let m = 0; m < 4; m++) {
-      const rawMove = inspectedStarter.starterMoves[m] || "---";
-      const moveKey = rawMove.toLowerCase().replace(/[\s_]+/g, "-");
-      const moveInfo = MOVES_DATA[moveKey];
-      const mName = isKo ? (moveInfo?.nameKo || rawMove) : rawMove;
-      const isCur = selectedMoveIdx === m;
+  const haBtnLabel = isKo
+    ? (hasHa ? (curUseHa ? `🌟 [숨특]` : `🌟 [일특]`) : "🔒 숨특")
+    : (hasHa ? (curUseHa ? `🌟 [HA]` : `🌟 [Ab]`) : "🔒 HA");
 
-      moveButtons.push(
-        new ButtonBuilder()
-          .setCustomId(`party_movepick_${m}_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${userId}`)
-          .setLabel(`${m + 1}. ${mName.slice(0, 5)}`)
-          .setStyle(isCur ? ButtonStyle.Primary : ButtonStyle.Secondary)
-          .setDisabled(rawMove === "---")
-      );
-    }
-    components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(...moveButtons));
-  } else if (partyTab === "shiny") {
+  const passBtnLabel = isKo
+    ? (hasPassive ? (curUsePassive ? "🔓 패시브ON" : "🔓 패시브OFF") : "🔒 패시브")
+    : (hasPassive ? (curUsePassive ? "🔓 PassON" : "🔓 PassOFF") : "🔒 Pass");
+
+  components.push(
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`party_tab_moves_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${selectedMoveIdx}_${userId}`)
+        .setLabel(isKo ? "⚔️ 기술 관리" : "⚔️ Moves")
+        .setStyle(partyTab === "moves" ? ButtonStyle.Primary : ButtonStyle.Secondary),
+      new ButtonBuilder()
+        .setCustomId(`party_tab_shiny_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${selectedMoveIdx}_${userId}`)
+        .setLabel(isKo ? "✨ 이로치 폼" : "✨ Shiny Form")
+        .setStyle(partyTab === "shiny" ? ButtonStyle.Primary : ButtonStyle.Secondary),
+      new ButtonBuilder()
+        .setCustomId(`party_toggleha_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
+        .setLabel(haBtnLabel)
+        .setStyle(curUseHa ? ButtonStyle.Danger : ButtonStyle.Secondary)
+        .setDisabled(!hasHa),
+      new ButtonBuilder()
+        .setCustomId(`party_togglepass_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
+        .setLabel(passBtnLabel)
+        .setStyle(curUsePassive ? ButtonStyle.Success : ButtonStyle.Secondary)
+        .setDisabled(!hasPassive)
+    )
+  );
+
+  // ROW 4: Context Sub-Actions based on active tab
+  if (partyTab === "shiny") {
     // Shiny Tab: 4 Direct Shiny Tier Buttons (T0, T1, T2, T3)
     const tierLabels = ["T0 일반", "T1 노랑", "T2 파랑", "T3 빨강"];
     const tierButtons: ButtonBuilder[] = [];
@@ -1040,29 +1035,24 @@ async function renderPartyViewMessageData(
     }
     components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(...tierButtons));
   } else {
-    // Summary Tab: Ability / HA toggle & Passive toggle
-    const haBtnLabel = isKo
-      ? (hasHa ? (curUseHa ? `🌟 [숨특] ${inspectedStarter.hiddenAbilityKo}` : `🌟 [특성] ${inspectedStarter.abilityKo}`) : "🔒 숨특 잠김")
-      : (hasHa ? (curUseHa ? `🌟 [HA] ${inspectedStarter.hiddenAbility}` : `🌟 [Ab] ${inspectedStarter.ability}`) : "🔒 HA Locked");
+    // Moves Tab (Default 1st Screen): 4 Move Selector Buttons
+    const moveButtons: ButtonBuilder[] = [];
+    for (let m = 0; m < 4; m++) {
+      const rawMove = inspectedStarter.starterMoves[m] || "---";
+      const moveKey = rawMove.toLowerCase().replace(/[\s_]+/g, "-");
+      const moveInfo = MOVES_DATA[moveKey];
+      const mName = isKo ? (moveInfo?.nameKo || rawMove) : rawMove;
+      const isCur = selectedMoveIdx === m;
 
-    const passBtnLabel = isKo
-      ? (hasPassive ? (curUsePassive ? "🔓 패시브 ON (-1C)" : "🔓 패시브 OFF") : "🔒 패시브 잠김")
-      : (hasPassive ? (curUsePassive ? "🔓 Passive ON (-1C)" : "🔓 Passive OFF") : "🔒 Passive Locked");
-
-    components.push(
-      new ActionRowBuilder<ButtonBuilder>().addComponents(
+      moveButtons.push(
         new ButtonBuilder()
-          .setCustomId(`party_toggleha_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
-          .setLabel(haBtnLabel)
-          .setStyle(curUseHa ? ButtonStyle.Danger : ButtonStyle.Secondary)
-          .setDisabled(!hasHa),
-        new ButtonBuilder()
-          .setCustomId(`party_togglepass_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
-          .setLabel(passBtnLabel)
-          .setStyle(curUsePassive ? ButtonStyle.Success : ButtonStyle.Secondary)
-          .setDisabled(!hasPassive)
-      )
-    );
+          .setCustomId(`party_movepick_${m}_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${userId}`)
+          .setLabel(`${m + 1}. ${mName.slice(0, 5)}`)
+          .setStyle(isCur ? ButtonStyle.Primary : ButtonStyle.Secondary)
+          .setDisabled(rawMove === "---")
+      );
+    }
+    components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(...moveButtons));
   }
 
   // ROW 5: Remove [-⚪] + START + Back [↩️]
@@ -1830,7 +1820,7 @@ export const interactionCreateEvent: BotEvent = {
         const isHa = parts[8] === "1";
         const isPassive = parts[9] === "1";
 
-        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, partyRaw, isShiny, isHa, isPassive, 0, "summary", 0);
+        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, partyRaw, isShiny, isHa, isPassive, 0, "moves", 0);
         await interaction.update(partyData);
         return;
       }
@@ -1846,7 +1836,7 @@ export const interactionCreateEvent: BotEvent = {
         const isShiny = parts[8] === "1";
         const isHa = parts[9] === "1";
         const isPassive = parts[10] === "1";
-        const tab = (parts[11] || "summary") as PartyViewTab;
+        const tab = (parts[11] || "moves") as PartyViewTab;
         const moveIdx = parseInt(parts[12], 10) || 0;
 
         const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, partyRaw, isShiny, isHa, isPassive, targetIdx, tab, moveIdx);
@@ -1854,7 +1844,7 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 2-1-P2-TAB. Switch Tab in Party View (📜 summary / ⚔️ moves / ✨ shiny)
+      // 2-1-P2-TAB. Switch Tab in Party View (⚔️ moves / ✨ shiny)
       if (customId.startsWith("party_tab_")) {
         const targetTab = parts[2] as PartyViewTab;
         const currentIdx = parseInt(parts[3], 10) || 0;
@@ -1932,7 +1922,7 @@ export const interactionCreateEvent: BotEvent = {
         const isShiny = parts[8] === "1";
         const isHa = parts[9] === "1";
         const isPassive = parts[10] === "1";
-        const tab = (parts[11] || "summary") as PartyViewTab;
+        const tab = (parts[11] || "moves") as PartyViewTab;
         const moveIdx = parseInt(parts[12], 10) || 0;
 
         const userStarters = getUserStarters(interaction.user.id);
@@ -1964,7 +1954,7 @@ export const interactionCreateEvent: BotEvent = {
         const isShiny = parts[8] === "1";
         const isHa = parts[9] === "1";
         const isPassive = parts[10] === "1";
-        const tab = (parts[11] || "summary") as PartyViewTab;
+        const tab = (parts[11] || "moves") as PartyViewTab;
         const moveIdx = parseInt(parts[12], 10) || 0;
 
         const userStarters = getUserStarters(interaction.user.id);
@@ -1997,7 +1987,7 @@ export const interactionCreateEvent: BotEvent = {
         const isShiny = parts[9] === "1";
         const isHa = parts[10] === "1";
         const isPassive = parts[11] === "1";
-        const tab = (parts[12] || "summary") as PartyViewTab;
+        const tab = (parts[12] || "moves") as PartyViewTab;
         const moveIdx = parseInt(parts[13], 10) || 0;
 
         const userStarters = getUserStarters(interaction.user.id);
