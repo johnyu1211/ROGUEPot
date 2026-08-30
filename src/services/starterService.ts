@@ -16,10 +16,10 @@ export interface UserStarterProgress {
   caughtCount: number;
 }
 
-// 1~9 Gen Default Starters (Grass, Fire, Water trios - 27 Pokemon)
+// Default Starters (Grass, Fire, Water trios + early dual-type starters)
 const DEFAULT_STARTER_SPECIES = new Set([
-  "bulbasaur", "charmander", "squirtle",
-  "chikorita", "cyndaquil", "totodile",
+  "bulbasaur", "charmander", "squirtle", "pidgey", "weedle",
+  "chikorita", "cyndaquil", "totodile", "hoothoot", "spinarak",
   "treecko", "torchic", "mudkip",
   "turtwig", "chimchar", "piplup",
   "snivy", "tepig", "oshawott",
