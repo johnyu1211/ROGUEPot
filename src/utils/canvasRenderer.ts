@@ -1322,6 +1322,7 @@ export interface StarterSelectPartyItem {
   name: string;
   cost: number;
   isShiny?: boolean;
+  shinyTier?: number;
   useHiddenAbility?: boolean;
   usePassive?: boolean;
 }
@@ -1704,6 +1705,285 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
   }
 }
 
+interface PartyCustomizationPanelArgs {
+  panelX: number;
+  panelW: number;
+  sel: StarterEntry;
+  partyMember?: StarterSelectPartyItem;
+  selProgress: any;
+  isKo: boolean;
+}
+
+function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelArgs) {
+  const { panelX, panelW, sel, partyMember, selProgress, isKo } = args;
+
+  const unlockedMaxShinyTier = selProgress?.shinyTier || 0;
+  const currentShinyTier = partyMember?.shinyTier !== undefined ? partyMember.shinyTier : (partyMember?.isShiny ? Math.max(1, unlockedMaxShinyTier) : 0);
+  const hasHaUnlocked = selProgress?.hasHiddenAbility || false;
+  const useHa = partyMember?.useHiddenAbility || false;
+  const hasPassiveUnlocked = selProgress?.passiveUnlocked || false;
+  const usePassive = partyMember?.usePassive || false;
+  const candies = selProgress?.candies || 0;
+
+  // Panel Background
+  ctx.fillStyle = "#151824";
+  ctx.beginPath();
+  ctx.roundRect(panelX, 10, panelW, 360, 6);
+  ctx.fill();
+  ctx.strokeStyle = "#2B3144";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Top Header (y: 10 ~ 38)
+  ctx.fillStyle = "#1B2030";
+  ctx.beginPath();
+  ctx.roundRect(panelX, 10, panelW, 28, [6, 6, 0, 0]);
+  ctx.fill();
+  ctx.strokeStyle = "#2D3448";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.textBaseline = "middle";
+  ctx.font = "bold 14px DungGeunMo";
+  ctx.fillStyle = "#FFFFFF";
+  ctx.textAlign = "left";
+  ctx.fillText(isKo ? "⚙️ 포켓몬 빌드 세팅" : "⚙️ Starter Build Setup", panelX + 8, 24);
+
+  ctx.font = "bold 13px DungGeunMo";
+  ctx.fillStyle = "#FCD34D";
+  ctx.textAlign = "right";
+  ctx.fillText(`🍬 ${candies}`, panelX + panelW - 8, 24);
+
+  // ----------------------------------------------------
+  // SECTION 1: ✨ Shiny Tier Selection (y: 44 ~ 114)
+  // ----------------------------------------------------
+  const sec1Y = 44;
+  const sec1H = 68;
+  ctx.fillStyle = "#10121A";
+  ctx.beginPath();
+  ctx.roundRect(panelX + 6, sec1Y, panelW - 12, sec1H, 5);
+  ctx.fill();
+  ctx.strokeStyle = "#202534";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Label
+  ctx.textBaseline = "middle";
+  ctx.font = "bold 13px DungGeunMo";
+  ctx.fillStyle = "#94A3B8";
+  ctx.textAlign = "left";
+  ctx.fillText(isKo ? `✨ 이로치 외형 (행운 +${currentShinyTier})` : `✨ Shiny Tier (Luck +${currentShinyTier})`, panelX + 12, sec1Y + 14);
+
+  // 4 Tier Pills (T0, T1, T2, T3)
+  const tierPillW = (panelW - 24 - 12) / 4;
+  const tierPillH = 34;
+  const tierPillY = sec1Y + 26;
+
+  const tierColors = ["#64748B", "#F59E0B", "#3B82F6", "#EF4444"];
+  const tierLabels = ["T0 일반", "T1 노랑", "T2 파랑", "T3 빨강"];
+
+  for (let t = 0; t <= 3; t++) {
+    const pX = panelX + 12 + t * (tierPillW + 4);
+    const isUnlocked = t === 0 || t <= unlockedMaxShinyTier;
+    const isSelected = currentShinyTier === t;
+
+    ctx.fillStyle = isSelected ? "#222A40" : "#161922";
+    ctx.beginPath();
+    ctx.roundRect(pX, tierPillY, tierPillW, tierPillH, 4);
+    ctx.fill();
+
+    ctx.strokeStyle = isSelected ? tierColors[t] : (isUnlocked ? "#2D3448" : "#1E222D");
+    ctx.lineWidth = isSelected ? 2 : 1;
+    ctx.stroke();
+
+    ctx.textBaseline = "middle";
+    ctx.font = "bold 12px DungGeunMo";
+    ctx.fillStyle = isSelected ? tierColors[t] : (isUnlocked ? "#CBD5E1" : "#475569");
+    ctx.textAlign = "center";
+
+    if (!isUnlocked) {
+      ctx.fillText(`🔒T${t}`, pX + tierPillW / 2, tierPillY + tierPillH / 2);
+    } else {
+      ctx.fillText(tierLabels[t], pX + tierPillW / 2, tierPillY + tierPillH / 2);
+    }
+  }
+
+  // ----------------------------------------------------
+  // SECTION 2: 🌟 Ability & 🔓 Passive (y: 118 ~ 216)
+  // ----------------------------------------------------
+  const sec2Y = 118;
+  const sec2H = 96;
+  ctx.fillStyle = "#10121A";
+  ctx.beginPath();
+  ctx.roundRect(panelX + 6, sec2Y, panelW - 12, sec2H, 5);
+  ctx.fill();
+  ctx.strokeStyle = "#202534";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // (1) Ability Row
+  ctx.textBaseline = "middle";
+  ctx.font = "bold 13px DungGeunMo";
+  ctx.fillStyle = "#94A3B8";
+  ctx.textAlign = "left";
+  ctx.fillText(isKo ? "🌟 특성 선택 (Ability)" : "🌟 Ability", panelX + 12, sec2Y + 14);
+
+  const abBtnW = (panelW - 24 - 6) / 2;
+  const abBtnH = 26;
+  const abBtnY = sec2Y + 25;
+
+  // Normal Ability Button
+  const isNormAbSelected = !useHa;
+  ctx.fillStyle = isNormAbSelected ? "#1E283D" : "#161922";
+  ctx.beginPath();
+  ctx.roundRect(panelX + 12, abBtnY, abBtnW, abBtnH, 4);
+  ctx.fill();
+  ctx.strokeStyle = isNormAbSelected ? "#60A5FA" : "#282D3D";
+  ctx.lineWidth = isNormAbSelected ? 1.5 : 1;
+  ctx.stroke();
+
+  ctx.textBaseline = "middle";
+  ctx.font = "bold 13px DungGeunMo";
+  ctx.fillStyle = isNormAbSelected ? "#60A5FA" : "#64748B";
+  ctx.textAlign = "center";
+  ctx.fillText(isKo ? sel.abilityKo : sel.ability, panelX + 12 + abBtnW / 2, abBtnY + abBtnH / 2);
+
+  // Hidden Ability (HA) Button
+  const haBtnX = panelX + 12 + abBtnW + 6;
+  const isHaSelected = useHa;
+  ctx.fillStyle = isHaSelected ? "#381E24" : "#161922";
+  ctx.beginPath();
+  ctx.roundRect(haBtnX, abBtnY, abBtnW, abBtnH, 4);
+  ctx.fill();
+  ctx.strokeStyle = isHaSelected ? "#F87171" : (hasHaUnlocked ? "#282D3D" : "#1E222D");
+  ctx.lineWidth = isHaSelected ? 1.5 : 1;
+  ctx.stroke();
+
+  ctx.font = "bold 13px DungGeunMo";
+  ctx.fillStyle = isHaSelected ? "#F87171" : (hasHaUnlocked ? "#94A3B8" : "#475569");
+  ctx.textAlign = "center";
+  if (hasHaUnlocked && sel.hiddenAbility) {
+    ctx.fillText(`🌟 ${isKo ? sel.hiddenAbilityKo : sel.hiddenAbility}`, haBtnX + abBtnW / 2, abBtnY + abBtnH / 2);
+  } else {
+    ctx.fillText(isKo ? `🔒 숨특 미해금` : `🔒 HA Locked`, haBtnX + abBtnW / 2, abBtnY + abBtnH / 2);
+  }
+
+  // (2) Passive Row
+  const passBtnY = sec2Y + 60;
+  const passBtnW = panelW - 24;
+  const passBtnH = 28;
+
+  ctx.fillStyle = usePassive ? "#132D24" : "#161922";
+  ctx.beginPath();
+  ctx.roundRect(panelX + 12, passBtnY, passBtnW, passBtnH, 4);
+  ctx.fill();
+  ctx.strokeStyle = usePassive ? "#34D399" : (hasPassiveUnlocked ? "#282D3D" : "#1E222D");
+  ctx.lineWidth = usePassive ? 1.5 : 1;
+  ctx.stroke();
+
+  ctx.textBaseline = "middle";
+  ctx.font = "bold 13px DungGeunMo";
+  ctx.textAlign = "center";
+  if (hasPassiveUnlocked) {
+    ctx.fillStyle = usePassive ? "#34D399" : "#64748B";
+    const passName = isKo ? sel.passiveAbilityKo : sel.passiveAbility;
+    ctx.fillText(`🔓 패시브: ${passName} (${usePassive ? "ON / -1C 할인" : "OFF"})`, panelX + 12 + passBtnW / 2, passBtnY + passBtnH / 2);
+  } else {
+    ctx.fillStyle = "#475569";
+    ctx.fillText(isKo ? `🔒 패시브 미해금 (${sel.passiveAbilityKo})` : `🔒 Passive Locked (${sel.passiveAbility})`, panelX + 12 + passBtnW / 2, passBtnY + passBtnH / 2);
+  }
+
+  // ----------------------------------------------------
+  // SECTION 3: ⚔️ Starting Moves (y: 220 ~ 362)
+  // ----------------------------------------------------
+  const sec3Y = 220;
+  const sec3H = 142;
+  ctx.fillStyle = "#10121A";
+  ctx.beginPath();
+  ctx.roundRect(panelX + 6, sec3Y, panelW - 12, sec3H, 5);
+  ctx.fill();
+  ctx.strokeStyle = "#202534";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Header
+  ctx.textBaseline = "middle";
+  ctx.font = "bold 13px DungGeunMo";
+  ctx.fillStyle = "#94A3B8";
+  ctx.textAlign = "left";
+  ctx.fillText(isKo ? "⚔️ 시작 기술 상세 (4개)" : "⚔️ Starting Moves (4)", panelX + 12, sec3Y + 14);
+
+  // 4 Moves (Vertical 4 Rows, h = 26 each)
+  const moveRowH = 26;
+  const moveStartY = sec3Y + 26;
+
+  for (let m = 0; m < 4; m++) {
+    const rawMove = sel.starterMoves[m] || "---";
+    const moveKey = rawMove.toLowerCase().replace(/[\s_]+/g, "-");
+    const moveInfo = MOVES_DATA[moveKey];
+    const mDisplay = isKo ? (moveInfo?.nameKo || rawMove) : rawMove;
+    const category = moveInfo?.category;
+    const mType = moveInfo?.type || "normal";
+    const mPower = moveInfo?.power ? String(moveInfo.power) : "-";
+
+    const mY = moveStartY + m * (moveRowH + 2);
+    const mW = panelW - 24;
+
+    ctx.fillStyle = "#161922";
+    ctx.beginPath();
+    ctx.roundRect(panelX + 12, mY, mW, moveRowH, 4);
+    ctx.fill();
+    ctx.strokeStyle = "#252B3C";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    if (rawMove === "---" || !category) {
+      ctx.textBaseline = "middle";
+      ctx.font = "bold 13px DungGeunMo";
+      ctx.fillStyle = "#475569";
+      ctx.textAlign = "center";
+      ctx.fillText("---", panelX + 12 + mW / 2, mY + moveRowH / 2);
+    } else {
+      // Move Category Icon (21x20)
+      const iconX = panelX + 16;
+      const iconY = mY + (moveRowH - 20) / 2;
+      drawMoveCategoryIcon(ctx, iconX, iconY, category);
+
+      // Move Name (13px, Left Aligned)
+      ctx.textBaseline = "middle";
+      ctx.font = "bold 13px DungGeunMo";
+      ctx.fillStyle = "#FFFFFF";
+      ctx.textAlign = "left";
+      ctx.fillText(mDisplay, panelX + 42, mY + moveRowH / 2);
+
+      // Type Badge Pill (Right Side)
+      const tLower = mType.toLowerCase();
+      const tColor = TYPE_COLORS[tLower] || "#777777";
+      const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || mType) : mType.toUpperCase();
+      const tBadgeW = 34;
+      const tBadgeH = 16;
+      const tBadgeX = panelX + mW - 68;
+      const tBadgeY = mY + (moveRowH - tBadgeH) / 2;
+
+      ctx.fillStyle = tColor;
+      ctx.beginPath();
+      ctx.roundRect(tBadgeX, tBadgeY, tBadgeW, tBadgeH, 3);
+      ctx.fill();
+
+      ctx.font = "bold 10px DungGeunMo";
+      ctx.fillStyle = "#FFFFFF";
+      ctx.textAlign = "center";
+      ctx.fillText(tDisplay, tBadgeX + tBadgeW / 2, tBadgeY + tBadgeH / 2);
+
+      // Power text
+      ctx.font = "bold 12px DungGeunMo";
+      ctx.fillStyle = "#CBD5E1";
+      ctx.textAlign = "right";
+      ctx.fillText(`P:${mPower}`, panelX + 12 + mW - 6, mY + moveRowH / 2);
+    }
+  }
+}
+
 /**
  * Renders the PokéRogue-style Dedicated Starter Selection & Party Builder Screen (560x380)
  */
@@ -1753,11 +2033,11 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
 
   if (options.isPartyView) {
     // ----------------------------------------------------
-    // PARTY MANAGEMENT VIEW (Right panel moved to Left, Right panel left empty)
+    // PARTY MANAGEMENT VIEW (Left: Inspector + Party Grid, Right: Customization Dashboard)
     // ----------------------------------------------------
-    const splitX = 280;
+    const splitX = 274;
     const panelX = 10;
-    const panelW = splitX - panelX - 10;
+    const panelW = splitX - panelX - 6;
 
     // Determine currently inspected party member
     const activePartyIdx = Math.min(Math.max(0, options.selectedPartyIdx || 0), Math.max(0, party.length - 1));
@@ -1796,14 +2076,17 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     ctx.lineTo(splitX, height);
     ctx.stroke();
 
-    // RIGHT SIDE: Left empty as requested (clean dark backdrop placeholder)
-    ctx.fillStyle = "#161924";
-    ctx.beginPath();
-    ctx.roundRect(splitX + 12, 10, width - splitX - 22, height - 20, 8);
-    ctx.fill();
-    ctx.strokeStyle = "#202534";
-    ctx.lineWidth = 1;
-    ctx.stroke();
+    // RIGHT SIDE: Render Party Member Customization Dashboard
+    if (inspectedStarter) {
+      renderPartyCustomizationPanel(ctx, {
+        panelX: splitX + 8,
+        panelW: width - splitX - 18,
+        sel: inspectedStarter,
+        partyMember: activePartyMember,
+        selProgress: inspectedProg,
+        isKo,
+      });
+    }
 
     return canvas.toBuffer("image/png");
   }
