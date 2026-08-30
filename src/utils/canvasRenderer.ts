@@ -1486,6 +1486,17 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
           ctx.drawImage(sprite, sprX + (sprAreaW - sprW) / 2, sprY + (sprAreaH - sprH) / 2, sprW, sprH);
         }
 
+        // Shiny Tier Badge on Mini Sprite (Tier 1: ✨, Tier 2: ✨✨, Tier 3: ✨✨✨)
+        const sShinyTier = sProgress?.shinyTier || 0;
+        if (sShinyTier > 0) {
+          const shinyStars = sShinyTier === 3 ? "✨✨✨" : sShinyTier === 2 ? "✨✨" : "✨";
+          const shinyColor = sShinyTier === 3 ? "#EF4444" : sShinyTier === 2 ? "#60A5FA" : "#FBBF24";
+          ctx.font = "bold 11px DungGeunMo";
+          ctx.fillStyle = shinyColor;
+          ctx.textAlign = "left";
+          ctx.fillText(shinyStars, sx + 6, sy + slotH - 8);
+        }
+
         // Party Check Badge or Gen tag (Enlarged to 13px)
         if (isAlreadyInParty) {
           ctx.fillStyle = "#22C55E";
@@ -1525,6 +1536,9 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
 
   // 5-1. TOP PREVIEW DETAILS (y: 10 ~ 162)
   if (sel) {
+    const selShinyTier = selProgress?.shinyTier || 0;
+    const selBorderColor = selShinyTier === 3 ? "#EF4444" : selShinyTier === 2 ? "#3B82F6" : selShinyTier === 1 ? "#F59E0B" : "#2D3246";
+
     // Sprite Box (70x70)
     const showBoxX = rightX;
     const showBoxY = 10;
@@ -1534,8 +1548,8 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     ctx.beginPath();
     ctx.roundRect(showBoxX, showBoxY, showBoxSize, showBoxSize, 6);
     ctx.fill();
-    ctx.strokeStyle = selHasShiny ? "#F59E0B" : "#2D3246";
-    ctx.lineWidth = selHasShiny ? 1.5 : 1;
+    ctx.strokeStyle = selBorderColor;
+    ctx.lineWidth = selShinyTier > 0 ? 2 : 1;
     ctx.stroke();
 
     if (selectedSprite) {
@@ -1547,7 +1561,8 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
 
     // Name + Dex next to sprite (Enlarged)
     const infoX = showBoxX + showBoxSize + 12;
-    const titleName = (selHasShiny ? "✨ " : "") + (isKo ? sel.nameKo : sel.name);
+    const shinyStars = selShinyTier === 3 ? "✨✨✨ " : selShinyTier === 2 ? "✨✨ " : selShinyTier === 1 ? "✨ " : "";
+    const titleName = shinyStars + (isKo ? sel.nameKo : sel.name);
     const dexTag = `#${String(sel.dexNumber).padStart(3, "0")}`;
 
     ctx.font = "bold 15px DungGeunMo";
@@ -1557,7 +1572,8 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
 
     const tagW = ctx.measureText(dexTag).width;
     ctx.font = "bold 20px DungGeunMo";
-    ctx.fillStyle = selHasShiny ? "#FBBF24" : "#FFFFFF";
+    const shinyNameColor = selShinyTier === 3 ? "#F87171" : selShinyTier === 2 ? "#93C5FD" : selShinyTier === 1 ? "#FBBF24" : "#FFFFFF";
+    ctx.fillStyle = shinyNameColor;
     ctx.fillText(titleName, infoX + tagW + 6, 26);
 
     // Right-aligned Big Cost in Header (Top Right of Card)
