@@ -92,6 +92,11 @@ export async function getPokemonSprite(pokemonName: string, allowFetch: boolean 
     else if (clean.startsWith("tornadus")) clean = "tornadus";
     else if (clean.startsWith("thundurus")) clean = "thundurus";
     else if (clean.startsWith("landorus")) clean = "landorus";
+    else if (clean.startsWith("frillish")) clean = "frillish";
+    else if (clean.startsWith("jellicent")) clean = "jellicent";
+    else if (clean.startsWith("keldeo")) clean = "keldeo";
+    else if (clean.startsWith("meloetta")) clean = "meloetta";
+    else if (clean.startsWith("pyroar")) clean = "pyroar";
     else if (clean.startsWith("oinkologne")) clean = "oinkologne";
     else if (clean.startsWith("maushold")) clean = "maushold";
     else if (clean.startsWith("palafin")) clean = "palafin";
