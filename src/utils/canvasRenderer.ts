@@ -269,16 +269,13 @@ export function drawShinySparkle(ctx: any, cx: number, cy: number, size: number,
 }
 
 /**
- * Draws 1, 2, or 3 vector Shiny Sparkles for Shiny Tiers (Tier 1 Yellow, Tier 2 Blue, Tier 3 Red)
+ * Draws a single crisp vector Shiny Sparkle Star with Tier Color (Tier 1 Yellow, Tier 2 Blue, Tier 3 Red)
  */
-export function drawShinyTierSparkles(ctx: any, startX: number, centerY: number, tier: number, size: number = 7): number {
+export function drawShinyTierSparkles(ctx: any, startX: number, centerY: number, tier: number, size: number = 7.5): number {
   if (tier <= 0) return startX;
   const color = tier === 3 ? "#EF4444" : tier === 2 ? "#3B82F6" : "#F59E0B";
-  const spacing = size * 1.8;
-  for (let t = 0; t < tier; t++) {
-    drawShinySparkle(ctx, startX + size + t * spacing, centerY, size, color);
-  }
-  return startX + tier * spacing + 4;
+  drawShinySparkle(ctx, startX + size, centerY, size, color);
+  return startX + size * 2 + 5;
 }
 
 /**
