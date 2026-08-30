@@ -128,6 +128,7 @@ function renderSettingsMessageData(userId: string) {
         `• **버전**: v1.12.1.0\n` +
         "━━━━━━━━━━━━━━━━━━━━━━\n" +
         "**출처 및 크레딧 (Credits & Sources)**\n" +
+        "• **개발자 (Developer)**: John\n" +
         "• **PokéRogue**: PageFaultGames\n" +
         "• **Sprites**: [Showdown](https://pokemonshowdown.com/) & [PMD SpriteCollab](https://sprites.pmdcollab.org/)\n" +
         "• **Data**: [PokéAPI](https://pokeapi.co/)"
@@ -136,6 +137,7 @@ function renderSettingsMessageData(userId: string) {
         `• **Engine Version**: v1.12.1.0\n` +
         "━━━━━━━━━━━━━━━━━━━━━━\n" +
         "**Credits & Sources**\n" +
+        "• **Developer**: John\n" +
         "• **PokéRogue**: PageFaultGames\n" +
         "• **Sprites**: [Showdown](https://pokemonshowdown.com/) & [PMD SpriteCollab](https://sprites.pmdcollab.org/)\n" +
         "• **Data**: [PokéAPI](https://pokeapi.co/)"
