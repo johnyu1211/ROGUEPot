@@ -1554,9 +1554,8 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   // 5-1. TOP PREVIEW DETAILS (y: 10 ~ 162)
   if (sel) {
     const selShinyTier = selProgress?.shinyTier || 0;
-    const selBorderColor = selShinyTier === 3 ? "#EF4444" : selShinyTier === 2 ? "#3B82F6" : selShinyTier === 1 ? "#F59E0B" : "#2D3246";
 
-    // Sprite Box (70x70)
+    // Sprite Box (70x70) - Clean Uniform Border
     const showBoxX = rightX;
     const showBoxY = 10;
     const showBoxSize = 70;
@@ -1565,8 +1564,8 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     ctx.beginPath();
     ctx.roundRect(showBoxX, showBoxY, showBoxSize, showBoxSize, 6);
     ctx.fill();
-    ctx.strokeStyle = selBorderColor;
-    ctx.lineWidth = selShinyTier > 0 ? 2 : 1;
+    ctx.strokeStyle = "#2D3246";
+    ctx.lineWidth = 1;
     ctx.stroke();
 
     if (selectedSprite) {
@@ -1593,8 +1592,7 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     }
 
     ctx.font = "bold 20px DungGeunMo";
-    const shinyNameColor = selShinyTier === 3 ? "#F87171" : selShinyTier === 2 ? "#93C5FD" : selShinyTier === 1 ? "#FBBF24" : "#FFFFFF";
-    ctx.fillStyle = shinyNameColor;
+    ctx.fillStyle = "#FFFFFF";
     ctx.fillText(isKo ? sel.nameKo : sel.name, nameX, 26);
 
     // Right-aligned Big Cost in Header (Top Right of Card)
