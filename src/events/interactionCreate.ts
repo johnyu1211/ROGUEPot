@@ -577,7 +577,7 @@ async function renderGenSelectMessageData(
     const info = GENERATION_INFO[g - 1];
     const isSelected = g === currentGen;
     return new ButtonBuilder()
-      .setCustomId(`starter_pickgen_${g}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+      .setCustomId(`starter_pickgen_${g}_${currentGen}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel(isKo ? info.nameKo : info.nameEn)
       .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Secondary);
   };
@@ -592,7 +592,7 @@ async function renderGenSelectMessageData(
     // Row 4: Back to Starter Select
     new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
-        .setCustomId(`starter_genback_${currentGen}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+        .setCustomId(`starter_genback_${currentGen}_${currentGen}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
         .setLabel(isKo ? "↩️ 스타팅 선택으로 돌아가기" : "↩️ Back to Starter Select")
         .setStyle(ButtonStyle.Secondary)
     ),
@@ -676,11 +676,12 @@ async function renderStarterSelectMessageData(
   const components: ActionRowBuilder<ButtonBuilder>[] = [];
 
   // ROW 1: 4 Core Filter & Mode Toggles ([ 📂 세대 ] [ ✨ 이로치 ] [ 🔓 패시브 ] [ 🌟 숨특 ])
+  const hasGenFilter = gen >= 1;
   const row1Btns: ButtonBuilder[] = [
     new ButtonBuilder()
       .setCustomId(`starter_open_gen_menu_${gen}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
-      .setLabel(isKo ? "📂 세대" : "📂 Gen")
-      .setStyle(ButtonStyle.Secondary),
+      .setLabel(isKo ? (hasGenFilter ? `📂 ${gen}세대` : "📂 세대") : (hasGenFilter ? `📂 Gen ${gen}` : "📂 Gen"))
+      .setStyle(hasGenFilter ? ButtonStyle.Primary : ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId(`starter_toggleshiny_${gen}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel(isShinyMode ? "✨ 이로치 ON" : "✨ 이로치")
@@ -1293,18 +1294,23 @@ export const interactionCreateEvent: BotEvent = {
 
       // 2-1-H. Pick Specific Generation from Gen Menu or Back Button
       if (customId.startsWith("starter_pickgen_") || customId.startsWith("starter_genback_")) {
+        const isBack = customId.startsWith("starter_genback_");
         const chosenGen = parseInt(parts[2], 10) || 1;
-        const slotId = parseInt(parts[3], 10) || 1;
-        const partyRaw = parts[4] || "empty";
+        const prevGen = parseInt(parts[3], 10) || 0;
+        const slotId = parseInt(parts[4], 10) || 1;
+        const partyRaw = parts[5] || "empty";
         const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
-        const isShiny = parts[5] === "1";
-        const isHa = parts[6] === "1";
-        const isPassive = parts[7] === "1";
+        const isShiny = parts[6] === "1";
+        const isHa = parts[7] === "1";
+        const isPassive = parts[8] === "1";
 
-        const genStarters = getStartersByGen(chosenGen);
+        // Toggle generation: If already selected, clicking it again cancels selection (resets to 0 / all)
+        const nextGen = isBack ? chosenGen : (chosenGen === prevGen ? 0 : chosenGen);
+
+        const genStarters = getStartersByGen(nextGen);
         const firstStarterDex = genStarters[0]?.dexNumber || 1;
 
-        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, chosenGen, firstStarterDex, partyDexList, isShiny, isHa, isPassive);
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, nextGen, firstStarterDex, partyDexList, isShiny, isHa, isPassive);
         await interaction.update(starterData);
         return;
       }

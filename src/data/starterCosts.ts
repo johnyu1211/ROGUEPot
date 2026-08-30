@@ -334,9 +334,10 @@ export const GENERATION_INFO = [
 ];
 
 /**
- * Get starter entries for a specific generation (1 ~ 9)
+ * Get starter entries for a specific generation (1 ~ 9, or 0 for all)
  */
 export function getStartersByGen(gen: number): StarterEntry[] {
+  if (gen <= 0) return STARTER_DATABASE;
   return STARTER_DATABASE.filter((s) => s.gen === gen);
 }
 
