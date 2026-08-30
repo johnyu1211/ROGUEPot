@@ -1346,22 +1346,22 @@ export interface StarterSelectScreenOptions {
  */
 function drawMoveCategoryIcon(ctx: any, x: number, y: number, category?: "physical" | "special" | "status") {
   if (!category) return;
-  const w = 18;
-  const h = 17;
+  const w = 21;
+  const h = 20;
 
   if (category === "physical") {
     // Physical: Vibrant Red-Orange + 8-Point Starburst Spark
     ctx.fillStyle = "#E0502E";
     ctx.beginPath();
-    ctx.roundRect(x, y, w, h, 3);
+    ctx.roundRect(x, y, w, h, 3.5);
     ctx.fill();
 
     ctx.fillStyle = "#FFFFFF";
     ctx.beginPath();
     const cx = x + w / 2;
     const cy = y + h / 2;
-    const outerR = 5.2;
-    const innerR = 2.4;
+    const outerR = 6.2;
+    const innerR = 2.8;
     const points = 8;
     for (let p = 0; p < points * 2; p++) {
       const r = p % 2 === 0 ? outerR : innerR;
@@ -1377,29 +1377,29 @@ function drawMoveCategoryIcon(ctx: any, x: number, y: number, category?: "physic
     // Special: Indigo-Blue + Dual Concentric Rings
     ctx.fillStyle = "#3B69B0";
     ctx.beginPath();
-    ctx.roundRect(x, y, w, h, 3);
+    ctx.roundRect(x, y, w, h, 3.5);
     ctx.fill();
 
     const cx = x + w / 2;
     const cy = y + h / 2;
     ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 1.3;
+    ctx.lineWidth = 1.4;
 
     // Outer Ring
     ctx.beginPath();
-    ctx.arc(cx, cy, 4.5, 0, Math.PI * 2);
+    ctx.arc(cx, cy, 5.5, 0, Math.PI * 2);
     ctx.stroke();
 
     // Inner Core
     ctx.fillStyle = "#FFFFFF";
     ctx.beginPath();
-    ctx.arc(cx, cy, 2, 0, Math.PI * 2);
+    ctx.arc(cx, cy, 2.4, 0, Math.PI * 2);
     ctx.fill();
   } else if (category === "status") {
     // Status: Slate-Gray + Yin-Yang Swirl
     ctx.fillStyle = "#6B7C96";
     ctx.beginPath();
-    ctx.roundRect(x, y, w, h, 3);
+    ctx.roundRect(x, y, w, h, 3.5);
     ctx.fill();
 
     const cx = x + w / 2;
@@ -1407,17 +1407,17 @@ function drawMoveCategoryIcon(ctx: any, x: number, y: number, category?: "physic
     // Dual Swirl / Yin-Yang Circle
     ctx.fillStyle = "#FFFFFF";
     ctx.beginPath();
-    ctx.arc(cx, cy, 4.5, 0, Math.PI);
+    ctx.arc(cx, cy, 5.5, 0, Math.PI);
     ctx.fill();
 
     ctx.fillStyle = "#6B7C96";
     ctx.beginPath();
-    ctx.arc(cx - 2.2, cy, 2.25, 0, Math.PI * 2);
+    ctx.arc(cx - 2.7, cy, 2.75, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.fillStyle = "#FFFFFF";
     ctx.beginPath();
-    ctx.arc(cx + 2.2, cy, 2.25, 0, Math.PI * 2);
+    ctx.arc(cx + 2.7, cy, 2.75, 0, Math.PI * 2);
     ctx.fill();
   }
 }
@@ -1775,9 +1775,9 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     ctx.fillStyle = selHasPassive ? "#34D399" : "#64748B";
     ctx.fillText(passiveName, rightColX, 64);
 
-    // Move Chips (2x2 Grid, width: 133 each, height: 25)
+    // Move Chips (2x2 Grid, width: 133 each, height: 30) - Expanded & Prominent!
     const moveChipW = (rightW - 10) / 2;
-    const moveChipH = 25;
+    const moveChipH = 30;
     for (let mIdx = 0; mIdx < 4; mIdx++) {
       const rawMove = sel.starterMoves[mIdx] || "---";
       const moveKey = rawMove.toLowerCase().replace(/[\s_]+/g, "-");
@@ -1788,7 +1788,7 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       const mCol = mIdx % 2;
       const mRow = Math.floor(mIdx / 2);
       const mX = rightX + mCol * (moveChipW + 10);
-      const mY = 88 + mRow * (moveChipH + 6);
+      const mY = 90 + mRow * (moveChipH + 6);
 
       ctx.fillStyle = "#181B26";
       ctx.beginPath();
@@ -1805,17 +1805,17 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
         ctx.textAlign = "center";
         ctx.fillText(mDisplay, mX + moveChipW / 2, mY + moveChipH / 2);
       } else {
-        // Draw Move Category Icon (Left aligned)
+        // Draw Move Category Icon (Left aligned, 21x20)
         const iconX = mX + 5;
-        const iconY = mY + (moveChipH - 17) / 2;
+        const iconY = mY + (moveChipH - 20) / 2;
         drawMoveCategoryIcon(ctx, iconX, iconY, category);
 
-        // Move Name Text (Aligned next to category icon)
+        // Move Name Text (Aligned next to category icon, 14px)
         ctx.textBaseline = "middle";
-        ctx.font = "bold 13px DungGeunMo";
+        ctx.font = "bold 14px DungGeunMo";
         ctx.fillStyle = "#F8FAFC";
         ctx.textAlign = "left";
-        ctx.fillText(mDisplay, mX + 27, mY + moveChipH / 2);
+        ctx.fillText(mDisplay, mX + 30, mY + moveChipH / 2);
       }
     }
   }
@@ -1824,12 +1824,12 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   ctx.strokeStyle = "#2D3246";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(rightX, 156);
-  ctx.lineTo(rightX + rightW, 156);
+  ctx.moveTo(rightX, 168);
+  ctx.lineTo(rightX + rightW, 168);
   ctx.stroke();
 
-  // 5-2. BOTTOM PARTY BUILDER (y: 160 ~ 370, Perfectly Aligned with Left Panel at y=370)
-  const costLineY = 170;
+  // 5-2. BOTTOM PARTY BUILDER (y: 176 ~ 370, Perfectly Balanced)
+  const costLineY = 184;
 
   // Cost Counter Text + Inline Gauge Bar (Single Row, Perfect Vertical Center Alignment)
   const isOverCost = currentCost > maxCost;
@@ -1864,13 +1864,13 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   ctx.roundRect(gaugeX, gaugeY, fillW, gaugeH, 3);
   ctx.fill();
 
-  // 6 Party Slots Grid (3 Columns x 2 Rows) - Height 88px, Bottom ends precisely at y = 370!
+  // 6 Party Slots Grid (3 Columns x 2 Rows) - Height 80px, Bottom ends precisely at y = 370!
   const partySlotW = (rightW - 12) / 3;
-  const partySlotH = 88;
+  const partySlotH = 80;
   const partyGapX = 6;
   const partyGapY = 8;
   const partyStartX = rightX;
-  const partyStartY = 186;
+  const partyStartY = 202;
 
   for (let pIdx = 0; pIdx < 6; pIdx++) {
     const member = party[pIdx];
@@ -1889,13 +1889,13 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     ctx.stroke();
 
     if (member) {
-      // Mini Sprite (Centered, Scale 0.75)
+      // Mini Sprite (Centered, Scale 0.7)
       const pSprite = partySprites[pIdx];
       if (pSprite) {
-        const scale = 0.75;
+        const scale = 0.7;
         const sprW = pSprite.width * scale;
         const sprH = pSprite.height * scale;
-        ctx.drawImage(pSprite, pX + (partySlotW - sprW) / 2, pY + 3 + (44 - sprH) / 2, sprW, sprH);
+        ctx.drawImage(pSprite, pX + (partySlotW - sprW) / 2, pY + 2 + (38 - sprH) / 2, sprW, sprH);
       }
 
       // Member Name + Cost (Middle textBaseline)
@@ -1903,22 +1903,22 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       ctx.font = "bold 15px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
-      ctx.fillText(member.name.slice(0, 4), pX + partySlotW / 2, pY + 56);
+      ctx.fillText(member.name.slice(0, 4), pX + partySlotW / 2, pY + 52);
 
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = member.usePassive ? "#34D399" : "#22C55E";
-      ctx.fillText(`${member.cost}C`, pX + partySlotW / 2, pY + 74);
+      ctx.fillText(`${member.cost}C`, pX + partySlotW / 2, pY + 68);
     } else {
       // Empty Slot Marker (True Middle Alignment)
       ctx.textBaseline = "middle";
-      ctx.font = "bold 24px DungGeunMo";
+      ctx.font = "bold 22px DungGeunMo";
       ctx.fillStyle = "#334155";
       ctx.textAlign = "center";
-      ctx.fillText("+", pX + partySlotW / 2, pY + 36);
+      ctx.fillText("+", pX + partySlotW / 2, pY + 34);
 
       ctx.font = "bold 13px DungGeunMo";
       ctx.fillStyle = "#475569";
-      ctx.fillText(isKo ? `슬롯 ${pIdx + 1}` : `Slot ${pIdx + 1}`, pX + partySlotW / 2, pY + 62);
+      ctx.fillText(isKo ? `슬롯 ${pIdx + 1}` : `Slot ${pIdx + 1}`, pX + partySlotW / 2, pY + 56);
     }
   }
 
