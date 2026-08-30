@@ -561,7 +561,10 @@ async function renderStarterSelectMessageData(
   slotId: number = 1,
   gen: number = 1,
   selectedDexNo: number = 1,
-  partyDexList: number[] = []
+  partyDexList: number[] = [],
+  isShinyMode: boolean = false,
+  isHaMode: boolean = false,
+  isPassiveMode: boolean = false
 ) {
   const profile = saveService.getProfile(userId);
   const isKo = profile.language === "ko";
@@ -577,14 +580,18 @@ async function renderStarterSelectMessageData(
         dexNumber: s.dexNumber,
         speciesId: s.speciesId,
         name: isKo ? s.nameKo : s.name,
-        cost: s.cost,
+        cost: isPassiveMode ? s.reducedCost : s.cost,
+        isShiny: isShinyMode,
+        useHiddenAbility: isHaMode,
+        usePassive: isPassiveMode,
       };
     })
     .filter(Boolean) as StarterSelectPartyItem[];
 
   const currentCost = selectedParty.reduce((sum, p) => sum + p.cost, 0);
   const isAlreadyInParty = partyDexList.includes(selectedStarter.dexNumber);
-  const canAdd = !isAlreadyInParty && selectedParty.length < 6 && (currentCost + selectedStarter.cost <= DEFAULT_MAX_COST);
+  const effectiveSelCost = isPassiveMode ? selectedStarter.reducedCost : selectedStarter.cost;
+  const canAdd = !isAlreadyInParty && selectedParty.length < 6 && (currentCost + effectiveSelCost <= DEFAULT_MAX_COST);
   const canStart = selectedParty.length >= 1 && currentCost <= DEFAULT_MAX_COST;
 
   const imageBuffer = await renderStarterSelectScreen({
@@ -592,12 +599,16 @@ async function renderStarterSelectMessageData(
     currentGen: gen,
     startersList: genStarters,
     selectedParty,
+    isShinyMode,
+    isHaMode,
+    isPassiveMode,
     maxCost: DEFAULT_MAX_COST,
     lang: profile.language,
   });
 
   const attachment = new AttachmentBuilder(imageBuffer, { name: "starter_select.png" });
   const partyParam = partyDexList.join("-") || "empty";
+  const flagsParam = `${isShinyMode ? 1 : 0}_${isHaMode ? 1 : 0}_${isPassiveMode ? 1 : 0}`;
 
   // Helper to create slot button
   const createSlotBtn = (idx: number) => {
@@ -611,20 +622,33 @@ async function renderStarterSelectMessageData(
     }
     const isSelected = selectedStarter.dexNumber === s.dexNumber;
     return new ButtonBuilder()
-      .setCustomId(`starter_sel_${s.dexNumber}_${gen}_${slotId}_${partyParam}_${userId}`)
+      .setCustomId(`starter_sel_${s.dexNumber}_${gen}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel(`${idx + 1}`)
       .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Secondary);
   };
 
   const components: ActionRowBuilder<ButtonBuilder>[] = [];
 
-  // ROW 1: Generation Tabs (1 ~ 5)
-  const row1Btns: ButtonBuilder[] = [1, 2, 3, 4, 5].map((g) =>
+  // ROW 1: 4 Core Filter & Mode Toggles ([ 📂 세대 (G1~G9) ] [ ✨ 이로치 ] [ 🔓 패시브 ] [ 🌟 숨특 ])
+  const nextGenCycle = gen >= 9 ? 1 : gen + 1;
+  const row1Btns: ButtonBuilder[] = [
     new ButtonBuilder()
-      .setCustomId(`starter_gen_${g}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${userId}`)
-      .setLabel(`G${g}`)
-      .setStyle(g === gen ? ButtonStyle.Danger : ButtonStyle.Secondary)
-  );
+      .setCustomId(`starter_gen_${nextGenCycle}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+      .setLabel(`📂 G${gen}`)
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId(`starter_toggleshiny_${gen}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+      .setLabel(isShinyMode ? "✨ 이로치 ON" : "✨ 이로치")
+      .setStyle(isShinyMode ? ButtonStyle.Danger : ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`starter_togglepass_${gen}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+      .setLabel(isPassiveMode ? "🔓 패시브 ON" : "🔓 패시브")
+      .setStyle(isPassiveMode ? ButtonStyle.Success : ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`starter_toggleha_${gen}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+      .setLabel(isHaMode ? "🌟 숨특 ON" : "🌟 숨특")
+      .setStyle(isHaMode ? ButtonStyle.Danger : ButtonStyle.Secondary)
+  ];
   components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row1Btns));
 
   // ROW 2: Starters 1, 2 + [+추가] + [-제거]
@@ -632,46 +656,46 @@ async function renderStarterSelectMessageData(
     createSlotBtn(0),
     createSlotBtn(1),
     new ButtonBuilder()
-      .setCustomId(`starter_add_${selectedStarter.dexNumber}_${gen}_${slotId}_${partyParam}_${userId}`)
+      .setCustomId(`starter_add_${selectedStarter.dexNumber}_${gen}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel(isKo ? "+파티추가" : "+Add")
       .setStyle(ButtonStyle.Success)
       .setDisabled(!canAdd),
     new ButtonBuilder()
-      .setCustomId(`starter_rem_${selectedStarter.dexNumber}_${gen}_${slotId}_${partyParam}_${userId}`)
+      .setCustomId(`starter_rem_${selectedStarter.dexNumber}_${gen}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel(isKo ? "-제거" : "-Remove")
       .setStyle(ButtonStyle.Danger)
       .setDisabled(!isAlreadyInParty)
   ];
   components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row2Btns));
 
-  // ROW 3: Starters 3, 4 + Generation Tabs (6 ~ 8)
+  // ROW 3: Starters 3, 4 + Fast 3 Gen Jump [ <<< ] + [ >>> ]
   const row3Btns: ButtonBuilder[] = [
     createSlotBtn(2),
     createSlotBtn(3),
-    ...([6, 7, 8].map((g) =>
-      new ButtonBuilder()
-        .setCustomId(`starter_gen_${g}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${userId}`)
-        .setLabel(`G${g}`)
-        .setStyle(g === gen ? ButtonStyle.Danger : ButtonStyle.Secondary)
-    ))
+    new ButtonBuilder()
+      .setCustomId(`starter_genjumpback_${Math.max(1, gen - 3)}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+      .setLabel("<<<")
+      .setStyle(ButtonStyle.Primary)
+      .setDisabled(gen <= 1),
+    new ButtonBuilder()
+      .setCustomId(`starter_genjumpfwd_${Math.min(9, gen + 3)}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+      .setLabel(">>>")
+      .setStyle(ButtonStyle.Primary)
+      .setDisabled(gen >= 9)
   ];
   components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row3Btns));
 
-  // ROW 4: Starters 5, 6 + G9 + Prev Gen / Next Gen
+  // ROW 4: Starters 5, 6 + Prev Gen [ < ] + Next Gen [ > ]
   const row4Btns: ButtonBuilder[] = [
     createSlotBtn(4),
     createSlotBtn(5),
     new ButtonBuilder()
-      .setCustomId(`starter_gen_9_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${userId}`)
-      .setLabel(`G9`)
-      .setStyle(gen === 9 ? ButtonStyle.Danger : ButtonStyle.Secondary),
-    new ButtonBuilder()
-      .setCustomId(`starter_genprev_${Math.max(1, gen - 1)}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${userId}`)
+      .setCustomId(`starter_genprev_${Math.max(1, gen - 1)}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel("<")
       .setStyle(ButtonStyle.Primary)
       .setDisabled(gen <= 1),
     new ButtonBuilder()
-      .setCustomId(`starter_gennext_${Math.min(9, gen + 1)}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${userId}`)
+      .setCustomId(`starter_gennext_${Math.min(9, gen + 1)}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel(">")
       .setStyle(ButtonStyle.Primary)
       .setDisabled(gen >= 9)
@@ -683,7 +707,7 @@ async function renderStarterSelectMessageData(
     createSlotBtn(6),
     createSlotBtn(7),
     new ButtonBuilder()
-      .setCustomId(`starter_start_${slotId}_${partyParam}_${userId}`)
+      .setCustomId(`starter_start_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel(isKo ? "🚀모험 시작!" : "🚀Start Adventure!")
       .setStyle(ButtonStyle.Success)
       .setDisabled(!canStart),
@@ -1205,7 +1229,7 @@ export const interactionCreateEvent: BotEvent = {
       // 2-1. New Game Button Clicked from Title (Pure Canvas Starter Select Screen)
       if (customId.startsWith("menu_newgame_")) {
         const targetSlot = saveService.getFirstAvailableSlot(interaction.user.id);
-        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, targetSlot, 1, 1, []);
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, targetSlot, 1, 1, [], false, false, false);
         await interaction.update(starterData);
         return;
       }
@@ -1217,27 +1241,84 @@ export const interactionCreateEvent: BotEvent = {
         const slotId = parseInt(parts[4], 10) || 1;
         const partyRaw = parts[5] || "empty";
         const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
+        const isShiny = parts[6] === "1";
+        const isHa = parts[7] === "1";
+        const isPassive = parts[8] === "1";
 
-        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, dexNo, partyDexList);
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, dexNo, partyDexList, isShiny, isHa, isPassive);
         await interaction.update(starterData);
         return;
       }
 
-      // 2-1-B. Starter Generation Tab Switch
+      // 2-1-B. Starter Generation Switch (Tab / Arrow / Jump)
       if (
         customId.startsWith("starter_gen_") ||
         customId.startsWith("starter_genprev_") ||
-        customId.startsWith("starter_gennext_")
+        customId.startsWith("starter_gennext_") ||
+        customId.startsWith("starter_genjumpback_") ||
+        customId.startsWith("starter_genjumpfwd_")
       ) {
         const gen = parseInt(parts[2], 10) || 1;
+        const currentDexNo = parseInt(parts[3], 10) || 1;
         const slotId = parseInt(parts[4], 10) || 1;
         const partyRaw = parts[5] || "empty";
         const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
+        const isShiny = parts[6] === "1";
+        const isHa = parts[7] === "1";
+        const isPassive = parts[8] === "1";
 
         const genStarters = getStartersByGen(gen);
-        const firstStarterDex = genStarters[0]?.dexNumber || 1;
+        const firstStarterDex = genStarters[0]?.dexNumber || currentDexNo;
 
-        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, firstStarterDex, partyDexList);
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, firstStarterDex, partyDexList, isShiny, isHa, isPassive);
+        await interaction.update(starterData);
+        return;
+      }
+
+      // 2-1-T1. Starter Toggle Shiny (✨ 이로치)
+      if (customId.startsWith("starter_toggleshiny_")) {
+        const gen = parseInt(parts[2], 10) || 1;
+        const dexNo = parseInt(parts[3], 10) || 1;
+        const slotId = parseInt(parts[4], 10) || 1;
+        const partyRaw = parts[5] || "empty";
+        const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
+        const isShiny = parts[6] === "1";
+        const isHa = parts[7] === "1";
+        const isPassive = parts[8] === "1";
+
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, dexNo, partyDexList, !isShiny, isHa, isPassive);
+        await interaction.update(starterData);
+        return;
+      }
+
+      // 2-1-T2. Starter Toggle Passive / Reduced Cost (🔓 패시브)
+      if (customId.startsWith("starter_togglepass_")) {
+        const gen = parseInt(parts[2], 10) || 1;
+        const dexNo = parseInt(parts[3], 10) || 1;
+        const slotId = parseInt(parts[4], 10) || 1;
+        const partyRaw = parts[5] || "empty";
+        const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
+        const isShiny = parts[6] === "1";
+        const isHa = parts[7] === "1";
+        const isPassive = parts[8] === "1";
+
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, dexNo, partyDexList, isShiny, isHa, !isPassive);
+        await interaction.update(starterData);
+        return;
+      }
+
+      // 2-1-T3. Starter Toggle Hidden Ability (🌟 숨특)
+      if (customId.startsWith("starter_toggleha_")) {
+        const gen = parseInt(parts[2], 10) || 1;
+        const dexNo = parseInt(parts[3], 10) || 1;
+        const slotId = parseInt(parts[4], 10) || 1;
+        const partyRaw = parts[5] || "empty";
+        const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
+        const isShiny = parts[6] === "1";
+        const isHa = parts[7] === "1";
+        const isPassive = parts[8] === "1";
+
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, dexNo, partyDexList, isShiny, !isHa, isPassive);
         await interaction.update(starterData);
         return;
       }
@@ -1249,12 +1330,15 @@ export const interactionCreateEvent: BotEvent = {
         const slotId = parseInt(parts[4], 10) || 1;
         const partyRaw = parts[5] || "empty";
         const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
+        const isShiny = parts[6] === "1";
+        const isHa = parts[7] === "1";
+        const isPassive = parts[8] === "1";
 
         if (!partyDexList.includes(dexNo) && partyDexList.length < 6) {
           partyDexList.push(dexNo);
         }
 
-        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, dexNo, partyDexList);
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, dexNo, partyDexList, isShiny, isHa, isPassive);
         await interaction.update(starterData);
         return;
       }
@@ -1266,10 +1350,13 @@ export const interactionCreateEvent: BotEvent = {
         const slotId = parseInt(parts[4], 10) || 1;
         const partyRaw = parts[5] || "empty";
         const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
+        const isShiny = parts[6] === "1";
+        const isHa = parts[7] === "1";
+        const isPassive = parts[8] === "1";
 
         const updatedList = partyDexList.filter((d) => d !== dexNo);
 
-        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, dexNo, updatedList);
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, dexNo, updatedList, isShiny, isHa, isPassive);
         await interaction.update(starterData);
         return;
       }
@@ -1279,17 +1366,22 @@ export const interactionCreateEvent: BotEvent = {
         const slotId = parseInt(parts[2], 10) || 1;
         const partyRaw = parts[3] || "empty";
         const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
+        const isShiny = parts[4] === "1";
+        const isHa = parts[5] === "1";
+        const isPassive = parts[6] === "1";
 
         if (partyDexList.length === 0) return;
 
         const starterParty: PartyPokemon[] = partyDexList.map((dex) => {
           const s = getStarterByDexNumber(dex)!;
+          const chosenAbility = (isHa && s.hiddenAbilityKo) ? s.hiddenAbilityKo : s.abilityKo;
           return {
             speciesId: s.speciesId,
-            name: s.nameKo,
+            name: (isShiny ? "✨ " : "") + s.nameKo,
             level: 5,
             hp: 20,
             maxHp: 20,
+            ability: chosenAbility,
             moves: s.starterMoves,
           };
         });
