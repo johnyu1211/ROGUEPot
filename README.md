@@ -74,7 +74,7 @@ npm run deploy-commands
 
 ## 📜 Credits & Acknowledgements
 
-* **Creator & Developer**: **johnyu**
+* **Creator & Developer**: **John**
 * **[PokéRogue](https://github.com/pagefaultgames/pokerogue)**: The incredible browser-based Pokémon roguelite game developed by PageFaultGames.
 * **[Pokémon Showdown](https://pokemonshowdown.com/)**: Gen 5 animated and pixel sprites CDN & Pokémon battle mechanics.
 * **[PokéAPI](https://pokeapi.co/)**: Comprehensive RESTful Pokémon data API.
