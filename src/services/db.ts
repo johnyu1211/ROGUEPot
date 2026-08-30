@@ -1,4 +1,4 @@
-﻿import Database from "better-sqlite3";
+import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";
 
@@ -55,6 +55,46 @@ export function initDatabase(): void {
       updated_at TEXT NOT NULL,
       PRIMARY KEY (user_id, slot_id),
       FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+    );
+  `);
+
+  // 3. User Starters Table (PokéRogue Starters Unlock & Progression)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS user_starters (
+      user_id TEXT NOT NULL,
+      species_id TEXT NOT NULL,
+      dex_number INTEGER NOT NULL,
+      is_unlocked INTEGER NOT NULL DEFAULT 0,
+      shiny_tier INTEGER NOT NULL DEFAULT 0,
+      has_hidden_ability INTEGER NOT NULL DEFAULT 0,
+      passive_unlocked INTEGER NOT NULL DEFAULT 0,
+      cost_reduction_count INTEGER NOT NULL DEFAULT 0,
+      candies INTEGER NOT NULL DEFAULT 0,
+      egg_moves TEXT NOT NULL DEFAULT '[]',
+      hatched_count INTEGER NOT NULL DEFAULT 0,
+      caught_count INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      PRIMARY KEY (user_id, species_id)
+    );
+  `);
+
+  // 4. User Eggs Table (Egg Gacha & Incubator)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS user_eggs (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      tier TEXT NOT NULL DEFAULT 'common',
+      gacha_type TEXT NOT NULL DEFAULT 'shiny',
+      steps_required INTEGER NOT NULL DEFAULT 10,
+      steps_progress INTEGER NOT NULL DEFAULT 0,
+      species_id TEXT NOT NULL,
+      shiny_tier INTEGER NOT NULL DEFAULT 0,
+      has_hidden_ability INTEGER NOT NULL DEFAULT 0,
+      egg_move TEXT,
+      hatched INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
     );
   `);
 

@@ -1297,9 +1297,10 @@ export interface StarterSelectScreenOptions {
   currentGen: number;
   startersList: StarterEntry[];
   selectedParty: StarterSelectPartyItem[];
-  isShinyMode?: boolean;
-  isHaMode?: boolean;
-  isPassiveMode?: boolean;
+  userStarters?: Map<string, any>;
+  isShinyFilter?: boolean;
+  isHaFilter?: boolean;
+  isPassiveFilter?: boolean;
   maxCost?: number;
   lang?: "en" | "ko";
 }
@@ -1322,15 +1323,29 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   const list = options.startersList || [];
   const party = options.selectedParty || [];
   const maxCost = options.maxCost || 10;
-  const isShiny = !!options.isShinyMode;
-  const isHa = !!options.isHaMode;
-  const isPassive = !!options.isPassiveMode;
+  const userStarters = options.userStarters;
+  const isShinyFilter = !!options.isShinyFilter;
+  const isHaFilter = !!options.isHaFilter;
+  const isPassiveFilter = !!options.isPassiveFilter;
   const currentCost = party.reduce((sum, p) => sum + p.cost, 0);
 
-  // 0. PRELOAD SPRITES IN PARALLEL (With Shiny support)
+  // Check selected starter's user unlock state
+  const selProgress = sel && userStarters ? userStarters.get(sel.speciesId) : null;
+  const selIsUnlocked = selProgress ? selProgress.isUnlocked : true;
+  const selHasShiny = (selProgress?.shinyTier || 0) > 0;
+  const selHasHa = selProgress?.hasHiddenAbility || false;
+  const selHasPassive = selProgress?.passiveUnlocked || false;
+  const effectiveSelCost = sel ? (selHasPassive ? sel.reducedCost : sel.cost) : 0;
+
+  // 0. PRELOAD SPRITES IN PARALLEL (With User-owned Shiny support)
   const [listSprites, selectedSprite, partySprites] = await Promise.all([
-    Promise.all(list.map((s) => (s ? getPokemonSprite(s.speciesId, true, isShiny) : Promise.resolve(null)))),
-    sel ? getPokemonSprite(sel.speciesId, true, isShiny) : Promise.resolve(null),
+    Promise.all(list.map((s) => {
+      if (!s) return Promise.resolve(null);
+      const prog = userStarters ? userStarters.get(s.speciesId) : null;
+      const isS = (prog?.shinyTier || 0) > 0;
+      return getPokemonSprite(s.speciesId, true, isS);
+    })),
+    sel ? getPokemonSprite(sel.speciesId, true, selHasShiny) : Promise.resolve(null),
     Promise.all(party.map((p) => (p ? getPokemonSprite(p.speciesId, true, p.isShiny) : Promise.resolve(null)))),
   ]);
 
@@ -1363,9 +1378,9 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   ctx.fillText(pageText, splitX - 8, 29);
   const pageTextW = ctx.measureText(pageText).width;
 
-  // Active Modes Badges on Banner (to the left of page text)
+  // Active Modes Filter Badges on Banner (to the left of page text)
   let badgeOffsetX = splitX - 8 - pageTextW - 8;
-  if (isShiny) {
+  if (isShinyFilter) {
     ctx.fillStyle = "#F59E0B";
     ctx.beginPath();
     ctx.roundRect(badgeOffsetX - 28, 9, 28, 24, 4);
@@ -1376,7 +1391,7 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     ctx.fillText("✨", badgeOffsetX - 14, 26);
     badgeOffsetX -= 32;
   }
-  if (isHa) {
+  if (isHaFilter) {
     ctx.fillStyle = "#EF4444";
     ctx.beginPath();
     ctx.roundRect(badgeOffsetX - 32, 9, 32, 24, 4);
@@ -1387,7 +1402,7 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     ctx.fillText("HA", badgeOffsetX - 16, 26);
     badgeOffsetX -= 36;
   }
-  if (isPassive) {
+  if (isPassiveFilter) {
     ctx.fillStyle = "#10B981";
     ctx.beginPath();
     ctx.roundRect(badgeOffsetX - 32, 9, 32, 24, 4);
@@ -1414,9 +1429,13 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     const sy = startListY + row * (slotH + gapY);
     const isSelected = sel && s && sel.dexNumber === s.dexNumber;
     const isAlreadyInParty = s && party.some((p) => p.dexNumber === s.dexNumber);
-    const effectiveCost = s ? (isPassive ? s.reducedCost : s.cost) : 0;
 
-    ctx.fillStyle = isSelected ? "#222738" : "#181B26";
+    const sProgress = s && userStarters ? userStarters.get(s.speciesId) : null;
+    const sIsUnlocked = sProgress ? sProgress.isUnlocked : true;
+    const sHasPassive = sProgress?.passiveUnlocked || false;
+    const sEffectiveCost = s ? (sHasPassive ? s.reducedCost : s.cost) : 0;
+
+    ctx.fillStyle = isSelected ? "#222738" : (sIsUnlocked ? "#181B26" : "#11131A");
     ctx.beginPath();
     ctx.roundRect(sx, sy, slotW, slotH, 6);
     ctx.fill();
@@ -1428,47 +1447,61 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     if (s) {
       const displayName = isKo ? s.nameKo : s.name;
 
-      // Slot Number + Name (Enlarged to 16px)
-      ctx.font = "bold 16px DungGeunMo";
-      ctx.fillStyle = isSelected ? "#FFFFFF" : "#F8FAFC";
-      ctx.textAlign = "left";
-      ctx.fillText(`${i + 1}.${displayName.slice(0, 4)}`, sx + 6, sy + 18);
+      if (!sIsUnlocked) {
+        // Locked Starter Slot
+        ctx.font = "bold 15px DungGeunMo";
+        ctx.fillStyle = "#475569";
+        ctx.textAlign = "left";
+        ctx.fillText(`${i + 1}. ???`, sx + 6, sy + 18);
 
-      // Cost Text without box (Bold 16px, Right Aligned, Vivid Green)
-      ctx.font = "bold 16px DungGeunMo";
-      ctx.fillStyle = isPassive ? "#34D399" : "#22C55E";
-      ctx.textAlign = "right";
-      ctx.fillText(`${effectiveCost}C`, sx + slotW - 8, sy + 18);
-
-      // Sprite
-      const sprite = listSprites[i];
-      const sprAreaW = 48;
-      const sprAreaH = 48;
-      const sprX = sx + 6;
-      const sprY = sy + 22;
-
-      if (sprite) {
-        const scale = 0.65;
-        const sprW = sprite.width * scale;
-        const sprH = sprite.height * scale;
-        ctx.drawImage(sprite, sprX + (sprAreaW - sprW) / 2, sprY + (sprAreaH - sprH) / 2, sprW, sprH);
-      }
-
-      // Party Check Badge or Gen tag (Enlarged to 13px)
-      if (isAlreadyInParty) {
-        ctx.fillStyle = "#22C55E";
-        ctx.beginPath();
-        ctx.roundRect(sx + slotW - 52, sy + slotH - 23, 48, 19, 3);
-        ctx.fill();
-        ctx.font = "bold 13px DungGeunMo";
-        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "bold 18px DungGeunMo";
+        ctx.fillStyle = "#475569";
         ctx.textAlign = "center";
-        ctx.fillText(isKo ? "선택됨" : "ADDED", sx + slotW - 28, sy + slotH - 9);
+        ctx.fillText("🔒", sx + slotW / 2, sy + slotH / 2 + 8);
       } else {
-        ctx.font = "bold 14px DungGeunMo";
-        ctx.fillStyle = "#64748B";
+        // Unlocked Starter Slot
+        // Slot Number + Name (Enlarged to 16px)
+        ctx.font = "bold 16px DungGeunMo";
+        ctx.fillStyle = isSelected ? "#FFFFFF" : "#F8FAFC";
+        ctx.textAlign = "left";
+        ctx.fillText(`${i + 1}.${displayName.slice(0, 4)}`, sx + 6, sy + 18);
+
+        // Cost Text without box (Bold 16px, Right Aligned, Vivid Green)
+        ctx.font = "bold 16px DungGeunMo";
+        ctx.fillStyle = sHasPassive ? "#34D399" : "#22C55E";
         ctx.textAlign = "right";
-        ctx.fillText(`#${String(s.dexNumber).padStart(3, "0")}`, sx + slotW - 6, sy + slotH - 8);
+        ctx.fillText(`${sEffectiveCost}C`, sx + slotW - 8, sy + 18);
+
+        // Sprite
+        const sprite = listSprites[i];
+        const sprAreaW = 48;
+        const sprAreaH = 48;
+        const sprX = sx + 6;
+        const sprY = sy + 22;
+
+        if (sprite) {
+          const scale = 0.65;
+          const sprW = sprite.width * scale;
+          const sprH = sprite.height * scale;
+          ctx.drawImage(sprite, sprX + (sprAreaW - sprW) / 2, sprY + (sprAreaH - sprH) / 2, sprW, sprH);
+        }
+
+        // Party Check Badge or Gen tag (Enlarged to 13px)
+        if (isAlreadyInParty) {
+          ctx.fillStyle = "#22C55E";
+          ctx.beginPath();
+          ctx.roundRect(sx + slotW - 52, sy + slotH - 23, 48, 19, 3);
+          ctx.fill();
+          ctx.font = "bold 13px DungGeunMo";
+          ctx.fillStyle = "#FFFFFF";
+          ctx.textAlign = "center";
+          ctx.fillText(isKo ? "선택됨" : "ADDED", sx + slotW - 28, sy + slotH - 9);
+        } else {
+          ctx.font = "bold 14px DungGeunMo";
+          ctx.fillStyle = "#64748B";
+          ctx.textAlign = "right";
+          ctx.fillText(`#${String(s.dexNumber).padStart(3, "0")}`, sx + slotW - 6, sy + slotH - 8);
+        }
       }
     } else {
       ctx.font = "bold 15px DungGeunMo";
@@ -1486,7 +1519,6 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   ctx.lineTo(splitX, height);
   ctx.stroke();
 
-  // 5. RIGHT SIDE: Top Preview Card & Bottom Party Builder Card
   // 5. RIGHT SIDE: Top Preview Details & Bottom Party Builder (Borderless Open Layout)
   const rightX = 274;
   const rightW = width - rightX - 10;
@@ -1502,8 +1534,8 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     ctx.beginPath();
     ctx.roundRect(showBoxX, showBoxY, showBoxSize, showBoxSize, 6);
     ctx.fill();
-    ctx.strokeStyle = isShiny ? "#F59E0B" : "#2D3246";
-    ctx.lineWidth = isShiny ? 1.5 : 1;
+    ctx.strokeStyle = selHasShiny ? "#F59E0B" : "#2D3246";
+    ctx.lineWidth = selHasShiny ? 1.5 : 1;
     ctx.stroke();
 
     if (selectedSprite) {
@@ -1515,7 +1547,7 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
 
     // Name + Dex next to sprite (Enlarged)
     const infoX = showBoxX + showBoxSize + 12;
-    const titleName = (isShiny ? "✨ " : "") + (isKo ? sel.nameKo : sel.name);
+    const titleName = (selHasShiny ? "✨ " : "") + (isKo ? sel.nameKo : sel.name);
     const dexTag = `#${String(sel.dexNumber).padStart(3, "0")}`;
 
     ctx.font = "bold 15px DungGeunMo";
@@ -1525,13 +1557,12 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
 
     const tagW = ctx.measureText(dexTag).width;
     ctx.font = "bold 20px DungGeunMo";
-    ctx.fillStyle = isShiny ? "#FBBF24" : "#FFFFFF";
+    ctx.fillStyle = selHasShiny ? "#FBBF24" : "#FFFFFF";
     ctx.fillText(titleName, infoX + tagW + 6, 26);
 
     // Right-aligned Big Cost in Header (Top Right of Card)
-    const effectiveSelCost = isPassive ? sel.reducedCost : sel.cost;
     ctx.font = "bold 22px DungGeunMo";
-    ctx.fillStyle = isPassive ? "#34D399" : "#22C55E";
+    ctx.fillStyle = selHasPassive ? "#34D399" : "#22C55E";
     ctx.textAlign = "right";
     ctx.fillText(`${effectiveSelCost}C`, rightX + rightW, 26);
 
@@ -1565,17 +1596,19 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     }
 
     // Ability / HA Tag (Enlarged to 15px)
-    const activeAbName = (isHa && sel.hiddenAbility) ? (isKo ? sel.hiddenAbilityKo : sel.hiddenAbility) : (isKo ? sel.abilityKo : sel.ability);
-    const abLabel = isHa && sel.hiddenAbility ? (isKo ? `[숨특] ${activeAbName}` : `[HA] ${activeAbName}`) : (isKo ? `[특성] ${activeAbName}` : `[Ab] ${activeAbName}`);
+    let abLabel = isKo ? `[특성] ${sel.abilityKo}` : `[Ab] ${sel.ability}`;
+    if (selHasHa && sel.hiddenAbility) {
+      abLabel = isKo ? `[숨특] ${sel.hiddenAbilityKo}` : `[HA] ${sel.hiddenAbility}`;
+    }
     ctx.font = "bold 15px DungGeunMo";
-    ctx.fillStyle = isHa ? "#F87171" : "#60A5FA";
+    ctx.fillStyle = selHasHa ? "#F87171" : "#60A5FA";
     ctx.textAlign = "left";
     ctx.fillText(abLabel, infoX, 67);
 
     // Passive Tag (Enlarged to 15px)
-    const passiveName = isPassive ? (isKo ? `[패시브] ${sel.passiveAbilityKo}` : `[Passive] ${sel.passiveAbility}`) : (isKo ? "[패시브] 미해금" : "[Passive] Locked");
+    const passiveName = selHasPassive ? (isKo ? `[패시브] ${sel.passiveAbilityKo}` : `[Passive] ${sel.passiveAbility}`) : (isKo ? "[패시브] 미해금" : "[Passive] Locked");
     ctx.font = "bold 15px DungGeunMo";
-    ctx.fillStyle = isPassive ? "#34D399" : "#64748B";
+    ctx.fillStyle = selHasPassive ? "#34D399" : "#64748B";
     ctx.fillText(passiveName, infoX, 84);
 
     // Starter Moves Title (Enlarged to 14px)
@@ -1823,6 +1856,198 @@ export async function renderGenSelectScreen(options: GenSelectScreenOptions): Pr
           ctx.drawImage(spr, sprX + (trioW - sw) / 2, sprY + (60 - sh) / 2, sw, sh);
         }
       }
+    }
+  }
+
+  return canvas.toBuffer("image/png");
+}
+
+export interface EggGachaScreenOptions {
+  selectedMachine: "shiny" | "move" | "legendary";
+  eggs: Array<{
+    id: string;
+    tier: string;
+    stepsRequired: number;
+    stepsProgress: number;
+    shinyTier: number;
+  }>;
+  recentHatched?: Array<{
+    speciesId: string;
+    nameKo: string;
+    nameEn: string;
+    shinyTier: number;
+    hasHiddenAbility: boolean;
+  }>;
+  lang?: "en" | "ko";
+}
+
+/**
+ * Renders the PokéRogue Egg Gacha & Incubator Screen (560x380)
+ */
+export async function renderEggGachaScreen(options: EggGachaScreenOptions): Promise<Buffer> {
+  const width = 560;
+  const height = 380;
+  const canvas = createCanvas(width, height);
+  const ctx = canvas.getContext("2d");
+
+  ctx.imageSmoothingEnabled = false;
+  ctx.textRendering = "optimizeSpeed";
+
+  const isKo = options.lang === "ko";
+  const machine = options.selectedMachine || "shiny";
+  const eggs = options.eggs || [];
+
+  // Background
+  ctx.fillStyle = "#13151F";
+  ctx.fillRect(0, 0, width, height);
+
+  // Top Banner
+  ctx.fillStyle = "#1A1D2A";
+  ctx.fillRect(0, 0, width, 42);
+  ctx.strokeStyle = "#2D3246";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(0, 42);
+  ctx.lineTo(width, 42);
+  ctx.stroke();
+
+  ctx.font = "bold 20px DungGeunMo";
+  ctx.fillStyle = "#FFFFFF";
+  ctx.textAlign = "left";
+  ctx.fillText(isKo ? "알 뽑기 (EGG GACHA)" : "EGG GACHA", 14, 28);
+
+  ctx.font = "bold 15px DungGeunMo";
+  ctx.fillStyle = "#F59E0B";
+  ctx.textAlign = "right";
+  ctx.fillText(isKo ? `인큐베이터: ${eggs.length}개 보관 중` : `Incubator: ${eggs.length} Eggs`, width - 14, 28);
+
+  // Top Gacha Machine Showcase (3 Machines Cards, y: 52 ~ 160)
+  const machines = [
+    { id: "shiny", nameKo: "✨ 이로치 뽑기", nameEn: "✨ Shiny UP", descKo: "이로치 확률 1/64", descEn: "Shiny Rate 1/64", color: "#F59E0B" },
+    { id: "move", nameKo: "💥 알 기술 뽑기", nameEn: "💥 Move UP", descKo: "희귀 알기술 확률 UP", descEn: "Rare Moves UP", color: "#EC4899" },
+    { id: "legendary", nameKo: "👑 전설 픽업", nameEn: "👑 Legendary UP", descKo: "전설 포켓몬 확률 UP", descEn: "Legendary Rate UP", color: "#8B5CF6" },
+  ];
+
+  const mCardW = 174;
+  const mCardH = 100;
+  const startX = 10;
+  const startY = 52;
+  const gapX = 9;
+
+  for (let i = 0; i < 3; i++) {
+    const m = machines[i];
+    const mx = startX + i * (mCardW + gapX);
+    const isSel = m.id === machine;
+
+    ctx.fillStyle = isSel ? "#22273A" : "#181B26";
+    ctx.beginPath();
+    ctx.roundRect(mx, startY, mCardW, mCardH, 6);
+    ctx.fill();
+
+    ctx.strokeStyle = isSel ? m.color : "#282D3D";
+    ctx.lineWidth = isSel ? 2 : 1;
+    ctx.stroke();
+
+    // Machine Name
+    ctx.font = "bold 16px DungGeunMo";
+    ctx.fillStyle = isSel ? "#FFFFFF" : "#CBD5E1";
+    ctx.textAlign = "center";
+    ctx.fillText(isKo ? m.nameKo : m.nameEn, mx + mCardW / 2, startY + 28);
+
+    // Big Egg Icon (Vector)
+    ctx.font = "bold 26px DungGeunMo";
+    ctx.fillText("🥚", mx + mCardW / 2, startY + 62);
+
+    // Desc
+    ctx.font = "bold 13px DungGeunMo";
+    ctx.fillStyle = isSel ? m.color : "#64748B";
+    ctx.fillText(isKo ? m.descKo : m.descEn, mx + mCardW / 2, startY + 86);
+  }
+
+  // Divider Line
+  ctx.strokeStyle = "#2D3246";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(10, 164);
+  ctx.lineTo(width - 10, 164);
+  ctx.stroke();
+
+  // Incubator Section Header (y: 184)
+  ctx.font = "bold 17px DungGeunMo";
+  ctx.fillStyle = "#FFFFFF";
+  ctx.textAlign = "left";
+  ctx.fillText(isKo ? "🥚 인큐베이터 알 보관소 (웨이브 클리어 시 부화!)" : "🥚 Incubator (Clearing waves hatches eggs!)", 14, 184);
+
+  // Incubator Eggs Grid (y: 196 ~ 370, 4 Columns x 2 Rows = 8 Visible Slots)
+  const eggSlotW = 128;
+  const eggSlotH = 78;
+  const eggStartX = 10;
+  const eggStartY = 196;
+  const eggGapX = 9;
+  const eggGapY = 8;
+
+  for (let i = 0; i < 8; i++) {
+    const e = eggs[i];
+    const col = i % 4;
+    const row = Math.floor(i / 4);
+    const ex = eggStartX + col * (eggSlotW + eggGapX);
+    const ey = eggStartY + row * (eggSlotH + eggGapY);
+
+    ctx.fillStyle = e ? "#181B26" : "#11131A";
+    ctx.beginPath();
+    ctx.roundRect(ex, ey, eggSlotW, eggSlotH, 5);
+    ctx.fill();
+
+    ctx.strokeStyle = e ? "#282D3D" : "#1E2230";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    if (e) {
+      const tierColor = e.tier === "legendary" ? "#8B5CF6" : e.tier === "epic" ? "#EC4899" : e.tier === "rare" ? "#3B82F6" : "#10B981";
+      const tierLabel = isKo ? (e.tier === "legendary" ? "전설알" : e.tier === "epic" ? "에픽알" : e.tier === "rare" ? "레어알" : "일반알") : e.tier.toUpperCase();
+
+      // Tier Badge
+      ctx.fillStyle = tierColor;
+      ctx.beginPath();
+      ctx.roundRect(ex + 6, ey + 6, 44, 18, 3);
+      ctx.fill();
+      ctx.font = "bold 11px DungGeunMo";
+      ctx.fillStyle = "#FFFFFF";
+      ctx.textAlign = "center";
+      ctx.fillText(tierLabel, ex + 28, ey + 19);
+
+      // Egg Icon
+      ctx.font = "bold 20px DungGeunMo";
+      ctx.fillText("🥚", ex + eggSlotW - 18, ey + 24);
+
+      // Progress Waves
+      ctx.font = "bold 14px DungGeunMo";
+      ctx.fillStyle = "#FFFFFF";
+      ctx.textAlign = "left";
+      ctx.fillText(`${e.stepsProgress} / ${e.stepsRequired} W`, ex + 8, ey + 46);
+
+      // Gauge Bar
+      const gW = eggSlotW - 16;
+      const gH = 6;
+      ctx.fillStyle = "#12141C";
+      ctx.beginPath();
+      ctx.roundRect(ex + 8, ey + 56, gW, gH, 3);
+      ctx.fill();
+
+      const ratio = Math.min(1.0, e.stepsProgress / e.stepsRequired);
+      ctx.fillStyle = tierColor;
+      ctx.beginPath();
+      ctx.roundRect(ex + 8, ey + 56, Math.max(3, ratio * gW), gH, 3);
+      ctx.fill();
+    } else {
+      ctx.font = "bold 18px DungGeunMo";
+      ctx.fillStyle = "#2D3246";
+      ctx.textAlign = "center";
+      ctx.fillText("+", ex + eggSlotW / 2, ey + 36);
+
+      ctx.font = "bold 12px DungGeunMo";
+      ctx.fillStyle = "#475569";
+      ctx.fillText(isKo ? "빈 슬롯" : "Empty", ex + eggSlotW / 2, ey + 56);
     }
   }
 
