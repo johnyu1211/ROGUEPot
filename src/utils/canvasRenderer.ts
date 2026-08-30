@@ -1617,27 +1617,32 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   ctx.lineTo(rightX + rightW, 168);
   ctx.stroke();
 
-  // 5-2. BOTTOM PARTY BUILDER (y: 176 ~ 370)
-  const bottomStartY = 176;
+  // 5-2. BOTTOM PARTY BUILDER (y: 174 ~ 370)
+  const bottomStartY = 174;
 
-  // Cost Counter text (Enlarged bold 20px)
+  // Cost Counter Text + Inline Gauge Bar (Single Row)
   const isOverCost = currentCost > maxCost;
   const costColor = isOverCost ? "#EF4444" : (currentCost >= 8 ? "#F59E0B" : "#22C55E");
-  ctx.font = "bold 20px DungGeunMo";
+  ctx.font = "bold 18px DungGeunMo";
   ctx.fillStyle = costColor;
   ctx.textAlign = "left";
-  ctx.fillText(`${isKo ? "코스트" : "COST"} : ${currentCost} / ${maxCost}`, rightX, bottomStartY + 18);
+  const costText = `${isKo ? "코스트" : "COST"} : ${currentCost} / ${maxCost}`;
+  ctx.fillText(costText, rightX, bottomStartY + 16);
+  const costTextW = ctx.measureText(costText).width;
 
-  // Cost Gauge Bar (Full width: rightW)
-  const gaugeW = rightW;
-  const gaugeH = 8;
-  const gaugeX = rightX;
-  const gaugeY = bottomStartY + 26;
+  // Inline Cost Gauge Bar right next to the text
+  const gaugeX = rightX + costTextW + 12;
+  const gaugeW = rightX + rightW - gaugeX;
+  const gaugeH = 9;
+  const gaugeY = bottomStartY + 6;
 
   ctx.fillStyle = "#12141C";
   ctx.beginPath();
   ctx.roundRect(gaugeX, gaugeY, gaugeW, gaugeH, 3);
   ctx.fill();
+  ctx.strokeStyle = "#282D3D";
+  ctx.lineWidth = 1;
+  ctx.stroke();
 
   const fillRatio = Math.min(1.0, currentCost / maxCost);
   const fillW = Math.max(fillRatio > 0 ? 4 : 0, fillRatio * gaugeW);
@@ -1646,13 +1651,13 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   ctx.roundRect(gaugeX, gaugeY, fillW, gaugeH, 3);
   ctx.fill();
 
-  // 6 Party Slots Grid (3 Columns x 2 Rows)
+  // 6 Party Slots Grid (3 Columns x 2 Rows) - Expanded to 76px Height!
   const partySlotW = (rightW - 12) / 3;
-  const partySlotH = 68;
+  const partySlotH = 76;
   const partyStartX = rightX;
-  const partyStartY = bottomStartY + 40;
+  const partyStartY = bottomStartY + 26;
   const partyGapX = 6;
-  const partyGapY = 6;
+  const partyGapY = 8;
 
   for (let pIdx = 0; pIdx < 6; pIdx++) {
     const member = party[pIdx];
@@ -1671,33 +1676,33 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     ctx.stroke();
 
     if (member) {
-      // Mini Sprite (Centered)
+      // Mini Sprite (Centered, Scale 0.68)
       const pSprite = partySprites[pIdx];
       if (pSprite) {
-        const scale = 0.62;
+        const scale = 0.68;
         const sprW = pSprite.width * scale;
         const sprH = pSprite.height * scale;
-        ctx.drawImage(pSprite, pX + (partySlotW - sprW) / 2, pY + 2 + (36 - sprH) / 2, sprW, sprH);
+        ctx.drawImage(pSprite, pX + (partySlotW - sprW) / 2, pY + 2 + (40 - sprH) / 2, sprW, sprH);
       }
 
       // Member Name + Cost (Clean Green Text without box)
       ctx.font = "bold 15px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
-      ctx.fillText(member.name.slice(0, 4), pX + partySlotW / 2, pY + 45);
+      ctx.fillText(member.name.slice(0, 4), pX + partySlotW / 2, pY + 50);
 
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = member.usePassive ? "#34D399" : "#22C55E";
-      ctx.fillText(`${member.cost}C`, pX + partySlotW / 2, pY + 61);
+      ctx.fillText(`${member.cost}C`, pX + partySlotW / 2, pY + 68);
     } else {
       // Empty Slot Marker (Enlarged to 22px / 13px)
       ctx.font = "bold 22px DungGeunMo";
       ctx.fillStyle = "#334155";
       ctx.textAlign = "center";
-      ctx.fillText("+", pX + partySlotW / 2, pY + 32);
+      ctx.fillText("+", pX + partySlotW / 2, pY + 36);
       ctx.font = "bold 13px DungGeunMo";
       ctx.fillStyle = "#475569";
-      ctx.fillText(isKo ? `슬롯 ${pIdx + 1}` : `Slot ${pIdx + 1}`, pX + partySlotW / 2, pY + 50);
+      ctx.fillText(isKo ? `슬롯 ${pIdx + 1}` : `Slot ${pIdx + 1}`, pX + partySlotW / 2, pY + 56);
     }
   }
 
