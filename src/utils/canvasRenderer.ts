@@ -1434,15 +1434,11 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       ctx.textAlign = "left";
       ctx.fillText(`${i + 1}.${displayName.slice(0, 4)}`, sx + 6, sy + 18);
 
-      // Cost Badge (Enlarged to 14px)
-      ctx.fillStyle = isPassive ? "#059669" : "#D97706";
-      ctx.beginPath();
-      ctx.roundRect(sx + slotW - 34, sy + 3, 30, 19, 3);
-      ctx.fill();
-      ctx.font = "bold 14px DungGeunMo";
-      ctx.fillStyle = "#FFFFFF";
-      ctx.textAlign = "center";
-      ctx.fillText(`${effectiveCost}C`, sx + slotW - 19, sy + 17);
+      // Cost Text without box (Bold 16px, Right Aligned, Gold Orange / Emerald Green)
+      ctx.font = "bold 16px DungGeunMo";
+      ctx.fillStyle = isPassive ? "#34D399" : "#F59E0B";
+      ctx.textAlign = "right";
+      ctx.fillText(`${effectiveCost}C`, sx + slotW - 8, sy + 18);
 
       // Sprite
       const sprite = listSprites[i];
@@ -1670,19 +1666,15 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
         ctx.drawImage(pSprite, pX + (partySlotW - sprW) / 2, pY + 2 + (32 - sprH) / 2, sprW, sprH);
       }
 
-      // Member Name + Cost Badge (Enlarged to 15px and 14px)
+      // Member Name + Cost (Clean Gold Text without box)
       ctx.font = "bold 15px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
       ctx.fillText(member.name.slice(0, 4), pX + partySlotW / 2, pY + 43);
 
-      ctx.fillStyle = "#D97706";
-      ctx.beginPath();
-      ctx.roundRect(pX + (partySlotW - 30) / 2, pY + 46, 30, 16, 2);
-      ctx.fill();
-      ctx.font = "bold 13px DungGeunMo";
-      ctx.fillStyle = "#FFFFFF";
-      ctx.fillText(`${member.cost}C`, pX + partySlotW / 2, pY + 59);
+      ctx.font = "bold 14px DungGeunMo";
+      ctx.fillStyle = member.usePassive ? "#34D399" : "#F59E0B";
+      ctx.fillText(`${member.cost}C`, pX + partySlotW / 2, pY + 58);
     } else {
       // Empty Slot Marker (Enlarged to 22px / 13px)
       ctx.font = "bold 22px DungGeunMo";
