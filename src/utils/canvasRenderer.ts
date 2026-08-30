@@ -3,6 +3,7 @@ import path from "path";
 import fs from "fs";
 import { DexPokemonInfo, getAbilityDetail, getPokemonSpeciesInfo } from "../services/pokeApiService.js";
 import { StarterEntry, GENERATION_INFO } from "../data/starterCosts.js";
+import { MOVES_DATA } from "../data/movesKo.js";
 
 // Register custom pixel dot font
 const fontPath = path.resolve(process.cwd(), "assets/fonts/DungGeunMo.ttf");
@@ -1639,37 +1640,40 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       typeBadgeX += badgeW + 6;
     }
 
-    // Ability / HA Tag (Enlarged to 15px)
+    // Ability / HA Tag (14px)
     let abLabel = isKo ? `[특성] ${sel.abilityKo}` : `[Ab] ${sel.ability}`;
     if (selHasHa && sel.hiddenAbility) {
       abLabel = isKo ? `[숨특] ${sel.hiddenAbilityKo}` : `[HA] ${sel.hiddenAbility}`;
     }
-    ctx.font = "bold 15px DungGeunMo";
+    ctx.font = "bold 14px DungGeunMo";
     ctx.fillStyle = selHasHa ? "#F87171" : "#60A5FA";
     ctx.textAlign = "left";
-    ctx.fillText(abLabel, infoX, 67);
+    ctx.fillText(abLabel, infoX, 63);
 
-    // Passive Tag (Enlarged to 15px)
+    // Passive Tag (14px)
     const passiveName = selHasPassive ? (isKo ? `[패시브] ${sel.passiveAbilityKo}` : `[Passive] ${sel.passiveAbility}`) : (isKo ? "[패시브] 미해금" : "[Passive] Locked");
-    ctx.font = "bold 15px DungGeunMo";
-    ctx.fillStyle = selHasPassive ? "#34D399" : "#64748B";
-    ctx.fillText(passiveName, infoX, 84);
-
-    // Starter Moves Title (Enlarged to 14px)
     ctx.font = "bold 14px DungGeunMo";
+    ctx.fillStyle = selHasPassive ? "#34D399" : "#64748B";
+    ctx.fillText(passiveName, infoX, 79);
+
+    // Starter Moves Title (13px) - Clean spacing
+    ctx.font = "bold 13px DungGeunMo";
     ctx.fillStyle = "#94A3B8";
     ctx.textAlign = "left";
-    ctx.fillText(isKo ? "시작 기술 (Starter Moves)" : "Starter Moves", rightX, 102);
+    ctx.fillText(isKo ? "시작 기술" : "Starter Moves", rightX, 97);
 
-    // Move Chips (2x2 Grid, width: 133 each)
+    // Move Chips (2x2 Grid, width: 133 each, height: 24)
     const moveChipW = (rightW - 10) / 2;
     const moveChipH = 24;
     for (let mIdx = 0; mIdx < 4; mIdx++) {
-      const mName = sel.starterMoves[mIdx] || "---";
+      const rawMove = sel.starterMoves[mIdx] || "---";
+      const moveKey = rawMove.toLowerCase().replace(/[\s_]+/g, "-");
+      const mDisplay = isKo ? (MOVES_DATA[moveKey]?.nameKo || rawMove) : rawMove;
+
       const mCol = mIdx % 2;
       const mRow = Math.floor(mIdx / 2);
       const mX = rightX + mCol * (moveChipW + 10);
-      const mY = 110 + mRow * (moveChipH + 5);
+      const mY = 105 + mRow * (moveChipH + 4);
 
       ctx.fillStyle = "#181B26";
       ctx.beginPath();
@@ -1680,9 +1684,9 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       ctx.stroke();
 
       ctx.font = "bold 14px DungGeunMo";
-      ctx.fillStyle = mName === "---" ? "#475569" : "#F8FAFC";
+      ctx.fillStyle = rawMove === "---" ? "#475569" : "#F8FAFC";
       ctx.textAlign = "center";
-      ctx.fillText(mName, mX + moveChipW / 2, mY + 17);
+      ctx.fillText(mDisplay, mX + moveChipW / 2, mY + 17);
     }
   }
 
@@ -1690,12 +1694,12 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   ctx.strokeStyle = "#2D3246";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(rightX, 168);
-  ctx.lineTo(rightX + rightW, 168);
+  ctx.moveTo(rightX, 164);
+  ctx.lineTo(rightX + rightW, 164);
   ctx.stroke();
 
-  // 5-2. BOTTOM PARTY BUILDER (y: 174 ~ 370)
-  const bottomStartY = 174;
+  // 5-2. BOTTOM PARTY BUILDER (y: 172 ~ 370)
+  const bottomStartY = 172;
 
   // Cost Counter Text + Inline Gauge Bar (Single Row)
   const isOverCost = currentCost > maxCost;
