@@ -13,7 +13,8 @@ import {
 } from "discord.js";
 import { BotEvent, ExtendedClient } from "../types/index.js";
 import { createBaseEmbed, COLORS } from "../utils/embed.js";
-import { renderTitleScreen, renderBagScreen, renderMultiplayerScreen, renderPokedexScreen, renderStarterSelectScreen, renderGenSelectScreen, renderEggGachaScreen, StarterSelectPartyItem, getPokemonSprite, isSpriteCached } from "../utils/canvasRenderer.js";
+import { renderTitleScreen, renderBagScreen, renderMultiplayerScreen, renderPokedexScreen, renderStarterSelectScreen, renderGenSelectScreen, renderEggGachaScreen, StarterSelectPartyItem, PartyViewTab, getPokemonSprite, isSpriteCached } from "../utils/canvasRenderer.js";
+import { MOVES_DATA } from "../data/movesKo.js";
 import { saveService, PartyPokemon } from "../services/saveService.js";
 import { getPokemonByQuery, getPokemonByDexNumber, getPokemonPage, getAbilityKoreanName, getAbilityDetail } from "../services/pokeApiService.js";
 import { STARTER_DATABASE, GENERATION_INFO, getStartersByGen, getStarterByDexNumber, DEFAULT_MAX_COST, StarterEntry } from "../data/starterCosts.js";
@@ -882,7 +883,9 @@ async function renderPartyViewMessageData(
   isShinyFilter: boolean = false,
   isHaFilter: boolean = false,
   isPassiveFilter: boolean = false,
-  selectedPartyIdx: number = 0
+  selectedPartyIdx: number = 0,
+  partyTab: PartyViewTab = "summary",
+  selectedMoveIdx: number = 0
 ) {
   const profile = saveService.getProfile(userId);
   const isKo = profile.language === "ko";
@@ -928,6 +931,8 @@ async function renderPartyViewMessageData(
     lang: profile.language,
     isPartyView: true,
     selectedPartyIdx: safePartyIdx,
+    partyTab,
+    selectedMoveIdx,
   });
 
   const attachment = new AttachmentBuilder(imageBuffer, { name: "party_view.png" });
@@ -946,7 +951,7 @@ async function renderPartyViewMessageData(
     }
     const isSelected = safePartyIdx === idx;
     return new ButtonBuilder()
-      .setCustomId(`party_pick_${idx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+      .setCustomId(`party_pick_${idx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
       .setLabel(`${idx + 1}. ${member.name.slice(0, 4)}`)
       .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Secondary);
   };
@@ -971,7 +976,25 @@ async function renderPartyViewMessageData(
     )
   );
 
-  // ROW 3: Customization Action Toggles for Inspected Member (✨ Shiny Tier, 🌟 HA, 🔓 Passive)
+  // ROW 3: Tab Switchers (📜 Summary / ⚔️ Moves / ✨ Shiny)
+  components.push(
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`party_tab_summary_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${selectedMoveIdx}_${userId}`)
+        .setLabel(isKo ? "📜 스펙/요약" : "📜 Summary")
+        .setStyle(partyTab === "summary" ? ButtonStyle.Primary : ButtonStyle.Secondary),
+      new ButtonBuilder()
+        .setCustomId(`party_tab_moves_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${selectedMoveIdx}_${userId}`)
+        .setLabel(isKo ? "⚔️ 기술 관리" : "⚔️ Moves")
+        .setStyle(partyTab === "moves" ? ButtonStyle.Primary : ButtonStyle.Secondary),
+      new ButtonBuilder()
+        .setCustomId(`party_tab_shiny_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${selectedMoveIdx}_${userId}`)
+        .setLabel(isKo ? "✨ 이로치 폼" : "✨ Shiny Form")
+        .setStyle(partyTab === "shiny" ? ButtonStyle.Primary : ButtonStyle.Secondary)
+    )
+  );
+
+  // ROW 4: Context Sub-Actions based on active tab
   const inspectedProg = inspectedStarter ? userStarters.get(inspectedStarter.speciesId) : null;
   const maxShinyTier = inspectedProg?.shinyTier || 0;
   const curShinyTier = activePartyMember?.shinyTier || 0;
@@ -980,45 +1003,75 @@ async function renderPartyViewMessageData(
   const hasPassive = inspectedProg?.passiveUnlocked || false;
   const curUsePassive = activePartyMember?.usePassive || false;
 
-  const shinyBtnLabel = isKo
-    ? (curShinyTier > 0 ? `✨ 이로치 T${curShinyTier}` : "✨ 일반 외형")
-    : (curShinyTier > 0 ? `✨ Shiny T${curShinyTier}` : "✨ Normal Form");
+  if (partyTab === "moves") {
+    // Moves Tab: 4 Move Selector Buttons
+    const moveButtons: ButtonBuilder[] = [];
+    for (let m = 0; m < 4; m++) {
+      const rawMove = inspectedStarter.starterMoves[m] || "---";
+      const moveKey = rawMove.toLowerCase().replace(/[\s_]+/g, "-");
+      const moveInfo = MOVES_DATA[moveKey];
+      const mName = isKo ? (moveInfo?.nameKo || rawMove) : rawMove;
+      const isCur = selectedMoveIdx === m;
 
-  const haBtnLabel = isKo
-    ? (hasHa ? (curUseHa ? `🌟 [숨특] ${inspectedStarter.hiddenAbilityKo}` : `🌟 [특성] ${inspectedStarter.abilityKo}`) : "🔒 숨특 잠김")
-    : (hasHa ? (curUseHa ? `🌟 [HA] ${inspectedStarter.hiddenAbility}` : `🌟 [Ab] ${inspectedStarter.ability}`) : "🔒 HA Locked");
+      moveButtons.push(
+        new ButtonBuilder()
+          .setCustomId(`party_movepick_${m}_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${userId}`)
+          .setLabel(`${m + 1}. ${mName.slice(0, 5)}`)
+          .setStyle(isCur ? ButtonStyle.Primary : ButtonStyle.Secondary)
+          .setDisabled(rawMove === "---")
+      );
+    }
+    components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(...moveButtons));
+  } else if (partyTab === "shiny") {
+    // Shiny Tab: 4 Direct Shiny Tier Buttons (T0, T1, T2, T3)
+    const tierLabels = ["T0 일반", "T1 노랑", "T2 파랑", "T3 빨강"];
+    const tierButtons: ButtonBuilder[] = [];
+    for (let t = 0; t <= 3; t++) {
+      const isUnlocked = t === 0 || t <= maxShinyTier;
+      const isCur = curShinyTier === t;
 
-  const passBtnLabel = isKo
-    ? (hasPassive ? (curUsePassive ? "🔓 패시브 ON (-1C)" : "🔓 패시브 OFF") : "🔒 패시브 잠김")
-    : (hasPassive ? (curUsePassive ? "🔓 Passive ON (-1C)" : "🔓 Passive OFF") : "🔒 Passive Locked");
+      tierButtons.push(
+        new ButtonBuilder()
+          .setCustomId(`party_setshiny_${t}_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
+          .setLabel(tierLabels[t])
+          .setStyle(isCur ? ButtonStyle.Primary : ButtonStyle.Secondary)
+          .setDisabled(!isUnlocked)
+      );
+    }
+    components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(...tierButtons));
+  } else {
+    // Summary Tab: Ability / HA toggle & Passive toggle
+    const haBtnLabel = isKo
+      ? (hasHa ? (curUseHa ? `🌟 [숨특] ${inspectedStarter.hiddenAbilityKo}` : `🌟 [특성] ${inspectedStarter.abilityKo}`) : "🔒 숨특 잠김")
+      : (hasHa ? (curUseHa ? `🌟 [HA] ${inspectedStarter.hiddenAbility}` : `🌟 [Ab] ${inspectedStarter.ability}`) : "🔒 HA Locked");
 
-  components.push(
-    new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder()
-        .setCustomId(`party_toggleshiny_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
-        .setLabel(shinyBtnLabel)
-        .setStyle(curShinyTier > 0 ? ButtonStyle.Primary : ButtonStyle.Secondary)
-        .setDisabled(maxShinyTier === 0),
-      new ButtonBuilder()
-        .setCustomId(`party_toggleha_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
-        .setLabel(haBtnLabel)
-        .setStyle(curUseHa ? ButtonStyle.Danger : ButtonStyle.Secondary)
-        .setDisabled(!hasHa),
-      new ButtonBuilder()
-        .setCustomId(`party_togglepass_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
-        .setLabel(passBtnLabel)
-        .setStyle(curUsePassive ? ButtonStyle.Success : ButtonStyle.Secondary)
-        .setDisabled(!hasPassive)
-    )
-  );
+    const passBtnLabel = isKo
+      ? (hasPassive ? (curUsePassive ? "🔓 패시브 ON (-1C)" : "🔓 패시브 OFF") : "🔒 패시브 잠김")
+      : (hasPassive ? (curUsePassive ? "🔓 Passive ON (-1C)" : "🔓 Passive OFF") : "🔒 Passive Locked");
 
-  // ROW 4: Remove Member [-⚪]
+    components.push(
+      new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`party_toggleha_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
+          .setLabel(haBtnLabel)
+          .setStyle(curUseHa ? ButtonStyle.Danger : ButtonStyle.Secondary)
+          .setDisabled(!hasHa),
+        new ButtonBuilder()
+          .setCustomId(`party_togglepass_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
+          .setLabel(passBtnLabel)
+          .setStyle(curUsePassive ? ButtonStyle.Success : ButtonStyle.Secondary)
+          .setDisabled(!hasPassive)
+      )
+    );
+  }
+
+  // ROW 5: Remove [-⚪] + START + Back [↩️]
   const removeTargetDex = activePartyMember ? activePartyMember.dexNumber : 0;
   components.push(
     new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
-        .setCustomId(`party_remove_${safePartyIdx}_${removeTargetDex}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
-        .setLabel("-⚪")
+        .setCustomId(`party_remove_${safePartyIdx}_${removeTargetDex}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
+        .setLabel(isKo ? "-⚪ 파티 제외" : "-⚪ Remove")
         .setStyle(ButtonStyle.Danger)
         .setDisabled(!activePartyMember),
       new ButtonBuilder()
@@ -1773,12 +1826,11 @@ export const interactionCreateEvent: BotEvent = {
         const page = parseInt(parts[4], 10) || 1;
         const slotId = parseInt(parts[5], 10) || 1;
         const partyRaw = parts[6] || "empty";
-        const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
         const isShiny = parts[7] === "1";
         const isHa = parts[8] === "1";
         const isPassive = parts[9] === "1";
 
-        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, partyDexList, isShiny, isHa, isPassive, 0);
+        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, partyRaw, isShiny, isHa, isPassive, 0, "summary", 0);
         await interaction.update(partyData);
         return;
       }
@@ -1791,49 +1843,85 @@ export const interactionCreateEvent: BotEvent = {
         const dexNo = parseInt(parts[5], 10) || 1;
         const slotId = parseInt(parts[6], 10) || 1;
         const partyRaw = parts[7] || "empty";
-        const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
         const isShiny = parts[8] === "1";
         const isHa = parts[9] === "1";
         const isPassive = parts[10] === "1";
+        const tab = (parts[11] || "summary") as PartyViewTab;
+        const moveIdx = parseInt(parts[12], 10) || 0;
 
-        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, partyRaw, isShiny, isHa, isPassive, targetIdx);
+        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, partyRaw, isShiny, isHa, isPassive, targetIdx, tab, moveIdx);
         await interaction.update(partyData);
         return;
       }
 
-      // 2-1-P2-A. Toggle Shiny Tier for inspected party member (✨)
-      if (customId.startsWith("party_toggleshiny_")) {
-        const currentIdx = parseInt(parts[2], 10) || 0;
-        const gen = parseInt(parts[3], 10) || 0;
-        const page = parseInt(parts[4], 10) || 1;
-        const dexNo = parseInt(parts[5], 10) || 1;
-        const slotId = parseInt(parts[6], 10) || 1;
-        const partyRaw = parts[7] || "empty";
-        const isShiny = parts[8] === "1";
-        const isHa = parts[9] === "1";
-        const isPassive = parts[10] === "1";
+      // 2-1-P2-TAB. Switch Tab in Party View (📜 summary / ⚔️ moves / ✨ shiny)
+      if (customId.startsWith("party_tab_")) {
+        const targetTab = parts[2] as PartyViewTab;
+        const currentIdx = parseInt(parts[3], 10) || 0;
+        const gen = parseInt(parts[4], 10) || 0;
+        const page = parseInt(parts[5], 10) || 1;
+        const dexNo = parseInt(parts[6], 10) || 1;
+        const slotId = parseInt(parts[7], 10) || 1;
+        const partyRaw = parts[8] || "empty";
+        const isShiny = parts[9] === "1";
+        const isHa = parts[10] === "1";
+        const isPassive = parts[11] === "1";
+        const moveIdx = parseInt(parts[12], 10) || 0;
+
+        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, partyRaw, isShiny, isHa, isPassive, currentIdx, targetTab, moveIdx);
+        await interaction.update(partyData);
+        return;
+      }
+
+      // 2-1-P2-MOVE. Pick Move in Moves Tab
+      if (customId.startsWith("party_movepick_")) {
+        const targetMoveIdx = parseInt(parts[2], 10) || 0;
+        const currentIdx = parseInt(parts[3], 10) || 0;
+        const gen = parseInt(parts[4], 10) || 0;
+        const page = parseInt(parts[5], 10) || 1;
+        const dexNo = parseInt(parts[6], 10) || 1;
+        const slotId = parseInt(parts[7], 10) || 1;
+        const partyRaw = parts[8] || "empty";
+        const isShiny = parts[9] === "1";
+        const isHa = parts[10] === "1";
+        const isPassive = parts[11] === "1";
+        const tab = (parts[12] || "moves") as PartyViewTab;
+
+        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, partyRaw, isShiny, isHa, isPassive, currentIdx, tab, targetMoveIdx);
+        await interaction.update(partyData);
+        return;
+      }
+
+      // 2-1-P2-SHINY. Direct Set Shiny Tier in Shiny Tab (T0, T1, T2, T3)
+      if (customId.startsWith("party_setshiny_")) {
+        const targetShinyTier = parseInt(parts[2], 10) || 0;
+        const currentIdx = parseInt(parts[3], 10) || 0;
+        const gen = parseInt(parts[4], 10) || 0;
+        const page = parseInt(parts[5], 10) || 1;
+        const dexNo = parseInt(parts[6], 10) || 1;
+        const slotId = parseInt(parts[7], 10) || 1;
+        const partyRaw = parts[8] || "empty";
+        const isShiny = parts[9] === "1";
+        const isHa = parts[10] === "1";
+        const isPassive = parts[11] === "1";
+        const tab = (parts[12] || "shiny") as PartyViewTab;
+        const moveIdx = parseInt(parts[13], 10) || 0;
 
         const userStarters = getUserStarters(interaction.user.id);
         const partyStates = parsePartyParam(partyRaw, userStarters);
         const targetMember = partyStates[currentIdx];
 
         if (targetMember) {
-          const s = getStarterByDexNumber(targetMember.dexNumber);
-          const prog = s ? userStarters.get(s.speciesId) : null;
-          const maxShinyTier = prog?.shinyTier || 0;
-
-          if (maxShinyTier > 0) {
-            targetMember.shinyTier = (targetMember.shinyTier + 1) % (maxShinyTier + 1);
-          }
+          targetMember.shinyTier = targetShinyTier;
         }
 
         const newPartyParam = serializePartyParam(partyStates);
-        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, currentIdx);
+        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, currentIdx, tab, moveIdx);
         await interaction.update(partyData);
         return;
       }
 
-      // 2-1-P2-B. Toggle Hidden Ability (HA) for inspected party member (🌟)
+      // 2-1-P2-A. Toggle Hidden Ability (HA) for inspected party member (🌟)
       if (customId.startsWith("party_toggleha_")) {
         const currentIdx = parseInt(parts[2], 10) || 0;
         const gen = parseInt(parts[3], 10) || 0;
@@ -1844,6 +1932,8 @@ export const interactionCreateEvent: BotEvent = {
         const isShiny = parts[8] === "1";
         const isHa = parts[9] === "1";
         const isPassive = parts[10] === "1";
+        const tab = (parts[11] || "summary") as PartyViewTab;
+        const moveIdx = parseInt(parts[12], 10) || 0;
 
         const userStarters = getUserStarters(interaction.user.id);
         const partyStates = parsePartyParam(partyRaw, userStarters);
@@ -1858,12 +1948,12 @@ export const interactionCreateEvent: BotEvent = {
         }
 
         const newPartyParam = serializePartyParam(partyStates);
-        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, currentIdx);
+        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, currentIdx, tab, moveIdx);
         await interaction.update(partyData);
         return;
       }
 
-      // 2-1-P2-C. Toggle Passive for inspected party member (🔓)
+      // 2-1-P2-B. Toggle Passive for inspected party member (🔓)
       if (customId.startsWith("party_togglepass_")) {
         const currentIdx = parseInt(parts[2], 10) || 0;
         const gen = parseInt(parts[3], 10) || 0;
@@ -1874,6 +1964,8 @@ export const interactionCreateEvent: BotEvent = {
         const isShiny = parts[8] === "1";
         const isHa = parts[9] === "1";
         const isPassive = parts[10] === "1";
+        const tab = (parts[11] || "summary") as PartyViewTab;
+        const moveIdx = parseInt(parts[12], 10) || 0;
 
         const userStarters = getUserStarters(interaction.user.id);
         const partyStates = parsePartyParam(partyRaw, userStarters);
@@ -1888,7 +1980,7 @@ export const interactionCreateEvent: BotEvent = {
         }
 
         const newPartyParam = serializePartyParam(partyStates);
-        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, currentIdx);
+        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, currentIdx, tab, moveIdx);
         await interaction.update(partyData);
         return;
       }
@@ -1905,6 +1997,8 @@ export const interactionCreateEvent: BotEvent = {
         const isShiny = parts[9] === "1";
         const isHa = parts[10] === "1";
         const isPassive = parts[11] === "1";
+        const tab = (parts[12] || "summary") as PartyViewTab;
+        const moveIdx = parseInt(parts[13], 10) || 0;
 
         const userStarters = getUserStarters(interaction.user.id);
         const partyStates = parsePartyParam(partyRaw, userStarters);
@@ -1919,7 +2013,7 @@ export const interactionCreateEvent: BotEvent = {
 
         const nextIdx = Math.min(currentIdx, updatedList.length - 1);
         const newPartyParam = serializePartyParam(updatedList);
-        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, nextIdx);
+        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, nextIdx, tab, moveIdx);
         await interaction.update(partyData);
         return;
       }
