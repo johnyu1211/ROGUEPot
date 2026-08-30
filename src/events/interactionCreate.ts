@@ -13,10 +13,12 @@ import {
 } from "discord.js";
 import { BotEvent, ExtendedClient } from "../types/index.js";
 import { createBaseEmbed, COLORS } from "../utils/embed.js";
-import { renderTitleScreen, renderBagScreen, renderMultiplayerScreen, renderPokedexScreen, renderStarterSelectScreen, renderGenSelectScreen, StarterSelectPartyItem, getPokemonSprite, isSpriteCached } from "../utils/canvasRenderer.js";
+import { renderTitleScreen, renderBagScreen, renderMultiplayerScreen, renderPokedexScreen, renderStarterSelectScreen, renderGenSelectScreen, renderEggGachaScreen, StarterSelectPartyItem, getPokemonSprite, isSpriteCached } from "../utils/canvasRenderer.js";
 import { saveService, PartyPokemon } from "../services/saveService.js";
 import { getPokemonByQuery, getPokemonByDexNumber, getPokemonPage, getAbilityKoreanName, getAbilityDetail } from "../services/pokeApiService.js";
 import { STARTER_DATABASE, GENERATION_INFO, getStartersByGen, getStarterByDexNumber, DEFAULT_MAX_COST, StarterEntry } from "../data/starterCosts.js";
+import { getUserStarters, getUserStarter } from "../services/starterService.js";
+import { pullEggs, getUserEggs, advanceEggHatching } from "../services/eggService.js";
 
 function createStarterSelectMenu(slotId: number, userId: string, fromSource: "title" | "slots" = "title") {
   const profile = saveService.getProfile(userId);
@@ -608,36 +610,60 @@ async function renderStarterSelectMessageData(
   gen: number = 1,
   selectedDexNo: number = 1,
   partyDexList: number[] = [],
-  isShinyMode: boolean = false,
-  isHaMode: boolean = false,
-  isPassiveMode: boolean = false
+  isShinyFilter: boolean = false,
+  isHaFilter: boolean = false,
+  isPassiveFilter: boolean = false
 ) {
   const profile = saveService.getProfile(userId);
   const isKo = profile.language === "ko";
+  const userStarters = getUserStarters(userId);
 
-  const genStarters = getStartersByGen(gen);
-  const selectedStarter = getStarterByDexNumber(selectedDexNo) || genStarters[0] || STARTER_DATABASE[0];
+  // 1. Filter Starters List based on user unlocked attributes
+  let genStarters = getStartersByGen(gen);
+  if (isShinyFilter) {
+    genStarters = genStarters.filter((s) => (userStarters.get(s.speciesId)?.shinyTier || 0) > 0);
+  }
+  if (isHaFilter) {
+    genStarters = genStarters.filter((s) => userStarters.get(s.speciesId)?.hasHiddenAbility);
+  }
+  if (isPassiveFilter) {
+    genStarters = genStarters.filter((s) => userStarters.get(s.speciesId)?.passiveUnlocked);
+  }
+
+  const selectedStarter =
+    genStarters.find((s) => s.dexNumber === selectedDexNo) ||
+    genStarters[0] ||
+    getStarterByDexNumber(selectedDexNo) ||
+    STARTER_DATABASE[0];
+
+  const selProgress = userStarters.get(selectedStarter.speciesId);
+  const selIsUnlocked = selProgress ? selProgress.isUnlocked : true;
+  const selHasPassive = selProgress?.passiveUnlocked || false;
 
   const selectedParty: StarterSelectPartyItem[] = partyDexList
     .map((dex) => {
       const s = getStarterByDexNumber(dex);
       if (!s) return null;
+      const prog = userStarters.get(s.speciesId);
+      const isShiny = (prog?.shinyTier || 0) > 0;
+      const useHiddenAbility = prog?.hasHiddenAbility || false;
+      const usePassive = prog?.passiveUnlocked || false;
       return {
         dexNumber: s.dexNumber,
         speciesId: s.speciesId,
         name: isKo ? s.nameKo : s.name,
-        cost: isPassiveMode ? s.reducedCost : s.cost,
-        isShiny: isShinyMode,
-        useHiddenAbility: isHaMode,
-        usePassive: isPassiveMode,
+        cost: usePassive ? s.reducedCost : s.cost,
+        isShiny,
+        useHiddenAbility,
+        usePassive,
       };
     })
     .filter(Boolean) as StarterSelectPartyItem[];
 
   const currentCost = selectedParty.reduce((sum, p) => sum + p.cost, 0);
   const isAlreadyInParty = partyDexList.includes(selectedStarter.dexNumber);
-  const effectiveSelCost = isPassiveMode ? selectedStarter.reducedCost : selectedStarter.cost;
-  const canAdd = !isAlreadyInParty && selectedParty.length < 6 && (currentCost + effectiveSelCost <= DEFAULT_MAX_COST);
+  const effectiveSelCost = selHasPassive ? selectedStarter.reducedCost : selectedStarter.cost;
+  const canAdd = selIsUnlocked && !isAlreadyInParty && selectedParty.length < 6 && (currentCost + effectiveSelCost <= DEFAULT_MAX_COST);
   const canStart = selectedParty.length >= 1 && currentCost <= DEFAULT_MAX_COST;
 
   const imageBuffer = await renderStarterSelectScreen({
@@ -645,16 +671,17 @@ async function renderStarterSelectMessageData(
     currentGen: gen,
     startersList: genStarters,
     selectedParty,
-    isShinyMode,
-    isHaMode,
-    isPassiveMode,
+    userStarters,
+    isShinyFilter,
+    isHaFilter,
+    isPassiveFilter,
     maxCost: DEFAULT_MAX_COST,
     lang: profile.language,
   });
 
   const attachment = new AttachmentBuilder(imageBuffer, { name: "starter_select.png" });
   const partyParam = partyDexList.join("-") || "empty";
-  const flagsParam = `${isShinyMode ? 1 : 0}_${isHaMode ? 1 : 0}_${isPassiveMode ? 1 : 0}`;
+  const flagsParam = `${isShinyFilter ? 1 : 0}_${isHaFilter ? 1 : 0}_${isPassiveFilter ? 1 : 0}`;
 
   // Helper to create slot button
   const createSlotBtn = (idx: number) => {
@@ -675,7 +702,7 @@ async function renderStarterSelectMessageData(
 
   const components: ActionRowBuilder<ButtonBuilder>[] = [];
 
-  // ROW 1: 4 Core Filter & Mode Toggles ([ 📂 세대 ] [ ✨ 이로치 ] [ 🔓 패시브 ] [ 🌟 숨특 ])
+  // ROW 1: 4 Core Filter Toggles ([ 📂 세대 ] [ ✨ 이로치 ] [ 🔓 패시브 ] [ 🌟 숨특 ])
   const hasGenFilter = gen >= 1;
   const row1Btns: ButtonBuilder[] = [
     new ButtonBuilder()
@@ -684,16 +711,16 @@ async function renderStarterSelectMessageData(
       .setStyle(hasGenFilter ? ButtonStyle.Primary : ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId(`starter_toggleshiny_${gen}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
-      .setLabel(isShinyMode ? "✨ 이로치 ON" : "✨ 이로치")
-      .setStyle(isShinyMode ? ButtonStyle.Danger : ButtonStyle.Secondary),
+      .setLabel(isKo ? (isShinyFilter ? "✨ 이로치 ON" : "✨ 이로치") : (isShinyFilter ? "✨ Shiny ON" : "✨ Shiny"))
+      .setStyle(isShinyFilter ? ButtonStyle.Primary : ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId(`starter_togglepass_${gen}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
-      .setLabel(isPassiveMode ? "🔓 패시브 ON" : "🔓 패시브")
-      .setStyle(isPassiveMode ? ButtonStyle.Success : ButtonStyle.Secondary),
+      .setLabel(isKo ? (isPassiveFilter ? "🔓 패시브 ON" : "🔓 패시브") : (isPassiveFilter ? "🔓 Passive ON" : "🔓 Passive"))
+      .setStyle(isPassiveFilter ? ButtonStyle.Primary : ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId(`starter_toggleha_${gen}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
-      .setLabel(isHaMode ? "🌟 숨특 ON" : "🌟 숨특")
-      .setStyle(isHaMode ? ButtonStyle.Danger : ButtonStyle.Secondary)
+      .setLabel(isKo ? (isHaFilter ? "🌟 숨특 ON" : "🌟 숨특") : (isHaFilter ? "🌟 HA ON" : "🌟 HA"))
+      .setStyle(isHaFilter ? ButtonStyle.Primary : ButtonStyle.Secondary)
   ];
   components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row1Btns));
 
@@ -765,6 +792,60 @@ async function renderStarterSelectMessageData(
   components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row5Btns));
 
   return { embeds: [], files: [attachment], attachments: [], components };
+}
+
+async function renderEggGachaMessageData(client: ExtendedClient, userId: string, selectedMachine: "shiny" | "move" | "legendary" = "shiny") {
+  const profile = saveService.getProfile(userId);
+  const isKo = profile.language === "ko";
+  const userEggs = getUserEggs(userId);
+
+  const imageBuffer = await renderEggGachaScreen({
+    selectedMachine,
+    eggs: userEggs.map((e) => ({
+      id: e.id,
+      tier: e.tier,
+      stepsRequired: e.stepsRequired,
+      stepsProgress: e.stepsProgress,
+      shinyTier: e.shinyTier,
+    })),
+    lang: profile.language,
+  });
+
+  const attachment = new AttachmentBuilder(imageBuffer, { name: "egg_gacha.png" });
+
+  // ROW 1: Machine Selection Buttons
+  const machineRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`egg_select_shiny_${userId}`)
+      .setLabel(isKo ? "✨ 이로치 UP" : "✨ Shiny UP")
+      .setStyle(selectedMachine === "shiny" ? ButtonStyle.Primary : ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`egg_select_move_${userId}`)
+      .setLabel(isKo ? "💥 알기술 UP" : "💥 Move UP")
+      .setStyle(selectedMachine === "move" ? ButtonStyle.Primary : ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`egg_select_legendary_${userId}`)
+      .setLabel(isKo ? "👑 전설 픽업" : "👑 Legendary UP")
+      .setStyle(selectedMachine === "legendary" ? ButtonStyle.Primary : ButtonStyle.Secondary)
+  );
+
+  // ROW 2: Pull Buttons (1 Pull / 5 Pulls / Title Back)
+  const pullRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`egg_pull_1_${selectedMachine}_${userId}`)
+      .setLabel(isKo ? "🥚 1회 뽑기" : "🥚 Pull 1")
+      .setStyle(ButtonStyle.Success),
+    new ButtonBuilder()
+      .setCustomId(`egg_pull_5_${selectedMachine}_${userId}`)
+      .setLabel(isKo ? "🥚 5회 연속 뽑기" : "🥚 Pull 5")
+      .setStyle(ButtonStyle.Success),
+    new ButtonBuilder()
+      .setCustomId(`starter_back_title_${userId}`)
+      .setLabel("↩️")
+      .setStyle(ButtonStyle.Secondary)
+  );
+
+  return { embeds: [], files: [attachment], components: [machineRow, pullRow] };
 }
 
 async function renderTitleMessageData(client: ExtendedClient, userId: string) {
@@ -1453,12 +1534,16 @@ export const interactionCreateEvent: BotEvent = {
 
         if (partyDexList.length === 0) return;
 
+        const userStarters = getUserStarters(interaction.user.id);
         const starterParty: PartyPokemon[] = partyDexList.map((dex) => {
           const s = getStarterByDexNumber(dex)!;
-          const chosenAbility = (isHa && s.hiddenAbilityKo) ? s.hiddenAbilityKo : s.abilityKo;
+          const prog = userStarters.get(s.speciesId);
+          const hasShiny = (prog?.shinyTier || 0) > 0;
+          const hasHa = prog?.hasHiddenAbility || false;
+          const chosenAbility = (hasHa && s.hiddenAbilityKo) ? s.hiddenAbilityKo : s.abilityKo;
           return {
             speciesId: s.speciesId,
-            name: (isShiny ? "✨ " : "") + s.nameKo,
+            name: (hasShiny ? "✨ " : "") + s.nameKo,
             level: 5,
             hp: 20,
             maxHp: 20,
@@ -1478,6 +1563,34 @@ export const interactionCreateEvent: BotEvent = {
       if (customId.startsWith("starter_back_title_")) {
         const titleData = await renderTitleMessageData(client, interaction.user.id);
         await interaction.update(titleData);
+        return;
+      }
+
+      // 2-1-G. Open Egg Gacha Screen (🥚)
+      if (customId.startsWith("menu_egg_gacha_")) {
+        const gachaData = await renderEggGachaMessageData(client, interaction.user.id, "shiny");
+        await interaction.update(gachaData);
+        return;
+      }
+
+      // 2-1-H. Egg Gacha Machine Select
+      if (customId.startsWith("egg_select_")) {
+        const machineType = parts[2] as "shiny" | "move" | "legendary";
+        const gachaData = await renderEggGachaMessageData(client, interaction.user.id, machineType);
+        await interaction.update(gachaData);
+        return;
+      }
+
+      // 2-1-I. Egg Gacha Pull (1 or 5 pulls)
+      if (customId.startsWith("egg_pull_")) {
+        const count = parseInt(parts[2], 10) || 1;
+        const machineType = (parts[3] || "shiny") as "shiny" | "move" | "legendary";
+
+        // Pull eggs into incubator
+        pullEggs(interaction.user.id, machineType, count);
+
+        const gachaData = await renderEggGachaMessageData(client, interaction.user.id, machineType);
+        await interaction.update(gachaData);
         return;
       }
 
