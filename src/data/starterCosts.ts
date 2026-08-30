@@ -321,6 +321,18 @@ export const STARTER_DATABASE: StarterEntry[] = [
 
 export const DEFAULT_MAX_COST = 10;
 
+export const GENERATION_INFO = [
+  { gen: 1, nameKo: "1세대 관동", nameEn: "Gen 1: Kanto", starters: ["bulbasaur", "charmander", "squirtle"] },
+  { gen: 2, nameKo: "2세대 성도", nameEn: "Gen 2: Johto", starters: ["chikorita", "cyndaquil", "totodile"] },
+  { gen: 3, nameKo: "3세대 호연", nameEn: "Gen 3: Hoenn", starters: ["treecko", "torchic", "mudkip"] },
+  { gen: 4, nameKo: "4세대 신오", nameEn: "Gen 4: Sinnoh", starters: ["turtwig", "chimchar", "piplup"] },
+  { gen: 5, nameKo: "5세대 하나", nameEn: "Gen 5: Unova", starters: ["snivy", "tepig", "oshawott"] },
+  { gen: 6, nameKo: "6세대 칼로스", nameEn: "Gen 6: Kalos", starters: ["chespin", "fennekin", "froakie"] },
+  { gen: 7, nameKo: "7세대 알로라", nameEn: "Gen 7: Alola", starters: ["rowlet", "litten", "popplio"] },
+  { gen: 8, nameKo: "8세대 가라르", nameEn: "Gen 8: Galar", starters: ["grookey", "scorbunny", "sobble"] },
+  { gen: 9, nameKo: "9세대 팔데아", nameEn: "Gen 9: Paldea", starters: ["sprigatito", "fuecoco", "quaxly"] },
+];
+
 /**
  * Get starter entries for a specific generation (1 ~ 9)
  */

@@ -2,7 +2,7 @@ import { createCanvas, loadImage, GlobalFonts, Image } from "@napi-rs/canvas";
 import path from "path";
 import fs from "fs";
 import { DexPokemonInfo, getAbilityDetail, getPokemonSpeciesInfo } from "../services/pokeApiService.js";
-import { StarterEntry } from "../data/starterCosts.js";
+import { StarterEntry, GENERATION_INFO } from "../data/starterCosts.js";
 
 // Register custom pixel dot font
 const fontPath = path.resolve(process.cwd(), "assets/fonts/DungGeunMo.ttf");
@@ -1620,13 +1620,6 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   ctx.textAlign = "left";
   ctx.fillText(`${isKo ? "코스트" : "COST"} : ${currentCost} / ${maxCost}`, rightX + 12, bottomCardY + 22);
 
-  // Remaining Cost Tag on the Right
-  const remainCost = maxCost - currentCost;
-  ctx.font = "bold 12px DungGeunMo";
-  ctx.fillStyle = isOverCost ? "#EF4444" : "#94A3B8";
-  ctx.textAlign = "right";
-  ctx.fillText(isKo ? `잔여 ${remainCost >= 0 ? remainCost : 0}C` : `Left: ${remainCost >= 0 ? remainCost : 0}C`, rightX + rightW - 12, bottomCardY + 22);
-
   // Cost Gauge Bar (Width: rightW - 24)
   const gaugeW = rightW - 24;
   const gaugeH = 6;
@@ -1701,6 +1694,126 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       ctx.font = "10px DungGeunMo";
       ctx.fillStyle = "#475569";
       ctx.fillText(isKo ? `슬롯 ${pIdx + 1}` : `Slot ${pIdx + 1}`, pX + partySlotW / 2, pY + 48);
+    }
+  }
+
+  return canvas.toBuffer("image/png");
+}
+
+export interface GenSelectScreenOptions {
+  currentGen: number;
+  lang?: "en" | "ko";
+}
+
+/**
+ * Renders the 9-Generation Overview & Fast Jump Screen (560x380)
+ */
+export async function renderGenSelectScreen(options: GenSelectScreenOptions): Promise<Buffer> {
+  const width = 560;
+  const height = 380;
+  const canvas = createCanvas(width, height);
+  const ctx = canvas.getContext("2d");
+
+  ctx.imageSmoothingEnabled = false;
+  ctx.textRendering = "optimizeSpeed";
+
+  const isKo = options.lang === "ko";
+  const currentGen = options.currentGen || 1;
+
+  // Preload starter trio sprites for all 9 generations (27 sprites)
+  const trioSprites = await Promise.all(
+    GENERATION_INFO.map(async (info) => {
+      const sprites = await Promise.all(info.starters.map((name) => getPokemonSprite(name)));
+      return { gen: info.gen, sprites };
+    })
+  );
+
+  // Background
+  ctx.fillStyle = "#13151F";
+  ctx.fillRect(0, 0, width, height);
+
+  // Top Banner
+  ctx.fillStyle = "#1A1D2A";
+  ctx.fillRect(0, 0, width, 40);
+  ctx.strokeStyle = "#2D3246";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(0, 40);
+  ctx.lineTo(width, 40);
+  ctx.stroke();
+
+  ctx.font = "bold 16px DungGeunMo";
+  ctx.fillStyle = "#FFFFFF";
+  ctx.textAlign = "left";
+  ctx.fillText(isKo ? "세대 선택 (GENERATION SELECT)" : "GENERATION SELECT", 14, 26);
+
+  ctx.font = "12px DungGeunMo";
+  ctx.fillStyle = "#94A3B8";
+  ctx.textAlign = "right";
+  ctx.fillText(isKo ? "탐험할 세대를 선택하세요" : "Choose your starter region", width - 14, 26);
+
+  // 9 Generation Cards Grid (3 Columns x 3 Rows, y: 48 ~ 370)
+  const cardW = 174;
+  const cardH = 100;
+  const startX = 10;
+  const startY = 48;
+  const gapX = 9;
+  const gapY = 8;
+
+  for (let i = 0; i < 9; i++) {
+    const info = GENERATION_INFO[i];
+    const col = i % 3;
+    const row = Math.floor(i / 3);
+    const cx = startX + col * (cardW + gapX);
+    const cy = startY + row * (cardH + gapY);
+    const isSelected = info.gen === currentGen;
+
+    ctx.fillStyle = isSelected ? "#22273A" : "#181B26";
+    ctx.beginPath();
+    ctx.roundRect(cx, cy, cardW, cardH, 6);
+    ctx.fill();
+
+    ctx.strokeStyle = isSelected ? "#5865F2" : "#282D3D";
+    ctx.lineWidth = isSelected ? 2 : 1;
+    ctx.stroke();
+
+    // Card Header Bar
+    ctx.fillStyle = isSelected ? "#303956" : "#12141C";
+    ctx.beginPath();
+    ctx.roundRect(cx + 1, cy + 1, cardW - 2, 22, [5, 5, 0, 0]);
+    ctx.fill();
+
+    // Gen Name
+    ctx.font = "bold 12px DungGeunMo";
+    ctx.fillStyle = isSelected ? "#FFFFFF" : "#E2E8F0";
+    ctx.textAlign = "left";
+    ctx.fillText(isKo ? info.nameKo : info.nameEn, cx + 8, cy + 16);
+
+    // Gen Tag
+    ctx.fillStyle = isSelected ? "#5865F2" : "#334155";
+    ctx.beginPath();
+    ctx.roundRect(cx + cardW - 32, cy + 3, 26, 16, 3);
+    ctx.fill();
+    ctx.font = "bold 10px DungGeunMo";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "center";
+    ctx.fillText(`G${info.gen}`, cx + cardW - 19, cy + 14);
+
+    // Starter Trio Sprites (3 Mini Sprites centered)
+    const genData = trioSprites.find((t) => t.gen === info.gen);
+    if (genData) {
+      const trioW = 46;
+      for (let sIdx = 0; sIdx < 3; sIdx++) {
+        const spr = genData.sprites[sIdx];
+        if (spr) {
+          const sprX = cx + 8 + sIdx * trioW;
+          const sprY = cy + 28;
+          const scale = 0.52;
+          const sw = spr.width * scale;
+          const sh = spr.height * scale;
+          ctx.drawImage(spr, sprX + (trioW - sw) / 2, sprY + (60 - sh) / 2, sw, sh);
+        }
+      }
     }
   }
 
