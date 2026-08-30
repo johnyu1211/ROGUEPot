@@ -246,6 +246,42 @@ export function drawVectorStar(ctx: any, cx: number, cy: number, spikes: number,
 }
 
 /**
+ * Draws a clean vector PokéRogue 4-point sparkle star (replaces emoji to prevent font breaking)
+ */
+export function drawShinySparkle(ctx: any, cx: number, cy: number, size: number, color: string = "#F59E0B") {
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  const r = size;
+  ctx.moveTo(cx, cy - r);
+  ctx.quadraticCurveTo(cx, cy, cx + r, cy);
+  ctx.quadraticCurveTo(cx, cy, cx, cy + r);
+  ctx.quadraticCurveTo(cx, cy, cx - r, cy);
+  ctx.quadraticCurveTo(cx, cy, cx, cy - r);
+  ctx.fill();
+
+  // Highlight center dot
+  ctx.fillStyle = "#FFFFFF";
+  ctx.beginPath();
+  ctx.arc(cx, cy, Math.max(1.5, size * 0.28), 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+/**
+ * Draws 1, 2, or 3 vector Shiny Sparkles for Shiny Tiers (Tier 1 Yellow, Tier 2 Blue, Tier 3 Red)
+ */
+export function drawShinyTierSparkles(ctx: any, startX: number, centerY: number, tier: number, size: number = 7): number {
+  if (tier <= 0) return startX;
+  const color = tier === 3 ? "#EF4444" : tier === 2 ? "#3B82F6" : "#F59E0B";
+  const spacing = size * 1.8;
+  for (let t = 0; t < tier; t++) {
+    drawShinySparkle(ctx, startX + size + t * spacing, centerY, size, color);
+  }
+  return startX + tier * spacing + 4;
+}
+
+/**
  * Draws a clean vector Bag Icon
  */
 export function drawVectorBag(ctx: any, cx: number, cy: number, w: number, h: number, color: string = "#F4A261") {
@@ -1385,10 +1421,7 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     ctx.beginPath();
     ctx.roundRect(badgeOffsetX - 28, 9, 28, 24, 4);
     ctx.fill();
-    ctx.font = "bold 14px DungGeunMo";
-    ctx.fillStyle = "#FFFFFF";
-    ctx.textAlign = "center";
-    ctx.fillText("✨", badgeOffsetX - 14, 26);
+    drawShinySparkle(ctx, badgeOffsetX - 14, 21, 7, "#FFFFFF");
     badgeOffsetX -= 32;
   }
   if (isHaFilter) {
@@ -1486,15 +1519,10 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
           ctx.drawImage(sprite, sprX + (sprAreaW - sprW) / 2, sprY + (sprAreaH - sprH) / 2, sprW, sprH);
         }
 
-        // Shiny Tier Badge on Mini Sprite (Tier 1: ✨, Tier 2: ✨✨, Tier 3: ✨✨✨)
+        // Shiny Tier Vector Sparkles on Mini Sprite (Tier 1 Yellow, Tier 2 Blue, Tier 3 Red)
         const sShinyTier = sProgress?.shinyTier || 0;
         if (sShinyTier > 0) {
-          const shinyStars = sShinyTier === 3 ? "✨✨✨" : sShinyTier === 2 ? "✨✨" : "✨";
-          const shinyColor = sShinyTier === 3 ? "#EF4444" : sShinyTier === 2 ? "#60A5FA" : "#FBBF24";
-          ctx.font = "bold 11px DungGeunMo";
-          ctx.fillStyle = shinyColor;
-          ctx.textAlign = "left";
-          ctx.fillText(shinyStars, sx + 6, sy + slotH - 8);
+          drawShinyTierSparkles(ctx, sx + 4, sy + slotH - 12, sShinyTier, 5);
         }
 
         // Party Check Badge or Gen tag (Enlarged to 13px)
@@ -1559,10 +1587,8 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       ctx.drawImage(selectedSprite, showBoxX + (showBoxSize - sprW) / 2, showBoxY + (showBoxSize - sprH) / 2, sprW, sprH);
     }
 
-    // Name + Dex next to sprite (Enlarged)
+    // Name + Dex + Vector Shiny Sparkles next to sprite (Enlarged)
     const infoX = showBoxX + showBoxSize + 12;
-    const shinyStars = selShinyTier === 3 ? "✨✨✨ " : selShinyTier === 2 ? "✨✨ " : selShinyTier === 1 ? "✨ " : "";
-    const titleName = shinyStars + (isKo ? sel.nameKo : sel.name);
     const dexTag = `#${String(sel.dexNumber).padStart(3, "0")}`;
 
     ctx.font = "bold 15px DungGeunMo";
@@ -1571,10 +1597,16 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     ctx.fillText(dexTag, infoX, 26);
 
     const tagW = ctx.measureText(dexTag).width;
+    let nameX = infoX + tagW + 6;
+
+    if (selShinyTier > 0) {
+      nameX = drawShinyTierSparkles(ctx, nameX, 20, selShinyTier, 7);
+    }
+
     ctx.font = "bold 20px DungGeunMo";
     const shinyNameColor = selShinyTier === 3 ? "#F87171" : selShinyTier === 2 ? "#93C5FD" : selShinyTier === 1 ? "#FBBF24" : "#FFFFFF";
     ctx.fillStyle = shinyNameColor;
-    ctx.fillText(titleName, infoX + tagW + 6, 26);
+    ctx.fillText(isKo ? sel.nameKo : sel.name, nameX, 26);
 
     // Right-aligned Big Cost in Header (Top Right of Card)
     ctx.font = "bold 22px DungGeunMo";
@@ -1939,9 +1971,9 @@ export async function renderEggGachaScreen(options: EggGachaScreenOptions): Prom
 
   // Top Gacha Machine Showcase (3 Machines Cards, y: 52 ~ 160)
   const machines = [
-    { id: "shiny", nameKo: "✨ 이로치 뽑기", nameEn: "✨ Shiny UP", descKo: "이로치 확률 1/64", descEn: "Shiny Rate 1/64", color: "#F59E0B" },
-    { id: "move", nameKo: "💥 알 기술 뽑기", nameEn: "💥 Move UP", descKo: "희귀 알기술 확률 UP", descEn: "Rare Moves UP", color: "#EC4899" },
-    { id: "legendary", nameKo: "👑 전설 픽업", nameEn: "👑 Legendary UP", descKo: "전설 포켓몬 확률 UP", descEn: "Legendary Rate UP", color: "#8B5CF6" },
+    { id: "shiny", nameKo: "이로치 UP 뽑기", nameEn: "Shiny UP Gacha", descKo: "이로치 확률 1/64", descEn: "Shiny Rate 1/64", color: "#F59E0B" },
+    { id: "move", nameKo: "알 기술 UP 뽑기", nameEn: "Move UP Gacha", descKo: "희귀 알기술 확률 UP", descEn: "Rare Moves UP", color: "#EC4899" },
+    { id: "legendary", nameKo: "전설 픽업 뽑기", nameEn: "Legendary UP", descKo: "전설 포켓몬 확률 UP", descEn: "Legendary Rate UP", color: "#8B5CF6" },
   ];
 
   const mCardW = 174;
