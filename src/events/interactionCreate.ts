@@ -591,15 +591,11 @@ async function renderGenSelectMessageData(
     new ActionRowBuilder<ButtonBuilder>().addComponents(createGenBtn(4), createGenBtn(5), createGenBtn(6)),
     // Row 3: Gen 7, 8, 9
     new ActionRowBuilder<ButtonBuilder>().addComponents(createGenBtn(7), createGenBtn(8), createGenBtn(9)),
-    // Row 4: All Gens Mode (0) + Back to Starter Select
+    // Row 4: Back to Starter Select
     new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
-        .setCustomId(`starter_pickgen_0_${currentGen}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
-        .setLabel(isKo ? "🌐 전체 세대 보기" : "🌐 All Generations")
-        .setStyle(currentGen === 0 ? ButtonStyle.Primary : ButtonStyle.Secondary),
-      new ButtonBuilder()
         .setCustomId(`starter_genback_${currentGen}_${currentGen}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
-        .setLabel(isKo ? "↩️ 뒤로가기" : "↩️ Back")
+        .setLabel(isKo ? "↩️ 스타팅 선택으로 돌아가기" : "↩️ Back to Starter Select")
         .setStyle(ButtonStyle.Secondary)
     ),
   ];
@@ -611,7 +607,7 @@ async function renderStarterSelectMessageData(
   client: ExtendedClient,
   userId: string,
   slotId: number = 1,
-  gen: number = 1,
+  gen: number = 0,
   selectedDexNo: number = 1,
   partyDexList: number[] = [],
   isShinyFilter: boolean = false,
@@ -1357,17 +1353,18 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 2-1. New Game Button Clicked from Title (Pure Canvas Starter Select Screen)
+      // 2-1. New Game Button Clicked from Title (Pure Canvas Starter Select Screen - Defaults to All Gens 0)
       if (customId.startsWith("menu_newgame_")) {
         const targetSlot = saveService.getFirstAvailableSlot(interaction.user.id);
-        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, targetSlot, 1, 1, [], false, false, false);
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, targetSlot, 0, 1, [], false, false, false);
         await interaction.update(starterData);
         return;
       }
 
       // 2-1-G. Open Generation Selection Menu
       if (customId.startsWith("starter_open_gen_menu_")) {
-        const currentGen = parseInt(parts[4], 10) || 1;
+        const rawGen = parseInt(parts[4], 10);
+        const currentGen = isNaN(rawGen) ? 0 : rawGen;
         const slotId = parseInt(parts[6], 10) || 1;
         const partyParam = parts[7] || "empty";
         const flagsParam = `${parts[8] || 0}_${parts[9] || 0}_${parts[10] || 0}`;
@@ -1377,16 +1374,20 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 2-1-H. Pick Specific Generation from Gen Menu or Back Button
+      // 2-1-H. Pick Specific Generation from Gen Menu or Back Button (Toggle cancel if re-selected)
       if (customId.startsWith("starter_pickgen_") || customId.startsWith("starter_genback_")) {
-        const rawGen = parseInt(parts[2], 10);
-        const nextGen = isNaN(rawGen) ? 1 : rawGen;
+        const isBack = customId.startsWith("starter_genback_");
+        const chosenGen = parseInt(parts[2], 10) || 0;
+        const prevGen = parseInt(parts[3], 10) || 0;
         const slotId = parseInt(parts[4], 10) || 1;
         const partyRaw = parts[5] || "empty";
         const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
         const isShiny = parts[6] === "1";
         const isHa = parts[7] === "1";
         const isPassive = parts[8] === "1";
+
+        // Toggle generation: If re-selecting the currently active gen, cancel selection (resets to 0 / all gens)
+        const nextGen = isBack ? chosenGen : (chosenGen === prevGen ? 0 : chosenGen);
 
         const genStarters = getStartersByGen(nextGen);
         const firstStarterDex = genStarters[0]?.dexNumber || 1;
