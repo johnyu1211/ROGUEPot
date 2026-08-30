@@ -619,8 +619,8 @@ async function renderStarterSelectMessageData(
   const isKo = profile.language === "ko";
   const userStarters = getUserStarters(userId);
 
-  // 1. Filter Starters List based on generation and user unlock attributes
-  let allStarters = getStartersByGen(gen);
+  // 1. Filter Starters List based on generation and ONLY UNLOCKED starters owned by user
+  let allStarters = getStartersByGen(gen).filter((s) => userStarters.get(s.speciesId)?.isUnlocked);
   if (isShinyFilter) {
     allStarters = allStarters.filter((s) => (userStarters.get(s.speciesId)?.shinyTier || 0) > 0);
   }
@@ -631,13 +631,10 @@ async function renderStarterSelectMessageData(
     allStarters = allStarters.filter((s) => userStarters.get(s.speciesId)?.passiveUnlocked);
   }
 
-  // 2. Sort: Unlocked Starters FIRST, then Shiny Tier desc, then Dex Number asc!
+  // 2. Sort: Shiny Tier desc, then Dex Number asc!
   allStarters.sort((a, b) => {
     const progA = userStarters.get(a.speciesId);
     const progB = userStarters.get(b.speciesId);
-    const unlockedA = progA ? (progA.isUnlocked ? 1 : 0) : 1;
-    const unlockedB = progB ? (progB.isUnlocked ? 1 : 0) : 1;
-    if (unlockedA !== unlockedB) return unlockedB - unlockedA; // Unlocked first!
 
     const shinyA = progA?.shinyTier || 0;
     const shinyB = progB?.shinyTier || 0;
