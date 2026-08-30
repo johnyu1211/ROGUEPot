@@ -604,7 +604,7 @@ async function renderStarterSelectMessageData(
     const s = genStarters[idx];
     if (!s) {
       return new ButtonBuilder()
-        .setCustomId(`starter_empty_${idx}_${userId}`)
+        .setCustomId(`starter_empty_${idx}_${gen}_${slotId}_${userId}`)
         .setLabel(`${idx + 1}`)
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(true);
@@ -666,12 +666,12 @@ async function renderStarterSelectMessageData(
       .setLabel(`G9`)
       .setStyle(gen === 9 ? ButtonStyle.Danger : ButtonStyle.Secondary),
     new ButtonBuilder()
-      .setCustomId(`starter_gen_${Math.max(1, gen - 1)}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${userId}`)
+      .setCustomId(`starter_genprev_${Math.max(1, gen - 1)}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${userId}`)
       .setLabel("<")
       .setStyle(ButtonStyle.Primary)
       .setDisabled(gen <= 1),
     new ButtonBuilder()
-      .setCustomId(`starter_gen_${Math.min(9, gen + 1)}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${userId}`)
+      .setCustomId(`starter_gennext_${Math.min(9, gen + 1)}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${userId}`)
       .setLabel(">")
       .setStyle(ButtonStyle.Primary)
       .setDisabled(gen >= 9)
@@ -1224,7 +1224,11 @@ export const interactionCreateEvent: BotEvent = {
       }
 
       // 2-1-B. Starter Generation Tab Switch
-      if (customId.startsWith("starter_gen_")) {
+      if (
+        customId.startsWith("starter_gen_") ||
+        customId.startsWith("starter_genprev_") ||
+        customId.startsWith("starter_gennext_")
+      ) {
         const gen = parseInt(parts[2], 10) || 1;
         const slotId = parseInt(parts[4], 10) || 1;
         const partyRaw = parts[5] || "empty";
