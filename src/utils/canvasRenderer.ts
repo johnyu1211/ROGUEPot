@@ -1489,9 +1489,18 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       ctx.textAlign = "left";
       ctx.fillText(`${i + 1}.${displayName.slice(0, 4)}`, sx + 6, sy + 18);
 
-      // Cost Text without box (Bold 16px, Right Aligned, Vivid Green)
+      // Cost Text without box (Bold 16px, Right Aligned: Red if unaffordable, Mint if passive, Green otherwise)
+      const remainingCost = maxCost - currentCost;
+      const cannotAddDueToCost = !isAlreadyInParty && (sEffectiveCost > remainingCost || party.length >= 6);
+      let costColor = "#22C55E";
+      if (cannotAddDueToCost) {
+        costColor = "#EF4444"; // Red when unaffordable!
+      } else if (sHasPassive) {
+        costColor = "#34D399"; // Emerald mint for reduced cost
+      }
+
       ctx.font = "bold 16px DungGeunMo";
-      ctx.fillStyle = sHasPassive ? "#34D399" : "#22C55E";
+      ctx.fillStyle = costColor;
       ctx.textAlign = "right";
       ctx.fillText(`${sEffectiveCost}C`, sx + slotW - 8, sy + 18);
 
