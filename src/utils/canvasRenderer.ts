@@ -38,8 +38,11 @@ export interface TitleScreenOptions {
   lang?: "en" | "ko";
 }
 
+// In-Memory Sprite Cache for instant 0ms rendering
+const spriteCache = new Map<string, Image>();
+
 /**
- * Helper to fetch a static pixel sprite from Showdown CDN
+ * Helper to fetch a static pixel sprite from Showdown CDN with in-memory caching
  */
 export async function getPokemonSprite(pokemonName: string): Promise<Image | null> {
   try {
@@ -93,8 +96,16 @@ export async function getPokemonSprite(pokemonName: string): Promise<Image | nul
     else if (clean.startsWith("meloetta")) clean = "meloetta";
     else clean = clean.replace(/[^a-z0-9]/g, "");
 
+    if (spriteCache.has(clean)) {
+      return spriteCache.get(clean)!;
+    }
+
     const url = `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`;
-    return await loadImage(url);
+    const img = await loadImage(url);
+    if (img) {
+      spriteCache.set(clean, img);
+    }
+    return img;
   } catch (err) {
     console.error(`[CANVAS] Failed to load sprite for ${pokemonName}:`, err);
     return null;
@@ -677,6 +688,13 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
   const curPage = options?.currentPage || 1;
   const totPages = options?.totalPages || 129;
 
+  // 0. PRELOAD ALL ASSETS IN PARALLEL (Instant Multi-Threaded Loading)
+  const [sprites, bigSprite, speciesInfo] = await Promise.all([
+    Promise.all(items.map((p) => (p ? getPokemonSprite(p.speciesId) : Promise.resolve(null)))),
+    selected ? getPokemonSprite(selected.speciesId) : Promise.resolve(null),
+    selected ? getPokemonSpeciesInfo(selected.dexNumber) : Promise.resolve({ genusKo: "포켓몬", genusEn: "Pokémon", flavorTextKo: "", flavorTextEn: "" }),
+  ]);
+
   // 1. Dark Retro Background (Refined Dark Midnight)
   ctx.fillStyle = "#13151F";
   ctx.fillRect(0, 0, width, height);
@@ -748,7 +766,7 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
       ctx.fillText(dexTag, sx + slotW - 6, sy + 16);
 
       // Mini Sprite (Centered in left half area: 50x48)
-      const sprite = await getPokemonSprite(p.speciesId);
+      const sprite = sprites[i];
       if (sprite) {
         const scale = 0.64;
         const sprW = sprite.width * scale;
@@ -844,7 +862,6 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    const bigSprite = await getPokemonSprite(selected.speciesId);
     if (bigSprite) {
       const scale = 1.35;
       const sprW = bigSprite.width * scale;
@@ -857,7 +874,6 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     const titleName = (isKo && selected.koreanName) ? selected.koreanName : selected.name;
     const dexTag = `#${String(selected.dexNumber).padStart(3, "0")}`;
 
-    const speciesInfo = await getPokemonSpeciesInfo(selected.dexNumber);
     const genusText = isKo ? speciesInfo.genusKo : speciesInfo.genusEn;
 
     // 1. Top Row: #001 (Dex Tag in Slate) + Pokémon Name (Bold White 18px) + Genus
