@@ -1430,30 +1430,98 @@ function drawMoveCategoryIcon(ctx: any, x: number, y: number, category?: "physic
 }
 
 /**
- * Draws Vector Candy Icon (Swirl core + candy wrapper ends)
+ * Draws Vector Candy Icon (PokéRogue Style Striped Wrapped Candy)
  */
-function drawCandyIcon(ctx: any, cx: number, cy: number, radius: number = 5, color: string = "#FCD34D") {
-  ctx.fillStyle = color;
-  // Center candy ball
-  ctx.beginPath();
-  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-  ctx.fill();
+function drawCandyIcon(ctx: any, cx: number, cy: number, r: number = 6.5, mainColor: string = "#F59E0B", stripeColor: string = "#FEF08A") {
+  ctx.save();
+  ctx.translate(cx, cy);
+  // Slight tilt for classic candy look
+  ctx.rotate(-Math.PI / 12);
 
-  // Left wrapper twist
+  // 1. Left Wrapper Frill (Twisted Fan)
+  ctx.fillStyle = mainColor;
   ctx.beginPath();
-  ctx.moveTo(cx - radius * 0.7, cy);
-  ctx.lineTo(cx - radius * 1.8, cy - radius * 0.8);
-  ctx.lineTo(cx - radius * 1.8, cy + radius * 0.8);
+  ctx.moveTo(-r * 0.7, -1);
+  ctx.lineTo(-r * 1.8, -r * 0.9);
+  ctx.lineTo(-r * 1.6, -r * 0.3);
+  ctx.lineTo(-r * 2.0, 0);
+  ctx.lineTo(-r * 1.6, r * 0.3);
+  ctx.lineTo(-r * 1.8, r * 0.9);
+  ctx.lineTo(-r * 0.7, 1);
   ctx.closePath();
   ctx.fill();
 
-  // Right wrapper twist
+  ctx.strokeStyle = "#B45309";
+  ctx.lineWidth = 0.8;
+  ctx.stroke();
+
+  // 2. Right Wrapper Frill (Twisted Fan)
+  ctx.fillStyle = mainColor;
   ctx.beginPath();
-  ctx.moveTo(cx + radius * 0.7, cy);
-  ctx.lineTo(cx + radius * 1.8, cy - radius * 0.8);
-  ctx.lineTo(cx + radius * 1.8, cy + radius * 0.8);
+  ctx.moveTo(r * 0.7, -1);
+  ctx.lineTo(r * 1.8, -r * 0.9);
+  ctx.lineTo(r * 1.6, -r * 0.3);
+  ctx.lineTo(r * 2.0, 0);
+  ctx.lineTo(r * 1.6, r * 0.3);
+  ctx.lineTo(r * 1.8, r * 0.9);
+  ctx.lineTo(r * 0.7, 1);
   ctx.closePath();
   ctx.fill();
+
+  ctx.strokeStyle = "#B45309";
+  ctx.lineWidth = 0.8;
+  ctx.stroke();
+
+  // 3. Candy Center Ball (Solid Circle)
+  ctx.fillStyle = mainColor;
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 4. Swirl / Stripes on Ball (Clip to circle)
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.clip();
+
+  ctx.strokeStyle = stripeColor;
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  ctx.arc(-r * 0.6, 0, r * 0.9, -Math.PI * 0.5, Math.PI * 0.5);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(r * 0.6, 0, r * 0.9, Math.PI * 0.5, Math.PI * 1.5);
+  ctx.stroke();
+
+  // Middle Diagonal Stripe
+  ctx.lineWidth = 2.0;
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.8, -r * 0.8);
+  ctx.lineTo(r * 0.8, r * 0.8);
+  ctx.stroke();
+
+  // Top-Left Gloss Highlight
+  ctx.fillStyle = "rgba(255, 255, 255, 0.65)";
+  ctx.beginPath();
+  ctx.ellipse(-r * 0.35, -r * 0.35, r * 0.3, r * 0.18, -Math.PI / 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+
+  // Center Ball Outline
+  ctx.strokeStyle = "#B45309";
+  ctx.lineWidth = 0.9;
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Knot Bands
+  ctx.fillStyle = "#D97706";
+  ctx.fillRect(-r * 0.75, -2, 1.2, 4);
+  ctx.fillRect(r * 0.75 - 1.2, -2, 1.2, 4);
+
+  ctx.restore();
 }
 
 /**
@@ -1898,15 +1966,32 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     ctx.fillText(isKo ? t.labelKo : t.labelEn, tX + tabW / 2, tabY + tabH / 2);
   });
 
-  // Candy Counter on Top Right
+  // Candy Badge on Top Right (y: 11 ~ 37)
   const candyText = `${candies}`;
+  ctx.font = "bold 13px DungGeunMo";
+  const cTextW = ctx.measureText(candyText).width;
+  const badgeW = cTextW + 34;
+  const badgeH = 26;
+  const badgeX = panelX + panelW - badgeW - 6;
+  const badgeY = 11;
+
+  ctx.fillStyle = "#10121A";
+  ctx.beginPath();
+  ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 4);
+  ctx.fill();
+  ctx.strokeStyle = "#2B3144";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Candy Vector Icon (Tilted, striped, frilled wrapper)
+  drawCandyIcon(ctx, badgeX + 13, badgeY + badgeH / 2, 5.5, "#F59E0B", "#FEF08A");
+
+  // Candy Count Text
   ctx.textBaseline = "middle";
   ctx.font = "bold 13px DungGeunMo";
   ctx.fillStyle = "#FCD34D";
-  ctx.textAlign = "right";
-  ctx.fillText(candyText, panelX + panelW - 8, 24);
-  const cTextW = ctx.measureText(candyText).width;
-  drawCandyIcon(ctx, panelX + panelW - 8 - cTextW - 10, 24, 4.5, "#FCD34D");
+  ctx.textAlign = "left";
+  ctx.fillText(candyText, badgeX + 25, badgeY + badgeH / 2);
 
   // =========================================================================
   // TAB 1: MOVES TAB (Detailed Move Inspector)
