@@ -13,7 +13,7 @@ import {
 } from "discord.js";
 import { BotEvent, ExtendedClient } from "../types/index.js";
 import { createBaseEmbed, COLORS } from "../utils/embed.js";
-import { renderTitleScreen, renderBagScreen, renderMultiplayerScreen, renderPokedexScreen } from "../utils/canvasRenderer.js";
+import { renderTitleScreen, renderBagScreen, renderMultiplayerScreen, renderPokedexScreen, getPokemonSprite } from "../utils/canvasRenderer.js";
 import { saveService, PartyPokemon } from "../services/saveService.js";
 import { getPokemonByQuery, getPokemonByDexNumber, getPokemonPage, getAbilityKoreanName, getAbilityDetail } from "../services/pokeApiService.js";
 
@@ -494,6 +494,24 @@ async function renderPokedexMessageData(
       .setStyle(ButtonStyle.Danger)
   );
   components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(lastRowBtns.slice(0, 5)));
+
+  // Background Prefetch next & previous pages for instantaneous 0ms page navigation
+  setTimeout(async () => {
+    try {
+      const nextPage = page + 1;
+      const prevPage = page - 1;
+      if (nextPage <= totalPages) {
+        const nextData = await getPokemonPage(nextPage);
+        nextData.items.forEach((p) => getPokemonSprite(p.speciesId));
+      }
+      if (prevPage >= 1) {
+        const prevData = await getPokemonPage(prevPage);
+        prevData.items.forEach((p) => getPokemonSprite(p.speciesId));
+      }
+    } catch {
+      // Silent catch for background prefetch
+    }
+  }, 100);
 
   return { embeds: [], files: [attachment], attachments: [], components };
 }
