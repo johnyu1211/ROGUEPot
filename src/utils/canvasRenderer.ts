@@ -1471,7 +1471,7 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     const sHasPassive = sProgress?.passiveUnlocked || false;
     const sEffectiveCost = s ? (sHasPassive ? s.reducedCost : s.cost) : 0;
 
-    ctx.fillStyle = isSelected ? "#222738" : (sIsUnlocked ? "#181B26" : "#11131A");
+    ctx.fillStyle = isSelected ? "#222738" : (s ? "#181B26" : "#11131A");
     ctx.beginPath();
     ctx.roundRect(sx, sy, slotW, slotH, 6);
     ctx.fill();
@@ -1483,67 +1483,53 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     if (s) {
       const displayName = isKo ? s.nameKo : s.name;
 
-      if (!sIsUnlocked) {
-        // Locked Starter Slot
-        ctx.font = "bold 15px DungGeunMo";
-        ctx.fillStyle = "#475569";
-        ctx.textAlign = "left";
-        ctx.fillText(`${i + 1}. ???`, sx + 6, sy + 18);
+      // Slot Number + Name (Enlarged to 16px)
+      ctx.font = "bold 16px DungGeunMo";
+      ctx.fillStyle = isSelected ? "#FFFFFF" : "#F8FAFC";
+      ctx.textAlign = "left";
+      ctx.fillText(`${i + 1}.${displayName.slice(0, 4)}`, sx + 6, sy + 18);
 
-        ctx.font = "bold 18px DungGeunMo";
-        ctx.fillStyle = "#475569";
+      // Cost Text without box (Bold 16px, Right Aligned, Vivid Green)
+      ctx.font = "bold 16px DungGeunMo";
+      ctx.fillStyle = sHasPassive ? "#34D399" : "#22C55E";
+      ctx.textAlign = "right";
+      ctx.fillText(`${sEffectiveCost}C`, sx + slotW - 8, sy + 18);
+
+      // Sprite
+      const sprite = listSprites[i];
+      const sprAreaW = 48;
+      const sprAreaH = 48;
+      const sprX = sx + 6;
+      const sprY = sy + 22;
+
+      if (sprite) {
+        const scale = 0.65;
+        const sprW = sprite.width * scale;
+        const sprH = sprite.height * scale;
+        ctx.drawImage(sprite, sprX + (sprAreaW - sprW) / 2, sprY + (sprAreaH - sprH) / 2, sprW, sprH);
+      }
+
+      // Shiny Tier Vector Sparkles on Mini Sprite (Tier 1 Yellow, Tier 2 Blue, Tier 3 Red)
+      const sShinyTier = sProgress?.shinyTier || 0;
+      if (sShinyTier > 0) {
+        drawShinyTierSparkles(ctx, sx + 4, sy + slotH - 12, sShinyTier, 5);
+      }
+
+      // Party Check Badge or Gen tag (Enlarged to 13px)
+      if (isAlreadyInParty) {
+        ctx.fillStyle = "#22C55E";
+        ctx.beginPath();
+        ctx.roundRect(sx + slotW - 52, sy + slotH - 23, 48, 19, 3);
+        ctx.fill();
+        ctx.font = "bold 13px DungGeunMo";
+        ctx.fillStyle = "#FFFFFF";
         ctx.textAlign = "center";
-        ctx.fillText("🔒", sx + slotW / 2, sy + slotH / 2 + 8);
+        ctx.fillText(isKo ? "선택됨" : "ADDED", sx + slotW - 28, sy + slotH - 9);
       } else {
-        // Unlocked Starter Slot
-        // Slot Number + Name (Enlarged to 16px)
-        ctx.font = "bold 16px DungGeunMo";
-        ctx.fillStyle = isSelected ? "#FFFFFF" : "#F8FAFC";
-        ctx.textAlign = "left";
-        ctx.fillText(`${i + 1}.${displayName.slice(0, 4)}`, sx + 6, sy + 18);
-
-        // Cost Text without box (Bold 16px, Right Aligned, Vivid Green)
-        ctx.font = "bold 16px DungGeunMo";
-        ctx.fillStyle = sHasPassive ? "#34D399" : "#22C55E";
+        ctx.font = "bold 14px DungGeunMo";
+        ctx.fillStyle = "#64748B";
         ctx.textAlign = "right";
-        ctx.fillText(`${sEffectiveCost}C`, sx + slotW - 8, sy + 18);
-
-        // Sprite
-        const sprite = listSprites[i];
-        const sprAreaW = 48;
-        const sprAreaH = 48;
-        const sprX = sx + 6;
-        const sprY = sy + 22;
-
-        if (sprite) {
-          const scale = 0.65;
-          const sprW = sprite.width * scale;
-          const sprH = sprite.height * scale;
-          ctx.drawImage(sprite, sprX + (sprAreaW - sprW) / 2, sprY + (sprAreaH - sprH) / 2, sprW, sprH);
-        }
-
-        // Shiny Tier Vector Sparkles on Mini Sprite (Tier 1 Yellow, Tier 2 Blue, Tier 3 Red)
-        const sShinyTier = sProgress?.shinyTier || 0;
-        if (sShinyTier > 0) {
-          drawShinyTierSparkles(ctx, sx + 4, sy + slotH - 12, sShinyTier, 5);
-        }
-
-        // Party Check Badge or Gen tag (Enlarged to 13px)
-        if (isAlreadyInParty) {
-          ctx.fillStyle = "#22C55E";
-          ctx.beginPath();
-          ctx.roundRect(sx + slotW - 52, sy + slotH - 23, 48, 19, 3);
-          ctx.fill();
-          ctx.font = "bold 13px DungGeunMo";
-          ctx.fillStyle = "#FFFFFF";
-          ctx.textAlign = "center";
-          ctx.fillText(isKo ? "선택됨" : "ADDED", sx + slotW - 28, sy + slotH - 9);
-        } else {
-          ctx.font = "bold 14px DungGeunMo";
-          ctx.fillStyle = "#64748B";
-          ctx.textAlign = "right";
-          ctx.fillText(`#${String(s.dexNumber).padStart(3, "0")}`, sx + slotW - 6, sy + slotH - 8);
-        }
+        ctx.fillText(`#${String(s.dexNumber).padStart(3, "0")}`, sx + slotW - 6, sy + slotH - 8);
       }
     } else {
       ctx.font = "bold 15px DungGeunMo";
