@@ -1596,49 +1596,71 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     }
 
     // Name + Dex next to sprite (Enlarged)
-    const infoX = showBoxX + showBoxSize + 12;
+    const infoX = showBoxX + showBoxSize + 10;
     const dexTag = `#${String(sel.dexNumber).padStart(3, "0")}`;
 
-    ctx.font = "bold 15px DungGeunMo";
+    ctx.font = "bold 14px DungGeunMo";
     ctx.fillStyle = "#8E96AB";
     ctx.textAlign = "left";
-    ctx.fillText(dexTag, infoX, 26);
+    ctx.fillText(dexTag, infoX, 24);
 
     const tagW = ctx.measureText(dexTag).width;
     const nameX = infoX + tagW + 6;
 
-    ctx.font = "bold 20px DungGeunMo";
+    ctx.font = "bold 19px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
-    ctx.fillText(isKo ? sel.nameKo : sel.name, nameX, 26);
+    ctx.fillText(isKo ? sel.nameKo : sel.name, nameX, 24);
 
-    // Type Badges below Name (e.g. [풀] [독])
+    // 2-COLUMN SECTION: Left = Type Badges, Right = Ability & Passive
     const types = sel.types && sel.types.length > 0 ? sel.types : ["normal"];
-    let typeBadgeX = infoX;
-    const typeBadgeY = 34;
-    const badgeW = isKo ? 46 : 52;
-    const badgeH = 21;
+    const badgeW = 46;
 
-    for (const tName of types) {
-      const tLower = tName.toLowerCase();
+    // 1) LEFT COLUMN: Type Badges (Vertical Stack if Dual Type, Centered if Single Type)
+    if (types.length === 1) {
+      const tLower = types[0].toLowerCase();
       const tColor = TYPE_COLORS[tLower] || "#777777";
-      const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || tName) : tName.toUpperCase();
+      const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || types[0]) : types[0].toUpperCase();
+      const badgeH = 24;
+      const bY = 46;
 
       ctx.fillStyle = tColor;
       ctx.beginPath();
-      ctx.roundRect(typeBadgeX, typeBadgeY, badgeW, badgeH, 4);
+      ctx.roundRect(infoX, bY, badgeW, badgeH, 4);
       ctx.fill();
-
       ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
       ctx.lineWidth = 1;
       ctx.stroke();
 
-      ctx.font = "bold 12px DungGeunMo";
+      ctx.font = "bold 13px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
-      ctx.fillText(tDisplay, typeBadgeX + badgeW / 2, typeBadgeY + 15);
+      ctx.fillText(tDisplay, infoX + badgeW / 2, bY + 17);
+    } else {
+      // Dual Type: 2 Compact Badges Stacked
+      const badgeH = 19;
+      types.slice(0, 2).forEach((tName, tIdx) => {
+        const tLower = tName.toLowerCase();
+        const tColor = TYPE_COLORS[tLower] || "#777777";
+        const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || tName) : tName.toUpperCase();
+        const bY = 36 + tIdx * (badgeH + 4);
 
-      typeBadgeX += badgeW + 6;
+        ctx.fillStyle = tColor;
+        ctx.beginPath();
+        ctx.roundRect(infoX, bY, badgeW, badgeH, 3);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.font = "bold 12px DungGeunMo";
+        ctx.fillStyle = "#FFFFFF";
+        ctx.textAlign = "center";
+        ctx.fillText(tDisplay, infoX + badgeW / 2, bY + 14);
+      });
     }
+
+    // 2) RIGHT COLUMN: Ability & Passive Tags (X = infoX + 54)
+    const rightColX = infoX + badgeW + 8;
 
     // Ability / HA Tag (14px)
     let abLabel = isKo ? `[특성] ${sel.abilityKo}` : `[Ab] ${sel.ability}`;
@@ -1648,15 +1670,15 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     ctx.font = "bold 14px DungGeunMo";
     ctx.fillStyle = selHasHa ? "#F87171" : "#60A5FA";
     ctx.textAlign = "left";
-    ctx.fillText(abLabel, infoX, 63);
+    ctx.fillText(abLabel, rightColX, 49);
 
     // Passive Tag (14px)
     const passiveName = selHasPassive ? (isKo ? `[패시브] ${sel.passiveAbilityKo}` : `[Passive] ${sel.passiveAbility}`) : (isKo ? "[패시브] 미해금" : "[Passive] Locked");
     ctx.font = "bold 14px DungGeunMo";
     ctx.fillStyle = selHasPassive ? "#34D399" : "#64748B";
-    ctx.fillText(passiveName, infoX, 79);
+    ctx.fillText(passiveName, rightColX, 73);
 
-    // Move Chips (2x2 Grid, width: 133 each, height: 26) - Clean Borderless Layout
+    // Move Chips (2x2 Grid, width: 133 each, height: 25)
     const moveChipW = (rightW - 10) / 2;
     const moveChipH = 25;
     for (let mIdx = 0; mIdx < 4; mIdx++) {
@@ -1667,7 +1689,7 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       const mCol = mIdx % 2;
       const mRow = Math.floor(mIdx / 2);
       const mX = rightX + mCol * (moveChipW + 10);
-      const mY = 98 + mRow * (moveChipH + 6);
+      const mY = 96 + mRow * (moveChipH + 6);
 
       ctx.fillStyle = "#181B26";
       ctx.beginPath();
@@ -1688,12 +1710,12 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   ctx.strokeStyle = "#2D3246";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(rightX, 164);
-  ctx.lineTo(rightX + rightW, 164);
+  ctx.moveTo(rightX, 163);
+  ctx.lineTo(rightX + rightW, 163);
   ctx.stroke();
 
-  // 5-2. BOTTOM PARTY BUILDER (y: 172 ~ 370)
-  const bottomStartY = 172;
+  // 5-2. BOTTOM PARTY BUILDER (y: 171 ~ 370)
+  const bottomStartY = 171;
 
   // Cost Counter Text + Inline Gauge Bar (Single Row)
   const isOverCost = currentCost > maxCost;
