@@ -1350,53 +1350,53 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   ctx.lineTo(splitX, 42);
   ctx.stroke();
 
-  ctx.font = "bold 17px DungGeunMo";
+  ctx.font = "bold 19px DungGeunMo";
   ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "left";
   ctx.fillText(isKo ? "스타팅 선택" : "STARTER SELECT", 10, 28);
 
-  // Large Crisp White Page Indicator ("1 / 9" or "전체")
+  // Large Crisp White Page Indicator ("1 / 9" or "전체") (20px)
   const pageText = gen <= 0 ? (isKo ? "전체" : "ALL") : `${gen} / 9`;
-  ctx.font = "bold 18px DungGeunMo";
+  ctx.font = "bold 20px DungGeunMo";
   ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "right";
-  ctx.fillText(pageText, splitX - 10, 28);
+  ctx.fillText(pageText, splitX - 8, 29);
   const pageTextW = ctx.measureText(pageText).width;
 
   // Active Modes Badges on Banner (to the left of page text)
-  let badgeOffsetX = splitX - 10 - pageTextW - 8;
+  let badgeOffsetX = splitX - 8 - pageTextW - 8;
   if (isShiny) {
     ctx.fillStyle = "#F59E0B";
     ctx.beginPath();
-    ctx.roundRect(badgeOffsetX - 26, 10, 26, 22, 3);
+    ctx.roundRect(badgeOffsetX - 28, 9, 28, 24, 4);
     ctx.fill();
-    ctx.font = "bold 12px DungGeunMo";
+    ctx.font = "bold 14px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "center";
-    ctx.fillText("✨", badgeOffsetX - 13, 26);
-    badgeOffsetX -= 30;
+    ctx.fillText("✨", badgeOffsetX - 14, 26);
+    badgeOffsetX -= 32;
   }
   if (isHa) {
     ctx.fillStyle = "#EF4444";
     ctx.beginPath();
-    ctx.roundRect(badgeOffsetX - 30, 10, 30, 22, 3);
+    ctx.roundRect(badgeOffsetX - 32, 9, 32, 24, 4);
     ctx.fill();
-    ctx.font = "bold 12px DungGeunMo";
+    ctx.font = "bold 13px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "center";
-    ctx.fillText("HA", badgeOffsetX - 15, 26);
-    badgeOffsetX -= 34;
+    ctx.fillText("HA", badgeOffsetX - 16, 26);
+    badgeOffsetX -= 36;
   }
   if (isPassive) {
     ctx.fillStyle = "#10B981";
     ctx.beginPath();
-    ctx.roundRect(badgeOffsetX - 30, 10, 30, 22, 3);
+    ctx.roundRect(badgeOffsetX - 32, 9, 32, 24, 4);
     ctx.fill();
-    ctx.font = "bold 12px DungGeunMo";
+    ctx.font = "bold 13px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "center";
-    ctx.fillText("PS", badgeOffsetX - 15, 26);
-    badgeOffsetX -= 34;
+    ctx.fillText("PS", badgeOffsetX - 16, 26);
+    badgeOffsetX -= 36;
   }
 
   // 3. LEFT SIDE: 8 Starters Grid (2 Columns x 4 Rows, y: 48 ~ 370)
@@ -1428,21 +1428,21 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     if (s) {
       const displayName = isKo ? s.nameKo : s.name;
 
-      // Slot Number + Name (Enlarged to 15px)
-      ctx.font = "bold 15px DungGeunMo";
-      ctx.fillStyle = isSelected ? "#FFFFFF" : "#F1F5F9";
+      // Slot Number + Name (Enlarged to 16px)
+      ctx.font = "bold 16px DungGeunMo";
+      ctx.fillStyle = isSelected ? "#FFFFFF" : "#F8FAFC";
       ctx.textAlign = "left";
       ctx.fillText(`${i + 1}.${displayName.slice(0, 4)}`, sx + 6, sy + 18);
 
-      // Cost Badge (Enlarged to 13px)
+      // Cost Badge (Enlarged to 14px)
       ctx.fillStyle = isPassive ? "#059669" : "#D97706";
       ctx.beginPath();
-      ctx.roundRect(sx + slotW - 32, sy + 3, 28, 18, 3);
+      ctx.roundRect(sx + slotW - 34, sy + 3, 30, 19, 3);
       ctx.fill();
-      ctx.font = "bold 13px DungGeunMo";
+      ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
-      ctx.fillText(`${effectiveCost}C`, sx + slotW - 18, sy + 17);
+      ctx.fillText(`${effectiveCost}C`, sx + slotW - 19, sy + 17);
 
       // Sprite
       const sprite = listSprites[i];
@@ -1458,24 +1458,24 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
         ctx.drawImage(sprite, sprX + (sprAreaW - sprW) / 2, sprY + (sprAreaH - sprH) / 2, sprW, sprH);
       }
 
-      // Party Check Badge or Gen tag (Enlarged to 12px)
+      // Party Check Badge or Gen tag (Enlarged to 13px)
       if (isAlreadyInParty) {
         ctx.fillStyle = "#22C55E";
         ctx.beginPath();
-        ctx.roundRect(sx + slotW - 48, sy + slotH - 22, 44, 18, 3);
+        ctx.roundRect(sx + slotW - 52, sy + slotH - 23, 48, 19, 3);
         ctx.fill();
-        ctx.font = "bold 11px DungGeunMo";
+        ctx.font = "bold 13px DungGeunMo";
         ctx.fillStyle = "#FFFFFF";
         ctx.textAlign = "center";
-        ctx.fillText(isKo ? "선택됨" : "ADDED", sx + slotW - 26, sy + slotH - 9);
+        ctx.fillText(isKo ? "선택됨" : "ADDED", sx + slotW - 28, sy + slotH - 9);
       } else {
-        ctx.font = "bold 12px DungGeunMo";
+        ctx.font = "bold 14px DungGeunMo";
         ctx.fillStyle = "#64748B";
         ctx.textAlign = "right";
         ctx.fillText(`#${String(s.dexNumber).padStart(3, "0")}`, sx + slotW - 6, sy + slotH - 8);
       }
     } else {
-      ctx.font = "bold 13px DungGeunMo";
+      ctx.font = "bold 15px DungGeunMo";
       ctx.fillStyle = "#334155";
       ctx.textAlign = "center";
       ctx.fillText("---", sx + slotW / 2, sy + slotH / 2 + 4);
@@ -1532,56 +1532,56 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     const titleName = (isShiny ? "✨ " : "") + (isKo ? sel.nameKo : sel.name);
     const dexTag = `#${String(sel.dexNumber).padStart(3, "0")}`;
 
-    ctx.font = "bold 14px DungGeunMo";
+    ctx.font = "bold 15px DungGeunMo";
     ctx.fillStyle = "#8E96AB";
     ctx.textAlign = "left";
     ctx.fillText(dexTag, infoX, topCardY + 22);
 
     const tagW = ctx.measureText(dexTag).width;
-    ctx.font = "bold 18px DungGeunMo";
+    ctx.font = "bold 20px DungGeunMo";
     ctx.fillStyle = isShiny ? "#FBBF24" : "#FFFFFF";
     ctx.fillText(titleName, infoX + tagW + 6, topCardY + 22);
 
-    // Cost Pill (Enlarged to 12px)
+    // Cost Pill (Enlarged to 14px)
     const effectiveSelCost = isPassive ? sel.reducedCost : sel.cost;
     ctx.fillStyle = isPassive ? "#059669" : "#D97706";
     ctx.beginPath();
-    ctx.roundRect(infoX, topCardY + 30, 64, 19, 3);
+    ctx.roundRect(infoX, topCardY + 30, 68, 20, 3);
     ctx.fill();
-    ctx.font = "bold 12px DungGeunMo";
+    ctx.font = "bold 13px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "center";
-    ctx.fillText(`COST: ${effectiveSelCost}`, infoX + 32, topCardY + 44);
+    ctx.fillText(`COST: ${effectiveSelCost}`, infoX + 34, topCardY + 44);
 
-    // Ability / HA Tag (Enlarged to 13px)
+    // Ability / HA Tag (Enlarged to 15px)
     const activeAbName = (isHa && sel.hiddenAbility) ? (isKo ? sel.hiddenAbilityKo : sel.hiddenAbility) : (isKo ? sel.abilityKo : sel.ability);
     const abLabel = isHa && sel.hiddenAbility ? (isKo ? `[숨특] ${activeAbName}` : `[HA] ${activeAbName}`) : (isKo ? `[특성] ${activeAbName}` : `[Ab] ${activeAbName}`);
-    ctx.font = "bold 13px DungGeunMo";
+    ctx.font = "bold 15px DungGeunMo";
     ctx.fillStyle = isHa ? "#F87171" : "#60A5FA";
     ctx.textAlign = "left";
-    ctx.fillText(abLabel, infoX, topCardY + 62);
+    ctx.fillText(abLabel, infoX, topCardY + 63);
 
-    // Passive Tag (Enlarged to 13px)
+    // Passive Tag (Enlarged to 15px)
     const passiveName = isPassive ? (isKo ? `[패시브] ${sel.passiveAbilityKo}` : `[Passive] ${sel.passiveAbility}`) : (isKo ? "[패시브] 미해금" : "[Passive] Locked");
-    ctx.font = "bold 13px DungGeunMo";
+    ctx.font = "bold 15px DungGeunMo";
     ctx.fillStyle = isPassive ? "#34D399" : "#64748B";
-    ctx.fillText(passiveName, infoX, topCardY + 77);
+    ctx.fillText(passiveName, infoX, topCardY + 79);
 
-    // Starter Moves Title (Enlarged to 12px)
-    ctx.font = "bold 12px DungGeunMo";
+    // Starter Moves Title (Enlarged to 14px)
+    ctx.font = "bold 14px DungGeunMo";
     ctx.fillStyle = "#94A3B8";
     ctx.textAlign = "left";
-    ctx.fillText(isKo ? "시작 기술 (Starter Moves)" : "Starter Moves", rightX + 10, topCardY + 95);
+    ctx.fillText(isKo ? "시작 기술 (Starter Moves)" : "Starter Moves", rightX + 10, topCardY + 97);
 
     // Move Chips (2x2 Grid, width: 122 each)
     const moveChipW = (rightW - 26) / 2;
-    const moveChipH = 23;
+    const moveChipH = 24;
     for (let mIdx = 0; mIdx < 4; mIdx++) {
       const mName = sel.starterMoves[mIdx] || "---";
       const mCol = mIdx % 2;
       const mRow = Math.floor(mIdx / 2);
       const mX = rightX + 10 + mCol * (moveChipW + 6);
-      const mY = topCardY + 102 + mRow * (moveChipH + 4);
+      const mY = topCardY + 103 + mRow * (moveChipH + 4);
 
       ctx.fillStyle = "#12141C";
       ctx.beginPath();
@@ -1591,10 +1591,10 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       ctx.lineWidth = 1;
       ctx.stroke();
 
-      ctx.font = "bold 12px DungGeunMo";
-      ctx.fillStyle = mName === "---" ? "#475569" : "#E2E8F0";
+      ctx.font = "bold 14px DungGeunMo";
+      ctx.fillStyle = mName === "---" ? "#475569" : "#F8FAFC";
       ctx.textAlign = "center";
-      ctx.fillText(mName, mX + moveChipW / 2, mY + 16);
+      ctx.fillText(mName, mX + moveChipW / 2, mY + 17);
     }
   }
 
@@ -1610,19 +1610,19 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   ctx.lineWidth = 1;
   ctx.stroke();
 
-  // Cost Counter text (Enlarged bold 18px)
+  // Cost Counter text (Enlarged bold 20px)
   const isOverCost = currentCost > maxCost;
   const costColor = isOverCost ? "#EF4444" : (currentCost >= 8 ? "#F59E0B" : "#22C55E");
-  ctx.font = "bold 18px DungGeunMo";
+  ctx.font = "bold 20px DungGeunMo";
   ctx.fillStyle = costColor;
   ctx.textAlign = "left";
-  ctx.fillText(`${isKo ? "코스트" : "COST"} : ${currentCost} / ${maxCost}`, rightX + 12, bottomCardY + 24);
+  ctx.fillText(`${isKo ? "코스트" : "COST"} : ${currentCost} / ${maxCost}`, rightX + 12, bottomCardY + 25);
 
   // Cost Gauge Bar (Width: rightW - 24)
   const gaugeW = rightW - 24;
-  const gaugeH = 7;
+  const gaugeH = 8;
   const gaugeX = rightX + 12;
-  const gaugeY = bottomCardY + 32;
+  const gaugeY = bottomCardY + 33;
 
   ctx.fillStyle = "#12141C";
   ctx.beginPath();
@@ -1640,7 +1640,7 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   const partySlotW = (rightW - 28) / 3;
   const partySlotH = 64;
   const partyStartX = rightX + 10;
-  const partyStartY = bottomCardY + 44;
+  const partyStartY = bottomCardY + 45;
   const partyGapX = 4;
   const partyGapY = 6;
 
@@ -1667,29 +1667,29 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
         const scale = 0.58;
         const sprW = pSprite.width * scale;
         const sprH = pSprite.height * scale;
-        ctx.drawImage(pSprite, pX + (partySlotW - sprW) / 2, pY + 2 + (34 - sprH) / 2, sprW, sprH);
+        ctx.drawImage(pSprite, pX + (partySlotW - sprW) / 2, pY + 2 + (32 - sprH) / 2, sprW, sprH);
       }
 
-      // Member Name + Cost Badge (Enlarged to 13px and 12px)
-      ctx.font = "bold 13px DungGeunMo";
+      // Member Name + Cost Badge (Enlarged to 15px and 14px)
+      ctx.font = "bold 15px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
-      ctx.fillText(member.name.slice(0, 4), pX + partySlotW / 2, pY + 44);
+      ctx.fillText(member.name.slice(0, 4), pX + partySlotW / 2, pY + 43);
 
       ctx.fillStyle = "#D97706";
       ctx.beginPath();
-      ctx.roundRect(pX + (partySlotW - 28) / 2, pY + 47, 28, 15, 2);
+      ctx.roundRect(pX + (partySlotW - 30) / 2, pY + 46, 30, 16, 2);
       ctx.fill();
-      ctx.font = "bold 12px DungGeunMo";
+      ctx.font = "bold 13px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.fillText(`${member.cost}C`, pX + partySlotW / 2, pY + 59);
     } else {
-      // Empty Slot Marker (Enlarged)
-      ctx.font = "bold 18px DungGeunMo";
+      // Empty Slot Marker (Enlarged to 22px / 13px)
+      ctx.font = "bold 22px DungGeunMo";
       ctx.fillStyle = "#334155";
       ctx.textAlign = "center";
       ctx.fillText("+", pX + partySlotW / 2, pY + 30);
-      ctx.font = "bold 12px DungGeunMo";
+      ctx.font = "bold 13px DungGeunMo";
       ctx.fillStyle = "#475569";
       ctx.fillText(isKo ? `슬롯 ${pIdx + 1}` : `Slot ${pIdx + 1}`, pX + partySlotW / 2, pY + 48);
     }
@@ -1730,7 +1730,7 @@ export async function renderGenSelectScreen(options: GenSelectScreenOptions): Pr
   ctx.fillStyle = "#13151F";
   ctx.fillRect(0, 0, width, height);
 
-  // Top Banner (Enlarged to 18px)
+  // Top Banner (Enlarged to 20px)
   ctx.fillStyle = "#1A1D2A";
   ctx.fillRect(0, 0, width, 40);
   ctx.strokeStyle = "#2D3246";
@@ -1740,12 +1740,12 @@ export async function renderGenSelectScreen(options: GenSelectScreenOptions): Pr
   ctx.lineTo(width, 40);
   ctx.stroke();
 
-  ctx.font = "bold 18px DungGeunMo";
+  ctx.font = "bold 20px DungGeunMo";
   ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "left";
   ctx.fillText(isKo ? "세대 선택 (GENERATION SELECT)" : "GENERATION SELECT", 14, 27);
 
-  ctx.font = "bold 13px DungGeunMo";
+  ctx.font = "bold 15px DungGeunMo";
   ctx.fillStyle = "#94A3B8";
   ctx.textAlign = "right";
   ctx.fillText(isKo ? "탐험할 세대를 선택하세요" : "Choose your starter region", width - 14, 27);
@@ -1781,21 +1781,21 @@ export async function renderGenSelectScreen(options: GenSelectScreenOptions): Pr
     ctx.roundRect(cx + 1, cy + 1, cardW - 2, 24, [5, 5, 0, 0]);
     ctx.fill();
 
-    // Gen Name (Enlarged to 14px)
-    ctx.font = "bold 14px DungGeunMo";
+    // Gen Name (Enlarged to 16px)
+    ctx.font = "bold 16px DungGeunMo";
     ctx.fillStyle = isSelected ? "#FFFFFF" : "#E2E8F0";
     ctx.textAlign = "left";
     ctx.fillText(isKo ? info.nameKo : info.nameEn, cx + 8, cy + 17);
 
-    // Gen Tag (Enlarged to 12px)
+    // Gen Tag (Enlarged to 14px)
     ctx.fillStyle = isSelected ? "#5865F2" : "#334155";
     ctx.beginPath();
-    ctx.roundRect(cx + cardW - 34, cy + 3, 28, 18, 3);
+    ctx.roundRect(cx + cardW - 36, cy + 3, 30, 19, 3);
     ctx.fill();
-    ctx.font = "bold 12px DungGeunMo";
+    ctx.font = "bold 14px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "center";
-    ctx.fillText(`G${info.gen}`, cx + cardW - 20, cy + 16);
+    ctx.fillText(`G${info.gen}`, cx + cardW - 21, cy + 17);
 
     // Starter Trio Sprites (3 Mini Sprites centered)
     const genData = trioSprites.find((t) => t.gen === info.gen);
