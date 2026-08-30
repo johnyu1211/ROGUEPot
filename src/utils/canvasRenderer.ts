@@ -1489,11 +1489,14 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     if (s) {
       const displayName = isKo ? s.nameKo : s.name;
 
-      // Slot Number + Name (Enlarged to 16px)
+      // Slot Number + Name (Enlarged to 16px, Middle Baseline)
+      ctx.textBaseline = "middle";
+      const slotHeaderY = sy + 13;
+
       ctx.font = "bold 16px DungGeunMo";
       ctx.fillStyle = isSelected ? "#FFFFFF" : "#F8FAFC";
       ctx.textAlign = "left";
-      ctx.fillText(`${i + 1}.${displayName.slice(0, 4)}`, sx + 6, sy + 18);
+      ctx.fillText(`${i + 1}.${displayName.slice(0, 4)}`, sx + 6, slotHeaderY);
 
       // Cost Text without box (Bold 16px, Right Aligned: Red if unaffordable, Mint if passive, Green otherwise)
       const remainingCost = maxCost - currentCost;
@@ -1508,7 +1511,7 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       ctx.font = "bold 16px DungGeunMo";
       ctx.fillStyle = costColor;
       ctx.textAlign = "right";
-      ctx.fillText(`${sEffectiveCost}C`, sx + slotW - 8, sy + 18);
+      ctx.fillText(`${sEffectiveCost}C`, sx + slotW - 8, slotHeaderY);
 
       // Sprite
       const sprite = listSprites[i];
@@ -1532,25 +1535,33 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
 
       // Party Check Badge or Gen tag (Enlarged to 13px)
       if (isAlreadyInParty) {
+        const bW = 48;
+        const bH = 19;
+        const bX = sx + slotW - 52;
+        const bY = sy + slotH - 23;
         ctx.fillStyle = "#22C55E";
         ctx.beginPath();
-        ctx.roundRect(sx + slotW - 52, sy + slotH - 23, 48, 19, 3);
+        ctx.roundRect(bX, bY, bW, bH, 3);
         ctx.fill();
+
+        ctx.textBaseline = "middle";
         ctx.font = "bold 13px DungGeunMo";
         ctx.fillStyle = "#FFFFFF";
         ctx.textAlign = "center";
-        ctx.fillText(isKo ? "선택됨" : "ADDED", sx + slotW - 28, sy + slotH - 9);
+        ctx.fillText(isKo ? "선택됨" : "ADDED", bX + bW / 2, bY + bH / 2);
       } else {
+        ctx.textBaseline = "middle";
         ctx.font = "bold 14px DungGeunMo";
         ctx.fillStyle = "#64748B";
         ctx.textAlign = "right";
-        ctx.fillText(`#${String(s.dexNumber).padStart(3, "0")}`, sx + slotW - 6, sy + slotH - 8);
+        ctx.fillText(`#${String(s.dexNumber).padStart(3, "0")}`, sx + slotW - 6, sy + slotH - 12);
       }
     } else {
+      ctx.textBaseline = "middle";
       ctx.font = "bold 15px DungGeunMo";
       ctx.fillStyle = "#334155";
       ctx.textAlign = "center";
-      ctx.fillText("---", sx + slotW / 2, sy + slotH / 2 + 4);
+      ctx.fillText("---", sx + slotW / 2, sy + slotH / 2);
     }
   }
 
@@ -1595,21 +1606,23 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       drawShinyTierSparkles(ctx, showBoxX + showBoxSize - 22, showBoxY + 12, selShinyTier, 7.5);
     }
 
-    // Name + Dex next to sprite (Enlarged)
+    // Name + Dex next to sprite (Enlarged, True Middle Baseline)
     const infoX = showBoxX + showBoxSize + 10;
+    const headerY = showBoxY + 12;
     const dexTag = `#${String(sel.dexNumber).padStart(3, "0")}`;
 
+    ctx.textBaseline = "middle";
     ctx.font = "bold 14px DungGeunMo";
     ctx.fillStyle = "#8E96AB";
     ctx.textAlign = "left";
-    ctx.fillText(dexTag, infoX, 24);
+    ctx.fillText(dexTag, infoX, headerY);
 
     const tagW = ctx.measureText(dexTag).width;
     const nameX = infoX + tagW + 6;
 
     ctx.font = "bold 19px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
-    ctx.fillText(isKo ? sel.nameKo : sel.name, nameX, 24);
+    ctx.fillText(isKo ? sel.nameKo : sel.name, nameX, headerY);
 
     // 2-COLUMN SECTION: Left = Type Badges, Right = Ability & Passive
     const types = sel.types && sel.types.length > 0 ? sel.types : ["normal"];
@@ -1620,8 +1633,8 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       const tLower = types[0].toLowerCase();
       const tColor = TYPE_COLORS[tLower] || "#777777";
       const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || types[0]) : types[0].toUpperCase();
-      const badgeH = 24;
-      const bY = 46;
+      const badgeH = 26;
+      const bY = 38;
 
       ctx.fillStyle = tColor;
       ctx.beginPath();
@@ -1631,10 +1644,11 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       ctx.lineWidth = 1;
       ctx.stroke();
 
+      ctx.textBaseline = "middle";
       ctx.font = "bold 13px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
-      ctx.fillText(tDisplay, infoX + badgeW / 2, bY + 17);
+      ctx.fillText(tDisplay, infoX + badgeW / 2, bY + badgeH / 2);
     } else {
       // Dual Type: 2 Compact Badges Stacked
       const badgeH = 19;
@@ -1642,7 +1656,7 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
         const tLower = tName.toLowerCase();
         const tColor = TYPE_COLORS[tLower] || "#777777";
         const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || tName) : tName.toUpperCase();
-        const bY = 36 + tIdx * (badgeH + 4);
+        const bY = 30 + tIdx * (badgeH + 4);
 
         ctx.fillStyle = tColor;
         ctx.beginPath();
@@ -1652,10 +1666,11 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
         ctx.lineWidth = 1;
         ctx.stroke();
 
+        ctx.textBaseline = "middle";
         ctx.font = "bold 12px DungGeunMo";
         ctx.fillStyle = "#FFFFFF";
         ctx.textAlign = "center";
-        ctx.fillText(tDisplay, infoX + badgeW / 2, bY + 14);
+        ctx.fillText(tDisplay, infoX + badgeW / 2, bY + badgeH / 2);
       });
     }
 
@@ -1667,16 +1682,17 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     if (selHasHa && sel.hiddenAbility) {
       abLabel = isKo ? `[숨특] ${sel.hiddenAbilityKo}` : `[HA] ${sel.hiddenAbility}`;
     }
+    ctx.textBaseline = "middle";
     ctx.font = "bold 14px DungGeunMo";
     ctx.fillStyle = selHasHa ? "#F87171" : "#60A5FA";
     ctx.textAlign = "left";
-    ctx.fillText(abLabel, rightColX, 49);
+    ctx.fillText(abLabel, rightColX, 41);
 
     // Passive Tag (14px)
     const passiveName = selHasPassive ? (isKo ? `[패시브] ${sel.passiveAbilityKo}` : `[Passive] ${sel.passiveAbility}`) : (isKo ? "[패시브] 미해금" : "[Passive] Locked");
     ctx.font = "bold 14px DungGeunMo";
     ctx.fillStyle = selHasPassive ? "#34D399" : "#64748B";
-    ctx.fillText(passiveName, rightColX, 73);
+    ctx.fillText(passiveName, rightColX, 62);
 
     // Move Chips (2x2 Grid, width: 133 each, height: 25)
     const moveChipW = (rightW - 10) / 2;
@@ -1689,7 +1705,7 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       const mCol = mIdx % 2;
       const mRow = Math.floor(mIdx / 2);
       const mX = rightX + mCol * (moveChipW + 10);
-      const mY = 96 + mRow * (moveChipH + 6);
+      const mY = 88 + mRow * (moveChipH + 6);
 
       ctx.fillStyle = "#181B26";
       ctx.beginPath();
@@ -1699,10 +1715,11 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       ctx.lineWidth = 1;
       ctx.stroke();
 
+      ctx.textBaseline = "middle";
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = rawMove === "---" ? "#475569" : "#F8FAFC";
       ctx.textAlign = "center";
-      ctx.fillText(mDisplay, mX + moveChipW / 2, mY + 18);
+      ctx.fillText(mDisplay, mX + moveChipW / 2, mY + moveChipH / 2);
     }
   }
 
@@ -1710,12 +1727,12 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   ctx.strokeStyle = "#2D3246";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(rightX, 163);
-  ctx.lineTo(rightX + rightW, 163);
+  ctx.moveTo(rightX, 158);
+  ctx.lineTo(rightX + rightW, 158);
   ctx.stroke();
 
-  // 5-2. BOTTOM PARTY BUILDER (y: 171 ~ 370)
-  const bottomStartY = 171;
+  // 5-2. BOTTOM PARTY BUILDER (y: 166 ~ 370)
+  const bottomStartY = 166;
 
   // Cost Counter Text + Inline Gauge Bar (Single Row)
   const isOverCost = currentCost > maxCost;
