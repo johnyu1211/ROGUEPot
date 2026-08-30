@@ -1601,9 +1601,9 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       ctx.drawImage(selectedSprite, showBoxX + (showBoxSize - sprW) / 2, showBoxY + (showBoxSize - sprH) / 2, sprW, sprH);
     }
 
-    // Shiny Tier Vector Sparkle Star on Top-Right Corner of Sprite Box
+    // Shiny Tier Vector Sparkle Star on Bottom-Left Corner of Sprite Box
     if (selShinyTier > 0) {
-      drawShinyTierSparkles(ctx, showBoxX + showBoxSize - 22, showBoxY + 12, selShinyTier, 7.5);
+      drawShinyTierSparkles(ctx, showBoxX + 4, showBoxY + showBoxSize - 14, selShinyTier, 7.5);
     }
 
     // Name + Dex next to sprite (Enlarged, True Middle Baseline)
