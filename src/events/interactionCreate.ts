@@ -598,7 +598,7 @@ async function renderGenSelectMessageData(
       new ButtonBuilder()
         .setCustomId(`starter_genback_${currentGen}_${currentGen}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
         .setLabel(isKo ? "↩️ 스타팅 선택으로 돌아가기" : "↩️ Back to Starter Select")
-        .setStyle(ButtonStyle.Secondary)
+        .setStyle(ButtonStyle.Danger)
     ),
   ];
 
@@ -810,7 +810,7 @@ async function renderStarterSelectMessageData(
     new ButtonBuilder()
       .setCustomId(`starter_back_title_${userId}`)
       .setLabel("↩️")
-      .setStyle(ButtonStyle.Secondary)
+      .setStyle(ButtonStyle.Danger)
   ];
   components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row5Btns));
 
