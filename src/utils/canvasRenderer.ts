@@ -1434,9 +1434,9 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       ctx.textAlign = "left";
       ctx.fillText(`${i + 1}.${displayName.slice(0, 4)}`, sx + 6, sy + 18);
 
-      // Cost Text without box (Bold 16px, Right Aligned, Gold Orange / Emerald Green)
+      // Cost Text without box (Bold 16px, Right Aligned, Vivid Green)
       ctx.font = "bold 16px DungGeunMo";
-      ctx.fillStyle = isPassive ? "#34D399" : "#F59E0B";
+      ctx.fillStyle = isPassive ? "#34D399" : "#22C55E";
       ctx.textAlign = "right";
       ctx.fillText(`${effectiveCost}C`, sx + slotW - 8, sy + 18);
 
@@ -1538,9 +1538,9 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     ctx.fillStyle = isShiny ? "#FBBF24" : "#FFFFFF";
     ctx.fillText(titleName, infoX + tagW + 6, topCardY + 22);
 
-    // Cost Pill (Enlarged to 14px)
+    // Cost Pill (Vivid Green Background)
     const effectiveSelCost = isPassive ? sel.reducedCost : sel.cost;
-    ctx.fillStyle = isPassive ? "#059669" : "#D97706";
+    ctx.fillStyle = isPassive ? "#059669" : "#15803D";
     ctx.beginPath();
     ctx.roundRect(infoX, topCardY + 30, 68, 20, 3);
     ctx.fill();
@@ -1666,14 +1666,14 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
         ctx.drawImage(pSprite, pX + (partySlotW - sprW) / 2, pY + 2 + (32 - sprH) / 2, sprW, sprH);
       }
 
-      // Member Name + Cost (Clean Gold Text without box)
+      // Member Name + Cost (Clean Green Text without box)
       ctx.font = "bold 15px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
       ctx.fillText(member.name.slice(0, 4), pX + partySlotW / 2, pY + 43);
 
       ctx.font = "bold 14px DungGeunMo";
-      ctx.fillStyle = member.usePassive ? "#34D399" : "#F59E0B";
+      ctx.fillStyle = member.usePassive ? "#34D399" : "#22C55E";
       ctx.fillText(`${member.cost}C`, pX + partySlotW / 2, pY + 58);
     } else {
       // Empty Slot Marker (Enlarged to 22px / 13px)
