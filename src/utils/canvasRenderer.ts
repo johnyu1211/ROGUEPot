@@ -1355,51 +1355,49 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   ctx.textAlign = "left";
   ctx.fillText(isKo ? "스타팅 선택" : "STARTER SELECT", 10, 27);
 
-  // Active Modes Badges on Banner
-  let badgeOffsetX = splitX - 10;
+  // Large Crisp White Page Indicator ("1 / 9")
+  const pageText = `${gen} / 9`;
+  ctx.font = "bold 16px DungGeunMo";
+  ctx.fillStyle = "#FFFFFF";
+  ctx.textAlign = "right";
+  ctx.fillText(pageText, splitX - 10, 27);
+  const pageTextW = ctx.measureText(pageText).width;
+
+  // Active Modes Badges on Banner (to the left of page text)
+  let badgeOffsetX = splitX - 10 - pageTextW - 8;
   if (isShiny) {
     ctx.fillStyle = "#F59E0B";
     ctx.beginPath();
-    ctx.roundRect(badgeOffsetX - 28, 11, 24, 20, 3);
+    ctx.roundRect(badgeOffsetX - 24, 11, 24, 20, 3);
     ctx.fill();
     ctx.font = "bold 11px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "center";
-    ctx.fillText("✨", badgeOffsetX - 16, 25);
-    badgeOffsetX -= 32;
+    ctx.fillText("✨", badgeOffsetX - 12, 25);
+    badgeOffsetX -= 28;
   }
   if (isHa) {
     ctx.fillStyle = "#EF4444";
     ctx.beginPath();
-    ctx.roundRect(badgeOffsetX - 32, 11, 28, 20, 3);
+    ctx.roundRect(badgeOffsetX - 28, 11, 28, 20, 3);
     ctx.fill();
     ctx.font = "bold 11px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "center";
-    ctx.fillText("HA", badgeOffsetX - 18, 25);
-    badgeOffsetX -= 36;
+    ctx.fillText("HA", badgeOffsetX - 14, 25);
+    badgeOffsetX -= 32;
   }
   if (isPassive) {
     ctx.fillStyle = "#10B981";
     ctx.beginPath();
-    ctx.roundRect(badgeOffsetX - 32, 11, 28, 20, 3);
+    ctx.roundRect(badgeOffsetX - 28, 11, 28, 20, 3);
     ctx.fill();
     ctx.font = "bold 11px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "center";
-    ctx.fillText("PS", badgeOffsetX - 18, 25);
-    badgeOffsetX -= 36;
+    ctx.fillText("PS", badgeOffsetX - 14, 25);
+    badgeOffsetX -= 32;
   }
-
-  // Gen Badge
-  ctx.fillStyle = "#5865F2";
-  ctx.beginPath();
-  ctx.roundRect(badgeOffsetX - 46, 11, 42, 20, 3);
-  ctx.fill();
-  ctx.font = "bold 11px DungGeunMo";
-  ctx.fillStyle = "#FFFFFF";
-  ctx.textAlign = "center";
-  ctx.fillText(`G${gen}`, badgeOffsetX - 25, 25);
 
   // 3. LEFT SIDE: 8 Starters Grid (2 Columns x 4 Rows, y: 48 ~ 370)
   const startListY = 48;
