@@ -1656,15 +1656,9 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     ctx.fillStyle = selHasPassive ? "#34D399" : "#64748B";
     ctx.fillText(passiveName, infoX, 79);
 
-    // Starter Moves Title (13px) - Clean spacing
-    ctx.font = "bold 13px DungGeunMo";
-    ctx.fillStyle = "#94A3B8";
-    ctx.textAlign = "left";
-    ctx.fillText(isKo ? "시작 기술" : "Starter Moves", rightX, 97);
-
-    // Move Chips (2x2 Grid, width: 133 each, height: 24)
+    // Move Chips (2x2 Grid, width: 133 each, height: 26) - Clean Borderless Layout
     const moveChipW = (rightW - 10) / 2;
-    const moveChipH = 24;
+    const moveChipH = 25;
     for (let mIdx = 0; mIdx < 4; mIdx++) {
       const rawMove = sel.starterMoves[mIdx] || "---";
       const moveKey = rawMove.toLowerCase().replace(/[\s_]+/g, "-");
@@ -1673,7 +1667,7 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       const mCol = mIdx % 2;
       const mRow = Math.floor(mIdx / 2);
       const mX = rightX + mCol * (moveChipW + 10);
-      const mY = 105 + mRow * (moveChipH + 4);
+      const mY = 98 + mRow * (moveChipH + 6);
 
       ctx.fillStyle = "#181B26";
       ctx.beginPath();
@@ -1686,7 +1680,7 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = rawMove === "---" ? "#475569" : "#F8FAFC";
       ctx.textAlign = "center";
-      ctx.fillText(mDisplay, mX + moveChipW / 2, mY + 17);
+      ctx.fillText(mDisplay, mX + moveChipW / 2, mY + 18);
     }
   }
 
