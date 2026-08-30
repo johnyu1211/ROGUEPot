@@ -1538,25 +1538,26 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   ctx.lineWidth = 1;
   ctx.stroke();
 
-  // Party Header + Cost Bar
-  ctx.font = "bold 13px DungGeunMo";
-  ctx.fillStyle = "#F1F5F9";
-  ctx.textAlign = "left";
-  ctx.fillText(isKo ? "파티 편성 (선택된 스타팅)" : "Selected Party", rightX + 10, bottomCardY + 20);
-
-  // Cost Counter text
+  // Cost Counter text (Enlarged bold 16px)
   const isOverCost = currentCost > maxCost;
   const costColor = isOverCost ? "#EF4444" : (currentCost >= 8 ? "#F59E0B" : "#22C55E");
-  ctx.font = "bold 13px DungGeunMo";
+  ctx.font = "bold 16px DungGeunMo";
   ctx.fillStyle = costColor;
-  ctx.textAlign = "right";
-  ctx.fillText(`${isKo ? "코스트" : "Cost"}: ${currentCost} / ${maxCost}`, rightX + rightW - 10, bottomCardY + 20);
+  ctx.textAlign = "left";
+  ctx.fillText(`${isKo ? "코스트" : "COST"} : ${currentCost} / ${maxCost}`, rightX + 12, bottomCardY + 22);
 
-  // Cost Gauge Bar (Width: rightW - 20)
-  const gaugeW = rightW - 20;
+  // Remaining Cost Tag on the Right
+  const remainCost = maxCost - currentCost;
+  ctx.font = "bold 12px DungGeunMo";
+  ctx.fillStyle = isOverCost ? "#EF4444" : "#94A3B8";
+  ctx.textAlign = "right";
+  ctx.fillText(isKo ? `잔여 ${remainCost >= 0 ? remainCost : 0}C` : `Left: ${remainCost >= 0 ? remainCost : 0}C`, rightX + rightW - 12, bottomCardY + 22);
+
+  // Cost Gauge Bar (Width: rightW - 24)
+  const gaugeW = rightW - 24;
   const gaugeH = 6;
-  const gaugeX = rightX + 10;
-  const gaugeY = bottomCardY + 28;
+  const gaugeX = rightX + 12;
+  const gaugeY = bottomCardY + 30;
 
   ctx.fillStyle = "#12141C";
   ctx.beginPath();
@@ -1574,7 +1575,7 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   const partySlotW = (rightW - 28) / 3;
   const partySlotH = 64;
   const partyStartX = rightX + 10;
-  const partyStartY = bottomCardY + 42;
+  const partyStartY = bottomCardY + 44;
   const partyGapX = 4;
   const partyGapY = 6;
 
