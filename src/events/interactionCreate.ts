@@ -13,7 +13,7 @@ import {
 } from "discord.js";
 import { BotEvent, ExtendedClient } from "../types/index.js";
 import { createBaseEmbed, COLORS } from "../utils/embed.js";
-import { renderTitleScreen, renderBagScreen, renderMultiplayerScreen, renderPokedexScreen, getPokemonSprite } from "../utils/canvasRenderer.js";
+import { renderTitleScreen, renderBagScreen, renderMultiplayerScreen, renderPokedexScreen, getPokemonSprite, isSpriteCached } from "../utils/canvasRenderer.js";
 import { saveService, PartyPokemon } from "../services/saveService.js";
 import { getPokemonByQuery, getPokemonByDexNumber, getPokemonPage, getAbilityKoreanName, getAbilityDetail } from "../services/pokeApiService.js";
 
@@ -350,7 +350,8 @@ async function renderPokedexMessageData(
   selectedDexNo: number = 1,
   page: number = 1,
   fromScreen: "multiplay" | "inventory" | "title" = "title",
-  activeAbility?: string
+  activeAbility?: string,
+  allowFetchSprites: boolean = true
 ) {
   const profile = saveService.getProfile(userId);
   const isKo = profile.language === "ko";
@@ -370,6 +371,7 @@ async function renderPokedexMessageData(
     totalPages,
     activeAbility,
     lang: profile.language,
+    allowFetchSprites,
   });
   const attachment = new AttachmentBuilder(imageBuffer, { name: "pokedex.png" });
 
@@ -514,6 +516,38 @@ async function renderPokedexMessageData(
   }, 100);
 
   return { embeds: [], files: [attachment], attachments: [], components };
+}
+
+async function handlePokedexInteractionUpdate(
+  interaction: any,
+  client: ExtendedClient,
+  userId: string,
+  dexNo: number,
+  page: number,
+  fromScreen: "multiplay" | "inventory" | "title",
+  activeAbility?: string
+) {
+  try {
+    const { items } = await getPokemonPage(page, 8);
+    const selected = items.find((p) => p.dexNumber === dexNo) || (await getPokemonByDexNumber(dexNo)) || items[0];
+    const hasUncached = items.some((p) => !isSpriteCached(p.speciesId)) || (selected && !isSpriteCached(selected.speciesId));
+
+    if (hasUncached) {
+      // Phase 1: 0.01s Instant Progressive UI Response
+      const quickData = await renderPokedexMessageData(client, userId, dexNo, page, fromScreen, activeAbility, false);
+      await interaction.update(quickData);
+
+      // Phase 2: Smooth Image Resolution Update
+      const fullData = await renderPokedexMessageData(client, userId, dexNo, page, fromScreen, activeAbility, true);
+      await interaction.editReply(fullData).catch(() => null);
+    } else {
+      // 0ms Instant In-Memory Update
+      const fullData = await renderPokedexMessageData(client, userId, dexNo, page, fromScreen, activeAbility, true);
+      await interaction.update(fullData);
+    }
+  } catch (err) {
+    console.error("[POKEDEX] Error in handlePokedexInteractionUpdate:", err);
+  }
 }
 
 async function renderTitleMessageData(client: ExtendedClient, userId: string) {
@@ -804,47 +838,29 @@ export const interactionCreateEvent: BotEvent = {
 
       // 3-0-6. Multiplayer Pokédex Button Clicked (Opens Unified Pokédex with fromScreen='multiplay')
       if (customId.startsWith("multi_pokedex_btn_")) {
-        await interaction.deferUpdate().catch(() => null);
-        try {
-          const dexData = await renderPokedexMessageData(client, interaction.user.id, 1, 1, "multiplay");
-          await interaction.editReply(dexData);
-        } catch (err) {
-          console.error("[POKEDEX] Error rendering pokedex from multiplay:", err);
-        }
+        await handlePokedexInteractionUpdate(interaction, client, interaction.user.id, 1, 1, "multiplay");
         return;
       }
 
       // 3-0-6-B. Pokédex Ability Info Button Clicked (Switch Active Ability Dialog on Canvas / Toggle)
       if (customId.startsWith("pokedex_ability_")) {
-        await interaction.deferUpdate().catch(() => null);
-        try {
-          const rawAbilityParam = parts[3] || "none";
-          const rawAbility = rawAbilityParam === "none" ? undefined : decodeURIComponent(rawAbilityParam);
-          const dexNo = parseInt(parts[4], 10) || 1;
-          const page = parseInt(parts[5], 10) || 1;
-          const fromScreen = (parts[6] || "title") as "multiplay" | "inventory" | "title";
+        const rawAbilityParam = parts[3] || "none";
+        const rawAbility = rawAbilityParam === "none" ? undefined : decodeURIComponent(rawAbilityParam);
+        const dexNo = parseInt(parts[4], 10) || 1;
+        const page = parseInt(parts[5], 10) || 1;
+        const fromScreen = (parts[6] || "title") as "multiplay" | "inventory" | "title";
 
-          const dexData = await renderPokedexMessageData(client, interaction.user.id, dexNo, page, fromScreen, rawAbility);
-          await interaction.editReply(dexData);
-        } catch (err) {
-          console.error("[POKEDEX] Error switching ability on canvas:", err);
-        }
+        await handlePokedexInteractionUpdate(interaction, client, interaction.user.id, dexNo, page, fromScreen, rawAbility);
         return;
       }
 
       // 3-0-7. Pokédex Select Pokémon (Resets ability to idle/unselected)
       if (customId.startsWith("pokedex_select_")) {
-        await interaction.deferUpdate().catch(() => null);
-        try {
-          const dexNo = parseInt(parts[2], 10) || 1;
-          const page = parseInt(parts[3], 10) || 1;
-          const fromScreen = (parts[4] || "title") as "multiplay" | "inventory" | "title";
+        const dexNo = parseInt(parts[2], 10) || 1;
+        const page = parseInt(parts[3], 10) || 1;
+        const fromScreen = (parts[4] || "title") as "multiplay" | "inventory" | "title";
 
-          const dexData = await renderPokedexMessageData(client, interaction.user.id, dexNo, page, fromScreen, undefined);
-          await interaction.editReply(dexData);
-        } catch (err) {
-          console.error("[POKEDEX] Error selecting pokemon in pokedex:", err);
-        }
+        await handlePokedexInteractionUpdate(interaction, client, interaction.user.id, dexNo, page, fromScreen, undefined);
         return;
       }
 
@@ -856,17 +872,11 @@ export const interactionCreateEvent: BotEvent = {
         customId.startsWith("pokedex_jumpback_") ||
         customId.startsWith("pokedex_jumpfwd_")
       ) {
-        await interaction.deferUpdate().catch(() => null);
-        try {
-          const targetPage = parseInt(parts[2], 10) || 1;
-          const currentDexNo = parseInt(parts[3], 10) || ((targetPage - 1) * 8 + 1);
-          const fromScreen = (parts[4] || "title") as "multiplay" | "inventory" | "title";
+        const targetPage = parseInt(parts[2], 10) || 1;
+        const currentDexNo = parseInt(parts[3], 10) || ((targetPage - 1) * 8 + 1);
+        const fromScreen = (parts[4] || "title") as "multiplay" | "inventory" | "title";
 
-          const dexData = await renderPokedexMessageData(client, interaction.user.id, currentDexNo, targetPage, fromScreen, undefined);
-          await interaction.editReply(dexData);
-        } catch (err) {
-          console.error("[POKEDEX] Error switching page in pokedex:", err);
-        }
+        await handlePokedexInteractionUpdate(interaction, client, interaction.user.id, currentDexNo, targetPage, fromScreen, undefined);
         return;
       }
 

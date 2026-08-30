@@ -44,7 +44,7 @@ const spriteCache = new Map<string, Image>();
 /**
  * Helper to fetch a static pixel sprite from Showdown CDN with in-memory caching
  */
-export async function getPokemonSprite(pokemonName: string): Promise<Image | null> {
+export async function getPokemonSprite(pokemonName: string, allowFetch: boolean = true): Promise<Image | null> {
   try {
     let clean = pokemonName.toLowerCase().trim();
     if (clean === "nidoran-f" || clean === "nidoran_f" || clean === "nidoran♀") clean = "nidoranf";
@@ -100,9 +100,18 @@ export async function getPokemonSprite(pokemonName: string): Promise<Image | nul
       return spriteCache.get(clean)!;
     }
 
+    if (!allowFetch) {
+      return null;
+    }
+
     const url = `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`;
     const img = await loadImage(url);
     if (img) {
+      // Automatic LRU-style cache size management (max 250 entries)
+      if (spriteCache.size >= 250) {
+        const firstKey = spriteCache.keys().next().value;
+        if (firstKey) spriteCache.delete(firstKey);
+      }
       spriteCache.set(clean, img);
     }
     return img;
@@ -110,6 +119,15 @@ export async function getPokemonSprite(pokemonName: string): Promise<Image | nul
     console.error(`[CANVAS] Failed to load sprite for ${pokemonName}:`, err);
     return null;
   }
+}
+
+/**
+ * Checks if a Pokémon's sprite is already loaded in RAM memory
+ */
+export function isSpriteCached(pokemonName: string): boolean {
+  let clean = pokemonName.toLowerCase().trim();
+  clean = clean.replace(/[^a-z0-9]/g, "");
+  return spriteCache.has(clean);
 }
 
 /**
@@ -626,6 +644,7 @@ export interface PokedexScreenOptions {
   totalPages?: number;
   activeAbility?: string;
   lang?: "en" | "ko";
+  allowFetchSprites?: boolean;
 }
 
 const TYPE_COLORS: Record<string, string> = {
@@ -687,11 +706,12 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
   const selected = options?.selectedPokemon || items[0] || null;
   const curPage = options?.currentPage || 1;
   const totPages = options?.totalPages || 129;
+  const allowFetch = options?.allowFetchSprites !== false;
 
   // 0. PRELOAD ALL ASSETS IN PARALLEL (Instant Multi-Threaded Loading)
   const [sprites, bigSprite, speciesInfo] = await Promise.all([
-    Promise.all(items.map((p) => (p ? getPokemonSprite(p.speciesId) : Promise.resolve(null)))),
-    selected ? getPokemonSprite(selected.speciesId) : Promise.resolve(null),
+    Promise.all(items.map((p) => (p ? getPokemonSprite(p.speciesId, allowFetch) : Promise.resolve(null)))),
+    selected ? getPokemonSprite(selected.speciesId, allowFetch) : Promise.resolve(null),
     selected ? getPokemonSpeciesInfo(selected.dexNumber) : Promise.resolve({ genusKo: "포켓몬", genusEn: "Pokémon", flavorTextKo: "", flavorTextEn: "" }),
   ]);
 
@@ -767,19 +787,38 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
 
       // Mini Sprite (Centered in left half area: 50x48)
       const sprite = sprites[i];
+      const sprAreaW = 50;
+      const sprAreaH = 48;
+      const sprAreaX = sx + 6;
+      const sprAreaY = sy + 22;
+
       if (sprite) {
         const scale = 0.64;
         const sprW = sprite.width * scale;
         const sprH = sprite.height * scale;
-        const sprAreaW = 50;
-        const sprAreaH = 48;
         ctx.drawImage(
           sprite,
-          sx + 6 + (sprAreaW - sprW) / 2,
-          sy + 22 + (sprAreaH - sprH) / 2,
+          sprAreaX + (sprAreaW - sprW) / 2,
+          sprAreaY + (sprAreaH - sprH) / 2,
           sprW,
           sprH
         );
+      } else {
+        // Pixel Loading Placeholder
+        ctx.save();
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(sprAreaX + sprAreaW / 2, sprAreaY + sprAreaH / 2, 10, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(sprAreaX + sprAreaW / 2 - 10, sprAreaY + sprAreaH / 2);
+        ctx.lineTo(sprAreaX + sprAreaW / 2 + 10, sprAreaY + sprAreaH / 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(sprAreaX + sprAreaW / 2, sprAreaY + sprAreaH / 2, 3.5, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
       }
 
       // Mini Type Badges (44x20 on the right side of slot, vertically balanced)
@@ -867,6 +906,21 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
       const sprW = bigSprite.width * scale;
       const sprH = bigSprite.height * scale;
       ctx.drawImage(bigSprite, showBoxX + (showBoxSize - sprW) / 2, showBoxY + (showBoxSize - sprH) / 2, sprW, sprH);
+    } else {
+      ctx.save();
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(showBoxX + showBoxSize / 2, showBoxY + showBoxSize / 2, 18, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(showBoxX + showBoxSize / 2 - 18, showBoxY + showBoxSize / 2);
+      ctx.lineTo(showBoxX + showBoxSize / 2 + 18, showBoxY + showBoxSize / 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(showBoxX + showBoxSize / 2, showBoxY + showBoxSize / 2, 6, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
     }
 
     // Info Column next to Sprite (Dex Number + Name + Genus + Types)
