@@ -1487,28 +1487,18 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   ctx.stroke();
 
   // 5. RIGHT SIDE: Top Preview Card & Bottom Party Builder Card
+  // 5. RIGHT SIDE: Top Preview Details & Bottom Party Builder (Borderless Open Layout)
   const rightX = 274;
   const rightW = width - rightX - 10;
 
-  // 5-1. TOP PREVIEW CARD (y: 10 ~ 165, h: 155)
-  const topCardY = 10;
-  const topCardH = 155;
-
-  ctx.fillStyle = "#181B26";
-  ctx.beginPath();
-  ctx.roundRect(rightX, topCardY, rightW, topCardH, 6);
-  ctx.fill();
-  ctx.strokeStyle = "#282D3D";
-  ctx.lineWidth = 1;
-  ctx.stroke();
-
+  // 5-1. TOP PREVIEW DETAILS (y: 10 ~ 162)
   if (sel) {
-    // Sprite Box (64x64)
-    const showBoxX = rightX + 8;
-    const showBoxY = topCardY + 8;
-    const showBoxSize = 64;
+    // Sprite Box (70x70)
+    const showBoxX = rightX;
+    const showBoxY = 10;
+    const showBoxSize = 70;
 
-    ctx.fillStyle = "#12141C";
+    ctx.fillStyle = "#141722";
     ctx.beginPath();
     ctx.roundRect(showBoxX, showBoxY, showBoxSize, showBoxSize, 6);
     ctx.fill();
@@ -1517,40 +1507,40 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     ctx.stroke();
 
     if (selectedSprite) {
-      const scale = 1.2;
+      const scale = 1.3;
       const sprW = selectedSprite.width * scale;
       const sprH = selectedSprite.height * scale;
       ctx.drawImage(selectedSprite, showBoxX + (showBoxSize - sprW) / 2, showBoxY + (showBoxSize - sprH) / 2, sprW, sprH);
     }
 
     // Name + Dex next to sprite (Enlarged)
-    const infoX = showBoxX + showBoxSize + 10;
+    const infoX = showBoxX + showBoxSize + 12;
     const titleName = (isShiny ? "✨ " : "") + (isKo ? sel.nameKo : sel.name);
     const dexTag = `#${String(sel.dexNumber).padStart(3, "0")}`;
 
     ctx.font = "bold 15px DungGeunMo";
     ctx.fillStyle = "#8E96AB";
     ctx.textAlign = "left";
-    ctx.fillText(dexTag, infoX, topCardY + 22);
+    ctx.fillText(dexTag, infoX, 26);
 
     const tagW = ctx.measureText(dexTag).width;
     ctx.font = "bold 20px DungGeunMo";
     ctx.fillStyle = isShiny ? "#FBBF24" : "#FFFFFF";
-    ctx.fillText(titleName, infoX + tagW + 6, topCardY + 22);
+    ctx.fillText(titleName, infoX + tagW + 6, 26);
 
     // Right-aligned Big Cost in Header (Top Right of Card)
     const effectiveSelCost = isPassive ? sel.reducedCost : sel.cost;
-    ctx.font = "bold 20px DungGeunMo";
+    ctx.font = "bold 22px DungGeunMo";
     ctx.fillStyle = isPassive ? "#34D399" : "#22C55E";
     ctx.textAlign = "right";
-    ctx.fillText(`${effectiveSelCost}C`, rightX + rightW - 10, topCardY + 22);
+    ctx.fillText(`${effectiveSelCost}C`, rightX + rightW, 26);
 
     // Type Badges below Name (e.g. [풀] [독])
     const types = sel.types && sel.types.length > 0 ? sel.types : ["normal"];
     let typeBadgeX = infoX;
-    const typeBadgeY = topCardY + 30;
-    const badgeW = isKo ? 44 : 50;
-    const badgeH = 20;
+    const typeBadgeY = 34;
+    const badgeW = isKo ? 46 : 52;
+    const badgeH = 21;
 
     for (const tName of types) {
       const tLower = tName.toLowerCase();
@@ -1569,7 +1559,7 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       ctx.font = "bold 12px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
-      ctx.fillText(tDisplay, typeBadgeX + badgeW / 2, typeBadgeY + 14);
+      ctx.fillText(tDisplay, typeBadgeX + badgeW / 2, typeBadgeY + 15);
 
       typeBadgeX += badgeW + 6;
     }
@@ -1580,33 +1570,33 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     ctx.font = "bold 15px DungGeunMo";
     ctx.fillStyle = isHa ? "#F87171" : "#60A5FA";
     ctx.textAlign = "left";
-    ctx.fillText(abLabel, infoX, topCardY + 63);
+    ctx.fillText(abLabel, infoX, 67);
 
     // Passive Tag (Enlarged to 15px)
     const passiveName = isPassive ? (isKo ? `[패시브] ${sel.passiveAbilityKo}` : `[Passive] ${sel.passiveAbility}`) : (isKo ? "[패시브] 미해금" : "[Passive] Locked");
     ctx.font = "bold 15px DungGeunMo";
     ctx.fillStyle = isPassive ? "#34D399" : "#64748B";
-    ctx.fillText(passiveName, infoX, topCardY + 79);
+    ctx.fillText(passiveName, infoX, 84);
 
     // Starter Moves Title (Enlarged to 14px)
     ctx.font = "bold 14px DungGeunMo";
     ctx.fillStyle = "#94A3B8";
     ctx.textAlign = "left";
-    ctx.fillText(isKo ? "시작 기술 (Starter Moves)" : "Starter Moves", rightX + 10, topCardY + 97);
+    ctx.fillText(isKo ? "시작 기술 (Starter Moves)" : "Starter Moves", rightX, 102);
 
-    // Move Chips (2x2 Grid, width: 122 each)
-    const moveChipW = (rightW - 26) / 2;
+    // Move Chips (2x2 Grid, width: 133 each)
+    const moveChipW = (rightW - 10) / 2;
     const moveChipH = 24;
     for (let mIdx = 0; mIdx < 4; mIdx++) {
       const mName = sel.starterMoves[mIdx] || "---";
       const mCol = mIdx % 2;
       const mRow = Math.floor(mIdx / 2);
-      const mX = rightX + 10 + mCol * (moveChipW + 6);
-      const mY = topCardY + 103 + mRow * (moveChipH + 4);
+      const mX = rightX + mCol * (moveChipW + 10);
+      const mY = 110 + mRow * (moveChipH + 5);
 
-      ctx.fillStyle = "#12141C";
+      ctx.fillStyle = "#181B26";
       ctx.beginPath();
-      ctx.roundRect(mX, mY, moveChipW, moveChipH, 3);
+      ctx.roundRect(mX, mY, moveChipW, moveChipH, 4);
       ctx.fill();
       ctx.strokeStyle = "#282D3D";
       ctx.lineWidth = 1;
@@ -1619,17 +1609,16 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     }
   }
 
-  // 5-2. BOTTOM PARTY BUILDER CARD (y: 172 ~ 370, h: 198)
-  const bottomCardY = 172;
-  const bottomCardH = 198;
-
-  ctx.fillStyle = "#181B26";
+  // Horizontal Divider Line between Details and Party
+  ctx.strokeStyle = "#2D3246";
+  ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.roundRect(rightX, bottomCardY, rightW, bottomCardH, 6);
-  ctx.fill();
-  ctx.strokeStyle = "#282D3D";
-  ctx.lineWidth = 1;
+  ctx.moveTo(rightX, 168);
+  ctx.lineTo(rightX + rightW, 168);
   ctx.stroke();
+
+  // 5-2. BOTTOM PARTY BUILDER (y: 176 ~ 370)
+  const bottomStartY = 176;
 
   // Cost Counter text (Enlarged bold 20px)
   const isOverCost = currentCost > maxCost;
@@ -1637,13 +1626,13 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   ctx.font = "bold 20px DungGeunMo";
   ctx.fillStyle = costColor;
   ctx.textAlign = "left";
-  ctx.fillText(`${isKo ? "코스트" : "COST"} : ${currentCost} / ${maxCost}`, rightX + 12, bottomCardY + 25);
+  ctx.fillText(`${isKo ? "코스트" : "COST"} : ${currentCost} / ${maxCost}`, rightX, bottomStartY + 18);
 
-  // Cost Gauge Bar (Width: rightW - 24)
-  const gaugeW = rightW - 24;
+  // Cost Gauge Bar (Full width: rightW)
+  const gaugeW = rightW;
   const gaugeH = 8;
-  const gaugeX = rightX + 12;
-  const gaugeY = bottomCardY + 33;
+  const gaugeX = rightX;
+  const gaugeY = bottomStartY + 26;
 
   ctx.fillStyle = "#12141C";
   ctx.beginPath();
@@ -1658,11 +1647,11 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   ctx.fill();
 
   // 6 Party Slots Grid (3 Columns x 2 Rows)
-  const partySlotW = (rightW - 28) / 3;
-  const partySlotH = 64;
-  const partyStartX = rightX + 10;
-  const partyStartY = bottomCardY + 45;
-  const partyGapX = 4;
+  const partySlotW = (rightW - 12) / 3;
+  const partySlotH = 68;
+  const partyStartX = rightX;
+  const partyStartY = bottomStartY + 40;
+  const partyGapX = 6;
   const partyGapY = 6;
 
   for (let pIdx = 0; pIdx < 6; pIdx++) {
@@ -1672,12 +1661,12 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     const pX = partyStartX + pCol * (partySlotW + partyGapX);
     const pY = partyStartY + pRow * (partySlotH + partyGapY);
 
-    ctx.fillStyle = member ? "#1E2438" : "#12141C";
+    ctx.fillStyle = member ? "#1E2438" : "#181B26";
     ctx.beginPath();
-    ctx.roundRect(pX, pY, partySlotW, partySlotH, 4);
+    ctx.roundRect(pX, pY, partySlotW, partySlotH, 5);
     ctx.fill();
 
-    ctx.strokeStyle = member ? "#384260" : "#242A3D";
+    ctx.strokeStyle = member ? "#384260" : "#282D3D";
     ctx.lineWidth = 1;
     ctx.stroke();
 
@@ -1685,30 +1674,30 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       // Mini Sprite (Centered)
       const pSprite = partySprites[pIdx];
       if (pSprite) {
-        const scale = 0.58;
+        const scale = 0.62;
         const sprW = pSprite.width * scale;
         const sprH = pSprite.height * scale;
-        ctx.drawImage(pSprite, pX + (partySlotW - sprW) / 2, pY + 2 + (32 - sprH) / 2, sprW, sprH);
+        ctx.drawImage(pSprite, pX + (partySlotW - sprW) / 2, pY + 2 + (36 - sprH) / 2, sprW, sprH);
       }
 
       // Member Name + Cost (Clean Green Text without box)
       ctx.font = "bold 15px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
-      ctx.fillText(member.name.slice(0, 4), pX + partySlotW / 2, pY + 43);
+      ctx.fillText(member.name.slice(0, 4), pX + partySlotW / 2, pY + 45);
 
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = member.usePassive ? "#34D399" : "#22C55E";
-      ctx.fillText(`${member.cost}C`, pX + partySlotW / 2, pY + 58);
+      ctx.fillText(`${member.cost}C`, pX + partySlotW / 2, pY + 61);
     } else {
       // Empty Slot Marker (Enlarged to 22px / 13px)
       ctx.font = "bold 22px DungGeunMo";
       ctx.fillStyle = "#334155";
       ctx.textAlign = "center";
-      ctx.fillText("+", pX + partySlotW / 2, pY + 30);
+      ctx.fillText("+", pX + partySlotW / 2, pY + 32);
       ctx.font = "bold 13px DungGeunMo";
       ctx.fillStyle = "#475569";
-      ctx.fillText(isKo ? `슬롯 ${pIdx + 1}` : `Slot ${pIdx + 1}`, pX + partySlotW / 2, pY + 48);
+      ctx.fillText(isKo ? `슬롯 ${pIdx + 1}` : `Slot ${pIdx + 1}`, pX + partySlotW / 2, pY + 50);
     }
   }
 
