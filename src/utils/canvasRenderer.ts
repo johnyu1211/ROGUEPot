@@ -1634,7 +1634,7 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       const tColor = TYPE_COLORS[tLower] || "#777777";
       const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || types[0]) : types[0].toUpperCase();
       const badgeH = 26;
-      const bY = 38;
+      const bY = 40;
 
       ctx.fillStyle = tColor;
       ctx.beginPath();
@@ -1656,7 +1656,7 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
         const tLower = tName.toLowerCase();
         const tColor = TYPE_COLORS[tLower] || "#777777";
         const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || tName) : tName.toUpperCase();
-        const bY = 30 + tIdx * (badgeH + 4);
+        const bY = 32 + tIdx * (badgeH + 4);
 
         ctx.fillStyle = tColor;
         ctx.beginPath();
@@ -1677,7 +1677,7 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     // 2) RIGHT COLUMN: Ability & Passive Tags (X = infoX + 54)
     const rightColX = infoX + badgeW + 8;
 
-    // Ability / HA Tag (14px)
+    // Ability / HA Tag (14px, True Middle Alignment)
     let abLabel = isKo ? `[특성] ${sel.abilityKo}` : `[Ab] ${sel.ability}`;
     if (selHasHa && sel.hiddenAbility) {
       abLabel = isKo ? `[숨특] ${sel.hiddenAbilityKo}` : `[HA] ${sel.hiddenAbility}`;
@@ -1686,13 +1686,13 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     ctx.font = "bold 14px DungGeunMo";
     ctx.fillStyle = selHasHa ? "#F87171" : "#60A5FA";
     ctx.textAlign = "left";
-    ctx.fillText(abLabel, rightColX, 41);
+    ctx.fillText(abLabel, rightColX, 43);
 
-    // Passive Tag (14px)
+    // Passive Tag (14px, True Middle Alignment)
     const passiveName = selHasPassive ? (isKo ? `[패시브] ${sel.passiveAbilityKo}` : `[Passive] ${sel.passiveAbility}`) : (isKo ? "[패시브] 미해금" : "[Passive] Locked");
     ctx.font = "bold 14px DungGeunMo";
     ctx.fillStyle = selHasPassive ? "#34D399" : "#64748B";
-    ctx.fillText(passiveName, rightColX, 62);
+    ctx.fillText(passiveName, rightColX, 64);
 
     // Move Chips (2x2 Grid, width: 133 each, height: 25)
     const moveChipW = (rightW - 10) / 2;
@@ -1727,28 +1727,31 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   ctx.strokeStyle = "#2D3246";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(rightX, 158);
-  ctx.lineTo(rightX + rightW, 158);
+  ctx.moveTo(rightX, 154);
+  ctx.lineTo(rightX + rightW, 154);
   ctx.stroke();
 
-  // 5-2. BOTTOM PARTY BUILDER (y: 166 ~ 370)
-  const bottomStartY = 166;
+  // 5-2. BOTTOM PARTY BUILDER (y: 160 ~ 370)
+  const bottomStartY = 160;
+  const costLineY = bottomStartY + 9;
 
-  // Cost Counter Text + Inline Gauge Bar (Single Row)
+  // Cost Counter Text + Inline Gauge Bar (Single Row, Perfect Vertical Center Alignment)
   const isOverCost = currentCost > maxCost;
   const costColor = isOverCost ? "#EF4444" : (currentCost >= 8 ? "#F59E0B" : "#22C55E");
-  ctx.font = "bold 18px DungGeunMo";
+
+  ctx.textBaseline = "middle";
+  ctx.font = "bold 17px DungGeunMo";
   ctx.fillStyle = costColor;
   ctx.textAlign = "left";
   const costText = `${isKo ? "코스트" : "COST"} : ${currentCost} / ${maxCost}`;
-  ctx.fillText(costText, rightX, bottomStartY + 16);
+  ctx.fillText(costText, rightX, costLineY);
   const costTextW = ctx.measureText(costText).width;
 
-  // Inline Cost Gauge Bar right next to the text
+  // Inline Cost Gauge Bar right next to the text (100% Center Line Matched)
   const gaugeX = rightX + costTextW + 12;
   const gaugeW = rightX + rightW - gaugeX;
-  const gaugeH = 9;
-  const gaugeY = bottomStartY + 6;
+  const gaugeH = 10;
+  const gaugeY = costLineY - gaugeH / 2;
 
   ctx.fillStyle = "#12141C";
   ctx.beginPath();
@@ -1765,11 +1768,11 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   ctx.roundRect(gaugeX, gaugeY, fillW, gaugeH, 3);
   ctx.fill();
 
-  // 6 Party Slots Grid (3 Columns x 2 Rows) - Expanded to 76px Height!
+  // 6 Party Slots Grid (3 Columns x 2 Rows)
   const partySlotW = (rightW - 12) / 3;
   const partySlotH = 76;
   const partyStartX = rightX;
-  const partyStartY = bottomStartY + 26;
+  const partyStartY = bottomStartY + 24;
   const partyGapX = 6;
   const partyGapY = 8;
 
