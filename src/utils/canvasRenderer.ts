@@ -1355,8 +1355,8 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   ctx.textAlign = "left";
   ctx.fillText(isKo ? "스타팅 선택" : "STARTER SELECT", 10, 27);
 
-  // Large Crisp White Page Indicator ("1 / 9")
-  const pageText = `${gen} / 9`;
+  // Large Crisp White Page Indicator ("1 / 9" or "전체")
+  const pageText = gen <= 0 ? (isKo ? "전체" : "ALL") : `${gen} / 9`;
   ctx.font = "bold 16px DungGeunMo";
   ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "right";
