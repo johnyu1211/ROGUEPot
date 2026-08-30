@@ -13,10 +13,10 @@ import {
 } from "discord.js";
 import { BotEvent, ExtendedClient } from "../types/index.js";
 import { createBaseEmbed, COLORS } from "../utils/embed.js";
-import { renderTitleScreen, renderBagScreen, renderMultiplayerScreen, renderPokedexScreen, renderStarterSelectScreen, StarterSelectPartyItem, getPokemonSprite, isSpriteCached } from "../utils/canvasRenderer.js";
+import { renderTitleScreen, renderBagScreen, renderMultiplayerScreen, renderPokedexScreen, renderStarterSelectScreen, renderGenSelectScreen, StarterSelectPartyItem, getPokemonSprite, isSpriteCached } from "../utils/canvasRenderer.js";
 import { saveService, PartyPokemon } from "../services/saveService.js";
 import { getPokemonByQuery, getPokemonByDexNumber, getPokemonPage, getAbilityKoreanName, getAbilityDetail } from "../services/pokeApiService.js";
-import { STARTER_DATABASE, getStartersByGen, getStarterByDexNumber, DEFAULT_MAX_COST, StarterEntry } from "../data/starterCosts.js";
+import { STARTER_DATABASE, GENERATION_INFO, getStartersByGen, getStarterByDexNumber, DEFAULT_MAX_COST, StarterEntry } from "../data/starterCosts.js";
 
 function createStarterSelectMenu(slotId: number, userId: string, fromSource: "title" | "slots" = "title") {
   const profile = saveService.getProfile(userId);
@@ -555,6 +555,52 @@ async function handlePokedexInteractionUpdate(
   }
 }
 
+async function renderGenSelectMessageData(
+  client: ExtendedClient,
+  userId: string,
+  currentGen: number = 1,
+  slotId: number = 1,
+  partyParam: string = "empty",
+  flagsParam: string = "0_0_0"
+) {
+  const profile = saveService.getProfile(userId);
+  const isKo = profile.language === "ko";
+
+  const imageBuffer = await renderGenSelectScreen({
+    currentGen,
+    lang: profile.language,
+  });
+
+  const attachment = new AttachmentBuilder(imageBuffer, { name: "gen_select.png" });
+
+  const createGenBtn = (g: number) => {
+    const info = GENERATION_INFO[g - 1];
+    const isSelected = g === currentGen;
+    return new ButtonBuilder()
+      .setCustomId(`starter_pickgen_${g}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+      .setLabel(isKo ? info.nameKo : info.nameEn)
+      .setStyle(isSelected ? ButtonStyle.Danger : ButtonStyle.Primary);
+  };
+
+  const components: ActionRowBuilder<ButtonBuilder>[] = [
+    // Row 1: Gen 1, 2, 3
+    new ActionRowBuilder<ButtonBuilder>().addComponents(createGenBtn(1), createGenBtn(2), createGenBtn(3)),
+    // Row 2: Gen 4, 5, 6
+    new ActionRowBuilder<ButtonBuilder>().addComponents(createGenBtn(4), createGenBtn(5), createGenBtn(6)),
+    // Row 3: Gen 7, 8, 9
+    new ActionRowBuilder<ButtonBuilder>().addComponents(createGenBtn(7), createGenBtn(8), createGenBtn(9)),
+    // Row 4: Back to Starter Select
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`starter_pickgen_${currentGen}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+        .setLabel(isKo ? "↩️ 스타팅 선택으로 돌아가기" : "↩️ Back to Starter Select")
+        .setStyle(ButtonStyle.Secondary)
+    ),
+  ];
+
+  return { embeds: [], files: [attachment], attachments: [], components };
+}
+
 async function renderStarterSelectMessageData(
   client: ExtendedClient,
   userId: string,
@@ -629,12 +675,11 @@ async function renderStarterSelectMessageData(
 
   const components: ActionRowBuilder<ButtonBuilder>[] = [];
 
-  // ROW 1: 4 Core Filter & Mode Toggles ([ 📂 세대 (G1~G9) ] [ ✨ 이로치 ] [ 🔓 패시브 ] [ 🌟 숨특 ])
-  const nextGenCycle = gen >= 9 ? 1 : gen + 1;
+  // ROW 1: 4 Core Filter & Mode Toggles ([ 📂 세대 ] [ ✨ 이로치 ] [ 🔓 패시브 ] [ 🌟 숨특 ])
   const row1Btns: ButtonBuilder[] = [
     new ButtonBuilder()
-      .setCustomId(`starter_gen_${nextGenCycle}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
-      .setLabel(`📂 G${gen}`)
+      .setCustomId(`starter_open_gen_menu_${gen}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+      .setLabel(isKo ? "📂 세대" : "📂 Gen")
       .setStyle(ButtonStyle.Primary),
     new ButtonBuilder()
       .setCustomId(`starter_toggleshiny_${gen}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
@@ -1230,6 +1275,36 @@ export const interactionCreateEvent: BotEvent = {
       if (customId.startsWith("menu_newgame_")) {
         const targetSlot = saveService.getFirstAvailableSlot(interaction.user.id);
         const starterData = await renderStarterSelectMessageData(client, interaction.user.id, targetSlot, 1, 1, [], false, false, false);
+        await interaction.update(starterData);
+        return;
+      }
+
+      // 2-1-G. Open Generation Selection Menu
+      if (customId.startsWith("starter_open_gen_menu_")) {
+        const currentGen = parseInt(parts[4], 10) || 1;
+        const slotId = parseInt(parts[6], 10) || 1;
+        const partyParam = parts[7] || "empty";
+        const flagsParam = `${parts[8] || 0}_${parts[9] || 0}_${parts[10] || 0}`;
+
+        const genData = await renderGenSelectMessageData(client, interaction.user.id, currentGen, slotId, partyParam, flagsParam);
+        await interaction.update(genData);
+        return;
+      }
+
+      // 2-1-H. Pick Specific Generation from Gen Menu
+      if (customId.startsWith("starter_pickgen_")) {
+        const chosenGen = parseInt(parts[2], 10) || 1;
+        const slotId = parseInt(parts[3], 10) || 1;
+        const partyRaw = parts[4] || "empty";
+        const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
+        const isShiny = parts[5] === "1";
+        const isHa = parts[6] === "1";
+        const isPassive = parts[7] === "1";
+
+        const genStarters = getStartersByGen(chosenGen);
+        const firstStarterDex = genStarters[0]?.dexNumber || 1;
+
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, chosenGen, firstStarterDex, partyDexList, isShiny, isHa, isPassive);
         await interaction.update(starterData);
         return;
       }
