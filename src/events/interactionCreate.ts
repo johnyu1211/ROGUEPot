@@ -757,10 +757,10 @@ async function renderStarterSelectMessageData(
       .setStyle(ButtonStyle.Success)
       .setDisabled(!canAdd),
     new ButtonBuilder()
-      .setCustomId(`starter_rem_${selectedStarter.dexNumber}_${gen}_${safePage}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+      .setCustomId(`starter_openparty_${selectedStarter.dexNumber}_${gen}_${safePage}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel("Party")
       .setStyle(ButtonStyle.Primary)
-      .setDisabled(!isAlreadyInParty)
+      .setDisabled(partyDexList.length === 0)
   ];
   components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row2Btns));
 
@@ -813,6 +813,132 @@ async function renderStarterSelectMessageData(
       .setStyle(ButtonStyle.Danger)
   ];
   components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row5Btns));
+
+  return { embeds: [], files: [attachment], attachments: [], components };
+}
+
+async function renderPartyViewMessageData(
+  client: ExtendedClient,
+  userId: string,
+  slotId: number = 1,
+  gen: number = 0,
+  page: number = 1,
+  selectedDexNo: number = 1,
+  partyDexList: number[] = [],
+  isShinyFilter: boolean = false,
+  isHaFilter: boolean = false,
+  isPassiveFilter: boolean = false,
+  selectedPartyIdx: number = 0
+) {
+  const profile = saveService.getProfile(userId);
+  const isKo = profile.language === "ko";
+  const userStarters = getUserStarters(userId);
+
+  const selectedParty: StarterSelectPartyItem[] = partyDexList
+    .map((dex) => {
+      const s = getStarterByDexNumber(dex);
+      if (!s) return null;
+      const prog = userStarters.get(s.speciesId);
+      const isShiny = (prog?.shinyTier || 0) > 0;
+      const useHiddenAbility = prog?.hasHiddenAbility || false;
+      const usePassive = prog?.passiveUnlocked || false;
+      return {
+        dexNumber: s.dexNumber,
+        speciesId: s.speciesId,
+        name: isKo ? s.nameKo : s.name,
+        cost: usePassive ? s.reducedCost : s.cost,
+        isShiny,
+        useHiddenAbility,
+        usePassive,
+      };
+    })
+    .filter(Boolean) as StarterSelectPartyItem[];
+
+  const currentCost = selectedParty.reduce((sum, p) => sum + p.cost, 0);
+  const canStart = selectedParty.length >= 1 && currentCost <= DEFAULT_MAX_COST;
+
+  const safePartyIdx = Math.min(Math.max(0, selectedPartyIdx), Math.max(0, selectedParty.length - 1));
+  const activePartyMember = selectedParty[safePartyIdx];
+  const inspectedStarter = activePartyMember ? getStarterByDexNumber(activePartyMember.dexNumber) || STARTER_DATABASE[0] : STARTER_DATABASE[0];
+
+  const imageBuffer = await renderStarterSelectScreen({
+    selectedStarter: inspectedStarter,
+    currentGen: gen,
+    currentPage: page,
+    totalPages: 1,
+    startersList: [],
+    selectedParty,
+    userStarters,
+    isShinyFilter,
+    isHaFilter,
+    isPassiveFilter,
+    maxCost: DEFAULT_MAX_COST,
+    lang: profile.language,
+    isPartyView: true,
+    selectedPartyIdx: safePartyIdx,
+  });
+
+  const attachment = new AttachmentBuilder(imageBuffer, { name: "party_view.png" });
+  const partyParam = partyDexList.join("-") || "empty";
+  const flagsParam = `${isShinyFilter ? 1 : 0}_${isHaFilter ? 1 : 0}_${isPassiveFilter ? 1 : 0}`;
+
+  // Helper to create Party Slot Selector Button
+  const createPartySlotBtn = (idx: number) => {
+    const member = selectedParty[idx];
+    if (!member) {
+      return new ButtonBuilder()
+        .setCustomId(`party_slot_empty_${idx}_${userId}`)
+        .setLabel(`P${idx + 1}`)
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(true);
+    }
+    const isSelected = safePartyIdx === idx;
+    return new ButtonBuilder()
+      .setCustomId(`party_pick_${idx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+      .setLabel(`${idx + 1}. ${member.name.slice(0, 4)}`)
+      .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Secondary);
+  };
+
+  const components: ActionRowBuilder<ButtonBuilder>[] = [];
+
+  // ROW 1: Party 1, 2, 3
+  components.push(
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      createPartySlotBtn(0),
+      createPartySlotBtn(1),
+      createPartySlotBtn(2)
+    )
+  );
+
+  // ROW 2: Party 4, 5, 6
+  components.push(
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      createPartySlotBtn(3),
+      createPartySlotBtn(4),
+      createPartySlotBtn(5)
+    )
+  );
+
+  // ROW 3: Remove Selected [-⚪] + [START] + [↩️ Back to Starter Select]
+  const removeTargetDex = activePartyMember ? activePartyMember.dexNumber : 0;
+  components.push(
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`party_remove_${safePartyIdx}_${removeTargetDex}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+        .setLabel("-⚪")
+        .setStyle(ButtonStyle.Danger)
+        .setDisabled(!activePartyMember),
+      new ButtonBuilder()
+        .setCustomId(`starter_start_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+        .setLabel("START")
+        .setStyle(ButtonStyle.Success)
+        .setDisabled(!canStart),
+      new ButtonBuilder()
+        .setCustomId(`party_back_starter_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+        .setLabel("↩️")
+        .setStyle(ButtonStyle.Danger)
+    )
+  );
 
   return { embeds: [], files: [attachment], attachments: [], components };
 }
@@ -1547,7 +1673,88 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 2-1-D. Starter Remove from Party (-제거)
+      // 2-1-P1. Open Party View Screen (Party 버튼 클릭)
+      if (customId.startsWith("starter_openparty_")) {
+        const dexNo = parseInt(parts[2], 10) || 1;
+        const gen = parseInt(parts[3], 10) || 0;
+        const page = parseInt(parts[4], 10) || 1;
+        const slotId = parseInt(parts[5], 10) || 1;
+        const partyRaw = parts[6] || "empty";
+        const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
+        const isShiny = parts[7] === "1";
+        const isHa = parts[8] === "1";
+        const isPassive = parts[9] === "1";
+
+        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, partyDexList, isShiny, isHa, isPassive, 0);
+        await interaction.update(partyData);
+        return;
+      }
+
+      // 2-1-P2. Pick Party Member in Party View Screen
+      if (customId.startsWith("party_pick_")) {
+        const targetIdx = parseInt(parts[2], 10) || 0;
+        const gen = parseInt(parts[3], 10) || 0;
+        const page = parseInt(parts[4], 10) || 1;
+        const dexNo = parseInt(parts[5], 10) || 1;
+        const slotId = parseInt(parts[6], 10) || 1;
+        const partyRaw = parts[7] || "empty";
+        const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
+        const isShiny = parts[8] === "1";
+        const isHa = parts[9] === "1";
+        const isPassive = parts[10] === "1";
+
+        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, partyDexList, isShiny, isHa, isPassive, targetIdx);
+        await interaction.update(partyData);
+        return;
+      }
+
+      // 2-1-P3. Remove Party Member from Party View Screen (-⚪)
+      if (customId.startsWith("party_remove_")) {
+        const currentIdx = parseInt(parts[2], 10) || 0;
+        const targetDex = parseInt(parts[3], 10) || 0;
+        const gen = parseInt(parts[4], 10) || 0;
+        const page = parseInt(parts[5], 10) || 1;
+        const dexNo = parseInt(parts[6], 10) || 1;
+        const slotId = parseInt(parts[7], 10) || 1;
+        const partyRaw = parts[8] || "empty";
+        const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
+        const isShiny = parts[9] === "1";
+        const isHa = parts[10] === "1";
+        const isPassive = parts[11] === "1";
+
+        const updatedList = partyDexList.filter((d) => d !== targetDex);
+
+        if (updatedList.length === 0) {
+          // If no party members left, go back to starter selection screen!
+          const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, page, dexNo, updatedList, isShiny, isHa, isPassive);
+          await interaction.update(starterData);
+          return;
+        }
+
+        const nextIdx = Math.min(currentIdx, updatedList.length - 1);
+        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, updatedList, isShiny, isHa, isPassive, nextIdx);
+        await interaction.update(partyData);
+        return;
+      }
+
+      // 2-1-P4. Back from Party View to Starter Selection Screen (↩️)
+      if (customId.startsWith("party_back_starter_")) {
+        const gen = parseInt(parts[3], 10) || 0;
+        const page = parseInt(parts[4], 10) || 1;
+        const dexNo = parseInt(parts[5], 10) || 1;
+        const slotId = parseInt(parts[6], 10) || 1;
+        const partyRaw = parts[7] || "empty";
+        const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
+        const isShiny = parts[8] === "1";
+        const isHa = parts[9] === "1";
+        const isPassive = parts[10] === "1";
+
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, page, dexNo, partyDexList, isShiny, isHa, isPassive);
+        await interaction.update(starterData);
+        return;
+      }
+
+      // 2-1-D. Starter Remove from Party (-제거) (Legacy fallback)
       if (customId.startsWith("starter_rem_")) {
         const dexNo = parseInt(parts[2], 10) || 1;
         const gen = parseInt(parts[3], 10) || 0;

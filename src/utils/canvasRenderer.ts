@@ -2,7 +2,7 @@ import { createCanvas, loadImage, GlobalFonts, Image } from "@napi-rs/canvas";
 import path from "path";
 import fs from "fs";
 import { DexPokemonInfo, getAbilityDetail, getPokemonSpeciesInfo } from "../services/pokeApiService.js";
-import { StarterEntry, GENERATION_INFO } from "../data/starterCosts.js";
+import { StarterEntry, GENERATION_INFO, getStarterByDexNumber } from "../data/starterCosts.js";
 import { MOVES_DATA } from "../data/movesKo.js";
 
 // Register custom pixel dot font
@@ -1339,6 +1339,8 @@ export interface StarterSelectScreenOptions {
   isPassiveFilter?: boolean;
   maxCost?: number;
   lang?: "en" | "ko";
+  isPartyView?: boolean;
+  selectedPartyIdx?: number;
 }
 
 /**
@@ -1422,6 +1424,286 @@ function drawMoveCategoryIcon(ctx: any, x: number, y: number, category?: "physic
   }
 }
 
+interface PreviewAndPartyPanelArgs {
+  panelX: number;
+  panelW: number;
+  sel: StarterEntry | null;
+  selectedSprite: Image | null;
+  selProgress: any;
+  selHasHa: boolean;
+  selHasPassive: boolean;
+  party: StarterSelectPartyItem[];
+  partySprites: (Image | null)[];
+  currentCost: number;
+  maxCost: number;
+  isKo: boolean;
+  selectedPartyIdx?: number;
+}
+
+function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
+  const {
+    panelX, panelW, sel, selectedSprite, selProgress,
+    selHasHa, selHasPassive, party, partySprites,
+    currentCost, maxCost, isKo, selectedPartyIdx
+  } = args;
+
+  if (sel) {
+    const selShinyTier = selProgress?.shinyTier || 0;
+
+    // Sprite Box (70x70) - Clean Uniform Border
+    const showBoxX = panelX;
+    const showBoxY = 10;
+    const showBoxSize = 70;
+
+    ctx.fillStyle = "#141722";
+    ctx.beginPath();
+    ctx.roundRect(showBoxX, showBoxY, showBoxSize, showBoxSize, 6);
+    ctx.fill();
+    ctx.strokeStyle = "#2D3246";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    if (selectedSprite) {
+      const scale = 1.3;
+      const sprW = selectedSprite.width * scale;
+      const sprH = selectedSprite.height * scale;
+      ctx.drawImage(selectedSprite, showBoxX + (showBoxSize - sprW) / 2, showBoxY + (showBoxSize - sprH) / 2, sprW, sprH);
+    }
+
+    // Shiny Tier Vector Sparkle Star on Bottom-Left Corner of Sprite Box
+    if (selShinyTier > 0) {
+      drawShinyTierSparkles(ctx, showBoxX + 4, showBoxY + showBoxSize - 14, selShinyTier, 7.5);
+    }
+
+    // Name + Dex next to sprite (Enlarged, True Middle Baseline)
+    const infoX = showBoxX + showBoxSize + 10;
+    const headerY = showBoxY + 12;
+    const dexTag = `#${String(sel.dexNumber).padStart(3, "0")}`;
+
+    ctx.textBaseline = "middle";
+    ctx.font = "bold 14px DungGeunMo";
+    ctx.fillStyle = "#8E96AB";
+    ctx.textAlign = "left";
+    ctx.fillText(dexTag, infoX, headerY);
+
+    const tagW = ctx.measureText(dexTag).width;
+    const nameX = infoX + tagW + 6;
+
+    ctx.font = "bold 19px DungGeunMo";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText(isKo ? sel.nameKo : sel.name, nameX, headerY);
+
+    // 2-COLUMN SECTION: Left = Type Badges, Right = Ability & Passive
+    const types = sel.types && sel.types.length > 0 ? sel.types : ["normal"];
+    const badgeW = 46;
+
+    // 1) LEFT COLUMN: Type Badges (Vertical Stack if Dual Type, Centered if Single Type)
+    if (types.length === 1) {
+      const tLower = types[0].toLowerCase();
+      const tColor = TYPE_COLORS[tLower] || "#777777";
+      const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || types[0]) : types[0].toUpperCase();
+      const badgeH = 26;
+      const bY = 40;
+
+      ctx.fillStyle = tColor;
+      ctx.beginPath();
+      ctx.roundRect(infoX, bY, badgeW, badgeH, 4);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.textBaseline = "middle";
+      ctx.font = "bold 13px DungGeunMo";
+      ctx.fillStyle = "#FFFFFF";
+      ctx.textAlign = "center";
+      ctx.fillText(tDisplay, infoX + badgeW / 2, bY + badgeH / 2);
+    } else {
+      // Dual Type: 2 Compact Badges Stacked
+      const badgeH = 19;
+      types.slice(0, 2).forEach((tName, tIdx) => {
+        const tLower = tName.toLowerCase();
+        const tColor = TYPE_COLORS[tLower] || "#777777";
+        const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || tName) : tName.toUpperCase();
+        const bY = 32 + tIdx * (badgeH + 4);
+
+        ctx.fillStyle = tColor;
+        ctx.beginPath();
+        ctx.roundRect(infoX, bY, badgeW, badgeH, 3);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.textBaseline = "middle";
+        ctx.font = "bold 12px DungGeunMo";
+        ctx.fillStyle = "#FFFFFF";
+        ctx.textAlign = "center";
+        ctx.fillText(tDisplay, infoX + badgeW / 2, bY + badgeH / 2);
+      });
+    }
+
+    // 2) RIGHT COLUMN: Ability & Passive Tags (X = infoX + 54)
+    const rightColX = infoX + badgeW + 8;
+
+    // Ability / HA Tag (14px, True Middle Alignment)
+    let abLabel = isKo ? `[특성] ${sel.abilityKo}` : `[Ab] ${sel.ability}`;
+    if (selHasHa && sel.hiddenAbility) {
+      abLabel = isKo ? `[숨특] ${sel.hiddenAbilityKo}` : `[HA] ${sel.hiddenAbility}`;
+    }
+    ctx.textBaseline = "middle";
+    ctx.font = "bold 14px DungGeunMo";
+    ctx.fillStyle = selHasHa ? "#F87171" : "#60A5FA";
+    ctx.textAlign = "left";
+    ctx.fillText(abLabel, rightColX, 43);
+
+    // Passive Tag (14px, True Middle Alignment)
+    const passiveName = selHasPassive ? (isKo ? `[패시브] ${sel.passiveAbilityKo}` : `[Passive] ${sel.passiveAbility}`) : (isKo ? "[패시브] 미해금" : "[Passive] Locked");
+    ctx.font = "bold 14px DungGeunMo";
+    ctx.fillStyle = selHasPassive ? "#34D399" : "#64748B";
+    ctx.fillText(passiveName, rightColX, 64);
+
+    // Move Chips (2x2 Grid, width: 133 each, height: 36) - Prominent & Borderless!
+    const moveChipW = (panelW - 10) / 2;
+    const moveChipH = 36;
+    for (let mIdx = 0; mIdx < 4; mIdx++) {
+      const rawMove = sel.starterMoves[mIdx] || "---";
+      const moveKey = rawMove.toLowerCase().replace(/[\s_]+/g, "-");
+      const moveInfo = MOVES_DATA[moveKey];
+      const mDisplay = isKo ? (moveInfo?.nameKo || rawMove) : rawMove;
+      const category = moveInfo?.category;
+
+      const mCol = mIdx % 2;
+      const mRow = Math.floor(mIdx / 2);
+      const mX = panelX + mCol * (moveChipW + 10);
+      const mY = 90 + mRow * (moveChipH + 6);
+
+      ctx.fillStyle = "#181B26";
+      ctx.beginPath();
+      ctx.roundRect(mX, mY, moveChipW, moveChipH, 5);
+      ctx.fill();
+      ctx.strokeStyle = "#282D3D";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      if (rawMove === "---" || !category) {
+        ctx.textBaseline = "middle";
+        ctx.font = "bold 15px DungGeunMo";
+        ctx.fillStyle = "#475569";
+        ctx.textAlign = "center";
+        ctx.fillText(mDisplay, mX + moveChipW / 2, mY + moveChipH / 2);
+      } else {
+        // Draw Move Category Icon (Left aligned, 23x22)
+        const iconX = mX + 6;
+        const iconY = mY + (moveChipH - 22) / 2;
+        drawMoveCategoryIcon(ctx, iconX, iconY, category);
+
+        // Move Name Text (Aligned next to category icon, 15px)
+        ctx.textBaseline = "middle";
+        ctx.font = "bold 15px DungGeunMo";
+        ctx.fillStyle = "#F8FAFC";
+        ctx.textAlign = "left";
+        ctx.fillText(mDisplay, mX + 35, mY + moveChipH / 2);
+      }
+    }
+  }
+
+  // 5-2. BOTTOM PARTY BUILDER (y: 178 ~ 370, Seamless Borderless Layout)
+  const costLineY = 184;
+
+  // Cost Counter Text + Inline Gauge Bar (Single Row, Perfect Vertical Center Alignment)
+  const isOverCost = currentCost > maxCost;
+  const costColor = isOverCost ? "#EF4444" : (currentCost >= 8 ? "#F59E0B" : "#22C55E");
+
+  ctx.textBaseline = "middle";
+  ctx.font = "bold 17px DungGeunMo";
+  ctx.fillStyle = costColor;
+  ctx.textAlign = "left";
+  const costText = `${isKo ? "코스트" : "COST"} : ${currentCost} / ${maxCost}`;
+  ctx.fillText(costText, panelX, costLineY);
+  const costTextW = ctx.measureText(costText).width;
+
+  // Inline Cost Gauge Bar right next to the text (100% Center Line Matched)
+  const gaugeX = panelX + costTextW + 12;
+  const gaugeW = panelX + panelW - gaugeX;
+  const gaugeH = 10;
+  const gaugeY = costLineY - gaugeH / 2;
+
+  ctx.fillStyle = "#12141C";
+  ctx.beginPath();
+  ctx.roundRect(gaugeX, gaugeY, gaugeW, gaugeH, 3);
+  ctx.fill();
+  ctx.strokeStyle = "#282D3D";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  const fillRatio = Math.min(1.0, currentCost / maxCost);
+  const fillW = Math.max(fillRatio > 0 ? 4 : 0, fillRatio * gaugeW);
+  ctx.fillStyle = costColor;
+  ctx.beginPath();
+  ctx.roundRect(gaugeX, gaugeY, fillW, gaugeH, 3);
+  ctx.fill();
+
+  // 6 Party Slots Grid (3 Columns x 2 Rows) - Height 80px, Bottom ends precisely at y = 370!
+  const partySlotW = (panelW - 12) / 3;
+  const partySlotH = 80;
+  const partyGapX = 6;
+  const partyGapY = 8;
+  const partyStartX = panelX;
+  const partyStartY = 202;
+
+  for (let pIdx = 0; pIdx < 6; pIdx++) {
+    const member = party[pIdx];
+    const pCol = pIdx % 3;
+    const pRow = Math.floor(pIdx / 3);
+    const pX = partyStartX + pCol * (partySlotW + partyGapX);
+    const pY = partyStartY + pRow * (partySlotH + partyGapY);
+    const isInspected = selectedPartyIdx !== undefined && selectedPartyIdx === pIdx;
+
+    ctx.fillStyle = isInspected ? "#222738" : (member ? "#1E2438" : "#181B26");
+    ctx.beginPath();
+    ctx.roundRect(pX, pY, partySlotW, partySlotH, 5);
+    ctx.fill();
+
+    ctx.strokeStyle = isInspected ? "#5865F2" : (member ? "#384260" : "#282D3D");
+    ctx.lineWidth = isInspected ? 2 : 1;
+    ctx.stroke();
+
+    if (member) {
+      // Mini Sprite (Centered, Scale 0.7)
+      const pSprite = partySprites[pIdx];
+      if (pSprite) {
+        const scale = 0.7;
+        const sprW = pSprite.width * scale;
+        const sprH = pSprite.height * scale;
+        ctx.drawImage(pSprite, pX + (partySlotW - sprW) / 2, pY + 2 + (38 - sprH) / 2, sprW, sprH);
+      }
+
+      // Member Name + Cost (Middle textBaseline)
+      ctx.textBaseline = "middle";
+      ctx.font = "bold 15px DungGeunMo";
+      ctx.fillStyle = "#FFFFFF";
+      ctx.textAlign = "center";
+      ctx.fillText(member.name.slice(0, 4), pX + partySlotW / 2, pY + 52);
+
+      ctx.font = "bold 14px DungGeunMo";
+      ctx.fillStyle = member.usePassive ? "#34D399" : "#22C55E";
+      ctx.fillText(`${member.cost}C`, pX + partySlotW / 2, pY + 68);
+    } else {
+      // Empty Slot Marker (True Middle Alignment)
+      ctx.textBaseline = "middle";
+      ctx.font = "bold 22px DungGeunMo";
+      ctx.fillStyle = "#334155";
+      ctx.textAlign = "center";
+      ctx.fillText("+", pX + partySlotW / 2, pY + 34);
+
+      ctx.font = "bold 13px DungGeunMo";
+      ctx.fillStyle = "#475569";
+      ctx.fillText(isKo ? `슬롯 ${pIdx + 1}` : `Slot ${pIdx + 1}`, pX + partySlotW / 2, pY + 56);
+    }
+  }
+}
+
 /**
  * Renders the PokéRogue-style Dedicated Starter Selection & Party Builder Screen (560x380)
  */
@@ -1452,7 +1734,6 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   const selHasShiny = (selProgress?.shinyTier || 0) > 0;
   const selHasHa = selProgress?.hasHiddenAbility || false;
   const selHasPassive = selProgress?.passiveUnlocked || false;
-  const effectiveSelCost = sel ? (selHasPassive ? sel.reducedCost : sel.cost) : 0;
 
   // 0. PRELOAD SPRITES IN PARALLEL (With User-owned Shiny support)
   const [listSprites, selectedSprite, partySprites] = await Promise.all([
@@ -1470,6 +1751,66 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   ctx.fillStyle = "#13151F";
   ctx.fillRect(0, 0, width, height);
 
+  if (options.isPartyView) {
+    // ----------------------------------------------------
+    // PARTY MANAGEMENT VIEW (Right panel moved to Left, Right panel left empty)
+    // ----------------------------------------------------
+    const splitX = 280;
+    const panelX = 10;
+    const panelW = splitX - panelX - 10;
+
+    // Determine currently inspected party member
+    const activePartyIdx = Math.min(Math.max(0, options.selectedPartyIdx || 0), Math.max(0, party.length - 1));
+    const activePartyMember = party[activePartyIdx];
+    const inspectedStarter = activePartyMember ? getStarterByDexNumber(activePartyMember.dexNumber) || sel : sel;
+    const inspectedProg = inspectedStarter && userStarters ? userStarters.get(inspectedStarter.speciesId) : null;
+    const inspectedHasShiny = activePartyMember?.isShiny || (inspectedProg?.shinyTier || 0) > 0;
+    const inspectedHasHa = activePartyMember?.useHiddenAbility || inspectedProg?.hasHiddenAbility || false;
+    const inspectedHasPassive = activePartyMember?.usePassive || inspectedProg?.passiveUnlocked || false;
+
+    // Fetch inspected sprite
+    const inspectedSprite = inspectedStarter ? await getPokemonSprite(inspectedStarter.speciesId, true, inspectedHasShiny) : selectedSprite;
+
+    // Render preview and party grid on LEFT SIDE
+    renderPreviewAndPartyPanel(ctx, {
+      panelX,
+      panelW,
+      sel: inspectedStarter,
+      selectedSprite: inspectedSprite,
+      selProgress: inspectedProg,
+      selHasHa: inspectedHasHa,
+      selHasPassive: inspectedHasPassive,
+      party,
+      partySprites,
+      currentCost,
+      maxCost,
+      isKo,
+      selectedPartyIdx: activePartyIdx,
+    });
+
+    // Vertical Split Line
+    ctx.strokeStyle = "#2D3246";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(splitX, 0);
+    ctx.lineTo(splitX, height);
+    ctx.stroke();
+
+    // RIGHT SIDE: Left empty as requested (clean dark backdrop placeholder)
+    ctx.fillStyle = "#161924";
+    ctx.beginPath();
+    ctx.roundRect(splitX + 12, 10, width - splitX - 22, height - 20, 8);
+    ctx.fill();
+    ctx.strokeStyle = "#202534";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    return canvas.toBuffer("image/png");
+  }
+
+  // ----------------------------------------------------
+  // STANDARD STARTER SELECTION VIEW
+  // ----------------------------------------------------
   // 2. TOP BANNER (Left Side Header Bar)
   const splitX = 262;
   ctx.fillStyle = "#1A1D2A";
@@ -1654,265 +1995,24 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   ctx.lineTo(splitX, height);
   ctx.stroke();
 
-  // 5. RIGHT SIDE: Top Preview Details & Bottom Party Builder (Borderless Open Layout)
+  // 5. RIGHT SIDE: Top Preview Details & Bottom Party Builder
   const rightX = 274;
   const rightW = width - rightX - 10;
 
-  // 5-1. TOP PREVIEW DETAILS (y: 10 ~ 162)
-  if (sel) {
-    const selShinyTier = selProgress?.shinyTier || 0;
-
-    // Sprite Box (70x70) - Clean Uniform Border
-    const showBoxX = rightX;
-    const showBoxY = 10;
-    const showBoxSize = 70;
-
-    ctx.fillStyle = "#141722";
-    ctx.beginPath();
-    ctx.roundRect(showBoxX, showBoxY, showBoxSize, showBoxSize, 6);
-    ctx.fill();
-    ctx.strokeStyle = "#2D3246";
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    if (selectedSprite) {
-      const scale = 1.3;
-      const sprW = selectedSprite.width * scale;
-      const sprH = selectedSprite.height * scale;
-      ctx.drawImage(selectedSprite, showBoxX + (showBoxSize - sprW) / 2, showBoxY + (showBoxSize - sprH) / 2, sprW, sprH);
-    }
-
-    // Shiny Tier Vector Sparkle Star on Bottom-Left Corner of Sprite Box
-    if (selShinyTier > 0) {
-      drawShinyTierSparkles(ctx, showBoxX + 4, showBoxY + showBoxSize - 14, selShinyTier, 7.5);
-    }
-
-    // Name + Dex next to sprite (Enlarged, True Middle Baseline)
-    const infoX = showBoxX + showBoxSize + 10;
-    const headerY = showBoxY + 12;
-    const dexTag = `#${String(sel.dexNumber).padStart(3, "0")}`;
-
-    ctx.textBaseline = "middle";
-    ctx.font = "bold 14px DungGeunMo";
-    ctx.fillStyle = "#8E96AB";
-    ctx.textAlign = "left";
-    ctx.fillText(dexTag, infoX, headerY);
-
-    const tagW = ctx.measureText(dexTag).width;
-    const nameX = infoX + tagW + 6;
-
-    ctx.font = "bold 19px DungGeunMo";
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fillText(isKo ? sel.nameKo : sel.name, nameX, headerY);
-
-    // 2-COLUMN SECTION: Left = Type Badges, Right = Ability & Passive
-    const types = sel.types && sel.types.length > 0 ? sel.types : ["normal"];
-    const badgeW = 46;
-
-    // 1) LEFT COLUMN: Type Badges (Vertical Stack if Dual Type, Centered if Single Type)
-    if (types.length === 1) {
-      const tLower = types[0].toLowerCase();
-      const tColor = TYPE_COLORS[tLower] || "#777777";
-      const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || types[0]) : types[0].toUpperCase();
-      const badgeH = 26;
-      const bY = 40;
-
-      ctx.fillStyle = tColor;
-      ctx.beginPath();
-      ctx.roundRect(infoX, bY, badgeW, badgeH, 4);
-      ctx.fill();
-      ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
-      ctx.lineWidth = 1;
-      ctx.stroke();
-
-      ctx.textBaseline = "middle";
-      ctx.font = "bold 13px DungGeunMo";
-      ctx.fillStyle = "#FFFFFF";
-      ctx.textAlign = "center";
-      ctx.fillText(tDisplay, infoX + badgeW / 2, bY + badgeH / 2);
-    } else {
-      // Dual Type: 2 Compact Badges Stacked
-      const badgeH = 19;
-      types.slice(0, 2).forEach((tName, tIdx) => {
-        const tLower = tName.toLowerCase();
-        const tColor = TYPE_COLORS[tLower] || "#777777";
-        const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || tName) : tName.toUpperCase();
-        const bY = 32 + tIdx * (badgeH + 4);
-
-        ctx.fillStyle = tColor;
-        ctx.beginPath();
-        ctx.roundRect(infoX, bY, badgeW, badgeH, 3);
-        ctx.fill();
-        ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        ctx.textBaseline = "middle";
-        ctx.font = "bold 12px DungGeunMo";
-        ctx.fillStyle = "#FFFFFF";
-        ctx.textAlign = "center";
-        ctx.fillText(tDisplay, infoX + badgeW / 2, bY + badgeH / 2);
-      });
-    }
-
-    // 2) RIGHT COLUMN: Ability & Passive Tags (X = infoX + 54)
-    const rightColX = infoX + badgeW + 8;
-
-    // Ability / HA Tag (14px, True Middle Alignment)
-    let abLabel = isKo ? `[특성] ${sel.abilityKo}` : `[Ab] ${sel.ability}`;
-    if (selHasHa && sel.hiddenAbility) {
-      abLabel = isKo ? `[숨특] ${sel.hiddenAbilityKo}` : `[HA] ${sel.hiddenAbility}`;
-    }
-    ctx.textBaseline = "middle";
-    ctx.font = "bold 14px DungGeunMo";
-    ctx.fillStyle = selHasHa ? "#F87171" : "#60A5FA";
-    ctx.textAlign = "left";
-    ctx.fillText(abLabel, rightColX, 43);
-
-    // Passive Tag (14px, True Middle Alignment)
-    const passiveName = selHasPassive ? (isKo ? `[패시브] ${sel.passiveAbilityKo}` : `[Passive] ${sel.passiveAbility}`) : (isKo ? "[패시브] 미해금" : "[Passive] Locked");
-    ctx.font = "bold 14px DungGeunMo";
-    ctx.fillStyle = selHasPassive ? "#34D399" : "#64748B";
-    ctx.fillText(passiveName, rightColX, 64);
-
-    // Move Chips (2x2 Grid, width: 133 each, height: 36) - Prominent & Borderless!
-    const moveChipW = (rightW - 10) / 2;
-    const moveChipH = 36;
-    for (let mIdx = 0; mIdx < 4; mIdx++) {
-      const rawMove = sel.starterMoves[mIdx] || "---";
-      const moveKey = rawMove.toLowerCase().replace(/[\s_]+/g, "-");
-      const moveInfo = MOVES_DATA[moveKey];
-      const mDisplay = isKo ? (moveInfo?.nameKo || rawMove) : rawMove;
-      const category = moveInfo?.category;
-
-      const mCol = mIdx % 2;
-      const mRow = Math.floor(mIdx / 2);
-      const mX = rightX + mCol * (moveChipW + 10);
-      const mY = 90 + mRow * (moveChipH + 6);
-
-      ctx.fillStyle = "#181B26";
-      ctx.beginPath();
-      ctx.roundRect(mX, mY, moveChipW, moveChipH, 5);
-      ctx.fill();
-      ctx.strokeStyle = "#282D3D";
-      ctx.lineWidth = 1;
-      ctx.stroke();
-
-      if (rawMove === "---" || !category) {
-        ctx.textBaseline = "middle";
-        ctx.font = "bold 15px DungGeunMo";
-        ctx.fillStyle = "#475569";
-        ctx.textAlign = "center";
-        ctx.fillText(mDisplay, mX + moveChipW / 2, mY + moveChipH / 2);
-      } else {
-        // Draw Move Category Icon (Left aligned, 23x22)
-        const iconX = mX + 6;
-        const iconY = mY + (moveChipH - 22) / 2;
-        drawMoveCategoryIcon(ctx, iconX, iconY, category);
-
-        // Move Name Text (Aligned next to category icon, 15px)
-        ctx.textBaseline = "middle";
-        ctx.font = "bold 15px DungGeunMo";
-        ctx.fillStyle = "#F8FAFC";
-        ctx.textAlign = "left";
-        ctx.fillText(mDisplay, mX + 35, mY + moveChipH / 2);
-      }
-    }
-  }
-
-  // 5-2. BOTTOM PARTY BUILDER (y: 178 ~ 370, Seamless Borderless Layout)
-  const costLineY = 184;
-
-  // Cost Counter Text + Inline Gauge Bar (Single Row, Perfect Vertical Center Alignment)
-  const isOverCost = currentCost > maxCost;
-  const costColor = isOverCost ? "#EF4444" : (currentCost >= 8 ? "#F59E0B" : "#22C55E");
-
-  ctx.textBaseline = "middle";
-  ctx.font = "bold 17px DungGeunMo";
-  ctx.fillStyle = costColor;
-  ctx.textAlign = "left";
-  const costText = `${isKo ? "코스트" : "COST"} : ${currentCost} / ${maxCost}`;
-  ctx.fillText(costText, rightX, costLineY);
-  const costTextW = ctx.measureText(costText).width;
-
-  // Inline Cost Gauge Bar right next to the text (100% Center Line Matched)
-  const gaugeX = rightX + costTextW + 12;
-  const gaugeW = rightX + rightW - gaugeX;
-  const gaugeH = 10;
-  const gaugeY = costLineY - gaugeH / 2;
-
-  ctx.fillStyle = "#12141C";
-  ctx.beginPath();
-  ctx.roundRect(gaugeX, gaugeY, gaugeW, gaugeH, 3);
-  ctx.fill();
-  ctx.strokeStyle = "#282D3D";
-  ctx.lineWidth = 1;
-  ctx.stroke();
-
-  const fillRatio = Math.min(1.0, currentCost / maxCost);
-  const fillW = Math.max(fillRatio > 0 ? 4 : 0, fillRatio * gaugeW);
-  ctx.fillStyle = costColor;
-  ctx.beginPath();
-  ctx.roundRect(gaugeX, gaugeY, fillW, gaugeH, 3);
-  ctx.fill();
-
-  // 6 Party Slots Grid (3 Columns x 2 Rows) - Height 80px, Bottom ends precisely at y = 370!
-  const partySlotW = (rightW - 12) / 3;
-  const partySlotH = 80;
-  const partyGapX = 6;
-  const partyGapY = 8;
-  const partyStartX = rightX;
-  const partyStartY = 202;
-
-  for (let pIdx = 0; pIdx < 6; pIdx++) {
-    const member = party[pIdx];
-    const pCol = pIdx % 3;
-    const pRow = Math.floor(pIdx / 3);
-    const pX = partyStartX + pCol * (partySlotW + partyGapX);
-    const pY = partyStartY + pRow * (partySlotH + partyGapY);
-
-    ctx.fillStyle = member ? "#1E2438" : "#181B26";
-    ctx.beginPath();
-    ctx.roundRect(pX, pY, partySlotW, partySlotH, 5);
-    ctx.fill();
-
-    ctx.strokeStyle = member ? "#384260" : "#282D3D";
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    if (member) {
-      // Mini Sprite (Centered, Scale 0.7)
-      const pSprite = partySprites[pIdx];
-      if (pSprite) {
-        const scale = 0.7;
-        const sprW = pSprite.width * scale;
-        const sprH = pSprite.height * scale;
-        ctx.drawImage(pSprite, pX + (partySlotW - sprW) / 2, pY + 2 + (38 - sprH) / 2, sprW, sprH);
-      }
-
-      // Member Name + Cost (Middle textBaseline)
-      ctx.textBaseline = "middle";
-      ctx.font = "bold 15px DungGeunMo";
-      ctx.fillStyle = "#FFFFFF";
-      ctx.textAlign = "center";
-      ctx.fillText(member.name.slice(0, 4), pX + partySlotW / 2, pY + 52);
-
-      ctx.font = "bold 14px DungGeunMo";
-      ctx.fillStyle = member.usePassive ? "#34D399" : "#22C55E";
-      ctx.fillText(`${member.cost}C`, pX + partySlotW / 2, pY + 68);
-    } else {
-      // Empty Slot Marker (True Middle Alignment)
-      ctx.textBaseline = "middle";
-      ctx.font = "bold 22px DungGeunMo";
-      ctx.fillStyle = "#334155";
-      ctx.textAlign = "center";
-      ctx.fillText("+", pX + partySlotW / 2, pY + 34);
-
-      ctx.font = "bold 13px DungGeunMo";
-      ctx.fillStyle = "#475569";
-      ctx.fillText(isKo ? `슬롯 ${pIdx + 1}` : `Slot ${pIdx + 1}`, pX + partySlotW / 2, pY + 56);
-    }
-  }
+  renderPreviewAndPartyPanel(ctx, {
+    panelX: rightX,
+    panelW: rightW,
+    sel,
+    selectedSprite,
+    selProgress,
+    selHasHa,
+    selHasPassive,
+    party,
+    partySprites,
+    currentCost,
+    maxCost,
+    isKo,
+  });
 
   return canvas.toBuffer("image/png");
 }
