@@ -416,9 +416,15 @@ async function renderPokedexMessageData(
     components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(abilityButtons.slice(0, 5)));
   }
 
-  // Helper to create pokemon button
+  // Helper to create pokemon button (Empty slots are rendered as disabled buttons)
   const createPokeBtn = (p: typeof items[0], idx: number) => {
-    if (!p) return null;
+    if (!p) {
+      return new ButtonBuilder()
+        .setCustomId(`pokedex_empty_${idx}_${page}_${userId}`)
+        .setLabel(`${idx + 1}`)
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(true);
+    }
     const isSelected = selectedPokemon && selectedPokemon.dexNumber === p.dexNumber;
     return new ButtonBuilder()
       .setCustomId(`pokedex_select_${p.dexNumber}_${page}_${fromScreen}_${userId}`)
@@ -427,7 +433,7 @@ async function renderPokedexMessageData(
   };
 
   // ROW 2: Pokemon 1, 2 + [+📦] + [+💼]
-  const row2Btns = [createPokeBtn(items[0], 0), createPokeBtn(items[1], 1)].filter(Boolean) as ButtonBuilder[];
+  const row2Btns = [createPokeBtn(items[0], 0), createPokeBtn(items[1], 1)];
   if (selectedPokemon) {
     row2Btns.push(
       new ButtonBuilder()
@@ -443,8 +449,9 @@ async function renderPokedexMessageData(
   components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row2Btns));
 
   // ROW 3: Pokemon 3, 4 + Blue Region Jump [`🗺️`] + Blue Search [`🔍`]
-  const row3Btns = [createPokeBtn(items[2], 2), createPokeBtn(items[3], 3)].filter(Boolean) as ButtonBuilder[];
-  row3Btns.push(
+  const row3Btns = [
+    createPokeBtn(items[2], 2),
+    createPokeBtn(items[3], 3),
     new ButtonBuilder()
       .setCustomId(`pokedex_region_btn_${fromScreen}_${userId}`)
       .setLabel("`🗺️`")
@@ -453,12 +460,13 @@ async function renderPokedexMessageData(
       .setCustomId(`pokedex_search_btn_${fromScreen}_${userId}`)
       .setLabel("`🔍`")
       .setStyle(ButtonStyle.Primary)
-  );
+  ];
   components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row3Btns));
 
   // ROW 4: Pokemon 5, 6 + Fast Backward 3 Pages [ <<< ] + Fast Forward 3 Pages [ >>> ]
-  const row4Btns = [createPokeBtn(items[4], 4), createPokeBtn(items[5], 5)].filter(Boolean) as ButtonBuilder[];
-  row4Btns.push(
+  const row4Btns = [
+    createPokeBtn(items[4], 4),
+    createPokeBtn(items[5], 5),
     new ButtonBuilder()
       .setCustomId(`pokedex_jumpback_${Math.max(1, page - 3)}_${selectedDexNo}_${fromScreen}_${userId}`)
       .setLabel("<<<")
@@ -469,17 +477,13 @@ async function renderPokedexMessageData(
       .setLabel(">>>")
       .setStyle(ButtonStyle.Primary)
       .setDisabled(page >= totalPages)
-  );
+  ];
   components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row4Btns));
 
   // ROW 5: Pokemon 7, 8 + [ < ] + [ > ] + [ ↩️ ]
-  const lastRowBtns: ButtonBuilder[] = [];
-  const btn7 = createPokeBtn(items[6], 6);
-  const btn8 = createPokeBtn(items[7], 7);
-  if (btn7) lastRowBtns.push(btn7);
-  if (btn8) lastRowBtns.push(btn8);
-
-  lastRowBtns.push(
+  const lastRowBtns: ButtonBuilder[] = [
+    createPokeBtn(items[6], 6),
+    createPokeBtn(items[7], 7),
     new ButtonBuilder()
       .setCustomId(`pokedex_pageprev_${Math.max(1, page - 1)}_${selectedDexNo}_${fromScreen}_${userId}`)
       .setLabel("<")
@@ -494,8 +498,8 @@ async function renderPokedexMessageData(
       .setCustomId(`pokedex_back_${fromScreen}_${userId}`)
       .setLabel("↩️")
       .setStyle(ButtonStyle.Danger)
-  );
-  components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(lastRowBtns.slice(0, 5)));
+  ];
+  components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(lastRowBtns));
 
   // Background Prefetch next & previous pages for instantaneous 0ms page navigation
   setTimeout(async () => {
