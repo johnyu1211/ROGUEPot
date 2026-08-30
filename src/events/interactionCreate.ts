@@ -804,7 +804,7 @@ async function renderStarterSelectMessageData(
     createSlotBtn(7),
     new ButtonBuilder()
       .setCustomId(`starter_start_${slotId}_${partyParam}_${flagsParam}_${userId}`)
-      .setLabel(isKo ? "🚀모험 시작!" : "🚀Start Adventure!")
+      .setLabel("START")
       .setStyle(ButtonStyle.Success)
       .setDisabled(!canStart),
     new ButtonBuilder()
