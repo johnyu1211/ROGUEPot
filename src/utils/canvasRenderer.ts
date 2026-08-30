@@ -1824,13 +1824,12 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   ctx.strokeStyle = "#2D3246";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(rightX, 154);
-  ctx.lineTo(rightX + rightW, 154);
+  ctx.moveTo(rightX, 156);
+  ctx.lineTo(rightX + rightW, 156);
   ctx.stroke();
 
-  // 5-2. BOTTOM PARTY BUILDER (y: 160 ~ 370)
-  const bottomStartY = 160;
-  const costLineY = bottomStartY + 9;
+  // 5-2. BOTTOM PARTY BUILDER (y: 160 ~ 370, Perfectly Aligned with Left Panel at y=370)
+  const costLineY = 170;
 
   // Cost Counter Text + Inline Gauge Bar (Single Row, Perfect Vertical Center Alignment)
   const isOverCost = currentCost > maxCost;
@@ -1865,13 +1864,13 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   ctx.roundRect(gaugeX, gaugeY, fillW, gaugeH, 3);
   ctx.fill();
 
-  // 6 Party Slots Grid (3 Columns x 2 Rows)
+  // 6 Party Slots Grid (3 Columns x 2 Rows) - Height 88px, Bottom ends precisely at y = 370!
   const partySlotW = (rightW - 12) / 3;
-  const partySlotH = 76;
-  const partyStartX = rightX;
-  const partyStartY = bottomStartY + 24;
+  const partySlotH = 88;
   const partyGapX = 6;
   const partyGapY = 8;
+  const partyStartX = rightX;
+  const partyStartY = 186;
 
   for (let pIdx = 0; pIdx < 6; pIdx++) {
     const member = party[pIdx];
@@ -1890,33 +1889,36 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     ctx.stroke();
 
     if (member) {
-      // Mini Sprite (Centered, Scale 0.68)
+      // Mini Sprite (Centered, Scale 0.75)
       const pSprite = partySprites[pIdx];
       if (pSprite) {
-        const scale = 0.68;
+        const scale = 0.75;
         const sprW = pSprite.width * scale;
         const sprH = pSprite.height * scale;
-        ctx.drawImage(pSprite, pX + (partySlotW - sprW) / 2, pY + 2 + (40 - sprH) / 2, sprW, sprH);
+        ctx.drawImage(pSprite, pX + (partySlotW - sprW) / 2, pY + 3 + (44 - sprH) / 2, sprW, sprH);
       }
 
-      // Member Name + Cost (Clean Green Text without box)
+      // Member Name + Cost (Middle textBaseline)
+      ctx.textBaseline = "middle";
       ctx.font = "bold 15px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
-      ctx.fillText(member.name.slice(0, 4), pX + partySlotW / 2, pY + 50);
+      ctx.fillText(member.name.slice(0, 4), pX + partySlotW / 2, pY + 56);
 
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = member.usePassive ? "#34D399" : "#22C55E";
-      ctx.fillText(`${member.cost}C`, pX + partySlotW / 2, pY + 68);
+      ctx.fillText(`${member.cost}C`, pX + partySlotW / 2, pY + 74);
     } else {
-      // Empty Slot Marker (Enlarged to 22px / 13px)
-      ctx.font = "bold 22px DungGeunMo";
+      // Empty Slot Marker (True Middle Alignment)
+      ctx.textBaseline = "middle";
+      ctx.font = "bold 24px DungGeunMo";
       ctx.fillStyle = "#334155";
       ctx.textAlign = "center";
       ctx.fillText("+", pX + partySlotW / 2, pY + 36);
+
       ctx.font = "bold 13px DungGeunMo";
       ctx.fillStyle = "#475569";
-      ctx.fillText(isKo ? `슬롯 ${pIdx + 1}` : `Slot ${pIdx + 1}`, pX + partySlotW / 2, pY + 56);
+      ctx.fillText(isKo ? `슬롯 ${pIdx + 1}` : `Slot ${pIdx + 1}`, pX + partySlotW / 2, pY + 62);
     }
   }
 
