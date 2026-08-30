@@ -608,6 +608,7 @@ async function renderStarterSelectMessageData(
   userId: string,
   slotId: number = 1,
   gen: number = 0,
+  page: number = 1,
   selectedDexNo: number = 1,
   partyDexList: number[] = [],
   isShinyFilter: boolean = false,
@@ -618,22 +619,43 @@ async function renderStarterSelectMessageData(
   const isKo = profile.language === "ko";
   const userStarters = getUserStarters(userId);
 
-  // 1. Filter Starters List based on user unlocked attributes
-  let genStarters = getStartersByGen(gen);
+  // 1. Filter Starters List based on generation and user unlock attributes
+  let allStarters = getStartersByGen(gen);
   if (isShinyFilter) {
-    genStarters = genStarters.filter((s) => (userStarters.get(s.speciesId)?.shinyTier || 0) > 0);
+    allStarters = allStarters.filter((s) => (userStarters.get(s.speciesId)?.shinyTier || 0) > 0);
   }
   if (isHaFilter) {
-    genStarters = genStarters.filter((s) => userStarters.get(s.speciesId)?.hasHiddenAbility);
+    allStarters = allStarters.filter((s) => userStarters.get(s.speciesId)?.hasHiddenAbility);
   }
   if (isPassiveFilter) {
-    genStarters = genStarters.filter((s) => userStarters.get(s.speciesId)?.passiveUnlocked);
+    allStarters = allStarters.filter((s) => userStarters.get(s.speciesId)?.passiveUnlocked);
   }
 
+  // 2. Sort: Unlocked Starters FIRST, then Shiny Tier desc, then Dex Number asc!
+  allStarters.sort((a, b) => {
+    const progA = userStarters.get(a.speciesId);
+    const progB = userStarters.get(b.speciesId);
+    const unlockedA = progA ? (progA.isUnlocked ? 1 : 0) : 1;
+    const unlockedB = progB ? (progB.isUnlocked ? 1 : 0) : 1;
+    if (unlockedA !== unlockedB) return unlockedB - unlockedA; // Unlocked first!
+
+    const shinyA = progA?.shinyTier || 0;
+    const shinyB = progB?.shinyTier || 0;
+    if (shinyA !== shinyB) return shinyB - shinyA; // Shiny tier desc!
+
+    return a.dexNumber - b.dexNumber;
+  });
+
+  // 3. Pagination (8 Starters per page)
+  const pageSize = 8;
+  const totalPages = Math.max(1, Math.ceil(allStarters.length / pageSize));
+  const safePage = Math.min(Math.max(1, page), totalPages);
+  const pageStarters = allStarters.slice((safePage - 1) * pageSize, safePage * pageSize);
+
   const selectedStarter =
-    genStarters.find((s) => s.dexNumber === selectedDexNo) ||
-    genStarters[0] ||
-    getStarterByDexNumber(selectedDexNo) ||
+    allStarters.find((s) => s.dexNumber === selectedDexNo) ||
+    pageStarters[0] ||
+    allStarters[0] ||
     STARTER_DATABASE[0];
 
   const selProgress = userStarters.get(selectedStarter.speciesId);
@@ -669,7 +691,9 @@ async function renderStarterSelectMessageData(
   const imageBuffer = await renderStarterSelectScreen({
     selectedStarter,
     currentGen: gen,
-    startersList: genStarters,
+    currentPage: safePage,
+    totalPages,
+    startersList: pageStarters,
     selectedParty,
     userStarters,
     isShinyFilter,
@@ -685,17 +709,17 @@ async function renderStarterSelectMessageData(
 
   // Helper to create slot button
   const createSlotBtn = (idx: number) => {
-    const s = genStarters[idx];
+    const s = pageStarters[idx];
     if (!s) {
       return new ButtonBuilder()
-        .setCustomId(`starter_empty_${idx}_${gen}_${slotId}_${userId}`)
+        .setCustomId(`starter_empty_${idx}_${gen}_${safePage}_${slotId}_${userId}`)
         .setLabel(`${idx + 1}`)
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(true);
     }
     const isSelected = selectedStarter.dexNumber === s.dexNumber;
     return new ButtonBuilder()
-      .setCustomId(`starter_sel_${s.dexNumber}_${gen}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+      .setCustomId(`starter_sel_${s.dexNumber}_${gen}_${safePage}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel(`${idx + 1}`)
       .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Secondary);
   };
@@ -706,19 +730,19 @@ async function renderStarterSelectMessageData(
   const hasGenFilter = gen >= 1;
   const row1Btns: ButtonBuilder[] = [
     new ButtonBuilder()
-      .setCustomId(`starter_open_gen_menu_${gen}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
-      .setLabel(isKo ? (hasGenFilter ? `📂 ${gen}세대` : "📂 전체 세대") : (hasGenFilter ? `📂 Gen ${gen}` : "📂 All Gens"))
+      .setCustomId(`starter_open_gen_menu_${gen}_${safePage}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+      .setLabel(isKo ? (hasGenFilter ? `📂 ${gen}세대` : "📂 세대") : (hasGenFilter ? `📂 Gen ${gen}` : "📂 Gen"))
       .setStyle(hasGenFilter ? ButtonStyle.Primary : ButtonStyle.Secondary),
     new ButtonBuilder()
-      .setCustomId(`starter_toggleshiny_${gen}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+      .setCustomId(`starter_toggleshiny_${gen}_${safePage}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel(isKo ? (isShinyFilter ? "✨ 이로치 ON" : "✨ 이로치") : (isShinyFilter ? "✨ Shiny ON" : "✨ Shiny"))
       .setStyle(isShinyFilter ? ButtonStyle.Primary : ButtonStyle.Secondary),
     new ButtonBuilder()
-      .setCustomId(`starter_togglepass_${gen}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+      .setCustomId(`starter_togglepass_${gen}_${safePage}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel(isKo ? (isPassiveFilter ? "🔓 패시브 ON" : "🔓 패시브") : (isPassiveFilter ? "🔓 Passive ON" : "🔓 Passive"))
       .setStyle(isPassiveFilter ? ButtonStyle.Primary : ButtonStyle.Secondary),
     new ButtonBuilder()
-      .setCustomId(`starter_toggleha_${gen}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+      .setCustomId(`starter_toggleha_${gen}_${safePage}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel(isKo ? (isHaFilter ? "🌟 숨특 ON" : "🌟 숨특") : (isHaFilter ? "🌟 HA ON" : "🌟 HA"))
       .setStyle(isHaFilter ? ButtonStyle.Primary : ButtonStyle.Secondary)
   ];
@@ -729,49 +753,49 @@ async function renderStarterSelectMessageData(
     createSlotBtn(0),
     createSlotBtn(1),
     new ButtonBuilder()
-      .setCustomId(`starter_add_${selectedStarter.dexNumber}_${gen}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+      .setCustomId(`starter_add_${selectedStarter.dexNumber}_${gen}_${safePage}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel(isKo ? "+파티추가" : "+Add")
       .setStyle(ButtonStyle.Success)
       .setDisabled(!canAdd),
     new ButtonBuilder()
-      .setCustomId(`starter_rem_${selectedStarter.dexNumber}_${gen}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+      .setCustomId(`starter_rem_${selectedStarter.dexNumber}_${gen}_${safePage}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel(isKo ? "-제거" : "-Remove")
       .setStyle(ButtonStyle.Danger)
       .setDisabled(!isAlreadyInParty)
   ];
   components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row2Btns));
 
-  // ROW 3: Starters 3, 4 + Fast 3 Gen Jump [ <<< ] + [ >>> ]
+  // ROW 3: Starters 3, 4 + Page Jump [ <<< ] + [ >>> ]
   const row3Btns: ButtonBuilder[] = [
     createSlotBtn(2),
     createSlotBtn(3),
     new ButtonBuilder()
-      .setCustomId(`starter_genjumpback_${Math.max(1, gen - 3)}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+      .setCustomId(`starter_pagejump_1_${gen}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel("<<<")
       .setStyle(ButtonStyle.Primary)
-      .setDisabled(gen <= 1),
+      .setDisabled(safePage <= 1),
     new ButtonBuilder()
-      .setCustomId(`starter_genjumpfwd_${Math.min(9, gen + 3)}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+      .setCustomId(`starter_pagejump_${totalPages}_${gen}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel(">>>")
       .setStyle(ButtonStyle.Primary)
-      .setDisabled(gen >= 9)
+      .setDisabled(safePage >= totalPages)
   ];
   components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row3Btns));
 
-  // ROW 4: Starters 5, 6 + Prev Gen [ < ] + Next Gen [ > ]
+  // ROW 4: Starters 5, 6 + Prev Page [ < ] + Next Page [ > ]
   const row4Btns: ButtonBuilder[] = [
     createSlotBtn(4),
     createSlotBtn(5),
     new ButtonBuilder()
-      .setCustomId(`starter_genprev_${Math.max(1, gen - 1)}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+      .setCustomId(`starter_page_${Math.max(1, safePage - 1)}_${gen}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel("<")
       .setStyle(ButtonStyle.Primary)
-      .setDisabled(gen <= 1),
+      .setDisabled(safePage <= 1),
     new ButtonBuilder()
-      .setCustomId(`starter_gennext_${Math.min(9, gen + 1)}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+      .setCustomId(`starter_page_${Math.min(totalPages, safePage + 1)}_${gen}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel(">")
       .setStyle(ButtonStyle.Primary)
-      .setDisabled(gen >= 9)
+      .setDisabled(safePage >= totalPages)
   ];
   components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row4Btns));
 
@@ -1356,7 +1380,7 @@ export const interactionCreateEvent: BotEvent = {
       // 2-1. New Game Button Clicked from Title (Pure Canvas Starter Select Screen - Defaults to All Gens 0)
       if (customId.startsWith("menu_newgame_")) {
         const targetSlot = saveService.getFirstAvailableSlot(interaction.user.id);
-        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, targetSlot, 0, 1, [], false, false, false);
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, targetSlot, 0, 1, 1, [], false, false, false);
         await interaction.update(starterData);
         return;
       }
@@ -1365,9 +1389,9 @@ export const interactionCreateEvent: BotEvent = {
       if (customId.startsWith("starter_open_gen_menu_")) {
         const rawGen = parseInt(parts[4], 10);
         const currentGen = isNaN(rawGen) ? 0 : rawGen;
-        const slotId = parseInt(parts[6], 10) || 1;
-        const partyParam = parts[7] || "empty";
-        const flagsParam = `${parts[8] || 0}_${parts[9] || 0}_${parts[10] || 0}`;
+        const slotId = parseInt(parts[7], 10) || 1;
+        const partyParam = parts[8] || "empty";
+        const flagsParam = `${parts[9] || 0}_${parts[10] || 0}_${parts[11] || 0}`;
 
         const genData = await renderGenSelectMessageData(client, interaction.user.id, currentGen, slotId, partyParam, flagsParam);
         await interaction.update(genData);
@@ -1392,7 +1416,7 @@ export const interactionCreateEvent: BotEvent = {
         const genStarters = getStartersByGen(nextGen);
         const firstStarterDex = genStarters[0]?.dexNumber || 1;
 
-        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, nextGen, firstStarterDex, partyDexList, isShiny, isHa, isPassive);
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, nextGen, 1, firstStarterDex, partyDexList, isShiny, isHa, isPassive);
         await interaction.update(starterData);
         return;
       }
@@ -1400,88 +1424,84 @@ export const interactionCreateEvent: BotEvent = {
       // 2-1-A. Starter Select Pokemon Item Clicked
       if (customId.startsWith("starter_sel_")) {
         const dexNo = parseInt(parts[2], 10) || 1;
-        const gen = parseInt(parts[3], 10) || 1;
-        const slotId = parseInt(parts[4], 10) || 1;
-        const partyRaw = parts[5] || "empty";
+        const gen = parseInt(parts[3], 10) || 0;
+        const page = parseInt(parts[4], 10) || 1;
+        const slotId = parseInt(parts[5], 10) || 1;
+        const partyRaw = parts[6] || "empty";
         const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
-        const isShiny = parts[6] === "1";
-        const isHa = parts[7] === "1";
-        const isPassive = parts[8] === "1";
+        const isShiny = parts[7] === "1";
+        const isHa = parts[8] === "1";
+        const isPassive = parts[9] === "1";
 
-        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, dexNo, partyDexList, isShiny, isHa, isPassive);
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, page, dexNo, partyDexList, isShiny, isHa, isPassive);
         await interaction.update(starterData);
         return;
       }
 
-      // 2-1-B. Starter Generation Switch (Tab / Arrow / Jump)
-      if (
-        customId.startsWith("starter_gen_") ||
-        customId.startsWith("starter_genprev_") ||
-        customId.startsWith("starter_gennext_") ||
-        customId.startsWith("starter_genjumpback_") ||
-        customId.startsWith("starter_genjumpfwd_")
-      ) {
-        const gen = parseInt(parts[2], 10) || 1;
-        const currentDexNo = parseInt(parts[3], 10) || 1;
-        const slotId = parseInt(parts[4], 10) || 1;
-        const partyRaw = parts[5] || "empty";
+      // 2-1-B. Starter Page Navigation (< / > / <<< / >>>)
+      if (customId.startsWith("starter_page_") || customId.startsWith("starter_pagejump_")) {
+        const page = parseInt(parts[2], 10) || 1;
+        const gen = parseInt(parts[3], 10) || 0;
+        const currentDexNo = parseInt(parts[4], 10) || 1;
+        const slotId = parseInt(parts[5], 10) || 1;
+        const partyRaw = parts[6] || "empty";
         const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
-        const isShiny = parts[6] === "1";
-        const isHa = parts[7] === "1";
-        const isPassive = parts[8] === "1";
+        const isShiny = parts[7] === "1";
+        const isHa = parts[8] === "1";
+        const isPassive = parts[9] === "1";
 
-        const genStarters = getStartersByGen(gen);
-        const firstStarterDex = genStarters[0]?.dexNumber || currentDexNo;
-
-        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, firstStarterDex, partyDexList, isShiny, isHa, isPassive);
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, page, currentDexNo, partyDexList, isShiny, isHa, isPassive);
         await interaction.update(starterData);
         return;
       }
 
       // 2-1-T1. Starter Toggle Shiny (✨ 이로치)
       if (customId.startsWith("starter_toggleshiny_")) {
-        const gen = parseInt(parts[2], 10) || 1;
-        const dexNo = parseInt(parts[3], 10) || 1;
-        const slotId = parseInt(parts[4], 10) || 1;
-        const partyRaw = parts[5] || "empty";
+        const gen = parseInt(parts[2], 10) || 0;
+        const page = parseInt(parts[3], 10) || 1;
+        const dexNo = parseInt(parts[4], 10) || 1;
+        const slotId = parseInt(parts[5], 10) || 1;
+        const partyRaw = parts[6] || "empty";
         const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
-        const isShiny = parts[6] === "1";
-        const isHa = parts[7] === "1";
-        const isPassive = parts[8] === "1";
+        const isShiny = parts[7] === "1";
+        const isHa = parts[8] === "1";
+        const isPassive = parts[9] === "1";
 
-        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, dexNo, partyDexList, !isShiny, isHa, isPassive);
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, page, dexNo, partyDexList, !isShiny, isHa, isPassive);
         await interaction.update(starterData);
         return;
       }
 
       // 2-1-T2. Starter Toggle Passive / Reduced Cost (🔓 패시브)
       if (customId.startsWith("starter_togglepass_")) {
-        const gen = parseInt(parts[2], 10) || 1;
-        const dexNo = parseInt(parts[3], 10) || 1;
-        const slotId = parseInt(parts[4], 10) || 1;
-        const partyRaw = parts[5] || "empty";
+        const gen = parseInt(parts[2], 10) || 0;
+        const page = parseInt(parts[3], 10) || 1;
+        const dexNo = parseInt(parts[4], 10) || 1;
+        const slotId = parseInt(parts[5], 10) || 1;
+        const partyRaw = parts[6] || "empty";
         const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
-        const isShiny = parts[6] === "1";
-        const isHa = parts[7] === "1";
-        const isPassive = parts[8] === "1";
+        const isShiny = parts[7] === "1";
+        const isHa = parts[8] === "1";
+        const isPassive = parts[9] === "1";
 
-        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, dexNo, partyDexList, isShiny, isHa, !isPassive);
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, page, dexNo, partyDexList, isShiny, isHa, !isPassive);
         await interaction.update(starterData);
         return;
       }
 
       // 2-1-T3. Starter Toggle Hidden Ability (🌟 숨특)
       if (customId.startsWith("starter_toggleha_")) {
-        const gen = parseInt(parts[2], 10) || 1;
-        const dexNo = parseInt(parts[3], 10) || 1;
-        const slotId = parseInt(parts[4], 10) || 1;
-        const partyRaw = parts[5] || "empty";
+        const gen = parseInt(parts[2], 10) || 0;
+        const page = parseInt(parts[3], 10) || 1;
+        const dexNo = parseInt(parts[4], 10) || 1;
+        const slotId = parseInt(parts[5], 10) || 1;
+        const partyRaw = parts[6] || "empty";
         const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
-        const isShiny = parts[6] === "1";
-        const isHa = parts[7] === "1";
-        const isPassive = parts[8] === "1";
+        const isShiny = parts[7] === "1";
+        const isHa = parts[8] === "1";
+        const isPassive = parts[9] === "1";
 
-        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, dexNo, partyDexList, isShiny, !isHa, isPassive);
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, page, dexNo, partyDexList, isShiny, !isHa, isPassive);
         await interaction.update(starterData);
         return;
       }
@@ -1489,19 +1509,20 @@ export const interactionCreateEvent: BotEvent = {
       // 2-1-C. Starter Add to Party (+파티추가)
       if (customId.startsWith("starter_add_")) {
         const dexNo = parseInt(parts[2], 10) || 1;
-        const gen = parseInt(parts[3], 10) || 1;
-        const slotId = parseInt(parts[4], 10) || 1;
-        const partyRaw = parts[5] || "empty";
+        const gen = parseInt(parts[3], 10) || 0;
+        const page = parseInt(parts[4], 10) || 1;
+        const slotId = parseInt(parts[5], 10) || 1;
+        const partyRaw = parts[6] || "empty";
         const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
-        const isShiny = parts[6] === "1";
-        const isHa = parts[7] === "1";
-        const isPassive = parts[8] === "1";
+        const isShiny = parts[7] === "1";
+        const isHa = parts[8] === "1";
+        const isPassive = parts[9] === "1";
 
         if (!partyDexList.includes(dexNo) && partyDexList.length < 6) {
           partyDexList.push(dexNo);
         }
 
-        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, dexNo, partyDexList, isShiny, isHa, isPassive);
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, page, dexNo, partyDexList, isShiny, isHa, isPassive);
         await interaction.update(starterData);
         return;
       }
@@ -1509,17 +1530,18 @@ export const interactionCreateEvent: BotEvent = {
       // 2-1-D. Starter Remove from Party (-제거)
       if (customId.startsWith("starter_rem_")) {
         const dexNo = parseInt(parts[2], 10) || 1;
-        const gen = parseInt(parts[3], 10) || 1;
-        const slotId = parseInt(parts[4], 10) || 1;
-        const partyRaw = parts[5] || "empty";
+        const gen = parseInt(parts[3], 10) || 0;
+        const page = parseInt(parts[4], 10) || 1;
+        const slotId = parseInt(parts[5], 10) || 1;
+        const partyRaw = parts[6] || "empty";
         const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
-        const isShiny = parts[6] === "1";
-        const isHa = parts[7] === "1";
-        const isPassive = parts[8] === "1";
+        const isShiny = parts[7] === "1";
+        const isHa = parts[8] === "1";
+        const isPassive = parts[9] === "1";
 
         const updatedList = partyDexList.filter((d) => d !== dexNo);
 
-        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, dexNo, updatedList, isShiny, isHa, isPassive);
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, page, dexNo, updatedList, isShiny, isHa, isPassive);
         await interaction.update(starterData);
         return;
       }
@@ -1664,7 +1686,7 @@ export const interactionCreateEvent: BotEvent = {
         const isKo = profile.language === "ko";
 
         if (!slotData) {
-          const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotNum, 1, 1, []);
+          const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotNum, 0, 1, 1, []);
           await interaction.update(starterData);
         } else {
           const existingSlotEmbed = createBaseEmbed(
@@ -1708,7 +1730,7 @@ export const interactionCreateEvent: BotEvent = {
       // 2-6-B. Overwrite Existing Slot (Opens Starter Select Screen for that slot)
       if (customId.startsWith("slot_overwrite_")) {
         const slotNum = parseInt(parts[2], 10) || 1;
-        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotNum, 1, 1, []);
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotNum, 0, 1, 1, []);
         await interaction.update(starterData);
         return;
       }
