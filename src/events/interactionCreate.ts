@@ -747,7 +747,7 @@ async function renderStarterSelectMessageData(
   ];
   components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row1Btns));
 
-  // ROW 2: Starters 1, 2 + [+⚪] + [-⚪]
+  // ROW 2: Starters 1, 2 + [+⚪] + [Party]
   const row2Btns: ButtonBuilder[] = [
     createSlotBtn(0),
     createSlotBtn(1),
@@ -758,7 +758,7 @@ async function renderStarterSelectMessageData(
       .setDisabled(!canAdd),
     new ButtonBuilder()
       .setCustomId(`starter_rem_${selectedStarter.dexNumber}_${gen}_${safePage}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
-      .setLabel("-⚪")
+      .setLabel("Party")
       .setStyle(ButtonStyle.Danger)
       .setDisabled(!isAlreadyInParty)
   ];
