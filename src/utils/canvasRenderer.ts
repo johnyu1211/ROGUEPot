@@ -1400,54 +1400,59 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   ctx.lineTo(splitX, 42);
   ctx.stroke();
 
-  ctx.font = "bold 19px DungGeunMo";
+  ctx.font = "bold 17px DungGeunMo";
   ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "left";
-  ctx.fillText(isKo ? "스타팅 선택" : "STARTER SELECT", 10, 28);
+  ctx.fillText(isKo ? "스타팅" : "STARTERS", 8, 27);
+  const titleW = ctx.measureText(isKo ? "스타팅" : "STARTERS").width;
 
-  // Large Crisp White Page Indicator ("전체 1/4" or "1세대 1/2") (16px)
+  // Crisp Page Indicator ("전체 1/4" or "1세대 1/2") (15px)
   const curPage = options.currentPage || 1;
   const totPages = options.totalPages || 1;
   const pageText = gen <= 0
     ? (isKo ? `전체 ${curPage}/${totPages}` : `ALL ${curPage}/${totPages}`)
     : (isKo ? `${gen}세대 ${curPage}/${totPages}` : `G${gen} ${curPage}/${totPages}`);
-  ctx.font = "bold 16px DungGeunMo";
+  ctx.font = "bold 15px DungGeunMo";
   ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "right";
-  ctx.fillText(pageText, splitX - 8, 28);
+  ctx.fillText(pageText, splitX - 8, 27);
   const pageTextW = ctx.measureText(pageText).width;
 
-  // Active Modes Filter Badges on Banner (to the left of page text)
-  let badgeOffsetX = splitX - 8 - pageTextW - 8;
-  if (isShinyFilter) {
-    ctx.fillStyle = "#F59E0B";
+  // Active Filter Badges on Banner (Compact 22px width pill badges between Title and Page)
+  let badgeOffsetX = splitX - 8 - pageTextW - 6;
+  const badgeW = 22;
+  const badgeH = 19;
+  const badgeY = 11;
+
+  if (isPassiveFilter) {
+    ctx.fillStyle = "#10B981";
     ctx.beginPath();
-    ctx.roundRect(badgeOffsetX - 28, 9, 28, 24, 4);
+    ctx.roundRect(badgeOffsetX - badgeW, badgeY, badgeW, badgeH, 3);
     ctx.fill();
-    drawShinySparkle(ctx, badgeOffsetX - 14, 21, 7, "#FFFFFF");
-    badgeOffsetX -= 32;
+    ctx.font = "bold 11px DungGeunMo";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "center";
+    ctx.fillText("PS", badgeOffsetX - badgeW / 2, badgeY + 14);
+    badgeOffsetX -= badgeW + 4;
   }
   if (isHaFilter) {
     ctx.fillStyle = "#EF4444";
     ctx.beginPath();
-    ctx.roundRect(badgeOffsetX - 32, 9, 32, 24, 4);
+    ctx.roundRect(badgeOffsetX - badgeW, badgeY, badgeW, badgeH, 3);
     ctx.fill();
-    ctx.font = "bold 13px DungGeunMo";
+    ctx.font = "bold 11px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "center";
-    ctx.fillText("HA", badgeOffsetX - 16, 26);
-    badgeOffsetX -= 36;
+    ctx.fillText("HA", badgeOffsetX - badgeW / 2, badgeY + 14);
+    badgeOffsetX -= badgeW + 4;
   }
-  if (isPassiveFilter) {
-    ctx.fillStyle = "#10B981";
+  if (isShinyFilter) {
+    ctx.fillStyle = "#F59E0B";
     ctx.beginPath();
-    ctx.roundRect(badgeOffsetX - 32, 9, 32, 24, 4);
+    ctx.roundRect(badgeOffsetX - badgeW, badgeY, badgeW, badgeH, 3);
     ctx.fill();
-    ctx.font = "bold 13px DungGeunMo";
-    ctx.fillStyle = "#FFFFFF";
-    ctx.textAlign = "center";
-    ctx.fillText("PS", badgeOffsetX - 16, 26);
-    badgeOffsetX -= 36;
+    drawShinySparkle(ctx, badgeOffsetX - badgeW / 2, badgeY + badgeH / 2, 5.5, "#FFFFFF");
+    badgeOffsetX -= badgeW + 4;
   }
 
   // 3. LEFT SIDE: 8 Starters Grid (2 Columns x 4 Rows, y: 48 ~ 370)
