@@ -45,7 +45,7 @@ const spriteCache = new Map<string, Image>();
 /**
  * Helper to fetch a static pixel sprite from Showdown CDN with in-memory caching
  */
-export async function getPokemonSprite(pokemonName: string, allowFetch: boolean = true): Promise<Image | null> {
+export async function getPokemonSprite(pokemonName: string, allowFetch: boolean = true, isShiny: boolean = false): Promise<Image | null> {
   try {
     let clean = pokemonName.toLowerCase().trim();
     if (clean === "nidoran-f" || clean === "nidoran_f" || clean === "nidoran♀") clean = "nidoranf";
@@ -111,25 +111,38 @@ export async function getPokemonSprite(pokemonName: string, allowFetch: boolean 
     else if (clean.startsWith("miraidon")) clean = "miraidon";
     else clean = clean.replace(/[^a-z0-9]/g, "");
 
-    if (spriteCache.has(clean)) {
-      return spriteCache.get(clean)!;
+    const cacheKey = isShiny ? `shiny_${clean}` : clean;
+
+    if (spriteCache.has(cacheKey)) {
+      return spriteCache.get(cacheKey)!;
     }
 
     if (!allowFetch) {
       return null;
     }
 
-    const url = `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`;
-    const img = await loadImage(url);
+    const folder = isShiny ? "gen5-shiny" : "gen5";
+    const url = `https://play.pokemonshowdown.com/sprites/${folder}/${clean}.png`;
+    let img: Image | null = null;
+    try {
+      img = await loadImage(url);
+    } catch {
+      // Fallback to non-shiny if shiny is missing
+      if (isShiny) {
+        img = await loadImage(`https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`).catch(() => null);
+      }
+    }
+
     if (img) {
       // Automatic LRU-style cache size management (max 250 entries)
       if (spriteCache.size >= 250) {
         const firstKey = spriteCache.keys().next().value;
         if (firstKey) spriteCache.delete(firstKey);
       }
-      spriteCache.set(clean, img);
+      spriteCache.set(cacheKey, img);
+      return img;
     }
-    return img;
+    return null;
   } catch (err) {
     console.error(`[CANVAS] Failed to load sprite for ${pokemonName}:`, err);
     return null;
@@ -1274,6 +1287,9 @@ export interface StarterSelectPartyItem {
   speciesId: string;
   name: string;
   cost: number;
+  isShiny?: boolean;
+  useHiddenAbility?: boolean;
+  usePassive?: boolean;
 }
 
 export interface StarterSelectScreenOptions {
@@ -1281,6 +1297,9 @@ export interface StarterSelectScreenOptions {
   currentGen: number;
   startersList: StarterEntry[];
   selectedParty: StarterSelectPartyItem[];
+  isShinyMode?: boolean;
+  isHaMode?: boolean;
+  isPassiveMode?: boolean;
   maxCost?: number;
   lang?: "en" | "ko";
 }
@@ -1303,13 +1322,16 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   const list = options.startersList || [];
   const party = options.selectedParty || [];
   const maxCost = options.maxCost || 10;
+  const isShiny = !!options.isShinyMode;
+  const isHa = !!options.isHaMode;
+  const isPassive = !!options.isPassiveMode;
   const currentCost = party.reduce((sum, p) => sum + p.cost, 0);
 
-  // 0. PRELOAD SPRITES IN PARALLEL
+  // 0. PRELOAD SPRITES IN PARALLEL (With Shiny support)
   const [listSprites, selectedSprite, partySprites] = await Promise.all([
-    Promise.all(list.map((s) => (s ? getPokemonSprite(s.speciesId) : Promise.resolve(null)))),
-    sel ? getPokemonSprite(sel.speciesId) : Promise.resolve(null),
-    Promise.all(party.map((p) => (p ? getPokemonSprite(p.speciesId) : Promise.resolve(null)))),
+    Promise.all(list.map((s) => (s ? getPokemonSprite(s.speciesId, true, isShiny) : Promise.resolve(null)))),
+    sel ? getPokemonSprite(sel.speciesId, true, isShiny) : Promise.resolve(null),
+    Promise.all(party.map((p) => (p ? getPokemonSprite(p.speciesId, true, p.isShiny) : Promise.resolve(null)))),
   ]);
 
   // 1. Dark Retro Background
@@ -1328,20 +1350,56 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   ctx.lineTo(splitX, 42);
   ctx.stroke();
 
-  ctx.font = "bold 16px DungGeunMo";
+  ctx.font = "bold 15px DungGeunMo";
   ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "left";
-  ctx.fillText(isKo ? "스타팅 포켓몬 선택" : "STARTER SELECT", 12, 28);
+  ctx.fillText(isKo ? "스타팅 선택" : "STARTER SELECT", 10, 27);
+
+  // Active Modes Badges on Banner
+  let badgeOffsetX = splitX - 10;
+  if (isShiny) {
+    ctx.fillStyle = "#F59E0B";
+    ctx.beginPath();
+    ctx.roundRect(badgeOffsetX - 28, 11, 24, 20, 3);
+    ctx.fill();
+    ctx.font = "bold 11px DungGeunMo";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "center";
+    ctx.fillText("✨", badgeOffsetX - 16, 25);
+    badgeOffsetX -= 32;
+  }
+  if (isHa) {
+    ctx.fillStyle = "#EF4444";
+    ctx.beginPath();
+    ctx.roundRect(badgeOffsetX - 32, 11, 28, 20, 3);
+    ctx.fill();
+    ctx.font = "bold 11px DungGeunMo";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "center";
+    ctx.fillText("HA", badgeOffsetX - 18, 25);
+    badgeOffsetX -= 36;
+  }
+  if (isPassive) {
+    ctx.fillStyle = "#10B981";
+    ctx.beginPath();
+    ctx.roundRect(badgeOffsetX - 32, 11, 28, 20, 3);
+    ctx.fill();
+    ctx.font = "bold 11px DungGeunMo";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "center";
+    ctx.fillText("PS", badgeOffsetX - 18, 25);
+    badgeOffsetX -= 36;
+  }
 
   // Gen Badge
   ctx.fillStyle = "#5865F2";
   ctx.beginPath();
-  ctx.roundRect(splitX - 60, 10, 50, 22, 4);
+  ctx.roundRect(badgeOffsetX - 46, 11, 42, 20, 3);
   ctx.fill();
-  ctx.font = "bold 12px DungGeunMo";
+  ctx.font = "bold 11px DungGeunMo";
   ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "center";
-  ctx.fillText(`GEN ${gen}`, splitX - 35, 26);
+  ctx.fillText(`G${gen}`, badgeOffsetX - 25, 25);
 
   // 3. LEFT SIDE: 8 Starters Grid (2 Columns x 4 Rows, y: 48 ~ 370)
   const startListY = 48;
@@ -1358,6 +1416,7 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     const sy = startListY + row * (slotH + gapY);
     const isSelected = sel && s && sel.dexNumber === s.dexNumber;
     const isAlreadyInParty = s && party.some((p) => p.dexNumber === s.dexNumber);
+    const effectiveCost = s ? (isPassive ? s.reducedCost : s.cost) : 0;
 
     ctx.fillStyle = isSelected ? "#222738" : "#181B26";
     ctx.beginPath();
@@ -1375,17 +1434,17 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       ctx.font = "bold 13px DungGeunMo";
       ctx.fillStyle = isSelected ? "#FFFFFF" : "#E2E8F0";
       ctx.textAlign = "left";
-      ctx.fillText(`${i + 1}. ${displayName.slice(0, 4)}`, sx + 6, sy + 16);
+      ctx.fillText(`${i + 1}.${displayName.slice(0, 4)}`, sx + 6, sy + 16);
 
-      // Cost Badge (Gold Orange)
-      ctx.fillStyle = "#D97706";
+      // Cost Badge (Gold Orange or Green if reduced)
+      ctx.fillStyle = isPassive ? "#059669" : "#D97706";
       ctx.beginPath();
-      ctx.roundRect(sx + slotW - 32, sy + 4, 26, 16, 3);
+      ctx.roundRect(sx + slotW - 30, sy + 4, 24, 16, 3);
       ctx.fill();
       ctx.font = "bold 11px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
-      ctx.fillText(`${s.cost}C`, sx + slotW - 19, sy + 16);
+      ctx.fillText(`${effectiveCost}C`, sx + slotW - 18, sy + 16);
 
       // Sprite
       const sprite = listSprites[i];
@@ -1405,12 +1464,12 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       if (isAlreadyInParty) {
         ctx.fillStyle = "#22C55E";
         ctx.beginPath();
-        ctx.roundRect(sx + slotW - 48, sy + slotH - 22, 42, 16, 3);
+        ctx.roundRect(sx + slotW - 46, sy + slotH - 22, 40, 16, 3);
         ctx.fill();
-        ctx.font = "bold 11px DungGeunMo";
+        ctx.font = "bold 10px DungGeunMo";
         ctx.fillStyle = "#FFFFFF";
         ctx.textAlign = "center";
-        ctx.fillText(isKo ? "선택됨" : "ADDED", sx + slotW - 27, sy + slotH - 10);
+        ctx.fillText(isKo ? "선택됨" : "ADDED", sx + slotW - 26, sy + slotH - 10);
       } else {
         ctx.font = "11px DungGeunMo";
         ctx.fillStyle = "#64748B";
@@ -1459,8 +1518,8 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     ctx.beginPath();
     ctx.roundRect(showBoxX, showBoxY, showBoxSize, showBoxSize, 6);
     ctx.fill();
-    ctx.strokeStyle = "#2D3246";
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = isShiny ? "#F59E0B" : "#2D3246";
+    ctx.lineWidth = isShiny ? 1.5 : 1;
     ctx.stroke();
 
     if (selectedSprite) {
@@ -1472,44 +1531,59 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
 
     // Name + Dex + Cost next to sprite
     const infoX = showBoxX + showBoxSize + 10;
-    const titleName = isKo ? sel.nameKo : sel.name;
+    const titleName = (isShiny ? "✨ " : "") + (isKo ? sel.nameKo : sel.name);
     const dexTag = `#${String(sel.dexNumber).padStart(3, "0")}`;
 
-    ctx.font = "bold 13px DungGeunMo";
+    ctx.font = "bold 12px DungGeunMo";
     ctx.fillStyle = "#8E96AB";
     ctx.textAlign = "left";
-    ctx.fillText(dexTag, infoX, topCardY + 24);
+    ctx.fillText(dexTag, infoX, topCardY + 20);
 
     const tagW = ctx.measureText(dexTag).width;
-    ctx.font = "bold 16px DungGeunMo";
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fillText(titleName, infoX + tagW + 6, topCardY + 24);
+    ctx.font = "bold 15px DungGeunMo";
+    ctx.fillStyle = isShiny ? "#FBBF24" : "#FFFFFF";
+    ctx.fillText(titleName, infoX + tagW + 6, topCardY + 20);
 
-    // Cost Pill
-    ctx.fillStyle = "#D97706";
+    // Cost Pill (Green if reduced)
+    const effectiveSelCost = isPassive ? sel.reducedCost : sel.cost;
+    ctx.fillStyle = isPassive ? "#059669" : "#D97706";
     ctx.beginPath();
-    ctx.roundRect(infoX, topCardY + 34, 60, 18, 3);
+    ctx.roundRect(infoX, topCardY + 28, 56, 17, 3);
     ctx.fill();
-    ctx.font = "bold 11px DungGeunMo";
+    ctx.font = "bold 10px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "center";
-    ctx.fillText(`COST: ${sel.cost}`, infoX + 30, topCardY + 47);
+    ctx.fillText(`COST: ${effectiveSelCost}`, infoX + 28, topCardY + 40);
+
+    // Ability / HA Tag
+    const activeAbName = (isHa && sel.hiddenAbility) ? (isKo ? sel.hiddenAbilityKo : sel.hiddenAbility) : (isKo ? sel.abilityKo : sel.ability);
+    const abLabel = isHa && sel.hiddenAbility ? (isKo ? `[숨특] ${activeAbName}` : `[HA] ${activeAbName}`) : (isKo ? `[특성] ${activeAbName}` : `[Ab] ${activeAbName}`);
+    ctx.font = "bold 11px DungGeunMo";
+    ctx.fillStyle = isHa ? "#F87171" : "#60A5FA";
+    ctx.textAlign = "left";
+    ctx.fillText(abLabel, infoX, topCardY + 58);
+
+    // Passive Tag
+    const passiveName = isPassive ? (isKo ? `[패시브] ${sel.passiveAbilityKo}` : `[Passive] ${sel.passiveAbility}`) : (isKo ? "[패시브] 미해금" : "[Passive] Locked");
+    ctx.font = "11px DungGeunMo";
+    ctx.fillStyle = isPassive ? "#34D399" : "#64748B";
+    ctx.fillText(passiveName, infoX, topCardY + 72);
 
     // Starter Moves Title
-    ctx.font = "bold 12px DungGeunMo";
+    ctx.font = "bold 11px DungGeunMo";
     ctx.fillStyle = "#94A3B8";
     ctx.textAlign = "left";
-    ctx.fillText(isKo ? "시작 기술 (Starter Moves)" : "Starter Moves", rightX + 10, topCardY + 84);
+    ctx.fillText(isKo ? "시작 기술 (Starter Moves)" : "Starter Moves", rightX + 10, topCardY + 90);
 
     // Move Chips (2x2 Grid, width: 122 each)
     const moveChipW = (rightW - 26) / 2;
-    const moveChipH = 24;
+    const moveChipH = 22;
     for (let mIdx = 0; mIdx < 4; mIdx++) {
       const mName = sel.starterMoves[mIdx] || "---";
       const mCol = mIdx % 2;
       const mRow = Math.floor(mIdx / 2);
       const mX = rightX + 10 + mCol * (moveChipW + 6);
-      const mY = topCardY + 96 + mRow * (moveChipH + 4);
+      const mY = topCardY + 98 + mRow * (moveChipH + 4);
 
       ctx.fillStyle = "#12141C";
       ctx.beginPath();
@@ -1519,10 +1593,10 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       ctx.lineWidth = 1;
       ctx.stroke();
 
-      ctx.font = "12px DungGeunMo";
+      ctx.font = "11px DungGeunMo";
       ctx.fillStyle = mName === "---" ? "#475569" : "#E2E8F0";
       ctx.textAlign = "center";
-      ctx.fillText(mName, mX + moveChipW / 2, mY + 16);
+      ctx.fillText(mName, mX + moveChipW / 2, mY + 15);
     }
   }
 
