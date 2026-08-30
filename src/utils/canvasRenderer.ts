@@ -1328,6 +1328,8 @@ export interface StarterSelectPartyItem {
 export interface StarterSelectScreenOptions {
   selectedStarter: StarterEntry;
   currentGen: number;
+  currentPage?: number;
+  totalPages?: number;
   startersList: StarterEntry[];
   selectedParty: StarterSelectPartyItem[];
   userStarters?: Map<string, any>;
@@ -1403,12 +1405,16 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   ctx.textAlign = "left";
   ctx.fillText(isKo ? "스타팅 선택" : "STARTER SELECT", 10, 28);
 
-  // Large Crisp White Page Indicator ("1 / 9" or "전체") (20px)
-  const pageText = gen <= 0 ? (isKo ? "전체" : "ALL") : `${gen} / 9`;
-  ctx.font = "bold 20px DungGeunMo";
+  // Large Crisp White Page Indicator ("전체 1/4" or "1세대 1/2") (16px)
+  const curPage = options.currentPage || 1;
+  const totPages = options.totalPages || 1;
+  const pageText = gen <= 0
+    ? (isKo ? `전체 ${curPage}/${totPages}` : `ALL ${curPage}/${totPages}`)
+    : (isKo ? `${gen}세대 ${curPage}/${totPages}` : `G${gen} ${curPage}/${totPages}`);
+  ctx.font = "bold 16px DungGeunMo";
   ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "right";
-  ctx.fillText(pageText, splitX - 8, 29);
+  ctx.fillText(pageText, splitX - 8, 28);
   const pageTextW = ctx.measureText(pageText).width;
 
   // Active Modes Filter Badges on Banner (to the left of page text)
