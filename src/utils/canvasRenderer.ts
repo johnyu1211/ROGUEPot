@@ -1575,7 +1575,12 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       ctx.drawImage(selectedSprite, showBoxX + (showBoxSize - sprW) / 2, showBoxY + (showBoxSize - sprH) / 2, sprW, sprH);
     }
 
-    // Name + Dex + Vector Shiny Sparkles next to sprite (Enlarged)
+    // Shiny Tier Vector Sparkle Star on Top-Right Corner of Sprite Box
+    if (selShinyTier > 0) {
+      drawShinyTierSparkles(ctx, showBoxX + showBoxSize - 22, showBoxY + 12, selShinyTier, 7.5);
+    }
+
+    // Name + Dex next to sprite (Enlarged)
     const infoX = showBoxX + showBoxSize + 12;
     const dexTag = `#${String(sel.dexNumber).padStart(3, "0")}`;
 
@@ -1585,11 +1590,7 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     ctx.fillText(dexTag, infoX, 26);
 
     const tagW = ctx.measureText(dexTag).width;
-    let nameX = infoX + tagW + 6;
-
-    if (selShinyTier > 0) {
-      nameX = drawShinyTierSparkles(ctx, nameX, 20, selShinyTier, 7);
-    }
+    const nameX = infoX + tagW + 6;
 
     ctx.font = "bold 20px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
