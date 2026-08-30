@@ -759,7 +759,7 @@ async function renderStarterSelectMessageData(
     new ButtonBuilder()
       .setCustomId(`starter_rem_${selectedStarter.dexNumber}_${gen}_${safePage}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel("Party")
-      .setStyle(ButtonStyle.Danger)
+      .setStyle(ButtonStyle.Primary)
       .setDisabled(!isAlreadyInParty)
   ];
   components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(row2Btns));
