@@ -769,12 +769,12 @@ async function renderStarterSelectMessageData(
     createSlotBtn(2),
     createSlotBtn(3),
     new ButtonBuilder()
-      .setCustomId(`starter_pagejump_1_${gen}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+      .setCustomId(`starter_page_jumpfirst_${gen}_${safePage}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel("<<<")
       .setStyle(ButtonStyle.Primary)
       .setDisabled(safePage <= 1),
     new ButtonBuilder()
-      .setCustomId(`starter_pagejump_${totalPages}_${gen}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+      .setCustomId(`starter_page_jumplast_${gen}_${safePage}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel(">>>")
       .setStyle(ButtonStyle.Primary)
       .setDisabled(safePage >= totalPages)
@@ -786,12 +786,12 @@ async function renderStarterSelectMessageData(
     createSlotBtn(4),
     createSlotBtn(5),
     new ButtonBuilder()
-      .setCustomId(`starter_page_${Math.max(1, safePage - 1)}_${gen}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+      .setCustomId(`starter_page_prev_${gen}_${safePage}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel("<")
       .setStyle(ButtonStyle.Primary)
       .setDisabled(safePage <= 1),
     new ButtonBuilder()
-      .setCustomId(`starter_page_${Math.min(totalPages, safePage + 1)}_${gen}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
+      .setCustomId(`starter_page_next_${gen}_${safePage}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel(">")
       .setStyle(ButtonStyle.Primary)
       .setDisabled(safePage >= totalPages)
@@ -942,7 +942,8 @@ async function renderTitleMessageData(client: ExtendedClient, userId: string) {
 export const interactionCreateEvent: BotEvent = {
   name: Events.InteractionCreate,
   async execute(interaction: Interaction) {
-    // 1. Slash Commands
+    try {
+      // 1. Slash Commands
     if (interaction.isChatInputCommand()) {
       const client = interaction.client as ExtendedClient;
       const command = client.commands.get(interaction.commandName);
@@ -1438,18 +1439,38 @@ export const interactionCreateEvent: BotEvent = {
       }
 
       // 2-1-B. Starter Page Navigation (< / > / <<< / >>>)
-      if (customId.startsWith("starter_page_") || customId.startsWith("starter_pagejump_")) {
-        const page = parseInt(parts[2], 10) || 1;
+      if (
+        customId.startsWith("starter_page_prev_") ||
+        customId.startsWith("starter_page_next_") ||
+        customId.startsWith("starter_page_jumpfirst_") ||
+        customId.startsWith("starter_page_jumplast_")
+      ) {
+        const action = parts[2]; // 'prev' | 'next' | 'jumpfirst' | 'jumplast'
         const gen = parseInt(parts[3], 10) || 0;
-        const currentDexNo = parseInt(parts[4], 10) || 1;
-        const slotId = parseInt(parts[5], 10) || 1;
-        const partyRaw = parts[6] || "empty";
+        const curPage = parseInt(parts[4], 10) || 1;
+        const currentDexNo = parseInt(parts[5], 10) || 1;
+        const slotId = parseInt(parts[6], 10) || 1;
+        const partyRaw = parts[7] || "empty";
         const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d) => parseInt(d, 10)).filter(Boolean);
-        const isShiny = parts[7] === "1";
-        const isHa = parts[8] === "1";
-        const isPassive = parts[9] === "1";
+        const isShiny = parts[8] === "1";
+        const isHa = parts[9] === "1";
+        const isPassive = parts[10] === "1";
 
-        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, page, currentDexNo, partyDexList, isShiny, isHa, isPassive);
+        const userStarters = getUserStarters(interaction.user.id);
+        let allStarters = getStartersByGen(gen).filter((s) => userStarters.get(s.speciesId)?.isUnlocked);
+        if (isShiny) allStarters = allStarters.filter((s) => (userStarters.get(s.speciesId)?.shinyTier || 0) > 0);
+        if (isHa) allStarters = allStarters.filter((s) => userStarters.get(s.speciesId)?.hasHiddenAbility);
+        if (isPassive) allStarters = allStarters.filter((s) => userStarters.get(s.speciesId)?.passiveUnlocked);
+
+        const totalPages = Math.max(1, Math.ceil(allStarters.length / 8));
+        let targetPage = curPage;
+
+        if (action === "prev") targetPage = Math.max(1, curPage - 1);
+        else if (action === "next") targetPage = Math.min(totalPages, curPage + 1);
+        else if (action === "jumpfirst") targetPage = 1;
+        else if (action === "jumplast") targetPage = totalPages;
+
+        const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotId, gen, targetPage, currentDexNo, partyDexList, isShiny, isHa, isPassive);
         await interaction.update(starterData);
         return;
       }
@@ -1843,6 +1864,9 @@ export const interactionCreateEvent: BotEvent = {
         });
         return;
       }
+    }
+    } catch (err) {
+      console.error("[ERROR] Unhandled error during interaction handling:", err);
     }
   },
 };
