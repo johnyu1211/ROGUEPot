@@ -1523,7 +1523,7 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       ctx.drawImage(selectedSprite, showBoxX + (showBoxSize - sprW) / 2, showBoxY + (showBoxSize - sprH) / 2, sprW, sprH);
     }
 
-    // Name + Dex + Cost next to sprite (Enlarged)
+    // Name + Dex next to sprite (Enlarged)
     const infoX = showBoxX + showBoxSize + 10;
     const titleName = (isShiny ? "✨ " : "") + (isKo ? sel.nameKo : sel.name);
     const dexTag = `#${String(sel.dexNumber).padStart(3, "0")}`;
@@ -1538,16 +1538,41 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     ctx.fillStyle = isShiny ? "#FBBF24" : "#FFFFFF";
     ctx.fillText(titleName, infoX + tagW + 6, topCardY + 22);
 
-    // Cost Pill (Vivid Green Background)
+    // Right-aligned Big Cost in Header (Top Right of Card)
     const effectiveSelCost = isPassive ? sel.reducedCost : sel.cost;
-    ctx.fillStyle = isPassive ? "#059669" : "#15803D";
-    ctx.beginPath();
-    ctx.roundRect(infoX, topCardY + 30, 68, 20, 3);
-    ctx.fill();
-    ctx.font = "bold 13px DungGeunMo";
-    ctx.fillStyle = "#FFFFFF";
-    ctx.textAlign = "center";
-    ctx.fillText(`COST: ${effectiveSelCost}`, infoX + 34, topCardY + 44);
+    ctx.font = "bold 20px DungGeunMo";
+    ctx.fillStyle = isPassive ? "#34D399" : "#22C55E";
+    ctx.textAlign = "right";
+    ctx.fillText(`${effectiveSelCost}C`, rightX + rightW - 10, topCardY + 22);
+
+    // Type Badges below Name (e.g. [풀] [독])
+    const types = sel.types && sel.types.length > 0 ? sel.types : ["normal"];
+    let typeBadgeX = infoX;
+    const typeBadgeY = topCardY + 30;
+    const badgeW = isKo ? 44 : 50;
+    const badgeH = 20;
+
+    for (const tName of types) {
+      const tLower = tName.toLowerCase();
+      const tColor = TYPE_COLORS[tLower] || "#777777";
+      const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || tName) : tName.toUpperCase();
+
+      ctx.fillStyle = tColor;
+      ctx.beginPath();
+      ctx.roundRect(typeBadgeX, typeBadgeY, badgeW, badgeH, 4);
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.font = "bold 12px DungGeunMo";
+      ctx.fillStyle = "#FFFFFF";
+      ctx.textAlign = "center";
+      ctx.fillText(tDisplay, typeBadgeX + badgeW / 2, typeBadgeY + 14);
+
+      typeBadgeX += badgeW + 6;
+    }
 
     // Ability / HA Tag (Enlarged to 15px)
     const activeAbName = (isHa && sel.hiddenAbility) ? (isKo ? sel.hiddenAbilityKo : sel.hiddenAbility) : (isKo ? sel.abilityKo : sel.ability);
