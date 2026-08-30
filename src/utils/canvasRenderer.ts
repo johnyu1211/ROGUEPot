@@ -1425,6 +1425,112 @@ function drawMoveCategoryIcon(ctx: any, x: number, y: number, category?: "physic
   }
 }
 
+/**
+ * Draws Vector Candy Icon (Swirl core + candy wrapper ends)
+ */
+function drawCandyIcon(ctx: any, cx: number, cy: number, radius: number = 5, color: string = "#FCD34D") {
+  ctx.fillStyle = color;
+  // Center candy ball
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Left wrapper twist
+  ctx.beginPath();
+  ctx.moveTo(cx - radius * 0.7, cy);
+  ctx.lineTo(cx - radius * 1.8, cy - radius * 0.8);
+  ctx.lineTo(cx - radius * 1.8, cy + radius * 0.8);
+  ctx.closePath();
+  ctx.fill();
+
+  // Right wrapper twist
+  ctx.beginPath();
+  ctx.moveTo(cx + radius * 0.7, cy);
+  ctx.lineTo(cx + radius * 1.8, cy - radius * 0.8);
+  ctx.lineTo(cx + radius * 1.8, cy + radius * 0.8);
+  ctx.closePath();
+  ctx.fill();
+}
+
+/**
+ * Draws Vector Padlock (Body + U-shackle)
+ */
+function drawLockIcon(ctx: any, cx: number, cy: number, w: number = 9, h: number = 10, color: string = "#64748B") {
+  const bodyH = h * 0.6;
+  const bodyY = cy - bodyH / 2 + 2;
+  const bodyX = cx - w / 2;
+
+  // Shackle (Arch)
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  const shackleR = w * 0.32;
+  ctx.arc(cx, bodyY - 1, shackleR, Math.PI, 0);
+  ctx.stroke();
+
+  // Lock Body
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.roundRect(bodyX, bodyY, w, bodyH, 2);
+  ctx.fill();
+
+  // Keyhole
+  ctx.fillStyle = "#10121A";
+  ctx.beginPath();
+  ctx.arc(cx, bodyY + bodyH * 0.45, 1.2, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+/**
+ * Draws Vector Gear / Settings Icon
+ */
+function drawGearIcon(ctx: any, cx: number, cy: number, r: number = 5.5, color: string = "#60A5FA") {
+  ctx.fillStyle = color;
+  const teeth = 6;
+  for (let i = 0; i < teeth; i++) {
+    const angle = (i * Math.PI) / (teeth / 2);
+    const tx = cx + Math.cos(angle) * (r * 1.25);
+    const ty = cy + Math.sin(angle) * (r * 1.25);
+    ctx.beginPath();
+    ctx.arc(tx, ty, r * 0.35, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Inner hole
+  ctx.fillStyle = "#1B2030";
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.45, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+/**
+ * Draws Vector Pokemon Egg Icon
+ */
+function drawEggIcon(ctx: any, cx: number, cy: number, rx: number = 10, ry: number = 14, color: string = "#FDE68A") {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.25)";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Egg Spot details
+  ctx.fillStyle = "rgba(239, 68, 68, 0.5)"; // red spot
+  ctx.beginPath();
+  ctx.arc(cx - rx * 0.3, cy - ry * 0.2, rx * 0.32, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "rgba(59, 130, 246, 0.5)"; // blue spot
+  ctx.beginPath();
+  ctx.arc(cx + rx * 0.35, cy + ry * 0.25, rx * 0.28, 0, Math.PI * 2);
+  ctx.fill();
+}
+
 interface PreviewAndPartyPanelArgs {
   panelX: number;
   panelW: number;
@@ -1736,6 +1842,8 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
 
   // Top Header (y: 10 ~ 38)
   ctx.fillStyle = "#1B2030";
+  // Top Header (y: 10 ~ 38)
+  ctx.fillStyle = "#1B2030";
   ctx.beginPath();
   ctx.roundRect(panelX, 10, panelW, 28, [6, 6, 0, 0]);
   ctx.fill();
@@ -1743,19 +1851,26 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   ctx.lineWidth = 1;
   ctx.stroke();
 
+  // Vector Gear Icon + Title
+  drawGearIcon(ctx, panelX + 16, 24, 5.5, "#60A5FA");
+
   ctx.textBaseline = "middle";
   ctx.font = "bold 14px DungGeunMo";
   ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "left";
-  ctx.fillText(isKo ? "⚙️ 포켓몬 빌드 세팅" : "⚙️ Starter Build Setup", panelX + 8, 24);
+  ctx.fillText(isKo ? "포켓몬 빌드 세팅" : "Starter Build Setup", panelX + 28, 24);
 
+  // Vector Candy Icon + Count
+  const candyText = `${candies}`;
   ctx.font = "bold 13px DungGeunMo";
   ctx.fillStyle = "#FCD34D";
   ctx.textAlign = "right";
-  ctx.fillText(`🍬 ${candies}`, panelX + panelW - 8, 24);
+  ctx.fillText(candyText, panelX + panelW - 8, 24);
+  const cTextW = ctx.measureText(candyText).width;
+  drawCandyIcon(ctx, panelX + panelW - 8 - cTextW - 10, 24, 4.5, "#FCD34D");
 
   // ----------------------------------------------------
-  // SECTION 1: ✨ Shiny Tier Selection (y: 44 ~ 114)
+  // SECTION 1: Shiny Tier Selection (y: 44 ~ 114)
   // ----------------------------------------------------
   const sec1Y = 44;
   const sec1H = 68;
@@ -1767,12 +1882,14 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   ctx.lineWidth = 1;
   ctx.stroke();
 
-  // Label
+  // Vector Sparkle + Label
+  drawShinySparkle(ctx, panelX + 16, sec1Y + 14, 4.5, "#F59E0B");
+
   ctx.textBaseline = "middle";
   ctx.font = "bold 13px DungGeunMo";
   ctx.fillStyle = "#94A3B8";
   ctx.textAlign = "left";
-  ctx.fillText(isKo ? `✨ 이로치 외형 (행운 +${currentShinyTier})` : `✨ Shiny Tier (Luck +${currentShinyTier})`, panelX + 12, sec1Y + 14);
+  ctx.fillText(isKo ? `이로치 외형 (행운 +${currentShinyTier})` : `Shiny Tier (Luck +${currentShinyTier})`, panelX + 26, sec1Y + 14);
 
   // 4 Tier Pills (T0, T1, T2, T3)
   const tierPillW = (panelW - 24 - 12) / 4;
@@ -1802,14 +1919,15 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     ctx.textAlign = "center";
 
     if (!isUnlocked) {
-      ctx.fillText(`🔒T${t}`, pX + tierPillW / 2, tierPillY + tierPillH / 2);
+      drawLockIcon(ctx, pX + tierPillW / 2 - 10, tierPillY + tierPillH / 2, 8, 9, "#475569");
+      ctx.fillText(`T${t}`, pX + tierPillW / 2 + 5, tierPillY + tierPillH / 2);
     } else {
       ctx.fillText(tierLabels[t], pX + tierPillW / 2, tierPillY + tierPillH / 2);
     }
   }
 
   // ----------------------------------------------------
-  // SECTION 2: 🌟 Ability & 🔓 Passive (y: 118 ~ 216)
+  // SECTION 2: Ability & Passive (y: 118 ~ 216)
   // ----------------------------------------------------
   const sec2Y = 118;
   const sec2H = 96;
@@ -1826,7 +1944,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   ctx.font = "bold 13px DungGeunMo";
   ctx.fillStyle = "#94A3B8";
   ctx.textAlign = "left";
-  ctx.fillText(isKo ? "🌟 특성 선택 (Ability)" : "🌟 Ability", panelX + 12, sec2Y + 14);
+  ctx.fillText(isKo ? "특성 선택 (Ability)" : "Ability Selection", panelX + 12, sec2Y + 14);
 
   const abBtnW = (panelW - 24 - 6) / 2;
   const abBtnH = 26;
@@ -1863,9 +1981,10 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   ctx.fillStyle = isHaSelected ? "#F87171" : (hasHaUnlocked ? "#94A3B8" : "#475569");
   ctx.textAlign = "center";
   if (hasHaUnlocked && sel.hiddenAbility) {
-    ctx.fillText(`🌟 ${isKo ? sel.hiddenAbilityKo : sel.hiddenAbility}`, haBtnX + abBtnW / 2, abBtnY + abBtnH / 2);
+    ctx.fillText(`[숨특] ${isKo ? sel.hiddenAbilityKo : sel.hiddenAbility}`, haBtnX + abBtnW / 2, abBtnY + abBtnH / 2);
   } else {
-    ctx.fillText(isKo ? `🔒 숨특 미해금` : `🔒 HA Locked`, haBtnX + abBtnW / 2, abBtnY + abBtnH / 2);
+    drawLockIcon(ctx, haBtnX + abBtnW / 2 - 32, abBtnY + abBtnH / 2, 8, 9, "#475569");
+    ctx.fillText(isKo ? "숨특 잠김" : "HA Locked", haBtnX + abBtnW / 2 + 5, abBtnY + abBtnH / 2);
   }
 
   // (2) Passive Row
@@ -1887,14 +2006,15 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   if (hasPassiveUnlocked) {
     ctx.fillStyle = usePassive ? "#34D399" : "#64748B";
     const passName = isKo ? sel.passiveAbilityKo : sel.passiveAbility;
-    ctx.fillText(`🔓 패시브: ${passName} (${usePassive ? "ON / -1C 할인" : "OFF"})`, panelX + 12 + passBtnW / 2, passBtnY + passBtnH / 2);
+    ctx.fillText(isKo ? `패시브: ${passName} (${usePassive ? "ON / -1C 할인" : "OFF"})` : `Passive: ${passName} (${usePassive ? "ON / -1C" : "OFF"})`, panelX + 12 + passBtnW / 2, passBtnY + passBtnH / 2);
   } else {
+    drawLockIcon(ctx, panelX + 12 + 18, passBtnY + passBtnH / 2, 8, 9, "#475569");
     ctx.fillStyle = "#475569";
-    ctx.fillText(isKo ? `🔒 패시브 미해금 (${sel.passiveAbilityKo})` : `🔒 Passive Locked (${sel.passiveAbility})`, panelX + 12 + passBtnW / 2, passBtnY + passBtnH / 2);
+    ctx.fillText(isKo ? `패시브 잠김 (${sel.passiveAbilityKo})` : `Passive Locked (${sel.passiveAbility})`, panelX + 12 + passBtnW / 2 + 6, passBtnY + passBtnH / 2);
   }
 
   // ----------------------------------------------------
-  // SECTION 3: ⚔️ Starting Moves (y: 220 ~ 362)
+  // SECTION 3: Starting Moves (y: 220 ~ 362)
   // ----------------------------------------------------
   const sec3Y = 220;
   const sec3H = 142;
@@ -1911,7 +2031,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   ctx.font = "bold 13px DungGeunMo";
   ctx.fillStyle = "#94A3B8";
   ctx.textAlign = "left";
-  ctx.fillText(isKo ? "⚔️ 시작 기술 상세 (4개)" : "⚔️ Starting Moves (4)", panelX + 12, sec3Y + 14);
+  ctx.fillText(isKo ? "시작 기술 상세 (4개)" : "Starting Moves (4)", panelX + 12, sec3Y + 14);
 
   // 4 Moves (Vertical 4 Rows, h = 26 each)
   const moveRowH = 26;
@@ -2510,11 +2630,10 @@ export async function renderEggGachaScreen(options: EggGachaScreenOptions): Prom
     ctx.font = "bold 16px DungGeunMo";
     ctx.fillStyle = isSel ? "#FFFFFF" : "#CBD5E1";
     ctx.textAlign = "center";
-    ctx.fillText(isKo ? m.nameKo : m.nameEn, mx + mCardW / 2, startY + 28);
+    ctx.fillText(isKo ? m.nameKo : m.nameEn, mx + mCardW / 2, startY + 24);
 
-    // Big Egg Icon (Vector)
-    ctx.font = "bold 26px DungGeunMo";
-    ctx.fillText("🥚", mx + mCardW / 2, startY + 62);
+    // Big Egg Vector Icon
+    drawEggIcon(ctx, mx + mCardW / 2, startY + 54, 12, 16, m.color);
 
     // Desc
     ctx.font = "bold 13px DungGeunMo";
@@ -2531,10 +2650,12 @@ export async function renderEggGachaScreen(options: EggGachaScreenOptions): Prom
   ctx.stroke();
 
   // Incubator Section Header (y: 184)
+  drawEggIcon(ctx, 22, 184, 7, 10, "#F59E0B");
+  ctx.textBaseline = "middle";
   ctx.font = "bold 17px DungGeunMo";
   ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "left";
-  ctx.fillText(isKo ? "🥚 인큐베이터 알 보관소 (웨이브 클리어 시 부화!)" : "🥚 Incubator (Clearing waves hatches eggs!)", 14, 184);
+  ctx.fillText(isKo ? "인큐베이터 알 보관소 (웨이브 클리어 시 부화!)" : "Incubator (Clearing waves hatches eggs!)", 36, 184);
 
   // Incubator Eggs Grid (y: 196 ~ 370, 4 Columns x 2 Rows = 8 Visible Slots)
   const eggSlotW = 128;
@@ -2574,9 +2695,8 @@ export async function renderEggGachaScreen(options: EggGachaScreenOptions): Prom
       ctx.textAlign = "center";
       ctx.fillText(tierLabel, ex + 28, ey + 19);
 
-      // Egg Icon
-      ctx.font = "bold 20px DungGeunMo";
-      ctx.fillText("🥚", ex + eggSlotW - 18, ey + 24);
+      // Egg Vector Icon
+      drawEggIcon(ctx, ex + eggSlotW - 18, ey + 20, 8, 11, tierColor);
 
       // Progress Waves
       ctx.font = "bold 14px DungGeunMo";
