@@ -72,22 +72,33 @@ export function getUserStarters(userId: string): Map<string, UserStarterProgress
     )
   `);
 
+  // Test Starter Grants (Gen 1 trio with Shiny Tiers 1, 2, 3)
+  const testTiers: Record<string, { shinyTier: number; hasHA: boolean; passive: boolean }> = {
+    bulbasaur: { shinyTier: 3, hasHA: true, passive: true }, // Tier 3 Red Shiny (+3 Luck)
+    charmander: { shinyTier: 2, hasHA: true, passive: true }, // Tier 2 Blue Shiny (+2 Luck)
+    squirtle: { shinyTier: 1, hasHA: true, passive: true }, // Tier 1 Yellow Shiny (+1 Luck)
+  };
+
   const tx = db.transaction(() => {
     for (const entry of STARTER_DATABASE) {
-      if (!progressMap.has(entry.speciesId)) {
-        const isDefault = DEFAULT_STARTER_SPECIES.has(entry.speciesId);
-        const isUnlocked = isDefault ? 1 : 0;
+      const testGrant = testTiers[entry.speciesId];
+      const isDefault = DEFAULT_STARTER_SPECIES.has(entry.speciesId);
+      const isUnlocked = (isDefault || testGrant) ? 1 : 0;
+      const initialShiny = testGrant ? testGrant.shinyTier : 0;
+      const initialHA = testGrant ? 1 : 0;
+      const initialPassive = testGrant ? 1 : 0;
 
+      if (!progressMap.has(entry.speciesId)) {
         insertStmt.run(
           userId,
           entry.speciesId,
           entry.dexNumber,
           isUnlocked,
-          0, // shiny_tier
-          0, // has_hidden_ability
-          0, // passive_unlocked
+          initialShiny,
+          initialHA,
+          initialPassive,
           0, // cost_reduction_count
-          0, // candies
+          50, // candies
           "[]",
           0, // hatched_count
           0, // caught_count
@@ -100,22 +111,35 @@ export function getUserStarters(userId: string): Map<string, UserStarterProgress
           speciesId: entry.speciesId,
           dexNumber: entry.dexNumber,
           isUnlocked: Boolean(isUnlocked),
-          shinyTier: 0,
-          hasHiddenAbility: false,
-          passiveUnlocked: false,
+          shinyTier: initialShiny,
+          hasHiddenAbility: Boolean(initialHA),
+          passiveUnlocked: Boolean(initialPassive),
           costReductionCount: 0,
-          candies: 0,
+          candies: 50,
           eggMoves: [],
           hatchedCount: 0,
           caughtCount: 0,
         });
+      } else if (testGrant) {
+        // Upgrade existing DB record if lower than test grant
+        const current = progressMap.get(entry.speciesId)!;
+        if (current.shinyTier < testGrant.shinyTier || !current.hasHiddenAbility || !current.passiveUnlocked) {
+          db.prepare(`
+            UPDATE user_starters
+            SET shiny_tier = ?, has_hidden_ability = 1, passive_unlocked = 1, candies = MAX(candies, 50), updated_at = ?
+            WHERE user_id = ? AND species_id = ?
+          `).run(testGrant.shinyTier, now, userId, entry.speciesId);
+
+          current.shinyTier = testGrant.shinyTier;
+          current.hasHiddenAbility = true;
+          current.passiveUnlocked = true;
+          current.candies = Math.max(current.candies, 50);
+        }
       }
     }
   });
 
-  if (rows.length < STARTER_DATABASE.length) {
-    tx();
-  }
+  tx();
 
   return progressMap;
 }
