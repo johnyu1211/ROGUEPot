@@ -350,7 +350,7 @@ function createPokedexRegionSelectMenu(fromScreen: "multiplay" | "inventory" | "
   return { embeds: [embed], files: [], components: [selectMenu, cancelRow] };
 }
 
-async function renderPokedexMessageData(
+export async function renderPokedexMessageData(
   client: ExtendedClient,
   userId: string,
   selectedDexNo: number = 1,

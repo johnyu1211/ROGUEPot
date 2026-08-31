@@ -7,15 +7,17 @@ import {
   renderSlotsScreenData,
   renderBagMessageData,
   renderMultiplayerMessageData,
+  renderPokedexMessageData,
   renderGenSelectMessageData,
   renderStarterSelectMessageData,
   renderPartyViewMessageData,
 } from "../src/events/interactionCreate.js";
-import { saveService } from "../src/services/saveService.js";
+import { saveService, PartyPokemon } from "../src/services/saveService.js";
 import { db } from "../src/services/db.js";
 import { PartyViewTab } from "../src/utils/canvasRenderer.js";
 import { getStartersByGen } from "../src/data/starterCosts.js";
 import { getUserStarters } from "../src/services/starterService.js";
+import { getPokemonByDexNumber } from "../src/services/pokeApiService.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -127,7 +129,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 3. Initial State Endpoint (Defaults directly to TITLE SCREEN)
+  // 3. Initial State Endpoint
   if (req.method === "GET" && req.url?.startsWith("/api/initial")) {
     try {
       const url = new URL(req.url, `http://${req.headers.host}`);
@@ -167,6 +169,8 @@ const server = http.createServer(async (req, res) => {
           "moves",
           0
         );
+      } else if (screen === "pokedex") {
+        result = await renderPokedexMessageData(null as any, SIMULATED_USER_ID, 1, 1, "title");
       } else if (screen === "bag") {
         result = await renderBagMessageData(null as any, SIMULATED_USER_ID, "pokemon");
       } else if (screen === "multiplayer") {
@@ -206,13 +210,109 @@ const server = http.createServer(async (req, res) => {
 
         // 3-0-1. Inventory Bag Button Clicked
         else if (customId.startsWith("menu_inventory_") || customId.startsWith("bag_tab_")) {
-          const tab = customId.includes("pokedex") ? "pokedex" : (customId.includes("records") ? "records" : "pokemon");
-          result = await renderBagMessageData(null as any, SIMULATED_USER_ID, tab);
+          if (customId.includes("pokedex")) {
+            result = await renderPokedexMessageData(null as any, SIMULATED_USER_ID, 1, 1, "inventory");
+          } else {
+            const tab = customId.includes("records") ? "records" : "pokemon";
+            result = await renderBagMessageData(null as any, SIMULATED_USER_ID, tab);
+          }
         }
 
         // 3-0-4. Multiplay Button Clicked
         else if (customId.startsWith("menu_multiplay_")) {
           result = await renderMultiplayerMessageData(null as any, SIMULATED_USER_ID);
+        }
+
+        // 3-0-6. Multiplayer Pokédex Button Clicked (interactionCreate.ts:1531)
+        else if (customId.startsWith("multi_pokedex_btn_")) {
+          result = await renderPokedexMessageData(null as any, SIMULATED_USER_ID, 1, 1, "multiplay");
+        }
+
+        // 3-0-6-B. Pokédex Ability Info Button Clicked (interactionCreate.ts:1537)
+        else if (customId.startsWith("pokedex_ability_")) {
+          const rawAbilityParam = parts[2] || "none";
+          const rawAbility = rawAbilityParam === "none" ? undefined : decodeURIComponent(rawAbilityParam);
+          const dexNo = parseInt(parts[3], 10) || 1;
+          const page = parseInt(parts[4], 10) || 1;
+          const fromScreen = (parts[5] || "title") as "multiplay" | "inventory" | "title";
+
+          result = await renderPokedexMessageData(null as any, SIMULATED_USER_ID, dexNo, page, fromScreen, rawAbility);
+        }
+
+        // 3-0-7. Pokédex Select Pokémon (interactionCreate.ts:1549)
+        else if (customId.startsWith("pokedex_select_")) {
+          const dexNo = parseInt(parts[2], 10) || 1;
+          const page = parseInt(parts[3], 10) || 1;
+          const fromScreen = (parts[4] || "title") as "multiplay" | "inventory" | "title";
+
+          result = await renderPokedexMessageData(null as any, SIMULATED_USER_ID, dexNo, page, fromScreen, undefined);
+        }
+
+        // 3-0-8. Pokédex Page Navigation (interactionCreate.ts:1559)
+        else if (
+          customId.startsWith("pokedex_page_") ||
+          customId.startsWith("pokedex_pageprev_") ||
+          customId.startsWith("pokedex_pagenext_") ||
+          customId.startsWith("pokedex_jumpback_") ||
+          customId.startsWith("pokedex_jumpfwd_")
+        ) {
+          const targetPage = parseInt(parts[2], 10) || 1;
+          const currentDexNo = parseInt(parts[3], 10) || ((targetPage - 1) * 8 + 1);
+          const fromScreen = (parts[4] || "title") as "multiplay" | "inventory" | "title";
+
+          result = await renderPokedexMessageData(null as any, SIMULATED_USER_ID, currentDexNo, targetPage, fromScreen, undefined);
+        }
+
+        // 3-0-8-Back. Pokédex Back Button (pokedex_back_${fromScreen}_${userId})
+        else if (customId.startsWith("pokedex_back_")) {
+          const fromScreen = parts[2] as "multiplay" | "inventory" | "title";
+          if (fromScreen === "multiplay") {
+            result = await renderMultiplayerMessageData(null as any, SIMULATED_USER_ID);
+          } else if (fromScreen === "inventory") {
+            result = await renderBagMessageData(null as any, SIMULATED_USER_ID, "pokemon");
+          } else {
+            result = await renderTitleMessageData(null as any, SIMULATED_USER_ID);
+          }
+        }
+
+        // 3-0-8-A. Pokédex Add to Multiplayer Team
+        else if (customId.startsWith("pokedex_add_multi_")) {
+          const dexNo = parseInt(parts[3], 10) || 1;
+          const page = parseInt(parts[4], 10) || 1;
+          const fromScreen = (parts[5] || "multiplay") as "multiplay" | "inventory" | "title";
+          const poke = await getPokemonByDexNumber(dexNo);
+          if (poke) {
+            const partyPoke: PartyPokemon = {
+              speciesId: poke.speciesId,
+              name: poke.koreanName || poke.name,
+              level: 50,
+              hp: poke.hp * 2 + 110,
+              maxHp: poke.hp * 2 + 110,
+              moves: ["Tackle", "Quick Attack"],
+            };
+            saveService.addMultiplayerPokemon(SIMULATED_USER_ID, partyPoke);
+          }
+          result = await renderPokedexMessageData(null as any, SIMULATED_USER_ID, dexNo, page, fromScreen);
+        }
+
+        // 3-0-8-B. Pokédex Add to Adventure Party
+        else if (customId.startsWith("pokedex_add_bag_")) {
+          const dexNo = parseInt(parts[3], 10) || 1;
+          const page = parseInt(parts[4], 10) || 1;
+          const fromScreen = (parts[5] || "inventory") as "multiplay" | "inventory" | "title";
+          const poke = await getPokemonByDexNumber(dexNo);
+          if (poke) {
+            const partyPoke: PartyPokemon = {
+              speciesId: poke.speciesId,
+              name: poke.koreanName || poke.name,
+              level: 25,
+              hp: poke.hp + 50,
+              maxHp: poke.hp + 50,
+              moves: ["Tackle", "Growl"],
+            };
+            saveService.addBagPokemon(SIMULATED_USER_ID, partyPoke);
+          }
+          result = await renderPokedexMessageData(null as any, SIMULATED_USER_ID, dexNo, page, fromScreen);
         }
 
         // 2-1. New Game Button Clicked from Title (interactionCreate.ts:1746 -> renderStarterSelectMessageData directly!)
@@ -234,7 +334,6 @@ const server = http.createServer(async (req, res) => {
 
         // 2-1-G. Open Generation Selection Menu
         else if (customId.startsWith("starter_open_gen_menu_") || customId.startsWith("starter_genmenu_")) {
-          // starter_genmenu_${gen}_${slotId}_${partyParam}_${flagsParam}_${userId}
           const rawGen = parseInt(parts[2], 10);
           const currentGen = isNaN(rawGen) ? 0 : rawGen;
           const slotId = parseInt(parts[3], 10) || 1;
@@ -285,7 +384,7 @@ const server = http.createServer(async (req, res) => {
           customId.startsWith("starter_page_jumplast_") ||
           customId.startsWith("starter_page_")
         ) {
-          const action = parts[2]; // 'prev' | 'next' | 'jumpfirst' | 'jumplast'
+          const action = parts[2];
           const gen = parseInt(parts[3], 10) || 0;
           const curPage = parseInt(parts[4], 10) || 1;
           const currentDexNo = parseInt(parts[5], 10) || 1;
