@@ -4,6 +4,7 @@ import fs from "fs";
 import { DexPokemonInfo, getAbilityDetail, getPokemonSpeciesInfo, ABILITY_DETAILED_DESC_KO } from "../services/pokeApiService.js";
 import { StarterEntry, GENERATION_INFO, getStarterByDexNumber } from "../data/starterCosts.js";
 import { MOVES_DATA } from "../data/movesKo.js";
+import { MOVES_EN_DESC } from "../data/movesEn.js";
 
 // Register custom pixel dot font
 const fontPath = path.resolve(process.cwd(), "assets/fonts/DungGeunMo.ttf");
@@ -2614,7 +2615,9 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       ctx.font = "14px DungGeunMo";
       ctx.fillStyle = "#F1F5F9";
       ctx.textAlign = "left";
-      const desc = curMoveInfo.description || (isKo ? "효과 설명이 없습니다." : "No description available.");
+      const desc = isKo
+        ? (curMoveInfo.description || "효과 설명이 없습니다.")
+        : (curMoveInfo.descriptionEn || MOVES_EN_DESC[curMoveKey] || "No description available.");
       drawWrappedText(ctx, desc, contentX, 232, contentW, 22);
     } else {
       ctx.textBaseline = "middle";
