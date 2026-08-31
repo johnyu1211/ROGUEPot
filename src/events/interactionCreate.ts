@@ -1927,34 +1927,27 @@ export const interactionCreateEvent: BotEvent = {
         const tab = (parts[isSet ? 12 : 11] || "moves") as PartyViewTab;
         const moveIdx = parseInt(parts[isSet ? 13 : 12], 10) || 0;
 
-        const profile = saveService.getProfile(interaction.user.id);
-        const isKo = profile.language === "ko";
         const userStarters = getUserStarters(interaction.user.id);
         const partyStates = parsePartyParam(partyRaw, userStarters);
         const targetMember = partyStates[currentIdx];
+        let nextTab = tab;
 
         if (targetMember) {
           const s = getStarterByDexNumber(targetMember.dexNumber);
           const prog = s ? userStarters.get(s.speciesId) : null;
-          if (isSet && targetUseHa && !prog?.hasHiddenAbility) {
-            const haName = isKo ? s?.hiddenAbilityKo : s?.hiddenAbility;
-            await interaction.reply({
-              content: isKo
-                ? `🔒 아직 해금되지 않은 숨겨진 특성입니다: **${haName}**\n*(포켓몬 알 부화나 사탕을 통해 해금할 수 있습니다)*`
-                : `🔒 Hidden ability **${haName}** is not unlocked yet.`,
-              ephemeral: true,
-            });
-            return;
-          }
-          if (prog?.hasHiddenAbility) {
-            targetMember.useHiddenAbility = isSet ? targetUseHa! : !targetMember.useHiddenAbility;
+          if (isSet && targetUseHa) {
+            if (prog?.hasHiddenAbility) {
+              targetMember.useHiddenAbility = true;
+            } else {
+              nextTab = "cost";
+            }
           } else if (isSet && !targetUseHa) {
             targetMember.useHiddenAbility = false;
           }
         }
 
         const newPartyParam = serializePartyParam(partyStates);
-        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, currentIdx, tab, moveIdx);
+        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, currentIdx, nextTab, moveIdx);
         await interaction.update(partyData);
         return;
       }
@@ -1973,30 +1966,23 @@ export const interactionCreateEvent: BotEvent = {
         const tab = (parts[11] || "moves") as PartyViewTab;
         const moveIdx = parseInt(parts[12], 10) || 0;
 
-        const profile = saveService.getProfile(interaction.user.id);
-        const isKo = profile.language === "ko";
         const userStarters = getUserStarters(interaction.user.id);
         const partyStates = parsePartyParam(partyRaw, userStarters);
         const targetMember = partyStates[currentIdx];
+        let nextTab = tab;
 
         if (targetMember) {
           const s = getStarterByDexNumber(targetMember.dexNumber);
           const prog = s ? userStarters.get(s.speciesId) : null;
-          if (!prog?.passiveUnlocked) {
-            const passName = isKo ? s?.passiveAbilityKo : s?.passiveAbility;
-            await interaction.reply({
-              content: isKo
-                ? `🔒 아직 해금되지 않은 패시브 특성입니다: **${passName}**\n*(사탕을 모아 🍬 코스트 관리 탭에서 해금할 수 있습니다)*`
-                : `🔒 Passive ability **${passName}** is not unlocked yet.`,
-              ephemeral: true,
-            });
-            return;
+          if (prog?.passiveUnlocked) {
+            targetMember.usePassive = !targetMember.usePassive;
+          } else {
+            nextTab = "cost";
           }
-          targetMember.usePassive = !targetMember.usePassive;
         }
 
         const newPartyParam = serializePartyParam(partyStates);
-        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, currentIdx, tab, moveIdx);
+        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, currentIdx, nextTab, moveIdx);
         await interaction.update(partyData);
         return;
       }
