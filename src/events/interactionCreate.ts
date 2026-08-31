@@ -1004,73 +1004,29 @@ async function renderPartyViewMessageData(
     )
   );
 
-  // ROW 2: Party 1, 2, 3
+  // ROW 2: Party 1, 2
   components.push(
     new ActionRowBuilder<ButtonBuilder>().addComponents(
       createPartySlotBtn(0),
-      createPartySlotBtn(1),
-      createPartySlotBtn(2)
+      createPartySlotBtn(1)
     )
   );
 
-  // ROW 3: Party 4, 5, 6
+  // ROW 3: Party 3, 4
   components.push(
     new ActionRowBuilder<ButtonBuilder>().addComponents(
-      createPartySlotBtn(3),
+      createPartySlotBtn(2),
+      createPartySlotBtn(3)
+    )
+  );
+
+  // ROW 4: Party 5, 6
+  components.push(
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
       createPartySlotBtn(4),
       createPartySlotBtn(5)
     )
   );
-
-  // ROW 4: Context Sub-Actions based on active tab
-  if (safePartyIdx === -1 || !inspectedStarter) {
-    // If no party member is selected yet
-    components.push(
-      new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder()
-          .setCustomId(`party_none_info_${userId}`)
-          .setLabel(isKo ? "🔍 파티원을 먼저 선택하세요" : "🔍 Select a Party Member First")
-          .setStyle(ButtonStyle.Secondary)
-          .setDisabled(true)
-      )
-    );
-  } else if (partyTab === "shiny") {
-    // Shiny Tab: 4 Direct Shiny Tier Buttons (T0, T1, T2, T3)
-    const tierLabels = ["T0 일반", "T1 노랑", "T2 파랑", "T3 빨강"];
-    const tierButtons: ButtonBuilder[] = [];
-    for (let t = 0; t <= 3; t++) {
-      const isUnlocked = t === 0 || t <= maxShinyTier;
-      const isCur = curShinyTier === t;
-
-      tierButtons.push(
-        new ButtonBuilder()
-          .setCustomId(`party_setshiny_${t}_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
-          .setLabel(tierLabels[t])
-          .setStyle(isCur ? ButtonStyle.Primary : ButtonStyle.Secondary)
-          .setDisabled(!isUnlocked)
-      );
-    }
-    components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(...tierButtons));
-  } else {
-    // Moves Tab (Default 1st Screen): 4 Move Selector Buttons
-    const moveButtons: ButtonBuilder[] = [];
-    for (let m = 0; m < 4; m++) {
-      const rawMove = inspectedStarter.starterMoves[m] || "---";
-      const moveKey = rawMove.toLowerCase().replace(/[\s_]+/g, "-");
-      const moveInfo = MOVES_DATA[moveKey];
-      const mName = isKo ? (moveInfo?.nameKo || rawMove) : rawMove;
-      const isCur = selectedMoveIdx === m;
-
-      moveButtons.push(
-        new ButtonBuilder()
-          .setCustomId(`party_movepick_${m}_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${userId}`)
-          .setLabel(`${m + 1}. ${mName.slice(0, 5)}`)
-          .setStyle(isCur ? ButtonStyle.Primary : ButtonStyle.Secondary)
-          .setDisabled(rawMove === "---")
-      );
-    }
-    components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(...moveButtons));
-  }
 
   // ROW 5: Remove [-⚪] + START + Back [↩️]
   const removeTargetDex = activePartyMember ? activePartyMember.dexNumber : 0;
@@ -1088,7 +1044,7 @@ async function renderPartyViewMessageData(
         .setDisabled(!canStart),
       new ButtonBuilder()
         .setCustomId(`party_back_starter_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
-        .setLabel("↩️")
+        .setLabel(isKo ? "↩️ 스타팅 목록" : "↩️ Back")
         .setStyle(ButtonStyle.Danger)
     )
   );
