@@ -2503,7 +2503,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       const moveTitle = isKo ? curMoveInfo.nameKo : curMoveInfo.name.toUpperCase();
       ctx.fillText(moveTitle, panelX + 44, 176);
 
-      // (2) Stats Row: Option A (Inline Symmetric Stat Bar with dividers)
+      // (2) Stats Row: Option A (Perfect Center-Aligned 3-Column Distribution)
       const statY = 206;
       const colW = panelW / 3;
 
@@ -2511,41 +2511,44 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       const accStr = curMoveInfo.accuracy ? `${curMoveInfo.accuracy}%` : "-";
       const ppStr = `${curMoveInfo.pp || 35}`;
 
-      // Column 1: [Category Icon] + "위력: 45"
+      // Column 1 Center: [Category Icon] + "위력: 45"
       const cat = curMoveInfo.category;
-      drawMoveCategoryIcon(ctx, panelX, 196, cat);
-
-      ctx.textBaseline = "middle";
+      const pwrLabel = isKo ? `위력: ${pwrStr}` : `Pwr: ${pwrStr}`;
       ctx.font = "bold 14px DungGeunMo";
+      const pwrTextW = ctx.measureText(pwrLabel).width;
+      const col1TotalW = 22 + 4 + pwrTextW;
+      const col1StartX = panelX + (colW - col1TotalW) / 2;
+
+      drawMoveCategoryIcon(ctx, col1StartX, 196, cat);
+      ctx.textBaseline = "middle";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "left";
-      const pwrLabel = isKo ? `위력: ${pwrStr}` : `Pwr: ${pwrStr}`;
-      ctx.fillText(pwrLabel, panelX + 26, statY);
+      ctx.fillText(pwrLabel, col1StartX + 26, statY);
 
       // Divider 1
       ctx.font = "bold 12px DungGeunMo";
       ctx.fillStyle = "#3B4256";
       ctx.textAlign = "center";
-      ctx.fillText("|", panelX + colW - 4, statY);
+      ctx.fillText("|", panelX + colW, statY);
 
-      // Column 2: "명중: 100%"
+      // Column 2 Center: "명중: 100%"
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
-      ctx.textAlign = "left";
+      ctx.textAlign = "center";
       const accLabel = isKo ? `명중: ${accStr}` : `Acc: ${accStr}`;
-      ctx.fillText(accLabel, panelX + colW + 8, statY);
+      ctx.fillText(accLabel, panelX + colW * 1.5, statY);
 
       // Divider 2
       ctx.font = "bold 12px DungGeunMo";
       ctx.fillStyle = "#3B4256";
       ctx.textAlign = "center";
-      ctx.fillText("|", panelX + colW * 2 - 4, statY);
+      ctx.fillText("|", panelX + colW * 2, statY);
 
-      // Column 3: "PP: 25"
+      // Column 3 Center: "PP: 25"
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
-      ctx.textAlign = "left";
-      ctx.fillText(`PP: ${ppStr}`, panelX + colW * 2 + 8, statY);
+      ctx.textAlign = "center";
+      ctx.fillText(`PP: ${ppStr}`, panelX + colW * 2.5, statY);
 
       // Divider Line between Specs and Description
       ctx.strokeStyle = "#1E2433";
