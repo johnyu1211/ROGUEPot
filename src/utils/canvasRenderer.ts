@@ -2227,24 +2227,35 @@ interface PartyCustomizationPanelArgs {
   selectedMoveIdx?: number;
 }
 
-function drawWrappedText(ctx: any, text: string, x: number, y: number, maxWidth: number, lineHeight: number) {
-  const words = text.split(" ");
-  let line = "";
+function drawWrappedText(ctx: any, text: string, x: number, y: number, maxWidth: number, lineHeight: number): number {
+  const paragraphs = text.split("\n");
   let curY = y;
 
-  for (let n = 0; n < words.length; n++) {
-    const testLine = line + words[n] + " ";
-    const metrics = ctx.measureText(testLine);
-    const testWidth = metrics.width;
-    if (testWidth > maxWidth && n > 0) {
-      ctx.fillText(line.trim(), x, curY);
-      line = words[n] + " ";
+  for (const p of paragraphs) {
+    if (!p || p.trim().length === 0) {
       curY += lineHeight;
-    } else {
-      line = testLine;
+      continue;
     }
+    const words = p.split(" ");
+    let line = "";
+
+    for (let n = 0; n < words.length; n++) {
+      const testLine = line + words[n] + " ";
+      const metrics = ctx.measureText(testLine);
+      const testWidth = metrics.width;
+      if (testWidth > maxWidth && n > 0) {
+        ctx.fillText(line.trim(), x, curY);
+        line = words[n] + " ";
+        curY += lineHeight;
+      } else {
+        line = testLine;
+      }
+    }
+    ctx.fillText(line.trim(), x, curY);
+    curY += lineHeight;
   }
-  ctx.fillText(line.trim(), x, curY);
+
+  return curY;
 }
 
 /**
@@ -2256,11 +2267,11 @@ function drawInGameMessageBox(ctx: any, width: number, height: number, msg: InGa
   ctx.fillStyle = "rgba(7, 9, 15, 0.45)";
   ctx.fillRect(0, 0, width, height);
 
-  // 2. In-Game Dialogue Box (Bottom Position: y: 268 ~ 368, H: 100, styled like Pokédex Card)
+  // 2. In-Game Dialogue Box (Bottom Position: y: 264 ~ 368, H: 104, styled like Pokédex Card)
   const boxX = 14;
-  const boxY = height - 110;
+  const boxY = height - 112;
   const boxW = width - 28;
-  const boxH = 100;
+  const boxH = 102;
 
   // Outer border & dark background (Same as Pokédex Flavor Card)
   ctx.fillStyle = "#181B26";
@@ -2272,7 +2283,7 @@ function drawInGameMessageBox(ctx: any, width: number, height: number, msg: InGa
   ctx.lineWidth = 1;
   ctx.stroke();
 
-  // 3. Header: Pokédex-style Title + Sub-divider line (y: boxY + 18)
+  // 3. Header: Pokédex-style Title + Sub-divider line (y: boxY + 16)
   ctx.textBaseline = "middle";
   ctx.font = "bold 13px DungGeunMo";
   ctx.fillStyle = "#CBD5E1";
@@ -2290,12 +2301,7 @@ function drawInGameMessageBox(ctx: any, width: number, height: number, msg: InGa
   // 4. Flavor Text (Official 13px DungGeunMo #F1F5F9 matching Pokédex)
   ctx.font = "13px DungGeunMo";
   ctx.fillStyle = "#F1F5F9";
-  const lines = msg.text.split("\n");
-  let curY = boxY + 44;
-  for (const line of lines) {
-    drawWrappedText(ctx, line, boxX + 12, curY, boxW - 24, 20);
-    curY += 20;
-  }
+  drawWrappedText(ctx, msg.text, boxX + 12, boxY + 44, boxW - 24, 20);
 }
 
 function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelArgs) {
