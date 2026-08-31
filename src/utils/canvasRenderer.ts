@@ -1327,7 +1327,7 @@ export interface StarterSelectPartyItem {
   usePassive?: boolean;
 }
 
-export type PartyViewTab = "moves" | "shiny";
+export type PartyViewTab = "moves" | "shiny" | "cost";
 
 export interface StarterSelectScreenOptions {
   selectedStarter: StarterEntry;
@@ -2222,13 +2222,14 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // Top Tab Bar (y: 10 ~ 38) - 2 Tabs: [ ⚔️ 기술 ] & [ ✨ 이로치 ]
-  const tabW = 82;
+  // Top Tab Bar (y: 10 ~ 38) - 3 Tabs: [ ⚔️ 기술 ], [ ✨ 이로치 ], [ 🍬 사탕 N개 ]
+  const tabW = 76;
   const tabH = 26;
   const tabY = 11;
   const tabs: { id: PartyViewTab; labelKo: string; labelEn: string }[] = [
     { id: "moves", labelKo: "⚔️ 기술", labelEn: "⚔️ Moves" },
     { id: "shiny", labelKo: "✨ 이로치", labelEn: "✨ Shiny" },
+    { id: "cost", labelKo: "🍬 사탕", labelEn: "🍬 Cost" },
   ];
 
   tabs.forEach((t, idx) => {
@@ -2244,27 +2245,22 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     ctx.lineWidth = isAct ? 1.5 : 1;
     ctx.stroke();
 
-    ctx.textBaseline = "middle";
-    ctx.font = "bold 13px DungGeunMo";
-    ctx.fillStyle = isAct ? "#FFFFFF" : "#64748B";
-    ctx.textAlign = "center";
-    ctx.fillText(isKo ? t.labelKo : t.labelEn, tX + tabW / 2, tabY + tabH / 2);
+    if (t.id === "cost") {
+      // Draw Candy Icon inside the 3rd tab box + count
+      drawCandyIcon(ctx, tX + 16, tabY + tabH / 2, 4.8, "#F59E0B", "#FEF08A");
+      ctx.textBaseline = "middle";
+      ctx.font = "bold 13px DungGeunMo";
+      ctx.fillStyle = isAct ? "#FFFFFF" : "#FCD34D";
+      ctx.textAlign = "center";
+      ctx.fillText(`${candies}개`, tX + 46, tabY + tabH / 2);
+    } else {
+      ctx.textBaseline = "middle";
+      ctx.font = "bold 13px DungGeunMo";
+      ctx.fillStyle = isAct ? "#FFFFFF" : "#64748B";
+      ctx.textAlign = "center";
+      ctx.fillText(isKo ? t.labelKo : t.labelEn, tX + tabW / 2, tabY + tabH / 2);
+    }
   });
-
-  // Candy Counter on Top Right (y: 24, Clean Gap)
-  const candyText = `${candies}`;
-  ctx.font = "bold 14px DungGeunMo";
-  const cTextW = ctx.measureText(candyText).width;
-  const rightMargin = panelX + panelW - 10;
-
-  // Candy Count Text (Right Aligned)
-  ctx.textBaseline = "middle";
-  ctx.fillStyle = "#FCD34D";
-  ctx.textAlign = "right";
-  ctx.fillText(candyText, rightMargin, 24);
-
-  // Candy Vector Icon (Tilted, striped, frilled wrapper) with clean gap
-  drawCandyIcon(ctx, rightMargin - cTextW - 16, 24, 6.0, "#F59E0B", "#FEF08A");
 
   // If No Party Member is inspected (selectedPartyIdx === -1)
   if (!sel || !partyMember) {
@@ -2573,6 +2569,87 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
         ctx.fillText(isKo ? "선택 가능" : "Ready", cX + cW - 10, cY + 48);
       }
     }
+
+    return;
+  }
+
+  // =========================================================================
+  // TAB 3: COST / CANDY MANAGEMENT TAB
+  // =========================================================================
+  if (currentTab === "cost") {
+    // 1. Top Info Header Card (y: 44 ~ 138, H: 94)
+    const infoCardY = 44;
+    const infoCardH = 94;
+    const cardW = panelW - 24;
+    const cardX = panelX + 12;
+
+    ctx.fillStyle = "#12141C";
+    ctx.beginPath();
+    ctx.roundRect(cardX, infoCardY, cardW, infoCardH, 6);
+    ctx.fill();
+    ctx.strokeStyle = "#282D3D";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Candy Icon + Title
+    drawCandyIcon(ctx, cardX + 18, infoCardY + 22, 6.5, "#F59E0B", "#FEF08A");
+    ctx.textBaseline = "middle";
+    ctx.font = "bold 15px DungGeunMo";
+    ctx.fillStyle = "#FCD34D";
+    ctx.textAlign = "left";
+    ctx.fillText(isKo ? `보유 사탕: ${candies}개` : `Candies: ${candies}`, cardX + 34, infoCardY + 22);
+
+    // Cost status
+    ctx.font = "bold 13px DungGeunMo";
+    ctx.fillStyle = "#CBD5E1";
+    ctx.fillText(isKo ? `기본 코스트: ${sel.cost} C` : `Base Cost: ${sel.cost} C`, cardX + 12, infoCardY + 48);
+    ctx.fillText(isKo ? `패시브 할인: ${sel.reducedCost} C` : `Discount: ${sel.reducedCost} C`, cardX + 130, infoCardY + 48);
+
+    ctx.font = "bold 12px DungGeunMo";
+    ctx.fillStyle = "#94A3B8";
+    const eggMoveCount = (selProgress?.eggMoves || []).length;
+    ctx.fillText(isKo ? `해금된 알기술: ${eggMoveCount} / 4개` : `Egg Moves: ${eggMoveCount} / 4`, cardX + 12, infoCardY + 74);
+
+    // 2. Action Card 1: Cost Reduction (y: 148 ~ 242, H: 94)
+    const card1Y = 148;
+    const card1H = 94;
+    ctx.fillStyle = "#181B26";
+    ctx.beginPath();
+    ctx.roundRect(cardX, card1Y, cardW, card1H, 6);
+    ctx.fill();
+    ctx.strokeStyle = "#2D3246";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.font = "bold 14px DungGeunMo";
+    ctx.fillStyle = "#60A5FA";
+    ctx.fillText(isKo ? "🔻 스타팅 코스트 감소" : "🔻 Cost Reduction", cardX + 12, card1Y + 22);
+
+    ctx.font = "bold 12px DungGeunMo";
+    ctx.fillStyle = "#94A3B8";
+    ctx.fillText(isKo ? "사탕을 소모하여 영구적으로" : "Spend candies to permanently reduce", cardX + 12, card1Y + 48);
+    ctx.fillText(isKo ? "출전 코스트를 낮출 수 있습니다. (준비 중)" : "entry cost. (Coming Soon)", cardX + 12, card1Y + 70);
+
+    // 3. Action Card 2: Passive Unlock (y: 252 ~ 346, H: 94)
+    const card2Y = 252;
+    const card2H = 94;
+    ctx.fillStyle = "#181B26";
+    ctx.beginPath();
+    ctx.roundRect(cardX, card2Y, cardW, card2H, 6);
+    ctx.fill();
+    ctx.strokeStyle = "#2D3246";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.font = "bold 14px DungGeunMo";
+    ctx.fillStyle = "#34D399";
+    ctx.fillText(isKo ? "🔓 패시브 특성 해금" : "🔓 Unlock Passive", cardX + 12, card2Y + 22);
+
+    ctx.font = "bold 12px DungGeunMo";
+    ctx.fillStyle = "#94A3B8";
+    const passStatusStr = hasPassiveUnlocked ? (isKo ? "✓ 이미 해금되었습니다! (상단 버튼으로 토글)" : "✓ Already Unlocked!") : (isKo ? "사탕을 소모하여 패시브를 해금합니다." : "Spend candies to unlock passive.");
+    ctx.fillText(passStatusStr, cardX + 12, card2Y + 48);
+    ctx.fillText(isKo ? `패시브: ${sel.passiveAbilityKo}` : `Passive: ${sel.passiveAbility}`, cardX + 12, card2Y + 70);
 
     return;
   }
