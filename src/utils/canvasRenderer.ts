@@ -1785,6 +1785,30 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
         ctx.fillText(mDisplay, mX + 35, mY + moveChipH / 2);
       }
     }
+  } else {
+    // No Pokemon Selected State (Top Area y: 10 ~ 170)
+    ctx.fillStyle = "#141722";
+    ctx.beginPath();
+    ctx.roundRect(panelX, 10, panelW, 160, 6);
+    ctx.fill();
+    ctx.strokeStyle = "#2D3246";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.textBaseline = "middle";
+    ctx.font = "bold 16px DungGeunMo";
+    ctx.fillStyle = "#CBD5E1";
+    ctx.textAlign = "center";
+    ctx.fillText(isKo ? "파티원 관리 대시보드" : "Party Overview", panelX + panelW / 2, 45);
+
+    ctx.font = "bold 13px DungGeunMo";
+    ctx.fillStyle = "#94A3B8";
+    ctx.fillText(isKo ? `출전 파티원: ${party.length} / 6 마리` : `Party Members: ${party.length} / 6`, panelX + panelW / 2, 80);
+
+    ctx.font = "bold 12px DungGeunMo";
+    ctx.fillStyle = "#64748B";
+    ctx.fillText(isKo ? "파티원을 선택하면 상세 정보가 표시됩니다." : "Select a member below to inspect moves & forms.", panelX + panelW / 2, 115);
+    ctx.fillText(isKo ? "하단 슬롯 또는 디스코드 버튼을 눌러주세요." : "Press P1~P6 buttons below.", panelX + panelW / 2, 138);
   }
 
   // 5-2. BOTTOM PARTY BUILDER (y: 178 ~ 370, Seamless Borderless Layout)
@@ -1886,8 +1910,8 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
 interface PartyCustomizationPanelArgs {
   panelX: number;
   panelW: number;
-  sel: StarterEntry;
-  partyMember?: StarterSelectPartyItem;
+  sel?: StarterEntry | null;
+  partyMember?: StarterSelectPartyItem | null;
   selProgress: any;
   isKo: boolean;
   tab?: PartyViewTab;
@@ -1979,6 +2003,37 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
 
   // Candy Vector Icon (Tilted, striped, frilled wrapper) with clean gap
   drawCandyIcon(ctx, rightMargin - cTextW - 16, 24, 6.0, "#F59E0B", "#FEF08A");
+
+  // If No Party Member is inspected (selectedPartyIdx === -1)
+  if (!sel || !partyMember) {
+    ctx.textBaseline = "middle";
+    ctx.font = "bold 17px DungGeunMo";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "center";
+    ctx.fillText(isKo ? "🔍 파티원을 선택하세요" : "🔍 Select a Party Member", panelX + panelW / 2, 130);
+
+    ctx.font = "bold 13px DungGeunMo";
+    ctx.fillStyle = "#94A3B8";
+    ctx.fillText(isKo ? "위 파티원 버튼(1~6번)을 선택하면" : "Select a party member (1~6)", panelX + panelW / 2, 175);
+    ctx.fillText(isKo ? "기술 상세 스펙과 이로치 외형을" : "to view detailed move descriptions", panelX + panelW / 2, 200);
+    ctx.fillText(isKo ? "자세히 확인하고 관리할 수 있습니다." : "and customize shiny forms.", panelX + panelW / 2, 225);
+
+    // Subtle decoration box
+    ctx.fillStyle = "#10121A";
+    ctx.beginPath();
+    ctx.roundRect(panelX + 16, 265, panelW - 32, 68, 5);
+    ctx.fill();
+    ctx.strokeStyle = "#252B3C";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.font = "bold 12px DungGeunMo";
+    ctx.fillStyle = "#60A5FA";
+    ctx.fillText(isKo ? "💡 TIP: [START] 버튼을 누르면" : "💡 TIP: Press [START] button", panelX + panelW / 2, 290);
+    ctx.fillText(isKo ? "현재 파티로 바로 모험을 시작합니다!" : "to launch your adventure!", panelX + panelW / 2, 312);
+
+    return;
+  }
 
   // =========================================================================
   // TAB 1 (DEFAULT): MOVES TAB (Detailed Move Inspector + Ability/Passive Footer)
@@ -2317,16 +2372,17 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     const panelW = splitX - panelX - 6;
 
     // Determine currently inspected party member
-    const activePartyIdx = Math.min(Math.max(0, options.selectedPartyIdx || 0), Math.max(0, party.length - 1));
-    const activePartyMember = party[activePartyIdx];
-    const inspectedStarter = activePartyMember ? getStarterByDexNumber(activePartyMember.dexNumber) || sel : sel;
+    const isNoneSelected = options.selectedPartyIdx === undefined || options.selectedPartyIdx === -1;
+    const activePartyIdx = isNoneSelected ? -1 : Math.min(Math.max(0, options.selectedPartyIdx!), Math.max(0, party.length - 1));
+    const activePartyMember = activePartyIdx >= 0 ? party[activePartyIdx] : undefined;
+    const inspectedStarter = activePartyMember ? getStarterByDexNumber(activePartyMember.dexNumber) || null : null;
     const inspectedProg = inspectedStarter && userStarters ? userStarters.get(inspectedStarter.speciesId) : null;
     const inspectedHasShiny = activePartyMember?.isShiny || (inspectedProg?.shinyTier || 0) > 0;
     const inspectedHasHa = activePartyMember?.useHiddenAbility || inspectedProg?.hasHiddenAbility || false;
     const inspectedHasPassive = activePartyMember?.usePassive || inspectedProg?.passiveUnlocked || false;
 
     // Fetch inspected sprite
-    const inspectedSprite = inspectedStarter ? await getPokemonSprite(inspectedStarter.speciesId, true, inspectedHasShiny) : selectedSprite;
+    const inspectedSprite = inspectedStarter ? await getPokemonSprite(inspectedStarter.speciesId, true, inspectedHasShiny) : null;
 
     // Render preview and party grid on LEFT SIDE
     renderPreviewAndPartyPanel(ctx, {
@@ -2354,18 +2410,16 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     ctx.stroke();
 
     // RIGHT SIDE: Render Party Member Customization Dashboard
-    if (inspectedStarter) {
-      renderPartyCustomizationPanel(ctx, {
-        panelX: splitX + 8,
-        panelW: width - splitX - 18,
-        sel: inspectedStarter,
-        partyMember: activePartyMember,
-        selProgress: inspectedProg,
-        isKo,
-        tab: options.partyTab,
-        selectedMoveIdx: options.selectedMoveIdx,
-      });
-    }
+    renderPartyCustomizationPanel(ctx, {
+      panelX: splitX + 8,
+      panelW: width - splitX - 18,
+      sel: inspectedStarter,
+      partyMember: activePartyMember,
+      selProgress: inspectedProg,
+      isKo,
+      tab: options.partyTab,
+      selectedMoveIdx: options.selectedMoveIdx,
+    });
 
     return canvas.toBuffer("image/png");
   }

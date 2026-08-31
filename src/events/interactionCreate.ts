@@ -883,7 +883,7 @@ async function renderPartyViewMessageData(
   isShinyFilter: boolean = false,
   isHaFilter: boolean = false,
   isPassiveFilter: boolean = false,
-  selectedPartyIdx: number = 0,
+  selectedPartyIdx: number = -1,
   partyTab: PartyViewTab = "moves",
   selectedMoveIdx: number = 0
 ) {
@@ -912,12 +912,12 @@ async function renderPartyViewMessageData(
   const currentCost = selectedParty.reduce((sum, p) => sum + p.cost, 0);
   const canStart = selectedParty.length >= 1 && currentCost <= DEFAULT_MAX_COST;
 
-  const safePartyIdx = Math.min(Math.max(0, selectedPartyIdx), Math.max(0, selectedParty.length - 1));
-  const activePartyMember = selectedParty[safePartyIdx];
-  const inspectedStarter = activePartyMember ? getStarterByDexNumber(activePartyMember.dexNumber) || STARTER_DATABASE[0] : STARTER_DATABASE[0];
+  const safePartyIdx = selectedPartyIdx >= 0 && selectedParty[selectedPartyIdx] ? selectedPartyIdx : -1;
+  const activePartyMember = safePartyIdx >= 0 ? selectedParty[safePartyIdx] : undefined;
+  const inspectedStarter = activePartyMember ? getStarterByDexNumber(activePartyMember.dexNumber) : undefined;
 
   const imageBuffer = await renderStarterSelectScreen({
-    selectedStarter: inspectedStarter,
+    selectedStarter: inspectedStarter || STARTER_DATABASE[0],
     currentGen: gen,
     currentPage: page,
     totalPages: 1,
@@ -967,13 +967,19 @@ async function renderPartyViewMessageData(
   const hasPassive = inspectedProg?.passiveUnlocked || false;
   const curUsePassive = activePartyMember?.usePassive || false;
 
-  const haBtnLabel = isKo
-    ? (hasHa ? (curUseHa ? `🌟 [숨특]` : `🌟 [일특]`) : "🔒 숨특")
-    : (hasHa ? (curUseHa ? `🌟 [HA]` : `🌟 [Ab]`) : "🔒 HA");
+  let haBtnLabel = isKo ? "🔒 숨특" : "🔒 HA";
+  if (inspectedStarter) {
+    haBtnLabel = isKo
+      ? (hasHa ? (curUseHa ? `🌟 [숨특]` : `🌟 [일특]`) : "🔒 숨특")
+      : (hasHa ? (curUseHa ? `🌟 [HA]` : `🌟 [Ab]`) : "🔒 HA");
+  }
 
-  const passBtnLabel = isKo
-    ? (hasPassive ? (curUsePassive ? "🔓 패시브ON" : "🔓 패시브OFF") : "🔒 패시브")
-    : (hasPassive ? (curUsePassive ? "🔓 PassON" : "🔓 PassOFF") : "🔒 Pass");
+  let passBtnLabel = isKo ? "🔒 패시브" : "🔒 Pass";
+  if (inspectedStarter) {
+    passBtnLabel = isKo
+      ? (hasPassive ? (curUsePassive ? "🔓 패시브ON" : "🔓 패시브OFF") : "🔒 패시브")
+      : (hasPassive ? (curUsePassive ? "🔓 PassON" : "🔓 PassOFF") : "🔒 Pass");
+  }
 
   components.push(
     new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -989,12 +995,12 @@ async function renderPartyViewMessageData(
         .setCustomId(`party_toggleha_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
         .setLabel(haBtnLabel)
         .setStyle(curUseHa ? ButtonStyle.Danger : ButtonStyle.Secondary)
-        .setDisabled(!hasHa),
+        .setDisabled(!inspectedStarter || !hasHa),
       new ButtonBuilder()
         .setCustomId(`party_togglepass_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
         .setLabel(passBtnLabel)
         .setStyle(curUsePassive ? ButtonStyle.Success : ButtonStyle.Secondary)
-        .setDisabled(!hasPassive)
+        .setDisabled(!inspectedStarter || !hasPassive)
     )
   );
 
@@ -1017,7 +1023,18 @@ async function renderPartyViewMessageData(
   );
 
   // ROW 4: Context Sub-Actions based on active tab
-  if (partyTab === "shiny") {
+  if (safePartyIdx === -1 || !inspectedStarter) {
+    // If no party member is selected yet
+    components.push(
+      new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`party_none_info_${userId}`)
+          .setLabel(isKo ? "🔍 파티원을 먼저 선택하세요" : "🔍 Select a Party Member First")
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(true)
+      )
+    );
+  } else if (partyTab === "shiny") {
     // Shiny Tab: 4 Direct Shiny Tier Buttons (T0, T1, T2, T3)
     const tierLabels = ["T0 일반", "T1 노랑", "T2 파랑", "T3 빨강"];
     const tierButtons: ButtonBuilder[] = [];
@@ -1063,7 +1080,7 @@ async function renderPartyViewMessageData(
         .setCustomId(`party_remove_${safePartyIdx}_${removeTargetDex}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
         .setLabel(isKo ? "-⚪ 파티 제외" : "-⚪ Remove")
         .setStyle(ButtonStyle.Danger)
-        .setDisabled(!activePartyMember),
+        .setDisabled(!activePartyMember || safePartyIdx === -1),
       new ButtonBuilder()
         .setCustomId(`starter_start_${slotId}_${partyParam}_${flagsParam}_${userId}`)
         .setLabel("START")
@@ -1820,7 +1837,7 @@ export const interactionCreateEvent: BotEvent = {
         const isHa = parts[8] === "1";
         const isPassive = parts[9] === "1";
 
-        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, partyRaw, isShiny, isHa, isPassive, 0, "moves", 0);
+        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, partyRaw, isShiny, isHa, isPassive, -1, "moves", 0);
         await interaction.update(partyData);
         return;
       }
