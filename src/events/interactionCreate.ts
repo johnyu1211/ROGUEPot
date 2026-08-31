@@ -968,21 +968,53 @@ async function renderPartyViewMessageData(
   const hasPassive = inspectedProg?.passiveUnlocked || false;
   const curUsePassive = activePartyMember?.usePassive || false;
 
-  let haBtnLabel = isKo ? "🔒 숨특" : "🔒 HA";
+  // ROW 1 (TOP): Ability, Hidden Ability, and Passive Information (All Secondary Grey Buttons)
+  const abilityName = inspectedStarter
+    ? (isKo ? inspectedStarter.abilityKo : inspectedStarter.ability)
+    : "-";
+  const haName = inspectedStarter && inspectedStarter.hiddenAbility
+    ? (isKo ? inspectedStarter.hiddenAbilityKo : inspectedStarter.hiddenAbility)
+    : "-";
+  const passName = inspectedStarter && inspectedStarter.passiveAbility
+    ? (isKo ? inspectedStarter.passiveAbilityKo : inspectedStarter.passiveAbility)
+    : "-";
+
+  let abBtnLabel = isKo ? `🌟 특성: ${abilityName}` : `🌟 Ab: ${abilityName}`;
+  let haBtnLabel = isKo ? "🔒 숨특: -" : "🔒 HA: -";
   if (inspectedStarter) {
-    haBtnLabel = isKo
-      ? (hasHa ? (curUseHa ? `🌟 [숨특]` : `🌟 [일특]`) : "🔒 숨특")
-      : (hasHa ? (curUseHa ? `🌟 [HA]` : `🌟 [Ab]`) : "🔒 HA");
+    haBtnLabel = hasHa
+      ? (curUseHa ? (isKo ? `🌟 [숨특] ${haName}` : `🌟 [HA] ${haName}`) : (isKo ? `🌟 [일특] ${abilityName}` : `🌟 [Ab] ${abilityName}`))
+      : (isKo ? `🔒 숨특 (${haName})` : `🔒 HA (${haName})`);
   }
 
-  let passBtnLabel = isKo ? "🔒 패시브" : "🔒 Pass";
+  let passBtnLabel = isKo ? "🔒 패시브: -" : "🔒 Pass: -";
   if (inspectedStarter) {
-    passBtnLabel = isKo
-      ? (hasPassive ? (curUsePassive ? "🔓 패시브ON" : "🔓 패시브OFF") : "🔒 패시브")
-      : (hasPassive ? (curUsePassive ? "🔓 PassON" : "🔓 PassOFF") : "🔒 Pass");
+    passBtnLabel = hasPassive
+      ? (curUsePassive ? (isKo ? `🔓 [패시브ON] ${passName}` : `🔓 [PassON] ${passName}`) : (isKo ? `🔓 [패시브OFF] ${passName}` : `🔓 [PassOFF] ${passName}`))
+      : (isKo ? `🔒 패시브 (${passName})` : `🔒 Pass (${passName})`);
   }
 
-  // ROW 1: Party 1, 2 + [ ⚔️ 기술 관리 ] + [ ✨ 이로치 폼 ]
+  components.push(
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`party_info_ab_${safePartyIdx}_${userId}`)
+        .setLabel(abBtnLabel.slice(0, 20))
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(true),
+      new ButtonBuilder()
+        .setCustomId(`party_toggleha_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
+        .setLabel(haBtnLabel.slice(0, 20))
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(!inspectedStarter || !hasHa),
+      new ButtonBuilder()
+        .setCustomId(`party_togglepass_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
+        .setLabel(passBtnLabel.slice(0, 20))
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(!inspectedStarter || !hasPassive)
+    )
+  );
+
+  // ROW 2: Party 1, 2 + [ ⚔️ 기술 관리 ] + [ ✨ 이로치 폼 ]
   components.push(
     new ActionRowBuilder<ButtonBuilder>().addComponents(
       createPartySlotBtn(0),
@@ -998,7 +1030,7 @@ async function renderPartyViewMessageData(
     )
   );
 
-  // ROW 2: Party 3, 4
+  // ROW 3: Party 3, 4
   components.push(
     new ActionRowBuilder<ButtonBuilder>().addComponents(
       createPartySlotBtn(2),
@@ -1006,7 +1038,7 @@ async function renderPartyViewMessageData(
     )
   );
 
-  // ROW 3: Party 5, 6
+  // ROW 4: Party 5, 6
   components.push(
     new ActionRowBuilder<ButtonBuilder>().addComponents(
       createPartySlotBtn(4),
@@ -1014,7 +1046,7 @@ async function renderPartyViewMessageData(
     )
   );
 
-  // ROW 4: Remove [-⚪] + Back [↩️] (NO START BUTTON)
+  // ROW 5: Remove [-⚪] + Back [↩️] (NO START BUTTON)
   const removeTargetDex = activePartyMember ? activePartyMember.dexNumber : 0;
   components.push(
     new ActionRowBuilder<ButtonBuilder>().addComponents(
