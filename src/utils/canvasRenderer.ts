@@ -2249,72 +2249,53 @@ function drawWrappedText(ctx: any, text: string, x: number, y: number, maxWidth:
 
 /**
  * Draws an authentic PokéRogue / Pokémon in-game dialogue message box overlaid on the top z-index layer
+ * (Matched 100% to the Pokédex flavor text message box design)
  */
 function drawInGameMessageBox(ctx: any, width: number, height: number, msg: InGameMessage, isKo: boolean) {
   // 1. Subtle Dim Overlay across the entire screen
-  ctx.fillStyle = "rgba(7, 9, 15, 0.55)";
+  ctx.fillStyle = "rgba(7, 9, 15, 0.45)";
   ctx.fillRect(0, 0, width, height);
 
-  // 2. In-Game Dialogue Box (Bottom Position: y: 266 ~ 366, H: 100)
+  // 2. In-Game Dialogue Box (Bottom Position: y: 268 ~ 368, H: 100, styled like Pokédex Card)
   const boxX = 14;
-  const boxY = height - 108;
+  const boxY = height - 110;
   const boxW = width - 28;
-  const boxH = 98;
+  const boxH = 100;
 
-  // Outer border & dark background
-  ctx.fillStyle = "#111422";
+  // Outer border & dark background (Same as Pokédex Flavor Card)
+  ctx.fillStyle = "#181B26";
   ctx.beginPath();
   ctx.roundRect(boxX, boxY, boxW, boxH, 6);
   ctx.fill();
 
-  const borderColor = msg.type === "lock" ? "#EF4444" : (msg.type === "success" ? "#22C55E" : "#5865F2");
-  ctx.strokeStyle = borderColor;
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = "#282D3D";
+  ctx.lineWidth = 1;
   ctx.stroke();
 
-  // Inner subtle accent border
-  ctx.strokeStyle = "#252B3D";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(boxX + 3, boxY + 3, boxW - 6, boxH - 6);
-
-  // 3. Top Title Tag (Badge)
-  const titleX = boxX + 14;
-  const titleY = boxY + 18;
-
+  // 3. Header: Pokédex-style Title + Sub-divider line (y: boxY + 18)
   ctx.textBaseline = "middle";
-  ctx.font = "bold 14px DungGeunMo";
-  ctx.fillStyle = borderColor;
+  ctx.font = "bold 13px DungGeunMo";
+  ctx.fillStyle = "#CBD5E1";
   ctx.textAlign = "left";
-  ctx.fillText(`[ ${msg.title} ]`, titleX, titleY);
+  ctx.fillText(msg.title, boxX + 12, boxY + 16);
 
-  // Divider line under title
-  ctx.strokeStyle = "#232838";
+  // Sub-divider line under header (matching Pokédex Card)
+  ctx.strokeStyle = "#282D3D";
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(boxX + 10, boxY + 30);
-  ctx.lineTo(boxX + boxW - 10, boxY + 30);
+  ctx.moveTo(boxX + 8, boxY + 26);
+  ctx.lineTo(boxX + boxW - 8, boxY + 26);
   ctx.stroke();
 
-  // 4. Message Content (Wrapped, 14px Font)
-  ctx.font = "14px DungGeunMo";
-  ctx.fillStyle = "#F8FAFC";
+  // 4. Flavor Text (Official 13px DungGeunMo #F1F5F9 matching Pokédex)
+  ctx.font = "13px DungGeunMo";
+  ctx.fillStyle = "#F1F5F9";
   const lines = msg.text.split("\n");
-  let curY = boxY + 48;
+  let curY = boxY + 44;
   for (const line of lines) {
-    drawWrappedText(ctx, line, boxX + 14, curY, boxW - 36, 20);
+    drawWrappedText(ctx, line, boxX + 12, curY, boxW - 24, 20);
     curY += 20;
   }
-
-  // 5. In-Game Cursor Arrow (▼) in bottom-right corner
-  ctx.fillStyle = borderColor;
-  ctx.beginPath();
-  const arrowX = boxX + boxW - 18;
-  const arrowY = boxY + boxH - 16;
-  ctx.moveTo(arrowX - 5, arrowY - 5);
-  ctx.lineTo(arrowX + 5, arrowY - 5);
-  ctx.lineTo(arrowX, arrowY);
-  ctx.closePath();
-  ctx.fill();
 }
 
 function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelArgs) {
