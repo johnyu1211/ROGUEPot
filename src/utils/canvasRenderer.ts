@@ -1002,9 +1002,6 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     ctx.beginPath();
     ctx.roundRect(showBoxX, showBoxY, showBoxSize, showBoxSize, 6);
     ctx.fill();
-    ctx.strokeStyle = "#2D3246";
-    ctx.lineWidth = 1;
-    ctx.stroke();
 
     if (bigSprite) {
       const scale = 1.35;
@@ -1694,9 +1691,6 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
       ctx.beginPath();
       ctx.roundRect(showBoxX, showBoxY, showBoxSize, showBoxSize, 6);
       ctx.fill();
-      ctx.strokeStyle = "#2D3246";
-      ctx.lineWidth = 1;
-      ctx.stroke();
 
       if (selectedSprite) {
         const scale = 1.25;
@@ -1947,9 +1941,6 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
     ctx.beginPath();
     ctx.roundRect(showBoxX, showBoxY, showBoxSize, showBoxSize, 6);
     ctx.fill();
-    ctx.strokeStyle = "#2D3246";
-    ctx.lineWidth = 1;
-    ctx.stroke();
 
     if (selectedSprite) {
       const scale = 1.3;
