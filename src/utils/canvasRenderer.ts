@@ -1739,7 +1739,13 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
       ctx.fillText(abLabel, rightColX, 40);
 
       // Passive Tag
-      const passiveName = selHasPassive ? (isKo ? `[패시브] ${sel.passiveAbilityKo}` : `[Passive] ${sel.passiveAbility}`) : (isKo ? "[패시브] 미해금" : "[Passive] Locked");
+      const hasPassUnlocked = selProgress?.passiveUnlocked || false;
+      let passiveName = isKo ? "[패시브] 미해금" : "[Passive] Locked";
+      if (hasPassUnlocked) {
+        passiveName = selHasPassive
+          ? (isKo ? `[패시브] ${sel.passiveAbilityKo}` : `[Passive] ${sel.passiveAbility}`)
+          : (isKo ? `[패시브] OFF` : `[Passive] OFF`);
+      }
       ctx.font = "bold 13px DungGeunMo";
       ctx.fillStyle = selHasPassive ? "#34D399" : "#64748B";
       ctx.fillText(passiveName, rightColX, 60);
@@ -2633,9 +2639,9 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     const activePartyMember = activePartyIdx >= 0 ? party[activePartyIdx] : undefined;
     const inspectedStarter = activePartyMember ? getStarterByDexNumber(activePartyMember.dexNumber) || null : null;
     const inspectedProg = inspectedStarter && userStarters ? userStarters.get(inspectedStarter.speciesId) : null;
-    const inspectedHasShiny = activePartyMember?.isShiny || (inspectedProg?.shinyTier || 0) > 0;
-    const inspectedHasHa = activePartyMember?.useHiddenAbility || inspectedProg?.hasHiddenAbility || false;
-    const inspectedHasPassive = activePartyMember?.usePassive || inspectedProg?.passiveUnlocked || false;
+    const inspectedHasShiny = activePartyMember ? activePartyMember.isShiny : (inspectedProg?.shinyTier || 0) > 0;
+    const inspectedHasHa = activePartyMember ? activePartyMember.useHiddenAbility : (inspectedProg?.hasHiddenAbility || false);
+    const inspectedHasPassive = activePartyMember ? activePartyMember.usePassive : (inspectedProg?.passiveUnlocked || false);
 
     // Fetch inspected sprite
     const inspectedSprite = inspectedStarter ? await getPokemonSprite(inspectedStarter.speciesId, true, inspectedHasShiny) : null;
