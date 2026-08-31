@@ -14,6 +14,8 @@ import {
 import { saveService } from "../src/services/saveService.js";
 import { db } from "../src/services/db.js";
 import { PartyViewTab } from "../src/utils/canvasRenderer.js";
+import { getStartersByGen } from "../src/data/starterCosts.js";
+import { getUserStarters } from "../src/services/starterService.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -62,7 +64,6 @@ function serializeDiscordMessagePayload(result: any) {
     imageBase64 = `data:image/png;base64,${attachment.attachment.toString("base64")}`;
   }
 
-  // Also support embed if returned
   let embedData = null;
   if (result.embeds && result.embeds[0]) {
     embedData = typeof result.embeds[0].toJSON === "function" ? result.embeds[0].toJSON() : result.embeds[0];
@@ -126,7 +127,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 3. Initial State Endpoint (Defaults directly to TITLE SCREEN - The true initial landing page!)
+  // 3. Initial State Endpoint (Defaults directly to TITLE SCREEN)
   if (req.method === "GET" && req.url?.startsWith("/api/initial")) {
     try {
       const url = new URL(req.url, `http://${req.headers.host}`);
@@ -142,10 +143,10 @@ const server = http.createServer(async (req, res) => {
           null as any,
           SIMULATED_USER_ID,
           1, // slotId
-          1, // gen
-          1, // page
-          1, // selectedDexNo
-          "393:0:0:0-1:2:0:1", // partyParam
+          0, // gen 0 (All)
+          1, // page 1
+          1, // selectedDexNo (Bulbasaur)
+          [], // partyDexList
           false,
           false,
           false
@@ -155,14 +156,14 @@ const server = http.createServer(async (req, res) => {
           null as any,
           SIMULATED_USER_ID,
           1,
-          1,
+          0,
           1,
           1,
           "393:0:0:0-1:2:0:1",
           false,
           false,
           false,
-          1,
+          0,
           "moves",
           0
         );
@@ -184,7 +185,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 4. Click Interaction Dispatcher (Full Discord event handling)
+  // 4. Click Interaction Dispatcher (100% 1:1 match with interactionCreate.ts button events)
   if (req.method === "POST" && req.url === "/api/click") {
     let body = "";
     req.on("data", (chunk) => (body += chunk));
@@ -195,69 +196,203 @@ const server = http.createServer(async (req, res) => {
 
         console.log(`[VIEWER INTERACTION] Clicked customId: ${customId}`);
 
+        const parts = customId.split("_");
         let result: any;
 
-        // TITLE & MENU INTERACTIONS
-        if (customId.startsWith("menu_newgame_") || customId.startsWith("menu_loadgame_")) {
-          result = renderSlotsScreenData(SIMULATED_USER_ID);
-        } else if (customId.startsWith("slot_select_")) {
-          // slot_select_${slotId}_${userId}
-          const parts = customId.split("_");
-          const slotId = parseInt(parts[2], 10) || 1;
-          result = await renderStarterSelectMessageData(
-            null as any,
-            SIMULATED_USER_ID,
-            slotId,
-            1, // gen 1
-            1, // page 1
-            1, // Bulbasaur
-            "393:0:0:0-1:2:0:1", // initial party
-            false,
-            false,
-            false
-          );
-        } else if (customId.startsWith("menu_back_to_title_") || customId.startsWith("starter_back_title_")) {
+        // 3-0. Back to Title Menu
+        if (customId.startsWith("menu_back_to_title_") || customId.startsWith("starter_back_title_")) {
           result = await renderTitleMessageData(null as any, SIMULATED_USER_ID);
-        } else if (customId.startsWith("menu_inventory_") || customId.startsWith("bag_tab_")) {
+        }
+
+        // 3-0-1. Inventory Bag Button Clicked
+        else if (customId.startsWith("menu_inventory_") || customId.startsWith("bag_tab_")) {
           const tab = customId.includes("pokedex") ? "pokedex" : (customId.includes("records") ? "records" : "pokemon");
           result = await renderBagMessageData(null as any, SIMULATED_USER_ID, tab);
-        } else if (customId.startsWith("menu_multiplay_")) {
+        }
+
+        // 3-0-4. Multiplay Button Clicked
+        else if (customId.startsWith("menu_multiplay_")) {
           result = await renderMultiplayerMessageData(null as any, SIMULATED_USER_ID);
         }
 
-        // GENERATION SELECTOR
-        else if (customId.startsWith("starter_genmenu_")) {
+        // 2-1. New Game Button Clicked from Title (interactionCreate.ts:1746 -> renderStarterSelectMessageData directly!)
+        else if (customId.startsWith("menu_newgame_")) {
+          const targetSlot = saveService.getFirstAvailableSlot(SIMULATED_USER_ID);
+          result = await renderStarterSelectMessageData(null as any, SIMULATED_USER_ID, targetSlot, 0, 1, 1, [], false, false, false);
+        }
+
+        // 2-0. Load Game Button Clicked from Title
+        else if (customId.startsWith("menu_loadgame_")) {
+          result = renderSlotsScreenData(SIMULATED_USER_ID);
+        }
+
+        // Slot Select
+        else if (customId.startsWith("slot_select_")) {
+          const slotId = parseInt(parts[2], 10) || 1;
+          result = await renderStarterSelectMessageData(null as any, SIMULATED_USER_ID, slotId, 0, 1, 1, [], false, false, false);
+        }
+
+        // 2-1-G. Open Generation Selection Menu
+        else if (customId.startsWith("starter_open_gen_menu_") || customId.startsWith("starter_genmenu_")) {
           // starter_genmenu_${gen}_${slotId}_${partyParam}_${flagsParam}_${userId}
-          const parts = customId.split("_");
-          const gen = parseInt(parts[2], 10) || 1;
+          const rawGen = parseInt(parts[2], 10);
+          const currentGen = isNaN(rawGen) ? 0 : rawGen;
           const slotId = parseInt(parts[3], 10) || 1;
           const partyParam = parts[4] || "empty";
           const flagsParam = parts[5] || "0_0_0";
-          result = await renderGenSelectMessageData(null as any, SIMULATED_USER_ID, gen, slotId, partyParam, flagsParam);
-        } else if (customId.startsWith("starter_pickgen_") || customId.startsWith("starter_genback_")) {
-          // starter_pickgen_${targetGen}_${currentGen}_${slotId}_${partyParam}_${flagsParam}_${userId}
-          const parts = customId.split("_");
-          const targetGen = parseInt(parts[2], 10) || 1;
-          const slotId = parseInt(parts[4], 10) || 1;
-          const partyParam = parts[5] || "empty";
-          const flags = (parts[6] || "0_0_0").split("_").map((v: string) => v === "1");
-          result = await renderStarterSelectMessageData(
-            null as any,
-            SIMULATED_USER_ID,
-            slotId,
-            targetGen,
-            1, // page 1
-            1,
-            partyParam,
-            flags[0],
-            flags[1],
-            flags[2]
-          );
+          result = await renderGenSelectMessageData(null as any, SIMULATED_USER_ID, currentGen, slotId, partyParam, flagsParam);
         }
 
-        // PARTY BUILDER INTERACTIONS
+        // 2-1-H. Pick Specific Generation from Gen Menu or Back Button
+        else if (customId.startsWith("starter_pickgen_") || customId.startsWith("starter_genback_")) {
+          const isBack = customId.startsWith("starter_genback_");
+          const chosenGen = parseInt(parts[2], 10) || 0;
+          const prevGen = parseInt(parts[3], 10) || 0;
+          const slotId = parseInt(parts[4], 10) || 1;
+          const partyRaw = parts[5] || "empty";
+          const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d: string) => parseInt(d, 10)).filter(Boolean);
+          const isShiny = parts[6] === "1";
+          const isHa = parts[7] === "1";
+          const isPassive = parts[8] === "1";
+
+          const nextGen = isBack ? chosenGen : (chosenGen === prevGen ? 0 : chosenGen);
+          const genStarters = getStartersByGen(nextGen);
+          const firstStarterDex = genStarters[0]?.dexNumber || 1;
+
+          result = await renderStarterSelectMessageData(null as any, SIMULATED_USER_ID, slotId, nextGen, 1, firstStarterDex, partyDexList, isShiny, isHa, isPassive);
+        }
+
+        // 2-1-A. Starter Select Pokemon Item Clicked (interactionCreate.ts:1790)
+        else if (customId.startsWith("starter_sel_") || customId.startsWith("starter_slot_")) {
+          const dexNo = parseInt(parts[2], 10) || 1;
+          const gen = parseInt(parts[3], 10) || 0;
+          const page = parseInt(parts[4], 10) || 1;
+          const slotId = parseInt(parts[5], 10) || 1;
+          const partyRaw = parts[6] || "empty";
+          const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d: string) => parseInt(d, 10)).filter(Boolean);
+          const isShiny = parts[7] === "1";
+          const isHa = parts[8] === "1";
+          const isPassive = parts[9] === "1";
+
+          result = await renderStarterSelectMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, partyDexList, isShiny, isHa, isPassive);
+        }
+
+        // 2-1-B. Starter Page Navigation (interactionCreate.ts:1807)
+        else if (
+          customId.startsWith("starter_page_prev_") ||
+          customId.startsWith("starter_page_next_") ||
+          customId.startsWith("starter_page_jumpfirst_") ||
+          customId.startsWith("starter_page_jumplast_") ||
+          customId.startsWith("starter_page_")
+        ) {
+          const action = parts[2]; // 'prev' | 'next' | 'jumpfirst' | 'jumplast'
+          const gen = parseInt(parts[3], 10) || 0;
+          const curPage = parseInt(parts[4], 10) || 1;
+          const currentDexNo = parseInt(parts[5], 10) || 1;
+          const slotId = parseInt(parts[6], 10) || 1;
+          const partyRaw = parts[7] || "empty";
+          const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d: string) => parseInt(d, 10)).filter(Boolean);
+          const isShiny = parts[8] === "1";
+          const isHa = parts[9] === "1";
+          const isPassive = parts[10] === "1";
+
+          const userStarters = getUserStarters(SIMULATED_USER_ID);
+          let allStarters = getStartersByGen(gen).filter((s) => userStarters.get(s.speciesId)?.isUnlocked);
+          if (isShiny) allStarters = allStarters.filter((s) => (userStarters.get(s.speciesId)?.shinyTier || 0) > 0);
+          if (isHa) allStarters = allStarters.filter((s) => userStarters.get(s.speciesId)?.hasHiddenAbility);
+          if (isPassive) allStarters = allStarters.filter((s) => userStarters.get(s.speciesId)?.passiveUnlocked);
+
+          const totalPages = Math.max(1, Math.ceil(allStarters.length / 8));
+          let targetPage = curPage;
+
+          if (action === "prev") targetPage = Math.max(1, curPage - 1);
+          else if (action === "next") targetPage = Math.min(totalPages, curPage + 1);
+          else if (action === "jumpfirst") targetPage = 1;
+          else if (action === "jumplast") targetPage = totalPages;
+
+          result = await renderStarterSelectMessageData(null as any, SIMULATED_USER_ID, slotId, gen, targetPage, currentDexNo, partyDexList, isShiny, isHa, isPassive);
+        }
+
+        // 2-1-T1. Starter Toggle Shiny (interactionCreate.ts:1844)
+        else if (customId.startsWith("starter_toggleshiny_")) {
+          const gen = parseInt(parts[2], 10) || 0;
+          const page = parseInt(parts[3], 10) || 1;
+          const dexNo = parseInt(parts[4], 10) || 1;
+          const slotId = parseInt(parts[5], 10) || 1;
+          const partyRaw = parts[6] || "empty";
+          const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d: string) => parseInt(d, 10)).filter(Boolean);
+          const isShiny = parts[7] === "1";
+          const isHa = parts[8] === "1";
+          const isPassive = parts[9] === "1";
+
+          result = await renderStarterSelectMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, partyDexList, !isShiny, isHa, isPassive);
+        }
+
+        // 2-1-T2. Starter Toggle Passive (interactionCreate.ts:1861)
+        else if (customId.startsWith("starter_togglepass_")) {
+          const gen = parseInt(parts[2], 10) || 0;
+          const page = parseInt(parts[3], 10) || 1;
+          const dexNo = parseInt(parts[4], 10) || 1;
+          const slotId = parseInt(parts[5], 10) || 1;
+          const partyRaw = parts[6] || "empty";
+          const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d: string) => parseInt(d, 10)).filter(Boolean);
+          const isShiny = parts[7] === "1";
+          const isHa = parts[8] === "1";
+          const isPassive = parts[9] === "1";
+
+          result = await renderStarterSelectMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, partyDexList, isShiny, isHa, !isPassive);
+        }
+
+        // 2-1-T3. Starter Toggle Hidden Ability (interactionCreate.ts:1878)
+        else if (customId.startsWith("starter_toggleha_")) {
+          const gen = parseInt(parts[2], 10) || 0;
+          const page = parseInt(parts[3], 10) || 1;
+          const dexNo = parseInt(parts[4], 10) || 1;
+          const slotId = parseInt(parts[5], 10) || 1;
+          const partyRaw = parts[6] || "empty";
+          const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d: string) => parseInt(d, 10)).filter(Boolean);
+          const isShiny = parts[7] === "1";
+          const isHa = parts[8] === "1";
+          const isPassive = parts[9] === "1";
+
+          result = await renderStarterSelectMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, partyDexList, isShiny, !isHa, isPassive);
+        }
+
+        // 2-1-C. Starter Add to Party (interactionCreate.ts:1895)
+        else if (customId.startsWith("starter_add_")) {
+          const dexNo = parseInt(parts[2], 10) || 1;
+          const gen = parseInt(parts[3], 10) || 0;
+          const page = parseInt(parts[4], 10) || 1;
+          const slotId = parseInt(parts[5], 10) || 1;
+          const partyRaw = parts[6] || "empty";
+          const partyDexList = partyRaw === "empty" ? [] : partyRaw.split("-").map((d: string) => parseInt(d, 10)).filter(Boolean);
+          const isShiny = parts[7] === "1";
+          const isHa = parts[8] === "1";
+          const isPassive = parts[9] === "1";
+
+          if (!partyDexList.includes(dexNo) && partyDexList.length < 6) {
+            partyDexList.push(dexNo);
+          }
+
+          result = await renderStarterSelectMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, partyDexList, isShiny, isHa, isPassive);
+        }
+
+        // 2-1-P1. Open Party View Screen (interactionCreate.ts:1916)
+        else if (customId.startsWith("starter_openparty_")) {
+          const dexNo = parseInt(parts[2], 10) || 1;
+          const gen = parseInt(parts[3], 10) || 0;
+          const page = parseInt(parts[4], 10) || 1;
+          const slotId = parseInt(parts[5], 10) || 1;
+          const partyRaw = parts[6] || "empty";
+          const isShiny = parts[7] === "1";
+          const isHa = parts[8] === "1";
+          const isPassive = parts[9] === "1";
+
+          result = await renderPartyViewMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, partyRaw, isShiny, isHa, isPassive, 0, "moves", 0);
+        }
+
+        // 2-2-P1. Party Slot Selection (interactionCreate.ts:1934)
         else if (customId.startsWith("party_pick_")) {
-          const parts = customId.split("_");
           const idx = parseInt(parts[2], 10);
           const gen = parseInt(parts[3], 10) || 0;
           const page = parseInt(parts[4], 10) || 1;
@@ -283,8 +418,10 @@ const server = http.createServer(async (req, res) => {
             tab,
             moveIdx
           );
-        } else if (customId.startsWith("party_tab_")) {
-          const parts = customId.split("_");
+        }
+
+        // 2-2-P2. Party Tab Switcher (interactionCreate.ts:1968)
+        else if (customId.startsWith("party_tab_")) {
           const tab = parts[2] as PartyViewTab;
           const partyIdx = parseInt(parts[3], 10) || 0;
           const gen = parseInt(parts[4], 10) || 0;
@@ -310,8 +447,10 @@ const server = http.createServer(async (req, res) => {
             tab,
             moveIdx
           );
-        } else if (customId.startsWith("party_pickmove_")) {
-          const parts = customId.split("_");
+        }
+
+        // 2-2-P3. Party Move Slot Select (interactionCreate.ts:2002)
+        else if (customId.startsWith("party_pickmove_")) {
           const mIdx = parseInt(parts[2], 10);
           const partyIdx = parseInt(parts[3], 10) || 0;
           const gen = parseInt(parts[4], 10) || 0;
@@ -337,8 +476,10 @@ const server = http.createServer(async (req, res) => {
             tab,
             mIdx
           );
-        } else if (customId.startsWith("party_setha_")) {
-          const parts = customId.split("_");
+        }
+
+        // 2-2-P4. Party Set Ability / HA (interactionCreate.ts:2036)
+        else if (customId.startsWith("party_setha_")) {
           const haVal = parts[2] === "1";
           const partyIdx = parseInt(parts[3], 10) || 0;
           const gen = parseInt(parts[4], 10) || 0;
@@ -374,8 +515,10 @@ const server = http.createServer(async (req, res) => {
             tab,
             moveIdx
           );
-        } else if (customId.startsWith("party_togglepass_")) {
-          const parts = customId.split("_");
+        }
+
+        // 2-2-P5. Party Toggle Passive (interactionCreate.ts:2070)
+        else if (customId.startsWith("party_togglepass_")) {
           const partyIdx = parseInt(parts[2], 10) || 0;
           const gen = parseInt(parts[3], 10) || 0;
           const page = parseInt(parts[4], 10) || 1;
@@ -411,8 +554,10 @@ const server = http.createServer(async (req, res) => {
             tab,
             moveIdx
           );
-        } else if (customId.startsWith("party_remove_")) {
-          const parts = customId.split("_");
+        }
+
+        // 2-2-P6. Party Remove Member (interactionCreate.ts:2104)
+        else if (customId.startsWith("party_remove_")) {
           const partyIdx = parseInt(parts[2], 10) || 0;
           const gen = parseInt(parts[4], 10) || 0;
           const page = parseInt(parts[5], 10) || 1;
@@ -446,8 +591,10 @@ const server = http.createServer(async (req, res) => {
             tab,
             moveIdx
           );
-        } else if (customId.startsWith("party_back_starter_")) {
-          const parts = customId.split("_");
+        }
+
+        // 2-2-P7. Party Back to Starter Select (interactionCreate.ts:2138)
+        else if (customId.startsWith("party_back_starter_")) {
           const gen = parseInt(parts[3], 10) || 0;
           const page = parseInt(parts[4], 10) || 1;
           const dexNo = parseInt(parts[5], 10) || 1;
@@ -467,111 +614,10 @@ const server = http.createServer(async (req, res) => {
             flags[1],
             flags[2]
           );
-        } else if (customId.startsWith("starter_openparty_")) {
-          const parts = customId.split("_");
-          const dexNo = parseInt(parts[2], 10) || 1;
-          const gen = parseInt(parts[3], 10) || 0;
-          const page = parseInt(parts[4], 10) || 1;
-          const slotId = parseInt(parts[5], 10) || 1;
-          const partyParam = parts[6] || "empty";
-          const flags = (parts[7] || "0_0_0").split("_").map((v: string) => v === "1");
-
-          result = await renderPartyViewMessageData(
-            null as any,
-            SIMULATED_USER_ID,
-            slotId,
-            gen,
-            page,
-            dexNo,
-            partyParam,
-            flags[0],
-            flags[1],
-            flags[2],
-            0,
-            "moves",
-            0
-          );
         }
 
-        // STARTER SELECT GENERAL INTERACTIONS
-        else if (
-          customId.startsWith("starter_slot_") ||
-          customId.startsWith("starter_toggleshiny_") ||
-          customId.startsWith("starter_togglepass_") ||
-          customId.startsWith("starter_toggleha_") ||
-          customId.startsWith("starter_page_") ||
-          customId.startsWith("starter_add_")
-        ) {
-          const parts = customId.split("_");
-          let gen = 1, page = 1, dexNo = 1, slotId = 1, partyParam = "empty", isShiny = false, isHa = false, isPass = false;
-
-          if (customId.startsWith("starter_slot_")) {
-            dexNo = parseInt(parts[2], 10) || 1;
-            gen = parseInt(parts[3], 10) || 1;
-            page = parseInt(parts[4], 10) || 1;
-            slotId = parseInt(parts[5], 10) || 1;
-            partyParam = parts[6] || "empty";
-            const flags = (parts[7] || "0_0_0").split("_").map((v: string) => v === "1");
-            isShiny = flags[0]; isHa = flags[1]; isPass = flags[2];
-          } else if (customId.startsWith("starter_add_")) {
-            dexNo = parseInt(parts[2], 10) || 1;
-            gen = parseInt(parts[3], 10) || 1;
-            page = parseInt(parts[4], 10) || 1;
-            slotId = parseInt(parts[5], 10) || 1;
-            partyParam = parts[6] || "empty";
-            const flags = (parts[7] || "0_0_0").split("_").map((v: string) => v === "1");
-            isShiny = flags[0]; isHa = flags[1]; isPass = flags[2];
-
-            if (partyParam === "empty") partyParam = `${dexNo}:0:0:0`;
-            else partyParam += `-${dexNo}:0:0:0`;
-          } else if (customId.startsWith("starter_toggleshiny_")) {
-            gen = parseInt(parts[2], 10) || 1;
-            page = parseInt(parts[3], 10) || 1;
-            dexNo = parseInt(parts[4], 10) || 1;
-            slotId = parseInt(parts[5], 10) || 1;
-            partyParam = parts[6] || "empty";
-            const flags = (parts[7] || "0_0_0").split("_").map((v: string) => v === "1");
-            isShiny = !flags[0]; isHa = flags[1]; isPass = flags[2];
-          } else if (customId.startsWith("starter_togglepass_")) {
-            gen = parseInt(parts[2], 10) || 1;
-            page = parseInt(parts[3], 10) || 1;
-            dexNo = parseInt(parts[4], 10) || 1;
-            slotId = parseInt(parts[5], 10) || 1;
-            partyParam = parts[6] || "empty";
-            const flags = (parts[7] || "0_0_0").split("_").map((v: string) => v === "1");
-            isShiny = flags[0]; isHa = flags[1]; isPass = !flags[2];
-          } else if (customId.startsWith("starter_toggleha_")) {
-            gen = parseInt(parts[2], 10) || 1;
-            page = parseInt(parts[3], 10) || 1;
-            dexNo = parseInt(parts[4], 10) || 1;
-            slotId = parseInt(parts[5], 10) || 1;
-            partyParam = parts[6] || "empty";
-            const flags = (parts[7] || "0_0_0").split("_").map((v: string) => v === "1");
-            isShiny = flags[0]; isHa = !flags[1]; isPass = flags[2];
-          } else if (customId.startsWith("starter_page_")) {
-            const isNext = parts[2] === "next";
-            gen = parseInt(parts[3], 10) || 1;
-            page = (parseInt(parts[4], 10) || 1) + (isNext ? 1 : -1);
-            dexNo = parseInt(parts[5], 10) || 1;
-            slotId = parseInt(parts[6], 10) || 1;
-            partyParam = parts[7] || "empty";
-            const flags = (parts[8] || "0_0_0").split("_").map((v: string) => v === "1");
-            isShiny = flags[0]; isHa = flags[1]; isPass = flags[2];
-          }
-
-          result = await renderStarterSelectMessageData(
-            null as any,
-            SIMULATED_USER_ID,
-            slotId,
-            gen,
-            page,
-            dexNo,
-            partyParam,
-            isShiny,
-            isHa,
-            isPass
-          );
-        } else {
+        // Fallback
+        else {
           result = await renderTitleMessageData(null as any, SIMULATED_USER_ID);
         }
 
@@ -592,7 +638,7 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   console.log(`================================================`);
-  console.log(`  🎮 ROGUEPot Canvas UI Viewer Started!`);
+  console.log(`  🎨 ROGUEPot Canvas UI Viewer Started!`);
   console.log(`  🔗 Open in Browser: http://localhost:${PORT}`);
   console.log(`================================================`);
 });
