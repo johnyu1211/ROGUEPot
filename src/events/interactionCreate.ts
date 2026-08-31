@@ -1072,12 +1072,11 @@ export async function renderPartyViewMessageData(
   }
 
   // Ability Button Styles:
-  // - 적용 중 (Active / Equipped): Success (Green)
-  // - 얻은 상태 (Unlocked / Owned but inactive): Primary (Blue)
-  // - 미해금 (Locked): Secondary (Grey)
-  const normalAbStyle = isNormalAbActive ? ButtonStyle.Success : ButtonStyle.Primary;
-  const haStyle = hasHa ? (isHaActive ? ButtonStyle.Success : ButtonStyle.Primary) : ButtonStyle.Secondary;
-  const passStyle = hasPassive ? (isPassiveActive ? ButtonStyle.Success : ButtonStyle.Primary) : ButtonStyle.Secondary;
+  // - 활성화 상태 (Active / Equipped): Primary (Blue)
+  // - 비활성화/기본 상태 (Inactive / Default): Secondary (Grey)
+  const normalAbStyle = isNormalAbActive ? ButtonStyle.Primary : ButtonStyle.Secondary;
+  const haStyle = isHaActive ? ButtonStyle.Primary : ButtonStyle.Secondary;
+  const passStyle = isPassiveActive ? ButtonStyle.Primary : ButtonStyle.Secondary;
 
   components.push(
     new ActionRowBuilder<ButtonBuilder>().addComponents(
