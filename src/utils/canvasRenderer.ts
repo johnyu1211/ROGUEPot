@@ -1734,7 +1734,7 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
       }
       ctx.textBaseline = "middle";
       ctx.font = "bold 13px DungGeunMo";
-      ctx.fillStyle = selHasHa ? "#F87171" : "#60A5FA";
+      ctx.fillStyle = selHasHa ? "#F87171" : "#FFFFFF";
       ctx.textAlign = "left";
       ctx.fillText(abLabel, rightColX, 40);
 
@@ -1989,7 +1989,7 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
     }
     ctx.textBaseline = "middle";
     ctx.font = "bold 14px DungGeunMo";
-    ctx.fillStyle = selHasHa ? "#F87171" : "#60A5FA";
+    ctx.fillStyle = selHasHa ? "#F87171" : "#FFFFFF";
     ctx.textAlign = "left";
     ctx.fillText(abLabel, rightColX, 43);
 
