@@ -1020,7 +1020,7 @@ async function renderPartyViewMessageData(
     )
   );
 
-  // ROW 2: Party 1, 2 + [ ⚔️ 기술 관리 ] + [ ✨ 이로치 폼 ]
+  // ROW 2: Party 1, 2 + [ ⚔️ 기술 관리 ] + [ ✨ 이로치 폼 ] + [ 🍬 코스트 ]
   components.push(
     new ActionRowBuilder<ButtonBuilder>().addComponents(
       createPartySlotBtn(0),
@@ -1032,7 +1032,11 @@ async function renderPartyViewMessageData(
       new ButtonBuilder()
         .setCustomId(`party_tab_shiny_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${selectedMoveIdx}_${userId}`)
         .setLabel(isKo ? "✨ 이로치 폼" : "✨ Shiny Form")
-        .setStyle(partyTab === "shiny" ? ButtonStyle.Primary : ButtonStyle.Secondary)
+        .setStyle(partyTab === "shiny" ? ButtonStyle.Primary : ButtonStyle.Secondary),
+      new ButtonBuilder()
+        .setCustomId(`party_tab_cost_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${selectedMoveIdx}_${userId}`)
+        .setLabel(isKo ? "🍬 코스트" : "🍬 Cost")
+        .setStyle(partyTab === "cost" ? ButtonStyle.Primary : ButtonStyle.Secondary)
     )
   );
 
