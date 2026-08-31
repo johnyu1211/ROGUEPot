@@ -2330,8 +2330,8 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     { id: "cost", labelKo: `${candies}개`, labelEn: `${candies}`, icon: "cost" },
   ];
 
-  // Draw Horizontal Baseline below inactive tabs
-  ctx.strokeStyle = "#2D3448";
+  // Draw Horizontal Blue Baseline across panelW connecting with the active tab
+  ctx.strokeStyle = "#5865F2";
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(panelX, baselineY);
@@ -2342,14 +2342,17 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     const tX = panelX + idx * (tabW + tabGap);
     const isAct = currentTab === t.id || (t.id === "moves" && currentTab === "learnable");
 
-    ctx.fillStyle = isAct ? "#181D2B" : "#11131C";
-    ctx.beginPath();
-    ctx.roundRect(tX, tabY, tabW, tabH, [6, 6, 0, 0]);
-    ctx.fill();
+    if (isAct) {
+      // Active Tab: Folder tab shape with Discord Blue outline and clear bottom
+      ctx.fillStyle = "#141724";
+      ctx.beginPath();
+      ctx.roundRect(tX, tabY, tabW, tabH + 1, [6, 6, 0, 0]);
+      ctx.fill();
 
-    ctx.strokeStyle = isAct ? "#5865F2" : "#282E40";
-    ctx.lineWidth = isAct ? 1.5 : 1;
-    ctx.stroke();
+      ctx.strokeStyle = "#5865F2";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
 
     const iconColor = isAct ? "#FFFFFF" : "#64748B";
 
@@ -2432,14 +2435,16 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       const mY = 48 + mRow * (moveChipH + 8);
       const isSel = selectedMoveIdx === m;
 
-      ctx.fillStyle = isSel ? "#171C2E" : "#141724";
+      ctx.fillStyle = isSel ? "#171C2E" : "#151824";
       ctx.beginPath();
-      ctx.roundRect(mX, mY, moveChipW, moveChipH, 6);
+      ctx.roundRect(mX, mY, moveChipW, moveChipH, 8);
       ctx.fill();
 
-      ctx.strokeStyle = isSel ? "#5865F2" : "#22283A";
-      ctx.lineWidth = isSel ? 2 : 1;
-      ctx.stroke();
+      if (isSel) {
+        ctx.strokeStyle = "#5865F2";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
 
       if (rawMove === "---" || !moveInfo) {
         ctx.textBaseline = "middle";
