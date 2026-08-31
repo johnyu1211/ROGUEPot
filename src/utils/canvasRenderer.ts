@@ -2326,10 +2326,11 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // Top Tab Bar (y: 10 ~ 38) - 3 Tabs: [ 기술 ], [ 이로치 ], [ 사탕 N개 ] (With crisp vector icons)
-  const tabW = 76;
-  const tabH = 26;
-  const tabY = 11;
+  // Top Tab Bar (y: 10 ~ 40) - 3 Full-Width Equal Tabs: [ 기술 ], [ 이로치 ], [ 사탕 N개 ]
+  const tabGap = 6;
+  const tabW = Math.floor((panelW - 20 - (tabGap * 2)) / 3);
+  const tabH = 30;
+  const tabY = 10;
   const tabs: { id: PartyViewTab; labelKo: string; labelEn: string; icon: "moves" | "shiny" | "cost" }[] = [
     { id: "moves", labelKo: "기술", labelEn: "Moves", icon: "moves" },
     { id: "shiny", labelKo: "이로치", labelEn: "Shiny", icon: "shiny" },
@@ -2337,8 +2338,8 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   ];
 
   tabs.forEach((t, idx) => {
-    const tX = panelX + 8 + idx * (tabW + 6);
-    const isAct = currentTab === t.id;
+    const tX = panelX + 10 + idx * (tabW + tabGap);
+    const isAct = currentTab === t.id || (t.id === "moves" && currentTab === "learnable");
 
     ctx.fillStyle = isAct ? "#242E46" : "#131620";
     ctx.beginPath();
@@ -2357,21 +2358,21 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       ctx.font = "bold 13px DungGeunMo";
       ctx.fillStyle = isAct ? "#FFFFFF" : "#8E96AB";
       ctx.textAlign = "center";
-      ctx.fillText(isKo ? t.labelKo : t.labelEn, tX + 46, tabY + tabH / 2);
+      ctx.fillText(isKo ? t.labelKo : t.labelEn, tX + (tabW / 2) + 8, tabY + tabH / 2);
     } else if (t.icon === "shiny") {
       drawShinySparkle(ctx, tX + 16, tabY + tabH / 2, 4.0, isAct ? "#F59E0B" : "#64748B");
       ctx.textBaseline = "middle";
       ctx.font = "bold 13px DungGeunMo";
       ctx.fillStyle = isAct ? "#FFFFFF" : "#8E96AB";
       ctx.textAlign = "center";
-      ctx.fillText(isKo ? t.labelKo : t.labelEn, tX + 46, tabY + tabH / 2);
+      ctx.fillText(isKo ? t.labelKo : t.labelEn, tX + (tabW / 2) + 8, tabY + tabH / 2);
     } else if (t.icon === "cost") {
       drawCandyIcon(ctx, tX + 16, tabY + tabH / 2, 4.8, "#F59E0B", "#FEF08A");
       ctx.textBaseline = "middle";
       ctx.font = "bold 13px DungGeunMo";
       ctx.fillStyle = isAct ? "#FFFFFF" : "#FCD34D";
       ctx.textAlign = "center";
-      ctx.fillText(isKo ? t.labelKo : t.labelEn, tX + 46, tabY + tabH / 2);
+      ctx.fillText(isKo ? t.labelKo : t.labelEn, tX + (tabW / 2) + 8, tabY + tabH / 2);
     }
   });
 
@@ -2407,12 +2408,13 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   }
 
   // =========================================================================
-  // TAB 1 (DEFAULT): MOVES TAB (Clean Single-Card Inspector)
+  // TAB 1 (DEFAULT): MOVES TAB (Spacious 2x2 Move Tiles + Clean Detail Card)
   // =========================================================================
   if (currentTab === "moves") {
-    // 1. Move Selection Chips (2x2 Balanced Split Grid, y: 44 ~ 116)
-    const moveChipW = (panelW - 20 - 6) / 2;
-    const moveChipH = 33;
+    // 1. Move Selection Tiles (Spacious 2x2 Grid, y: 48 ~ 154, H: 49 each)
+    const chipGap = 8;
+    const moveChipW = Math.floor((panelW - 20 - chipGap) / 2);
+    const moveChipH = 49;
 
     for (let m = 0; m < 4; m++) {
       const rawMove = sel.starterMoves[m] || "---";
@@ -2423,13 +2425,13 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
 
       const mCol = m % 2;
       const mRow = Math.floor(m / 2);
-      const mX = panelX + 10 + mCol * (moveChipW + 6);
-      const mY = 44 + mRow * (moveChipH + 6);
+      const mX = panelX + 10 + mCol * (moveChipW + chipGap);
+      const mY = 48 + mRow * (moveChipH + 6);
       const isSel = selectedMoveIdx === m;
 
       ctx.fillStyle = isSel ? "#1E293B" : "#131622";
       ctx.beginPath();
-      ctx.roundRect(mX, mY, moveChipW, moveChipH, 4);
+      ctx.roundRect(mX, mY, moveChipW, moveChipH, 5);
       ctx.fill();
 
       ctx.strokeStyle = isSel ? "#60A5FA" : "#252B3D";
@@ -2438,31 +2440,30 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
 
       if (rawMove === "---" || !category || !moveInfo) {
         ctx.textBaseline = "middle";
-        ctx.font = "bold 13px DungGeunMo";
+        ctx.font = "bold 14px DungGeunMo";
         ctx.fillStyle = "#475569";
         ctx.textAlign = "center";
         ctx.fillText("---", mX + moveChipW / 2, mY + moveChipH / 2);
       } else {
-        // Left: Category Icon
-        const iconX = mX + 5;
-        const iconY = mY + (moveChipH - 20) / 2;
+        // Row 1 (y: mY + 16): Category Icon + Move Name
+        const iconX = mX + 8;
+        const iconY = mY + 6;
         drawMoveCategoryIcon(ctx, iconX, iconY, category);
 
-        // Center: Move Name
         ctx.textBaseline = "middle";
-        ctx.font = "bold 13px DungGeunMo";
-        ctx.fillStyle = isSel ? "#FFFFFF" : "#CBD5E1";
+        ctx.font = "bold 14px DungGeunMo";
+        ctx.fillStyle = isSel ? "#FFFFFF" : "#E2E8F0";
         ctx.textAlign = "left";
-        ctx.fillText(mDisplay, mX + 31, mY + moveChipH / 2);
+        ctx.fillText(mDisplay, mX + 36, mY + 16);
 
-        // Right: Type Badge (Mini)
+        // Row 2 (y: mY + 36): Type Badge + PP
         const tLower = moveInfo.type.toLowerCase();
         const tColor = TYPE_COLORS[tLower] || "#777777";
         const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || moveInfo.type) : moveInfo.type.toUpperCase();
-        const tW = 28;
+        const tW = 32;
         const tH = 15;
-        const tX = mX + moveChipW - tW - 5;
-        const tY = mY + (moveChipH - tH) / 2;
+        const tX = mX + 8;
+        const tY = mY + 28;
 
         ctx.fillStyle = tColor;
         ctx.beginPath();
@@ -2472,12 +2473,19 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
         ctx.fillStyle = "#FFFFFF";
         ctx.textAlign = "center";
         ctx.fillText(tDisplay, tX + tW / 2, tY + tH / 2);
+
+        // PP / Power Indicator on right of row 2
+        ctx.font = "bold 11px DungGeunMo";
+        ctx.fillStyle = "#94A3B8";
+        ctx.textAlign = "right";
+        const pwrLabel = moveInfo.power ? `위력:${moveInfo.power}` : "변화";
+        ctx.fillText(pwrLabel, mX + moveChipW - 8, mY + 36);
       }
     }
 
-    // 2. Clean Single Card Move Detail (y: 120 ~ 362, H: 242, No nested boxes!)
-    const cardY = 120;
-    const cardH = 242;
+    // 2. Clean Single Card Move Detail (y: 160 ~ 362, H: 202, No nested boxes!)
+    const cardY = 160;
+    const cardH = 202;
     const cardW = panelW - 20;
     const cardX = panelX + 10;
 
@@ -2496,14 +2504,14 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     if (curRawMove !== "---" && curMoveInfo) {
       // (1) Header: Category Icon + Move Name (18px) + Type Badge
       const cat = curMoveInfo.category;
-      drawMoveCategoryIcon(ctx, cardX + 12, cardY + 10, cat);
+      drawMoveCategoryIcon(ctx, cardX + 12, cardY + 8, cat);
 
       ctx.textBaseline = "middle";
-      ctx.font = "bold 18px DungGeunMo";
+      ctx.font = "bold 17px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "left";
       const moveTitle = isKo ? curMoveInfo.nameKo : curMoveInfo.name.toUpperCase();
-      ctx.fillText(moveTitle, cardX + 42, cardY + 21);
+      ctx.fillText(moveTitle, cardX + 42, cardY + 18);
       const titleWidth = ctx.measureText(moveTitle).width;
 
       // Type Badge
@@ -2511,9 +2519,9 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       const tColor = TYPE_COLORS[tLower] || "#777777";
       const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || curMoveInfo.type) : curMoveInfo.type.toUpperCase();
       const tBadgeW = 38;
-      const tBadgeH = 18;
+      const tBadgeH = 17;
       const tBadgeX = cardX + 48 + titleWidth;
-      const tBadgeY = cardY + 12;
+      const tBadgeY = cardY + 10;
 
       ctx.fillStyle = tColor;
       ctx.beginPath();
@@ -2529,12 +2537,12 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       ctx.strokeStyle = "#282D3D";
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(cardX + 10, cardY + 38);
-      ctx.lineTo(cardX + cardW - 10, cardY + 38);
+      ctx.moveTo(cardX + 10, cardY + 32);
+      ctx.lineTo(cardX + cardW - 10, cardY + 32);
       ctx.stroke();
 
       // (2) Stats Row: Power / Accuracy / PP (Clean 3-Column text layout)
-      const statY = cardY + 54;
+      const statY = cardY + 46;
       const colW = (cardW - 24) / 3;
 
       const pwrStr = curMoveInfo.power ? String(curMoveInfo.power) : "-";
@@ -2546,7 +2554,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       ctx.fillStyle = "#94A3B8";
       ctx.textAlign = "left";
       ctx.fillText(isKo ? "위력:" : "Power:", cardX + 12, statY);
-      ctx.font = "bold 15px DungGeunMo";
+      ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#F87171";
       ctx.fillText(pwrStr, cardX + (isKo ? 46 : 58), statY);
 
@@ -2554,7 +2562,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       ctx.font = "bold 12px DungGeunMo";
       ctx.fillStyle = "#94A3B8";
       ctx.fillText(isKo ? "명중:" : "Acc:", cardX + 12 + colW, statY);
-      ctx.font = "bold 15px DungGeunMo";
+      ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#60A5FA";
       ctx.fillText(accStr, cardX + 12 + colW + (isKo ? 46 : 46), statY);
 
@@ -2562,28 +2570,28 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       ctx.font = "bold 12px DungGeunMo";
       ctx.fillStyle = "#94A3B8";
       ctx.fillText("PP:", cardX + 12 + colW * 2, statY);
-      ctx.font = "bold 15px DungGeunMo";
+      ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#34D399";
-      ctx.fillText(ppStr, cardX + 12 + colW * 2 + 30, statY);
+      ctx.fillText(ppStr, cardX + 12 + colW * 2 + 28, statY);
 
       // Second Divider Line
       ctx.strokeStyle = "#282D3D";
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(cardX + 10, cardY + 70);
-      ctx.lineTo(cardX + cardW - 10, cardY + 70);
+      ctx.moveTo(cardX + 10, cardY + 60);
+      ctx.lineTo(cardX + cardW - 10, cardY + 60);
       ctx.stroke();
 
       // (3) Description Header & Content (Spacious Pokédex-style typography)
       ctx.font = "bold 12px DungGeunMo";
       ctx.fillStyle = "#CBD5E1";
       ctx.textAlign = "left";
-      ctx.fillText(isKo ? "기술 효과 설명" : "Move Effect Description", cardX + 12, cardY + 86);
+      ctx.fillText(isKo ? "기술 효과 설명" : "Move Effect Description", cardX + 12, cardY + 74);
 
       ctx.font = "13px DungGeunMo";
       ctx.fillStyle = "#F1F5F9";
       const desc = curMoveInfo.description || (isKo ? "효과 설명이 없습니다." : "No description available.");
-      drawWrappedText(ctx, desc, cardX + 12, cardY + 108, cardW - 24, 22);
+      drawWrappedText(ctx, desc, cardX + 12, cardY + 94, cardW - 24, 20);
     } else {
       ctx.textBaseline = "middle";
       ctx.font = "bold 14px DungGeunMo";
