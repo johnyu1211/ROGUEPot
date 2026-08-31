@@ -1930,7 +1930,7 @@ export const interactionCreateEvent: BotEvent = {
         const userStarters = getUserStarters(interaction.user.id);
         const partyStates = parsePartyParam(partyRaw, userStarters);
         const targetMember = partyStates[currentIdx];
-        let nextTab = tab;
+        let nextTab: PartyViewTab = "ability";
 
         if (targetMember) {
           const s = getStarterByDexNumber(targetMember.dexNumber);
@@ -1938,8 +1938,6 @@ export const interactionCreateEvent: BotEvent = {
           if (isSet && targetUseHa) {
             if (prog?.hasHiddenAbility) {
               targetMember.useHiddenAbility = true;
-            } else {
-              nextTab = "cost";
             }
           } else if (isSet && !targetUseHa) {
             targetMember.useHiddenAbility = false;
@@ -1969,15 +1967,13 @@ export const interactionCreateEvent: BotEvent = {
         const userStarters = getUserStarters(interaction.user.id);
         const partyStates = parsePartyParam(partyRaw, userStarters);
         const targetMember = partyStates[currentIdx];
-        let nextTab = tab;
+        let nextTab: PartyViewTab = "passive";
 
         if (targetMember) {
           const s = getStarterByDexNumber(targetMember.dexNumber);
           const prog = s ? userStarters.get(s.speciesId) : null;
           if (prog?.passiveUnlocked) {
             targetMember.usePassive = !targetMember.usePassive;
-          } else {
-            nextTab = "cost";
           }
         }
 
