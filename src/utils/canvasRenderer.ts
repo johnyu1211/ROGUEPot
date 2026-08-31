@@ -2445,25 +2445,14 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
         ctx.textAlign = "center";
         ctx.fillText("---", mX + moveChipW / 2, mY + moveChipH / 2);
       } else {
-        // Row 1 (y: mY + 16): Category Icon + Move Name
-        const iconX = mX + 8;
-        const iconY = mY + 6;
-        drawMoveCategoryIcon(ctx, iconX, iconY, category);
-
-        ctx.textBaseline = "middle";
-        ctx.font = "bold 14px DungGeunMo";
-        ctx.fillStyle = isSel ? "#FFFFFF" : "#E2E8F0";
-        ctx.textAlign = "left";
-        ctx.fillText(mDisplay, mX + 36, mY + 16);
-
-        // Row 2 (y: mY + 36): Type Badge + PP
+        // Row 1 (y: mY + 16): [Type Badge] (Left Front) + [Category Icon] + [Move Name]
         const tLower = moveInfo.type.toLowerCase();
         const tColor = TYPE_COLORS[tLower] || "#777777";
         const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || moveInfo.type) : moveInfo.type.toUpperCase();
-        const tW = 32;
-        const tH = 15;
-        const tX = mX + 8;
-        const tY = mY + 28;
+        const tW = 30;
+        const tH = 16;
+        const tX = mX + 6;
+        const tY = mY + 8;
 
         ctx.fillStyle = tColor;
         ctx.beginPath();
@@ -2474,12 +2463,27 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
         ctx.textAlign = "center";
         ctx.fillText(tDisplay, tX + tW / 2, tY + tH / 2);
 
-        // PP / Power Indicator on right of row 2
+        // Category Icon (Next to Type Badge)
+        const iconX = mX + 40;
+        const iconY = mY + 6;
+        drawMoveCategoryIcon(ctx, iconX, iconY, category);
+
+        // Move Name (Next to Category Icon)
+        ctx.textBaseline = "middle";
+        ctx.font = "bold 14px DungGeunMo";
+        ctx.fillStyle = isSel ? "#FFFFFF" : "#E2E8F0";
+        ctx.textAlign = "left";
+        ctx.fillText(mDisplay, mX + 66, mY + 16);
+
+        // Row 2 (y: mY + 36): Power & PP
         ctx.font = "bold 11px DungGeunMo";
         ctx.fillStyle = "#94A3B8";
-        ctx.textAlign = "right";
+        ctx.textAlign = "left";
         const pwrLabel = moveInfo.power ? `위력:${moveInfo.power}` : "변화";
-        ctx.fillText(pwrLabel, mX + moveChipW - 8, mY + 36);
+        ctx.fillText(pwrLabel, mX + 8, mY + 36);
+
+        ctx.textAlign = "right";
+        ctx.fillText(`PP:${moveInfo.pp || 35}`, mX + moveChipW - 8, mY + 36);
       }
     }
 
@@ -2502,25 +2506,13 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     const curMoveInfo = MOVES_DATA[curMoveKey];
 
     if (curRawMove !== "---" && curMoveInfo) {
-      // (1) Header: Category Icon + Move Name (18px) + Type Badge
-      const cat = curMoveInfo.category;
-      drawMoveCategoryIcon(ctx, cardX + 12, cardY + 8, cat);
-
-      ctx.textBaseline = "middle";
-      ctx.font = "bold 17px DungGeunMo";
-      ctx.fillStyle = "#FFFFFF";
-      ctx.textAlign = "left";
-      const moveTitle = isKo ? curMoveInfo.nameKo : curMoveInfo.name.toUpperCase();
-      ctx.fillText(moveTitle, cardX + 42, cardY + 18);
-      const titleWidth = ctx.measureText(moveTitle).width;
-
-      // Type Badge
+      // (1) Header: [Type Badge] (Left Front) + Move Name (18px)
       const tLower = curMoveInfo.type.toLowerCase();
       const tColor = TYPE_COLORS[tLower] || "#777777";
       const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || curMoveInfo.type) : curMoveInfo.type.toUpperCase();
       const tBadgeW = 38;
-      const tBadgeH = 17;
-      const tBadgeX = cardX + 48 + titleWidth;
+      const tBadgeH = 18;
+      const tBadgeX = cardX + 12;
       const tBadgeY = cardY + 10;
 
       ctx.fillStyle = tColor;
@@ -2528,10 +2520,18 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       ctx.roundRect(tBadgeX, tBadgeY, tBadgeW, tBadgeH, 3);
       ctx.fill();
 
+      ctx.textBaseline = "middle";
       ctx.font = "bold 11px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
       ctx.fillText(tDisplay, tBadgeX + tBadgeW / 2, tBadgeY + tBadgeH / 2);
+
+      // Move Name (Next to Type Badge)
+      ctx.font = "bold 18px DungGeunMo";
+      ctx.fillStyle = "#FFFFFF";
+      ctx.textAlign = "left";
+      const moveTitle = isKo ? curMoveInfo.nameKo : curMoveInfo.name.toUpperCase();
+      ctx.fillText(moveTitle, cardX + 56, cardY + 20);
 
       // Top Divider Line
       ctx.strokeStyle = "#282D3D";
@@ -2541,7 +2541,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       ctx.lineTo(cardX + cardW - 10, cardY + 32);
       ctx.stroke();
 
-      // (2) Stats Row: Power / Accuracy / PP (Clean 3-Column text layout)
+      // (2) Stats Row: [Category Icon : Power] / Accuracy / PP
       const statY = cardY + 46;
       const colW = (cardW - 24) / 3;
 
@@ -2549,14 +2549,18 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       const accStr = curMoveInfo.accuracy ? `${curMoveInfo.accuracy}%` : "-";
       const ppStr = `${curMoveInfo.pp || 35}`;
 
-      // Column 1: Power
-      ctx.font = "bold 12px DungGeunMo";
+      // Column 1: Category Icon + ": " + Power
+      const cat = curMoveInfo.category;
+      drawMoveCategoryIcon(ctx, cardX + 12, cardY + 36, cat);
+
+      ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#94A3B8";
       ctx.textAlign = "left";
-      ctx.fillText(isKo ? "위력:" : "Power:", cardX + 12, statY);
-      ctx.font = "bold 14px DungGeunMo";
+      ctx.fillText(":", cardX + 38, statY);
+
+      ctx.font = "bold 15px DungGeunMo";
       ctx.fillStyle = "#F87171";
-      ctx.fillText(pwrStr, cardX + (isKo ? 46 : 58), statY);
+      ctx.fillText(pwrStr, cardX + 46, statY);
 
       // Column 2: Accuracy
       ctx.font = "bold 12px DungGeunMo";
@@ -2564,7 +2568,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       ctx.fillText(isKo ? "명중:" : "Acc:", cardX + 12 + colW, statY);
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#60A5FA";
-      ctx.fillText(accStr, cardX + 12 + colW + (isKo ? 46 : 46), statY);
+      ctx.fillText(accStr, cardX + 12 + colW + (isKo ? 38 : 38), statY);
 
       // Column 3: PP
       ctx.font = "bold 12px DungGeunMo";
@@ -2572,7 +2576,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       ctx.fillText("PP:", cardX + 12 + colW * 2, statY);
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#34D399";
-      ctx.fillText(ppStr, cardX + 12 + colW * 2 + 28, statY);
+      ctx.fillText(ppStr, cardX + 12 + colW * 2 + 26, statY);
 
       // Second Divider Line
       ctx.strokeStyle = "#282D3D";
