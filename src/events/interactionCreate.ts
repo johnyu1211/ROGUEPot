@@ -1142,20 +1142,15 @@ export async function renderPartyViewMessageData(
       .setDisabled(isSelected);
   };
 
-  // Helper to create Shiny Tier Buttons (0: Normal, 1: ★1 Yellow, 2: ★★2 Blue, 3: ★★★3 Red)
+  // Helper to create Shiny Tier Buttons (⚪, 🟡, 🔵, 🔴)
   const createShinyTierBtn = (t: number) => {
     const isUnlocked = t === 0 || t <= maxShinyTier;
     const isCurrent = curShinyTier === t;
-    const starLabels = [
-      isKo ? "⚪ 일반 폼" : "⚪ Normal",
-      isKo ? "★1 옐로" : "★1 Yellow",
-      isKo ? "★★2 블루" : "★★2 Blue",
-      isKo ? "★★★3 레드" : "★★★3 Red"
-    ];
+    const circleLabels = ["⚪", "🟡", "🔵", "🔴"];
     return new ButtonBuilder()
       .setCustomId(`party_setshiny_${t}_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
-      .setLabel(starLabels[t])
-      .setStyle(isCurrent ? ButtonStyle.Success : (isUnlocked ? ButtonStyle.Primary : ButtonStyle.Secondary))
+      .setLabel(circleLabels[t])
+      .setStyle(isCurrent ? ButtonStyle.Primary : ButtonStyle.Secondary)
       .setDisabled(!isUnlocked || isCurrent);
   };
 
