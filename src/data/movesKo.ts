@@ -12,6 +12,7 @@ export interface MoveData {
   pp: number;
   category: "physical" | "special" | "status";
   description: string;
+  descriptionEn?: string;
 }
 
 export const MOVES_DATA: Record<string, MoveData> = {
