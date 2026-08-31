@@ -1865,24 +1865,24 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
       const pY = startY + pRow * (slotH + gapY);
       const isInspected = selectedPartyIdx !== undefined && selectedPartyIdx === pIdx;
 
-      ctx.fillStyle = isInspected ? "#222738" : (member ? "#181B26" : "#12141C");
+      ctx.fillStyle = isInspected ? "#1A2032" : (member ? "#161B2A" : "#121520");
       ctx.beginPath();
       ctx.roundRect(pX, pY, slotW, slotH, 5);
       ctx.fill();
 
-      ctx.strokeStyle = isInspected ? "#5865F2" : (member ? "#2D3448" : "#202430");
+      ctx.strokeStyle = isInspected ? "#5865F2" : (member ? "#242C42" : "#1C2232");
       ctx.lineWidth = isInspected ? 2 : 1;
       ctx.stroke();
 
       // Slot Badge (Top-Left: P1 ~ P6)
-      ctx.fillStyle = isInspected ? "#5865F2" : "#242A3B";
+      ctx.fillStyle = isInspected ? "#5865F2" : "#242C42";
       ctx.beginPath();
       ctx.roundRect(pX + 5, pY + 5, 24, 15, 3);
       ctx.fill();
 
       ctx.textBaseline = "middle";
       ctx.font = "bold 11px DungGeunMo";
-      ctx.fillStyle = isInspected ? "#FFFFFF" : "#94A3B8";
+      ctx.fillStyle = isInspected ? "#FFFFFF" : "#8E96AB";
       ctx.textAlign = "center";
       ctx.fillText(`P${pIdx + 1}`, pX + 17, pY + 12);
 
@@ -2336,7 +2336,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   const activeX = panelX + safeActiveIdx * (tabW + tabGap);
 
   // 2. Draw Active Tab Body (Fill and Top/Left/Right Stroke, Open Bottom!)
-  ctx.fillStyle = "#13151F";
+  ctx.fillStyle = "#11131C";
   ctx.beginPath();
   ctx.roundRect(activeX, tabY, tabW, tabH + 2, [6, 6, 0, 0]);
   ctx.fill();
@@ -2458,7 +2458,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       const isSel = selectedMoveIdx === m;
       const isEmpty = rawMove === "---" || !moveInfo;
 
-      ctx.fillStyle = isSel ? "#121520" : (isEmpty ? "#10121A" : "#1E2436");
+      ctx.fillStyle = isSel ? "#11131C" : (isEmpty ? "#121520" : "#1A2030");
       ctx.beginPath();
       ctx.roundRect(mX, mY, moveChipW, moveChipH, 8);
       ctx.fill();
@@ -2943,7 +2943,7 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   ]);
 
   // 1. Dark Retro Background
-  ctx.fillStyle = "#13151F";
+  ctx.fillStyle = "#11131C";
   ctx.fillRect(0, 0, width, height);
 
   if (options.isPartyView) {
