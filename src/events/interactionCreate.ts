@@ -1130,8 +1130,11 @@ export async function renderPartyViewMessageData(
         .setDisabled(true);
     }
 
+    const moveKey = rawMove.toLowerCase().replace(/[\s_]+/g, "-");
+    const moveInfo = MOVES_DATA[moveKey];
+    const mName = isKo ? (moveInfo?.nameKo || rawMove) : rawMove;
     const isSelected = partyTab === "moves" && selectedMoveIdx === mIdx;
-    const label = `Move ${mIdx + 1}`;
+    const label = (mName || "").slice(0, 10) || "\u2800";
 
     return new ButtonBuilder()
       .setCustomId(`party_pickmove_${mIdx}_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${userId}`)
