@@ -771,11 +771,20 @@ export async function renderStarterSelectMessageData(
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(true);
     }
+    const isInParty = partyStates.some((p) => p.dexNumber === s.dexNumber);
     const isSelected = selectedStarter.dexNumber === s.dexNumber;
+
+    let btnStyle = ButtonStyle.Secondary;
+    if (isInParty) {
+      btnStyle = ButtonStyle.Success;
+    } else if (isSelected) {
+      btnStyle = ButtonStyle.Primary;
+    }
+
     return new ButtonBuilder()
       .setCustomId(`starter_sel_${s.dexNumber}_${gen}_${safePage}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel(`${idx + 1}`)
-      .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Secondary);
+      .setStyle(btnStyle);
   };
 
   const components: ActionRowBuilder<ButtonBuilder>[] = [];
