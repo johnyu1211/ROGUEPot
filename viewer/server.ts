@@ -8,6 +8,7 @@ import {
   renderBagMessageData,
   renderMultiplayerMessageData,
   renderPokedexMessageData,
+  renderSettingsMessageData,
   renderGenSelectMessageData,
   renderStarterSelectMessageData,
   renderPartyViewMessageData,
@@ -177,6 +178,8 @@ const server = http.createServer(async (req, res) => {
         result = await renderBagMessageData(null as any, SIMULATED_USER_ID, "pokemon");
       } else if (screen === "multiplayer") {
         result = await renderMultiplayerMessageData(null as any, SIMULATED_USER_ID);
+      } else if (screen === "settings") {
+        result = renderSettingsMessageData(SIMULATED_USER_ID);
       } else {
         result = await renderTitleMessageData(null as any, SIMULATED_USER_ID);
       }
@@ -218,6 +221,18 @@ const server = http.createServer(async (req, res) => {
             const tab = customId.includes("records") ? "records" : "pokemon";
             result = await renderBagMessageData(null as any, SIMULATED_USER_ID, tab);
           }
+        }
+
+        // 3-0-2. Settings Button Clicked (⚙️)
+        else if (customId.startsWith("menu_settings_")) {
+          result = renderSettingsMessageData(SIMULATED_USER_ID);
+        }
+
+        // 3-0-3. Switch Language (English / 한국어)
+        else if (customId.startsWith("settings_lang_")) {
+          const lang = parts[2] as "en" | "ko";
+          saveService.setLanguage(SIMULATED_USER_ID, lang);
+          result = renderSettingsMessageData(SIMULATED_USER_ID);
         }
 
         // 3-0-4. Multiplay Button Clicked
@@ -505,7 +520,7 @@ const server = http.createServer(async (req, res) => {
           const isHa = parts[9] === "1";
           const isPassive = parts[10] === "1";
           const tab = (parts[11] || "moves") as PartyViewTab;
-          const moveIdx = 0; // Always reset to 1st move (slot 0) on switching party member!
+          const moveIdx = 0;
 
           result = await renderPartyViewMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, partyRaw, isShiny, isHa, isPassive, targetIdx, tab, moveIdx);
         }

@@ -117,7 +117,7 @@ export function renderSlotsScreenData(userId: string) {
   return { embeds: [slotEmbed], components: [slotButtons] };
 }
 
-function renderSettingsMessageData(userId: string) {
+export function renderSettingsMessageData(userId: string) {
   const profile = saveService.getProfile(userId);
   const isKo = profile.language === "ko";
 
