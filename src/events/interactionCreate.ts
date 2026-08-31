@@ -75,7 +75,7 @@ function createStarterSelectMenu(slotId: number, userId: string, fromSource: "ti
   return { embeds: [starterEmbed], components: [starterSelectMenu, backRow] };
 }
 
-function renderSlotsScreenData(userId: string) {
+export function renderSlotsScreenData(userId: string) {
   const profile = saveService.getProfile(userId);
   const isKo = profile.language === "ko";
 
@@ -165,7 +165,7 @@ function renderSettingsMessageData(userId: string) {
   return { embeds: [settingsEmbed], components: [langRow, backRow] };
 }
 
-async function renderBagMessageData(
+export async function renderBagMessageData(
   client: ExtendedClient,
   userId: string,
   tab: "pokemon" | "pokedex" | "records" = "pokemon"
@@ -174,9 +174,9 @@ async function renderBagMessageData(
   const activeRun = profile.activeSlotId ? profile.slots[profile.activeSlotId] : null;
   const isKo = profile.language === "ko";
 
-  const user = client.users.cache.get(userId) || (await client.users.fetch(userId).catch(() => null));
+  const user = client?.users?.cache?.get(userId) || (await client?.users?.fetch(userId).catch(() => null));
   const username = user?.username || "Trainer";
-  const avatarUrl = user?.displayAvatarURL({ extension: "png", size: 64 });
+  const avatarUrl = user?.displayAvatarURL?.({ extension: "png", size: 64 });
 
   const imageBuffer = await renderBagScreen({
     username,
@@ -269,13 +269,13 @@ async function renderBagMessageData(
   return { embeds: [], files: [attachment], components };
 }
 
-async function renderMultiplayerMessageData(client: ExtendedClient, userId: string) {
+export async function renderMultiplayerMessageData(client: ExtendedClient, userId: string) {
   const profile = saveService.getProfile(userId);
   const isKo = profile.language === "ko";
 
-  const user = client.users.cache.get(userId) || (await client.users.fetch(userId).catch(() => null));
+  const user = client?.users?.cache?.get(userId) || (await client?.users?.fetch(userId).catch(() => null));
   const username = user?.username || "Trainer";
-  const avatarUrl = user?.displayAvatarURL({ extension: "png", size: 64 });
+  const avatarUrl = user?.displayAvatarURL?.({ extension: "png", size: 64 });
 
   const imageBuffer = await renderMultiplayerScreen({
     username,
@@ -560,7 +560,7 @@ async function handlePokedexInteractionUpdate(
   }
 }
 
-async function renderGenSelectMessageData(
+export async function renderGenSelectMessageData(
   client: ExtendedClient,
   userId: string,
   currentGen: number = 1,
@@ -1236,14 +1236,14 @@ async function renderEggGachaMessageData(client: ExtendedClient, userId: string,
   return { embeds: [], files: [attachment], components: [machineRow, pullRow] };
 }
 
-async function renderTitleMessageData(client: ExtendedClient, userId: string) {
+export async function renderTitleMessageData(client: ExtendedClient, userId: string) {
   const hasSavedSlots = saveService.hasAnySavedSlot(userId);
   const userProfile = saveService.getProfile(userId);
   const activeRun = userProfile.activeSlotId ? userProfile.slots[userProfile.activeSlotId] : null;
   const isKo = userProfile.language === "ko";
 
-  const user = client.users.cache.get(userId) || (await client.users.fetch(userId).catch(() => null));
-  const avatarUrl = user?.displayAvatarURL({ extension: "png", size: 64 });
+  const user = client?.users?.cache?.get(userId) || (await client?.users?.fetch(userId).catch(() => null));
+  const avatarUrl = user?.displayAvatarURL?.({ extension: "png", size: 64 });
   const username = user?.username || "Trainer";
 
   const imageBuffer = await renderTitleScreen({
