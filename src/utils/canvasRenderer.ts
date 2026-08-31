@@ -1617,13 +1617,14 @@ interface PreviewAndPartyPanelArgs {
   maxCost: number;
   isKo: boolean;
   selectedPartyIdx?: number;
+  isPartyView?: boolean;
 }
 
 function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
   const {
     panelX, panelW, sel, selectedSprite, selProgress,
     selHasHa, selHasPassive, party, partySprites,
-    currentCost, maxCost, isKo, selectedPartyIdx
+    currentCost, maxCost, isKo, selectedPartyIdx, isPartyView
   } = args;
 
   if (sel) {
@@ -1742,47 +1743,104 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
     ctx.fillStyle = selHasPassive ? "#34D399" : "#64748B";
     ctx.fillText(passiveName, rightColX, 64);
 
-    // Move Chips (2x2 Grid, width: 133 each, height: 36) - Prominent & Borderless!
-    const moveChipW = (panelW - 10) / 2;
-    const moveChipH = 36;
-    for (let mIdx = 0; mIdx < 4; mIdx++) {
-      const rawMove = sel.starterMoves[mIdx] || "---";
-      const moveKey = rawMove.toLowerCase().replace(/[\s_]+/g, "-");
-      const moveInfo = MOVES_DATA[moveKey];
-      const mDisplay = isKo ? (moveInfo?.nameKo || rawMove) : rawMove;
-      const category = moveInfo?.category;
-
-      const mCol = mIdx % 2;
-      const mRow = Math.floor(mIdx / 2);
-      const mX = panelX + mCol * (moveChipW + 10);
-      const mY = 90 + mRow * (moveChipH + 6);
-
-      ctx.fillStyle = "#181B26";
+    if (isPartyView) {
+      // =========================================================================
+      // PARTY VIEW MODE: No Duplicate Move Chips!
+      // Render Clean Party Member Spec & Cultivation Status Card (y: 90 ~ 168, H: 78)
+      // =========================================================================
+      const statCardY = 90;
+      const statCardH = 78;
+      ctx.fillStyle = "#141722";
       ctx.beginPath();
-      ctx.roundRect(mX, mY, moveChipW, moveChipH, 5);
+      ctx.roundRect(panelX, statCardY, panelW, statCardH, 6);
       ctx.fill();
       ctx.strokeStyle = "#282D3D";
       ctx.lineWidth = 1;
       ctx.stroke();
 
-      if (rawMove === "---" || !category) {
-        ctx.textBaseline = "middle";
-        ctx.font = "bold 15px DungGeunMo";
-        ctx.fillStyle = "#475569";
-        ctx.textAlign = "center";
-        ctx.fillText(mDisplay, mX + moveChipW / 2, mY + moveChipH / 2);
-      } else {
-        // Draw Move Category Icon (Left aligned, 23x22)
-        const iconX = mX + 6;
-        const iconY = mY + (moveChipH - 22) / 2;
-        drawMoveCategoryIcon(ctx, iconX, iconY, category);
+      const member = selectedPartyIdx !== undefined && selectedPartyIdx >= 0 ? party[selectedPartyIdx] : undefined;
+      const usePass = member?.usePassive || false;
+      const curCost = usePass ? sel.reducedCost : sel.cost;
+      const candies = selProgress?.candies || 0;
+      const eggMoveCount = (selProgress?.eggMoves || []).length;
 
-        // Move Name Text (Aligned next to category icon, 15px)
-        ctx.textBaseline = "middle";
-        ctx.font = "bold 15px DungGeunMo";
-        ctx.fillStyle = "#F8FAFC";
-        ctx.textAlign = "left";
-        ctx.fillText(mDisplay, mX + 35, mY + moveChipH / 2);
+      // Row 1: Cost Info & Slot Badge (y: statCardY + 16)
+      ctx.textBaseline = "middle";
+      ctx.font = "bold 13px DungGeunMo";
+      ctx.fillStyle = "#94A3B8";
+      ctx.textAlign = "left";
+      ctx.fillText(isKo ? "출전 코스트:" : "Entry Cost:", panelX + 10, statCardY + 16);
+
+      ctx.fillStyle = "#F59E0B";
+      ctx.fillText(`${curCost} C ${usePass ? (isKo ? "(패시브 할인)" : "(Discounted)") : ""}`, panelX + 86, statCardY + 16);
+
+      if (selectedPartyIdx !== undefined && selectedPartyIdx >= 0) {
+        ctx.fillStyle = "#3B82F6";
+        ctx.textAlign = "right";
+        ctx.fillText(`P${selectedPartyIdx + 1}`, panelX + panelW - 10, statCardY + 16);
+      }
+
+      // Row 2: Cultivation Status (Candies + Egg Moves) (y: statCardY + 40)
+      ctx.fillStyle = "#94A3B8";
+      ctx.textAlign = "left";
+      ctx.fillText(isKo ? "보유 사탕:" : "Candies:", panelX + 10, statCardY + 40);
+
+      ctx.fillStyle = "#FCD34D";
+      ctx.fillText(`${candies}개`, panelX + 74, statCardY + 40);
+
+      ctx.fillStyle = "#94A3B8";
+      ctx.fillText(isKo ? `해금 알기술: ${eggMoveCount}개` : `Egg Moves: ${eggMoveCount}`, panelX + 140, statCardY + 40);
+
+      // Row 3: Move Inspection Guide (y: statCardY + 63)
+      ctx.fillStyle = "#64748B";
+      ctx.font = "bold 12px DungGeunMo";
+      ctx.textAlign = "left";
+      ctx.fillText(isKo ? "👉 우측 화면에서 기술 정보와 이로치를 관리하세요" : "👉 Inspect moves & shiny on the right panel", panelX + 10, statCardY + 63);
+    } else {
+      // =========================================================================
+      // STARTER SELECT MODE: Starting Moves Chips (2x2 Grid, width: 133 each, height: 36)
+      // =========================================================================
+      const moveChipW = (panelW - 10) / 2;
+      const moveChipH = 36;
+      for (let mIdx = 0; mIdx < 4; mIdx++) {
+        const rawMove = sel.starterMoves[mIdx] || "---";
+        const moveKey = rawMove.toLowerCase().replace(/[\s_]+/g, "-");
+        const moveInfo = MOVES_DATA[moveKey];
+        const mDisplay = isKo ? (moveInfo?.nameKo || rawMove) : rawMove;
+        const category = moveInfo?.category;
+
+        const mCol = mIdx % 2;
+        const mRow = Math.floor(mIdx / 2);
+        const mX = panelX + mCol * (moveChipW + 10);
+        const mY = 90 + mRow * (moveChipH + 6);
+
+        ctx.fillStyle = "#181B26";
+        ctx.beginPath();
+        ctx.roundRect(mX, mY, moveChipW, moveChipH, 5);
+        ctx.fill();
+        ctx.strokeStyle = "#282D3D";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        if (rawMove === "---" || !category) {
+          ctx.textBaseline = "middle";
+          ctx.font = "bold 15px DungGeunMo";
+          ctx.fillStyle = "#475569";
+          ctx.textAlign = "center";
+          ctx.fillText(mDisplay, mX + moveChipW / 2, mY + moveChipH / 2);
+        } else {
+          // Draw Move Category Icon (Left aligned, 23x22)
+          const iconX = mX + 6;
+          const iconY = mY + (moveChipH - 22) / 2;
+          drawMoveCategoryIcon(ctx, iconX, iconY, category);
+
+          // Move Name Text (Aligned next to category icon, 15px)
+          ctx.textBaseline = "middle";
+          ctx.font = "bold 15px DungGeunMo";
+          ctx.fillStyle = "#F8FAFC";
+          ctx.textAlign = "left";
+          ctx.fillText(mDisplay, mX + 35, mY + moveChipH / 2);
+        }
       }
     }
   } else {
@@ -2399,6 +2457,7 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       maxCost,
       isKo,
       selectedPartyIdx: activePartyIdx,
+      isPartyView: true,
     });
 
     // Vertical Split Line
