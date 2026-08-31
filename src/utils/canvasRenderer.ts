@@ -2336,7 +2336,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   const activeX = panelX + safeActiveIdx * (tabW + tabGap);
 
   // 2. Draw Active Tab Body (Fill and Top/Left/Right Stroke, Open Bottom!)
-  ctx.fillStyle = "#141724";
+  ctx.fillStyle = "#13151F";
   ctx.beginPath();
   ctx.roundRect(activeX, tabY, tabW, tabH + 2, [6, 6, 0, 0]);
   ctx.fill();
@@ -2456,8 +2456,9 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       const mX = panelX + mCol * (moveChipW + chipGap);
       const mY = 48 + mRow * (moveChipH + 8);
       const isSel = selectedMoveIdx === m;
+      const isEmpty = rawMove === "---" || !moveInfo;
 
-      ctx.fillStyle = isSel ? "#171C2E" : "#151824";
+      ctx.fillStyle = isSel ? "#121520" : (isEmpty ? "#10121A" : "#1E2436");
       ctx.beginPath();
       ctx.roundRect(mX, mY, moveChipW, moveChipH, 8);
       ctx.fill();
