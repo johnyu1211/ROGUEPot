@@ -1130,8 +1130,8 @@ async function renderPartyViewMessageData(
     return new ButtonBuilder()
       .setCustomId(`party_pickmove_${mIdx}_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${userId}`)
       .setLabel(mName.slice(0, 20))
-      .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Success)
-      .setDisabled(false);
+      .setStyle(ButtonStyle.Success)
+      .setDisabled(isSelected);
   };
 
   // Helper to create B Button (📚 배울 수 있는 기술 목록 리스트 뷰)
@@ -1140,7 +1140,7 @@ async function renderPartyViewMessageData(
     .setCustomId(`party_tab_learnable_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${selectedMoveIdx}_${userId}`)
     .setLabel(isKo ? "📚 기술 목록" : "📚 Moves")
     .setStyle(isLearnableTab ? ButtonStyle.Primary : ButtonStyle.Secondary)
-    .setDisabled(!inspectedStarter);
+    .setDisabled(isLearnableTab || !inspectedStarter);
 
   // ROW 3: Party 3, 4 + [ 1: 기술1 ] + [ 2: 기술2 ] + [ 📚 기술 목록 (B) ]
   components.push(
