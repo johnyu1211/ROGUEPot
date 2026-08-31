@@ -1098,14 +1098,12 @@ export async function renderPartyViewMessageData(
     )
   );
 
-  // ROW 2: Party 1, 2 + [ ⚔️ 기술 관리 ] + [ ✨ 이로치 폼 ] + [ 🍬 코스트 ]
+  // ROW 2: Tabs [⚔️ 기술] + [✨ 이로치 폼] + [🍬 코스트]
   components.push(
     new ActionRowBuilder<ButtonBuilder>().addComponents(
-      createPartySlotBtn(0),
-      createPartySlotBtn(1),
       new ButtonBuilder()
         .setCustomId(`party_tab_moves_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${selectedMoveIdx}_${userId}`)
-        .setLabel(isKo ? "⚔️ 기술 관리" : "⚔️ Moves")
+        .setLabel(isKo ? "⚔️ 기술" : "⚔️ Moves")
         .setStyle(partyTab === "moves" ? ButtonStyle.Primary : ButtonStyle.Secondary),
       new ButtonBuilder()
         .setCustomId(`party_tab_shiny_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${selectedMoveIdx}_${userId}`)
@@ -1125,7 +1123,7 @@ export async function renderPartyViewMessageData(
     if (!rawMove) {
       return new ButtonBuilder()
         .setCustomId(`party_move_empty_${mIdx}_${userId}`)
-        .setLabel("\u2800".repeat(10))
+        .setLabel("\u2800")
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(true);
     }
@@ -1134,31 +1132,29 @@ export async function renderPartyViewMessageData(
     const moveInfo = MOVES_DATA[moveKey];
     const mName = isKo ? (moveInfo?.nameKo || rawMove) : rawMove;
     const isSelected = partyTab === "moves" && selectedMoveIdx === mIdx;
-
-    // Exact 10-character fixed width padded with invisible space!
-    const truncated = (mName || "").slice(0, 10);
-    const label = truncated.padEnd(10, "\u2800");
+    const label = (mName || "").slice(0, 10) || "\u2800";
 
     return new ButtonBuilder()
       .setCustomId(`party_pickmove_${mIdx}_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${userId}`)
       .setLabel(label)
-      .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Secondary)
-      .setDisabled(isSelected);
+      .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Secondary);
   };
 
   // Helper to create Shiny Tier Buttons (⚪, 🟡, 🔵, 🔴)
   const createShinyTierBtn = (t: number) => {
+    const maxShinyTier = inspectedProg?.shinyTier || 0;
+    const curShinyTier = activePartyMember?.shinyTier || 0;
     const isUnlocked = t === 0 || t <= maxShinyTier;
     const isCurrent = curShinyTier === t;
     const circleLabels = ["⚪", "🟡", "🔵", "🔴"];
     return new ButtonBuilder()
       .setCustomId(`party_setshiny_${t}_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
-      .setLabel(circleLabels[t])
+      .setLabel(circleLabels[t] || "⚪")
       .setStyle(isCurrent ? ButtonStyle.Primary : ButtonStyle.Secondary)
-      .setDisabled(!isUnlocked || isCurrent);
+      .setDisabled(!isUnlocked);
   };
 
-  // Helper to create B Button (📚 배울 수 있는 기술 목록 리스트 뷰)
+  // Helper for Learnable Moves Tab Button
   const isLearnableTab = partyTab === "learnable";
   const moveListBtn = new ButtonBuilder()
     .setCustomId(`party_tab_learnable_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${selectedMoveIdx}_${userId}`)
@@ -1198,13 +1194,18 @@ export async function renderPartyViewMessageData(
       )
     );
 
-    // ROW 4: Party 5, 6 + [ 3: 기술3 ] + [ 4: 기술4 ]
+    // ROW 4: Party 5, 6 + [ 3: 기술3 ] + [ 4: 기술4 ] + [ 5: 빈 자리 플레이스홀더 (Row 3과 1:1 완벽 정렬) ]
     components.push(
       new ActionRowBuilder<ButtonBuilder>().addComponents(
         createPartySlotBtn(4),
         createPartySlotBtn(5),
         createMoveSlotBtn(2),
-        createMoveSlotBtn(3)
+        createMoveSlotBtn(3),
+        new ButtonBuilder()
+          .setCustomId(`party_row4_dummy_${userId}`)
+          .setLabel("\u2800")
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(true)
       )
     );
   }
