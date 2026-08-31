@@ -2330,30 +2330,49 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     { id: "cost", labelKo: `${candies}개`, labelEn: `${candies}`, icon: "cost" },
   ];
 
-  // Draw Horizontal Blue Baseline across panelW connecting with the active tab
-  ctx.strokeStyle = "#5865F2";
-  ctx.lineWidth = 1;
+  // 1. Find active tab index and bounds
+  const activeIdx = tabs.findIndex(t => currentTab === t.id || (t.id === "moves" && currentTab === "learnable"));
+  const safeActiveIdx = activeIdx >= 0 ? activeIdx : 0;
+  const activeX = panelX + safeActiveIdx * (tabW + tabGap);
+
+  // 2. Draw Active Tab Body (Fill and Top/Left/Right Stroke, Open Bottom!)
+  ctx.fillStyle = "#141724";
   ctx.beginPath();
-  ctx.moveTo(panelX, baselineY);
+  ctx.roundRect(activeX, tabY, tabW, tabH + 2, [6, 6, 0, 0]);
+  ctx.fill();
+
+  ctx.strokeStyle = "#5865F2";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  // Left border
+  ctx.moveTo(activeX, baselineY);
+  ctx.lineTo(activeX, tabY + 6);
+  // Top-left arc
+  ctx.arcTo(activeX, tabY, activeX + 6, tabY, 6);
+  // Top border
+  ctx.lineTo(activeX + tabW - 6, tabY);
+  // Top-right arc
+  ctx.arcTo(activeX + tabW, tabY, activeX + tabW, tabY + 6, 6);
+  // Right border
+  ctx.lineTo(activeX + tabW, baselineY);
+  ctx.stroke();
+
+  // 3. Draw Horizontal Blue Baseline OUTSIDE of the active tab (Seamless connection!)
+  ctx.strokeStyle = "#5865F2";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  if (activeX > panelX) {
+    ctx.moveTo(panelX, baselineY);
+    ctx.lineTo(activeX, baselineY);
+  }
+  ctx.moveTo(activeX + tabW, baselineY);
   ctx.lineTo(panelX + panelW, baselineY);
   ctx.stroke();
 
+  // 4. Render Tab Labels & Icons
   tabs.forEach((t, idx) => {
     const tX = panelX + idx * (tabW + tabGap);
-    const isAct = currentTab === t.id || (t.id === "moves" && currentTab === "learnable");
-
-    if (isAct) {
-      // Active Tab: Folder tab shape with Discord Blue outline and clear bottom
-      ctx.fillStyle = "#141724";
-      ctx.beginPath();
-      ctx.roundRect(tX, tabY, tabW, tabH + 1, [6, 6, 0, 0]);
-      ctx.fill();
-
-      ctx.strokeStyle = "#5865F2";
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-    }
-
+    const isAct = idx === safeActiveIdx;
     const iconColor = isAct ? "#FFFFFF" : "#64748B";
 
     if (t.icon === "moves") {
