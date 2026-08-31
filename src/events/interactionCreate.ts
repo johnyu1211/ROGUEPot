@@ -1110,19 +1110,56 @@ async function renderPartyViewMessageData(
     )
   );
 
-  // ROW 3: Party 3, 4
+  // Helper to create Move Slot Buttons (1, 2, 3, 4)
+  const starterMoves = inspectedStarter?.starterMoves || [];
+  const createMoveSlotBtn = (mIdx: number) => {
+    const rawMove = starterMoves[mIdx];
+    if (!rawMove) {
+      return new ButtonBuilder()
+        .setCustomId(`party_move_empty_${mIdx}_${userId}`)
+        .setLabel(`${mIdx + 1}: -`)
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(true);
+    }
+
+    const moveKey = rawMove.toLowerCase().replace(/[\s_]+/g, "-");
+    const moveInfo = MOVES_DATA[moveKey];
+    const mName = isKo ? (moveInfo?.nameKo || rawMove) : rawMove;
+    const isSelected = partyTab === "moves" && selectedMoveIdx === mIdx;
+
+    return new ButtonBuilder()
+      .setCustomId(`party_pickmove_${mIdx}_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${userId}`)
+      .setLabel(`${mIdx + 1}: ${mName}`.slice(0, 20))
+      .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Secondary)
+      .setDisabled(false);
+  };
+
+  // Helper to create B Button (📚 배울 수 있는 기술 목록 리스트 뷰)
+  const isLearnableTab = partyTab === "learnable";
+  const moveListBtn = new ButtonBuilder()
+    .setCustomId(`party_tab_learnable_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${selectedMoveIdx}_${userId}`)
+    .setLabel(isKo ? "📚 기술 목록" : "📚 Moves")
+    .setStyle(isLearnableTab ? ButtonStyle.Primary : ButtonStyle.Secondary)
+    .setDisabled(!inspectedStarter);
+
+  // ROW 3: Party 3, 4 + [ 1: 기술1 ] + [ 2: 기술2 ] + [ 📚 기술 목록 (B) ]
   components.push(
     new ActionRowBuilder<ButtonBuilder>().addComponents(
       createPartySlotBtn(2),
-      createPartySlotBtn(3)
+      createPartySlotBtn(3),
+      createMoveSlotBtn(0),
+      createMoveSlotBtn(1),
+      moveListBtn
     )
   );
 
-  // ROW 4: Party 5, 6
+  // ROW 4: Party 5, 6 + [ 3: 기술3 ] + [ 4: 기술4 ]
   components.push(
     new ActionRowBuilder<ButtonBuilder>().addComponents(
       createPartySlotBtn(4),
-      createPartySlotBtn(5)
+      createPartySlotBtn(5),
+      createMoveSlotBtn(2),
+      createMoveSlotBtn(3)
     )
   );
 
@@ -1930,8 +1967,8 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 2-1-P2-MOVE. Pick Move in Moves Tab
-      if (customId.startsWith("party_movepick_")) {
+      // 2-1-P2-MOVE. Pick Move in Moves Tab (1, 2, 3, 4)
+      if (customId.startsWith("party_movepick_") || customId.startsWith("party_pickmove_")) {
         const targetMoveIdx = parseInt(parts[2], 10) || 0;
         const currentIdx = parseInt(parts[3], 10) || 0;
         const gen = parseInt(parts[4], 10) || 0;
@@ -1942,7 +1979,7 @@ export const interactionCreateEvent: BotEvent = {
         const isShiny = parts[9] === "1";
         const isHa = parts[10] === "1";
         const isPassive = parts[11] === "1";
-        const tab = (parts[12] || "moves") as PartyViewTab;
+        const tab: PartyViewTab = "moves";
 
         const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, partyRaw, isShiny, isHa, isPassive, currentIdx, tab, targetMoveIdx);
         await interaction.update(partyData);
