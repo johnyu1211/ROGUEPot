@@ -912,7 +912,9 @@ async function renderPartyViewMessageData(
   const currentCost = selectedParty.reduce((sum, p) => sum + p.cost, 0);
   const canStart = selectedParty.length >= 1 && currentCost <= DEFAULT_MAX_COST;
 
-  const safePartyIdx = selectedPartyIdx >= 0 && selectedParty[selectedPartyIdx] ? selectedPartyIdx : -1;
+  const safePartyIdx = (selectedPartyIdx !== undefined && selectedPartyIdx >= 0 && selectedParty[selectedPartyIdx])
+    ? selectedPartyIdx
+    : (selectedParty.length > 0 ? 0 : -1);
   const activePartyMember = safePartyIdx >= 0 ? selectedParty[safePartyIdx] : undefined;
   const inspectedStarter = activePartyMember ? getStarterByDexNumber(activePartyMember.dexNumber) : undefined;
 
@@ -939,7 +941,8 @@ async function renderPartyViewMessageData(
   const partyParam = serializePartyParam(partyStates);
   const flagsParam = `${isShinyFilter ? 1 : 0}_${isHaFilter ? 1 : 0}_${isPassiveFilter ? 1 : 0}`;
 
-  // Helper to create Party Slot Selector Button (P1, P2, P3, P4, P5, P6) with Toggle Deselect
+  // Helper to create Party Slot Selector Button (P1, P2, P3, P4, P5, P6)
+  // Selected slot is highlighted in Primary and disabled!
   const createPartySlotBtn = (idx: number) => {
     const member = selectedParty[idx];
     if (!member) {
@@ -950,11 +953,11 @@ async function renderPartyViewMessageData(
         .setDisabled(true);
     }
     const isSelected = safePartyIdx === idx;
-    const nextIdx = isSelected ? -1 : idx;
     return new ButtonBuilder()
-      .setCustomId(`party_pick_${nextIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
+      .setCustomId(`party_pick_${idx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
       .setLabel(`P${idx + 1}`)
-      .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Secondary);
+      .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Secondary)
+      .setDisabled(isSelected);
   };
 
   const components: ActionRowBuilder<ButtonBuilder>[] = [];
@@ -1011,7 +1014,7 @@ async function renderPartyViewMessageData(
         .setCustomId(`party_setha_1_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
         .setLabel(haBtnLabel.slice(0, 20))
         .setStyle(isHaActive ? ButtonStyle.Primary : ButtonStyle.Secondary)
-        .setDisabled(!inspectedStarter || !hasHa),
+        .setDisabled(!inspectedStarter || isHaActive || !hasHa),
       new ButtonBuilder()
         .setCustomId(`party_togglepass_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
         .setLabel(passBtnLabel.slice(0, 20))
@@ -1028,15 +1031,18 @@ async function renderPartyViewMessageData(
       new ButtonBuilder()
         .setCustomId(`party_tab_moves_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${selectedMoveIdx}_${userId}`)
         .setLabel(isKo ? "⚔️ 기술 관리" : "⚔️ Moves")
-        .setStyle(partyTab === "moves" ? ButtonStyle.Primary : ButtonStyle.Secondary),
+        .setStyle(partyTab === "moves" ? ButtonStyle.Primary : ButtonStyle.Secondary)
+        .setDisabled(partyTab === "moves"),
       new ButtonBuilder()
         .setCustomId(`party_tab_shiny_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${selectedMoveIdx}_${userId}`)
         .setLabel(isKo ? "✨ 이로치 폼" : "✨ Shiny Form")
-        .setStyle(partyTab === "shiny" ? ButtonStyle.Primary : ButtonStyle.Secondary),
+        .setStyle(partyTab === "shiny" ? ButtonStyle.Primary : ButtonStyle.Secondary)
+        .setDisabled(partyTab === "shiny"),
       new ButtonBuilder()
         .setCustomId(`party_tab_cost_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${selectedMoveIdx}_${userId}`)
         .setLabel(isKo ? "🍬 코스트" : "🍬 Cost")
         .setStyle(partyTab === "cost" ? ButtonStyle.Primary : ButtonStyle.Secondary)
+        .setDisabled(partyTab === "cost")
     )
   );
 
@@ -1816,7 +1822,7 @@ export const interactionCreateEvent: BotEvent = {
         const isHa = parts[8] === "1";
         const isPassive = parts[9] === "1";
 
-        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, partyRaw, isShiny, isHa, isPassive, -1, "moves", 0);
+        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, partyRaw, isShiny, isHa, isPassive, 0, "moves", 0);
         await interaction.update(partyData);
         return;
       }
