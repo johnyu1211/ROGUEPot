@@ -13,10 +13,25 @@ import {
   PartyViewTab,
 } from "../src/utils/canvasRenderer.js";
 import { STARTER_DATABASE, getStartersByGen, getStarterByDexNumber } from "../src/data/starterCosts.js";
+import { MOVES_DATA } from "../src/data/movesKo.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PORT = 3456;
+
+// SSE Clients for Live Reload
+const sseClients: http.ServerResponse[] = [];
+
+// Watch canvasRenderer.ts for changes and trigger live reload
+const rendererPath = path.resolve(__dirname, "../src/utils/canvasRenderer.ts");
+if (fs.existsSync(rendererPath)) {
+  fs.watch(rendererPath, () => {
+    console.log("[VIEWER] canvasRenderer.ts changed, triggering hot reload...");
+    sseClients.forEach((client) => {
+      client.write("data: reload\n\n");
+    });
+  });
+}
 
 const server = http.createServer(async (req, res) => {
   // CORS Headers
@@ -30,7 +45,22 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 1. Serve Viewer HTML
+  // 1. Live Reload SSE Endpoint
+  if (req.method === "GET" && req.url === "/api/live") {
+    res.writeHead(200, {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    });
+    sseClients.push(res);
+    req.on("close", () => {
+      const idx = sseClients.indexOf(res);
+      if (idx >= 0) sseClients.splice(idx, 1);
+    });
+    return;
+  }
+
+  // 2. Serve Viewer HTML
   if (req.method === "GET" && (req.url === "/" || req.url === "/index.html")) {
     const htmlPath = path.join(__dirname, "index.html");
     fs.readFile(htmlPath, "utf-8", (err, data) => {
@@ -45,7 +75,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 2. Render API
+  // 3. Render API Endpoint
   if (req.method === "POST" && req.url === "/api/render") {
     let body = "";
     req.on("data", (chunk) => {
@@ -59,9 +89,12 @@ const server = http.createServer(async (req, res) => {
 
         let buffer: Buffer | null = null;
 
-        // Mock Starter & User Data for high-fidelity simulation
+        // Realistic PokeRogue Starter DB integration
         const sampleStarters = getStartersByGen(payload.currentGen || 1);
-        const selectedStarter = sampleStarters[0] || STARTER_DATABASE[0];
+        const selectedParty = payload.party || [];
+        const activePartyIdx = payload.selectedPartyIdx ?? 1;
+        const activeMember = selectedParty[activePartyIdx];
+        const inspectedStarter = activeMember ? getStarterByDexNumber(activeMember.dexNumber) || sampleStarters[0] : sampleStarters[0];
 
         const mockUserStarters = new Map<string, any>();
         mockUserStarters.set("bulbasaur", {
@@ -83,12 +116,12 @@ const server = http.createServer(async (req, res) => {
 
         if (screen === "starter_party") {
           buffer = await renderStarterSelectScreen({
-            selectedStarter,
+            selectedStarter: inspectedStarter,
             currentGen: payload.currentGen || 1,
             currentPage: payload.currentPage || 1,
             totalPages: payload.totalPages || 4,
             startersList: sampleStarters.slice(0, 12),
-            selectedParty: payload.party || [],
+            selectedParty,
             userStarters: mockUserStarters,
             isShinyFilter: payload.isShinyFilter,
             isHaFilter: payload.isHaFilter,
@@ -96,18 +129,18 @@ const server = http.createServer(async (req, res) => {
             maxCost: 10,
             lang: "ko",
             isPartyView: true,
-            selectedPartyIdx: payload.selectedPartyIdx ?? 1,
+            selectedPartyIdx: activePartyIdx,
             partyTab: (payload.partyTab as PartyViewTab) || "moves",
-            selectedMoveIdx: payload.selectedMoveIdx ?? 1,
+            selectedMoveIdx: payload.selectedMoveIdx ?? 0,
           });
         } else if (screen === "starter_select") {
           buffer = await renderStarterSelectScreen({
-            selectedStarter,
+            selectedStarter: inspectedStarter,
             currentGen: payload.currentGen || 1,
             currentPage: payload.currentPage || 1,
             totalPages: payload.totalPages || 4,
             startersList: sampleStarters.slice(0, 12),
-            selectedParty: payload.party || [],
+            selectedParty,
             userStarters: mockUserStarters,
             isShinyFilter: payload.isShinyFilter,
             isHaFilter: payload.isHaFilter,

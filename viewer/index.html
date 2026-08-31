@@ -596,6 +596,19 @@
       }
     }
 
+    // Live Reload SSE Connection (Zero-delay auto update when canvas code changes)
+    try {
+      const evtSource = new EventSource('/api/live');
+      evtSource.onmessage = (event) => {
+        if (event.data === 'reload') {
+          console.log('[LIVE RELOAD] Canvas renderer updated! Refreshing...');
+          renderState();
+        }
+      };
+    } catch (e) {
+      console.warn('SSE connection warning:', e);
+    }
+
     // Initialize
     setScale(1.25);
     renderButtons();
