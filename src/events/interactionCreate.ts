@@ -795,7 +795,7 @@ export async function renderStarterSelectMessageData(
     new ButtonBuilder()
       .setCustomId(`starter_genmenu_${gen}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel(genLabel)
-      .setStyle(ButtonStyle.Primary),
+      .setStyle(gen > 0 ? ButtonStyle.Primary : ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId(`starter_toggleshiny_${gen}_${safePage}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
       .setLabel(isKo ? (isShinyFilter ? "✨ 이로치 ON" : "✨ 이로치") : (isShinyFilter ? "✨ Shiny ON" : "✨ Shiny"))
