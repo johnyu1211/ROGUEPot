@@ -1009,17 +1009,17 @@ async function renderPartyViewMessageData(
         .setCustomId(`party_setha_0_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
         .setLabel(abBtnLabel.slice(0, 20))
         .setStyle(isNormalAbActive ? ButtonStyle.Primary : ButtonStyle.Secondary)
-        .setDisabled(!inspectedStarter || !hasHa),
+        .setDisabled(false),
       new ButtonBuilder()
         .setCustomId(`party_setha_1_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
         .setLabel(haBtnLabel.slice(0, 20))
         .setStyle(isHaActive ? ButtonStyle.Primary : ButtonStyle.Secondary)
-        .setDisabled(!inspectedStarter || !hasHa),
+        .setDisabled(false),
       new ButtonBuilder()
         .setCustomId(`party_togglepass_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
         .setLabel(passBtnLabel.slice(0, 20))
         .setStyle(isPassiveActive ? ButtonStyle.Primary : ButtonStyle.Secondary)
-        .setDisabled(!inspectedStarter || !hasPassive)
+        .setDisabled(false)
     )
   );
 
@@ -1927,6 +1927,8 @@ export const interactionCreateEvent: BotEvent = {
         const tab = (parts[isSet ? 12 : 11] || "moves") as PartyViewTab;
         const moveIdx = parseInt(parts[isSet ? 13 : 12], 10) || 0;
 
+        const profile = saveService.getProfile(interaction.user.id);
+        const isKo = profile.language === "ko";
         const userStarters = getUserStarters(interaction.user.id);
         const partyStates = parsePartyParam(partyRaw, userStarters);
         const targetMember = partyStates[currentIdx];
@@ -1934,8 +1936,20 @@ export const interactionCreateEvent: BotEvent = {
         if (targetMember) {
           const s = getStarterByDexNumber(targetMember.dexNumber);
           const prog = s ? userStarters.get(s.speciesId) : null;
+          if (isSet && targetUseHa && !prog?.hasHiddenAbility) {
+            const haName = isKo ? s?.hiddenAbilityKo : s?.hiddenAbility;
+            await interaction.reply({
+              content: isKo
+                ? `🔒 아직 해금되지 않은 숨겨진 특성입니다: **${haName}**\n*(포켓몬 알 부화나 사탕을 통해 해금할 수 있습니다)*`
+                : `🔒 Hidden ability **${haName}** is not unlocked yet.`,
+              ephemeral: true,
+            });
+            return;
+          }
           if (prog?.hasHiddenAbility) {
             targetMember.useHiddenAbility = isSet ? targetUseHa! : !targetMember.useHiddenAbility;
+          } else if (isSet && !targetUseHa) {
+            targetMember.useHiddenAbility = false;
           }
         }
 
@@ -1959,6 +1973,8 @@ export const interactionCreateEvent: BotEvent = {
         const tab = (parts[11] || "moves") as PartyViewTab;
         const moveIdx = parseInt(parts[12], 10) || 0;
 
+        const profile = saveService.getProfile(interaction.user.id);
+        const isKo = profile.language === "ko";
         const userStarters = getUserStarters(interaction.user.id);
         const partyStates = parsePartyParam(partyRaw, userStarters);
         const targetMember = partyStates[currentIdx];
@@ -1966,9 +1982,17 @@ export const interactionCreateEvent: BotEvent = {
         if (targetMember) {
           const s = getStarterByDexNumber(targetMember.dexNumber);
           const prog = s ? userStarters.get(s.speciesId) : null;
-          if (prog?.passiveUnlocked) {
-            targetMember.usePassive = !targetMember.usePassive;
+          if (!prog?.passiveUnlocked) {
+            const passName = isKo ? s?.passiveAbilityKo : s?.passiveAbility;
+            await interaction.reply({
+              content: isKo
+                ? `🔒 아직 해금되지 않은 패시브 특성입니다: **${passName}**\n*(사탕을 모아 🍬 코스트 관리 탭에서 해금할 수 있습니다)*`
+                : `🔒 Passive ability **${passName}** is not unlocked yet.`,
+              ephemeral: true,
+            });
+            return;
           }
+          targetMember.usePassive = !targetMember.usePassive;
         }
 
         const newPartyParam = serializePartyParam(partyStates);
