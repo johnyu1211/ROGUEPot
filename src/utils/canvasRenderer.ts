@@ -2432,19 +2432,19 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       const mY = 48 + mRow * (moveChipH + 8);
       const isSel = selectedMoveIdx === m;
 
-      ctx.fillStyle = isSel ? "#1B2234" : "#131622";
+      ctx.fillStyle = isSel ? "#171C2E" : "#141724";
       ctx.beginPath();
       ctx.roundRect(mX, mY, moveChipW, moveChipH, 6);
       ctx.fill();
 
-      ctx.strokeStyle = isSel ? "#5865F2" : "#252B3D";
+      ctx.strokeStyle = isSel ? "#5865F2" : "#22283A";
       ctx.lineWidth = isSel ? 2 : 1;
       ctx.stroke();
 
       if (rawMove === "---" || !moveInfo) {
         ctx.textBaseline = "middle";
         ctx.font = "bold 14px DungGeunMo";
-        ctx.fillStyle = "#475569";
+        ctx.fillStyle = "#3B4256";
         ctx.textAlign = "center";
         ctx.fillText("---", mX + moveChipW / 2, mY + moveChipH / 2);
       } else {
@@ -2469,7 +2469,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
 
         // [Move Name] (Next to Type Badge, Vertically Centered)
         ctx.font = "bold 15px DungGeunMo";
-        ctx.fillStyle = isSel ? "#FFFFFF" : "#CBD5E1";
+        ctx.fillStyle = "#FFFFFF";
         ctx.textAlign = "left";
         ctx.fillText(mDisplay, mX + 48, mY + moveChipH / 2);
       }
