@@ -1186,18 +1186,17 @@ export async function renderPartyViewMessageData(
       )
     );
   } else {
-    // ROW 3: Party 3, 4 + [ 1: 기술1 ] + [ 2: 기술2 ] + [ 📚 기술 목록 (B) ]
+    // ROW 3: Party 3, 4 + [ 1: 기술1 ] + [ 2: 기술2 ] (Exact 4 buttons, matches Row 4 perfectly!)
     components.push(
       new ActionRowBuilder<ButtonBuilder>().addComponents(
         createPartySlotBtn(2),
         createPartySlotBtn(3),
         createMoveSlotBtn(0),
-        createMoveSlotBtn(1),
-        moveListBtn
+        createMoveSlotBtn(1)
       )
     );
 
-    // ROW 4: Party 5, 6 + [ 3: 기술3 ] + [ 4: 기술4 ]
+    // ROW 4: Party 5, 6 + [ 3: 기술3 ] + [ 4: 기술4 ] (Exact 4 buttons, 1:1 symmetry with Row 3!)
     components.push(
       new ActionRowBuilder<ButtonBuilder>().addComponents(
         createPartySlotBtn(4),
@@ -1208,7 +1207,7 @@ export async function renderPartyViewMessageData(
     );
   }
 
-  // ROW 5: Remove [-⚪] + Back [↩️] (NO START BUTTON)
+  // ROW 5: Remove [-⚪] + Back [↩️] + Moves List [📚 기술 목록]
   const removeTargetDex = activePartyMember ? activePartyMember.dexNumber : 0;
   components.push(
     new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -1220,7 +1219,8 @@ export async function renderPartyViewMessageData(
       new ButtonBuilder()
         .setCustomId(`party_back_starter_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
         .setLabel(isKo ? "↩️ 스타팅 목록" : "↩️ Back")
-        .setStyle(ButtonStyle.Danger)
+        .setStyle(ButtonStyle.Danger),
+      moveListBtn
     )
   );
 
