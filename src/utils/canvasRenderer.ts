@@ -2653,7 +2653,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       ctx.fill();
 
       if (isCurrent) {
-        ctx.strokeStyle = tierColors[t] || "#5865F2";
+        ctx.strokeStyle = "#5865F2";
         ctx.lineWidth = 2;
         ctx.stroke();
       }
