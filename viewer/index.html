@@ -8,7 +8,6 @@
     :root {
       --bg-app: #1E1F22;
       --bg-chat: #313338;
-      --border-color: #3F4147;
       
       /* Discord Official Button Styles */
       --btn-primary: #5865F2;
@@ -33,7 +32,7 @@
 
     html, body {
       width: 100%;
-      height: 100%;
+      min-height: 100%;
       background-color: var(--bg-app);
       color: var(--text-normal);
       font-family: 'gg sans', 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -45,7 +44,7 @@
     header {
       background-color: #111214;
       border-bottom: 1px solid #232428;
-      padding: 8px 16px;
+      padding: 10px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -96,12 +95,12 @@
       outline: none;
     }
 
-    /* Discord Chat Layout */
+    /* Discord Chat Layout (Exact 560px Full Message) */
     .chat-container {
       width: 100%;
       display: flex;
       justify-content: center;
-      padding: 16px;
+      padding: 24px 16px 40px;
     }
 
     .discord-message {
@@ -118,14 +117,14 @@
     }
 
     .bot-avatar {
-      width: 38px;
-      height: 38px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       background: #5865F2;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
+      font-size: 20px;
     }
 
     .bot-info {
@@ -175,17 +174,17 @@
       image-rendering: pixelated;
     }
 
-    /* Discord ActionRows */
+    /* Discord ActionRows Container */
     .discord-action-rows {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
       width: 560px;
     }
 
     .action-row {
       display: flex;
-      gap: 6px;
+      gap: 8px;
       width: 100%;
     }
 
@@ -193,58 +192,60 @@
       flex: 1;
     }
 
-    /* Discord Buttons */
+    /* Discord Official Button Styles */
     .d-btn {
-      height: 36px;
-      padding: 2px 8px;
+      height: 38px;
+      padding: 2px 12px;
       border-radius: 4px;
       border: none;
-      font-size: 13px;
+      font-size: 13.5px;
       font-weight: 500;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 4px;
+      gap: 6px;
       transition: background-color 0.17s ease, color 0.17s ease;
       white-space: nowrap;
       user-select: none;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .d-btn.primary {
+    .d-btn.btn-1 {
       background-color: var(--btn-primary);
       color: #FFFFFF;
     }
-    .d-btn.primary:hover:not(:disabled) {
+    .d-btn.btn-1:hover:not(:disabled) {
       background-color: var(--btn-primary-hover);
     }
 
-    .d-btn.secondary {
+    .d-btn.btn-2 {
       background-color: var(--btn-secondary);
       color: #FFFFFF;
     }
-    .d-btn.secondary:hover:not(:disabled) {
+    .d-btn.btn-2:hover:not(:disabled) {
       background-color: var(--btn-secondary-hover);
     }
 
-    .d-btn.success {
+    .d-btn.btn-3 {
       background-color: var(--btn-success);
       color: #FFFFFF;
     }
-    .d-btn.success:hover:not(:disabled) {
+    .d-btn.btn-3:hover:not(:disabled) {
       background-color: var(--btn-success-hover);
     }
 
-    .d-btn.danger {
+    .d-btn.btn-4 {
       background-color: var(--btn-danger);
       color: #FFFFFF;
     }
-    .d-btn.danger:hover:not(:disabled) {
+    .d-btn.btn-4:hover:not(:disabled) {
       background-color: var(--btn-danger-hover);
     }
 
     .d-btn:disabled {
-      opacity: 0.5;
+      opacity: 0.45;
       cursor: not-allowed;
     }
   </style>
@@ -253,21 +254,15 @@
 
   <header>
     <div class="brand">
-      <h1>🎮 ROGUEPot UI Viewer</h1>
-      <span class="badge">Live 0ms Simulator</span>
+      <h1>🎮 ROGUEPot UI Viewer (Live Runtime)</h1>
+      <span class="badge">100% Discord Native Payload</span>
     </div>
     <div class="toolbar">
-      <select id="screen-select" onchange="onScreenChange()">
-        <option value="starter_party">⭐ 스타팅 파티 관리 (Party Customization)</option>
+      <select id="mode-select" onchange="onModeChange()">
+        <option value="party">⭐ 스타팅 파티 관리 (Party Customization)</option>
         <option value="starter_select">🔍 스타팅 포켓몬 선택 (Starter Select)</option>
-        <option value="pokedex">📚 포켓몬 도감 (Pokédex)</option>
-        <option value="bag">🎒 트레이너 가방 (Trainer Bag)</option>
-        <option value="multiplayer">🌐 멀티플레이 로비 (Multiplayer)</option>
-        <option value="gacha">🥚 알 부화기 (Egg Gacha)</option>
-        <option value="gen_select">🗺️ 세대 선택 화면 (Gen Select)</option>
-        <option value="title">🕹️ 메인 타이틀 화면 (Title Screen)</option>
       </select>
-      <button class="d-btn primary" onclick="renderState()" style="height: 30px; padding: 0 10px; font-size: 12px;">
+      <button class="d-btn btn-1" onclick="reloadCurrentView()" style="height: 32px; padding: 0 12px; font-size: 12px;">
         🔄 새로고침
       </button>
     </div>
@@ -284,314 +279,97 @@
         </div>
       </div>
 
-      <!-- 1. Canvas Image (560x380 No Crop / No Overflow) -->
+      <!-- 1. Discord Canvas Attachment (560x380) -->
       <div class="attachment-card">
-        <img id="canvas-preview" src="" alt="Discord Bot Canvas">
+        <img id="canvas-preview" src="" alt="Discord Bot Canvas Attachment">
       </div>
 
-      <!-- 2. Discord ActionRows (5 Rows) -->
-      <div class="discord-action-rows" id="action-rows"></div>
+      <!-- 2. Discord ActionRows (Pure 1:1 Render of interactionCreate.ts components) -->
+      <div class="discord-action-rows" id="action-rows">
+        <!-- Rendered dynamically directly from Discord components JSON -->
+      </div>
     </div>
   </div>
 
   <script>
-    // State Store matching interactionCreate.ts
-    let state = {
-      screen: "starter_party",
-      selectedPartyIdx: 1, // 0 = P1 (팽도리), 1 = P2 (이상해씨)
-      partyTab: "moves",   // "moves" | "shiny" | "cost" | "learnable"
-      selectedMoveIdx: 1,  // 0 ~ 3
-      currentGen: 1,
-      currentPage: 1,
-      totalPages: 4,
-      isShinyFilter: false,
-      isHaFilter: false,
-      isPassiveFilter: false,
-      party: [
-        { dexNumber: 393, speciesId: "piplup", name: "팽도리", cost: 3, isShiny: false, usePassive: false, useHiddenAbility: false },
-        { dexNumber: 1, speciesId: "bulbasaur", name: "이상해씨", cost: 2, isShiny: false, usePassive: true, useHiddenAbility: false }
-      ],
-      userCandies: 50,
-      moves: {
-        bulbasaur: ["Tackle", "Growl", "Vine Whip"],
-        piplup: ["Pound", "Growl", "Water Gun"]
-      },
-      movesKo: {
-        "Tackle": "몸통박치기",
-        "Growl": "울음소리",
-        "Vine Whip": "덩굴채찍",
-        "Pound": "막치기",
-        "Water Gun": "물대포"
-      }
-    };
+    let currentMode = "party";
 
-    async function renderState() {
+    async function loadInitial(mode = "party") {
       try {
-        const res = await fetch('/api/render', {
+        const res = await fetch(`/api/initial?mode=${mode}`);
+        const data = await res.json();
+        renderDiscordPayload(data);
+      } catch (err) {
+        console.error("Failed to load initial view:", err);
+      }
+    }
+
+    async function onDiscordButtonClick(customId) {
+      try {
+        const res = await fetch('/api/click', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(state)
+          body: JSON.stringify({ customId })
         });
         const data = await res.json();
-        if (data.image) {
-          document.getElementById('canvas-preview').src = data.image;
-        }
+        renderDiscordPayload(data);
       } catch (err) {
-        console.error('Render error:', err);
+        console.error("Failed to execute button interaction:", err);
       }
     }
 
-    function onScreenChange() {
-      state.screen = document.getElementById('screen-select').value;
-      renderButtons();
-      renderState();
-    }
-
-    // Party interaction handlers
-    function pickParty(idx) {
-      if (idx < 0 || idx >= state.party.length) return;
-      state.selectedPartyIdx = idx;
-      state.selectedMoveIdx = 0; // Party pick always resets moveIdx to 0
-      renderButtons();
-      renderState();
-    }
-
-    function pickTab(tab) {
-      state.partyTab = tab;
-      renderButtons();
-      renderState();
-    }
-
-    function pickMove(idx) {
-      state.selectedMoveIdx = idx;
-      renderButtons();
-      renderState();
-    }
-
-    function toggleNormalAb() {
-      const p = state.party[state.selectedPartyIdx];
-      if (p) {
-        p.useHiddenAbility = false;
-        renderButtons();
-        renderState();
+    function renderDiscordPayload(data) {
+      if (data.image) {
+        document.getElementById('canvas-preview').src = data.image;
       }
-    }
 
-    function toggleHa() {
-      const p = state.party[state.selectedPartyIdx];
-      if (p && p.speciesId === 'bulbasaur') {
-        p.useHiddenAbility = true;
-        renderButtons();
-        renderState();
-      }
-    }
-
-    function togglePassive() {
-      const p = state.party[state.selectedPartyIdx];
-      if (p && p.speciesId === 'bulbasaur') {
-        p.usePassive = !p.usePassive;
-        p.cost = p.usePassive ? 2 : 3;
-        renderButtons();
-        renderState();
-      }
-    }
-
-    function removeCurrentParty() {
-      if (state.party.length > 0 && state.selectedPartyIdx < state.party.length) {
-        state.party.splice(state.selectedPartyIdx, 1);
-        state.selectedPartyIdx = Math.max(0, state.party.length - 1);
-        renderButtons();
-        renderState();
-      }
-    }
-
-    // Starter Select Handlers
-    function changeGen(gen) {
-      state.currentGen = gen;
-      state.currentPage = 1;
-      renderButtons();
-      renderState();
-    }
-
-    function changePage(delta) {
-      state.currentPage = Math.max(1, Math.min(state.totalPages, state.currentPage + delta));
-      renderButtons();
-      renderState();
-    }
-
-    function toggleFilter(filter) {
-      if (filter === 'shiny') state.isShinyFilter = !state.isShinyFilter;
-      if (filter === 'ha') state.isHaFilter = !state.isHaFilter;
-      if (filter === 'passive') state.isPassiveFilter = !state.isPassiveFilter;
-      renderButtons();
-      renderState();
-    }
-
-    function addSampleStarterToParty() {
-      if (state.party.length < 6) {
-        state.party.push({ dexNumber: 4, speciesId: "charmander", name: "파이리", cost: 3, isShiny: false });
-        state.selectedPartyIdx = state.party.length - 1;
-        state.screen = 'starter_party';
-        document.getElementById('screen-select').value = 'starter_party';
-        renderButtons();
-        renderState();
-      }
-    }
-
-    function renderButtons() {
       const container = document.getElementById('action-rows');
       container.innerHTML = '';
 
-      if (state.screen === 'starter_party') {
-        const curMember = state.party[state.selectedPartyIdx];
-        const isPiplup = curMember?.speciesId === 'piplup';
-        const isBulba = curMember?.speciesId === 'bulbasaur';
+      if (Array.isArray(data.rows)) {
+        data.rows.forEach(row => {
+          const rowDiv = document.createElement('div');
+          rowDiv.className = 'action-row';
 
-        const normalAb = isPiplup ? "급류" : (isBulba ? "심록" : "-");
-        const haAb = isPiplup ? "-" : (isBulba ? "엽록소" : "-");
-        const passAb = isPiplup ? "미해금" : (isBulba ? "부식" : "-");
+          row.forEach(btn => {
+            const btnEl = document.createElement('button');
+            btnEl.className = `d-btn btn-${btn.style || 2}`;
+            btnEl.textContent = btn.label;
+            if (btn.disabled) btnEl.disabled = true;
 
-        const curMoves = isPiplup ? ["Pound", "Growl", "Water Gun"] : ["Tackle", "Growl", "Vine Whip"];
+            btnEl.onclick = () => onDiscordButtonClick(btn.custom_id);
+            rowDiv.appendChild(btnEl);
+          });
 
-        const isNormalAbActive = !curMember?.useHiddenAbility;
-        const isHaActive = curMember?.useHiddenAbility;
-        const isPassActive = curMember?.usePassive;
-
-        // ROW 1: Ability / Hidden Ability / Passive
-        container.innerHTML += `
-          <div class="action-row">
-            <button class="d-btn ${isNormalAbActive ? 'success' : 'primary'}" onclick="toggleNormalAb()">
-              🌟 특성: ${normalAb}
-            </button>
-            <button class="d-btn ${isBulba ? (isHaActive ? 'success' : 'primary') : 'secondary'}" ${!isBulba ? 'disabled' : ''} onclick="toggleHa()">
-              ${isBulba ? (isHaActive ? `🌟 숨특: ${haAb}` : `🌟 숨특: ${haAb}`) : '🔒 숨특: -'}
-            </button>
-            <button class="d-btn ${isBulba ? (isPassActive ? 'success' : 'primary') : 'secondary'}" ${!isBulba ? 'disabled' : ''} onclick="togglePassive()">
-              ${isBulba ? (isPassActive ? `🔓 패시브: ${passAb}` : `🔒 패시브: ${passAb}`) : '🔒 패시브: -'}
-            </button>
-          </div>
-        `;
-
-        // ROW 2: P1, P2 + [⚔️ 기술 관리] + [✨ 이로치 폼] + [🍬 코스트]
-        container.innerHTML += `
-          <div class="action-row">
-            <button class="d-btn ${state.selectedPartyIdx === 0 ? 'primary' : 'secondary'}" ${state.selectedPartyIdx === 0 || !state.party[0] ? 'disabled' : ''} onclick="pickParty(0)">P1</button>
-            <button class="d-btn ${state.selectedPartyIdx === 1 ? 'primary' : 'secondary'}" ${state.selectedPartyIdx === 1 || !state.party[1] ? 'disabled' : ''} onclick="pickParty(1)">P2</button>
-            <button class="d-btn ${state.partyTab === 'moves' ? 'primary' : 'secondary'}" onclick="pickTab('moves')">⚔️ 기술 관리</button>
-            <button class="d-btn ${state.partyTab === 'shiny' ? 'primary' : 'secondary'}" onclick="pickTab('shiny')">✨ 이로치 폼</button>
-            <button class="d-btn ${state.partyTab === 'cost' ? 'primary' : 'secondary'}" onclick="pickTab('cost')">🍬 코스트</button>
-          </div>
-        `;
-
-        // ROW 3: P3, P4 + Move 1 + Move 2 + [📚 기술 목록]
-        const m1 = curMoves[0] ? state.movesKo[curMoves[0]] : '-';
-        const m2 = curMoves[1] ? state.movesKo[curMoves[1]] : '-';
-        container.innerHTML += `
-          <div class="action-row">
-            <button class="d-btn ${state.selectedPartyIdx === 2 ? 'primary' : 'secondary'}" ${state.selectedPartyIdx === 2 || !state.party[2] ? 'disabled' : ''} onclick="pickParty(2)">P3</button>
-            <button class="d-btn ${state.selectedPartyIdx === 3 ? 'primary' : 'secondary'}" ${state.selectedPartyIdx === 3 || !state.party[3] ? 'disabled' : ''} onclick="pickParty(3)">P4</button>
-            <button class="d-btn ${state.selectedMoveIdx === 0 ? 'primary' : 'secondary'}" ${state.selectedMoveIdx === 0 || !curMoves[0] ? 'disabled' : ''} onclick="pickMove(0)">${m1}</button>
-            <button class="d-btn ${state.selectedMoveIdx === 1 ? 'primary' : 'secondary'}" ${state.selectedMoveIdx === 1 || !curMoves[1] ? 'disabled' : ''} onclick="pickMove(1)">${m2}</button>
-            <button class="d-btn ${state.partyTab === 'learnable' ? 'primary' : 'secondary'}" onclick="pickTab('learnable')">📚 기술 목록</button>
-          </div>
-        `;
-
-        // ROW 4: P5, P6 + Move 3 + Move 4
-        const m3 = curMoves[2] ? state.movesKo[curMoves[2]] : '-';
-        const m4 = curMoves[3] ? state.movesKo[curMoves[3]] : '-';
-        container.innerHTML += `
-          <div class="action-row">
-            <button class="d-btn ${state.selectedPartyIdx === 4 ? 'primary' : 'secondary'}" ${state.selectedPartyIdx === 4 || !state.party[4] ? 'disabled' : ''} onclick="pickParty(4)">P5</button>
-            <button class="d-btn ${state.selectedPartyIdx === 5 ? 'primary' : 'secondary'}" ${state.selectedPartyIdx === 5 || !state.party[5] ? 'disabled' : ''} onclick="pickParty(5)">P6</button>
-            <button class="d-btn ${state.selectedMoveIdx === 2 ? 'primary' : 'secondary'}" ${state.selectedMoveIdx === 2 || !curMoves[2] ? 'disabled' : ''} onclick="pickMove(2)">${m3}</button>
-            <button class="d-btn secondary" disabled>${m4}</button>
-          </div>
-        `;
-
-        // ROW 5: [-⚪ 파티 제외] + [↩️ 스타팅 목록]
-        container.innerHTML += `
-          <div class="action-row">
-            <button class="d-btn danger" ${state.party.length === 0 ? 'disabled' : ''} onclick="removeCurrentParty()">-⚪ 파티 제외</button>
-            <button class="d-btn danger" onclick="state.screen='starter_select'; document.getElementById('screen-select').value='starter_select'; renderButtons(); renderState();">↩️ 스타팅 목록</button>
-          </div>
-        `;
-      } else if (state.screen === 'starter_select') {
-        // ROW 1: Generation & Filters
-        container.innerHTML += `
-          <div class="action-row">
-            <button class="d-btn primary" onclick="changeGen((state.currentGen % 9) + 1)">세대: G${state.currentGen}</button>
-            <button class="d-btn ${state.isPassiveFilter ? 'success' : 'secondary'}" onclick="toggleFilter('passive')">PS 패시브</button>
-            <button class="d-btn ${state.isHaFilter ? 'danger' : 'secondary'}" onclick="toggleFilter('ha')">HA 숨특</button>
-            <button class="d-btn ${state.isShinyFilter ? 'primary' : 'secondary'}" onclick="toggleFilter('shiny')">✨ 이로치</button>
-          </div>
-        `;
-
-        // ROW 2: Starters 1~4
-        container.innerHTML += `
-          <div class="action-row">
-            <button class="d-btn primary">1. 이상해씨</button>
-            <button class="d-btn secondary">2. 파이리</button>
-            <button class="d-btn secondary">3. 꼬부기</button>
-            <button class="d-btn secondary">4. 피카츄</button>
-          </div>
-        `;
-
-        // ROW 3: Starters 5~8
-        container.innerHTML += `
-          <div class="action-row">
-            <button class="d-btn secondary">5. 이브이</button>
-            <button class="d-btn secondary">6. 캐터피</button>
-            <button class="d-btn secondary">7. 뿔충이</button>
-            <button class="d-btn secondary">8. 구구</button>
-          </div>
-        `;
-
-        // ROW 4: Starters 9~12
-        container.innerHTML += `
-          <div class="action-row">
-            <button class="d-btn secondary">9. 꼬렛</button>
-            <button class="d-btn secondary">10. 깨비참</button>
-            <button class="d-btn secondary">11. 아보</button>
-            <button class="d-btn secondary">12. 모래두지</button>
-          </div>
-        `;
-
-        // ROW 5: Nav & Action
-        container.innerHTML += `
-          <div class="action-row">
-            <button class="d-btn secondary" onclick="changePage(-1)">◀ 이전</button>
-            <button class="d-btn success" onclick="addSampleStarterToParty()">+⚪ 파티 추가</button>
-            <button class="d-btn primary" onclick="state.screen='starter_party'; document.getElementById('screen-select').value='starter_party'; renderButtons(); renderState();">👥 파티 관리 (${state.party.length}/6)</button>
-            <button class="d-btn secondary" onclick="changePage(1)">다음 ▶</button>
-            <button class="d-btn success">⚔️ 모험 시작</button>
-          </div>
-        `;
-      } else {
-        container.innerHTML = `
-          <div class="action-row">
-            <button class="d-btn primary" onclick="state.screen='starter_party'; document.getElementById('screen-select').value='starter_party'; renderButtons(); renderState();">👥 파티 관리 화면으로 이동</button>
-            <button class="d-btn secondary" onclick="state.screen='starter_select'; document.getElementById('screen-select').value='starter_select'; renderButtons(); renderState();">🔍 스타팅 선택 화면으로 이동</button>
-          </div>
-        `;
+          container.appendChild(rowDiv);
+        });
       }
     }
 
-    // Live Reload SSE Connection
+    function onModeChange() {
+      currentMode = document.getElementById('mode-select').value;
+      loadInitial(currentMode);
+    }
+
+    function reloadCurrentView() {
+      loadInitial(currentMode);
+    }
+
+    // Live Hot Reload via SSE
     try {
       const evtSource = new EventSource('/api/live');
       evtSource.onmessage = (event) => {
         if (event.data === 'reload') {
-          console.log('[LIVE RELOAD] Canvas renderer updated! Refreshing...');
-          renderState();
+          console.log('[LIVE RELOAD] Source updated! Refreshing...');
+          reloadCurrentView();
         }
       };
     } catch (e) {
       console.warn('SSE connection warning:', e);
     }
 
-    // Initialize
-    renderButtons();
-    renderState();
+    // Start
+    loadInitial("party");
   </script>
 </body>
 </html>
