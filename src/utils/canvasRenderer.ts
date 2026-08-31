@@ -431,11 +431,6 @@ async function drawPartyRightPanel(
     ctx.roundRect(sx, sy, slotW, slotH, borderRadius);
     ctx.fill();
 
-    // Slot Subtle Edge Border
-    ctx.strokeStyle = options?.borderColor ? "#282E48" : "#282D3D";
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
     // Slot Number Tag (1, 2, 3, 4, 5, 6)
     if (options?.showSlotNumbers) {
       ctx.font = "bold 13px DungGeunMo";
