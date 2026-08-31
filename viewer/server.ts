@@ -11,6 +11,8 @@ import {
   renderGenSelectMessageData,
   renderStarterSelectMessageData,
   renderPartyViewMessageData,
+  parsePartyParam,
+  serializePartyParam,
 } from "../src/events/interactionCreate.js";
 import { saveService, PartyPokemon } from "../src/services/saveService.js";
 import { db } from "../src/services/db.js";
@@ -161,7 +163,7 @@ const server = http.createServer(async (req, res) => {
           0,
           1,
           1,
-          "393:0:0:0-1:2:0:1",
+          "1:2:1:1-4:1:0:1-7:0:1:0", // Sample 3 Pokemon Party
           false,
           false,
           false,
@@ -490,229 +492,173 @@ const server = http.createServer(async (req, res) => {
           result = await renderPartyViewMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, partyRaw, isShiny, isHa, isPassive, 0, "moves", 0);
         }
 
-        // 2-2-P1. Party Slot Selection (interactionCreate.ts:1934)
+        // 2-1-P2. Pick Party Member in Party View Screen (interactionCreate.ts:1932)
         else if (customId.startsWith("party_pick_")) {
-          const idx = parseInt(parts[2], 10);
+          const rawIdx = parseInt(parts[2], 10);
+          const targetIdx = isNaN(rawIdx) ? -1 : rawIdx;
           const gen = parseInt(parts[3], 10) || 0;
           const page = parseInt(parts[4], 10) || 1;
           const dexNo = parseInt(parts[5], 10) || 1;
           const slotId = parseInt(parts[6], 10) || 1;
-          const partyParam = parts[7] || "empty";
-          const flags = (parts[8] || "0_0_0").split("_").map((v: string) => v === "1");
-          const tab = (parts[9] as PartyViewTab) || "moves";
-          const moveIdx = parseInt(parts[10], 10) || 0;
+          const partyRaw = parts[7] || "empty";
+          const isShiny = parts[8] === "1";
+          const isHa = parts[9] === "1";
+          const isPassive = parts[10] === "1";
+          const tab = (parts[11] || "moves") as PartyViewTab;
+          const moveIdx = 0; // Always reset to 1st move (slot 0) on switching party member!
 
-          result = await renderPartyViewMessageData(
-            null as any,
-            SIMULATED_USER_ID,
-            slotId,
-            gen,
-            page,
-            dexNo,
-            partyParam,
-            flags[0],
-            flags[1],
-            flags[2],
-            idx,
-            tab,
-            moveIdx
-          );
+          result = await renderPartyViewMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, partyRaw, isShiny, isHa, isPassive, targetIdx, tab, moveIdx);
         }
 
-        // 2-2-P2. Party Tab Switcher (interactionCreate.ts:1968)
+        // 2-1-P2-TAB. Switch Tab in Party View (interactionCreate.ts:1952)
         else if (customId.startsWith("party_tab_")) {
-          const tab = parts[2] as PartyViewTab;
-          const partyIdx = parseInt(parts[3], 10) || 0;
+          const targetTab = parts[2] as PartyViewTab;
+          const currentIdx = parseInt(parts[3], 10) || 0;
           const gen = parseInt(parts[4], 10) || 0;
           const page = parseInt(parts[5], 10) || 1;
           const dexNo = parseInt(parts[6], 10) || 1;
           const slotId = parseInt(parts[7], 10) || 1;
-          const partyParam = parts[8] || "empty";
-          const flags = (parts[9] || "0_0_0").split("_").map((v: string) => v === "1");
-          const moveIdx = parseInt(parts[10], 10) || 0;
+          const partyRaw = parts[8] || "empty";
+          const isShiny = parts[9] === "1";
+          const isHa = parts[10] === "1";
+          const isPassive = parts[11] === "1";
+          const moveIdx = parseInt(parts[12], 10) || 0;
 
-          result = await renderPartyViewMessageData(
-            null as any,
-            SIMULATED_USER_ID,
-            slotId,
-            gen,
-            page,
-            dexNo,
-            partyParam,
-            flags[0],
-            flags[1],
-            flags[2],
-            partyIdx,
-            tab,
-            moveIdx
-          );
+          result = await renderPartyViewMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, partyRaw, isShiny, isHa, isPassive, currentIdx, targetTab, moveIdx);
         }
 
-        // 2-2-P3. Party Move Slot Select (interactionCreate.ts:2002)
-        else if (customId.startsWith("party_pickmove_")) {
-          const mIdx = parseInt(parts[2], 10);
-          const partyIdx = parseInt(parts[3], 10) || 0;
+        // 2-1-P2-MOVE. Pick Move in Moves Tab (interactionCreate.ts:1971)
+        else if (customId.startsWith("party_movepick_") || customId.startsWith("party_pickmove_")) {
+          const targetMoveIdx = parseInt(parts[2], 10) || 0;
+          const currentIdx = parseInt(parts[3], 10) || 0;
           const gen = parseInt(parts[4], 10) || 0;
           const page = parseInt(parts[5], 10) || 1;
           const dexNo = parseInt(parts[6], 10) || 1;
           const slotId = parseInt(parts[7], 10) || 1;
-          const partyParam = parts[8] || "empty";
-          const flags = (parts[9] || "0_0_0").split("_").map((v: string) => v === "1");
-          const tab = (parts[10] as PartyViewTab) || "moves";
+          const partyRaw = parts[8] || "empty";
+          const isShiny = parts[9] === "1";
+          const isHa = parts[10] === "1";
+          const isPassive = parts[11] === "1";
+          const tab: PartyViewTab = "moves";
 
-          result = await renderPartyViewMessageData(
-            null as any,
-            SIMULATED_USER_ID,
-            slotId,
-            gen,
-            page,
-            dexNo,
-            partyParam,
-            flags[0],
-            flags[1],
-            flags[2],
-            partyIdx,
-            tab,
-            mIdx
-          );
+          result = await renderPartyViewMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, partyRaw, isShiny, isHa, isPassive, currentIdx, tab, targetMoveIdx);
         }
 
-        // 2-2-P4. Party Set Ability / HA (interactionCreate.ts:2036)
-        else if (customId.startsWith("party_setha_")) {
-          const haVal = parts[2] === "1";
-          const partyIdx = parseInt(parts[3], 10) || 0;
+        // 2-1-P2-SHINY. Set Shiny Tier in Shiny Tab (interactionCreate.ts:1990)
+        else if (customId.startsWith("party_setshiny_")) {
+          const targetShinyTier = parseInt(parts[2], 10) || 0;
+          const currentIdx = parseInt(parts[3], 10) || 0;
           const gen = parseInt(parts[4], 10) || 0;
           const page = parseInt(parts[5], 10) || 1;
           const dexNo = parseInt(parts[6], 10) || 1;
           const slotId = parseInt(parts[7], 10) || 1;
-          let partyParam = parts[8] || "empty";
-          const flags = (parts[9] || "0_0_0").split("_").map((v: string) => v === "1");
-          const tab = (parts[10] as PartyViewTab) || "moves";
-          const moveIdx = parseInt(parts[11], 10) || 0;
+          const partyRaw = parts[8] || "empty";
+          const isShiny = parts[9] === "1";
+          const isHa = parts[10] === "1";
+          const isPassive = parts[11] === "1";
+          const tab = (parts[12] || "shiny") as PartyViewTab;
+          const moveIdx = parseInt(parts[13], 10) || 0;
 
-          if (partyParam !== "empty") {
-            const list = partyParam.split("-");
-            if (list[partyIdx]) {
-              const [d, s, , p] = list[partyIdx].split(":");
-              list[partyIdx] = `${d}:${s}:${haVal ? 1 : 0}:${p}`;
-              partyParam = list.join("-");
-            }
+          const userStarters = getUserStarters(SIMULATED_USER_ID);
+          const partyStates = parsePartyParam(partyRaw, userStarters);
+          const targetMember = partyStates[currentIdx];
+          if (targetMember) {
+            targetMember.shinyTier = targetShinyTier;
           }
-
-          result = await renderPartyViewMessageData(
-            null as any,
-            SIMULATED_USER_ID,
-            slotId,
-            gen,
-            page,
-            dexNo,
-            partyParam,
-            flags[0],
-            flags[1],
-            flags[2],
-            partyIdx,
-            tab,
-            moveIdx
-          );
+          const newPartyParam = serializePartyParam(partyStates);
+          result = await renderPartyViewMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, currentIdx, tab, moveIdx);
         }
 
-        // 2-2-P5. Party Toggle Passive (interactionCreate.ts:2070)
+        // 2-1-P2-A. Set or Toggle Hidden Ability (interactionCreate.ts:2019)
+        else if (customId.startsWith("party_setha_") || customId.startsWith("party_toggleha_")) {
+          const isSet = customId.startsWith("party_setha_");
+          const targetUseHa = isSet ? parts[2] === "1" : undefined;
+          const currentIdx = parseInt(parts[isSet ? 3 : 2], 10) || 0;
+          const gen = parseInt(parts[isSet ? 4 : 3], 10) || 0;
+          const page = parseInt(parts[isSet ? 5 : 4], 10) || 1;
+          const dexNo = parseInt(parts[isSet ? 6 : 5], 10) || 1;
+          const slotId = parseInt(parts[isSet ? 7 : 6], 10) || 1;
+          const partyRaw = parts[isSet ? 8 : 7] || "empty";
+          const isShiny = parts[isSet ? 9 : 8] === "1";
+          const isHa = parts[isSet ? 10 : 9] === "1";
+          const isPassive = parts[isSet ? 11 : 10] === "1";
+          const tab = (parts[isSet ? 12 : 11] || "moves") as PartyViewTab;
+          const moveIdx = parseInt(parts[isSet ? 13 : 12], 10) || 0;
+
+          const userStarters = getUserStarters(SIMULATED_USER_ID);
+          const partyStates = parsePartyParam(partyRaw, userStarters);
+          const targetMember = partyStates[currentIdx];
+          if (targetMember) {
+            targetMember.useHiddenAbility = isSet ? (targetUseHa ?? !targetMember.useHiddenAbility) : !targetMember.useHiddenAbility;
+          }
+          const newPartyParam = serializePartyParam(partyStates);
+          result = await renderPartyViewMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, currentIdx, tab, moveIdx);
+        }
+
+        // 2-1-P2-B. Toggle Passive (interactionCreate.ts:2054)
         else if (customId.startsWith("party_togglepass_")) {
-          const partyIdx = parseInt(parts[2], 10) || 0;
+          const currentIdx = parseInt(parts[2], 10) || 0;
           const gen = parseInt(parts[3], 10) || 0;
           const page = parseInt(parts[4], 10) || 1;
           const dexNo = parseInt(parts[5], 10) || 1;
           const slotId = parseInt(parts[6], 10) || 1;
-          let partyParam = parts[7] || "empty";
-          const flags = (parts[8] || "0_0_0").split("_").map((v: string) => v === "1");
-          const tab = (parts[9] as PartyViewTab) || "moves";
-          const moveIdx = parseInt(parts[10], 10) || 0;
+          const partyRaw = parts[7] || "empty";
+          const isShiny = parts[8] === "1";
+          const isHa = parts[9] === "1";
+          const isPassive = parts[10] === "1";
+          const tab = (parts[11] || "moves") as PartyViewTab;
+          const moveIdx = parseInt(parts[12], 10) || 0;
 
-          if (partyParam !== "empty") {
-            const list = partyParam.split("-");
-            if (list[partyIdx]) {
-              const [d, s, ha, p] = list[partyIdx].split(":");
-              const newPass = p === "1" ? "0" : "1";
-              list[partyIdx] = `${d}:${s}:${ha}:${newPass}`;
-              partyParam = list.join("-");
-            }
+          const userStarters = getUserStarters(SIMULATED_USER_ID);
+          const partyStates = parsePartyParam(partyRaw, userStarters);
+          const targetMember = partyStates[currentIdx];
+          if (targetMember) {
+            targetMember.usePassive = !targetMember.usePassive;
           }
-
-          result = await renderPartyViewMessageData(
-            null as any,
-            SIMULATED_USER_ID,
-            slotId,
-            gen,
-            page,
-            dexNo,
-            partyParam,
-            flags[0],
-            flags[1],
-            flags[2],
-            partyIdx,
-            tab,
-            moveIdx
-          );
+          const newPartyParam = serializePartyParam(partyStates);
+          result = await renderPartyViewMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, currentIdx, tab, moveIdx);
         }
 
-        // 2-2-P6. Party Remove Member (interactionCreate.ts:2104)
+        // 2-1-P2-R. Remove Party Member (interactionCreate.ts:2088)
         else if (customId.startsWith("party_remove_")) {
-          const partyIdx = parseInt(parts[2], 10) || 0;
+          const currentIdx = parseInt(parts[2], 10) || 0;
+          const removeDex = parseInt(parts[3], 10) || 0;
           const gen = parseInt(parts[4], 10) || 0;
           const page = parseInt(parts[5], 10) || 1;
           const dexNo = parseInt(parts[6], 10) || 1;
           const slotId = parseInt(parts[7], 10) || 1;
-          let partyParam = parts[8] || "empty";
-          const flags = (parts[9] || "0_0_0").split("_").map((v: string) => v === "1");
-          const tab = (parts[10] as PartyViewTab) || "moves";
-          const moveIdx = parseInt(parts[11], 10) || 0;
+          const partyRaw = parts[8] || "empty";
+          const isShiny = parts[9] === "1";
+          const isHa = parts[10] === "1";
+          const isPassive = parts[11] === "1";
+          const tab = (parts[12] || "moves") as PartyViewTab;
+          const moveIdx = parseInt(parts[13], 10) || 0;
 
-          if (partyParam !== "empty") {
-            const list = partyParam.split("-");
-            list.splice(partyIdx, 1);
-            partyParam = list.length > 0 ? list.join("-") : "empty";
-          }
+          const userStarters = getUserStarters(SIMULATED_USER_ID);
+          const partyStates = parsePartyParam(partyRaw, userStarters);
+          const filteredStates = partyStates.filter((p) => p.dexNumber !== removeDex);
+          const newPartyParam = serializePartyParam(filteredStates);
+          const nextSelectedIdx = Math.max(0, Math.min(currentIdx, filteredStates.length - 1));
 
-          const newPartyIdx = partyParam === "empty" ? -1 : Math.max(0, partyIdx - 1);
-
-          result = await renderPartyViewMessageData(
-            null as any,
-            SIMULATED_USER_ID,
-            slotId,
-            gen,
-            page,
-            dexNo,
-            partyParam,
-            flags[0],
-            flags[1],
-            flags[2],
-            newPartyIdx,
-            tab,
-            moveIdx
-          );
+          result = await renderPartyViewMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, nextSelectedIdx, tab, moveIdx);
         }
 
-        // 2-2-P7. Party Back to Starter Select (interactionCreate.ts:2138)
+        // 2-1-P2-B2. Back to Starter Select (interactionCreate.ts:2124)
         else if (customId.startsWith("party_back_starter_")) {
           const gen = parseInt(parts[3], 10) || 0;
           const page = parseInt(parts[4], 10) || 1;
           const dexNo = parseInt(parts[5], 10) || 1;
           const slotId = parseInt(parts[6], 10) || 1;
-          const partyParam = parts[7] || "empty";
-          const flags = (parts[8] || "0_0_0").split("_").map((v: string) => v === "1");
+          const partyRaw = parts[7] || "empty";
+          const isShiny = parts[8] === "1";
+          const isHa = parts[9] === "1";
+          const isPassive = parts[10] === "1";
 
-          result = await renderStarterSelectMessageData(
-            null as any,
-            SIMULATED_USER_ID,
-            slotId,
-            gen,
-            page,
-            dexNo,
-            partyParam,
-            flags[0],
-            flags[1],
-            flags[2]
-          );
+          const userStarters = getUserStarters(SIMULATED_USER_ID);
+          const partyStates = parsePartyParam(partyRaw, userStarters);
+          const partyDexList = partyStates.map((p) => p.dexNumber);
+
+          result = await renderStarterSelectMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, partyDexList, isShiny, isHa, isPassive);
         }
 
         // Fallback

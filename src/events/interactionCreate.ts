@@ -613,7 +613,7 @@ interface PartyItemState {
   usePassive: boolean;
 }
 
-function parsePartyParam(param: string | number[] | undefined, userStarters?: Map<string, any>): PartyItemState[] {
+export function parsePartyParam(param: string | number[] | undefined, userStarters?: Map<string, any>): PartyItemState[] {
   if (!param || param === "empty") return [];
   if (Array.isArray(param)) {
     return param.map((dex) => {
@@ -654,7 +654,7 @@ function parsePartyParam(param: string | number[] | undefined, userStarters?: Ma
     .filter(Boolean) as PartyItemState[];
 }
 
-function serializePartyParam(states: PartyItemState[]): string {
+export function serializePartyParam(states: PartyItemState[]): string {
   if (!states || states.length === 0) return "empty";
   return states
     .map((st) => `${st.dexNumber}:${st.shinyTier}:${st.useHiddenAbility ? 1 : 0}:${st.usePassive ? 1 : 0}`)
