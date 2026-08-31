@@ -1013,7 +1013,7 @@ async function renderPartyViewMessageData(
     }
     const isSelected = safePartyIdx === idx;
     return new ButtonBuilder()
-      .setCustomId(`party_pick_${idx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
+      .setCustomId(`party_pick_${idx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_0_${userId}`)
       .setLabel(`P${idx + 1}`)
       .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Secondary)
       .setDisabled(isSelected);
@@ -1941,7 +1941,7 @@ export const interactionCreateEvent: BotEvent = {
         const isHa = parts[9] === "1";
         const isPassive = parts[10] === "1";
         const tab = (parts[11] || "moves") as PartyViewTab;
-        const moveIdx = parseInt(parts[12], 10) || 0;
+        const moveIdx = 0; // Always reset to 1st move (slot 0) on switching party member!
 
         const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, partyRaw, isShiny, isHa, isPassive, targetIdx, tab, moveIdx);
         await interaction.update(partyData);
