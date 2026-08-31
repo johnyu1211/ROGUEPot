@@ -1137,7 +1137,7 @@ export async function renderPartyViewMessageData(
 
     return new ButtonBuilder()
       .setCustomId(`party_pickmove_${mIdx}_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${userId}`)
-      .setLabel(mName.slice(0, 20))
+      .setLabel(mName.slice(0, 4))
       .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Secondary)
       .setDisabled(isSelected);
   };
