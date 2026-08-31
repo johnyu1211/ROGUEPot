@@ -218,6 +218,23 @@ export function drawVectorCheck(ctx: any, cx: number, cy: number, r: number, col
 }
 
 /**
+ * Draws a clean vector Checkmark Icon (SVG path style)
+ */
+export function drawCheckmark(ctx: any, cx: number, cy: number, size: number = 5.5, color: string = "#22C55E") {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.beginPath();
+  ctx.moveTo(cx - size * 0.7, cy);
+  ctx.lineTo(cx - size * 0.15, cy + size * 0.55);
+  ctx.lineTo(cx + size * 0.75, cy - size * 0.55);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/**
  * Draws a clean vector Star Icon
  */
 export function drawVectorStar(ctx: any, cx: number, cy: number, spikes: number, outerRadius: number, innerRadius: number, color: string = "#F4A261") {
@@ -2710,8 +2727,20 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       ctx.textAlign = "center";
 
       if (isCurrent) {
+        const activeLabel = isKo ? "적용 중" : "Active";
+        ctx.font = "bold 12px DungGeunMo";
+        const txtW = ctx.measureText(activeLabel).width;
+        const totalW = txtW + 14;
+        const startX = (cX + tileW / 2) - (totalW / 2);
+
+        drawCheckmark(ctx, startX + 5, cY + 100, 4.5, "#22C55E");
+
         ctx.fillStyle = "#22C55E";
-        ctx.fillText(isKo ? "✓ 적용 중" : "✓ Active", cX + tileW / 2, cY + 100);
+        ctx.textAlign = "left";
+        ctx.fillText(activeLabel, startX + 14, cY + 100);
+
+        // Top-Right Corner Vector Check Badge
+        drawVectorCheck(ctx, cX + tileW - 14, cY + 14, 7, "#22C55E");
       } else if (isUnlocked) {
         ctx.fillStyle = tierColors[t] || "#94A3B8";
         ctx.fillText(tierLucks[t], cX + tileW / 2, cY + 100);
@@ -2918,8 +2947,9 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
         ctx.font = "bold 11px DungGeunMo";
         ctx.textAlign = "right";
         if (isEquipped) {
+          drawCheckmark(ctx, cardX + cardW - (isKo ? 46 : 56), itemY + 20, 4, "#22C55E");
           ctx.fillStyle = "#22C55E";
-          ctx.fillText(isKo ? "[장착]" : "[Equipped]", cardX + cardW - 8, itemY + 20);
+          ctx.fillText(isKo ? "장착 중" : "Equipped", cardX + cardW - 8, itemY + 20);
         } else if (isEggMove) {
           ctx.fillStyle = "#F59E0B";
           ctx.fillText(isKo ? "[알기술]" : "[Egg]", cardX + cardW - 8, itemY + 20);
