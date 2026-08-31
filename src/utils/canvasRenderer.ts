@@ -2317,12 +2317,18 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   const usePassive = partyMember?.usePassive || false;
   const candies = selProgress?.candies || 0;
 
-  // Top Tab Bar (y: 6 ~ 38) - Connected Tab Bar with Baseline
+  // 1. Precise Tab Layout Dimensions & Container Bounds (Seamlessly fills right side)
   const tabGap = 6;
-  const tabW = Math.floor((panelW - (tabGap * 2)) / 3);
   const tabH = 32;
   const tabY = 6;
-  const baselineY = tabY + tabH;
+  const baselineY = tabY + tabH; // 38px
+
+  const bodyX = panelX;
+  const bodyY = baselineY;
+  const bodyW = panelW;
+  const bodyH = 370 - bodyY; // 332px
+
+  const tabW = Math.floor((bodyW - (tabGap * 2)) / 3);
 
   const tabs: { id: PartyViewTab; labelKo: string; labelEn: string; icon: "moves" | "shiny" | "cost" }[] = [
     { id: "moves", labelKo: "기술", labelEn: "Moves", icon: "moves" },
@@ -2330,27 +2336,21 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     { id: "cost", labelKo: `${candies}개`, labelEn: `${candies}`, icon: "cost" },
   ];
 
-  // 1. Find active tab index and bounds
   const activeIdx = tabs.findIndex(t => currentTab === t.id || (t.id === "moves" && currentTab === "learnable"));
   const safeActiveIdx = activeIdx >= 0 ? activeIdx : 0;
-  const activeX = panelX + safeActiveIdx * (tabW + tabGap);
+  const activeX = bodyX + safeActiveIdx * (tabW + tabGap);
 
   // 2. Draw Full Tab Body Panel Container (#1B202D Container covering y: 38 ~ 370)
-  const bodyX = panelX - 6;
-  const bodyY = baselineY; // 38px
-  const bodyW = panelW + 12;
-  const bodyH = 370 - bodyY; // 332px
-
   ctx.fillStyle = "#1B202D";
   ctx.beginPath();
   ctx.roundRect(bodyX, bodyY, bodyW, bodyH, [0, 0, 8, 8]);
   ctx.fill();
 
-  ctx.strokeStyle = "#283042";
+  ctx.strokeStyle = "#2E364A";
   ctx.lineWidth = 1;
   ctx.stroke();
 
-  // 2-B. Draw Active Tab Body (Fill with #1B202D and Top/Left/Right Stroke, Open Bottom into Body!)
+  // 2-B. Draw Active Tab Body (Filled with #1B202D and Open at Bottom to connect directly to Body!)
   ctx.fillStyle = "#1B202D";
   ctx.beginPath();
   ctx.roundRect(activeX, tabY, tabW, tabH + 2, [6, 6, 0, 0]);
@@ -2372,7 +2372,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   ctx.lineTo(activeX + tabW, baselineY + 1);
   ctx.stroke();
 
-  // 3. Draw Horizontal Blue Baseline OUTSIDE of the active tab (Connected to body edges)
+  // 3. Draw Horizontal Blue Baseline OUTSIDE of the active tab (Exact match from bodyX to bodyX + bodyW)
   ctx.strokeStyle = "#5865F2";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
@@ -2386,7 +2386,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
 
   // 4. Render Tab Labels & Icons
   tabs.forEach((t, idx) => {
-    const tX = panelX + idx * (tabW + tabGap);
+    const tX = bodyX + idx * (tabW + tabGap);
     const isAct = idx === safeActiveIdx;
     const iconColor = isAct ? "#FFFFFF" : "#64748B";
 
@@ -2406,6 +2406,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
 
       ctx.font = "bold 13px DungGeunMo";
       ctx.fillStyle = isAct ? "#FFFFFF" : "#8E96AB";
+      ctx.textAlign = "center";
       ctx.fillText(isKo ? t.labelKo : t.labelEn, tX + (tabW / 2) + 8, tabY + tabH / 2);
     } else if (t.icon === "cost") {
       drawCandyIcon(ctx, tX + 16, tabY + tabH / 2, 4.8, "#F59E0B", "#FEF08A");
@@ -2423,27 +2424,27 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     ctx.font = "bold 17px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "center";
-    ctx.fillText(isKo ? "🔍 파티원을 선택하세요" : "🔍 Select a Party Member", panelX + panelW / 2, 130);
+    ctx.fillText(isKo ? "🔍 파티원을 선택하세요" : "🔍 Select a Party Member", bodyX + bodyW / 2, 130);
 
     ctx.font = "bold 13px DungGeunMo";
     ctx.fillStyle = "#94A3B8";
-    ctx.fillText(isKo ? "위 파티원 버튼(1~6번)을 선택하면" : "Select a party member (1~6)", panelX + panelW / 2, 175);
-    ctx.fillText(isKo ? "기술 상세 스펙과 이로치 외형을" : "to view detailed move descriptions", panelX + panelW / 2, 200);
-    ctx.fillText(isKo ? "자세히 확인하고 관리할 수 있습니다." : "and customize shiny forms.", panelX + panelW / 2, 225);
+    ctx.fillText(isKo ? "위 파티원 버튼(1~6번)을 선택하면" : "Select a party member (1~6)", bodyX + bodyW / 2, 175);
+    ctx.fillText(isKo ? "기술 상세 스펙과 이로치 외형을" : "to view detailed move descriptions", bodyX + bodyW / 2, 200);
+    ctx.fillText(isKo ? "자세히 확인하고 관리할 수 있습니다." : "and customize shiny forms.", bodyX + bodyW / 2, 225);
 
     // Subtle decoration box
-    ctx.fillStyle = "#1B202D";
+    ctx.fillStyle = "#222A3C";
     ctx.beginPath();
-    ctx.roundRect(panelX + 16, 265, panelW - 32, 68, 5);
+    ctx.roundRect(bodyX + 16, 265, bodyW - 32, 68, 5);
     ctx.fill();
-    ctx.strokeStyle = "#252B3D";
+    ctx.strokeStyle = "#333E56";
     ctx.lineWidth = 1;
     ctx.stroke();
 
     ctx.font = "bold 12px DungGeunMo";
     ctx.fillStyle = "#60A5FA";
-    ctx.fillText(isKo ? "💡 TIP: [START] 버튼을 누르면" : "💡 TIP: Press [START] button", panelX + panelW / 2, 290);
-    ctx.fillText(isKo ? "현재 파티로 바로 모험을 시작합니다!" : "to launch your adventure!", panelX + panelW / 2, 312);
+    ctx.fillText(isKo ? "💡 TIP: [START] 버튼을 누르면" : "💡 TIP: Press [START] button", bodyX + bodyW / 2, 290);
+    ctx.fillText(isKo ? "현재 파티로 바로 모험을 시작합니다!" : "to launch your adventure!", bodyX + bodyW / 2, 312);
 
     return;
   }
@@ -2452,9 +2453,12 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   // TAB 1 (DEFAULT): MOVES TAB (Spacious 2x2 Move Tiles + Clean Detail Card)
   // =========================================================================
   if (currentTab === "moves") {
-    // 1. Move Selection Tiles (Clean 2x2 Grid, only [Type Badge] + [Move Name], H: 48 each)
+    // 1. Move Selection Tiles (Clean 2x2 Grid inside body container)
+    const contentPadding = 10;
+    const contentX = bodyX + contentPadding;
+    const contentW = bodyW - (contentPadding * 2);
     const chipGap = 8;
-    const moveChipW = Math.floor((panelW - chipGap) / 2);
+    const moveChipW = Math.floor((contentW - chipGap) / 2);
     const moveChipH = 48;
 
     for (let m = 0; m < 4; m++) {
@@ -2465,14 +2469,15 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
 
       const mCol = m % 2;
       const mRow = Math.floor(m / 2);
-      const mX = panelX + mCol * (moveChipW + chipGap);
-      const mY = 48 + mRow * (moveChipH + 8);
+      const mX = contentX + mCol * (moveChipW + chipGap);
+      const mY = 50 + mRow * (moveChipH + 8);
       const isSel = selectedMoveIdx === m;
       const isEmpty = rawMove === "---" || !moveInfo;
 
-      ctx.fillStyle = isSel ? "#28344E" : (isEmpty ? "#11131C" : "#141722");
+      // Brightened tiles on top of #1B202D background!
+      ctx.fillStyle = isSel ? "#2E3A56" : (isEmpty ? "#141722" : "#242C3E");
       ctx.beginPath();
-      ctx.roundRect(mX, mY, moveChipW, moveChipH, 8);
+      ctx.roundRect(mX, mY, moveChipW, moveChipH, 6);
       ctx.fill();
 
       if (isSel) {
@@ -2480,7 +2485,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
         ctx.lineWidth = 2;
         ctx.stroke();
       } else {
-        ctx.strokeStyle = isEmpty ? "#1C202E" : "#283042";
+        ctx.strokeStyle = isEmpty ? "#1F2434" : "#353F57";
         ctx.lineWidth = 1;
         ctx.stroke();
       }
@@ -2488,7 +2493,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       if (rawMove === "---" || !moveInfo) {
         ctx.textBaseline = "middle";
         ctx.font = "bold 14px DungGeunMo";
-        ctx.fillStyle = "#3B4256";
+        ctx.fillStyle = "#475569";
         ctx.textAlign = "center";
         ctx.fillText("---", mX + moveChipW / 2, mY + moveChipH / 2);
       } else {
@@ -2519,19 +2524,19 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       }
     }
 
-    // 2. Direct Flat Move Detail (Borderless / Open Layout directly on panel)
+    // 2. Direct Flat Move Detail (Borderless / Open Layout directly on #1B202D panel)
     const curRawMove = sel.starterMoves[selectedMoveIdx] || "---";
     const curMoveKey = curRawMove.toLowerCase().replace(/[\s_]+/g, "-");
     const curMoveInfo = MOVES_DATA[curMoveKey];
 
     if (curRawMove !== "---" && curMoveInfo) {
-      // (1) Header: [Type Badge] (Left Front) + Move Name (18px)
+      // (1) Header: [Type Badge] + Move Name
       const tLower = curMoveInfo.type.toLowerCase();
       const tColor = TYPE_COLORS[tLower] || "#777777";
       const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || curMoveInfo.type) : curMoveInfo.type.toUpperCase();
       const tBadgeW = 34;
       const tBadgeH = 20;
-      const tBadgeX = panelX;
+      const tBadgeX = contentX;
       const tBadgeY = 168;
 
       ctx.fillStyle = tColor;
@@ -2545,12 +2550,12 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       ctx.textAlign = "center";
       ctx.fillText(tDisplay, tBadgeX + tBadgeW / 2, tBadgeY + tBadgeH / 2);
 
-      // Move Name (Next to Type Badge)
+      // Move Name
       ctx.font = "bold 18px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "left";
       const moveTitle = isKo ? curMoveInfo.nameKo : curMoveInfo.name.toUpperCase();
-      ctx.fillText(moveTitle, panelX + 44, 178);
+      ctx.fillText(moveTitle, contentX + 44, 178);
 
       // (2) Stats Row: Clean Natural Left-Aligned Stat Bar
       const statY = 204;
@@ -2568,22 +2573,22 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       const pwrTextW = ctx.measureText(pwrLabel).width;
       const accTextW = ctx.measureText(accLabel).width;
 
-      // 1. Column 1: [Icon] + Power (Starts at panelX)
-      drawMoveCategoryIcon(ctx, panelX, 193, cat);
+      // Column 1: [Icon] + Power
+      drawMoveCategoryIcon(ctx, contentX, 193, cat);
       ctx.textBaseline = "middle";
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "left";
-      ctx.fillText(pwrLabel, panelX + 28, statY);
+      ctx.fillText(pwrLabel, contentX + 28, statY);
 
       // Divider 1
-      const div1X = panelX + 28 + pwrTextW + 12;
+      const div1X = contentX + 28 + pwrTextW + 12;
       ctx.font = "bold 12px DungGeunMo";
-      ctx.fillStyle = "#333A4D";
+      ctx.fillStyle = "#3E4964";
       ctx.textAlign = "center";
       ctx.fillText("|", div1X, statY);
 
-      // 2. Column 2: Accuracy
+      // Column 2: Accuracy
       const col2X = div1X + 12;
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
@@ -2593,11 +2598,11 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       // Divider 2
       const div2X = col2X + accTextW + 12;
       ctx.font = "bold 12px DungGeunMo";
-      ctx.fillStyle = "#333A4D";
+      ctx.fillStyle = "#3E4964";
       ctx.textAlign = "center";
       ctx.fillText("|", div2X, statY);
 
-      // 3. Column 3: PP
+      // Column 3: PP
       const col3X = div2X + 12;
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
@@ -2607,16 +2612,16 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       // (3) Description Content (Rendered directly with spacious natural layout)
       ctx.textBaseline = "top";
       ctx.font = "14px DungGeunMo";
-      ctx.fillStyle = "#FFFFFF";
+      ctx.fillStyle = "#F1F5F9";
       ctx.textAlign = "left";
       const desc = curMoveInfo.description || (isKo ? "효과 설명이 없습니다." : "No description available.");
-      drawWrappedText(ctx, desc, panelX, 232, panelW, 22);
+      drawWrappedText(ctx, desc, contentX, 232, contentW, 22);
     } else {
       ctx.textBaseline = "middle";
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#64748B";
       ctx.textAlign = "center";
-      ctx.fillText(isKo ? "등록된 기술이 없습니다." : "No move registered.", panelX + panelW / 2, 250);
+      ctx.fillText(isKo ? "등록된 기술이 없습니다." : "No move registered.", bodyX + bodyW / 2, 250);
     }
 
     return;
@@ -2632,20 +2637,20 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
 
     const cardH = 68;
     const startCardY = 46;
+    const cW = bodyW - 20;
+    const cX = bodyX + 10;
 
     for (let t = 0; t <= 3; t++) {
       const cY = startCardY + t * (cardH + 8);
-      const cW = panelW - 24;
-      const cX = panelX + 12;
       const isUnlocked = t === 0 || t <= unlockedMaxShinyTier;
       const isCurrent = currentShinyTier === t;
 
-      ctx.fillStyle = isCurrent ? "#262E40" : (isUnlocked ? "#1B202D" : "#10121A");
+      ctx.fillStyle = isCurrent ? "#2E3A56" : (isUnlocked ? "#242C3E" : "#141722");
       ctx.beginPath();
       ctx.roundRect(cX, cY, cW, cardH, 5);
       ctx.fill();
 
-      ctx.strokeStyle = isCurrent ? tierColors[t] : (isUnlocked ? "#283042" : "#1A1D27");
+      ctx.strokeStyle = isCurrent ? tierColors[t] : (isUnlocked ? "#353F57" : "#1F2434");
       ctx.lineWidth = isCurrent ? 2 : 1;
       ctx.stroke();
 
@@ -2708,14 +2713,14 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     // 1. Top Info Header Card (y: 44 ~ 138, H: 94)
     const infoCardY = 44;
     const infoCardH = 94;
-    const cardW = panelW - 24;
-    const cardX = panelX + 12;
+    const cardW = bodyW - 20;
+    const cardX = bodyX + 10;
 
-    ctx.fillStyle = "#1B202D";
+    ctx.fillStyle = "#242C3E";
     ctx.beginPath();
     ctx.roundRect(cardX, infoCardY, cardW, infoCardH, 6);
     ctx.fill();
-    ctx.strokeStyle = "#283042";
+    ctx.strokeStyle = "#353F57";
     ctx.lineWidth = 1;
     ctx.stroke();
 
@@ -2741,11 +2746,11 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     // 2. Action Card 1: Cost Reduction (y: 148 ~ 242, H: 94)
     const card1Y = 148;
     const card1H = 94;
-    ctx.fillStyle = "#1B202D";
+    ctx.fillStyle = "#242C3E";
     ctx.beginPath();
     ctx.roundRect(cardX, card1Y, cardW, card1H, 6);
     ctx.fill();
-    ctx.strokeStyle = "#283042";
+    ctx.strokeStyle = "#353F57";
     ctx.lineWidth = 1;
     ctx.stroke();
 
@@ -2761,7 +2766,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     // 3. Action Card 2: Passive Unlock (y: 252 ~ 346, H: 94)
     const card2Y = 252;
     const card2H = 94;
-    ctx.fillStyle = "#1B202D";
+    ctx.fillStyle = "#242C3E";
     ctx.beginPath();
     ctx.roundRect(cardX, card2Y, cardW, card2H, 6);
     ctx.fill();
