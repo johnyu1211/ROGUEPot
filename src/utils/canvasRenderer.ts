@@ -2317,7 +2317,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   const usePassive = partyMember?.usePassive || false;
   const candies = selProgress?.candies || 0;
 
-  // Top Tab Bar (y: 10 ~ 40) - 3 Full-Width Equal Tabs: [ 기술 ], [ 이로치 ], [ 사탕 N개 ]
+  // Top Tab Bar (y: 10 ~ 40) - 3 Full-Width Equal Tabs: [ ⚔ 기술 ], [ • 이로치 ], [ 🍬 사탕 N개 ]
   const tabGap = 6;
   const tabW = Math.floor((panelW - (tabGap * 2)) / 3);
   const tabH = 30;
@@ -2351,11 +2351,14 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       ctx.textAlign = "center";
       ctx.fillText(isKo ? t.labelKo : t.labelEn, tX + (tabW / 2) + 8, tabY + tabH / 2);
     } else if (t.icon === "shiny") {
-      drawShinySparkle(ctx, tX + 16, tabY + tabH / 2, 4.0, isAct ? "#F59E0B" : "#64748B");
       ctx.textBaseline = "middle";
+      ctx.font = "bold 14px DungGeunMo";
+      ctx.fillStyle = isAct ? "#FFFFFF" : "#64748B";
+      ctx.textAlign = "center";
+      ctx.fillText("•", tX + 16, tabY + tabH / 2);
+
       ctx.font = "bold 13px DungGeunMo";
       ctx.fillStyle = isAct ? "#FFFFFF" : "#8E96AB";
-      ctx.textAlign = "center";
       ctx.fillText(isKo ? t.labelKo : t.labelEn, tX + (tabW / 2) + 8, tabY + tabH / 2);
     } else if (t.icon === "cost") {
       drawCandyIcon(ctx, tX + 16, tabY + tabH / 2, 4.8, "#F59E0B", "#FEF08A");
@@ -2386,7 +2389,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     ctx.beginPath();
     ctx.roundRect(panelX + 16, 265, panelW - 32, 68, 5);
     ctx.fill();
-    ctx.strokeStyle = "#252B3C";
+    ctx.strokeStyle = "#252B3D";
     ctx.lineWidth = 1;
     ctx.stroke();
 
@@ -2416,10 +2419,10 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       const mCol = m % 2;
       const mRow = Math.floor(m / 2);
       const mX = panelX + mCol * (moveChipW + chipGap);
-      const mY = 48 + mRow * (moveChipH + 6);
+      const mY = 48 + mRow * (moveChipH + 8);
       const isSel = selectedMoveIdx === m;
 
-      ctx.fillStyle = isSel ? "#222738" : "#131622";
+      ctx.fillStyle = isSel ? "#1B2234" : "#131622";
       ctx.beginPath();
       ctx.roundRect(mX, mY, moveChipW, moveChipH, 6);
       ctx.fill();
@@ -2463,14 +2466,6 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     }
 
     // 2. Direct Flat Move Detail (Borderless / Open Layout directly on panel)
-    // Section Divider Line below 2x2 Move Tiles
-    ctx.strokeStyle = "#252B3D";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(panelX + 2, 156);
-    ctx.lineTo(panelX + panelW - 2, 156);
-    ctx.stroke();
-
     const curRawMove = sel.starterMoves[selectedMoveIdx] || "---";
     const curMoveKey = curRawMove.toLowerCase().replace(/[\s_]+/g, "-");
     const curMoveInfo = MOVES_DATA[curMoveKey];
@@ -2480,10 +2475,10 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       const tLower = curMoveInfo.type.toLowerCase();
       const tColor = TYPE_COLORS[tLower] || "#777777";
       const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || curMoveInfo.type) : curMoveInfo.type.toUpperCase();
-      const tBadgeW = 38;
-      const tBadgeH = 18;
-      const tBadgeX = panelX + 4;
-      const tBadgeY = 166;
+      const tBadgeW = 34;
+      const tBadgeH = 20;
+      const tBadgeX = panelX;
+      const tBadgeY = 168;
 
       ctx.fillStyle = tColor;
       ctx.beginPath();
@@ -2501,10 +2496,10 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "left";
       const moveTitle = isKo ? curMoveInfo.nameKo : curMoveInfo.name.toUpperCase();
-      ctx.fillText(moveTitle, panelX + 48, 176);
+      ctx.fillText(moveTitle, panelX + 44, 178);
 
       // (2) Stats Row: Clean Natural Left-Aligned Stat Bar
-      const statY = 206;
+      const statY = 204;
 
       const pwrStr = curMoveInfo.power ? String(curMoveInfo.power) : "-";
       const accStr = curMoveInfo.accuracy ? `${curMoveInfo.accuracy}%` : "-";
@@ -2520,17 +2515,17 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       const accTextW = ctx.measureText(accLabel).width;
 
       // 1. Column 1: [Icon] + Power (Starts at panelX)
-      drawMoveCategoryIcon(ctx, panelX, 196, cat);
+      drawMoveCategoryIcon(ctx, panelX, 193, cat);
       ctx.textBaseline = "middle";
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "left";
-      ctx.fillText(pwrLabel, panelX + 26, statY);
+      ctx.fillText(pwrLabel, panelX + 28, statY);
 
       // Divider 1
-      const div1X = panelX + 26 + pwrTextW + 12;
+      const div1X = panelX + 28 + pwrTextW + 12;
       ctx.font = "bold 12px DungGeunMo";
-      ctx.fillStyle = "#3B4256";
+      ctx.fillStyle = "#333A4D";
       ctx.textAlign = "center";
       ctx.fillText("|", div1X, statY);
 
@@ -2544,7 +2539,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       // Divider 2
       const div2X = col2X + accTextW + 12;
       ctx.font = "bold 12px DungGeunMo";
-      ctx.fillStyle = "#3B4256";
+      ctx.fillStyle = "#333A4D";
       ctx.textAlign = "center";
       ctx.fillText("|", div2X, statY);
 
@@ -2555,21 +2550,13 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       ctx.textAlign = "left";
       ctx.fillText(ppLabel, col3X, statY);
 
-      // Divider Line between Specs and Description
-      ctx.strokeStyle = "#1E2433";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(panelX, 226);
-      ctx.lineTo(panelX + panelW, 226);
-      ctx.stroke();
-
-      // (3) Description Content (Restored to default left alignment!)
+      // (3) Description Content (Rendered directly with spacious natural layout)
       ctx.textBaseline = "top";
       ctx.font = "14px DungGeunMo";
-      ctx.fillStyle = "#F1F5F9";
+      ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "left";
       const desc = curMoveInfo.description || (isKo ? "효과 설명이 없습니다." : "No description available.");
-      drawWrappedText(ctx, desc, panelX, 238, panelW, 22);
+      drawWrappedText(ctx, desc, panelX, 232, panelW, 22);
     } else {
       ctx.textBaseline = "middle";
       ctx.font = "bold 14px DungGeunMo";
