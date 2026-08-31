@@ -3,10 +3,16 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import {
-  renderPartyViewMessageData,
+  renderTitleMessageData,
+  renderSlotsScreenData,
+  renderBagMessageData,
+  renderMultiplayerMessageData,
+  renderGenSelectMessageData,
   renderStarterSelectMessageData,
+  renderPartyViewMessageData,
 } from "../src/events/interactionCreate.js";
 import { saveService } from "../src/services/saveService.js";
+import { db } from "../src/services/db.js";
 import { PartyViewTab } from "../src/utils/canvasRenderer.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -14,9 +20,7 @@ const __dirname = path.dirname(__filename);
 const PORT = 3456;
 const SIMULATED_USER_ID = "viewer_simulator_user";
 
-import { db } from "../src/services/db.js";
-
-// Ensure a rich mock save profile exists for live rendering
+// Initialize a realistic mock profile in SQLite
 function initSimulatedUser() {
   saveService.getProfile(SIMULATED_USER_ID);
   saveService.setLanguage(SIMULATED_USER_ID, "ko");
@@ -50,12 +54,18 @@ const interactionPath = path.resolve(__dirname, "../src/events/interactionCreate
   }
 });
 
-// Helper to convert Discord Message Payload to JSON response for Web
+// Convert Discord Message Payload to JSON response
 function serializeDiscordMessagePayload(result: any) {
   const attachment = result.files && result.files[0];
   let imageBase64 = "";
   if (attachment && attachment.attachment) {
     imageBase64 = `data:image/png;base64,${attachment.attachment.toString("base64")}`;
+  }
+
+  // Also support embed if returned
+  let embedData = null;
+  if (result.embeds && result.embeds[0]) {
+    embedData = typeof result.embeds[0].toJSON === "function" ? result.embeds[0].toJSON() : result.embeds[0];
   }
 
   const rows = (result.components || []).map((row: any) => {
@@ -70,6 +80,7 @@ function serializeDiscordMessagePayload(result: any) {
 
   return {
     image: imageBase64,
+    embed: embedData,
     rows: rows,
   };
 }
@@ -115,44 +126,52 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 3. Initial State Endpoint (Directly calls interactionCreate.ts renderPartyViewMessageData)
+  // 3. Initial State Endpoint (Defaults directly to TITLE SCREEN - The true initial landing page!)
   if (req.method === "GET" && req.url?.startsWith("/api/initial")) {
     try {
       const url = new URL(req.url, `http://${req.headers.host}`);
-      const mode = url.searchParams.get("mode") || "party";
+      const screen = url.searchParams.get("screen") || "title";
 
       let result: any;
-      if (mode === "starter_select") {
+      if (screen === "title") {
+        result = await renderTitleMessageData(null as any, SIMULATED_USER_ID);
+      } else if (screen === "slots") {
+        result = renderSlotsScreenData(SIMULATED_USER_ID);
+      } else if (screen === "starter_select") {
         result = await renderStarterSelectMessageData(
           null as any,
           SIMULATED_USER_ID,
           1, // slotId
           1, // gen
           1, // page
-          1, // selectedDexNo (Bulbasaur)
+          1, // selectedDexNo
           "393:0:0:0-1:2:0:1", // partyParam
           false,
           false,
           false
         );
-      } else {
-        // Party Management View
+      } else if (screen === "party") {
         result = await renderPartyViewMessageData(
           null as any,
           SIMULATED_USER_ID,
-          1, // slotId
-          1, // gen
-          1, // page
-          1, // selectedDexNo
-          "393:0:0:0-1:2:0:1", // partyParam (P1 Piplup, P2 Bulbasaur)
+          1,
+          1,
+          1,
+          1,
+          "393:0:0:0-1:2:0:1",
           false,
           false,
           false,
-          1, // selectedPartyIdx (P2 이상해씨)
-          "moves", // partyTab
-          0, // selectedMoveIdx (1st move slot)
-          undefined
+          1,
+          "moves",
+          0
         );
+      } else if (screen === "bag") {
+        result = await renderBagMessageData(null as any, SIMULATED_USER_ID, "pokemon");
+      } else if (screen === "multiplayer") {
+        result = await renderMultiplayerMessageData(null as any, SIMULATED_USER_ID);
+      } else {
+        result = await renderTitleMessageData(null as any, SIMULATED_USER_ID);
       }
 
       res.writeHead(200, { "Content-Type": "application/json" });
@@ -165,7 +184,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 4. Click Interaction Dispatcher (Executes interactionCreate.ts handler logic)
+  // 4. Click Interaction Dispatcher (Full Discord event handling)
   if (req.method === "POST" && req.url === "/api/click") {
     let body = "";
     req.on("data", (chunk) => (body += chunk));
@@ -178,8 +197,66 @@ const server = http.createServer(async (req, res) => {
 
         let result: any;
 
-        if (customId.startsWith("party_pick_")) {
-          // party_pick_${idx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${moveIdx}_${userId}
+        // TITLE & MENU INTERACTIONS
+        if (customId.startsWith("menu_newgame_") || customId.startsWith("menu_loadgame_")) {
+          result = renderSlotsScreenData(SIMULATED_USER_ID);
+        } else if (customId.startsWith("slot_select_")) {
+          // slot_select_${slotId}_${userId}
+          const parts = customId.split("_");
+          const slotId = parseInt(parts[2], 10) || 1;
+          result = await renderStarterSelectMessageData(
+            null as any,
+            SIMULATED_USER_ID,
+            slotId,
+            1, // gen 1
+            1, // page 1
+            1, // Bulbasaur
+            "393:0:0:0-1:2:0:1", // initial party
+            false,
+            false,
+            false
+          );
+        } else if (customId.startsWith("menu_back_to_title_") || customId.startsWith("starter_back_title_")) {
+          result = await renderTitleMessageData(null as any, SIMULATED_USER_ID);
+        } else if (customId.startsWith("menu_inventory_") || customId.startsWith("bag_tab_")) {
+          const tab = customId.includes("pokedex") ? "pokedex" : (customId.includes("records") ? "records" : "pokemon");
+          result = await renderBagMessageData(null as any, SIMULATED_USER_ID, tab);
+        } else if (customId.startsWith("menu_multiplay_")) {
+          result = await renderMultiplayerMessageData(null as any, SIMULATED_USER_ID);
+        }
+
+        // GENERATION SELECTOR
+        else if (customId.startsWith("starter_genmenu_")) {
+          // starter_genmenu_${gen}_${slotId}_${partyParam}_${flagsParam}_${userId}
+          const parts = customId.split("_");
+          const gen = parseInt(parts[2], 10) || 1;
+          const slotId = parseInt(parts[3], 10) || 1;
+          const partyParam = parts[4] || "empty";
+          const flagsParam = parts[5] || "0_0_0";
+          result = await renderGenSelectMessageData(null as any, SIMULATED_USER_ID, gen, slotId, partyParam, flagsParam);
+        } else if (customId.startsWith("starter_pickgen_") || customId.startsWith("starter_genback_")) {
+          // starter_pickgen_${targetGen}_${currentGen}_${slotId}_${partyParam}_${flagsParam}_${userId}
+          const parts = customId.split("_");
+          const targetGen = parseInt(parts[2], 10) || 1;
+          const slotId = parseInt(parts[4], 10) || 1;
+          const partyParam = parts[5] || "empty";
+          const flags = (parts[6] || "0_0_0").split("_").map((v: string) => v === "1");
+          result = await renderStarterSelectMessageData(
+            null as any,
+            SIMULATED_USER_ID,
+            slotId,
+            targetGen,
+            1, // page 1
+            1,
+            partyParam,
+            flags[0],
+            flags[1],
+            flags[2]
+          );
+        }
+
+        // PARTY BUILDER INTERACTIONS
+        else if (customId.startsWith("party_pick_")) {
           const parts = customId.split("_");
           const idx = parseInt(parts[2], 10);
           const gen = parseInt(parts[3], 10) || 0;
@@ -207,7 +284,6 @@ const server = http.createServer(async (req, res) => {
             moveIdx
           );
         } else if (customId.startsWith("party_tab_")) {
-          // party_tab_${tab}_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${selectedMoveIdx}_${userId}
           const parts = customId.split("_");
           const tab = parts[2] as PartyViewTab;
           const partyIdx = parseInt(parts[3], 10) || 0;
@@ -235,7 +311,6 @@ const server = http.createServer(async (req, res) => {
             moveIdx
           );
         } else if (customId.startsWith("party_pickmove_")) {
-          // party_pickmove_${mIdx}_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${userId}
           const parts = customId.split("_");
           const mIdx = parseInt(parts[2], 10);
           const partyIdx = parseInt(parts[3], 10) || 0;
@@ -263,7 +338,6 @@ const server = http.createServer(async (req, res) => {
             mIdx
           );
         } else if (customId.startsWith("party_setha_")) {
-          // party_setha_${val}_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}
           const parts = customId.split("_");
           const haVal = parts[2] === "1";
           const partyIdx = parseInt(parts[3], 10) || 0;
@@ -276,7 +350,6 @@ const server = http.createServer(async (req, res) => {
           const tab = (parts[10] as PartyViewTab) || "moves";
           const moveIdx = parseInt(parts[11], 10) || 0;
 
-          // Update party param string with new HA state
           if (partyParam !== "empty") {
             const list = partyParam.split("-");
             if (list[partyIdx]) {
@@ -302,7 +375,6 @@ const server = http.createServer(async (req, res) => {
             moveIdx
           );
         } else if (customId.startsWith("party_togglepass_")) {
-          // party_togglepass_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}
           const parts = customId.split("_");
           const partyIdx = parseInt(parts[2], 10) || 0;
           const gen = parseInt(parts[3], 10) || 0;
@@ -314,7 +386,6 @@ const server = http.createServer(async (req, res) => {
           const tab = (parts[9] as PartyViewTab) || "moves";
           const moveIdx = parseInt(parts[10], 10) || 0;
 
-          // Toggle passive state in partyParam
           if (partyParam !== "empty") {
             const list = partyParam.split("-");
             if (list[partyIdx]) {
@@ -341,7 +412,6 @@ const server = http.createServer(async (req, res) => {
             moveIdx
           );
         } else if (customId.startsWith("party_remove_")) {
-          // party_remove_${safePartyIdx}_${removeTargetDex}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}
           const parts = customId.split("_");
           const partyIdx = parseInt(parts[2], 10) || 0;
           const gen = parseInt(parts[4], 10) || 0;
@@ -377,7 +447,6 @@ const server = http.createServer(async (req, res) => {
             moveIdx
           );
         } else if (customId.startsWith("party_back_starter_")) {
-          // party_back_starter_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${userId}
           const parts = customId.split("_");
           const gen = parseInt(parts[3], 10) || 0;
           const page = parseInt(parts[4], 10) || 1;
@@ -399,7 +468,6 @@ const server = http.createServer(async (req, res) => {
             flags[2]
           );
         } else if (customId.startsWith("starter_openparty_")) {
-          // starter_openparty_${selectedStarter.dexNumber}_${gen}_${safePage}_${slotId}_${partyParam}_${flagsParam}_${userId}
           const parts = customId.split("_");
           const dexNo = parseInt(parts[2], 10) || 1;
           const gen = parseInt(parts[3], 10) || 0;
@@ -419,17 +487,25 @@ const server = http.createServer(async (req, res) => {
             flags[0],
             flags[1],
             flags[2],
-            0, // select P1
+            0,
             "moves",
             0
           );
-        } else if (customId.startsWith("starter_slot_") || customId.startsWith("starter_toggleshiny_") || customId.startsWith("starter_togglepass_") || customId.startsWith("starter_toggleha_") || customId.startsWith("starter_page_") || customId.startsWith("starter_add_")) {
-          // General Starter Select interactions
+        }
+
+        // STARTER SELECT GENERAL INTERACTIONS
+        else if (
+          customId.startsWith("starter_slot_") ||
+          customId.startsWith("starter_toggleshiny_") ||
+          customId.startsWith("starter_togglepass_") ||
+          customId.startsWith("starter_toggleha_") ||
+          customId.startsWith("starter_page_") ||
+          customId.startsWith("starter_add_")
+        ) {
           const parts = customId.split("_");
           let gen = 1, page = 1, dexNo = 1, slotId = 1, partyParam = "empty", isShiny = false, isHa = false, isPass = false;
 
           if (customId.startsWith("starter_slot_")) {
-            // starter_slot_${s.dexNumber}_${gen}_${safePage}_${slotId}_${partyParam}_${flagsParam}_${userId}
             dexNo = parseInt(parts[2], 10) || 1;
             gen = parseInt(parts[3], 10) || 1;
             page = parseInt(parts[4], 10) || 1;
@@ -438,7 +514,6 @@ const server = http.createServer(async (req, res) => {
             const flags = (parts[7] || "0_0_0").split("_").map((v: string) => v === "1");
             isShiny = flags[0]; isHa = flags[1]; isPass = flags[2];
           } else if (customId.startsWith("starter_add_")) {
-            // starter_add_${selectedStarter.dexNumber}_${gen}_${safePage}_${slotId}_${partyParam}_${flagsParam}_${userId}
             dexNo = parseInt(parts[2], 10) || 1;
             gen = parseInt(parts[3], 10) || 1;
             page = parseInt(parts[4], 10) || 1;
@@ -447,7 +522,6 @@ const server = http.createServer(async (req, res) => {
             const flags = (parts[7] || "0_0_0").split("_").map((v: string) => v === "1");
             isShiny = flags[0]; isHa = flags[1]; isPass = flags[2];
 
-            // Add dexNo to partyParam
             if (partyParam === "empty") partyParam = `${dexNo}:0:0:0`;
             else partyParam += `-${dexNo}:0:0:0`;
           } else if (customId.startsWith("starter_toggleshiny_")) {
@@ -475,7 +549,6 @@ const server = http.createServer(async (req, res) => {
             const flags = (parts[7] || "0_0_0").split("_").map((v: string) => v === "1");
             isShiny = flags[0]; isHa = !flags[1]; isPass = flags[2];
           } else if (customId.startsWith("starter_page_")) {
-            // starter_page_next_${gen}_${safePage}_${selectedStarter.dexNumber}_${slotId}_${partyParam}_${flagsParam}_${userId}
             const isNext = parts[2] === "next";
             gen = parseInt(parts[3], 10) || 1;
             page = (parseInt(parts[4], 10) || 1) + (isNext ? 1 : -1);
@@ -499,8 +572,7 @@ const server = http.createServer(async (req, res) => {
             isPass
           );
         } else {
-          // Default fallback
-          result = await renderPartyViewMessageData(null as any, SIMULATED_USER_ID);
+          result = await renderTitleMessageData(null as any, SIMULATED_USER_ID);
         }
 
         res.writeHead(200, { "Content-Type": "application/json" });
