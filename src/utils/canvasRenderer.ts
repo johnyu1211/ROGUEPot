@@ -2317,27 +2317,37 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   const usePassive = partyMember?.usePassive || false;
   const candies = selProgress?.candies || 0;
 
-  // Top Tab Bar (y: 10 ~ 40) - 3 Full-Width Equal Tabs: [ ⚔ 기술 ], [ • 이로치 ], [ 🍬 사탕 N개 ]
+  // Top Tab Bar (y: 6 ~ 38) - Connected Tab Bar with Baseline
   const tabGap = 6;
   const tabW = Math.floor((panelW - (tabGap * 2)) / 3);
-  const tabH = 30;
-  const tabY = 10;
+  const tabH = 32;
+  const tabY = 6;
+  const baselineY = tabY + tabH;
+
   const tabs: { id: PartyViewTab; labelKo: string; labelEn: string; icon: "moves" | "shiny" | "cost" }[] = [
     { id: "moves", labelKo: "기술", labelEn: "Moves", icon: "moves" },
     { id: "shiny", labelKo: "이로치", labelEn: "Shiny", icon: "shiny" },
     { id: "cost", labelKo: `${candies}개`, labelEn: `${candies}`, icon: "cost" },
   ];
 
+  // Draw Horizontal Baseline below inactive tabs
+  ctx.strokeStyle = "#2D3448";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(panelX, baselineY);
+  ctx.lineTo(panelX + panelW, baselineY);
+  ctx.stroke();
+
   tabs.forEach((t, idx) => {
     const tX = panelX + idx * (tabW + tabGap);
     const isAct = currentTab === t.id || (t.id === "moves" && currentTab === "learnable");
 
-    ctx.fillStyle = isAct ? "#242E46" : "#131620";
+    ctx.fillStyle = isAct ? "#181D2B" : "#11131C";
     ctx.beginPath();
-    ctx.roundRect(tX, tabY, tabW, tabH, 4);
+    ctx.roundRect(tX, tabY, tabW, tabH, [6, 6, 0, 0]);
     ctx.fill();
 
-    ctx.strokeStyle = isAct ? "#5865F2" : "#242938";
+    ctx.strokeStyle = isAct ? "#5865F2" : "#282E40";
     ctx.lineWidth = isAct ? 1.5 : 1;
     ctx.stroke();
 
