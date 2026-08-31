@@ -1143,6 +1143,23 @@ export async function renderPartyViewMessageData(
       .setDisabled(isSelected);
   };
 
+  // Helper to create Shiny Tier Buttons (0: Normal, 1: ★1 Yellow, 2: ★★2 Blue, 3: ★★★3 Red)
+  const createShinyTierBtn = (t: number) => {
+    const isUnlocked = t === 0 || t <= maxShinyTier;
+    const isCurrent = curShinyTier === t;
+    const starLabels = [
+      isKo ? "⚪ 일반 폼" : "⚪ Normal",
+      isKo ? "★1 옐로" : "★1 Yellow",
+      isKo ? "★★2 블루" : "★★2 Blue",
+      isKo ? "★★★3 레드" : "★★★3 Red"
+    ];
+    return new ButtonBuilder()
+      .setCustomId(`party_setshiny_${t}_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
+      .setLabel(starLabels[t])
+      .setStyle(isCurrent ? ButtonStyle.Success : (isUnlocked ? ButtonStyle.Primary : ButtonStyle.Secondary))
+      .setDisabled(!isUnlocked || isCurrent);
+  };
+
   // Helper to create B Button (📚 배울 수 있는 기술 목록 리스트 뷰)
   const isLearnableTab = partyTab === "learnable";
   const moveListBtn = new ButtonBuilder()
@@ -1151,26 +1168,48 @@ export async function renderPartyViewMessageData(
     .setStyle(isLearnableTab ? ButtonStyle.Primary : ButtonStyle.Secondary)
     .setDisabled(isLearnableTab || !inspectedStarter);
 
-  // ROW 3: Party 3, 4 + [ 1: 기술1 ] + [ 2: 기술2 ] + [ 📚 기술 목록 (B) ]
-  components.push(
-    new ActionRowBuilder<ButtonBuilder>().addComponents(
-      createPartySlotBtn(2),
-      createPartySlotBtn(3),
-      createMoveSlotBtn(0),
-      createMoveSlotBtn(1),
-      moveListBtn
-    )
-  );
+  if (partyTab === "shiny") {
+    // ROW 3: Party 3, 4 + [ ⚪ 일반 폼 ] + [ ★1 옐로 ]
+    components.push(
+      new ActionRowBuilder<ButtonBuilder>().addComponents(
+        createPartySlotBtn(2),
+        createPartySlotBtn(3),
+        createShinyTierBtn(0),
+        createShinyTierBtn(1)
+      )
+    );
 
-  // ROW 4: Party 5, 6 + [ 3: 기술3 ] + [ 4: 기술4 ]
-  components.push(
-    new ActionRowBuilder<ButtonBuilder>().addComponents(
-      createPartySlotBtn(4),
-      createPartySlotBtn(5),
-      createMoveSlotBtn(2),
-      createMoveSlotBtn(3)
-    )
-  );
+    // ROW 4: Party 5, 6 + [ ★★2 블루 ] + [ ★★★3 레드 ]
+    components.push(
+      new ActionRowBuilder<ButtonBuilder>().addComponents(
+        createPartySlotBtn(4),
+        createPartySlotBtn(5),
+        createShinyTierBtn(2),
+        createShinyTierBtn(3)
+      )
+    );
+  } else {
+    // ROW 3: Party 3, 4 + [ 1: 기술1 ] + [ 2: 기술2 ] + [ 📚 기술 목록 (B) ]
+    components.push(
+      new ActionRowBuilder<ButtonBuilder>().addComponents(
+        createPartySlotBtn(2),
+        createPartySlotBtn(3),
+        createMoveSlotBtn(0),
+        createMoveSlotBtn(1),
+        moveListBtn
+      )
+    );
+
+    // ROW 4: Party 5, 6 + [ 3: 기술3 ] + [ 4: 기술4 ]
+    components.push(
+      new ActionRowBuilder<ButtonBuilder>().addComponents(
+        createPartySlotBtn(4),
+        createPartySlotBtn(5),
+        createMoveSlotBtn(2),
+        createMoveSlotBtn(3)
+      )
+    );
+  }
 
   // ROW 5: Remove [-⚪] + Back [↩️] (NO START BUTTON)
   const removeTargetDex = activePartyMember ? activePartyMember.dexNumber : 0;
