@@ -2516,28 +2516,28 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       drawMoveCategoryIcon(ctx, panelX, 182, cat);
 
       ctx.font = "bold 14px DungGeunMo";
-      ctx.fillStyle = "#94A3B8";
+      ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "left";
       ctx.fillText(":", panelX + 26, statY);
 
       ctx.font = "bold 15px DungGeunMo";
-      ctx.fillStyle = "#F87171";
+      ctx.fillStyle = "#FFFFFF";
       ctx.fillText(pwrStr, panelX + 34, statY);
 
       // Column 2: Accuracy
       ctx.font = "bold 12px DungGeunMo";
-      ctx.fillStyle = "#94A3B8";
+      ctx.fillStyle = "#FFFFFF";
       ctx.fillText(isKo ? "명중:" : "Acc:", panelX + colW, statY);
       ctx.font = "bold 14px DungGeunMo";
-      ctx.fillStyle = "#60A5FA";
+      ctx.fillStyle = "#FFFFFF";
       ctx.fillText(accStr, panelX + colW + (isKo ? 38 : 38), statY);
 
       // Column 3: PP
       ctx.font = "bold 12px DungGeunMo";
-      ctx.fillStyle = "#94A3B8";
+      ctx.fillStyle = "#FFFFFF";
       ctx.fillText("PP:", panelX + colW * 2, statY);
       ctx.font = "bold 14px DungGeunMo";
-      ctx.fillStyle = "#34D399";
+      ctx.fillStyle = "#FFFFFF";
       ctx.fillText(ppStr, panelX + colW * 2 + 26, statY);
 
       // Divider Line between Specs and Description
@@ -2548,16 +2548,11 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       ctx.lineTo(panelX + panelW, 212);
       ctx.stroke();
 
-      // (3) Description Header & Content (Spacious full-width typography)
-      ctx.font = "bold 12px DungGeunMo";
-      ctx.fillStyle = "#64748B";
-      ctx.textAlign = "left";
-      ctx.fillText(isKo ? "효과 설명" : "Description", panelX, 228);
-
+      // (3) Description Content (Rendered directly with spacious line height)
       ctx.font = "14px DungGeunMo";
       ctx.fillStyle = "#F1F5F9";
       const desc = curMoveInfo.description || (isKo ? "효과 설명이 없습니다." : "No description available.");
-      drawWrappedText(ctx, desc, panelX, 248, panelW, 22);
+      drawWrappedText(ctx, desc, panelX, 228, panelW, 22);
     } else {
       ctx.textBaseline = "middle";
       ctx.font = "bold 14px DungGeunMo";
