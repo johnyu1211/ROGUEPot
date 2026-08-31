@@ -2402,10 +2402,10 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   // TAB 1 (DEFAULT): MOVES TAB (Spacious 2x2 Move Tiles + Clean Detail Card)
   // =========================================================================
   if (currentTab === "moves") {
-    // 1. Move Selection Tiles (Clean 2x2 Grid, only [Type Badge] + [Move Name], H: 40 each)
+    // 1. Move Selection Tiles (Clean 2x2 Grid, only [Type Badge] + [Move Name], H: 48 each)
     const chipGap = 8;
     const moveChipW = Math.floor((panelW - chipGap) / 2);
-    const moveChipH = 40;
+    const moveChipH = 48;
 
     for (let m = 0; m < 4; m++) {
       const rawMove = sel.starterMoves[m] || "---";
@@ -2421,7 +2421,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
 
       ctx.fillStyle = isSel ? "#1E293B" : "#131622";
       ctx.beginPath();
-      ctx.roundRect(mX, mY, moveChipW, moveChipH, 5);
+      ctx.roundRect(mX, mY, moveChipW, moveChipH, 6);
       ctx.fill();
 
       ctx.strokeStyle = isSel ? "#60A5FA" : "#252B3D";
@@ -2439,8 +2439,8 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
         const tLower = moveInfo.type.toLowerCase();
         const tColor = TYPE_COLORS[tLower] || "#777777";
         const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || moveInfo.type) : moveInfo.type.toUpperCase();
-        const tW = 32;
-        const tH = 18;
+        const tW = 34;
+        const tH = 20;
         const tX = mX + 8;
         const tY = mY + (moveChipH - tH) / 2;
 
@@ -2455,10 +2455,10 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
         ctx.fillText(tDisplay, tX + tW / 2, tY + tH / 2);
 
         // [Move Name] (Next to Type Badge, Vertically Centered)
-        ctx.font = "bold 14px DungGeunMo";
+        ctx.font = "bold 15px DungGeunMo";
         ctx.fillStyle = isSel ? "#FFFFFF" : "#CBD5E1";
         ctx.textAlign = "left";
-        ctx.fillText(mDisplay, mX + 46, mY + moveChipH / 2);
+        ctx.fillText(mDisplay, mX + 48, mY + moveChipH / 2);
       }
     }
 
@@ -2467,8 +2467,8 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     ctx.strokeStyle = "#252B3D";
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(panelX, 142);
-    ctx.lineTo(panelX + panelW, 142);
+    ctx.moveTo(panelX, 156);
+    ctx.lineTo(panelX + panelW, 156);
     ctx.stroke();
 
     const curRawMove = sel.starterMoves[selectedMoveIdx] || "---";
@@ -2483,7 +2483,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       const tBadgeW = 38;
       const tBadgeH = 18;
       const tBadgeX = panelX;
-      const tBadgeY = 152;
+      const tBadgeY = 166;
 
       ctx.fillStyle = tColor;
       ctx.beginPath();
@@ -2501,10 +2501,10 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "left";
       const moveTitle = isKo ? curMoveInfo.nameKo : curMoveInfo.name.toUpperCase();
-      ctx.fillText(moveTitle, panelX + 44, 162);
+      ctx.fillText(moveTitle, panelX + 44, 176);
 
-      // (2) Stats Row: [Category Icon : Power] / Accuracy / PP (y: 190)
-      const statY = 192;
+      // (2) Stats Row: [Category Icon : Power] / Accuracy / PP (y: 206)
+      const statY = 206;
       const colW = panelW / 3;
 
       const pwrStr = curMoveInfo.power ? String(curMoveInfo.power) : "-";
@@ -2513,7 +2513,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
 
       // Column 1: Category Icon + ": " + Power
       const cat = curMoveInfo.category;
-      drawMoveCategoryIcon(ctx, panelX, 182, cat);
+      drawMoveCategoryIcon(ctx, panelX, 196, cat);
 
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
@@ -2544,15 +2544,15 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       ctx.strokeStyle = "#1E2433";
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(panelX, 212);
-      ctx.lineTo(panelX + panelW, 212);
+      ctx.moveTo(panelX, 226);
+      ctx.lineTo(panelX + panelW, 226);
       ctx.stroke();
 
       // (3) Description Content (Rendered directly with spacious line height)
       ctx.font = "14px DungGeunMo";
       ctx.fillStyle = "#F1F5F9";
       const desc = curMoveInfo.description || (isKo ? "효과 설명이 없습니다." : "No description available.");
-      drawWrappedText(ctx, desc, panelX, 228, panelW, 22);
+      drawWrappedText(ctx, desc, panelX, 240, panelW, 22);
     } else {
       ctx.textBaseline = "middle";
       ctx.font = "bold 14px DungGeunMo";
