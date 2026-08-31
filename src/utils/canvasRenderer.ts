@@ -2357,16 +2357,19 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   ctx.lineTo(activeX + tabW, baselineY);
   ctx.stroke();
 
-  // 3. Draw Horizontal Blue Baseline OUTSIDE of the active tab (Seamless connection!)
+  // 3. Draw Horizontal Blue Baseline OUTSIDE of the active tab (100% Full Width!)
+  const splitLineX = panelX - 10;
+  const canvasRightEdge = panelX + panelW + 10;
+
   ctx.strokeStyle = "#5865F2";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  if (activeX > panelX) {
-    ctx.moveTo(panelX, baselineY);
+  if (activeX > splitLineX) {
+    ctx.moveTo(splitLineX, baselineY);
     ctx.lineTo(activeX, baselineY);
   }
   ctx.moveTo(activeX + tabW, baselineY);
-  ctx.lineTo(panelX + panelW, baselineY);
+  ctx.lineTo(canvasRightEdge, baselineY);
   ctx.stroke();
 
   // 4. Render Tab Labels & Icons
