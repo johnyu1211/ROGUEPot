@@ -2335,7 +2335,22 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   const safeActiveIdx = activeIdx >= 0 ? activeIdx : 0;
   const activeX = panelX + safeActiveIdx * (tabW + tabGap);
 
-  // 2. Draw Active Tab Body (Fill and Top/Left/Right Stroke, Open Bottom!)
+  // 2. Draw Full Tab Body Panel Container (#1B202D Container covering y: 38 ~ 370)
+  const bodyX = panelX - 6;
+  const bodyY = baselineY; // 38px
+  const bodyW = panelW + 12;
+  const bodyH = 370 - bodyY; // 332px
+
+  ctx.fillStyle = "#1B202D";
+  ctx.beginPath();
+  ctx.roundRect(bodyX, bodyY, bodyW, bodyH, [0, 0, 8, 8]);
+  ctx.fill();
+
+  ctx.strokeStyle = "#283042";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // 2-B. Draw Active Tab Body (Fill with #1B202D and Top/Left/Right Stroke, Open Bottom into Body!)
   ctx.fillStyle = "#1B202D";
   ctx.beginPath();
   ctx.roundRect(activeX, tabY, tabW, tabH + 2, [6, 6, 0, 0]);
@@ -2345,7 +2360,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   // Left border
-  ctx.moveTo(activeX, baselineY);
+  ctx.moveTo(activeX, baselineY + 1);
   ctx.lineTo(activeX, tabY + 6);
   // Top-left arc
   ctx.arcTo(activeX, tabY, activeX + 6, tabY, 6);
@@ -2354,22 +2369,19 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   // Top-right arc
   ctx.arcTo(activeX + tabW, tabY, activeX + tabW, tabY + 6, 6);
   // Right border
-  ctx.lineTo(activeX + tabW, baselineY);
+  ctx.lineTo(activeX + tabW, baselineY + 1);
   ctx.stroke();
 
-  // 3. Draw Horizontal Blue Baseline OUTSIDE of the active tab (100% Full Width!)
-  const splitLineX = panelX - 10;
-  const canvasRightEdge = panelX + panelW + 10;
-
+  // 3. Draw Horizontal Blue Baseline OUTSIDE of the active tab (Connected to body edges)
   ctx.strokeStyle = "#5865F2";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  if (activeX > splitLineX) {
-    ctx.moveTo(splitLineX, baselineY);
+  if (activeX > bodyX) {
+    ctx.moveTo(bodyX, baselineY);
     ctx.lineTo(activeX, baselineY);
   }
   ctx.moveTo(activeX + tabW, baselineY);
-  ctx.lineTo(canvasRightEdge, baselineY);
+  ctx.lineTo(bodyX + bodyW, baselineY);
   ctx.stroke();
 
   // 4. Render Tab Labels & Icons
@@ -2458,7 +2470,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       const isSel = selectedMoveIdx === m;
       const isEmpty = rawMove === "---" || !moveInfo;
 
-      ctx.fillStyle = isSel ? "#262E40" : (isEmpty ? "#12141D" : "#1B202D");
+      ctx.fillStyle = isSel ? "#28344E" : (isEmpty ? "#11131C" : "#141722");
       ctx.beginPath();
       ctx.roundRect(mX, mY, moveChipW, moveChipH, 8);
       ctx.fill();
@@ -2468,7 +2480,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
         ctx.lineWidth = 2;
         ctx.stroke();
       } else {
-        ctx.strokeStyle = isEmpty ? "#1E2230" : "#283042";
+        ctx.strokeStyle = isEmpty ? "#1C202E" : "#283042";
         ctx.lineWidth = 1;
         ctx.stroke();
       }
