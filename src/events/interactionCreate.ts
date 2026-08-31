@@ -13,10 +13,10 @@ import {
 } from "discord.js";
 import { BotEvent, ExtendedClient } from "../types/index.js";
 import { createBaseEmbed, COLORS } from "../utils/embed.js";
-import { renderTitleScreen, renderBagScreen, renderMultiplayerScreen, renderPokedexScreen, renderStarterSelectScreen, renderGenSelectScreen, renderEggGachaScreen, StarterSelectPartyItem, PartyViewTab, getPokemonSprite, isSpriteCached } from "../utils/canvasRenderer.js";
+import { renderTitleScreen, renderBagScreen, renderMultiplayerScreen, renderPokedexScreen, renderStarterSelectScreen, renderGenSelectScreen, renderEggGachaScreen, StarterSelectPartyItem, PartyViewTab, InGameMessage, getPokemonSprite, isSpriteCached } from "../utils/canvasRenderer.js";
 import { MOVES_DATA } from "../data/movesKo.js";
 import { saveService, PartyPokemon } from "../services/saveService.js";
-import { getPokemonByQuery, getPokemonByDexNumber, getPokemonPage, getAbilityKoreanName, getAbilityDetail } from "../services/pokeApiService.js";
+import { getPokemonByQuery, getPokemonByDexNumber, getPokemonPage, getAbilityKoreanName, getAbilityDetail, ABILITY_DETAILED_DESC_KO } from "../services/pokeApiService.js";
 import { STARTER_DATABASE, GENERATION_INFO, getStartersByGen, getStarterByDexNumber, DEFAULT_MAX_COST, StarterEntry } from "../data/starterCosts.js";
 import { getUserStarters, getUserStarter } from "../services/starterService.js";
 import { pullEggs, getUserEggs, advanceEggHatching } from "../services/eggService.js";
@@ -885,7 +885,8 @@ async function renderPartyViewMessageData(
   isPassiveFilter: boolean = false,
   selectedPartyIdx: number = -1,
   partyTab: PartyViewTab = "moves",
-  selectedMoveIdx: number = 0
+  selectedMoveIdx: number = 0,
+  inGameMessage?: InGameMessage
 ) {
   const profile = saveService.getProfile(userId);
   const isKo = profile.language === "ko";
@@ -935,6 +936,7 @@ async function renderPartyViewMessageData(
     selectedPartyIdx: safePartyIdx,
     partyTab,
     selectedMoveIdx,
+    inGameMessage,
   });
 
   const attachment = new AttachmentBuilder(imageBuffer, { name: "party_view.png" });
@@ -1927,25 +1929,59 @@ export const interactionCreateEvent: BotEvent = {
         const tab = (parts[isSet ? 12 : 11] || "moves") as PartyViewTab;
         const moveIdx = parseInt(parts[isSet ? 13 : 12], 10) || 0;
 
+        const profile = saveService.getProfile(interaction.user.id);
+        const isKo = profile.language === "ko";
         const userStarters = getUserStarters(interaction.user.id);
         const partyStates = parsePartyParam(partyRaw, userStarters);
         const targetMember = partyStates[currentIdx];
-        let nextTab: PartyViewTab = "ability";
+        let inGameMsg: InGameMessage | undefined = undefined;
 
         if (targetMember) {
           const s = getStarterByDexNumber(targetMember.dexNumber);
           const prog = s ? userStarters.get(s.speciesId) : null;
           if (isSet && targetUseHa) {
+            // Clicked Hidden Ability button
+            const haName = isKo ? s?.hiddenAbilityKo : s?.hiddenAbility;
+            const haKey = (s?.hiddenAbility || "").toLowerCase().replace(/[\s_]+/g, "-");
+            const haDesc = ABILITY_DETAILED_DESC_KO[haKey] || (isKo ? "포켓몬의 숨겨진 특성입니다." : "Hidden ability of this Pokemon.");
+
             if (prog?.hasHiddenAbility) {
               targetMember.useHiddenAbility = true;
+              inGameMsg = {
+                title: isKo ? `[숨특] ${haName} (적용 완료)` : `[HA] ${haName} (Active)`,
+                text: isKo
+                  ? `${haDesc}\n✓ 숨겨진 특성 [${haName}]이 활성화되었습니다.`
+                  : `${haDesc}\n✓ Hidden ability equipped.`,
+                type: "success",
+              };
+            } else {
+              inGameMsg = {
+                title: isKo ? `[숨특] ${haName} (잠김)` : `[HA] ${haName} (Locked)`,
+                text: isKo
+                  ? `${haDesc}\n[잠김] 아직 해금되지 않은 특성입니다. (사탕/알 부화 필요)`
+                  : `${haDesc}\n[Locked] Unlock via eggs or candies.`,
+                type: "lock",
+              };
             }
-          } else if (isSet && !targetUseHa) {
+          } else {
+            // Clicked Regular Ability button
             targetMember.useHiddenAbility = false;
+            const abName = isKo ? s?.abilityKo : s?.ability;
+            const abKey = (s?.ability || "").toLowerCase().replace(/[\s_]+/g, "-");
+            const abDesc = ABILITY_DETAILED_DESC_KO[abKey] || (isKo ? "포켓몬의 일반 특성입니다." : "Regular ability of this Pokemon.");
+
+            inGameMsg = {
+              title: isKo ? `[일반 특성] ${abName} (적용 완료)` : `[Ability] ${abName} (Active)`,
+              text: isKo
+                ? `${abDesc}\n✓ 일반 특성 [${abName}]이 활성화되었습니다.`
+                : `${abDesc}\n✓ Regular ability equipped.`,
+              type: "info",
+            };
           }
         }
 
         const newPartyParam = serializePartyParam(partyStates);
-        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, currentIdx, nextTab, moveIdx);
+        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, currentIdx, tab, moveIdx, inGameMsg);
         await interaction.update(partyData);
         return;
       }
@@ -1964,21 +2000,42 @@ export const interactionCreateEvent: BotEvent = {
         const tab = (parts[11] || "moves") as PartyViewTab;
         const moveIdx = parseInt(parts[12], 10) || 0;
 
+        const profile = saveService.getProfile(interaction.user.id);
+        const isKo = profile.language === "ko";
         const userStarters = getUserStarters(interaction.user.id);
         const partyStates = parsePartyParam(partyRaw, userStarters);
         const targetMember = partyStates[currentIdx];
-        let nextTab: PartyViewTab = "passive";
+        let inGameMsg: InGameMessage | undefined = undefined;
 
         if (targetMember) {
           const s = getStarterByDexNumber(targetMember.dexNumber);
           const prog = s ? userStarters.get(s.speciesId) : null;
+          const passName = isKo ? s?.passiveAbilityKo : s?.passiveAbility;
+          const passKey = (s?.passiveAbility || "").toLowerCase().replace(/[\s_]+/g, "-");
+          const passDesc = ABILITY_DETAILED_DESC_KO[passKey] || (isKo ? "포케로그 스타팅 고유의 강력한 패시브 특성입니다." : "A unique PokeRogue starter passive ability.");
+
           if (prog?.passiveUnlocked) {
             targetMember.usePassive = !targetMember.usePassive;
+            inGameMsg = {
+              title: isKo ? `[패시브] ${passName} (${targetMember.usePassive ? "ON" : "OFF"})` : `[Passive] ${passName} (${targetMember.usePassive ? "ON" : "OFF"})`,
+              text: isKo
+                ? `${passDesc}\n✓ 패시브 상태가 [${targetMember.usePassive ? "ON / 출전 코스트 1C 할인" : "OFF"}] 로 변경되었습니다.`
+                : `${passDesc}\n✓ Passive toggled: ${targetMember.usePassive ? "ON (-1C)" : "OFF"}.`,
+              type: targetMember.usePassive ? "success" : "info",
+            };
+          } else {
+            inGameMsg = {
+              title: isKo ? `[패시브] ${passName} (잠김)` : `[Passive] ${passName} (Locked)`,
+              text: isKo
+                ? `${passDesc}\n[잠김] 사탕을 모아 🍬 코스트 탭에서 패시브를 해금할 수 있습니다.`
+                : `${passDesc}\n[Locked] Collect candies to unlock in Cost tab.`,
+              type: "lock",
+            };
           }
         }
 
         const newPartyParam = serializePartyParam(partyStates);
-        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, currentIdx, nextTab, moveIdx);
+        const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, currentIdx, tab, moveIdx, inGameMsg);
         await interaction.update(partyData);
         return;
       }
