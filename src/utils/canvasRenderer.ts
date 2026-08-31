@@ -47,7 +47,7 @@ const spriteCache = new Map<string, Image>();
 /**
  * Helper to fetch a static pixel sprite from Showdown CDN with in-memory caching
  */
-export async function getPokemonSprite(pokemonName: string, allowFetch: boolean = true, isShiny: boolean = false): Promise<Image | null> {
+export async function getPokemonSprite(pokemonName: string, allowFetch: boolean = true, isShiny: boolean | number = false): Promise<any | null> {
   try {
     let clean = pokemonName.toLowerCase().trim();
     if (clean === "nidoran-f" || clean === "nidoran_f" || clean === "nidoran♀") clean = "nidoranf";
@@ -113,7 +113,8 @@ export async function getPokemonSprite(pokemonName: string, allowFetch: boolean 
     else if (clean.startsWith("miraidon")) clean = "miraidon";
     else clean = clean.replace(/[^a-z0-9]/g, "");
 
-    const cacheKey = isShiny ? `shiny_${clean}` : clean;
+    const tier = typeof isShiny === "number" ? isShiny : (isShiny ? 1 : 0);
+    const cacheKey = tier > 0 ? `shiny_${tier}_${clean}` : clean;
 
     if (spriteCache.has(cacheKey)) {
       return spriteCache.get(cacheKey)!;
@@ -123,31 +124,116 @@ export async function getPokemonSprite(pokemonName: string, allowFetch: boolean 
       return null;
     }
 
-    const folder = isShiny ? "gen5-shiny" : "gen5";
+    const folder = tier > 0 ? "gen5-shiny" : "gen5";
     const url = `https://play.pokemonshowdown.com/sprites/${folder}/${clean}.png`;
-    let img: Image | null = null;
+    let img: any | null = null;
     try {
       img = await loadImage(url);
     } catch {
       // Fallback to non-shiny if shiny is missing
-      if (isShiny) {
+      if (tier > 0) {
         img = await loadImage(`https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`).catch(() => null);
       }
     }
 
     if (img) {
-      // Automatic LRU-style cache size management (max 250 entries)
-      if (spriteCache.size >= 250) {
+      let finalImg = img;
+      if (tier >= 2) {
+        finalImg = applyShinyTierVariant(img, tier);
+      }
+
+      // Automatic LRU-style cache size management (max 300 entries)
+      if (spriteCache.size >= 300) {
         const firstKey = spriteCache.keys().next().value;
         if (firstKey) spriteCache.delete(firstKey);
       }
-      spriteCache.set(cacheKey, img);
-      return img;
+      spriteCache.set(cacheKey, finalImg);
+      return finalImg;
     }
     return null;
   } catch (err) {
     console.error(`[CANVAS] Failed to load sprite for ${pokemonName}:`, err);
     return null;
+  }
+}
+
+/**
+ * Generates custom PokéRogue shiny variant sprites (Tier 2 Blue, Tier 3 Epic Red)
+ * via hue-shifting and saturation adjustment on the base shiny sprite.
+ */
+function applyShinyTierVariant(img: any, tier: number): any {
+  if (tier <= 1) return img;
+
+  try {
+    const canvas = createCanvas(img.width, img.height);
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0);
+    const imgData = ctx.getImageData(0, 0, img.width, img.height);
+    const data = imgData.data;
+
+    // Tier 2 (Blue Shiny): +140 deg hue shift (Cools down to blue/cyan/indigo)
+    // Tier 3 (Red/Epic Shiny): +260 deg hue shift (Warm magenta/crimson/gold)
+    const hueShiftDegrees = tier === 2 ? 140 : 260;
+    const satMult = tier === 2 ? 1.25 : 1.35;
+
+    for (let i = 0; i < data.length; i += 4) {
+      const a = data[i + 3];
+      if (a < 10) continue;
+
+      let r = data[i] / 255;
+      let g = data[i + 1] / 255;
+      let b = data[i + 2] / 255;
+
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      let h = 0, s = 0, l = (max + min) / 2;
+
+      if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+      }
+
+      // Shift hue and enhance saturation
+      h = (h + hueShiftDegrees / 360) % 1.0;
+      if (h < 0) h += 1.0;
+      s = Math.min(1.0, s * satMult);
+
+      // Convert back to RGB
+      let r1, g1, b1;
+      if (s === 0) {
+        r1 = g1 = b1 = l;
+      } else {
+        const hue2rgb = (p: number, q: number, t: number) => {
+          if (t < 0) t += 1;
+          if (t > 1) t -= 1;
+          if (t < 1/6) return p + (q - p) * 6 * t;
+          if (t < 1/2) return q;
+          if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+          return p;
+        };
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r1 = hue2rgb(p, q, h + 1/3);
+        g1 = hue2rgb(p, q, h);
+        b1 = hue2rgb(p, q, h - 1/3);
+      }
+
+      data[i] = Math.round(r1 * 255);
+      data[i + 1] = Math.round(g1 * 255);
+      data[i + 2] = Math.round(b1 * 255);
+    }
+
+    ctx.putImageData(imgData, 0, 0);
+    return canvas;
+  } catch (err) {
+    console.error(`[CANVAS] Failed to apply shiny variant for tier ${tier}:`, err);
+    return img;
   }
 }
 
@@ -2222,6 +2308,7 @@ interface PartyCustomizationPanelArgs {
   selectedMoveIdx?: number;
   normalSprite?: Image | null;
   shinySprite?: Image | null;
+  tierSprites?: any[];
 }
 
 function drawWrappedText(ctx: any, text: string, x: number, y: number, maxWidth: number, lineHeight: number): number {
@@ -2302,7 +2389,7 @@ function drawInGameMessageBox(ctx: any, width: number, height: number, msg: InGa
 }
 
 function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelArgs) {
-  const { panelX, panelW, sel, partyMember, selProgress, isKo, normalSprite, shinySprite } = args;
+  const { panelX, panelW, sel, partyMember, selProgress, isKo, normalSprite, shinySprite, tierSprites } = args;
   const currentTab: PartyViewTab = args.tab || "moves";
   const selectedMoveIdx = args.selectedMoveIdx || 0;
 
@@ -2669,7 +2756,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       }
 
       // 2. Sprite Image Box (Centered Upper Half)
-      const spr = t === 0 ? normalSprite : shinySprite;
+      const spr = tierSprites && tierSprites[t] ? tierSprites[t] : (t === 0 ? normalSprite : shinySprite);
       const sprBoxSize = 56;
       const sprBoxX = cX + (tileW - sprBoxSize) / 2;
       const sprBoxY = cY + 8;
@@ -2993,7 +3080,8 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
   // Check selected starter's user unlock state
   const selProgress = sel && userStarters ? userStarters.get(sel.speciesId) : null;
   const selIsUnlocked = selProgress ? selProgress.isUnlocked : true;
-  const selHasShiny = (selProgress?.shinyTier || 0) > 0;
+  const selShinyTier = selProgress?.shinyTier || 0;
+  const selHasShiny = selShinyTier > 0;
   const selHasHa = selProgress?.hasHiddenAbility || false;
   const selHasPassive = selProgress?.passiveUnlocked || false;
 
@@ -3002,11 +3090,11 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     Promise.all(list.map((s) => {
       if (!s) return Promise.resolve(null);
       const prog = userStarters ? userStarters.get(s.speciesId) : null;
-      const isS = (prog?.shinyTier || 0) > 0;
-      return getPokemonSprite(s.speciesId, true, isS);
+      const sTier = prog?.shinyTier || 0;
+      return getPokemonSprite(s.speciesId, true, sTier);
     })),
-    sel ? getPokemonSprite(sel.speciesId, true, selHasShiny) : Promise.resolve(null),
-    Promise.all(party.map((p) => (p ? getPokemonSprite(p.speciesId, true, p.isShiny) : Promise.resolve(null)))),
+    sel ? getPokemonSprite(sel.speciesId, true, selShinyTier) : Promise.resolve(null),
+    Promise.all(party.map((p) => (p ? getPokemonSprite(p.speciesId, true, p.shinyTier !== undefined ? p.shinyTier : (p.isShiny ? 1 : 0)) : Promise.resolve(null)))),
   ]);
 
   // 1. Dark Retro Background
@@ -3027,18 +3115,20 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     const activePartyMember = activePartyIdx >= 0 ? party[activePartyIdx] : undefined;
     const inspectedStarter = activePartyMember ? getStarterByDexNumber(activePartyMember.dexNumber) || null : null;
     const inspectedProg = inspectedStarter && userStarters ? userStarters.get(inspectedStarter.speciesId) : null;
-    const inspectedHasShiny = activePartyMember ? activePartyMember.isShiny : (inspectedProg?.shinyTier || 0) > 0;
+    const inspectedShinyTier = activePartyMember ? (activePartyMember.shinyTier !== undefined ? activePartyMember.shinyTier : (activePartyMember.isShiny ? 1 : 0)) : (inspectedProg?.shinyTier || 0);
     const inspectedHasHa = activePartyMember ? activePartyMember.useHiddenAbility : (inspectedProg?.hasHiddenAbility || false);
     const inspectedHasPassive = activePartyMember ? activePartyMember.usePassive : (inspectedProg?.passiveUnlocked || false);
 
-    // Fetch inspected sprite + normal/shiny variants for shiny tab
-    const [inspectedSprite, normalSprite, shinySprite] = inspectedStarter
+    // Fetch inspected sprite + all 4 shiny tier variants (0: Normal, 1: Yellow, 2: Blue, 3: Red)
+    const [inspectedSprite, t0Sprite, t1Sprite, t2Sprite, t3Sprite] = inspectedStarter
       ? await Promise.all([
-          getPokemonSprite(inspectedStarter.speciesId, true, inspectedHasShiny),
-          getPokemonSprite(inspectedStarter.speciesId, true, false),
-          getPokemonSprite(inspectedStarter.speciesId, true, true),
+          getPokemonSprite(inspectedStarter.speciesId, true, inspectedShinyTier),
+          getPokemonSprite(inspectedStarter.speciesId, true, 0),
+          getPokemonSprite(inspectedStarter.speciesId, true, 1),
+          getPokemonSprite(inspectedStarter.speciesId, true, 2),
+          getPokemonSprite(inspectedStarter.speciesId, true, 3),
         ])
-      : [null, null, null];
+      : [null, null, null, null, null];
 
     // Render preview and party grid on LEFT SIDE
     renderPreviewAndPartyPanel(ctx, {
@@ -3076,8 +3166,9 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       isKo,
       tab: options.partyTab,
       selectedMoveIdx: options.selectedMoveIdx,
-      normalSprite,
-      shinySprite,
+      normalSprite: t0Sprite,
+      shinySprite: t1Sprite,
+      tierSprites: [t0Sprite, t1Sprite, t2Sprite, t3Sprite],
     });
 
     if (options.inGameMessage) {
