@@ -2487,18 +2487,13 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       }
     }
 
-    // 2. Clean Single Card Move Detail (y: 160 ~ 362, H: 202, No nested boxes!)
-    const cardY = 160;
-    const cardH = 202;
-    const cardW = panelW - 20;
-    const cardX = panelX + 10;
-
-    ctx.fillStyle = "#181B26";
-    ctx.beginPath();
-    ctx.roundRect(cardX, cardY, cardW, cardH, 6);
-    ctx.fill();
-    ctx.strokeStyle = "#282D3D";
+    // 2. Direct Flat Move Detail (Borderless / Open Layout directly on panel)
+    // Section Divider Line below 2x2 Move Tiles
+    ctx.strokeStyle = "#252B3D";
     ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(panelX + 10, 156);
+    ctx.lineTo(panelX + panelW - 10, 156);
     ctx.stroke();
 
     const curRawMove = sel.starterMoves[selectedMoveIdx] || "---";
@@ -2512,8 +2507,8 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || curMoveInfo.type) : curMoveInfo.type.toUpperCase();
       const tBadgeW = 38;
       const tBadgeH = 18;
-      const tBadgeX = cardX + 12;
-      const tBadgeY = cardY + 10;
+      const tBadgeX = panelX + 12;
+      const tBadgeY = 166;
 
       ctx.fillStyle = tColor;
       ctx.beginPath();
@@ -2531,19 +2526,11 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "left";
       const moveTitle = isKo ? curMoveInfo.nameKo : curMoveInfo.name.toUpperCase();
-      ctx.fillText(moveTitle, cardX + 56, cardY + 20);
+      ctx.fillText(moveTitle, panelX + 56, 176);
 
-      // Top Divider Line
-      ctx.strokeStyle = "#282D3D";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(cardX + 10, cardY + 32);
-      ctx.lineTo(cardX + cardW - 10, cardY + 32);
-      ctx.stroke();
-
-      // (2) Stats Row: [Category Icon : Power] / Accuracy / PP
-      const statY = cardY + 46;
-      const colW = (cardW - 24) / 3;
+      // (2) Stats Row: [Category Icon : Power] / Accuracy / PP (y: 202)
+      const statY = 206;
+      const colW = (panelW - 24) / 3;
 
       const pwrStr = curMoveInfo.power ? String(curMoveInfo.power) : "-";
       const accStr = curMoveInfo.accuracy ? `${curMoveInfo.accuracy}%` : "-";
@@ -2551,57 +2538,57 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
 
       // Column 1: Category Icon + ": " + Power
       const cat = curMoveInfo.category;
-      drawMoveCategoryIcon(ctx, cardX + 12, cardY + 36, cat);
+      drawMoveCategoryIcon(ctx, panelX + 12, 196, cat);
 
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#94A3B8";
       ctx.textAlign = "left";
-      ctx.fillText(":", cardX + 38, statY);
+      ctx.fillText(":", panelX + 38, statY);
 
       ctx.font = "bold 15px DungGeunMo";
       ctx.fillStyle = "#F87171";
-      ctx.fillText(pwrStr, cardX + 46, statY);
+      ctx.fillText(pwrStr, panelX + 46, statY);
 
       // Column 2: Accuracy
       ctx.font = "bold 12px DungGeunMo";
       ctx.fillStyle = "#94A3B8";
-      ctx.fillText(isKo ? "명중:" : "Acc:", cardX + 12 + colW, statY);
+      ctx.fillText(isKo ? "명중:" : "Acc:", panelX + 12 + colW, statY);
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#60A5FA";
-      ctx.fillText(accStr, cardX + 12 + colW + (isKo ? 38 : 38), statY);
+      ctx.fillText(accStr, panelX + 12 + colW + (isKo ? 38 : 38), statY);
 
       // Column 3: PP
       ctx.font = "bold 12px DungGeunMo";
       ctx.fillStyle = "#94A3B8";
-      ctx.fillText("PP:", cardX + 12 + colW * 2, statY);
+      ctx.fillText("PP:", panelX + 12 + colW * 2, statY);
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#34D399";
-      ctx.fillText(ppStr, cardX + 12 + colW * 2 + 26, statY);
+      ctx.fillText(ppStr, panelX + 12 + colW * 2 + 26, statY);
 
-      // Second Divider Line
-      ctx.strokeStyle = "#282D3D";
+      // Divider Line between Specs and Description
+      ctx.strokeStyle = "#1E2433";
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(cardX + 10, cardY + 60);
-      ctx.lineTo(cardX + cardW - 10, cardY + 60);
+      ctx.moveTo(panelX + 12, 224);
+      ctx.lineTo(panelX + panelW - 12, 224);
       ctx.stroke();
 
-      // (3) Description Header & Content (Spacious Pokédex-style typography)
+      // (3) Description Header & Content (Spacious full-width typography)
       ctx.font = "bold 12px DungGeunMo";
-      ctx.fillStyle = "#CBD5E1";
+      ctx.fillStyle = "#64748B";
       ctx.textAlign = "left";
-      ctx.fillText(isKo ? "기술 효과 설명" : "Move Effect Description", cardX + 12, cardY + 74);
+      ctx.fillText(isKo ? "효과 설명" : "Description", panelX + 12, 240);
 
-      ctx.font = "13px DungGeunMo";
+      ctx.font = "14px DungGeunMo";
       ctx.fillStyle = "#F1F5F9";
       const desc = curMoveInfo.description || (isKo ? "효과 설명이 없습니다." : "No description available.");
-      drawWrappedText(ctx, desc, cardX + 12, cardY + 94, cardW - 24, 20);
+      drawWrappedText(ctx, desc, panelX + 12, 258, panelW - 24, 22);
     } else {
       ctx.textBaseline = "middle";
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#64748B";
       ctx.textAlign = "center";
-      ctx.fillText(isKo ? "등록된 기술이 없습니다." : "No move registered.", cardX + cardW / 2, cardY + cardH / 2);
+      ctx.fillText(isKo ? "등록된 기술이 없습니다." : "No move registered.", panelX + panelW / 2, 250);
     }
 
     return;
