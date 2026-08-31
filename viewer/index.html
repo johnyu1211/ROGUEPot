@@ -3,20 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PokéRogue Bot - Canvas UI Viewer</title>
+  <title>PokéRogue Bot - Discord UI Simulator</title>
   <style>
     :root {
-      --bg-darkest: #0E1017;
-      --bg-darker: #13151F;
-      --bg-card: #181B26;
-      --border-color: #2D3246;
-      --discord-blue: #5865F2;
-      --discord-green: #57F287;
-      --discord-yellow: #FEE75C;
-      --discord-red: #ED4245;
-      --discord-grey: #4E5058;
-      --text-white: #FFFFFF;
-      --text-muted: #94A3B8;
+      --bg-app: #1E1F22;
+      --bg-chat: #313338;
+      --bg-message: #2B2D31;
+      --border-color: #3F4147;
+      
+      /* Discord Official Button Styles */
+      --btn-primary: #5865F2;
+      --btn-primary-hover: #4752C4;
+      --btn-secondary: #4E5058;
+      --btn-secondary-hover: #6D6F78;
+      --btn-success: #248046;
+      --btn-success-hover: #1A6334;
+      --btn-danger: #DA373C;
+      --btn-danger-hover: #A12828;
+
+      --text-normal: #DBDEE1;
+      --text-muted: #949BA4;
+      --text-header: #F2F3F5;
     }
 
     * {
@@ -26,50 +33,51 @@
     }
 
     body {
-      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg-darkest);
-      color: var(--text-white);
+      font-family: 'gg sans', 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-app);
+      color: var(--text-normal);
       display: flex;
       flex-direction: column;
       height: 100vh;
       overflow: hidden;
     }
 
+    /* Top Nav */
     header {
-      background-color: var(--bg-darker);
-      border-bottom: 1px solid var(--border-color);
-      padding: 12px 24px;
+      background-color: #111214;
+      border-bottom: 1px solid #232428;
+      padding: 10px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      z-index: 10;
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
     .brand h1 {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 700;
-      color: var(--text-white);
-      letter-spacing: -0.5px;
+      color: var(--text-header);
     }
 
-    .brand .badge {
-      background: var(--discord-blue);
+    .badge {
+      background: var(--btn-primary);
       color: white;
       font-size: 11px;
       padding: 2px 8px;
-      border-radius: 12px;
+      border-radius: 10px;
       font-weight: 600;
     }
 
     .toolbar {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
     }
 
     select, button {
@@ -77,229 +85,189 @@
     }
 
     select {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
+      background: #2B2D31;
+      border: 1px solid #3F4147;
       color: white;
-      padding: 8px 14px;
-      border-radius: 6px;
-      font-size: 14px;
+      padding: 7px 12px;
+      border-radius: 4px;
+      font-size: 13px;
       cursor: pointer;
       outline: none;
     }
 
     select:focus {
-      border-color: var(--discord-blue);
+      border-color: var(--btn-primary);
     }
 
-    .main-layout {
+    /* Main Chat Layout */
+    .chat-container {
       flex: 1;
       display: flex;
-      overflow: hidden;
-    }
-
-    .preview-area {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
-      background: radial-gradient(circle at 50% 50%, #171A26 0%, #0E1017 100%);
+      background-color: var(--bg-chat);
       padding: 20px;
-      position: relative;
-      overflow: auto;
-    }
-
-    .canvas-wrapper {
-      position: relative;
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
-      border-radius: 8px;
-      overflow: hidden;
-      display: flex;
-      background: #000;
-    }
-
-    #preview-image {
-      display: block;
-      image-rendering: pixelated;
-      image-rendering: -moz-crisp-edges;
-      image-rendering: crisp-edges;
-      transition: transform 0.15s ease-out;
-    }
-
-    .status-bar {
-      position: absolute;
-      bottom: 12px;
-      left: 20px;
-      display: flex;
-      gap: 12px;
-      font-size: 12px;
-      color: var(--text-muted);
-      background: rgba(19, 21, 31, 0.85);
-      backdrop-filter: blur(8px);
-      padding: 6px 12px;
-      border-radius: 6px;
-      border: 1px solid var(--border-color);
-    }
-
-    .sidebar {
-      width: 380px;
-      background-color: var(--bg-darker);
-      border-left: 1px solid var(--border-color);
-      display: flex;
-      flex-direction: column;
       overflow-y: auto;
     }
 
-    .sidebar-section {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--border-color);
+    /* Discord Message Card */
+    .discord-message {
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
 
-    .sidebar-section h3 {
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--text-muted);
-      margin-bottom: 12px;
+    .message-header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      gap: 12px;
     }
 
-    .btn-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-
-    .btn-grid.two-col {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
-    .btn-grid.four-col {
-      grid-template-columns: repeat(4, 1fr);
-    }
-
-    .d-btn {
-      background: var(--discord-grey);
-      color: white;
-      border: none;
-      padding: 10px 8px;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
+    .bot-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #5865F2;
       display: flex;
       align-items: center;
       justify-content: center;
+      font-size: 20px;
+    }
+
+    .bot-info {
+      display: flex;
+      align-items: center;
       gap: 6px;
-      transition: all 0.1s ease;
+    }
+
+    .bot-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-header);
+    }
+
+    .bot-tag {
+      background: #5865F2;
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 4px;
+      border-radius: 3px;
+      text-transform: uppercase;
+    }
+
+    .msg-timestamp {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-left: 4px;
+    }
+
+    /* Attachment Canvas Container */
+    .attachment-card {
+      background-color: #0E1017;
+      border-radius: 8px;
+      overflow: hidden;
+      display: inline-block;
+      width: 560px;
+      height: 380px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    #canvas-preview {
+      display: block;
+      width: 560px;
+      height: 380px;
+      image-rendering: pixelated;
+    }
+
+    /* Discord ActionRows (Buttons) */
+    .discord-action-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 560px;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .action-row > * {
+      flex: 1;
+    }
+
+    /* Discord Official Button Styling */
+    .d-btn {
+      height: 38px;
+      padding: 2px 14px;
+      border-radius: 4px;
+      border: none;
+      font-size: 13.5px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background-color 0.17s ease, color 0.17s ease;
+      white-space: nowrap;
       user-select: none;
     }
 
-    .d-btn:hover {
-      filter: brightness(1.15);
-    }
-
-    .d-btn:active {
-      transform: scale(0.97);
-    }
-
     .d-btn.primary {
-      background: var(--discord-blue);
+      background-color: var(--btn-primary);
+      color: #FFFFFF;
+    }
+    .d-btn.primary:hover:not(:disabled) {
+      background-color: var(--btn-primary-hover);
+    }
+
+    .d-btn.secondary {
+      background-color: var(--btn-secondary);
+      color: #FFFFFF;
+    }
+    .d-btn.secondary:hover:not(:disabled) {
+      background-color: var(--btn-secondary-hover);
     }
 
     .d-btn.success {
-      background: var(--discord-green);
-      color: #0E1017;
+      background-color: var(--btn-success);
+      color: #FFFFFF;
+    }
+    .d-btn.success:hover:not(:disabled) {
+      background-color: var(--btn-success-hover);
     }
 
     .d-btn.danger {
-      background: var(--discord-red);
+      background-color: var(--btn-danger);
+      color: #FFFFFF;
     }
-
-    .d-btn.active {
-      outline: 2px solid #FFFFFF;
-      outline-offset: 1px;
+    .d-btn.danger:hover:not(:disabled) {
+      background-color: var(--btn-danger-hover);
     }
 
     .d-btn:disabled {
-      opacity: 0.4;
+      opacity: 0.5;
       cursor: not-allowed;
-      transform: none;
-      filter: none;
-    }
-
-    .toggle-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 0;
-      font-size: 14px;
-    }
-
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 44px;
-      height: 24px;
-    }
-
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-color: var(--discord-grey);
-      transition: .2s;
-      border-radius: 24px;
-    }
-
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 18px;
-      width: 18px;
-      left: 3px;
-      bottom: 3px;
-      background-color: white;
-      transition: .2s;
-      border-radius: 50%;
-    }
-
-    input:checked + .slider {
-      background-color: var(--discord-green);
-    }
-
-    input:checked + .slider:before {
-      transform: translateX(20px);
-    }
-
-    .scale-controls {
-      display: flex;
-      gap: 6px;
     }
 
     .scale-btn {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
+      background: #2B2D31;
+      border: 1px solid #3F4147;
       color: var(--text-muted);
-      padding: 4px 10px;
+      padding: 5px 10px;
       border-radius: 4px;
       font-size: 12px;
       cursor: pointer;
     }
-
     .scale-btn.active {
       color: white;
-      border-color: var(--discord-blue);
-      background: var(--discord-blue);
+      background: var(--btn-primary);
+      border-color: var(--btn-primary);
     }
   </style>
 </head>
@@ -307,14 +275,14 @@
 
   <header>
     <div class="brand">
-      <h1>🎮 ROGUEPot UI Viewer</h1>
-      <span class="badge">Canvas 0ms Live Simulator</span>
+      <h1>🤖 PokéRogue Discord UI Simulator</h1>
+      <span class="badge">Live 0ms Emulation</span>
     </div>
     <div class="toolbar">
       <div class="scale-controls">
         <button class="scale-btn" onclick="setScale(1)">100%</button>
-        <button class="scale-btn active" onclick="setScale(1.5)">150%</button>
-        <button class="scale-btn" onclick="setScale(2)">200%</button>
+        <button class="scale-btn active" onclick="setScale(1.25)">125%</button>
+        <button class="scale-btn" onclick="setScale(1.5)">150%</button>
       </div>
       <select id="screen-select" onchange="onScreenChange()">
         <option value="starter_party">⭐ 스타팅 파티 관리 (Party Customization)</option>
@@ -326,39 +294,40 @@
         <option value="gen_select">🗺️ 세대 선택 화면 (Gen Select)</option>
         <option value="title">🕹️ 메인 타이틀 화면 (Title Screen)</option>
       </select>
-      <button class="d-btn primary" onclick="renderCurrentState()" style="padding: 8px 14px;">
+      <button class="d-btn primary" onclick="renderState()" style="height: 32px; padding: 0 12px; font-size: 12px;">
         🔄 즉시 새로고침
       </button>
     </div>
   </header>
 
-  <div class="main-layout">
-    <!-- Center Live Preview -->
-    <div class="preview-area">
-      <div class="canvas-wrapper">
-        <img id="preview-image" src="" alt="Canvas Preview" width="560" height="380">
+  <div class="chat-container">
+    <div class="discord-message" id="message-box">
+      <div class="message-header">
+        <div class="bot-avatar">🎮</div>
+        <div class="bot-info">
+          <span class="bot-name">ROGUEPot</span>
+          <span class="bot-tag">BOT</span>
+          <span class="msg-timestamp">오늘 오후 2:55</span>
+        </div>
       </div>
-      <div class="status-bar">
-        <span id="stat-res">해상도: 560 x 380 (Official Pixel Ratio)</span>
-        <span>•</span>
-        <span id="stat-time">렌더링 속도: - ms</span>
-        <span>•</span>
-        <span id="stat-mode">모드: 스타팅 파티 관리</span>
-      </div>
-    </div>
 
-    <!-- Right Interactive Controls -->
-    <div class="sidebar" id="sidebar-controls">
-      <!-- Dynamic Controls inserted by JS -->
+      <!-- 1. Canvas Image Attachment -->
+      <div class="attachment-card" id="attachment-wrapper">
+        <img id="canvas-preview" src="" alt="Discord Bot Canvas">
+      </div>
+
+      <!-- 2. Discord ActionRows (Real Component Buttons) -->
+      <div class="discord-action-rows" id="action-rows">
+        <!-- Rendered dynamically matching interactionCreate.ts -->
+      </div>
     </div>
   </div>
 
   <script>
-    let currentScale = 1.5;
     let state = {
       screen: "starter_party",
       selectedPartyIdx: 1, // 0 = P1 (팽도리), 1 = P2 (이상해씨)
-      partyTab: "moves",   // "moves" | "shiny" | "cost"
+      partyTab: "moves",   // "moves" | "shiny" | "cost" | "learnable"
       selectedMoveIdx: 1,  // 0 ~ 3
       currentGen: 1,
       currentPage: 1,
@@ -367,24 +336,42 @@
       isHaFilter: false,
       isPassiveFilter: false,
       party: [
-        { dexNumber: 393, speciesId: "piplup", name: "팽도리", cost: 3, isShiny: false },
-        { dexNumber: 1, speciesId: "bulbasaur", name: "이상해씨", cost: 2, isShiny: false, usePassive: true }
+        { dexNumber: 393, speciesId: "piplup", name: "팽도리", cost: 3, isShiny: false, usePassive: false, useHiddenAbility: false },
+        { dexNumber: 1, speciesId: "bulbasaur", name: "이상해씨", cost: 2, isShiny: false, usePassive: true, useHiddenAbility: false }
       ],
       userCandies: 50,
+      moves: {
+        bulbasaur: ["Tackle", "Growl", "Vine Whip"],
+        piplup: ["Pound", "Growl", "Water Gun"]
+      },
+      movesKo: {
+        "Tackle": "몸통박치기",
+        "Growl": "울음소리",
+        "Vine Whip": "덩굴채찍",
+        "Pound": "막치기",
+        "Water Gun": "물대포"
+      }
     };
 
     function setScale(scale) {
-      currentScale = scale;
       document.querySelectorAll('.scale-btn').forEach(btn => {
         btn.classList.toggle('active', btn.textContent === `${scale * 100}%`);
       });
-      const img = document.getElementById('preview-image');
-      img.style.width = `${560 * scale}px`;
-      img.style.height = `${380 * scale}px`;
+      const wrapper = document.getElementById('attachment-wrapper');
+      const img = document.getElementById('canvas-preview');
+      const rows = document.getElementById('action-rows');
+      
+      const w = 560 * scale;
+      const h = 380 * scale;
+      wrapper.style.width = `${w}px`;
+      wrapper.style.height = `${h}px`;
+      img.style.width = `${w}px`;
+      img.style.height = `${h}px`;
+      rows.style.width = `${w}px`;
+      document.getElementById('message-box').style.maxWidth = `${Math.max(600, w + 40)}px`;
     }
 
-    async function renderCurrentState() {
-      const startTime = performance.now();
+    async function renderState() {
       try {
         const res = await fetch('/api/render', {
           method: 'POST',
@@ -393,9 +380,7 @@
         });
         const data = await res.json();
         if (data.image) {
-          document.getElementById('preview-image').src = data.image;
-          const elapsed = (performance.now() - startTime).toFixed(1);
-          document.getElementById('stat-time').textContent = `렌더링 속도: ${elapsed} ms`;
+          document.getElementById('canvas-preview').src = data.image;
         }
       } catch (err) {
         console.error('Render error:', err);
@@ -404,170 +389,217 @@
 
     function onScreenChange() {
       state.screen = document.getElementById('screen-select').value;
-      document.getElementById('stat-mode').textContent = `모드: ${document.getElementById('screen-select').selectedOptions[0].text}`;
-      updateSidebarUI();
-      renderCurrentState();
+      renderButtons();
+      renderState();
     }
 
-    function setPartyMember(idx) {
+    // Party interaction handlers
+    function pickParty(idx) {
       state.selectedPartyIdx = idx;
-      state.selectedMoveIdx = 0; // 항상 1번 기술로 리셋
-      updateSidebarUI();
-      renderCurrentState();
+      state.selectedMoveIdx = 0; // Party pick always resets moveIdx to 0
+      renderButtons();
+      renderState();
     }
 
-    function setTab(tab) {
+    function pickTab(tab) {
       state.partyTab = tab;
-      updateSidebarUI();
-      renderCurrentState();
+      renderButtons();
+      renderState();
     }
 
-    function setMoveSlot(idx) {
+    function pickMove(idx) {
       state.selectedMoveIdx = idx;
-      updateSidebarUI();
-      renderCurrentState();
+      renderButtons();
+      renderState();
+    }
+
+    function toggleHa() {
+      const p = state.party[state.selectedPartyIdx];
+      if (p) {
+        p.useHiddenAbility = !p.useHiddenAbility;
+        renderButtons();
+        renderState();
+      }
     }
 
     function togglePassive() {
       const p = state.party[state.selectedPartyIdx];
       if (p) {
         p.usePassive = !p.usePassive;
-        updateSidebarUI();
-        renderCurrentState();
+        renderButtons();
+        renderState();
       }
     }
 
-    function toggleShiny() {
-      const p = state.party[state.selectedPartyIdx];
-      if (p) {
-        p.isShiny = !p.isShiny;
-        updateSidebarUI();
-        renderCurrentState();
+    function removeCurrentParty() {
+      if (state.party.length > 0 && state.selectedPartyIdx < state.party.length) {
+        state.party.splice(state.selectedPartyIdx, 1);
+        state.selectedPartyIdx = Math.max(0, state.party.length - 1);
+        renderButtons();
+        renderState();
       }
+    }
+
+    // Starter Select Handlers
+    function changeGen(gen) {
+      state.currentGen = gen;
+      state.currentPage = 1;
+      renderButtons();
+      renderState();
+    }
+
+    function changePage(delta) {
+      state.currentPage = Math.max(1, Math.min(state.totalPages, state.currentPage + delta));
+      renderButtons();
+      renderState();
     }
 
     function toggleFilter(filter) {
       if (filter === 'shiny') state.isShinyFilter = !state.isShinyFilter;
       if (filter === 'ha') state.isHaFilter = !state.isHaFilter;
       if (filter === 'passive') state.isPassiveFilter = !state.isPassiveFilter;
-      updateSidebarUI();
-      renderCurrentState();
+      renderButtons();
+      renderState();
     }
 
-    function changePage(delta) {
-      state.currentPage = Math.max(1, Math.min(state.totalPages, state.currentPage + delta));
-      updateSidebarUI();
-      renderCurrentState();
-    }
-
-    function changeGen(gen) {
-      state.currentGen = gen;
-      state.currentPage = 1;
-      updateSidebarUI();
-      renderCurrentState();
-    }
-
-    function updateSidebarUI() {
-      const sidebar = document.getElementById('sidebar-controls');
-      sidebar.innerHTML = '';
+    function renderButtons() {
+      const container = document.getElementById('action-rows');
+      container.innerHTML = '';
 
       if (state.screen === 'starter_party') {
-        sidebar.innerHTML = `
-          <div class="sidebar-section">
-            <h3>1. 파티원 선택 (1~6번 슬롯)</h3>
-            <div class="btn-grid">
-              ${[0, 1, 2, 3, 4, 5].map(i => {
-                const member = state.party[i];
-                const label = member ? `P${i+1} ${member.name}` : `P${i+1} +`;
-                const isSel = state.selectedPartyIdx === i;
-                return `<button class="d-btn ${isSel ? 'primary active' : ''}" onclick="setPartyMember(${i})">${label}</button>`;
-              }).join('')}
-            </div>
+        const curMember = state.party[state.selectedPartyIdx];
+        const isPiplup = curMember?.speciesId === 'piplup';
+        const isBulba = curMember?.speciesId === 'bulbasaur';
+
+        const normalAb = isPiplup ? "급류" : (isBulba ? "심록" : "-");
+        const haAb = isPiplup ? "-" : (isBulba ? "엽록소" : "-");
+        const passAb = isPiplup ? "미해금" : (isBulba ? "부식" : "-");
+
+        const curMoves = isPiplup ? ["Pound", "Growl", "Water Gun"] : ["Tackle", "Growl", "Vine Whip"];
+
+        // ROW 1: Ability / Hidden Ability / Passive
+        container.innerHTML += `
+          <div class="action-row">
+            <button class="d-btn ${!curMember?.useHiddenAbility ? 'success' : 'primary'}" onclick="toggleHa()">
+              🌟 특성: ${normalAb}
+            </button>
+            <button class="d-btn ${curMember?.useHiddenAbility ? 'success' : 'secondary'}" ${!isBulba ? 'disabled' : ''} onclick="toggleHa()">
+              ${isBulba ? (curMember?.useHiddenAbility ? `🌟 숨특: ${haAb}` : `🔒 숨특: ${haAb}`) : '🔒 숨특: -'}
+            </button>
+            <button class="d-btn ${curMember?.usePassive ? 'success' : 'primary'}" ${!isBulba ? 'disabled' : ''} onclick="togglePassive()">
+              ${isBulba ? (curMember?.usePassive ? `🔓 패시브: ${passAb}` : `🔒 패시브: ${passAb}`) : '🔒 패시브: -'}
+            </button>
           </div>
+        `;
 
-          <div class="sidebar-section">
-            <h3>2. 대시보드 탭 전환</h3>
-            <div class="btn-grid">
-              <button class="d-btn ${state.partyTab === 'moves' ? 'primary active' : ''}" onclick="setTab('moves')">⚔ 기술</button>
-              <button class="d-btn ${state.partyTab === 'shiny' ? 'primary active' : ''}" onclick="setTab('shiny')">• 이로치</button>
-              <button class="d-btn ${state.partyTab === 'cost' ? 'primary active' : ''}" onclick="setTab('cost')">🍬 사탕</button>
-            </div>
+        // ROW 2: P1, P2 + [⚔️ 기술 관리] + [✨ 이로치 폼] + [🍬 코스트]
+        container.innerHTML += `
+          <div class="action-row">
+            <button class="d-btn ${state.selectedPartyIdx === 0 ? 'primary' : 'secondary'}" ${state.selectedPartyIdx === 0 ? 'disabled' : ''} onclick="pickParty(0)">P1</button>
+            <button class="d-btn ${state.selectedPartyIdx === 1 ? 'primary' : 'secondary'}" ${state.selectedPartyIdx === 1 ? 'disabled' : ''} onclick="pickParty(1)">P2</button>
+            <button class="d-btn ${state.partyTab === 'moves' ? 'primary' : 'secondary'}" onclick="pickTab('moves')">⚔️ 기술 관리</button>
+            <button class="d-btn ${state.partyTab === 'shiny' ? 'primary' : 'secondary'}" onclick="pickTab('shiny')">✨ 이로치 폼</button>
+            <button class="d-btn ${state.partyTab === 'cost' ? 'primary' : 'secondary'}" onclick="pickTab('cost')">🍬 코스트</button>
           </div>
+        `;
 
-          ${state.partyTab === 'moves' ? `
-            <div class="sidebar-section">
-              <h3>3. 장착 기술 슬롯 선택 (1~4번)</h3>
-              <div class="btn-grid two-col">
-                <button class="d-btn ${state.selectedMoveIdx === 0 ? 'primary active' : ''}" onclick="setMoveSlot(0)">1. 기술 1번</button>
-                <button class="d-btn ${state.selectedMoveIdx === 1 ? 'primary active' : ''}" onclick="setMoveSlot(1)">2. 기술 2번</button>
-                <button class="d-btn ${state.selectedMoveIdx === 2 ? 'primary active' : ''}" onclick="setMoveSlot(2)">3. 기술 3번</button>
-                <button class="d-btn ${state.selectedMoveIdx === 3 ? 'primary active' : ''}" onclick="setMoveSlot(3)">4. 기술 4번</button>
-              </div>
-            </div>
-          ` : ''}
+        // ROW 3: P3, P4 + Move 1 + Move 2 + [📚 기술 목록]
+        const m1 = curMoves[0] ? state.movesKo[curMoves[0]] : '-';
+        const m2 = curMoves[1] ? state.movesKo[curMoves[1]] : '-';
+        container.innerHTML += `
+          <div class="action-row">
+            <button class="d-btn secondary" disabled>P3</button>
+            <button class="d-btn secondary" disabled>P4</button>
+            <button class="d-btn ${state.selectedMoveIdx === 0 ? 'primary' : 'secondary'}" ${state.selectedMoveIdx === 0 ? 'disabled' : ''} onclick="pickMove(0)">${m1}</button>
+            <button class="d-btn ${state.selectedMoveIdx === 1 ? 'primary' : 'secondary'}" ${state.selectedMoveIdx === 1 ? 'disabled' : ''} onclick="pickMove(1)">${m2}</button>
+            <button class="d-btn secondary" onclick="pickTab('learnable')">📚 기술 목록</button>
+          </div>
+        `;
 
-          <div class="sidebar-section">
-            <h3>4. 파티원 커스텀 토글</h3>
-            <div class="toggle-row">
-              <span>패시브 특성 (Passive)</span>
-              <label class="switch">
-                <input type="checkbox" ${state.party[state.selectedPartyIdx]?.usePassive ? 'checked' : ''} onchange="togglePassive()">
-                <span class="slider"></span>
-              </label>
-            </div>
-            <div class="toggle-row">
-              <span>이로치 외형 (Shiny)</span>
-              <label class="switch">
-                <input type="checkbox" ${state.party[state.selectedPartyIdx]?.isShiny ? 'checked' : ''} onchange="toggleShiny()">
-                <span class="slider"></span>
-              </label>
-            </div>
+        // ROW 4: P5, P6 + Move 3 + Move 4
+        const m3 = curMoves[2] ? state.movesKo[curMoves[2]] : '-';
+        const m4 = curMoves[3] ? state.movesKo[curMoves[3]] : '-';
+        container.innerHTML += `
+          <div class="action-row">
+            <button class="d-btn secondary" disabled>P5</button>
+            <button class="d-btn secondary" disabled>P6</button>
+            <button class="d-btn ${state.selectedMoveIdx === 2 ? 'primary' : 'secondary'}" ${state.selectedMoveIdx === 2 ? 'disabled' : ''} onclick="pickMove(2)">${m3}</button>
+            <button class="d-btn secondary" disabled>${m4}</button>
+          </div>
+        `;
+
+        // ROW 5: [-⚪ 파티 제외] + [↩️ 스타팅 목록]
+        container.innerHTML += `
+          <div class="action-row">
+            <button class="d-btn danger" onclick="removeCurrentParty()">-⚪ 파티 제외</button>
+            <button class="d-btn danger" onclick="onScreenChange()">↩️ 스타팅 목록</button>
           </div>
         `;
       } else if (state.screen === 'starter_select') {
-        sidebar.innerHTML = `
-          <div class="sidebar-section">
-            <h3>세대 선택 (1 ~ 9세대)</h3>
-            <div class="btn-grid">
-              ${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(g => `
-                <button class="d-btn ${state.currentGen === g ? 'primary active' : ''}" onclick="changeGen(${g})">${g === 0 ? '전체' : g + '세대'}</button>
-              `).join('')}
-            </div>
+        // ROW 1: Generation & Filters
+        container.innerHTML += `
+          <div class="action-row">
+            <button class="d-btn primary" onclick="changeGen((state.currentGen % 9) + 1)">세대: G${state.currentGen}</button>
+            <button class="d-btn ${state.isPassiveFilter ? 'success' : 'secondary'}" onclick="toggleFilter('passive')">PS 패시브</button>
+            <button class="d-btn ${state.isHaFilter ? 'danger' : 'secondary'}" onclick="toggleFilter('ha')">HA 숨특</button>
+            <button class="d-btn ${state.isShinyFilter ? 'primary' : 'secondary'}" onclick="toggleFilter('shiny')">✨ 이로치</button>
           </div>
+        `;
 
-          <div class="sidebar-section">
-            <h3>페이지 이동</h3>
-            <div class="btn-grid two-col">
-              <button class="d-btn" onclick="changePage(-1)">◀ 이전 페이지</button>
-              <button class="d-btn" onclick="changePage(1)">다음 페이지 ▶</button>
-            </div>
+        // ROW 2: Starters 1~4
+        container.innerHTML += `
+          <div class="action-row">
+            <button class="d-btn primary">1. 이상해씨</button>
+            <button class="d-btn secondary">2. 파이리</button>
+            <button class="d-btn secondary">3. 꼬부기</button>
+            <button class="d-btn secondary">4. 피카츄</button>
           </div>
+        `;
 
-          <div class="sidebar-section">
-            <h3>필터 토글</h3>
-            <div class="btn-grid">
-              <button class="d-btn ${state.isPassiveFilter ? 'success active' : ''}" onclick="toggleFilter('passive')">PS 패시브</button>
-              <button class="d-btn ${state.isHaFilter ? 'danger active' : ''}" onclick="toggleFilter('ha')">HA 숨특</button>
-              <button class="d-btn ${state.isShinyFilter ? 'primary active' : ''}" onclick="toggleFilter('shiny')">✨ 이로치</button>
-            </div>
+        // ROW 3: Starters 5~8
+        container.innerHTML += `
+          <div class="action-row">
+            <button class="d-btn secondary">5. 이브이</button>
+            <button class="d-btn secondary">6. 캐터피</button>
+            <button class="d-btn secondary">7. 뿔충이</button>
+            <button class="d-btn secondary">8. 구구</button>
+          </div>
+        `;
+
+        // ROW 4: Starters 9~12
+        container.innerHTML += `
+          <div class="action-row">
+            <button class="d-btn secondary">9. 꼬렛</button>
+            <button class="d-btn secondary">10. 깨비참</button>
+            <button class="d-btn secondary">11. 아보</button>
+            <button class="d-btn secondary">12. 모래두지</button>
+          </div>
+        `;
+
+        // ROW 5: Nav & Action
+        container.innerHTML += `
+          <div class="action-row">
+            <button class="d-btn secondary" onclick="changePage(-1)">◀ 이전</button>
+            <button class="d-btn success">+⚪ 파티 추가</button>
+            <button class="d-btn primary" onclick="state.screen='starter_party'; renderButtons(); renderState();">👥 파티 관리 (${state.party.length}/6)</button>
+            <button class="d-btn secondary" onclick="changePage(1)">다음 ▶</button>
+            <button class="d-btn success">⚔️ 모험 시작</button>
           </div>
         `;
       } else {
-        sidebar.innerHTML = `
-          <div class="sidebar-section">
-            <h3>화면 조작</h3>
-            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">
-              현재 선택된 화면 모드입니다.<br>상단 드롭다운에서 다른 화면으로 빠르게 전환할 수 있습니다.
-            </p>
+        container.innerHTML = `
+          <div class="action-row">
+            <button class="d-btn primary" onclick="state.screen='starter_party'; renderButtons(); renderState();">👥 파티 관리 화면으로 이동</button>
+            <button class="d-btn secondary" onclick="state.screen='starter_select'; renderButtons(); renderState();">🔍 스타팅 선택 화면으로 이동</button>
           </div>
         `;
       }
     }
 
     // Initialize
-    setScale(1.5);
-    updateSidebarUI();
-    renderCurrentState();
+    setScale(1.25);
+    renderButtons();
+    renderState();
   </script>
 </body>
 </html>
