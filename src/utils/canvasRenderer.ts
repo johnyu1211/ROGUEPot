@@ -2336,7 +2336,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   const activeX = panelX + safeActiveIdx * (tabW + tabGap);
 
   // 2. Draw Active Tab Body (Fill and Top/Left/Right Stroke, Open Bottom!)
-  ctx.fillStyle = "#11131C";
+  ctx.fillStyle = "#1B202D";
   ctx.beginPath();
   ctx.roundRect(activeX, tabY, tabW, tabH + 2, [6, 6, 0, 0]);
   ctx.fill();
@@ -2420,7 +2420,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     ctx.fillText(isKo ? "자세히 확인하고 관리할 수 있습니다." : "and customize shiny forms.", panelX + panelW / 2, 225);
 
     // Subtle decoration box
-    ctx.fillStyle = "#10121A";
+    ctx.fillStyle = "#1B202D";
     ctx.beginPath();
     ctx.roundRect(panelX + 16, 265, panelW - 32, 68, 5);
     ctx.fill();
@@ -2458,7 +2458,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       const isSel = selectedMoveIdx === m;
       const isEmpty = rawMove === "---" || !moveInfo;
 
-      ctx.fillStyle = isSel ? "#11131C" : (isEmpty ? "#121520" : "#1A2030");
+      ctx.fillStyle = isSel ? "#262E40" : (isEmpty ? "#12141D" : "#1B202D");
       ctx.beginPath();
       ctx.roundRect(mX, mY, moveChipW, moveChipH, 8);
       ctx.fill();
@@ -2466,6 +2466,10 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       if (isSel) {
         ctx.strokeStyle = "#5865F2";
         ctx.lineWidth = 2;
+        ctx.stroke();
+      } else {
+        ctx.strokeStyle = isEmpty ? "#1E2230" : "#283042";
+        ctx.lineWidth = 1;
         ctx.stroke();
       }
 
@@ -2624,12 +2628,12 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       const isUnlocked = t === 0 || t <= unlockedMaxShinyTier;
       const isCurrent = currentShinyTier === t;
 
-      ctx.fillStyle = isCurrent ? "#1E273C" : (isUnlocked ? "#12141C" : "#0D0F15");
+      ctx.fillStyle = isCurrent ? "#262E40" : (isUnlocked ? "#1B202D" : "#10121A");
       ctx.beginPath();
       ctx.roundRect(cX, cY, cW, cardH, 5);
       ctx.fill();
 
-      ctx.strokeStyle = isCurrent ? tierColors[t] : (isUnlocked ? "#282D3D" : "#1A1D27");
+      ctx.strokeStyle = isCurrent ? tierColors[t] : (isUnlocked ? "#283042" : "#1A1D27");
       ctx.lineWidth = isCurrent ? 2 : 1;
       ctx.stroke();
 
@@ -2695,11 +2699,11 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     const cardW = panelW - 24;
     const cardX = panelX + 12;
 
-    ctx.fillStyle = "#12141C";
+    ctx.fillStyle = "#1B202D";
     ctx.beginPath();
     ctx.roundRect(cardX, infoCardY, cardW, infoCardH, 6);
     ctx.fill();
-    ctx.strokeStyle = "#282D3D";
+    ctx.strokeStyle = "#283042";
     ctx.lineWidth = 1;
     ctx.stroke();
 
@@ -2725,11 +2729,11 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     // 2. Action Card 1: Cost Reduction (y: 148 ~ 242, H: 94)
     const card1Y = 148;
     const card1H = 94;
-    ctx.fillStyle = "#181B26";
+    ctx.fillStyle = "#1B202D";
     ctx.beginPath();
     ctx.roundRect(cardX, card1Y, cardW, card1H, 6);
     ctx.fill();
-    ctx.strokeStyle = "#2D3246";
+    ctx.strokeStyle = "#283042";
     ctx.lineWidth = 1;
     ctx.stroke();
 
@@ -2745,7 +2749,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     // 3. Action Card 2: Passive Unlock (y: 252 ~ 346, H: 94)
     const card2Y = 252;
     const card2H = 94;
-    ctx.fillStyle = "#181B26";
+    ctx.fillStyle = "#1B202D";
     ctx.beginPath();
     ctx.roundRect(cardX, card2Y, cardW, card2H, 6);
     ctx.fill();
