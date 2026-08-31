@@ -1098,9 +1098,11 @@ export async function renderPartyViewMessageData(
     )
   );
 
-  // ROW 2: Tabs [⚔️ 기술] + [✨ 이로치 폼] + [🍬 코스트]
+  // ROW 2: Party 1, 2 + Tabs [⚔️ 기술] + [✨ 이로치 폼] + [🍬 코스트]
   components.push(
     new ActionRowBuilder<ButtonBuilder>().addComponents(
+      createPartySlotBtn(0),
+      createPartySlotBtn(1),
       new ButtonBuilder()
         .setCustomId(`party_tab_moves_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${selectedMoveIdx}_${userId}`)
         .setLabel(isKo ? "⚔️ 기술" : "⚔️ Moves")
@@ -1128,11 +1130,8 @@ export async function renderPartyViewMessageData(
         .setDisabled(true);
     }
 
-    const moveKey = rawMove.toLowerCase().replace(/[\s_]+/g, "-");
-    const moveInfo = MOVES_DATA[moveKey];
-    const mName = isKo ? (moveInfo?.nameKo || rawMove) : rawMove;
     const isSelected = partyTab === "moves" && selectedMoveIdx === mIdx;
-    const label = (mName || "").slice(0, 10) || "\u2800";
+    const label = `Move ${mIdx + 1}`;
 
     return new ButtonBuilder()
       .setCustomId(`party_pickmove_${mIdx}_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${userId}`)
