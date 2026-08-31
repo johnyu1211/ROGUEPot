@@ -2682,8 +2682,8 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       const ppStr = `${curMoveInfo.pp || 35}`;
 
       const statSummary = isKo
-        ? `위력: ${pwrStr}  |  명중: ${accStr}  |  PP: ${ppStr}`
-        : `Pwr: ${pwrStr}  |  Acc: ${accStr}  |  PP: ${ppStr}`;
+        ? `${pwrStr}  |  명중: ${accStr}  |  PP: ${ppStr}`
+        : `${pwrStr}  |  Acc: ${accStr}  |  PP: ${ppStr}`;
 
       ctx.font = "bold 13px DungGeunMo";
       ctx.fillStyle = "#94A3B8";
