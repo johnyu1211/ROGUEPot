@@ -1627,6 +1627,124 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
     currentCost, maxCost, isKo, selectedPartyIdx, isPartyView
   } = args;
 
+  // =========================================================================
+  // PARTY VIEW MODE: 2 Columns x 3 Rows Vertical Grid Layout (y: 10 ~ 370)
+  // =========================================================================
+  if (isPartyView) {
+    const costLineY = 20;
+
+    // Cost Counter Text + Inline Gauge Bar
+    const isOverCost = currentCost > maxCost;
+    const costColor = isOverCost ? "#EF4444" : (currentCost >= 8 ? "#F59E0B" : "#22C55E");
+
+    ctx.textBaseline = "middle";
+    ctx.font = "bold 16px DungGeunMo";
+    ctx.fillStyle = costColor;
+    ctx.textAlign = "left";
+    const costText = `${isKo ? "코스트" : "COST"} : ${currentCost} / ${maxCost}`;
+    ctx.fillText(costText, panelX, costLineY);
+    const costTextW = ctx.measureText(costText).width;
+
+    const gaugeX = panelX + costTextW + 10;
+    const gaugeW = panelX + panelW - gaugeX;
+    const gaugeH = 9;
+    const gaugeY = costLineY - gaugeH / 2;
+
+    ctx.fillStyle = "#12141C";
+    ctx.beginPath();
+    ctx.roundRect(gaugeX, gaugeY, gaugeW, gaugeH, 3);
+    ctx.fill();
+    ctx.strokeStyle = "#282D3D";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    const fillRatio = Math.min(1.0, currentCost / maxCost);
+    const fillW = Math.max(fillRatio > 0 ? 4 : 0, fillRatio * gaugeW);
+    ctx.fillStyle = costColor;
+    ctx.beginPath();
+    ctx.roundRect(gaugeX, gaugeY, fillW, gaugeH, 3);
+    ctx.fill();
+
+    // 2 Columns x 3 Rows Vertical Grid (y: 36 ~ 368)
+    const slotW = (panelW - 8) / 2;
+    const slotH = 104;
+    const gapX = 8;
+    const gapY = 8;
+    const startY = 36;
+
+    for (let pIdx = 0; pIdx < 6; pIdx++) {
+      const member = party[pIdx];
+      const pCol = pIdx % 2;
+      const pRow = Math.floor(pIdx / 2);
+      const pX = panelX + pCol * (slotW + gapX);
+      const pY = startY + pRow * (slotH + gapY);
+      const isInspected = selectedPartyIdx !== undefined && selectedPartyIdx === pIdx;
+
+      ctx.fillStyle = isInspected ? "#222738" : (member ? "#181B26" : "#12141C");
+      ctx.beginPath();
+      ctx.roundRect(pX, pY, slotW, slotH, 6);
+      ctx.fill();
+
+      ctx.strokeStyle = isInspected ? "#60A5FA" : (member ? "#2D3448" : "#202430");
+      ctx.lineWidth = isInspected ? 2 : 1;
+      ctx.stroke();
+
+      // Slot Badge (Top-Left: P1 ~ P6)
+      ctx.fillStyle = isInspected ? "#3B82F6" : "#242A3B";
+      ctx.beginPath();
+      ctx.roundRect(pX + 6, pY + 6, 28, 16, 3);
+      ctx.fill();
+
+      ctx.textBaseline = "middle";
+      ctx.font = "bold 11px DungGeunMo";
+      ctx.fillStyle = isInspected ? "#FFFFFF" : "#94A3B8";
+      ctx.textAlign = "center";
+      ctx.fillText(`P${pIdx + 1}`, pX + 20, pY + 14);
+
+      if (member) {
+        // Sprite (Centered, Scale 0.9)
+        const pSprite = partySprites[pIdx];
+        if (pSprite) {
+          const scale = 0.9;
+          const sprW = pSprite.width * scale;
+          const sprH = pSprite.height * scale;
+          ctx.drawImage(pSprite, pX + (slotW - sprW) / 2, pY + 12 + (54 - sprH) / 2, sprW, sprH);
+        }
+
+        // Shiny Sparkle
+        const sTier = member.shinyTier || 0;
+        if (sTier > 0) {
+          drawShinyTierSparkles(ctx, pX + 12, pY + 58, sTier, 5.5);
+        }
+
+        // Member Name
+        ctx.textBaseline = "middle";
+        ctx.font = "bold 14px DungGeunMo";
+        ctx.fillStyle = "#FFFFFF";
+        ctx.textAlign = "center";
+        ctx.fillText(member.name.slice(0, 5), pX + slotW / 2, pY + 74);
+
+        // Cost
+        ctx.font = "bold 12px DungGeunMo";
+        ctx.fillStyle = member.usePassive ? "#34D399" : "#F59E0B";
+        ctx.fillText(`${member.cost}C`, pX + slotW / 2, pY + 91);
+      } else {
+        // Empty Slot Marker
+        ctx.textBaseline = "middle";
+        ctx.font = "bold 24px DungGeunMo";
+        ctx.fillStyle = "#334155";
+        ctx.textAlign = "center";
+        ctx.fillText("+", pX + slotW / 2, pY + 46);
+
+        ctx.font = "bold 12px DungGeunMo";
+        ctx.fillStyle = "#475569";
+        ctx.fillText(isKo ? "빈 슬롯" : "Empty", pX + slotW / 2, pY + 76);
+      }
+    }
+
+    return;
+  }
+
   if (sel) {
     const selShinyTier = selProgress?.shinyTier || 0;
 

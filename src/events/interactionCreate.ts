@@ -981,7 +981,7 @@ async function renderPartyViewMessageData(
       : (hasPassive ? (curUsePassive ? "🔓 PassON" : "🔓 PassOFF") : "🔒 Pass");
   }
 
-  // ROW 1: Party 1, 2 + [ ⚔️ 기술 관리 ] + [ 🌟 숨특/일특 ]
+  // ROW 1: Party 1, 2 + [ ⚔️ 기술 관리 ] + [ ✨ 이로치 폼 ]
   components.push(
     new ActionRowBuilder<ButtonBuilder>().addComponents(
       createPartySlotBtn(0),
@@ -991,27 +991,17 @@ async function renderPartyViewMessageData(
         .setLabel(isKo ? "⚔️ 기술 관리" : "⚔️ Moves")
         .setStyle(partyTab === "moves" ? ButtonStyle.Primary : ButtonStyle.Secondary),
       new ButtonBuilder()
-        .setCustomId(`party_toggleha_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
-        .setLabel(haBtnLabel)
-        .setStyle(curUseHa ? ButtonStyle.Danger : ButtonStyle.Secondary)
-        .setDisabled(!inspectedStarter || !hasHa)
+        .setCustomId(`party_tab_shiny_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${selectedMoveIdx}_${userId}`)
+        .setLabel(isKo ? "✨ 이로치 폼" : "✨ Shiny Form")
+        .setStyle(partyTab === "shiny" ? ButtonStyle.Primary : ButtonStyle.Secondary)
     )
   );
 
-  // ROW 2: Party 3, 4 + [ ✨ 이로치 폼 ] + [ 🔓 패시브 ]
+  // ROW 2: Party 3, 4
   components.push(
     new ActionRowBuilder<ButtonBuilder>().addComponents(
       createPartySlotBtn(2),
-      createPartySlotBtn(3),
-      new ButtonBuilder()
-        .setCustomId(`party_tab_shiny_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${selectedMoveIdx}_${userId}`)
-        .setLabel(isKo ? "✨ 이로치 폼" : "✨ Shiny Form")
-        .setStyle(partyTab === "shiny" ? ButtonStyle.Primary : ButtonStyle.Secondary),
-      new ButtonBuilder()
-        .setCustomId(`party_togglepass_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
-        .setLabel(passBtnLabel)
-        .setStyle(curUsePassive ? ButtonStyle.Success : ButtonStyle.Secondary)
-        .setDisabled(!inspectedStarter || !hasPassive)
+      createPartySlotBtn(3)
     )
   );
 
@@ -1023,7 +1013,7 @@ async function renderPartyViewMessageData(
     )
   );
 
-  // ROW 4: Remove [-⚪] + START + Back [↩️]
+  // ROW 4: Remove [-⚪] + Back [↩️] (NO START BUTTON)
   const removeTargetDex = activePartyMember ? activePartyMember.dexNumber : 0;
   components.push(
     new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -1032,11 +1022,6 @@ async function renderPartyViewMessageData(
         .setLabel(isKo ? "-⚪ 파티 제외" : "-⚪ Remove")
         .setStyle(ButtonStyle.Danger)
         .setDisabled(!activePartyMember || safePartyIdx === -1),
-      new ButtonBuilder()
-        .setCustomId(`starter_start_${slotId}_${partyParam}_${flagsParam}_${userId}`)
-        .setLabel("START")
-        .setStyle(ButtonStyle.Success)
-        .setDisabled(!canStart),
       new ButtonBuilder()
         .setCustomId(`party_back_starter_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${userId}`)
         .setLabel(isKo ? "↩️ 스타팅 목록" : "↩️ Back")
