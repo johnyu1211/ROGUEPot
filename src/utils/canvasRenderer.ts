@@ -1685,12 +1685,12 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
       ctx.roundRect(pX, pY, slotW, slotH, 6);
       ctx.fill();
 
-      ctx.strokeStyle = isInspected ? "#60A5FA" : (member ? "#2D3448" : "#202430");
+      ctx.strokeStyle = isInspected ? "#5865F2" : (member ? "#2D3448" : "#202430");
       ctx.lineWidth = isInspected ? 2 : 1;
       ctx.stroke();
 
       // Slot Badge (Top-Left: P1 ~ P6)
-      ctx.fillStyle = isInspected ? "#3B82F6" : "#242A3B";
+      ctx.fillStyle = isInspected ? "#5865F2" : "#242A3B";
       ctx.beginPath();
       ctx.roundRect(pX + 6, pY + 6, 28, 16, 3);
       ctx.fill();
@@ -2102,13 +2102,13 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     ctx.roundRect(tX, tabY, tabW, tabH, 4);
     ctx.fill();
 
-    ctx.strokeStyle = isAct ? "#60A5FA" : "#242938";
+    ctx.strokeStyle = isAct ? "#5865F2" : "#242938";
     ctx.lineWidth = isAct ? 1.5 : 1;
     ctx.stroke();
 
     ctx.textBaseline = "middle";
     ctx.font = "bold 13px DungGeunMo";
-    ctx.fillStyle = isAct ? "#60A5FA" : "#64748B";
+    ctx.fillStyle = isAct ? "#FFFFFF" : "#64748B";
     ctx.textAlign = "center";
     ctx.fillText(isKo ? t.labelKo : t.labelEn, tX + tabW / 2, tabY + tabH / 2);
   });
