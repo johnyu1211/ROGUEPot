@@ -2210,6 +2210,8 @@ interface PartyCustomizationPanelArgs {
   isKo: boolean;
   tab?: PartyViewTab;
   selectedMoveIdx?: number;
+  normalSprite?: Image | null;
+  shinySprite?: Image | null;
 }
 
 function drawWrappedText(ctx: any, text: string, x: number, y: number, maxWidth: number, lineHeight: number): number {
@@ -2290,7 +2292,7 @@ function drawInGameMessageBox(ctx: any, width: number, height: number, msg: InGa
 }
 
 function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelArgs) {
-  const { panelX, panelW, sel, partyMember, selProgress, isKo } = args;
+  const { panelX, panelW, sel, partyMember, selProgress, isKo, normalSprite, shinySprite } = args;
   const currentTab: PartyViewTab = args.tab || "moves";
   const selectedMoveIdx = args.selectedMoveIdx || 0;
 
@@ -2611,82 +2613,129 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   }
 
   // =========================================================================
-  // TAB 2: SHINY TAB (Shiny Form & Luck Management)
+  // TAB 2: SHINY TAB (2x2 Grid with Pokemon Sprites & Star Sparkles)
   // =========================================================================
   if (currentTab === "shiny") {
     const tierColors = ["#64748B", "#F59E0B", "#3B82F6", "#EF4444"];
-    const tierNames = ["T0 일반 폼", "T1 노랑 이로치", "T2 파랑 이로치", "T3 빨강 이로치"];
-    const tierLucks = ["행운 +0 (기본)", "행운 +1 (+1 Luck)", "행운 +2 (+2 Luck)", "행운 +3 (최대 행운)"];
+    const tierNames = [
+      isKo ? "일반 폼" : "Normal Form",
+      isKo ? "노랑 이로치" : "Yellow Shiny",
+      isKo ? "파랑 이로치" : "Blue Shiny",
+      isKo ? "빨강 이로치" : "Red Shiny"
+    ];
+    const tierLucks = [
+      isKo ? "기본 (+0)" : "+0 Luck",
+      isKo ? "행운 +1" : "+1 Luck",
+      isKo ? "행운 +2" : "+2 Luck",
+      isKo ? "행운 +3 (최대)" : "+3 Luck (Max)"
+    ];
 
-    const cardH = 68;
-    const startCardY = 46;
-    const cW = bodyW - 20;
-    const cX = bodyX + 10;
+    const contentX = bodyX + 10;
+    const contentW = bodyW - 20;
+    const startCardY = 48;
+    const chipGap = 8;
+    const tileW = Math.floor((contentW - chipGap) / 2);
+    const tileH = 122;
 
     for (let t = 0; t <= 3; t++) {
-      const cY = startCardY + t * (cardH + 8);
+      const col = t % 2;
+      const row = Math.floor(t / 2);
+      const cX = contentX + col * (tileW + chipGap);
+      const cY = startCardY + row * (tileH + 8);
+
       const isUnlocked = t === 0 || t <= unlockedMaxShinyTier;
       const isCurrent = currentShinyTier === t;
 
+      // 1. Tile Base Background
       ctx.fillStyle = isCurrent ? "#2E3A56" : (isUnlocked ? "#242C3E" : "#141722");
       ctx.beginPath();
-      ctx.roundRect(cX, cY, cW, cardH, 5);
+      ctx.roundRect(cX, cY, tileW, tileH, 6);
       ctx.fill();
 
       if (isCurrent) {
-        ctx.strokeStyle = tierColors[t];
+        ctx.strokeStyle = tierColors[t] || "#5865F2";
         ctx.lineWidth = 2;
         ctx.stroke();
       }
 
-      // Tier Badge (Left)
-      const bW = 68;
-      const bH = 22;
-      const bX = cX + 10;
-      const bY = cY + 12;
+      // 2. Sprite Image Box (Centered Upper Half)
+      const spr = t === 0 ? normalSprite : shinySprite;
+      const sprBoxSize = 56;
+      const sprBoxX = cX + (tileW - sprBoxSize) / 2;
+      const sprBoxY = cY + 8;
 
-      ctx.fillStyle = isUnlocked ? tierColors[t] : "#334155";
-      ctx.beginPath();
-      ctx.roundRect(bX, bY, bW, bH, 3);
-      ctx.fill();
+      if (isUnlocked && spr) {
+        const scale = 1.05;
+        const sW = spr.width * scale;
+        const sH = spr.height * scale;
+        ctx.drawImage(spr, sprBoxX + (sprBoxSize - sW) / 2, sprBoxY + (sprBoxSize - sH) / 2, sW, sH);
+      } else if (!isUnlocked) {
+        // Locked state: subtle lock icon in center of sprite area
+        drawLockIcon(ctx, cX + tileW / 2, cY + 36, 12, 14, "#475569");
+      }
 
+      // 3. Stars Row (Replaces "TIER X" text with beautiful Stars!)
+      const starsY = cY + 74;
+      if (t === 0) {
+        // Normal Form: Soft subtle text
+        ctx.textBaseline = "middle";
+        ctx.font = "bold 12px DungGeunMo";
+        ctx.fillStyle = isCurrent ? "#FFFFFF" : (isUnlocked ? "#94A3B8" : "#475569");
+        ctx.textAlign = "center";
+        ctx.fillText(tierNames[0], cX + tileW / 2, starsY);
+      } else {
+        // Shiny Tiers: Draw Star Sparkles (1, 2, 3 stars)
+        if (isUnlocked) {
+          const starSpacing = 14;
+          const totalStarsW = (t - 1) * starSpacing;
+          const startStarX = (cX + tileW / 2) - (totalStarsW / 2);
+          for (let sIdx = 0; sIdx < t; sIdx++) {
+            drawShinySparkle(ctx, startStarX + sIdx * starSpacing, starsY, 5.5, tierColors[t]);
+          }
+        } else {
+          ctx.textBaseline = "middle";
+          ctx.font = "bold 11px DungGeunMo";
+          ctx.fillStyle = "#475569";
+          ctx.textAlign = "center";
+          ctx.fillText(isKo ? "🔒 미해금" : "🔒 LOCKED", cX + tileW / 2, starsY);
+        }
+      }
+
+      // 4. Luck Info & Active State Badge (Bottom Line, y: cY + 100)
       ctx.textBaseline = "middle";
       ctx.font = "bold 12px DungGeunMo";
-      ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
-      ctx.fillText(`TIER ${t}`, bX + bW / 2, bY + bH / 2);
 
-      // Star Sparkles
-      if (t > 0 && isUnlocked) {
-        drawShinyTierSparkles(ctx, bX + bW + 8, bY + bH / 2, t, 5);
-      }
-
-      // Title & Luck Info
-      ctx.font = "bold 14px DungGeunMo";
-      ctx.fillStyle = isCurrent ? "#FFFFFF" : (isUnlocked ? "#CBD5E1" : "#475569");
-      ctx.textAlign = "left";
-      ctx.fillText(tierNames[t], cX + 10, cY + 48);
-
-      ctx.font = "bold 12px DungGeunMo";
-      ctx.fillStyle = isUnlocked ? tierColors[t] : "#475569";
-      ctx.textAlign = "right";
-      ctx.fillText(tierLucks[t], cX + cW - 10, cY + 23);
-
-      // State Tag (Right Bottom)
       if (isCurrent) {
         ctx.fillStyle = "#22C55E";
-        ctx.font = "bold 13px DungGeunMo";
-        ctx.textAlign = "right";
-        ctx.fillText(isKo ? "✓ 적용 중" : "✓ Active", cX + cW - 10, cY + 48);
-      } else if (!isUnlocked) {
-        drawLockIcon(ctx, cX + cW - 20, cY + 48, 9, 10, "#475569");
+        ctx.fillText(isKo ? "✓ 적용 중" : "✓ Active", cX + tileW / 2, cY + 100);
+      } else if (isUnlocked) {
+        ctx.fillStyle = tierColors[t] || "#94A3B8";
+        ctx.fillText(tierLucks[t], cX + tileW / 2, cY + 100);
       } else {
-        ctx.fillStyle = "#64748B";
-        ctx.font = "bold 12px DungGeunMo";
-        ctx.textAlign = "right";
-        ctx.fillText(isKo ? "선택 가능" : "Ready", cX + cW - 10, cY + 48);
+        ctx.fillStyle = "#475569";
+        ctx.font = "11px DungGeunMo";
+        ctx.fillText(isKo ? "미해금" : "Locked", cX + tileW / 2, cY + 100);
       }
     }
+
+    // 5. Bottom Guide Tip Box (y: 308 ~ 362, H: 54)
+    const guideY = 308;
+    const guideH = 54;
+    ctx.fillStyle = "#242C3E";
+    ctx.beginPath();
+    ctx.roundRect(contentX, guideY, contentW, guideH, 4);
+    ctx.fill();
+
+    ctx.textBaseline = "middle";
+    ctx.font = "bold 12px DungGeunMo";
+    ctx.fillStyle = "#F59E0B";
+    ctx.textAlign = "center";
+    ctx.fillText(isKo ? "✨ 이로치 외형을 변경하면 행운(Luck)이 적용됩니다!" : "✨ Equipping shiny forms grants battle luck!", contentX + contentW / 2, guideY + 18);
+
+    ctx.font = "bold 11px DungGeunMo";
+    ctx.fillStyle = "#94A3B8";
+    ctx.fillText(isKo ? "하단 [✨ 이로치 폼] 버튼으로 원하는 폼을 선택하세요." : "Select your desired shiny tier using the buttons below.", contentX + contentW / 2, guideY + 38);
 
     return;
   }
@@ -2962,8 +3011,14 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     const inspectedHasHa = activePartyMember ? activePartyMember.useHiddenAbility : (inspectedProg?.hasHiddenAbility || false);
     const inspectedHasPassive = activePartyMember ? activePartyMember.usePassive : (inspectedProg?.passiveUnlocked || false);
 
-    // Fetch inspected sprite
-    const inspectedSprite = inspectedStarter ? await getPokemonSprite(inspectedStarter.speciesId, true, inspectedHasShiny) : null;
+    // Fetch inspected sprite + normal/shiny variants for shiny tab
+    const [inspectedSprite, normalSprite, shinySprite] = inspectedStarter
+      ? await Promise.all([
+          getPokemonSprite(inspectedStarter.speciesId, true, inspectedHasShiny),
+          getPokemonSprite(inspectedStarter.speciesId, true, false),
+          getPokemonSprite(inspectedStarter.speciesId, true, true),
+        ])
+      : [null, null, null];
 
     // Render preview and party grid on LEFT SIDE
     renderPreviewAndPartyPanel(ctx, {
@@ -3001,6 +3056,8 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       isKo,
       tab: options.partyTab,
       selectedMoveIdx: options.selectedMoveIdx,
+      normalSprite,
+      shinySprite,
     });
 
     if (options.inGameMessage) {
