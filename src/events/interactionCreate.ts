@@ -958,25 +958,7 @@ async function renderPartyViewMessageData(
 
   const components: ActionRowBuilder<ButtonBuilder>[] = [];
 
-  // ROW 1: Party 1, 2, 3
-  components.push(
-    new ActionRowBuilder<ButtonBuilder>().addComponents(
-      createPartySlotBtn(0),
-      createPartySlotBtn(1),
-      createPartySlotBtn(2)
-    )
-  );
-
-  // ROW 2: Party 4, 5, 6
-  components.push(
-    new ActionRowBuilder<ButtonBuilder>().addComponents(
-      createPartySlotBtn(3),
-      createPartySlotBtn(4),
-      createPartySlotBtn(5)
-    )
-  );
-
-  // ROW 3: Tab Switchers (⚔️ Moves / ✨ Shiny) + Ability/Passive Toggles
+  // ROW 1 (TOP): Tab Switchers (⚔️ Moves / ✨ Shiny) + Ability/Passive Toggles
   const inspectedProg = inspectedStarter ? userStarters.get(inspectedStarter.speciesId) : null;
   const maxShinyTier = inspectedProg?.shinyTier || 0;
   const curShinyTier = activePartyMember?.shinyTier || 0;
@@ -1013,6 +995,24 @@ async function renderPartyViewMessageData(
         .setLabel(passBtnLabel)
         .setStyle(curUsePassive ? ButtonStyle.Success : ButtonStyle.Secondary)
         .setDisabled(!hasPassive)
+    )
+  );
+
+  // ROW 2: Party 1, 2, 3
+  components.push(
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      createPartySlotBtn(0),
+      createPartySlotBtn(1),
+      createPartySlotBtn(2)
+    )
+  );
+
+  // ROW 3: Party 4, 5, 6
+  components.push(
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      createPartySlotBtn(3),
+      createPartySlotBtn(4),
+      createPartySlotBtn(5)
     )
   );
 
