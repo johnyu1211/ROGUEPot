@@ -1367,7 +1367,7 @@ export interface StarterSelectPartyItem {
   usePassive?: boolean;
 }
 
-export type PartyViewTab = "moves" | "shiny" | "cost";
+export type PartyViewTab = "moves" | "learnable" | "shiny" | "cost";
 
 export interface InGameMessage {
   title: string;
@@ -2763,6 +2763,138 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     const passStatusStr = hasPassiveUnlocked ? (isKo ? "이미 해금되었습니다! (상단 버튼으로 토글)" : "Already Unlocked!") : (isKo ? "사탕을 소모하여 패시브를 해금합니다." : "Spend candies to unlock passive.");
     ctx.fillText(passStatusStr, cardX + 12, card2Y + 48);
     ctx.fillText(isKo ? `패시브: ${sel.passiveAbilityKo}` : `Passive: ${sel.passiveAbility}`, cardX + 12, card2Y + 70);
+
+    return;
+  }
+
+  // =========================================================================
+  // TAB 4: LEARNABLE MOVES LIST VIEW (초기 선택 가능한 전체 기술 목록 리스트 뷰)
+  // =========================================================================
+  if (currentTab === "learnable") {
+    const cardW = panelW - 24;
+    const cardX = panelX + 12;
+
+    // 1. Top Title Header Card (y: 44 ~ 80, H: 36)
+    const headerY = 44;
+    const headerH = 36;
+
+    ctx.fillStyle = "#12141C";
+    ctx.beginPath();
+    ctx.roundRect(cardX, headerY, cardW, headerH, 6);
+    ctx.fill();
+    ctx.strokeStyle = "#5865F2";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    drawBookIcon(ctx, cardX + 16, headerY + 18, 12, 10, "#60A5FA");
+    ctx.textBaseline = "middle";
+    ctx.font = "bold 15px DungGeunMo";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "left";
+    ctx.fillText(isKo ? "배울 수 있는 기술 목록" : "Learnable Moves", cardX + 32, headerY + 18);
+
+    const starterMoves = sel.starterMoves || [];
+    const eggMoves: string[] = selProgress?.eggMoves || [];
+    const allMoves = [...starterMoves, ...eggMoves.filter((m: string) => !starterMoves.includes(m))];
+
+    ctx.font = "bold 12px DungGeunMo";
+    ctx.fillStyle = "#60A5FA";
+    ctx.textAlign = "right";
+    ctx.fillText(isKo ? `총 ${allMoves.length}개` : `${allMoves.length} Moves`, cardX + cardW - 12, headerY + 18);
+
+    // 2. Move Cards List (y: 86 ~ 296)
+    const listStartY = 86;
+    const itemH = 40;
+    const itemGap = 5;
+    const maxShow = 5;
+
+    for (let i = 0; i < Math.min(allMoves.length, maxShow); i++) {
+      const rawMove = allMoves[i];
+      const isEggMove = eggMoves.includes(rawMove);
+      const isEquipped = starterMoves.includes(rawMove);
+      const moveKey = rawMove.toLowerCase().replace(/[\s_]+/g, "-");
+      const moveInfo = MOVES_DATA[moveKey];
+      const itemY = listStartY + i * (itemH + itemGap);
+
+      ctx.fillStyle = isEquipped ? "#1C2333" : "#12141C";
+      ctx.beginPath();
+      ctx.roundRect(cardX, itemY, cardW, itemH, 4);
+      ctx.fill();
+      ctx.strokeStyle = isEquipped ? "#3B82F6" : "#282D3D";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      if (moveInfo) {
+        // Move Category Icon
+        drawMoveCategoryIcon(ctx, cardX + 8, itemY + 9, moveInfo.category);
+
+        // Move Name
+        ctx.textBaseline = "middle";
+        ctx.font = "bold 13px DungGeunMo";
+        ctx.fillStyle = isEquipped ? "#FFFFFF" : "#CBD5E1";
+        ctx.textAlign = "left";
+        const moveName = isKo ? moveInfo.nameKo : moveInfo.name.toUpperCase();
+        ctx.fillText(moveName, cardX + 34, itemY + 13);
+
+        // Type Badge
+        const tLower = moveInfo.type.toLowerCase();
+        const tColor = TYPE_COLORS[tLower] || "#777777";
+        const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || moveInfo.type) : moveInfo.type.toUpperCase();
+        const tW = 32;
+        const tH = 14;
+        const tX = cardX + 34 + ctx.measureText(moveName).width + 6;
+        const tY = itemY + 6;
+
+        ctx.fillStyle = tColor;
+        ctx.beginPath();
+        ctx.roundRect(tX, tY, tW, tH, 3);
+        ctx.fill();
+        ctx.font = "bold 10px DungGeunMo";
+        ctx.fillStyle = "#FFFFFF";
+        ctx.textAlign = "center";
+        ctx.fillText(tDisplay, tX + tW / 2, tY + tH / 2);
+
+        // Stats (Power / Acc / PP)
+        ctx.font = "bold 11px DungGeunMo";
+        ctx.fillStyle = "#94A3B8";
+        ctx.textAlign = "left";
+        const pwrStr = moveInfo.power ? `${moveInfo.power}` : "-";
+        const accStr = moveInfo.accuracy ? `${moveInfo.accuracy}%` : "-";
+        ctx.fillText(`위력:${pwrStr}  명중:${accStr}  PP:${moveInfo.pp || 35}`, cardX + 34, itemY + 28);
+
+        // Tag: [장착] or [알기술] or [기본]
+        ctx.font = "bold 11px DungGeunMo";
+        ctx.textAlign = "right";
+        if (isEquipped) {
+          ctx.fillStyle = "#22C55E";
+          ctx.fillText(isKo ? "[장착]" : "[Equipped]", cardX + cardW - 8, itemY + 20);
+        } else if (isEggMove) {
+          ctx.fillStyle = "#F59E0B";
+          ctx.fillText(isKo ? "[알기술]" : "[Egg]", cardX + cardW - 8, itemY + 20);
+        } else {
+          ctx.fillStyle = "#64748B";
+          ctx.fillText(isKo ? "[기본]" : "[Base]", cardX + cardW - 8, itemY + 20);
+        }
+      }
+    }
+
+    // 3. Bottom Guide Box (y: 310 ~ 362, H: 52)
+    const guideY = 310;
+    const guideH = 52;
+    ctx.fillStyle = "#10121A";
+    ctx.beginPath();
+    ctx.roundRect(cardX, guideY, cardW, guideH, 4);
+    ctx.fill();
+    ctx.strokeStyle = "#252B3C";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.textBaseline = "middle";
+    ctx.font = "bold 11px DungGeunMo";
+    ctx.fillStyle = "#94A3B8";
+    ctx.textAlign = "center";
+    ctx.fillText(isKo ? "알 뽑기(Gacha)에서 새로운 알기술을 해금할 수 있습니다." : "Unlock rare egg moves via Egg Gacha!", cardX + cardW / 2, guideY + 16);
+    ctx.fillText(isKo ? "좌측 1~4번 버튼으로 장착된 기술 슬롯을 확인하세요." : "Select slots 1~4 on left to view move details.", cardX + cardW / 2, guideY + 34);
 
     return;
   }
