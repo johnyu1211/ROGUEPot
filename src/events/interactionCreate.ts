@@ -1117,7 +1117,7 @@ async function renderPartyViewMessageData(
     if (!rawMove) {
       return new ButtonBuilder()
         .setCustomId(`party_move_empty_${mIdx}_${userId}`)
-        .setLabel(`${mIdx + 1}: -`)
+        .setLabel("-")
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(true);
     }
@@ -1129,8 +1129,8 @@ async function renderPartyViewMessageData(
 
     return new ButtonBuilder()
       .setCustomId(`party_pickmove_${mIdx}_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${userId}`)
-      .setLabel(`${mIdx + 1}: ${mName}`.slice(0, 20))
-      .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Secondary)
+      .setLabel(mName.slice(0, 20))
+      .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Success)
       .setDisabled(false);
   };
 
