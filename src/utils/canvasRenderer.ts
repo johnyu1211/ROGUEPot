@@ -2646,14 +2646,14 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     ctx.stroke();
 
     if (curRawMove !== "---" && curMoveInfo) {
-      // (1) Header: [Type Badge] + Move Name (Left)
+      // (1) Row 1: [Type Badge] + Move Name (Full Width Available!)
       const tLower = curMoveInfo.type.toLowerCase();
       const tColor = TYPE_COLORS[tLower] || "#777777";
       const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || curMoveInfo.type) : curMoveInfo.type.toUpperCase();
       const tBadgeW = 34;
       const tBadgeH = 20;
       const tBadgeX = cardX + 12;
-      const tBadgeY = cardY + 12;
+      const tBadgeY = cardY + 10;
 
       ctx.fillStyle = tColor;
       ctx.beginPath();
@@ -2666,29 +2666,33 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       ctx.textAlign = "center";
       ctx.fillText(tDisplay, tBadgeX + tBadgeW / 2, tBadgeY + tBadgeH / 2);
 
-      // Move Name (Left Title)
-      ctx.font = "bold 17px DungGeunMo";
+      // Move Name
+      ctx.font = "bold 16px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "left";
       const moveTitle = isKo ? curMoveInfo.nameKo : curMoveInfo.name.toUpperCase();
-      ctx.fillText(moveTitle, cardX + 54, cardY + 22);
+      ctx.fillText(moveTitle, cardX + 52, cardY + 20);
 
-      // (2) Stats: Power, Accuracy, PP (Right Aligned Header Bar)
+      // (2) Row 2: [Category Icon] + Power | Accuracy | PP (Dedicated Stat Line)
+      const cat = curMoveInfo.category;
+      drawMoveCategoryIcon(ctx, cardX + 12, cardY + 38, cat);
+
       const pwrStr = curMoveInfo.power ? String(curMoveInfo.power) : "-";
       const accStr = curMoveInfo.accuracy ? `${curMoveInfo.accuracy}%` : "-";
       const ppStr = `${curMoveInfo.pp || 35}`;
-      const statY = cardY + 22;
 
-      ctx.font = "bold 13px DungGeunMo";
-      ctx.fillStyle = "#94A3B8";
-      ctx.textAlign = "right";
       const statSummary = isKo
         ? `위력: ${pwrStr}  |  명중: ${accStr}  |  PP: ${ppStr}`
         : `Pwr: ${pwrStr}  |  Acc: ${accStr}  |  PP: ${ppStr}`;
-      ctx.fillText(statSummary, cardX + cardW - 12, statY);
+
+      ctx.font = "bold 13px DungGeunMo";
+      ctx.fillStyle = "#94A3B8";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      ctx.fillText(statSummary, cardX + 38, cardY + 48);
 
       // (3) Divider Line
-      const divY = cardY + 44;
+      const divY = cardY + 64;
       ctx.strokeStyle = "#252E42";
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -2696,21 +2700,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       ctx.lineTo(cardX + cardW - 10, divY);
       ctx.stroke();
 
-      // (4) Category Icon & Label
-      const cat = curMoveInfo.category;
-      drawMoveCategoryIcon(ctx, cardX + 12, cardY + 54, cat);
-
-      const catLabel = isKo
-        ? (cat === "physical" ? "물리 기술" : cat === "special" ? "특수 기술" : "변화 기술")
-        : (cat === "physical" ? "Physical" : cat === "special" ? "Special" : "Status");
-
-      ctx.font = "bold 12px DungGeunMo";
-      ctx.fillStyle = cat === "physical" ? "#F87171" : cat === "special" ? "#60A5FA" : "#94A3B8";
-      ctx.textAlign = "left";
-      ctx.textBaseline = "middle";
-      ctx.fillText(catLabel, cardX + 38, cardY + 64);
-
-      // (5) Description Content (Full width enclosed inside card)
+      // (4) Row 3: Description Content (Spacious & Clean Wrapping)
       ctx.textBaseline = "top";
       ctx.font = "14px DungGeunMo";
       ctx.fillStyle = "#E2E8F0";
@@ -2718,7 +2708,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       const desc = isKo
         ? (curMoveInfo.description || "효과 설명이 없습니다.")
         : (curMoveInfo.descriptionEn || MOVES_EN_DESC[curMoveKey] || "No description available.");
-      drawWrappedText(ctx, desc, cardX + 12, cardY + 82, cardW - 24, 22);
+      drawWrappedText(ctx, desc, cardX + 12, cardY + 76, cardW - 24, 21);
     } else {
       ctx.textBaseline = "middle";
       ctx.font = "bold 14px DungGeunMo";
