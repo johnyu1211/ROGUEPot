@@ -2767,23 +2767,21 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   }
 
   // =========================================================================
+  // =========================================================================
   // TAB 4: LEARNABLE MOVES LIST VIEW (초기 선택 가능한 전체 기술 목록 리스트 뷰)
   // =========================================================================
   if (currentTab === "learnable") {
-    const cardW = panelW - 24;
-    const cardX = panelX + 12;
+    const cardW = bodyW - 20;
+    const cardX = bodyX + 10;
 
     // 1. Top Title Header Card (y: 44 ~ 80, H: 36)
     const headerY = 44;
     const headerH = 36;
 
-    ctx.fillStyle = "#12141C";
+    ctx.fillStyle = "#242C3E";
     ctx.beginPath();
     ctx.roundRect(cardX, headerY, cardW, headerH, 6);
     ctx.fill();
-    ctx.strokeStyle = "#5865F2";
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
 
     drawBookIcon(ctx, cardX + 16, headerY + 18, 12, 10, "#60A5FA");
     ctx.textBaseline = "middle";
@@ -2815,13 +2813,16 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       const moveInfo = MOVES_DATA[moveKey];
       const itemY = listStartY + i * (itemH + itemGap);
 
-      ctx.fillStyle = isEquipped ? "#1C2333" : "#12141C";
+      ctx.fillStyle = isEquipped ? "#2E3A56" : "#242C3E";
       ctx.beginPath();
       ctx.roundRect(cardX, itemY, cardW, itemH, 4);
       ctx.fill();
-      ctx.strokeStyle = isEquipped ? "#3B82F6" : "#282D3D";
-      ctx.lineWidth = 1;
-      ctx.stroke();
+
+      if (isEquipped) {
+        ctx.strokeStyle = "#5865F2";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
 
       if (moveInfo) {
         // Move Category Icon
@@ -2880,13 +2881,10 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     // 3. Bottom Guide Box (y: 310 ~ 362, H: 52)
     const guideY = 310;
     const guideH = 52;
-    ctx.fillStyle = "#10121A";
+    ctx.fillStyle = "#242C3E";
     ctx.beginPath();
     ctx.roundRect(cardX, guideY, cardW, guideH, 4);
     ctx.fill();
-    ctx.strokeStyle = "#252B3C";
-    ctx.lineWidth = 1;
-    ctx.stroke();
 
     ctx.textBaseline = "middle";
     ctx.font = "bold 11px DungGeunMo";
