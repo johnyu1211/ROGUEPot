@@ -2738,7 +2738,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
 
     ctx.font = "bold 11px DungGeunMo";
     ctx.fillStyle = "#94A3B8";
-    ctx.fillText(isKo ? "하단 [✨ 이로치 폼] 버튼으로 원하는 폼을 선택하세요." : "Select your desired shiny tier using the buttons below.", contentX + contentW / 2, guideY + 38);
+    ctx.fillText(isKo ? "하단 [ ⚪ | 🟡 | 🔵 | 🔴 ] 버튼으로 원하는 폼을 선택하세요." : "Select your desired form using the [ ⚪ | 🟡 | 🔵 | 🔴 ] buttons below.", contentX + contentW / 2, guideY + 38);
 
     return;
   }
