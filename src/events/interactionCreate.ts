@@ -939,7 +939,7 @@ async function renderPartyViewMessageData(
   const partyParam = serializePartyParam(partyStates);
   const flagsParam = `${isShinyFilter ? 1 : 0}_${isHaFilter ? 1 : 0}_${isPassiveFilter ? 1 : 0}`;
 
-  // Helper to create Party Slot Selector Button
+  // Helper to create Party Slot Selector Button (P1, P2, P3, P4, P5, P6)
   const createPartySlotBtn = (idx: number) => {
     const member = selectedParty[idx];
     if (!member) {
@@ -952,7 +952,7 @@ async function renderPartyViewMessageData(
     const isSelected = safePartyIdx === idx;
     return new ButtonBuilder()
       .setCustomId(`party_pick_${idx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
-      .setLabel(`${idx + 1}. ${member.name.slice(0, 4)}`)
+      .setLabel(`P${idx + 1}`)
       .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Secondary);
   };
 
