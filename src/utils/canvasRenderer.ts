@@ -2485,10 +2485,6 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
         ctx.strokeStyle = "#5865F2";
         ctx.lineWidth = 2;
         ctx.stroke();
-      } else {
-        ctx.strokeStyle = isEmpty ? "#1F2434" : "#353F57";
-        ctx.lineWidth = 1;
-        ctx.stroke();
       }
 
       if (rawMove === "---" || !moveInfo) {
@@ -2653,9 +2649,11 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       ctx.roundRect(cX, cY, cW, cardH, 5);
       ctx.fill();
 
-      ctx.strokeStyle = isCurrent ? tierColors[t] : (isUnlocked ? "#353F57" : "#1F2434");
-      ctx.lineWidth = isCurrent ? 2 : 1;
-      ctx.stroke();
+      if (isCurrent) {
+        ctx.strokeStyle = tierColors[t];
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
 
       // Tier Badge (Left)
       const bW = 68;
@@ -2723,9 +2721,6 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     ctx.beginPath();
     ctx.roundRect(cardX, infoCardY, cardW, infoCardH, 6);
     ctx.fill();
-    ctx.strokeStyle = "#353F57";
-    ctx.lineWidth = 1;
-    ctx.stroke();
 
     // Candy Icon + Title
     drawCandyIcon(ctx, cardX + 18, infoCardY + 22, 6.5, "#F59E0B", "#FEF08A");
@@ -2753,9 +2748,6 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     ctx.beginPath();
     ctx.roundRect(cardX, card1Y, cardW, card1H, 6);
     ctx.fill();
-    ctx.strokeStyle = "#353F57";
-    ctx.lineWidth = 1;
-    ctx.stroke();
 
     ctx.font = "bold 14px DungGeunMo";
     ctx.fillStyle = "#60A5FA";
