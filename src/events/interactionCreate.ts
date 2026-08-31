@@ -939,7 +939,7 @@ async function renderPartyViewMessageData(
   const partyParam = serializePartyParam(partyStates);
   const flagsParam = `${isShinyFilter ? 1 : 0}_${isHaFilter ? 1 : 0}_${isPassiveFilter ? 1 : 0}`;
 
-  // Helper to create Party Slot Selector Button (P1, P2, P3, P4, P5, P6)
+  // Helper to create Party Slot Selector Button (P1, P2, P3, P4, P5, P6) with Toggle Deselect
   const createPartySlotBtn = (idx: number) => {
     const member = selectedParty[idx];
     if (!member) {
@@ -950,8 +950,9 @@ async function renderPartyViewMessageData(
         .setDisabled(true);
     }
     const isSelected = safePartyIdx === idx;
+    const nextIdx = isSelected ? -1 : idx;
     return new ButtonBuilder()
-      .setCustomId(`party_pick_${idx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
+      .setCustomId(`party_pick_${nextIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
       .setLabel(`P${idx + 1}`)
       .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Secondary);
   };
@@ -1778,9 +1779,10 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 2-1-P2. Pick Party Member in Party View Screen
+      // 2-1-P2. Pick Party Member in Party View Screen (With Deselect Toggle)
       if (customId.startsWith("party_pick_")) {
-        const targetIdx = parseInt(parts[2], 10) || 0;
+        const rawIdx = parseInt(parts[2], 10);
+        const targetIdx = isNaN(rawIdx) ? -1 : rawIdx;
         const gen = parseInt(parts[3], 10) || 0;
         const page = parseInt(parts[4], 10) || 1;
         const dexNo = parseInt(parts[5], 10) || 1;
