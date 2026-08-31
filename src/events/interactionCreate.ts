@@ -1009,12 +1009,12 @@ async function renderPartyViewMessageData(
         .setCustomId(`party_setha_0_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
         .setLabel(abBtnLabel.slice(0, 20))
         .setStyle(isNormalAbActive ? ButtonStyle.Primary : ButtonStyle.Secondary)
-        .setDisabled(!inspectedStarter || isNormalAbActive || !hasHa),
+        .setDisabled(!inspectedStarter || !hasHa),
       new ButtonBuilder()
         .setCustomId(`party_setha_1_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
         .setLabel(haBtnLabel.slice(0, 20))
         .setStyle(isHaActive ? ButtonStyle.Primary : ButtonStyle.Secondary)
-        .setDisabled(!inspectedStarter || isHaActive || !hasHa),
+        .setDisabled(!inspectedStarter || !hasHa),
       new ButtonBuilder()
         .setCustomId(`party_togglepass_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
         .setLabel(passBtnLabel.slice(0, 20))
@@ -1031,18 +1031,15 @@ async function renderPartyViewMessageData(
       new ButtonBuilder()
         .setCustomId(`party_tab_moves_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${selectedMoveIdx}_${userId}`)
         .setLabel(isKo ? "⚔️ 기술 관리" : "⚔️ Moves")
-        .setStyle(partyTab === "moves" ? ButtonStyle.Primary : ButtonStyle.Secondary)
-        .setDisabled(partyTab === "moves"),
+        .setStyle(partyTab === "moves" ? ButtonStyle.Primary : ButtonStyle.Secondary),
       new ButtonBuilder()
         .setCustomId(`party_tab_shiny_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${selectedMoveIdx}_${userId}`)
         .setLabel(isKo ? "✨ 이로치 폼" : "✨ Shiny Form")
-        .setStyle(partyTab === "shiny" ? ButtonStyle.Primary : ButtonStyle.Secondary)
-        .setDisabled(partyTab === "shiny"),
+        .setStyle(partyTab === "shiny" ? ButtonStyle.Primary : ButtonStyle.Secondary),
       new ButtonBuilder()
         .setCustomId(`party_tab_cost_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${selectedMoveIdx}_${userId}`)
         .setLabel(isKo ? "🍬 코스트" : "🍬 Cost")
         .setStyle(partyTab === "cost" ? ButtonStyle.Primary : ButtonStyle.Secondary)
-        .setDisabled(partyTab === "cost")
     )
   );
 
