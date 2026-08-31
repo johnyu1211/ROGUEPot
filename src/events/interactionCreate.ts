@@ -872,6 +872,63 @@ async function renderStarterSelectMessageData(
   return { embeds: [], files: [attachment], attachments: [], components };
 }
 
+// Track active in-game message auto-dismiss timers per user/message
+const activeDismissTokens = new Map<string, number>();
+
+function scheduleInGameMessageDismiss(
+  client: ExtendedClient,
+  interaction: any,
+  slotId: number,
+  gen: number,
+  page: number,
+  dexNo: number,
+  partyParam: string,
+  isShiny: boolean,
+  isHa: boolean,
+  isPassive: boolean,
+  currentIdx: number,
+  tab: PartyViewTab,
+  moveIdx: number,
+  inGameMsg?: InGameMessage
+) {
+  if (!inGameMsg || !interaction.message) return;
+
+  const totalLen = (inGameMsg.title?.length || 0) + (inGameMsg.text?.length || 0);
+  // Base 2500ms minimum, +45ms per character for natural reading speed, capped at 7500ms max
+  const duration = Math.min(7500, Math.max(2500, 1800 + totalLen * 45));
+
+  const token = Date.now();
+  const userKey = `${interaction.user.id}_${interaction.message.id}`;
+  activeDismissTokens.set(userKey, token);
+
+  setTimeout(async () => {
+    try {
+      if (activeDismissTokens.get(userKey) === token) {
+        activeDismissTokens.delete(userKey);
+        const cleanPartyData = await renderPartyViewMessageData(
+          client,
+          interaction.user.id,
+          slotId,
+          gen,
+          page,
+          dexNo,
+          partyParam,
+          isShiny,
+          isHa,
+          isPassive,
+          currentIdx,
+          tab,
+          moveIdx,
+          undefined // Auto-dismiss message box
+        );
+        await interaction.message.edit(cleanPartyData);
+      }
+    } catch {
+      // Message deleted or expired, gracefully ignore
+    }
+  }, duration);
+}
+
 async function renderPartyViewMessageData(
   client: ExtendedClient,
   userId: string,
@@ -1983,6 +2040,7 @@ export const interactionCreateEvent: BotEvent = {
         const newPartyParam = serializePartyParam(partyStates);
         const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, currentIdx, tab, moveIdx, inGameMsg);
         await interaction.update(partyData);
+        scheduleInGameMessageDismiss(client, interaction, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, currentIdx, tab, moveIdx, inGameMsg);
         return;
       }
 
@@ -2037,6 +2095,7 @@ export const interactionCreateEvent: BotEvent = {
         const newPartyParam = serializePartyParam(partyStates);
         const partyData = await renderPartyViewMessageData(client, interaction.user.id, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, currentIdx, tab, moveIdx, inGameMsg);
         await interaction.update(partyData);
+        scheduleInGameMessageDismiss(client, interaction, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, currentIdx, tab, moveIdx, inGameMsg);
         return;
       }
 
