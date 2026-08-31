@@ -1868,17 +1868,12 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
         ctx.stroke();
       }
 
-      // Slot Badge (Top-Left: P1 ~ P6)
-      ctx.fillStyle = isInspected ? "#5865F2" : "#242C42";
-      ctx.beginPath();
-      ctx.roundRect(pX + 5, pY + 5, 24, 15, 3);
-      ctx.fill();
-
+      // Slot Number Text (Top-Left: P1 ~ P6, Clean text without badge box)
       ctx.textBaseline = "middle";
-      ctx.font = "bold 11px DungGeunMo";
-      ctx.fillStyle = isInspected ? "#FFFFFF" : "#8E96AB";
-      ctx.textAlign = "center";
-      ctx.fillText(`P${pIdx + 1}`, pX + 17, pY + 12);
+      ctx.font = "bold 13px DungGeunMo";
+      ctx.fillStyle = isInspected ? "#5865F2" : "#64748B";
+      ctx.textAlign = "left";
+      ctx.fillText(`P${pIdx + 1}`, pX + 8, pY + 12);
 
       if (member) {
         // Sprite (Centered Left, 44x44 area)
