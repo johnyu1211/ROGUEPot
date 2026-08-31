@@ -1125,7 +1125,7 @@ export async function renderPartyViewMessageData(
     if (!rawMove) {
       return new ButtonBuilder()
         .setCustomId(`party_move_empty_${mIdx}_${userId}`)
-        .setLabel("\u2800".repeat(10))
+        .setLabel("-".padEnd(10, "\u2800"))
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(true);
     }
