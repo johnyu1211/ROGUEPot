@@ -1125,7 +1125,7 @@ export async function renderPartyViewMessageData(
     if (!rawMove) {
       return new ButtonBuilder()
         .setCustomId(`party_move_empty_${mIdx}_${userId}`)
-        .setLabel(" ")
+        .setLabel("\u2800")
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(true);
     }
@@ -1134,7 +1134,7 @@ export async function renderPartyViewMessageData(
     const moveInfo = MOVES_DATA[moveKey];
     const mName = isKo ? (moveInfo?.nameKo || rawMove) : rawMove;
     const isSelected = partyTab === "moves" && selectedMoveIdx === mIdx;
-    const label = (mName || "").slice(0, 6) || " ";
+    const label = (mName || "").slice(0, 6) || "\u2800";
 
     return new ButtonBuilder()
       .setCustomId(`party_pickmove_${mIdx}_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${userId}`)
