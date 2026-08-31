@@ -2419,13 +2419,13 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       const mY = 48 + mRow * (moveChipH + 6);
       const isSel = selectedMoveIdx === m;
 
-      ctx.fillStyle = isSel ? "#1E293B" : "#131622";
+      ctx.fillStyle = isSel ? "#222738" : "#131622";
       ctx.beginPath();
       ctx.roundRect(mX, mY, moveChipW, moveChipH, 6);
       ctx.fill();
 
-      ctx.strokeStyle = isSel ? "#60A5FA" : "#252B3D";
-      ctx.lineWidth = isSel ? 1.5 : 1;
+      ctx.strokeStyle = isSel ? "#5865F2" : "#252B3D";
+      ctx.lineWidth = isSel ? 2 : 1;
       ctx.stroke();
 
       if (rawMove === "---" || !moveInfo) {
