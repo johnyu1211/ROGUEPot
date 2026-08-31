@@ -2410,9 +2410,9 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   // TAB 1 (DEFAULT): MOVES TAB (Detailed Move Inspector + Ability/Passive Footer)
   // =========================================================================
   if (currentTab === "moves") {
-    // 1. Move Selection Chips (2x2 Grid, y: 44 ~ 116)
+    // 1. Move Selection Chips (2x2 Balanced Split Grid, y: 44 ~ 116)
     const moveChipW = (panelW - 24 - 6) / 2;
-    const moveChipH = 32;
+    const moveChipH = 33;
 
     for (let m = 0; m < 4; m++) {
       const rawMove = sel.starterMoves[m] || "---";
@@ -2427,31 +2427,51 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       const mY = 44 + mRow * (moveChipH + 6);
       const isSel = selectedMoveIdx === m;
 
-      ctx.fillStyle = isSel ? "#202A42" : "#12141C";
+      ctx.fillStyle = isSel ? "#1E293B" : "#131622";
       ctx.beginPath();
       ctx.roundRect(mX, mY, moveChipW, moveChipH, 4);
       ctx.fill();
 
-      ctx.strokeStyle = isSel ? "#60A5FA" : "#282D3D";
+      ctx.strokeStyle = isSel ? "#60A5FA" : "#252B3D";
       ctx.lineWidth = isSel ? 1.5 : 1;
       ctx.stroke();
 
-      if (rawMove === "---" || !category) {
+      if (rawMove === "---" || !category || !moveInfo) {
         ctx.textBaseline = "middle";
         ctx.font = "bold 13px DungGeunMo";
         ctx.fillStyle = "#475569";
         ctx.textAlign = "center";
         ctx.fillText("---", mX + moveChipW / 2, mY + moveChipH / 2);
       } else {
+        // Left: Category Icon
         const iconX = mX + 5;
         const iconY = mY + (moveChipH - 20) / 2;
         drawMoveCategoryIcon(ctx, iconX, iconY, category);
 
+        // Center: Move Name
         ctx.textBaseline = "middle";
         ctx.font = "bold 13px DungGeunMo";
         ctx.fillStyle = isSel ? "#FFFFFF" : "#CBD5E1";
         ctx.textAlign = "left";
-        ctx.fillText(mDisplay, mX + 32, mY + moveChipH / 2);
+        ctx.fillText(mDisplay, mX + 31, mY + moveChipH / 2);
+
+        // Right: Type Badge (Mini)
+        const tLower = moveInfo.type.toLowerCase();
+        const tColor = TYPE_COLORS[tLower] || "#777777";
+        const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || moveInfo.type) : moveInfo.type.toUpperCase();
+        const tW = 28;
+        const tH = 15;
+        const tX = mX + moveChipW - tW - 5;
+        const tY = mY + (moveChipH - tH) / 2;
+
+        ctx.fillStyle = tColor;
+        ctx.beginPath();
+        ctx.roundRect(tX, tY, tW, tH, 3);
+        ctx.fill();
+        ctx.font = "bold 10px DungGeunMo";
+        ctx.fillStyle = "#FFFFFF";
+        ctx.textAlign = "center";
+        ctx.fillText(tDisplay, tX + tW / 2, tY + tH / 2);
       }
     }
 
