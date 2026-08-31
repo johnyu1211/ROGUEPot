@@ -2412,16 +2412,16 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   // =========================================================================
   if (currentTab === "moves") {
     // 1. Move Selection Tiles (Spacious 2x2 Grid, y: 48 ~ 154, H: 49 each)
+    // 1. Move Selection Tiles (Clean 2x2 Grid, only [Type Badge] + [Move Name], H: 40 each)
     const chipGap = 8;
     const moveChipW = Math.floor((panelW - 20 - chipGap) / 2);
-    const moveChipH = 49;
+    const moveChipH = 40;
 
     for (let m = 0; m < 4; m++) {
       const rawMove = sel.starterMoves[m] || "---";
       const moveKey = rawMove.toLowerCase().replace(/[\s_]+/g, "-");
       const moveInfo = MOVES_DATA[moveKey];
       const mDisplay = isKo ? (moveInfo?.nameKo || rawMove) : rawMove;
-      const category = moveInfo?.category;
 
       const mCol = m % 2;
       const mRow = Math.floor(m / 2);
@@ -2438,52 +2438,37 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       ctx.lineWidth = isSel ? 1.5 : 1;
       ctx.stroke();
 
-      if (rawMove === "---" || !category || !moveInfo) {
+      if (rawMove === "---" || !moveInfo) {
         ctx.textBaseline = "middle";
         ctx.font = "bold 14px DungGeunMo";
         ctx.fillStyle = "#475569";
         ctx.textAlign = "center";
         ctx.fillText("---", mX + moveChipW / 2, mY + moveChipH / 2);
       } else {
-        // Row 1 (y: mY + 16): [Type Badge] (Left Front) + [Category Icon] + [Move Name]
+        // [Type Badge] (Left Front, Vertically Centered)
         const tLower = moveInfo.type.toLowerCase();
         const tColor = TYPE_COLORS[tLower] || "#777777";
         const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || moveInfo.type) : moveInfo.type.toUpperCase();
-        const tW = 30;
-        const tH = 16;
-        const tX = mX + 6;
-        const tY = mY + 8;
+        const tW = 32;
+        const tH = 18;
+        const tX = mX + 8;
+        const tY = mY + (moveChipH - tH) / 2;
 
         ctx.fillStyle = tColor;
         ctx.beginPath();
         ctx.roundRect(tX, tY, tW, tH, 3);
         ctx.fill();
-        ctx.font = "bold 10px DungGeunMo";
+        ctx.font = "bold 11px DungGeunMo";
         ctx.fillStyle = "#FFFFFF";
         ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
         ctx.fillText(tDisplay, tX + tW / 2, tY + tH / 2);
 
-        // Category Icon (Next to Type Badge)
-        const iconX = mX + 40;
-        const iconY = mY + 6;
-        drawMoveCategoryIcon(ctx, iconX, iconY, category);
-
-        // Move Name (Next to Category Icon)
-        ctx.textBaseline = "middle";
+        // [Move Name] (Next to Type Badge, Vertically Centered)
         ctx.font = "bold 14px DungGeunMo";
-        ctx.fillStyle = isSel ? "#FFFFFF" : "#E2E8F0";
+        ctx.fillStyle = isSel ? "#FFFFFF" : "#CBD5E1";
         ctx.textAlign = "left";
-        ctx.fillText(mDisplay, mX + 66, mY + 16);
-
-        // Row 2 (y: mY + 36): Power & PP
-        ctx.font = "bold 11px DungGeunMo";
-        ctx.fillStyle = "#94A3B8";
-        ctx.textAlign = "left";
-        const pwrLabel = moveInfo.power ? `위력:${moveInfo.power}` : "변화";
-        ctx.fillText(pwrLabel, mX + 8, mY + 36);
-
-        ctx.textAlign = "right";
-        ctx.fillText(`PP:${moveInfo.pp || 35}`, mX + moveChipW - 8, mY + 36);
+        ctx.fillText(mDisplay, mX + 46, mY + moveChipH / 2);
       }
     }
 
@@ -2492,8 +2477,8 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     ctx.strokeStyle = "#252B3D";
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(panelX + 10, 156);
-    ctx.lineTo(panelX + panelW - 10, 156);
+    ctx.moveTo(panelX + 10, 142);
+    ctx.lineTo(panelX + panelW - 10, 142);
     ctx.stroke();
 
     const curRawMove = sel.starterMoves[selectedMoveIdx] || "---";
@@ -2508,7 +2493,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       const tBadgeW = 38;
       const tBadgeH = 18;
       const tBadgeX = panelX + 12;
-      const tBadgeY = 166;
+      const tBadgeY = 152;
 
       ctx.fillStyle = tColor;
       ctx.beginPath();
@@ -2526,10 +2511,10 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "left";
       const moveTitle = isKo ? curMoveInfo.nameKo : curMoveInfo.name.toUpperCase();
-      ctx.fillText(moveTitle, panelX + 56, 176);
+      ctx.fillText(moveTitle, panelX + 56, 162);
 
-      // (2) Stats Row: [Category Icon : Power] / Accuracy / PP (y: 202)
-      const statY = 206;
+      // (2) Stats Row: [Category Icon : Power] / Accuracy / PP (y: 190)
+      const statY = 192;
       const colW = (panelW - 24) / 3;
 
       const pwrStr = curMoveInfo.power ? String(curMoveInfo.power) : "-";
@@ -2538,7 +2523,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
 
       // Column 1: Category Icon + ": " + Power
       const cat = curMoveInfo.category;
-      drawMoveCategoryIcon(ctx, panelX + 12, 196, cat);
+      drawMoveCategoryIcon(ctx, panelX + 12, 182, cat);
 
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#94A3B8";
@@ -2569,20 +2554,20 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       ctx.strokeStyle = "#1E2433";
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(panelX + 12, 224);
-      ctx.lineTo(panelX + panelW - 12, 224);
+      ctx.moveTo(panelX + 12, 212);
+      ctx.lineTo(panelX + panelW - 12, 212);
       ctx.stroke();
 
       // (3) Description Header & Content (Spacious full-width typography)
       ctx.font = "bold 12px DungGeunMo";
       ctx.fillStyle = "#64748B";
       ctx.textAlign = "left";
-      ctx.fillText(isKo ? "효과 설명" : "Description", panelX + 12, 240);
+      ctx.fillText(isKo ? "효과 설명" : "Description", panelX + 12, 228);
 
       ctx.font = "14px DungGeunMo";
       ctx.fillStyle = "#F1F5F9";
       const desc = curMoveInfo.description || (isKo ? "효과 설명이 없습니다." : "No description available.");
-      drawWrappedText(ctx, desc, panelX + 12, 258, panelW - 24, 22);
+      drawWrappedText(ctx, desc, panelX + 12, 248, panelW - 24, 22);
     } else {
       ctx.textBaseline = "middle";
       ctx.font = "bold 14px DungGeunMo";
