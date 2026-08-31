@@ -1694,10 +1694,6 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
         ctx.drawImage(selectedSprite, showBoxX + (showBoxSize - sprW) / 2, showBoxY + (showBoxSize - sprH) / 2, sprW, sprH);
       }
 
-      if (selShinyTier > 0) {
-        drawShinyTierSparkles(ctx, showBoxX + 4, showBoxY + showBoxSize - 14, selShinyTier, 7.5);
-      }
-
       // Dex Tag & Name
       const infoX = showBoxX + showBoxSize + 8;
       const headerY = showBoxY + 11;
@@ -1714,7 +1710,13 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
 
       ctx.font = "bold 17px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
-      ctx.fillText(isKo ? sel.nameKo : sel.name, nameX, headerY);
+      const displayName = isKo ? sel.nameKo : sel.name;
+      ctx.fillText(displayName, nameX, headerY);
+
+      if (selShinyTier > 0) {
+        const nameW = ctx.measureText(displayName).width;
+        drawShinyTierSparkles(ctx, nameX + nameW + 5, headerY, selShinyTier, 5.5);
+      }
 
       // Type Badges & Ability / Passive Tags
       const types = sel.types && sel.types.length > 0 ? sel.types : ["normal"];
@@ -1939,11 +1941,6 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
       ctx.drawImage(selectedSprite, showBoxX + (showBoxSize - sprW) / 2, showBoxY + (showBoxSize - sprH) / 2, sprW, sprH);
     }
 
-    // Shiny Tier Vector Sparkle Star on Bottom-Left Corner of Sprite Box
-    if (selShinyTier > 0) {
-      drawShinyTierSparkles(ctx, showBoxX + 4, showBoxY + showBoxSize - 14, selShinyTier, 7.5);
-    }
-
     // Name + Dex next to sprite (Enlarged, True Middle Baseline)
     const infoX = showBoxX + showBoxSize + 10;
     const headerY = showBoxY + 12;
@@ -1960,7 +1957,13 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
 
     ctx.font = "bold 19px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
-    ctx.fillText(isKo ? sel.nameKo : sel.name, nameX, headerY);
+    const displayName = isKo ? sel.nameKo : sel.name;
+    ctx.fillText(displayName, nameX, headerY);
+
+    if (selShinyTier > 0) {
+      const nameW = ctx.measureText(displayName).width;
+      drawShinyTierSparkles(ctx, nameX + nameW + 6, headerY, selShinyTier, 6);
+    }
 
     // 2-COLUMN SECTION: Left = Type Badges, Right = Ability & Passive
     const types = sel.types && sel.types.length > 0 ? sel.types : ["normal"];
