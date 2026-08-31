@@ -2738,9 +2738,6 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
         ctx.fillStyle = "#22C55E";
         ctx.textAlign = "left";
         ctx.fillText(activeLabel, startX + 14, cY + 100);
-
-        // Top-Right Corner Vector Check Badge
-        drawVectorCheck(ctx, cX + tileW - 14, cY + 14, 7, "#22C55E");
       } else if (isUnlocked) {
         ctx.fillStyle = tierColors[t] || "#94A3B8";
         ctx.fillText(tierLucks[t], cX + tileW / 2, cY + 100);
