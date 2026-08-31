@@ -16,7 +16,7 @@ import { createBaseEmbed, COLORS } from "../utils/embed.js";
 import { renderTitleScreen, renderBagScreen, renderMultiplayerScreen, renderPokedexScreen, renderStarterSelectScreen, renderGenSelectScreen, renderEggGachaScreen, StarterSelectPartyItem, PartyViewTab, InGameMessage, getPokemonSprite, isSpriteCached } from "../utils/canvasRenderer.js";
 import { MOVES_DATA } from "../data/movesKo.js";
 import { saveService, PartyPokemon } from "../services/saveService.js";
-import { getPokemonByQuery, getPokemonByDexNumber, getPokemonPage, getAbilityKoreanName, getAbilityDetail, ABILITY_DETAILED_DESC_KO } from "../services/pokeApiService.js";
+import { getPokemonByQuery, getPokemonByDexNumber, getPokemonPage, getAbilityKoreanName, getAbilityDetail, ABILITY_DETAILED_DESC_KO, ABILITY_DETAILED_DESC_EN } from "../services/pokeApiService.js";
 import { STARTER_DATABASE, GENERATION_INFO, getStartersByGen, getStarterByDexNumber, DEFAULT_MAX_COST, StarterEntry } from "../data/starterCosts.js";
 import { getUserStarters, getUserStarter } from "../services/starterService.js";
 import { pullEggs, getUserEggs, advanceEggHatching } from "../services/eggService.js";
@@ -2093,7 +2093,9 @@ export const interactionCreateEvent: BotEvent = {
             // Clicked Hidden Ability button
             const haName = isKo ? s?.hiddenAbilityKo : s?.hiddenAbility;
             const haKey = (s?.hiddenAbility || "").toLowerCase().replace(/[\s_]+/g, "-");
-            const haDesc = ABILITY_DETAILED_DESC_KO[haKey] || (isKo ? "포켓몬의 숨겨진 특성입니다." : "Hidden ability of this Pokemon.");
+            const haDesc = isKo
+              ? (ABILITY_DETAILED_DESC_KO[haKey] || "포켓몬의 숨겨진 특성입니다.")
+              : (ABILITY_DETAILED_DESC_EN[haKey] || "Hidden ability of this Pokémon.");
 
             if (prog?.hasHiddenAbility) {
               targetMember.useHiddenAbility = true;
@@ -2101,7 +2103,7 @@ export const interactionCreateEvent: BotEvent = {
                 title: isKo ? `[숨특] ${haName} (적용 완료)` : `[HA] ${haName} (Active)`,
                 text: isKo
                   ? `${haDesc}\n[적용] 숨겨진 특성 [${haName}]이 활성화되었습니다.`
-                  : `${haDesc}\n[Equipped] Hidden ability active.`,
+                  : `${haDesc}\n[Equipped] Hidden ability [${haName}] is now active.`,
                 type: "success",
               };
             } else {
@@ -2109,7 +2111,7 @@ export const interactionCreateEvent: BotEvent = {
                 title: isKo ? `[숨특] ${haName} (잠김)` : `[HA] ${haName} (Locked)`,
                 text: isKo
                   ? `${haDesc}\n[잠김] 아직 해금되지 않은 특성입니다. (사탕/알 부화 필요)`
-                  : `${haDesc}\n[Locked] Unlock via eggs or candies.`,
+                  : `${haDesc}\n[Locked] Not unlocked yet. (Requires candies or egg hatching)`,
                 type: "lock",
               };
             }
@@ -2118,13 +2120,15 @@ export const interactionCreateEvent: BotEvent = {
             targetMember.useHiddenAbility = false;
             const abName = isKo ? s?.abilityKo : s?.ability;
             const abKey = (s?.ability || "").toLowerCase().replace(/[\s_]+/g, "-");
-            const abDesc = ABILITY_DETAILED_DESC_KO[abKey] || (isKo ? "포켓몬의 일반 특성입니다." : "Regular ability of this Pokemon.");
+            const abDesc = isKo
+              ? (ABILITY_DETAILED_DESC_KO[abKey] || "포켓몬의 일반 특성입니다.")
+              : (ABILITY_DETAILED_DESC_EN[abKey] || "Regular ability of this Pokémon.");
 
             inGameMsg = {
               title: isKo ? `[일반 특성] ${abName} (적용 완료)` : `[Ability] ${abName} (Active)`,
               text: isKo
                 ? `${abDesc}\n[적용] 일반 특성 [${abName}]이 활성화되었습니다.`
-                : `${abDesc}\n[Equipped] Regular ability active.`,
+                : `${abDesc}\n[Equipped] Regular ability [${abName}] is now active.`,
               type: "info",
             };
           }
@@ -2163,7 +2167,9 @@ export const interactionCreateEvent: BotEvent = {
           const prog = s ? userStarters.get(s.speciesId) : null;
           const passName = isKo ? s?.passiveAbilityKo : s?.passiveAbility;
           const passKey = (s?.passiveAbility || "").toLowerCase().replace(/[\s_]+/g, "-");
-          const passDesc = ABILITY_DETAILED_DESC_KO[passKey] || (isKo ? "포케로그 스타팅 고유의 강력한 패시브 특성입니다." : "A unique PokeRogue starter passive ability.");
+          const passDesc = isKo
+            ? (ABILITY_DETAILED_DESC_KO[passKey] || "포케로그 스타팅 고유의 강력한 패시브 특성입니다.")
+            : (ABILITY_DETAILED_DESC_EN[passKey] || "A unique PokéRogue starter passive ability.");
 
           if (prog?.passiveUnlocked) {
             targetMember.usePassive = !targetMember.usePassive;
@@ -2171,7 +2177,7 @@ export const interactionCreateEvent: BotEvent = {
               title: isKo ? `[패시브] ${passName} (${targetMember.usePassive ? "ON" : "OFF"})` : `[Passive] ${passName} (${targetMember.usePassive ? "ON" : "OFF"})`,
               text: isKo
                 ? `${passDesc}\n[적용] 패시브 상태가 [${targetMember.usePassive ? "ON / 출전 코스트 1C 할인" : "OFF"}] 로 변경되었습니다.`
-                : `${passDesc}\n[Equipped] Passive toggled: ${targetMember.usePassive ? "ON (-1C)" : "OFF"}.`,
+                : `${passDesc}\n[Equipped] Passive [${passName}] toggled ${targetMember.usePassive ? "ON (-1C Cost)" : "OFF"}.`,
               type: targetMember.usePassive ? "success" : "info",
             };
           } else {
@@ -2179,7 +2185,7 @@ export const interactionCreateEvent: BotEvent = {
               title: isKo ? `[패시브] ${passName} (잠김)` : `[Passive] ${passName} (Locked)`,
               text: isKo
                 ? `${passDesc}\n[잠김] 사탕을 모아 코스트 관리 탭에서 패시브를 해금할 수 있습니다.`
-                : `${passDesc}\n[Locked] Collect candies to unlock in Cost tab.`,
+                : `${passDesc}\n[Locked] Collect candies to unlock passive in Cost tab.`,
               type: "lock",
             };
           }
