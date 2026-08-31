@@ -868,9 +868,11 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
     ctx.roundRect(sx, sy, slotW, slotH, 6);
     ctx.fill();
 
-    ctx.strokeStyle = isSelected ? "#FFFFFF" : "#282D3D";
-    ctx.lineWidth = isSelected ? 1.5 : 1;
-    ctx.stroke();
+    if (isSelected) {
+      ctx.strokeStyle = "#5865F2";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
 
     if (p) {
       const displayName = (isKo && p.koreanName) ? p.koreanName : p.name;
@@ -1871,9 +1873,11 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
       ctx.roundRect(pX, pY, slotW, slotH, 5);
       ctx.fill();
 
-      ctx.strokeStyle = isInspected ? "#5865F2" : (member ? "#242C42" : "#1C2232");
-      ctx.lineWidth = isInspected ? 2 : 1;
-      ctx.stroke();
+      if (isInspected) {
+        ctx.strokeStyle = "#5865F2";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
 
       // Slot Badge (Top-Left: P1 ~ P6)
       ctx.fillStyle = isInspected ? "#5865F2" : "#242C42";
@@ -2070,9 +2074,6 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
         ctx.beginPath();
         ctx.roundRect(mX, mY, moveChipW, moveChipH, 5);
         ctx.fill();
-        ctx.strokeStyle = "#282D3D";
-        ctx.lineWidth = 1;
-        ctx.stroke();
 
         if (rawMove === "---" || !category) {
           ctx.textBaseline = "middle";
@@ -2178,9 +2179,11 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
     ctx.roundRect(pX, pY, partySlotW, partySlotH, 5);
     ctx.fill();
 
-    ctx.strokeStyle = isInspected ? "#5865F2" : (member ? "#384260" : "#282D3D");
-    ctx.lineWidth = isInspected ? 2 : 1;
-    ctx.stroke();
+    if (isInspected) {
+      ctx.strokeStyle = "#5865F2";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
 
     if (member) {
       // Mini Sprite (Centered, Scale 0.7)
@@ -3124,9 +3127,11 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
     ctx.roundRect(sx, sy, slotW, slotH, 6);
     ctx.fill();
 
-    ctx.strokeStyle = isSelected ? "#5865F2" : (isAlreadyInParty ? "#22C55E" : "#282D3D");
-    ctx.lineWidth = isSelected ? 2 : 1;
-    ctx.stroke();
+    if (isSelected) {
+      ctx.strokeStyle = "#5865F2";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
 
     if (s) {
       const displayName = isKo ? s.nameKo : s.name;
