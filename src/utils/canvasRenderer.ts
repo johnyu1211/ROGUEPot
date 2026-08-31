@@ -2503,7 +2503,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       const moveTitle = isKo ? curMoveInfo.nameKo : curMoveInfo.name.toUpperCase();
       ctx.fillText(moveTitle, panelX + 44, 176);
 
-      // (2) Stats Row: [Category Icon : Power] / Accuracy / PP (y: 206)
+      // (2) Stats Row: Option A (Inline Symmetric Stat Bar with dividers)
       const statY = 206;
       const colW = panelW / 3;
 
@@ -2511,34 +2511,41 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       const accStr = curMoveInfo.accuracy ? `${curMoveInfo.accuracy}%` : "-";
       const ppStr = `${curMoveInfo.pp || 35}`;
 
-      // Column 1: Category Icon + ": " + Power
+      // Column 1: [Category Icon] + "위력: 45"
       const cat = curMoveInfo.category;
       drawMoveCategoryIcon(ctx, panelX, 196, cat);
 
+      ctx.textBaseline = "middle";
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "left";
-      ctx.fillText(":", panelX + 26, statY);
+      const pwrLabel = isKo ? `위력: ${pwrStr}` : `Pwr: ${pwrStr}`;
+      ctx.fillText(pwrLabel, panelX + 26, statY);
 
-      ctx.font = "bold 15px DungGeunMo";
-      ctx.fillStyle = "#FFFFFF";
-      ctx.fillText(pwrStr, panelX + 34, statY);
-
-      // Column 2: Accuracy
+      // Divider 1
       ctx.font = "bold 12px DungGeunMo";
-      ctx.fillStyle = "#FFFFFF";
-      ctx.fillText(isKo ? "명중:" : "Acc:", panelX + colW, statY);
+      ctx.fillStyle = "#3B4256";
+      ctx.textAlign = "center";
+      ctx.fillText("|", panelX + colW - 4, statY);
+
+      // Column 2: "명중: 100%"
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
-      ctx.fillText(accStr, panelX + colW + (isKo ? 38 : 38), statY);
+      ctx.textAlign = "left";
+      const accLabel = isKo ? `명중: ${accStr}` : `Acc: ${accStr}`;
+      ctx.fillText(accLabel, panelX + colW + 8, statY);
 
-      // Column 3: PP
+      // Divider 2
       ctx.font = "bold 12px DungGeunMo";
-      ctx.fillStyle = "#FFFFFF";
-      ctx.fillText("PP:", panelX + colW * 2, statY);
+      ctx.fillStyle = "#3B4256";
+      ctx.textAlign = "center";
+      ctx.fillText("|", panelX + colW * 2 - 4, statY);
+
+      // Column 3: "PP: 25"
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
-      ctx.fillText(ppStr, panelX + colW * 2 + 26, statY);
+      ctx.textAlign = "left";
+      ctx.fillText(`PP: ${ppStr}`, panelX + colW * 2 + 8, statY);
 
       // Divider Line between Specs and Description
       ctx.strokeStyle = "#1E2433";
