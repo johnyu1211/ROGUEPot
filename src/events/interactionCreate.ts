@@ -1062,22 +1062,30 @@ async function renderPartyViewMessageData(
       : (isKo ? `🔒 패시브 (${passName})` : `🔒 Pass (${passName})`);
   }
 
+  // Ability Button Styles:
+  // - 적용 중 (Active / Equipped): Success (Green)
+  // - 얻은 상태 (Unlocked / Owned but inactive): Primary (Blue)
+  // - 미해금 (Locked): Secondary (Grey)
+  const normalAbStyle = isNormalAbActive ? ButtonStyle.Success : ButtonStyle.Primary;
+  const haStyle = hasHa ? (isHaActive ? ButtonStyle.Success : ButtonStyle.Primary) : ButtonStyle.Secondary;
+  const passStyle = hasPassive ? (isPassiveActive ? ButtonStyle.Success : ButtonStyle.Primary) : ButtonStyle.Secondary;
+
   components.push(
     new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
         .setCustomId(`party_setha_0_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
         .setLabel(abBtnLabel.slice(0, 20))
-        .setStyle(isNormalAbActive ? ButtonStyle.Primary : ButtonStyle.Secondary)
+        .setStyle(normalAbStyle)
         .setDisabled(false),
       new ButtonBuilder()
         .setCustomId(`party_setha_1_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
         .setLabel(haBtnLabel.slice(0, 20))
-        .setStyle(isHaActive ? ButtonStyle.Primary : ButtonStyle.Secondary)
+        .setStyle(haStyle)
         .setDisabled(false),
       new ButtonBuilder()
         .setCustomId(`party_togglepass_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
         .setLabel(passBtnLabel.slice(0, 20))
-        .setStyle(isPassiveActive ? ButtonStyle.Primary : ButtonStyle.Secondary)
+        .setStyle(passStyle)
         .setDisabled(false)
     )
   );
