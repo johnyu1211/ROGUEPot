@@ -2503,66 +2503,84 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       const moveTitle = isKo ? curMoveInfo.nameKo : curMoveInfo.name.toUpperCase();
       ctx.fillText(moveTitle, panelX + 48, 176);
 
-      // (2) Stats Row: Option A (Perfect Center-Aligned 3-Column Distribution)
+      // (2) Stats Row: Centered Stat Bar across right panel
       const statY = 206;
-      const colW = panelW / 3;
 
       const pwrStr = curMoveInfo.power ? String(curMoveInfo.power) : "-";
       const accStr = curMoveInfo.accuracy ? `${curMoveInfo.accuracy}%` : "-";
       const ppStr = `${curMoveInfo.pp || 35}`;
 
-      // Column 1 Center: [Category Icon] + "위력: 45"
       const cat = curMoveInfo.category;
       const pwrLabel = isKo ? `위력: ${pwrStr}` : `Pwr: ${pwrStr}`;
+      const accLabel = isKo ? `명중: ${accStr}` : `Acc: ${accStr}`;
+      const ppLabel = `PP: ${ppStr}`;
+
       ctx.font = "bold 14px DungGeunMo";
       const pwrTextW = ctx.measureText(pwrLabel).width;
-      const col1TotalW = 22 + 4 + pwrTextW;
-      const col1StartX = panelX + (colW - col1TotalW) / 2;
+      const accTextW = ctx.measureText(accLabel).width;
+      const ppTextW = ctx.measureText(ppLabel).width;
 
-      drawMoveCategoryIcon(ctx, col1StartX, 196, cat);
+      const col1W = 22 + 4 + pwrTextW; // icon(22) + gap(4) + text
+      const col2W = accTextW;
+      const col3W = ppTextW;
+      const dividerW = 12;
+
+      // Distribute 3 items and 2 dividers evenly in panelW
+      const totalContentW = col1W + col2W + col3W + dividerW * 2;
+      const itemGap = Math.max(12, Math.floor((panelW - totalContentW) / 2));
+      const startX = panelX + Math.max(6, Math.floor((panelW - (col1W + col2W + col3W + 40)) / 2));
+
+      // 1. Column 1: [Icon] + Power
+      drawMoveCategoryIcon(ctx, startX, 196, cat);
       ctx.textBaseline = "middle";
+      ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "left";
-      ctx.fillText(pwrLabel, col1StartX + 26, statY);
+      ctx.fillText(pwrLabel, startX + 26, statY);
 
       // Divider 1
+      const div1X = startX + col1W + 10;
       ctx.font = "bold 12px DungGeunMo";
       ctx.fillStyle = "#3B4256";
       ctx.textAlign = "center";
-      ctx.fillText("|", panelX + colW, statY);
+      ctx.fillText("|", div1X, statY);
 
-      // Column 2 Center: "명중: 100%"
+      // 2. Column 2: Accuracy
+      const col2X = div1X + 10;
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
-      ctx.textAlign = "center";
-      const accLabel = isKo ? `명중: ${accStr}` : `Acc: ${accStr}`;
-      ctx.fillText(accLabel, panelX + colW * 1.5, statY);
+      ctx.textAlign = "left";
+      ctx.fillText(accLabel, col2X, statY);
 
       // Divider 2
+      const div2X = col2X + col2W + 10;
       ctx.font = "bold 12px DungGeunMo";
       ctx.fillStyle = "#3B4256";
       ctx.textAlign = "center";
-      ctx.fillText("|", panelX + colW * 2, statY);
+      ctx.fillText("|", div2X, statY);
 
-      // Column 3 Center: "PP: 25"
+      // 3. Column 3: PP
+      const col3X = div2X + 10;
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
-      ctx.textAlign = "center";
-      ctx.fillText(`PP: ${ppStr}`, panelX + colW * 2.5, statY);
+      ctx.textAlign = "left";
+      ctx.fillText(ppLabel, col3X, statY);
 
       // Divider Line between Specs and Description
       ctx.strokeStyle = "#1E2433";
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(panelX + 2, 226);
-      ctx.lineTo(panelX + panelW - 2, 226);
+      ctx.moveTo(panelX, 226);
+      ctx.lineTo(panelX + panelW, 226);
       ctx.stroke();
 
-      // (3) Description Content (Rendered directly with comfortable padding & line height)
+      // (3) Description Content (Restored to default left alignment!)
+      ctx.textBaseline = "top";
       ctx.font = "14px DungGeunMo";
       ctx.fillStyle = "#F1F5F9";
+      ctx.textAlign = "left";
       const desc = curMoveInfo.description || (isKo ? "효과 설명이 없습니다." : "No description available.");
-      drawWrappedText(ctx, desc, panelX + 8, 240, panelW - 16, 22);
+      drawWrappedText(ctx, desc, panelX, 238, panelW, 22);
     } else {
       ctx.textBaseline = "middle";
       ctx.font = "bold 14px DungGeunMo";
