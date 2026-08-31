@@ -2407,11 +2407,11 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   }
 
   // =========================================================================
-  // TAB 1 (DEFAULT): MOVES TAB (Detailed Move Inspector + Ability/Passive Footer)
+  // TAB 1 (DEFAULT): MOVES TAB (Clean Single-Card Inspector)
   // =========================================================================
   if (currentTab === "moves") {
     // 1. Move Selection Chips (2x2 Balanced Split Grid, y: 44 ~ 116)
-    const moveChipW = (panelW - 24 - 6) / 2;
+    const moveChipW = (panelW - 20 - 6) / 2;
     const moveChipH = 33;
 
     for (let m = 0; m < 4; m++) {
@@ -2423,7 +2423,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
 
       const mCol = m % 2;
       const mRow = Math.floor(m / 2);
-      const mX = panelX + 12 + mCol * (moveChipW + 6);
+      const mX = panelX + 10 + mCol * (moveChipW + 6);
       const mY = 44 + mRow * (moveChipH + 6);
       const isSel = selectedMoveIdx === m;
 
@@ -2475,15 +2475,15 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       }
     }
 
-    // 2. Selected Move Detailed Spec Card (y: 122 ~ 304, Height: 182)
-    const cardY = 122;
-    const cardH = 182;
-    const cardW = panelW - 24;
-    const cardX = panelX + 12;
+    // 2. Clean Single Card Move Detail (y: 120 ~ 362, H: 242, No nested boxes!)
+    const cardY = 120;
+    const cardH = 242;
+    const cardW = panelW - 20;
+    const cardX = panelX + 10;
 
-    ctx.fillStyle = "#10121A";
+    ctx.fillStyle = "#181B26";
     ctx.beginPath();
-    ctx.roundRect(cardX, cardY, cardW, cardH, 5);
+    ctx.roundRect(cardX, cardY, cardW, cardH, 6);
     ctx.fill();
     ctx.strokeStyle = "#282D3D";
     ctx.lineWidth = 1;
@@ -2494,16 +2494,16 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     const curMoveInfo = MOVES_DATA[curMoveKey];
 
     if (curRawMove !== "---" && curMoveInfo) {
-      // Header: Move Name + Category Badge + Type Badge
+      // (1) Header: Category Icon + Move Name (18px) + Type Badge
       const cat = curMoveInfo.category;
-      drawMoveCategoryIcon(ctx, cardX + 10, cardY + 10, cat);
+      drawMoveCategoryIcon(ctx, cardX + 12, cardY + 10, cat);
 
       ctx.textBaseline = "middle";
-      ctx.font = "bold 17px DungGeunMo";
+      ctx.font = "bold 18px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "left";
       const moveTitle = isKo ? curMoveInfo.nameKo : curMoveInfo.name.toUpperCase();
-      ctx.fillText(moveTitle, cardX + 38, cardY + 20);
+      ctx.fillText(moveTitle, cardX + 42, cardY + 21);
       const titleWidth = ctx.measureText(moveTitle).width;
 
       // Type Badge
@@ -2511,8 +2511,8 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       const tColor = TYPE_COLORS[tLower] || "#777777";
       const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || curMoveInfo.type) : curMoveInfo.type.toUpperCase();
       const tBadgeW = 38;
-      const tBadgeH = 17;
-      const tBadgeX = cardX + 42 + titleWidth;
+      const tBadgeH = 18;
+      const tBadgeX = cardX + 48 + titleWidth;
       const tBadgeY = cardY + 12;
 
       ctx.fillStyle = tColor;
@@ -2525,104 +2525,72 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       ctx.textAlign = "center";
       ctx.fillText(tDisplay, tBadgeX + tBadgeW / 2, tBadgeY + tBadgeH / 2);
 
-      // Spec Pills Row (Power, Accuracy, PP)
-      const specY = cardY + 42;
-      const specPillW = (cardW - 20 - 10) / 3;
-      const specPillH = 32;
-
-      const specs = [
-        { label: isKo ? "위력" : "Power", val: curMoveInfo.power ? String(curMoveInfo.power) : "-", col: "#F87171" },
-        { label: isKo ? "명중" : "Acc", val: curMoveInfo.accuracy ? `${curMoveInfo.accuracy}%` : "-", col: "#60A5FA" },
-        { label: "PP", val: `${curMoveInfo.pp || 35}`, col: "#34D399" },
-      ];
-
-      specs.forEach((sp, idx) => {
-        const sX = cardX + 10 + idx * (specPillW + 5);
-        ctx.fillStyle = "#161922";
-        ctx.beginPath();
-        ctx.roundRect(sX, specY, specPillW, specPillH, 4);
-        ctx.fill();
-        ctx.strokeStyle = "#242938";
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        ctx.textBaseline = "middle";
-        ctx.font = "bold 10px DungGeunMo";
-        ctx.fillStyle = "#64748B";
-        ctx.textAlign = "center";
-        ctx.fillText(sp.label, sX + specPillW / 2, specY + 9);
-
-        ctx.font = "bold 14px DungGeunMo";
-        ctx.fillStyle = sp.col;
-        ctx.fillText(sp.val, sX + specPillW / 2, specY + 22);
-      });
-
-      // Description Box
-      const descBoxY = cardY + 80;
-      const descBoxH = 92;
-      ctx.fillStyle = "#141720";
-      ctx.beginPath();
-      ctx.roundRect(cardX + 10, descBoxY, cardW - 20, descBoxH, 4);
-      ctx.fill();
-      ctx.strokeStyle = "#202534";
+      // Top Divider Line
+      ctx.strokeStyle = "#282D3D";
       ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(cardX + 10, cardY + 38);
+      ctx.lineTo(cardX + cardW - 10, cardY + 38);
       ctx.stroke();
 
-      ctx.textBaseline = "top";
+      // (2) Stats Row: Power / Accuracy / PP (Clean 3-Column text layout)
+      const statY = cardY + 54;
+      const colW = (cardW - 24) / 3;
+
+      const pwrStr = curMoveInfo.power ? String(curMoveInfo.power) : "-";
+      const accStr = curMoveInfo.accuracy ? `${curMoveInfo.accuracy}%` : "-";
+      const ppStr = `${curMoveInfo.pp || 35}`;
+
+      // Column 1: Power
       ctx.font = "bold 12px DungGeunMo";
-      ctx.fillStyle = "#E2E8F0";
+      ctx.fillStyle = "#94A3B8";
       ctx.textAlign = "left";
+      ctx.fillText(isKo ? "위력:" : "Power:", cardX + 12, statY);
+      ctx.font = "bold 15px DungGeunMo";
+      ctx.fillStyle = "#F87171";
+      ctx.fillText(pwrStr, cardX + (isKo ? 46 : 58), statY);
+
+      // Column 2: Accuracy
+      ctx.font = "bold 12px DungGeunMo";
+      ctx.fillStyle = "#94A3B8";
+      ctx.fillText(isKo ? "명중:" : "Acc:", cardX + 12 + colW, statY);
+      ctx.font = "bold 15px DungGeunMo";
+      ctx.fillStyle = "#60A5FA";
+      ctx.fillText(accStr, cardX + 12 + colW + (isKo ? 46 : 46), statY);
+
+      // Column 3: PP
+      ctx.font = "bold 12px DungGeunMo";
+      ctx.fillStyle = "#94A3B8";
+      ctx.fillText("PP:", cardX + 12 + colW * 2, statY);
+      ctx.font = "bold 15px DungGeunMo";
+      ctx.fillStyle = "#34D399";
+      ctx.fillText(ppStr, cardX + 12 + colW * 2 + 30, statY);
+
+      // Second Divider Line
+      ctx.strokeStyle = "#282D3D";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(cardX + 10, cardY + 70);
+      ctx.lineTo(cardX + cardW - 10, cardY + 70);
+      ctx.stroke();
+
+      // (3) Description Header & Content (Spacious Pokédex-style typography)
+      ctx.font = "bold 12px DungGeunMo";
+      ctx.fillStyle = "#CBD5E1";
+      ctx.textAlign = "left";
+      ctx.fillText(isKo ? "기술 효과 설명" : "Move Effect Description", cardX + 12, cardY + 86);
+
+      ctx.font = "13px DungGeunMo";
+      ctx.fillStyle = "#F1F5F9";
       const desc = curMoveInfo.description || (isKo ? "효과 설명이 없습니다." : "No description available.");
-      drawWrappedText(ctx, desc, cardX + 16, descBoxY + 10, cardW - 32, 18);
+      drawWrappedText(ctx, desc, cardX + 12, cardY + 108, cardW - 24, 22);
     } else {
       ctx.textBaseline = "middle";
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#64748B";
       ctx.textAlign = "center";
-      ctx.fillText(isKo ? "등록된 기술이 없습니다." : "No move registered in this slot.", cardX + cardW / 2, cardY + cardH / 2);
+      ctx.fillText(isKo ? "등록된 기술이 없습니다." : "No move registered.", cardX + cardW / 2, cardY + cardH / 2);
     }
-
-    // 3. Ability & Passive Compact Summary Footer (y: 310 ~ 362, Height: 52)
-    const footY = 310;
-    const footH = 52;
-    const footW = panelW - 24;
-    const footX = panelX + 12;
-
-    ctx.fillStyle = "#10121A";
-    ctx.beginPath();
-    ctx.roundRect(footX, footY, footW, footH, 5);
-    ctx.fill();
-    ctx.strokeStyle = "#242938";
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    // Ability Row (y: footY + 14)
-    ctx.textBaseline = "middle";
-    ctx.font = "bold 12px DungGeunMo";
-    ctx.fillStyle = "#94A3B8";
-    ctx.textAlign = "left";
-    ctx.fillText(isKo ? "특성:" : "Ability:", footX + 8, footY + 14);
-
-    const abName = useHa
-      ? (isKo ? `[숨특] ${sel.hiddenAbilityKo}` : `[HA] ${sel.hiddenAbility}`)
-      : (isKo ? sel.abilityKo : sel.ability);
-    ctx.fillStyle = useHa ? "#F87171" : "#60A5FA";
-    ctx.fillText(abName, footX + 44, footY + 14);
-
-    // Passive Row (y: footY + 36)
-    ctx.fillStyle = "#94A3B8";
-    ctx.fillText(isKo ? "패시브:" : "Passive:", footX + 8, footY + 36);
-
-    let passText = "";
-    if (hasPassiveUnlocked) {
-      const pName = isKo ? sel.passiveAbilityKo : sel.passiveAbility;
-      passText = `${pName} (${usePassive ? "ON / -1C 할인" : "OFF"})`;
-      ctx.fillStyle = usePassive ? "#34D399" : "#64748B";
-    } else {
-      passText = isKo ? `미해금 (${sel.passiveAbilityKo})` : `Locked (${sel.passiveAbility})`;
-      ctx.fillStyle = "#475569";
-    }
-    ctx.fillText(passText, footX + 54, footY + 36);
 
     return;
   }
