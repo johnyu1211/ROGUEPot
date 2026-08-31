@@ -1628,26 +1628,158 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
   } = args;
 
   // =========================================================================
-  // PARTY VIEW MODE: 2 Columns x 3 Rows Vertical Grid Layout (y: 10 ~ 370)
+  // PARTY VIEW MODE: Pokemon Info Header + 2x3 Vertical Grid (y: 10 ~ 370)
   // =========================================================================
   if (isPartyView) {
-    const costLineY = 20;
+    // 1. TOP HEADER: Selected Pokemon Info (Dex Style: Sprite, Name, Types, Ability, Passive)
+    if (sel) {
+      const selShinyTier = selProgress?.shinyTier || 0;
 
-    // Cost Counter Text + Inline Gauge Bar
+      // Sprite Box (66x66)
+      const showBoxX = panelX;
+      const showBoxY = 10;
+      const showBoxSize = 66;
+
+      ctx.fillStyle = "#141722";
+      ctx.beginPath();
+      ctx.roundRect(showBoxX, showBoxY, showBoxSize, showBoxSize, 6);
+      ctx.fill();
+      ctx.strokeStyle = "#2D3246";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      if (selectedSprite) {
+        const scale = 1.25;
+        const sprW = selectedSprite.width * scale;
+        const sprH = selectedSprite.height * scale;
+        ctx.drawImage(selectedSprite, showBoxX + (showBoxSize - sprW) / 2, showBoxY + (showBoxSize - sprH) / 2, sprW, sprH);
+      }
+
+      if (selShinyTier > 0) {
+        drawShinyTierSparkles(ctx, showBoxX + 4, showBoxY + showBoxSize - 14, selShinyTier, 7.5);
+      }
+
+      // Dex Tag & Name
+      const infoX = showBoxX + showBoxSize + 8;
+      const headerY = showBoxY + 11;
+      const dexTag = `#${String(sel.dexNumber).padStart(3, "0")}`;
+
+      ctx.textBaseline = "middle";
+      ctx.font = "bold 13px DungGeunMo";
+      ctx.fillStyle = "#8E96AB";
+      ctx.textAlign = "left";
+      ctx.fillText(dexTag, infoX, headerY);
+
+      const tagW = ctx.measureText(dexTag).width;
+      const nameX = infoX + tagW + 6;
+
+      ctx.font = "bold 17px DungGeunMo";
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillText(isKo ? sel.nameKo : sel.name, nameX, headerY);
+
+      // Type Badges & Ability / Passive Tags
+      const types = sel.types && sel.types.length > 0 ? sel.types : ["normal"];
+      const badgeW = 44;
+
+      if (types.length === 1) {
+        const tLower = types[0].toLowerCase();
+        const tColor = TYPE_COLORS[tLower] || "#777777";
+        const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || types[0]) : types[0].toUpperCase();
+        const badgeH = 24;
+        const bY = 38;
+
+        ctx.fillStyle = tColor;
+        ctx.beginPath();
+        ctx.roundRect(infoX, bY, badgeW, badgeH, 4);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.textBaseline = "middle";
+        ctx.font = "bold 12px DungGeunMo";
+        ctx.fillStyle = "#FFFFFF";
+        ctx.textAlign = "center";
+        ctx.fillText(tDisplay, infoX + badgeW / 2, bY + badgeH / 2);
+      } else {
+        const badgeH = 18;
+        types.slice(0, 2).forEach((tName, tIdx) => {
+          const tLower = tName.toLowerCase();
+          const tColor = TYPE_COLORS[tLower] || "#777777";
+          const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || tName) : tName.toUpperCase();
+          const bY = 30 + tIdx * (badgeH + 3);
+
+          ctx.fillStyle = tColor;
+          ctx.beginPath();
+          ctx.roundRect(infoX, bY, badgeW, badgeH, 3);
+          ctx.fill();
+          ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+
+          ctx.textBaseline = "middle";
+          ctx.font = "bold 11px DungGeunMo";
+          ctx.fillStyle = "#FFFFFF";
+          ctx.textAlign = "center";
+          ctx.fillText(tDisplay, infoX + badgeW / 2, bY + badgeH / 2);
+        });
+      }
+
+      const rightColX = infoX + badgeW + 8;
+
+      // Ability Tag
+      let abLabel = isKo ? `[특성] ${sel.abilityKo}` : `[Ab] ${sel.ability}`;
+      if (selHasHa && sel.hiddenAbility) {
+        abLabel = isKo ? `[숨특] ${sel.hiddenAbilityKo}` : `[HA] ${sel.hiddenAbility}`;
+      }
+      ctx.textBaseline = "middle";
+      ctx.font = "bold 13px DungGeunMo";
+      ctx.fillStyle = selHasHa ? "#F87171" : "#60A5FA";
+      ctx.textAlign = "left";
+      ctx.fillText(abLabel, rightColX, 40);
+
+      // Passive Tag
+      const passiveName = selHasPassive ? (isKo ? `[패시브] ${sel.passiveAbilityKo}` : `[Passive] ${sel.passiveAbility}`) : (isKo ? "[패시브] 미해금" : "[Passive] Locked");
+      ctx.font = "bold 13px DungGeunMo";
+      ctx.fillStyle = selHasPassive ? "#34D399" : "#64748B";
+      ctx.fillText(passiveName, rightColX, 60);
+    } else {
+      // Unselected Placeholder
+      ctx.fillStyle = "#141722";
+      ctx.beginPath();
+      ctx.roundRect(panelX, 10, panelW, 66, 6);
+      ctx.fill();
+      ctx.strokeStyle = "#2D3246";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.textBaseline = "middle";
+      ctx.font = "bold 15px DungGeunMo";
+      ctx.fillStyle = "#CBD5E1";
+      ctx.textAlign = "center";
+      ctx.fillText(isKo ? "👥 파티원 관리 대시보드" : "👥 Party Overview", panelX + panelW / 2, 32);
+
+      ctx.font = "bold 12px DungGeunMo";
+      ctx.fillStyle = "#94A3B8";
+      ctx.fillText(isKo ? `출전 파티원: ${party.length} / 6 마리` : `Party Members: ${party.length} / 6`, panelX + panelW / 2, 54);
+    }
+
+    // 2. COST GAUGE BAR (y: 88)
+    const costLineY = 90;
     const isOverCost = currentCost > maxCost;
     const costColor = isOverCost ? "#EF4444" : (currentCost >= 8 ? "#F59E0B" : "#22C55E");
 
     ctx.textBaseline = "middle";
-    ctx.font = "bold 16px DungGeunMo";
+    ctx.font = "bold 15px DungGeunMo";
     ctx.fillStyle = costColor;
     ctx.textAlign = "left";
     const costText = `${isKo ? "코스트" : "COST"} : ${currentCost} / ${maxCost}`;
     ctx.fillText(costText, panelX, costLineY);
     const costTextW = ctx.measureText(costText).width;
 
-    const gaugeX = panelX + costTextW + 10;
+    const gaugeX = panelX + costTextW + 8;
     const gaugeW = panelX + panelW - gaugeX;
-    const gaugeH = 9;
+    const gaugeH = 8;
     const gaugeY = costLineY - gaugeH / 2;
 
     ctx.fillStyle = "#12141C";
@@ -1665,12 +1797,12 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
     ctx.roundRect(gaugeX, gaugeY, fillW, gaugeH, 3);
     ctx.fill();
 
-    // 2 Columns x 3 Rows Vertical Grid (y: 36 ~ 368)
-    const slotW = (panelW - 8) / 2;
-    const slotH = 104;
-    const gapX = 8;
-    const gapY = 8;
-    const startY = 36;
+    // 3. 2 Columns x 3 Rows Vertical Grid (y: 106 ~ 368, H: 82 each)
+    const slotW = (panelW - 6) / 2;
+    const slotH = 82;
+    const gapX = 6;
+    const gapY = 6;
+    const startY = 106;
 
     for (let pIdx = 0; pIdx < 6; pIdx++) {
       const member = party[pIdx];
@@ -1682,7 +1814,7 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
 
       ctx.fillStyle = isInspected ? "#222738" : (member ? "#181B26" : "#12141C");
       ctx.beginPath();
-      ctx.roundRect(pX, pY, slotW, slotH, 6);
+      ctx.roundRect(pX, pY, slotW, slotH, 5);
       ctx.fill();
 
       ctx.strokeStyle = isInspected ? "#5865F2" : (member ? "#2D3448" : "#202430");
@@ -1692,53 +1824,53 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
       // Slot Badge (Top-Left: P1 ~ P6)
       ctx.fillStyle = isInspected ? "#5865F2" : "#242A3B";
       ctx.beginPath();
-      ctx.roundRect(pX + 6, pY + 6, 28, 16, 3);
+      ctx.roundRect(pX + 5, pY + 5, 24, 15, 3);
       ctx.fill();
 
       ctx.textBaseline = "middle";
       ctx.font = "bold 11px DungGeunMo";
       ctx.fillStyle = isInspected ? "#FFFFFF" : "#94A3B8";
       ctx.textAlign = "center";
-      ctx.fillText(`P${pIdx + 1}`, pX + 20, pY + 14);
+      ctx.fillText(`P${pIdx + 1}`, pX + 17, pY + 12);
 
       if (member) {
-        // Sprite (Centered, Scale 0.9)
+        // Sprite (Centered Left, 44x44 area)
         const pSprite = partySprites[pIdx];
         if (pSprite) {
-          const scale = 0.9;
+          const scale = 0.75;
           const sprW = pSprite.width * scale;
           const sprH = pSprite.height * scale;
-          ctx.drawImage(pSprite, pX + (slotW - sprW) / 2, pY + 12 + (54 - sprH) / 2, sprW, sprH);
+          ctx.drawImage(pSprite, pX + 4 + (44 - sprW) / 2, pY + 22 + (44 - sprH) / 2, sprW, sprH);
         }
 
         // Shiny Sparkle
         const sTier = member.shinyTier || 0;
         if (sTier > 0) {
-          drawShinyTierSparkles(ctx, pX + 12, pY + 58, sTier, 5.5);
+          drawShinyTierSparkles(ctx, pX + 6, pY + 66, sTier, 4.5);
         }
 
-        // Member Name
+        // Member Name & Cost (Right Aligned in Slot)
         ctx.textBaseline = "middle";
         ctx.font = "bold 14px DungGeunMo";
         ctx.fillStyle = "#FFFFFF";
-        ctx.textAlign = "center";
-        ctx.fillText(member.name.slice(0, 5), pX + slotW / 2, pY + 74);
+        ctx.textAlign = "left";
+        ctx.fillText(member.name.slice(0, 5), pX + 52, pY + 36);
 
         // Cost
-        ctx.font = "bold 12px DungGeunMo";
+        ctx.font = "bold 13px DungGeunMo";
         ctx.fillStyle = member.usePassive ? "#34D399" : "#F59E0B";
-        ctx.fillText(`${member.cost}C`, pX + slotW / 2, pY + 91);
+        ctx.fillText(`${member.cost}C`, pX + 52, pY + 58);
       } else {
         // Empty Slot Marker
         ctx.textBaseline = "middle";
-        ctx.font = "bold 24px DungGeunMo";
+        ctx.font = "bold 20px DungGeunMo";
         ctx.fillStyle = "#334155";
         ctx.textAlign = "center";
-        ctx.fillText("+", pX + slotW / 2, pY + 46);
+        ctx.fillText("+", pX + slotW / 2, pY + 34);
 
         ctx.font = "bold 12px DungGeunMo";
         ctx.fillStyle = "#475569";
-        ctx.fillText(isKo ? "빈 슬롯" : "Empty", pX + slotW / 2, pY + 76);
+        ctx.fillText(isKo ? "빈 슬롯" : "Empty", pX + slotW / 2, pY + 56);
       }
     }
 
