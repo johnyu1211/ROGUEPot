@@ -2503,7 +2503,7 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       const moveTitle = isKo ? curMoveInfo.nameKo : curMoveInfo.name.toUpperCase();
       ctx.fillText(moveTitle, panelX + 48, 176);
 
-      // (2) Stats Row: Centered Stat Bar across right panel
+      // (2) Stats Row: Clean Natural Left-Aligned Stat Bar
       const statY = 206;
 
       const pwrStr = curMoveInfo.power ? String(curMoveInfo.power) : "-";
@@ -2518,49 +2518,38 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       ctx.font = "bold 14px DungGeunMo";
       const pwrTextW = ctx.measureText(pwrLabel).width;
       const accTextW = ctx.measureText(accLabel).width;
-      const ppTextW = ctx.measureText(ppLabel).width;
 
-      const col1W = 22 + 4 + pwrTextW; // icon(22) + gap(4) + text
-      const col2W = accTextW;
-      const col3W = ppTextW;
-      const dividerW = 12;
-
-      // Distribute 3 items and 2 dividers evenly in panelW
-      const totalContentW = col1W + col2W + col3W + dividerW * 2;
-      const itemGap = Math.max(12, Math.floor((panelW - totalContentW) / 2));
-      const startX = panelX + Math.max(6, Math.floor((panelW - (col1W + col2W + col3W + 40)) / 2));
-
-      // 1. Column 1: [Icon] + Power
-      drawMoveCategoryIcon(ctx, startX, 196, cat);
+      // 1. Column 1: [Icon] + Power (Starts at panelX)
+      drawMoveCategoryIcon(ctx, panelX, 196, cat);
       ctx.textBaseline = "middle";
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "left";
-      ctx.fillText(pwrLabel, startX + 26, statY);
+      ctx.fillText(pwrLabel, panelX + 26, statY);
 
       // Divider 1
-      const div1X = startX + col1W + 10;
+      const div1X = panelX + 26 + pwrTextW + 12;
       ctx.font = "bold 12px DungGeunMo";
       ctx.fillStyle = "#3B4256";
       ctx.textAlign = "center";
       ctx.fillText("|", div1X, statY);
 
       // 2. Column 2: Accuracy
-      const col2X = div1X + 10;
+      const col2X = div1X + 12;
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "left";
       ctx.fillText(accLabel, col2X, statY);
 
       // Divider 2
-      const div2X = col2X + col2W + 10;
+      const div2X = col2X + accTextW + 12;
       ctx.font = "bold 12px DungGeunMo";
       ctx.fillStyle = "#3B4256";
       ctx.textAlign = "center";
       ctx.fillText("|", div2X, statY);
 
       // 3. Column 3: PP
-      const col3X = div2X + 10;
+      const col3X = div2X + 12;
       ctx.font = "bold 14px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "left";
