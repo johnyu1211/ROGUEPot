@@ -2,7 +2,7 @@ import { createCanvas, loadImage, GlobalFonts, Image } from "@napi-rs/canvas";
 import path from "path";
 import fs from "fs";
 import { DexPokemonInfo, getAbilityDetail, getPokemonSpeciesInfo, ABILITY_DETAILED_DESC_KO } from "../services/pokeApiService.js";
-import { StarterEntry, GENERATION_INFO, getStarterByDexNumber } from "../data/starterCosts.js";
+import { StarterEntry, GENERATION_INFO, getStarterByDexNumber, STARTER_DATABASE } from "../data/starterCosts.js";
 import { MOVES_DATA } from "../data/movesKo.js";
 import { MOVES_EN_DESC } from "../data/movesEn.js";
 
@@ -124,31 +124,52 @@ export async function getPokemonSprite(pokemonName: string, allowFetch: boolean 
       return null;
     }
 
-    const folder = tier > 0 ? "gen5-shiny" : "gen5";
-    const url = `https://play.pokemonshowdown.com/sprites/${folder}/${clean}.png`;
+    // 1. Resolve Dex Number for authentic PokéRogue sprite lookup
+    let dexNo: number | null = null;
+    if (/^\d+$/.test(clean)) {
+      dexNo = parseInt(clean, 10);
+    } else {
+      const matchStarter = STARTER_DATABASE.find((s) => s.speciesId === clean);
+      if (matchStarter) dexNo = matchStarter.dexNumber;
+    }
+
     let img: any | null = null;
-    try {
-      img = await loadImage(url);
-    } catch {
-      // Fallback to non-shiny if shiny is missing
-      if (tier > 0) {
-        img = await loadImage(`https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`).catch(() => null);
+
+    // 2. Primary Source: Official PokéRogue Extracted Assets (Authentic Tier 0, 1, 2, 3 sprites!)
+    if (dexNo) {
+      try {
+        const rogueUrl = `https://raw.githubusercontent.com/Sandstormer/PokeRogue-Dex/main/images/${dexNo}_${tier}.png`;
+        img = await loadImage(rogueUrl);
+      } catch {
+        img = null;
+      }
+    }
+
+    // 3. Secondary Fallback Source: Showdown CDN + Hue Shift engine
+    if (!img) {
+      const folder = tier > 0 ? "gen5-shiny" : "gen5";
+      const url = `https://play.pokemonshowdown.com/sprites/${folder}/${clean}.png`;
+      try {
+        img = await loadImage(url);
+      } catch {
+        if (tier > 0) {
+          img = await loadImage(`https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`).catch(() => null);
+        }
+      }
+
+      if (img && tier >= 2) {
+        img = applyShinyTierVariant(img, tier);
       }
     }
 
     if (img) {
-      let finalImg = img;
-      if (tier >= 2) {
-        finalImg = applyShinyTierVariant(img, tier);
-      }
-
       // Automatic LRU-style cache size management (max 300 entries)
       if (spriteCache.size >= 300) {
         const firstKey = spriteCache.keys().next().value;
         if (firstKey) spriteCache.delete(firstKey);
       }
-      spriteCache.set(cacheKey, finalImg);
-      return finalImg;
+      spriteCache.set(cacheKey, img);
+      return img;
     }
     return null;
   } catch (err) {
