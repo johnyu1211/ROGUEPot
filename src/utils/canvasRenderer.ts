@@ -1730,11 +1730,6 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
       const displayName = isKo ? sel.nameKo : sel.name;
       ctx.fillText(displayName, nameX, headerY);
 
-      if (selShinyTier > 0) {
-        const nameW = ctx.measureText(displayName).width;
-        drawShinyTierSparkles(ctx, nameX + nameW + 5, headerY, selShinyTier, 5.5);
-      }
-
       // Type Badges & Ability / Passive Tags
       const types = sel.types && sel.types.length > 0 ? sel.types : ["normal"];
       const badgeW = 44;
@@ -1976,11 +1971,6 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
     ctx.fillStyle = "#FFFFFF";
     const displayName = isKo ? sel.nameKo : sel.name;
     ctx.fillText(displayName, nameX, headerY);
-
-    if (selShinyTier > 0) {
-      const nameW = ctx.measureText(displayName).width;
-      drawShinyTierSparkles(ctx, nameX + nameW + 6, headerY, selShinyTier, 6);
-    }
 
     // 2-COLUMN SECTION: Left = Type Badges, Right = Ability & Passive
     const types = sel.types && sel.types.length > 0 ? sel.types : ["normal"];
