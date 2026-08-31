@@ -1950,8 +1950,8 @@ export const interactionCreateEvent: BotEvent = {
               inGameMsg = {
                 title: isKo ? `[숨특] ${haName} (적용 완료)` : `[HA] ${haName} (Active)`,
                 text: isKo
-                  ? `${haDesc}\n✓ 숨겨진 특성 [${haName}]이 활성화되었습니다.`
-                  : `${haDesc}\n✓ Hidden ability equipped.`,
+                  ? `${haDesc}\n[적용] 숨겨진 특성 [${haName}]이 활성화되었습니다.`
+                  : `${haDesc}\n[Equipped] Hidden ability active.`,
                 type: "success",
               };
             } else {
@@ -1973,8 +1973,8 @@ export const interactionCreateEvent: BotEvent = {
             inGameMsg = {
               title: isKo ? `[일반 특성] ${abName} (적용 완료)` : `[Ability] ${abName} (Active)`,
               text: isKo
-                ? `${abDesc}\n✓ 일반 특성 [${abName}]이 활성화되었습니다.`
-                : `${abDesc}\n✓ Regular ability equipped.`,
+                ? `${abDesc}\n[적용] 일반 특성 [${abName}]이 활성화되었습니다.`
+                : `${abDesc}\n[Equipped] Regular ability active.`,
               type: "info",
             };
           }
@@ -2019,15 +2019,15 @@ export const interactionCreateEvent: BotEvent = {
             inGameMsg = {
               title: isKo ? `[패시브] ${passName} (${targetMember.usePassive ? "ON" : "OFF"})` : `[Passive] ${passName} (${targetMember.usePassive ? "ON" : "OFF"})`,
               text: isKo
-                ? `${passDesc}\n✓ 패시브 상태가 [${targetMember.usePassive ? "ON / 출전 코스트 1C 할인" : "OFF"}] 로 변경되었습니다.`
-                : `${passDesc}\n✓ Passive toggled: ${targetMember.usePassive ? "ON (-1C)" : "OFF"}.`,
+                ? `${passDesc}\n[적용] 패시브 상태가 [${targetMember.usePassive ? "ON / 출전 코스트 1C 할인" : "OFF"}] 로 변경되었습니다.`
+                : `${passDesc}\n[Equipped] Passive toggled: ${targetMember.usePassive ? "ON (-1C)" : "OFF"}.`,
               type: targetMember.usePassive ? "success" : "info",
             };
           } else {
             inGameMsg = {
               title: isKo ? `[패시브] ${passName} (잠김)` : `[Passive] ${passName} (Locked)`,
               text: isKo
-                ? `${passDesc}\n[잠김] 사탕을 모아 🍬 코스트 탭에서 패시브를 해금할 수 있습니다.`
+                ? `${passDesc}\n[잠김] 사탕을 모아 코스트 관리 탭에서 패시브를 해금할 수 있습니다.`
                 : `${passDesc}\n[Locked] Collect candies to unlock in Cost tab.`,
               type: "lock",
             };
