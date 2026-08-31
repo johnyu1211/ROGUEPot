@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PokéRogue Bot - Canvas UI Viewer</title>
+  <style>
+    :root {
+      --bg-darkest: #0E1017;
+      --bg-darker: #13151F;
+      --bg-card: #181B26;
+      --border-color: #2D3246;
+      --discord-blue: #5865F2;
+      --discord-green: #57F287;
+      --discord-yellow: #FEE75C;
+      --discord-red: #ED4245;
+      --discord-grey: #4E5058;
+      --text-white: #FFFFFF;
+      --text-muted: #94A3B8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-darkest);
+      color: var(--text-white);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    header {
+      background-color: var(--bg-darker);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-white);
+      letter-spacing: -0.5px;
+    }
+
+    .brand .badge {
+      background: var(--discord-blue);
+      color: white;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    select, button {
+      font-family: inherit;
+    }
+
+    select {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: white;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      outline: none;
+    }
+
+    select:focus {
+      border-color: var(--discord-blue);
+    }
+
+    .main-layout {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    .preview-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 50% 50%, #171A26 0%, #0E1017 100%);
+      padding: 20px;
+      position: relative;
+      overflow: auto;
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      background: #000;
+    }
+
+    #preview-image {
+      display: block;
+      image-rendering: pixelated;
+      image-rendering: -moz-crisp-edges;
+      image-rendering: crisp-edges;
+      transition: transform 0.15s ease-out;
+    }
+
+    .status-bar {
+      position: absolute;
+      bottom: 12px;
+      left: 20px;
+      display: flex;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+      background: rgba(19, 21, 31, 0.85);
+      backdrop-filter: blur(8px);
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+    }
+
+    .sidebar {
+      width: 380px;
+      background-color: var(--bg-darker);
+      border-left: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .sidebar-section {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .sidebar-section h3 {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .btn-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .btn-grid.two-col {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .btn-grid.four-col {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .d-btn {
+      background: var(--discord-grey);
+      color: white;
+      border: none;
+      padding: 10px 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.1s ease;
+      user-select: none;
+    }
+
+    .d-btn:hover {
+      filter: brightness(1.15);
+    }
+
+    .d-btn:active {
+      transform: scale(0.97);
+    }
+
+    .d-btn.primary {
+      background: var(--discord-blue);
+    }
+
+    .d-btn.success {
+      background: var(--discord-green);
+      color: #0E1017;
+    }
+
+    .d-btn.danger {
+      background: var(--discord-red);
+    }
+
+    .d-btn.active {
+      outline: 2px solid #FFFFFF;
+      outline-offset: 1px;
+    }
+
+    .d-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+      filter: none;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      font-size: 14px;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: var(--discord-grey);
+      transition: .2s;
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .2s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--discord-green);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    .scale-controls {
+      display: flex;
+      gap: 6px;
+    }
+
+    .scale-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .scale-btn.active {
+      color: white;
+      border-color: var(--discord-blue);
+      background: var(--discord-blue);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <h1>🎮 ROGUEPot UI Viewer</h1>
+      <span class="badge">Canvas 0ms Live Simulator</span>
+    </div>
+    <div class="toolbar">
+      <div class="scale-controls">
+        <button class="scale-btn" onclick="setScale(1)">100%</button>
+        <button class="scale-btn active" onclick="setScale(1.5)">150%</button>
+        <button class="scale-btn" onclick="setScale(2)">200%</button>
+      </div>
+      <select id="screen-select" onchange="onScreenChange()">
+        <option value="starter_party">⭐ 스타팅 파티 관리 (Party Customization)</option>
+        <option value="starter_select">🔍 스타팅 포켓몬 선택 (Starter Select)</option>
+        <option value="pokedex">📚 포켓몬 도감 (Pokédex)</option>
+        <option value="bag">🎒 트레이너 가방 (Trainer Bag)</option>
+        <option value="multiplayer">🌐 멀티플레이 로비 (Multiplayer)</option>
+        <option value="gacha">🥚 알 부화기 (Egg Gacha)</option>
+        <option value="gen_select">🗺️ 세대 선택 화면 (Gen Select)</option>
+        <option value="title">🕹️ 메인 타이틀 화면 (Title Screen)</option>
+      </select>
+      <button class="d-btn primary" onclick="renderCurrentState()" style="padding: 8px 14px;">
+        🔄 즉시 새로고침
+      </button>
+    </div>
+  </header>
+
+  <div class="main-layout">
+    <!-- Center Live Preview -->
+    <div class="preview-area">
+      <div class="canvas-wrapper">
+        <img id="preview-image" src="" alt="Canvas Preview" width="560" height="380">
+      </div>
+      <div class="status-bar">
+        <span id="stat-res">해상도: 560 x 380 (Official Pixel Ratio)</span>
+        <span>•</span>
+        <span id="stat-time">렌더링 속도: - ms</span>
+        <span>•</span>
+        <span id="stat-mode">모드: 스타팅 파티 관리</span>
+      </div>
+    </div>
+
+    <!-- Right Interactive Controls -->
+    <div class="sidebar" id="sidebar-controls">
+      <!-- Dynamic Controls inserted by JS -->
+    </div>
+  </div>
+
+  <script>
+    let currentScale = 1.5;
+    let state = {
+      screen: "starter_party",
+      selectedPartyIdx: 1, // 0 = P1 (팽도리), 1 = P2 (이상해씨)
+      partyTab: "moves",   // "moves" | "shiny" | "cost"
+      selectedMoveIdx: 1,  // 0 ~ 3
+      currentGen: 1,
+      currentPage: 1,
+      totalPages: 4,
+      isShinyFilter: false,
+      isHaFilter: false,
+      isPassiveFilter: false,
+      party: [
+        { dexNumber: 393, speciesId: "piplup", name: "팽도리", cost: 3, isShiny: false },
+        { dexNumber: 1, speciesId: "bulbasaur", name: "이상해씨", cost: 2, isShiny: false, usePassive: true }
+      ],
+      userCandies: 50,
+    };
+
+    function setScale(scale) {
+      currentScale = scale;
+      document.querySelectorAll('.scale-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent === `${scale * 100}%`);
+      });
+      const img = document.getElementById('preview-image');
+      img.style.width = `${560 * scale}px`;
+      img.style.height = `${380 * scale}px`;
+    }
+
+    async function renderCurrentState() {
+      const startTime = performance.now();
+      try {
+        const res = await fetch('/api/render', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(state)
+        });
+        const data = await res.json();
+        if (data.image) {
+          document.getElementById('preview-image').src = data.image;
+          const elapsed = (performance.now() - startTime).toFixed(1);
+          document.getElementById('stat-time').textContent = `렌더링 속도: ${elapsed} ms`;
+        }
+      } catch (err) {
+        console.error('Render error:', err);
+      }
+    }
+
+    function onScreenChange() {
+      state.screen = document.getElementById('screen-select').value;
+      document.getElementById('stat-mode').textContent = `모드: ${document.getElementById('screen-select').selectedOptions[0].text}`;
+      updateSidebarUI();
+      renderCurrentState();
+    }
+
+    function setPartyMember(idx) {
+      state.selectedPartyIdx = idx;
+      state.selectedMoveIdx = 0; // 항상 1번 기술로 리셋
+      updateSidebarUI();
+      renderCurrentState();
+    }
+
+    function setTab(tab) {
+      state.partyTab = tab;
+      updateSidebarUI();
+      renderCurrentState();
+    }
+
+    function setMoveSlot(idx) {
+      state.selectedMoveIdx = idx;
+      updateSidebarUI();
+      renderCurrentState();
+    }
+
+    function togglePassive() {
+      const p = state.party[state.selectedPartyIdx];
+      if (p) {
+        p.usePassive = !p.usePassive;
+        updateSidebarUI();
+        renderCurrentState();
+      }
+    }
+
+    function toggleShiny() {
+      const p = state.party[state.selectedPartyIdx];
+      if (p) {
+        p.isShiny = !p.isShiny;
+        updateSidebarUI();
+        renderCurrentState();
+      }
+    }
+
+    function toggleFilter(filter) {
+      if (filter === 'shiny') state.isShinyFilter = !state.isShinyFilter;
+      if (filter === 'ha') state.isHaFilter = !state.isHaFilter;
+      if (filter === 'passive') state.isPassiveFilter = !state.isPassiveFilter;
+      updateSidebarUI();
+      renderCurrentState();
+    }
+
+    function changePage(delta) {
+      state.currentPage = Math.max(1, Math.min(state.totalPages, state.currentPage + delta));
+      updateSidebarUI();
+      renderCurrentState();
+    }
+
+    function changeGen(gen) {
+      state.currentGen = gen;
+      state.currentPage = 1;
+      updateSidebarUI();
+      renderCurrentState();
+    }
+
+    function updateSidebarUI() {
+      const sidebar = document.getElementById('sidebar-controls');
+      sidebar.innerHTML = '';
+
+      if (state.screen === 'starter_party') {
+        sidebar.innerHTML = `
+          <div class="sidebar-section">
+            <h3>1. 파티원 선택 (1~6번 슬롯)</h3>
+            <div class="btn-grid">
+              ${[0, 1, 2, 3, 4, 5].map(i => {
+                const member = state.party[i];
+                const label = member ? `P${i+1} ${member.name}` : `P${i+1} +`;
+                const isSel = state.selectedPartyIdx === i;
+                return `<button class="d-btn ${isSel ? 'primary active' : ''}" onclick="setPartyMember(${i})">${label}</button>`;
+              }).join('')}
+            </div>
+          </div>
+
+          <div class="sidebar-section">
+            <h3>2. 대시보드 탭 전환</h3>
+            <div class="btn-grid">
+              <button class="d-btn ${state.partyTab === 'moves' ? 'primary active' : ''}" onclick="setTab('moves')">⚔ 기술</button>
+              <button class="d-btn ${state.partyTab === 'shiny' ? 'primary active' : ''}" onclick="setTab('shiny')">• 이로치</button>
+              <button class="d-btn ${state.partyTab === 'cost' ? 'primary active' : ''}" onclick="setTab('cost')">🍬 사탕</button>
+            </div>
+          </div>
+
+          ${state.partyTab === 'moves' ? `
+            <div class="sidebar-section">
+              <h3>3. 장착 기술 슬롯 선택 (1~4번)</h3>
+              <div class="btn-grid two-col">
+                <button class="d-btn ${state.selectedMoveIdx === 0 ? 'primary active' : ''}" onclick="setMoveSlot(0)">1. 기술 1번</button>
+                <button class="d-btn ${state.selectedMoveIdx === 1 ? 'primary active' : ''}" onclick="setMoveSlot(1)">2. 기술 2번</button>
+                <button class="d-btn ${state.selectedMoveIdx === 2 ? 'primary active' : ''}" onclick="setMoveSlot(2)">3. 기술 3번</button>
+                <button class="d-btn ${state.selectedMoveIdx === 3 ? 'primary active' : ''}" onclick="setMoveSlot(3)">4. 기술 4번</button>
+              </div>
+            </div>
+          ` : ''}
+
+          <div class="sidebar-section">
+            <h3>4. 파티원 커스텀 토글</h3>
+            <div class="toggle-row">
+              <span>패시브 특성 (Passive)</span>
+              <label class="switch">
+                <input type="checkbox" ${state.party[state.selectedPartyIdx]?.usePassive ? 'checked' : ''} onchange="togglePassive()">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-row">
+              <span>이로치 외형 (Shiny)</span>
+              <label class="switch">
+                <input type="checkbox" ${state.party[state.selectedPartyIdx]?.isShiny ? 'checked' : ''} onchange="toggleShiny()">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        `;
+      } else if (state.screen === 'starter_select') {
+        sidebar.innerHTML = `
+          <div class="sidebar-section">
+            <h3>세대 선택 (1 ~ 9세대)</h3>
+            <div class="btn-grid">
+              ${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(g => `
+                <button class="d-btn ${state.currentGen === g ? 'primary active' : ''}" onclick="changeGen(${g})">${g === 0 ? '전체' : g + '세대'}</button>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="sidebar-section">
+            <h3>페이지 이동</h3>
+            <div class="btn-grid two-col">
+              <button class="d-btn" onclick="changePage(-1)">◀ 이전 페이지</button>
+              <button class="d-btn" onclick="changePage(1)">다음 페이지 ▶</button>
+            </div>
+          </div>
+
+          <div class="sidebar-section">
+            <h3>필터 토글</h3>
+            <div class="btn-grid">
+              <button class="d-btn ${state.isPassiveFilter ? 'success active' : ''}" onclick="toggleFilter('passive')">PS 패시브</button>
+              <button class="d-btn ${state.isHaFilter ? 'danger active' : ''}" onclick="toggleFilter('ha')">HA 숨특</button>
+              <button class="d-btn ${state.isShinyFilter ? 'primary active' : ''}" onclick="toggleFilter('shiny')">✨ 이로치</button>
+            </div>
+          </div>
+        `;
+      } else {
+        sidebar.innerHTML = `
+          <div class="sidebar-section">
+            <h3>화면 조작</h3>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">
+              현재 선택된 화면 모드입니다.<br>상단 드롭다운에서 다른 화면으로 빠르게 전환할 수 있습니다.
+            </p>
+          </div>
+        `;
+      }
+    }
+
+    // Initialize
+    setScale(1.5);
+    updateSidebarUI();
+    renderCurrentState();
+  </script>
+</body>
+</html>
