@@ -661,7 +661,7 @@ function serializePartyParam(states: PartyItemState[]): string {
     .join("-");
 }
 
-async function renderStarterSelectMessageData(
+export async function renderStarterSelectMessageData(
   client: ExtendedClient,
   userId: string,
   slotId: number = 1,
@@ -929,7 +929,7 @@ function scheduleInGameMessageDismiss(
   }, duration);
 }
 
-async function renderPartyViewMessageData(
+export async function renderPartyViewMessageData(
   client: ExtendedClient,
   userId: string,
   slotId: number = 1,
