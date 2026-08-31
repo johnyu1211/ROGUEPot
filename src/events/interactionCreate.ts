@@ -968,7 +968,8 @@ async function renderPartyViewMessageData(
   const hasPassive = inspectedProg?.passiveUnlocked || false;
   const curUsePassive = activePartyMember?.usePassive || false;
 
-  // ROW 1 (TOP): Ability, Hidden Ability, and Passive Information (All Secondary Grey Buttons)
+  // ROW 1 (TOP): Ability, Hidden Ability, and Passive Information
+  // Active ability/passive shown on the UI is highlighted in Primary (Blue), others in Secondary (Grey)
   const abilityName = inspectedStarter
     ? (isKo ? inspectedStarter.abilityKo : inspectedStarter.ability)
     : "-";
@@ -979,37 +980,42 @@ async function renderPartyViewMessageData(
     ? (isKo ? inspectedStarter.passiveAbilityKo : inspectedStarter.passiveAbility)
     : "-";
 
+  // Active states
+  const isNormalAbActive = Boolean(inspectedStarter && !curUseHa);
+  const isHaActive = Boolean(inspectedStarter && hasHa && curUseHa);
+  const isPassiveActive = Boolean(inspectedStarter && hasPassive && curUsePassive);
+
   let abBtnLabel = isKo ? `🌟 특성: ${abilityName}` : `🌟 Ab: ${abilityName}`;
   let haBtnLabel = isKo ? "🔒 숨특: -" : "🔒 HA: -";
   if (inspectedStarter) {
     haBtnLabel = hasHa
-      ? (curUseHa ? (isKo ? `🌟 [숨특] ${haName}` : `🌟 [HA] ${haName}`) : (isKo ? `🌟 [일특] ${abilityName}` : `🌟 [Ab] ${abilityName}`))
+      ? (isKo ? `🌟 숨특: ${haName}` : `🌟 HA: ${haName}`)
       : (isKo ? `🔒 숨특 (${haName})` : `🔒 HA (${haName})`);
   }
 
   let passBtnLabel = isKo ? "🔒 패시브: -" : "🔒 Pass: -";
   if (inspectedStarter) {
     passBtnLabel = hasPassive
-      ? (curUsePassive ? (isKo ? `🔓 [패시브ON] ${passName}` : `🔓 [PassON] ${passName}`) : (isKo ? `🔓 [패시브OFF] ${passName}` : `🔓 [PassOFF] ${passName}`))
+      ? (isKo ? `🔓 패시브: ${passName}` : `🔓 Pass: ${passName}`)
       : (isKo ? `🔒 패시브 (${passName})` : `🔒 Pass (${passName})`);
   }
 
   components.push(
     new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
-        .setCustomId(`party_info_ab_${safePartyIdx}_${userId}`)
+        .setCustomId(`party_setha_0_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
         .setLabel(abBtnLabel.slice(0, 20))
-        .setStyle(ButtonStyle.Secondary)
-        .setDisabled(true),
+        .setStyle(isNormalAbActive ? ButtonStyle.Primary : ButtonStyle.Secondary)
+        .setDisabled(!inspectedStarter || isNormalAbActive || !hasHa),
       new ButtonBuilder()
-        .setCustomId(`party_toggleha_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
+        .setCustomId(`party_setha_1_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
         .setLabel(haBtnLabel.slice(0, 20))
-        .setStyle(ButtonStyle.Secondary)
+        .setStyle(isHaActive ? ButtonStyle.Primary : ButtonStyle.Secondary)
         .setDisabled(!inspectedStarter || !hasHa),
       new ButtonBuilder()
         .setCustomId(`party_togglepass_${safePartyIdx}_${gen}_${page}_${selectedDexNo}_${slotId}_${partyParam}_${flagsParam}_${partyTab}_${selectedMoveIdx}_${userId}`)
         .setLabel(passBtnLabel.slice(0, 20))
-        .setStyle(ButtonStyle.Secondary)
+        .setStyle(isPassiveActive ? ButtonStyle.Primary : ButtonStyle.Secondary)
         .setDisabled(!inspectedStarter || !hasPassive)
     )
   );
@@ -1898,19 +1904,21 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
 
-      // 2-1-P2-A. Toggle Hidden Ability (HA) for inspected party member (🌟)
-      if (customId.startsWith("party_toggleha_")) {
-        const currentIdx = parseInt(parts[2], 10) || 0;
-        const gen = parseInt(parts[3], 10) || 0;
-        const page = parseInt(parts[4], 10) || 1;
-        const dexNo = parseInt(parts[5], 10) || 1;
-        const slotId = parseInt(parts[6], 10) || 1;
-        const partyRaw = parts[7] || "empty";
-        const isShiny = parts[8] === "1";
-        const isHa = parts[9] === "1";
-        const isPassive = parts[10] === "1";
-        const tab = (parts[11] || "moves") as PartyViewTab;
-        const moveIdx = parseInt(parts[12], 10) || 0;
+      // 2-1-P2-A. Set or Toggle Hidden Ability (HA) for inspected party member (🌟)
+      if (customId.startsWith("party_setha_") || customId.startsWith("party_toggleha_")) {
+        const isSet = customId.startsWith("party_setha_");
+        const targetUseHa = isSet ? parts[2] === "1" : undefined;
+        const currentIdx = parseInt(parts[isSet ? 3 : 2], 10) || 0;
+        const gen = parseInt(parts[isSet ? 4 : 3], 10) || 0;
+        const page = parseInt(parts[isSet ? 5 : 4], 10) || 1;
+        const dexNo = parseInt(parts[isSet ? 6 : 5], 10) || 1;
+        const slotId = parseInt(parts[isSet ? 7 : 6], 10) || 1;
+        const partyRaw = parts[isSet ? 8 : 7] || "empty";
+        const isShiny = parts[isSet ? 9 : 8] === "1";
+        const isHa = parts[isSet ? 10 : 9] === "1";
+        const isPassive = parts[isSet ? 11 : 10] === "1";
+        const tab = (parts[isSet ? 12 : 11] || "moves") as PartyViewTab;
+        const moveIdx = parseInt(parts[isSet ? 13 : 12], 10) || 0;
 
         const userStarters = getUserStarters(interaction.user.id);
         const partyStates = parsePartyParam(partyRaw, userStarters);
@@ -1920,7 +1928,7 @@ export const interactionCreateEvent: BotEvent = {
           const s = getStarterByDexNumber(targetMember.dexNumber);
           const prog = s ? userStarters.get(s.speciesId) : null;
           if (prog?.hasHiddenAbility) {
-            targetMember.useHiddenAbility = !targetMember.useHiddenAbility;
+            targetMember.useHiddenAbility = isSet ? targetUseHa! : !targetMember.useHiddenAbility;
           }
         }
 
