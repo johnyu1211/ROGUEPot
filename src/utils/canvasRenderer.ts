@@ -1,7 +1,7 @@
 import { createCanvas, loadImage, GlobalFonts, Image } from "@napi-rs/canvas";
 import path from "path";
 import fs from "fs";
-import { DexPokemonInfo, getAbilityDetail, getPokemonSpeciesInfo } from "../services/pokeApiService.js";
+import { DexPokemonInfo, getAbilityDetail, getPokemonSpeciesInfo, ABILITY_DETAILED_DESC_KO } from "../services/pokeApiService.js";
 import { StarterEntry, GENERATION_INFO, getStarterByDexNumber } from "../data/starterCosts.js";
 import { MOVES_DATA } from "../data/movesKo.js";
 
@@ -277,6 +277,46 @@ export function drawShinyTierSparkles(ctx: any, startX: number, centerY: number,
   const color = tier === 3 ? "#EF4444" : tier === 2 ? "#3B82F6" : "#F59E0B";
   drawShinySparkle(ctx, startX + size, centerY, size, color);
   return startX + size * 2 + 5;
+}
+
+/**
+ * Draws a clean vector Crossed Sword Icon for Moves Tab
+ */
+export function drawSwordIcon(ctx: any, cx: number, cy: number, size: number = 6, color: string = "#FFFFFF") {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  // Blade 1
+  ctx.moveTo(cx - size, cy + size);
+  ctx.lineTo(cx + size, cy - size);
+  // Cross guard 1
+  ctx.moveTo(cx - size * 0.4, cy + size * 0.8);
+  ctx.lineTo(cx - size * 0.8, cy + size * 0.4);
+  // Blade 2
+  ctx.moveTo(cx + size, cy + size);
+  ctx.lineTo(cx - size, cy - size);
+  // Cross guard 2
+  ctx.moveTo(cx + size * 0.4, cy + size * 0.8);
+  ctx.lineTo(cx + size * 0.8, cy + size * 0.4);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/**
+ * Draws a clean vector Book/Dex Icon for Ability/Pokedex cards
+ */
+export function drawBookIcon(ctx: any, cx: number, cy: number, w: number = 12, h: number = 10, color: string = "#60A5FA") {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(cx - w / 2, cy - h / 2, w / 2, h);
+  ctx.strokeRect(cx, cy - h / 2, w / 2, h);
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - h / 2);
+  ctx.lineTo(cx, cy + h / 2);
+  ctx.stroke();
+  ctx.restore();
 }
 
 /**
@@ -1327,7 +1367,7 @@ export interface StarterSelectPartyItem {
   usePassive?: boolean;
 }
 
-export type PartyViewTab = "moves" | "shiny" | "cost";
+export type PartyViewTab = "moves" | "shiny" | "cost" | "ability" | "passive";
 
 export interface StarterSelectScreenOptions {
   selectedStarter: StarterEntry;
@@ -2222,14 +2262,14 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // Top Tab Bar (y: 10 ~ 38) - 3 Tabs: [ ⚔️ 기술 ], [ ✨ 이로치 ], [ 🍬 사탕 N개 ]
+  // Top Tab Bar (y: 10 ~ 38) - 3 Tabs: [ 기술 ], [ 이로치 ], [ 사탕 N개 ] (With crisp vector icons)
   const tabW = 76;
   const tabH = 26;
   const tabY = 11;
-  const tabs: { id: PartyViewTab; labelKo: string; labelEn: string }[] = [
-    { id: "moves", labelKo: "⚔️ 기술", labelEn: "⚔️ Moves" },
-    { id: "shiny", labelKo: "✨ 이로치", labelEn: "✨ Shiny" },
-    { id: "cost", labelKo: "🍬 사탕", labelEn: "🍬 Cost" },
+  const tabs: { id: PartyViewTab; labelKo: string; labelEn: string; icon: "moves" | "shiny" | "cost" }[] = [
+    { id: "moves", labelKo: "기술", labelEn: "Moves", icon: "moves" },
+    { id: "shiny", labelKo: "이로치", labelEn: "Shiny", icon: "shiny" },
+    { id: "cost", labelKo: `${candies}개`, labelEn: `${candies}`, icon: "cost" },
   ];
 
   tabs.forEach((t, idx) => {
@@ -2245,20 +2285,29 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     ctx.lineWidth = isAct ? 1.5 : 1;
     ctx.stroke();
 
-    if (t.id === "cost") {
-      // Draw Candy Icon inside the 3rd tab box + count
+    const iconColor = isAct ? "#FFFFFF" : "#64748B";
+
+    if (t.icon === "moves") {
+      drawSwordIcon(ctx, tX + 16, tabY + tabH / 2, 4.5, iconColor);
+      ctx.textBaseline = "middle";
+      ctx.font = "bold 13px DungGeunMo";
+      ctx.fillStyle = isAct ? "#FFFFFF" : "#8E96AB";
+      ctx.textAlign = "center";
+      ctx.fillText(isKo ? t.labelKo : t.labelEn, tX + 46, tabY + tabH / 2);
+    } else if (t.icon === "shiny") {
+      drawShinySparkle(ctx, tX + 16, tabY + tabH / 2, 4.0, isAct ? "#F59E0B" : "#64748B");
+      ctx.textBaseline = "middle";
+      ctx.font = "bold 13px DungGeunMo";
+      ctx.fillStyle = isAct ? "#FFFFFF" : "#8E96AB";
+      ctx.textAlign = "center";
+      ctx.fillText(isKo ? t.labelKo : t.labelEn, tX + 46, tabY + tabH / 2);
+    } else if (t.icon === "cost") {
       drawCandyIcon(ctx, tX + 16, tabY + tabH / 2, 4.8, "#F59E0B", "#FEF08A");
       ctx.textBaseline = "middle";
       ctx.font = "bold 13px DungGeunMo";
       ctx.fillStyle = isAct ? "#FFFFFF" : "#FCD34D";
       ctx.textAlign = "center";
-      ctx.fillText(`${candies}개`, tX + 46, tabY + tabH / 2);
-    } else {
-      ctx.textBaseline = "middle";
-      ctx.font = "bold 13px DungGeunMo";
-      ctx.fillStyle = isAct ? "#FFFFFF" : "#64748B";
-      ctx.textAlign = "center";
-      ctx.fillText(isKo ? t.labelKo : t.labelEn, tX + tabW / 2, tabY + tabH / 2);
+      ctx.fillText(isKo ? t.labelKo : t.labelEn, tX + 46, tabY + tabH / 2);
     }
   });
 
@@ -2643,13 +2692,209 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
 
     ctx.font = "bold 14px DungGeunMo";
     ctx.fillStyle = "#34D399";
-    ctx.fillText(isKo ? "🔓 패시브 특성 해금" : "🔓 Unlock Passive", cardX + 12, card2Y + 22);
+    ctx.fillText(isKo ? "패시브 특성 해금" : "Unlock Passive", cardX + 12, card2Y + 22);
 
     ctx.font = "bold 12px DungGeunMo";
     ctx.fillStyle = "#94A3B8";
-    const passStatusStr = hasPassiveUnlocked ? (isKo ? "✓ 이미 해금되었습니다! (상단 버튼으로 토글)" : "✓ Already Unlocked!") : (isKo ? "사탕을 소모하여 패시브를 해금합니다." : "Spend candies to unlock passive.");
+    const passStatusStr = hasPassiveUnlocked ? (isKo ? "이미 해금되었습니다! (상단 버튼으로 토글)" : "Already Unlocked!") : (isKo ? "사탕을 소모하여 패시브를 해금합니다." : "Spend candies to unlock passive.");
     ctx.fillText(passStatusStr, cardX + 12, card2Y + 48);
     ctx.fillText(isKo ? `패시브: ${sel.passiveAbilityKo}` : `Passive: ${sel.passiveAbility}`, cardX + 12, card2Y + 70);
+
+    return;
+  }
+
+  // =========================================================================
+  // TAB 4: ABILITY SPEC CARD (도감 스타일 특성 상세 설명 메시지 박스)
+  // =========================================================================
+  if (currentTab === "ability") {
+    const isHiddenAb = useHa && sel.hiddenAbility;
+    const abTitle = isHiddenAb ? (isKo ? sel.hiddenAbilityKo : sel.hiddenAbility) : (isKo ? sel.abilityKo : sel.ability);
+    const rawAbName = isHiddenAb ? (sel.hiddenAbility || "") : (sel.ability || "");
+    const abKey = rawAbName.toLowerCase().replace(/[\s_]+/g, "-");
+    const abDesc = ABILITY_DETAILED_DESC_KO[abKey] || (isKo ? "포켓몬의 고유 특성입니다." : "A unique Pokemon ability.");
+
+    // 1. Top Title Header Card (y: 44 ~ 100, H: 56)
+    const headerY = 44;
+    const headerH = 56;
+    const cardW = panelW - 24;
+    const cardX = panelX + 12;
+
+    ctx.fillStyle = "#12141C";
+    ctx.beginPath();
+    ctx.roundRect(cardX, headerY, cardW, headerH, 6);
+    ctx.fill();
+    ctx.strokeStyle = isHiddenAb ? "#FB923C" : "#5865F2";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Dex Book Vector Icon
+    drawBookIcon(ctx, cardX + 18, headerY + 28, 12, 10, isHiddenAb ? "#FB923C" : "#60A5FA");
+    ctx.textBaseline = "middle";
+    ctx.font = "bold 16px DungGeunMo";
+    ctx.fillStyle = isHiddenAb ? "#FB923C" : "#FFFFFF";
+    ctx.textAlign = "left";
+    ctx.fillText(`${isHiddenAb ? "[숨특]" : "[특성]"} ${abTitle}`, cardX + 32, headerY + 28);
+
+    // Active status pill
+    ctx.font = "bold 12px DungGeunMo";
+    ctx.fillStyle = "#22C55E";
+    ctx.textAlign = "right";
+    ctx.fillText(isKo ? "적용 중" : "Active", cardX + cardW - 12, headerY + 28);
+
+    // 2. Main Flavor / Effect Message Box (y: 108 ~ 254, H: 146)
+    const descY = 108;
+    const descH = 146;
+
+    ctx.fillStyle = "#181B26";
+    ctx.beginPath();
+    ctx.roundRect(cardX, descY, cardW, descH, 6);
+    ctx.fill();
+    ctx.strokeStyle = "#282D3D";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.font = "bold 13px DungGeunMo";
+    ctx.fillStyle = "#94A3B8";
+    ctx.textAlign = "left";
+    ctx.fillText(isKo ? "특성 효과 설명" : "Ability Effect Description", cardX + 12, descY + 20);
+
+    ctx.strokeStyle = "#282D3D";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cardX + 10, descY + 30);
+    ctx.lineTo(cardX + cardW - 10, descY + 30);
+    ctx.stroke();
+
+    ctx.font = "14px DungGeunMo";
+    ctx.fillStyle = "#F1F5F9";
+    drawWrappedText(ctx, abDesc, cardX + 12, descY + 52, cardW - 24, 22);
+
+    // 3. Bottom Guide Box (y: 262 ~ 356, H: 94)
+    const guideY = 262;
+    const guideH = 94;
+
+    ctx.fillStyle = "#12141C";
+    ctx.beginPath();
+    ctx.roundRect(cardX, guideY, cardW, guideH, 6);
+    ctx.fill();
+    ctx.strokeStyle = "#282D3D";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.font = "bold 13px DungGeunMo";
+    ctx.fillStyle = "#60A5FA";
+    ctx.fillText(isKo ? "특성 교체 및 해금 안내" : "Ability Switch Guide", cardX + 12, guideY + 22);
+
+    ctx.font = "12px DungGeunMo";
+    ctx.fillStyle = "#94A3B8";
+    if (isHiddenAb) {
+      ctx.fillText(isKo ? "숨겨진 특성이 적용된 상태입니다." : "Hidden ability is currently equipped.", cardX + 12, guideY + 48);
+      ctx.fillText(isKo ? "상단 버튼으로 일반 특성 전환이 가능합니다." : "Press top button to switch back.", cardX + 12, guideY + 70);
+    } else {
+      ctx.fillText(isKo ? "일반 특성이 적용된 상태입니다." : "Regular ability is currently equipped.", cardX + 12, guideY + 48);
+      const haText = hasHaUnlocked
+        ? (isKo ? "숨특이 해금되어 있습니다. (상단 버튼으로 교체)" : "HA unlocked! (Press top button)")
+        : (isKo ? "숨특은 알 부화나 사탕으로 해금할 수 있습니다." : "HA can be unlocked via eggs/candies.");
+      ctx.fillText(haText, cardX + 12, guideY + 70);
+    }
+
+    return;
+  }
+
+  // =========================================================================
+  // TAB 5: PASSIVE SPEC CARD (도감 스타일 패시브 상세 설명 메시지 박스)
+  // =========================================================================
+  if (currentTab === "passive") {
+    const passTitle = isKo ? sel.passiveAbilityKo : sel.passiveAbility;
+    const rawPassName = sel.passiveAbility || "";
+    const passKey = rawPassName.toLowerCase().replace(/[\s_]+/g, "-");
+    const passDesc = ABILITY_DETAILED_DESC_KO[passKey] || (isKo ? "포케로그 스타팅 고유의 강력한 패시브 특성입니다." : "A unique PokeRogue starter passive ability.");
+
+    // 1. Top Title Header Card (y: 44 ~ 100, H: 56)
+    const headerY = 44;
+    const headerH = 56;
+    const cardW = panelW - 24;
+    const cardX = panelX + 12;
+
+    ctx.fillStyle = "#12141C";
+    ctx.beginPath();
+    ctx.roundRect(cardX, headerY, cardW, headerH, 6);
+    ctx.fill();
+    ctx.strokeStyle = hasPassiveUnlocked ? "#34D399" : "#64748B";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    drawBookIcon(ctx, cardX + 18, headerY + 28, 12, 10, hasPassiveUnlocked ? "#34D399" : "#64748B");
+    ctx.textBaseline = "middle";
+    ctx.font = "bold 16px DungGeunMo";
+    ctx.fillStyle = hasPassiveUnlocked ? "#34D399" : "#94A3B8";
+    ctx.textAlign = "left";
+    ctx.fillText(`[패시브] ${passTitle}`, cardX + 32, headerY + 28);
+
+    // Active status pill
+    ctx.font = "bold 12px DungGeunMo";
+    ctx.textAlign = "right";
+    if (hasPassiveUnlocked) {
+      ctx.fillStyle = usePassive ? "#22C55E" : "#94A3B8";
+      ctx.fillText(usePassive ? (isKo ? "적용 중" : "Active") : (isKo ? "OFF 상태" : "OFF"), cardX + cardW - 12, headerY + 28);
+    } else {
+      ctx.fillStyle = "#EF4444";
+      ctx.fillText(isKo ? "미해금" : "Locked", cardX + cardW - 12, headerY + 28);
+    }
+
+    // 2. Main Flavor / Effect Message Box (y: 108 ~ 254, H: 146)
+    const descY = 108;
+    const descH = 146;
+
+    ctx.fillStyle = "#181B26";
+    ctx.beginPath();
+    ctx.roundRect(cardX, descY, cardW, descH, 6);
+    ctx.fill();
+    ctx.strokeStyle = "#282D3D";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.font = "bold 13px DungGeunMo";
+    ctx.fillStyle = "#94A3B8";
+    ctx.textAlign = "left";
+    ctx.fillText(isKo ? "패시브 효과 설명" : "Passive Effect Description", cardX + 12, descY + 20);
+
+    ctx.strokeStyle = "#282D3D";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cardX + 10, descY + 30);
+    ctx.lineTo(cardX + cardW - 10, descY + 30);
+    ctx.stroke();
+
+    ctx.font = "14px DungGeunMo";
+    ctx.fillStyle = "#F1F5F9";
+    drawWrappedText(ctx, passDesc, cardX + 12, descY + 52, cardW - 24, 22);
+
+    // 3. Bottom Guide Box (y: 262 ~ 356, H: 94)
+    const guideY = 262;
+    const guideH = 94;
+
+    ctx.fillStyle = "#12141C";
+    ctx.beginPath();
+    ctx.roundRect(cardX, guideY, cardW, guideH, 6);
+    ctx.fill();
+    ctx.strokeStyle = "#282D3D";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.font = "bold 13px DungGeunMo";
+    ctx.fillStyle = "#34D399";
+    ctx.fillText(isKo ? "사탕 및 코스트 할인 안내" : "Candy & Discount Guide", cardX + 12, guideY + 22);
+
+    ctx.font = "12px DungGeunMo";
+    ctx.fillStyle = "#94A3B8";
+    if (hasPassiveUnlocked) {
+      ctx.fillText(isKo ? "패시브가 해금되어 상시 발동됩니다." : "Passive is unlocked and active.", cardX + 12, guideY + 48);
+      ctx.fillText(isKo ? `출전 코스트 -1C 할인 혜택 적용 중 (${sel.reducedCost}C)` : `Discount applied: ${sel.reducedCost}C`, cardX + 12, guideY + 70);
+    } else {
+      ctx.fillText(isKo ? `현재 보유 사탕: ${candies}개` : `Current Candies: ${candies}`, cardX + 12, guideY + 48);
+      ctx.fillText(isKo ? "사탕을 모아 코스트 관리 탭에서 해금하세요." : "Unlock via Candy/Cost tab.", cardX + 12, guideY + 70);
+    }
 
     return;
   }
