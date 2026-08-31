@@ -2740,16 +2740,16 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
 
     const contentX = bodyX + 10;
     const contentW = bodyW - 20;
-    const startCardY = 48;
+    const startCardY = 52;
     const chipGap = 8;
     const tileW = Math.floor((contentW - chipGap) / 2);
-    const tileH = 122;
+    const tileH = 138;
 
     for (let t = 0; t <= 3; t++) {
       const col = t % 2;
       const row = Math.floor(t / 2);
       const cX = contentX + col * (tileW + chipGap);
-      const cY = startCardY + row * (tileH + 8);
+      const cY = startCardY + row * (tileH + 10);
 
       const isUnlocked = t === 0 || t <= unlockedMaxShinyTier;
       const isCurrent = currentShinyTier === t;
@@ -2768,48 +2768,48 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
 
       // 2. Sprite Image Box (Centered Upper Half)
       const spr = tierSprites && tierSprites[t] ? tierSprites[t] : (t === 0 ? normalSprite : shinySprite);
-      const sprBoxSize = 56;
+      const sprBoxSize = 62;
       const sprBoxX = cX + (tileW - sprBoxSize) / 2;
-      const sprBoxY = cY + 8;
+      const sprBoxY = cY + 10;
 
       if (isUnlocked && spr) {
-        const scale = 1.05;
+        const scale = 1.1;
         const sW = spr.width * scale;
         const sH = spr.height * scale;
         ctx.drawImage(spr, sprBoxX + (sprBoxSize - sW) / 2, sprBoxY + (sprBoxSize - sH) / 2, sW, sH);
       } else if (!isUnlocked) {
         // Locked state: subtle lock icon in center of sprite area
-        drawLockIcon(ctx, cX + tileW / 2, cY + 36, 12, 14, "#475569");
+        drawLockIcon(ctx, cX + tileW / 2, cY + 40, 14, 16, "#475569");
       }
 
       // 3. Stars Row (Replaces "TIER X" text with beautiful Stars!)
-      const starsY = cY + 74;
+      const starsY = cY + 84;
       if (t === 0) {
         // Normal Form: Soft subtle text
         ctx.textBaseline = "middle";
-        ctx.font = "bold 12px DungGeunMo";
+        ctx.font = "bold 13px DungGeunMo";
         ctx.fillStyle = isCurrent ? "#FFFFFF" : (isUnlocked ? "#94A3B8" : "#475569");
         ctx.textAlign = "center";
         ctx.fillText(tierNames[0], cX + tileW / 2, starsY);
       } else {
         // Shiny Tiers: Draw Star Sparkles (1, 2, 3 stars)
         if (isUnlocked) {
-          const starSpacing = 14;
+          const starSpacing = 16;
           const totalStarsW = (t - 1) * starSpacing;
           const startStarX = (cX + tileW / 2) - (totalStarsW / 2);
           for (let sIdx = 0; sIdx < t; sIdx++) {
-            drawShinySparkle(ctx, startStarX + sIdx * starSpacing, starsY, 5.5, tierColors[t]);
+            drawShinySparkle(ctx, startStarX + sIdx * starSpacing, starsY, 6, tierColors[t]);
           }
         } else {
           ctx.textBaseline = "middle";
-          ctx.font = "bold 11px DungGeunMo";
+          ctx.font = "bold 12px DungGeunMo";
           ctx.fillStyle = "#475569";
           ctx.textAlign = "center";
           ctx.fillText(isKo ? "🔒 미해금" : "🔒 LOCKED", cX + tileW / 2, starsY);
         }
       }
 
-      // 4. Luck Info & Active State Badge (Bottom Line, y: cY + 100)
+      // 4. Luck Info & Active State Badge (Bottom Line, y: cY + 114)
       ctx.textBaseline = "middle";
       ctx.font = "bold 12px DungGeunMo";
       ctx.textAlign = "center";
@@ -2821,38 +2821,20 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
         const totalW = txtW + 14;
         const startX = (cX + tileW / 2) - (totalW / 2);
 
-        drawCheckmark(ctx, startX + 5, cY + 100, 4.5, "#22C55E");
+        drawCheckmark(ctx, startX + 5, cY + 114, 4.5, "#22C55E");
 
         ctx.fillStyle = "#22C55E";
         ctx.textAlign = "left";
-        ctx.fillText(activeLabel, startX + 14, cY + 100);
+        ctx.fillText(activeLabel, startX + 14, cY + 114);
       } else if (isUnlocked) {
         ctx.fillStyle = tierColors[t] || "#94A3B8";
-        ctx.fillText(tierLucks[t], cX + tileW / 2, cY + 100);
+        ctx.fillText(tierLucks[t], cX + tileW / 2, cY + 114);
       } else {
         ctx.fillStyle = "#475569";
         ctx.font = "11px DungGeunMo";
-        ctx.fillText(isKo ? "미해금" : "Locked", cX + tileW / 2, cY + 100);
+        ctx.fillText(isKo ? "미해금" : "Locked", cX + tileW / 2, cY + 114);
       }
     }
-
-    // 5. Bottom Guide Tip Box (y: 308 ~ 362, H: 54)
-    const guideY = 308;
-    const guideH = 54;
-    ctx.fillStyle = "#242C3E";
-    ctx.beginPath();
-    ctx.roundRect(contentX, guideY, contentW, guideH, 4);
-    ctx.fill();
-
-    ctx.textBaseline = "middle";
-    ctx.font = "bold 12px DungGeunMo";
-    ctx.fillStyle = "#F59E0B";
-    ctx.textAlign = "center";
-    ctx.fillText(isKo ? "✨ 이로치 외형을 변경하면 행운(Luck)이 적용됩니다!" : "✨ Equipping shiny forms grants battle luck!", contentX + contentW / 2, guideY + 18);
-
-    ctx.font = "bold 11px DungGeunMo";
-    ctx.fillStyle = "#94A3B8";
-    ctx.fillText(isKo ? "하단 [ ⚪ | 🟡 | 🔵 | 🔴 ] 버튼으로 원하는 폼을 선택하세요." : "Select your desired form using the [ ⚪ | 🟡 | 🔵 | 🔴 ] buttons below.", contentX + contentW / 2, guideY + 38);
 
     return;
   }
