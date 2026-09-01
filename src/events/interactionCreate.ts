@@ -169,25 +169,6 @@ export async function safeInteractionUpdate(interaction: any, data: any) {
   }
 }
 
-/**
- * Automatically converts an animated battle.gif into a true static battle.png
- * right after its motion frames finish, so subsequent user clicks never trigger a replay!
- */
-export function scheduleStaticAutoTransition(interaction: any, userId: string, slotId: number, durationMs: number) {
-  if (durationMs > 0) {
-    setTimeout(async () => {
-      try {
-        const battle = battleService.getOrCreateBattle(userId, slotId);
-        battle.lastMoveEffect = null;
-        const staticData = await renderBattleMessageData(userId, slotId);
-        await safeInteractionUpdate(interaction, staticData).catch(() => null);
-      } catch (e) {
-        // Ignore transient errors
-      }
-    }, durationMs + 80);
-  }
-}
-
 export async function renderBattleMessageData(
   userId: string,
   slotId: number,
@@ -3569,16 +3550,12 @@ export const interactionCreateEvent: BotEvent = {
           saveService.setActiveSlot(interaction.user.id, slotNum);
           const battleData = await renderBattleMessageData(interaction.user.id, slotNum, undefined, true);
           await interaction.update(battleData);
-          scheduleStaticAutoTransition(interaction, interaction.user.id, slotNum, battleData.motionDurationMs);
         }
         return;
       }
 
       // 2-7. Battle Actions (⚔️ Fight, 🎒 Bag, 🔄 Party, 🏃 Run, Moves, Balls, Next Wave)
       if (customId.startsWith("battle_")) {
-        // Instantly acknowledge the button interaction to prevent Discord 3-second timeout!
-        await interaction.deferUpdate().catch(() => null);
-
         // 2-7-A. Fight Menu Selected
         if (customId.startsWith("battle_menu_fight_")) {
           const slotId = parseInt(parts[3], 10) || 1;
@@ -3626,7 +3603,6 @@ export const interactionCreateEvent: BotEvent = {
           battleService.executePlayerMove(interaction.user.id, slotId, moveKey, profile.language);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId);
           await safeInteractionUpdate(interaction, battleData);
-          scheduleStaticAutoTransition(interaction, interaction.user.id, slotId, battleData.motionDurationMs);
           return;
         }
 
@@ -3658,7 +3634,6 @@ export const interactionCreateEvent: BotEvent = {
           battleService.advanceToNextWave(interaction.user.id, slotId);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId, undefined, true);
           await safeInteractionUpdate(interaction, battleData);
-          scheduleStaticAutoTransition(interaction, interaction.user.id, slotId, battleData.motionDurationMs);
           return;
         }
 
