@@ -28,7 +28,7 @@ export const BATTLE_LAYOUT_CONFIG = {
   // 2. 아군 발판 (좌하단 전경 1인칭 미러링)
   playerPlatform: {
     scale: 2.0,
-    x: -46,
+    x: -65,
     y: 118,
   },
   // 3. 상대 포켓몬 (원경)
@@ -40,7 +40,7 @@ export const BATTLE_LAYOUT_CONFIG = {
   // 4. 아군 포켓몬 (전경 1인칭)
   playerPokemon: {
     size: 135,     // 실제 픽셀 몸체 크기 (px)
-    x: 175,        // 발판 중심 X
+    x: 150,        // 발판 중심 X
     y: 268,        // 발판 착지점 Y
   },
   // 5. HUD 박스 위치 & 크기 (포켓로그 공식 스프라이트 규격)
@@ -5406,7 +5406,7 @@ export async function renderBattleScreen(options: BattleScreenOptions): Promise<
     drawFittedBattleSprite(ctx, playerSprite, pm.x, pm.y, pm.size);
   }
 
-  // 5. Top Right: Biome - Wave & Money
+  // 5. Top Right: Biome - Wave, Money & Weather
   const rawBiome = battle.biome || "Town";
   const biomeDisplay = isKo ? (BIOME_NAMES_KO[rawBiome.toLowerCase()] || rawBiome) : rawBiome;
   const waveText = `${biomeDisplay} - ${battle.wave || 1}`;
@@ -5434,6 +5434,28 @@ export async function renderBattleScreen(options: BattleScreenOptions): Promise<
   ctx.strokeText(moneyText, textX, moneyY);
   ctx.fillStyle = "#FDE047";
   ctx.fillText(moneyText, textX, moneyY);
+
+  // 3) Weather text right below Money (Thematic color with dark outline)
+  if (battle.weather) {
+    const wType = battle.weather;
+    const wConfig: Record<string, { labelKo: string; labelEn: string; color: string }> = {
+      sun: { labelKo: "쾌청", labelEn: "SUN", color: "#FB923C" },
+      rain: { labelKo: "비바라기", labelEn: "RAIN", color: "#60A5FA" },
+      sand: { labelKo: "모래바람", labelEn: "SAND", color: "#FBBF24" },
+      snow: { labelKo: "설경", labelEn: "SNOW", color: "#BAE6FD" },
+    };
+    const cfg = wConfig[wType] || wConfig.sun;
+    const turnsStr = battle.weatherTurns ? ` ${battle.weatherTurns}${isKo ? "턴" : "T"}` : "";
+    const weatherText = `${isKo ? cfg.labelKo : cfg.labelEn}${turnsStr}`;
+
+    const weatherY = moneyY + 18;
+    ctx.font = "bold 13px DungGeunMo";
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.85)";
+    ctx.lineWidth = 3.0;
+    ctx.strokeText(weatherText, textX, weatherY);
+    ctx.fillStyle = cfg.color;
+    ctx.fillText(weatherText, textX, weatherY);
+  }
 
   const getStatusBadge = (mon: any) => {
     if (mon.status === "par") return isKo ? " [마비]" : " [PAR]";
@@ -5499,40 +5521,7 @@ export async function renderBattleScreen(options: BattleScreenOptions): Promise<
     hpLabel: pbAssets.hpLabel,
   });
 
-  // 7.5. Weather Indicator Badge (Top Center)
-  if (battle.weather) {
-    const wType = battle.weather;
-    const wConfig: Record<string, { labelKo: string; labelEn: string; color: string }> = {
-      sun: { labelKo: "쾌청", labelEn: "SUN", color: "#EE8130" },
-      rain: { labelKo: "비바라기", labelEn: "RAIN", color: "#3B82F6" },
-      sand: { labelKo: "모래바람", labelEn: "SAND", color: "#D97706" },
-      snow: { labelKo: "설경", labelEn: "SNOW", color: "#38BDF8" },
-    };
-    const cfg = wConfig[wType] || wConfig.sun;
-    const turnsStr = battle.weatherTurns ? ` ${battle.weatherTurns}${isKo ? "턴" : "T"}` : "";
-    const wText = `[${isKo ? cfg.labelKo : cfg.labelEn}${turnsStr}]`;
 
-    ctx.font = "bold 12px DungGeunMo";
-    const textW = ctx.measureText(wText).width;
-    const wBadgeW = textW + 16;
-    const wBadgeH = 20;
-    const wBadgeX = (width - wBadgeW) / 2;
-    const wBadgeY = 12;
-
-    ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
-    ctx.beginPath();
-    ctx.roundRect(wBadgeX, wBadgeY, wBadgeW, wBadgeH, 4);
-    ctx.fill();
-
-    ctx.strokeStyle = cfg.color;
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    ctx.fillStyle = "#FFFFFF";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(wText, wBadgeX + wBadgeW / 2, wBadgeY + wBadgeH / 2 + 0.5);
-  }
 
 /**
  * Draws the 2x2 Battle Move Cards Grid during FIGHT phase
