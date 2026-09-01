@@ -5701,9 +5701,10 @@ function drawBattleFightMovesGrid(ctx: any, combatMon: any, isKo: boolean, categ
     const defaultDialogue = isKo
       ? `${pDisplayName}(은)는 무엇을 할까?`
       : `What will ${pDisplayName} do?`;
-    const dialogueLines = (battle.dialogueText || defaultDialogue).replace(/\\n/g, "\n").split("\n");
+    const rawLines = (battle.dialogueText || defaultDialogue).replace(/\\n/g, "\n").split("\n").map((l: string) => l.trim()).filter((l: string) => l.length > 0);
+    const linesToShow = rawLines.length > 3 ? rawLines.slice(-3) : rawLines;
 
-    dialogueLines.slice(0, 3).forEach((line: string, lIdx: number) => {
+    linesToShow.forEach((line: string, lIdx: number) => {
       ctx.fillText(line, 24, boxY + 16 + lIdx * 25);
     });
   }

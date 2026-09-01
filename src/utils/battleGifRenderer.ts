@@ -136,7 +136,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       hitFlash: false,
       enemyHp: enemyHp,
       playerHp: playerHp,
-      textLineIdx: 3
+      textLineIdx: 99
     }
   ];
 
@@ -254,7 +254,7 @@ export async function renderBattleFaintGif(options: BattleAnimationOptions): Pro
     // Frame 4: Completely Gone (200ms) - EFFECT OFF!
     { delay: 200, showEffect: false, hitFlash: false, eOffsetY: 70, opacity: 0.0, enemyHp: 0, textLineIdx: 3 },
     // Frame 5: 60-Second Static Hold Frame (60,000ms)
-    { delay: 60000, showEffect: false, hitFlash: false, eOffsetY: 70, opacity: 0.0, enemyHp: 0, textLineIdx: 3 }
+    { delay: 60000, showEffect: false, hitFlash: false, eOffsetY: 70, opacity: 0.0, enemyHp: 0, textLineIdx: 99 }
   ];
 
   const motionDurationMs = faintFrames.slice(0, -1).reduce((sum, f) => sum + f.delay, 0);
@@ -366,7 +366,7 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
     // Frame 4: Aligned on Platform (220ms)
     { delay: 220, pPlatX: 0, ePlatX: 0, pMonX: 0, eMonX: 0, showHud: true, textLineIdx: 2 },
     // Frame 5: 60-Second Static Hold Frame (60,000ms)
-    { delay: 60000, pPlatX: 0, ePlatX: 0, pMonX: 0, eMonX: 0, showHud: true, textLineIdx: 2 }
+    { delay: 60000, pPlatX: 0, ePlatX: 0, pMonX: 0, eMonX: 0, showHud: true, textLineIdx: 99 }
   ];
 
   const motionDurationMs = entryFrames.slice(0, -1).reduce((sum, f) => sum + f.delay, 0);
@@ -538,8 +538,10 @@ function renderBattleDialogue(ctx: any, width: number, height: number, dialogueL
   ctx.fillStyle = "#FFFFFF";
 
   if (textLineIdx > 0) {
-    const linesToShow = dialogueLines.slice(0, textLineIdx);
-    linesToShow.slice(0, 3).forEach((line: string, lIdx: number) => {
+    const rawLines = dialogueLines.map((l: string) => l.trim()).filter((l: string) => l.length > 0);
+    const available = rawLines.slice(0, textLineIdx);
+    const linesToShow = available.length > 3 ? available.slice(-3) : available;
+    linesToShow.forEach((line: string, lIdx: number) => {
       ctx.fillText(line, 24, boxY + 16 + lIdx * 25);
     });
   }
