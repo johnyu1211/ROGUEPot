@@ -176,45 +176,42 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   const em = BATTLE_LAYOUT_CONFIG.enemyPokemon;
   const pm = BATTLE_LAYOUT_CONFIG.playerPokemon;
 
+  const offCanvas = createCanvas(width, height);
+  const offCtx = offCanvas.getContext("2d");
+  offCtx.imageSmoothingEnabled = false;
+
   for (const f of framesConfig) {
-    ctx.clearRect(0, 0, width, height);
+    const targetCtx = f.isBlur ? offCtx : ctx;
+    targetCtx.clearRect(0, 0, width, height);
 
-    if (f.isBlur) {
-      ctx.filter = "blur(4px) brightness(0.90)";
-    } else {
-      ctx.filter = "none";
-    }
-
-    if (arena.bg) ctx.drawImage(arena.bg, 0, 0, width, 275);
-    else { ctx.fillStyle = "#487848"; ctx.fillRect(0, 0, width, 275); }
+    if (arena.bg) targetCtx.drawImage(arena.bg, 0, 0, width, 275);
+    else { targetCtx.fillStyle = "#487848"; targetCtx.fillRect(0, 0, width, 275); }
 
     if (arena.b) {
-      ctx.drawImage(arena.b, ep.x, ep.y, enemyPlatW, enemyPlatH);
-      ctx.save();
-      ctx.translate(width, 0);
-      ctx.scale(-1, 1);
-      ctx.drawImage(arena.b, pp.x, pp.y, playerPlatW, playerPlatH);
-      ctx.restore();
+      targetCtx.drawImage(arena.b, ep.x, ep.y, enemyPlatW, enemyPlatH);
+      targetCtx.save();
+      targetCtx.translate(width, 0);
+      targetCtx.scale(-1, 1);
+      targetCtx.drawImage(arena.b, pp.x, pp.y, playerPlatW, playerPlatH);
+      targetCtx.restore();
     }
 
     if (enemySprite) {
-      ctx.save();
-      if (f.hitFlash && isPlayer) ctx.filter = "brightness(1.8) contrast(1.2)";
-      drawFittedBattleSprite(ctx, enemySprite, em.x + f.eOffset.x, em.y + f.eOffset.y, em.size);
-      ctx.restore();
+      targetCtx.save();
+      if (f.hitFlash && isPlayer) targetCtx.filter = "brightness(1.8) contrast(1.2)";
+      drawFittedBattleSprite(targetCtx, enemySprite, em.x + f.eOffset.x, em.y + f.eOffset.y, em.size);
+      targetCtx.restore();
     }
 
     if (playerSprite) {
-      ctx.save();
-      if (f.hitFlash && !isPlayer) ctx.filter = "brightness(1.8) contrast(1.2)";
-      drawFittedBattleSprite(ctx, playerSprite, pm.x + f.pOffset.x, pm.y + f.pOffset.y, pm.size);
-      ctx.restore();
+      targetCtx.save();
+      if (f.hitFlash && !isPlayer) targetCtx.filter = "brightness(1.8) contrast(1.2)";
+      drawFittedBattleSprite(targetCtx, playerSprite, pm.x + f.pOffset.x, pm.y + f.pOffset.y, pm.size);
+      targetCtx.restore();
     }
 
-    ctx.filter = "none";
-
     if (f.showEffect) {
-      renderMoveEffect(ctx, { moveKey, type, isSpecial, isPlayerAttacking: isPlayer });
+      renderMoveEffect(targetCtx, { moveKey, type, isSpecial, isPlayerAttacking: isPlayer });
     }
 
     // Draw Stat Boost (Upward Arrows) / Stat Drop (Downward Arrows)
@@ -224,28 +221,34 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           ? { x: pm.x + pm.size / 2, y: pm.y + pm.size * 0.45 }
           : { x: em.x + em.size / 2, y: em.y + em.size * 0.45 };
         if (sc.direction === "up") {
-          drawStatBoostEffect(ctx, centerPos, f.statProgress);
+          drawStatBoostEffect(targetCtx, centerPos, f.statProgress);
         } else if (sc.direction === "down") {
-          drawStatDropEffect(ctx, centerPos, f.statProgress);
+          drawStatDropEffect(targetCtx, centerPos, f.statProgress);
         }
       }
     }
 
     if (!f.isBlur) {
-      renderBattleHeader(ctx, width, battle, isKo);
-      renderBattleHuds(ctx, battle, isKo, pbAssets, f.enemyHp, f.playerHp);
-      renderBattleDialogue(ctx, width, height, dialogueLines, f.textLineIdx);
+      renderBattleHeader(targetCtx, width, battle, isKo);
+      renderBattleHuds(targetCtx, battle, isKo, pbAssets, f.enemyHp, f.playerHp);
+      renderBattleDialogue(targetCtx, width, height, dialogueLines, f.textLineIdx);
     } else {
-      // Clean text-free dialogue box for smooth loading transition
+      // Base empty dialogue box drawn on offCanvas before full-frame blur
       const boxY = 270;
-      ctx.fillStyle = "#131924";
-      ctx.fillRect(0, boxY, width, height - boxY);
-      ctx.strokeStyle = "#0D9488";
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.moveTo(0, boxY);
-      ctx.lineTo(width, boxY);
-      ctx.stroke();
+      targetCtx.fillStyle = "#131924";
+      targetCtx.fillRect(0, boxY, width, height - boxY);
+      targetCtx.strokeStyle = "#0D9488";
+      targetCtx.lineWidth = 2.5;
+      targetCtx.beginPath();
+      targetCtx.moveTo(0, boxY);
+      targetCtx.lineTo(width, boxY);
+      targetCtx.stroke();
+
+      // Apply UNIFIED 100% Full-Screen Blur to the main canvas
+      ctx.clearRect(0, 0, width, height);
+      ctx.filter = "blur(6px) brightness(0.88)";
+      ctx.drawImage(offCanvas, 0, 0, width, height);
+      ctx.filter = "none";
     }
 
     encoder.setDelay(f.delay);
@@ -331,61 +334,64 @@ export async function renderBattleFaintGif(options: BattleAnimationOptions): Pro
   const em = BATTLE_LAYOUT_CONFIG.enemyPokemon;
   const pm = BATTLE_LAYOUT_CONFIG.playerPokemon;
 
+  const offFaintCanvas = createCanvas(width, height);
+  const offFaintCtx = offFaintCanvas.getContext("2d");
+  offFaintCtx.imageSmoothingEnabled = false;
+
   for (const f of faintFrames) {
-    ctx.clearRect(0, 0, width, height);
+    const targetCtx = f.isBlur ? offFaintCtx : ctx;
+    targetCtx.clearRect(0, 0, width, height);
 
-    if (f.isBlur) {
-      ctx.filter = "blur(4px) brightness(0.90)";
-    } else {
-      ctx.filter = "none";
-    }
-
-    if (arena.bg) ctx.drawImage(arena.bg, 0, 0, width, 275);
-    else { ctx.fillStyle = "#487848"; ctx.fillRect(0, 0, width, 275); }
+    if (arena.bg) targetCtx.drawImage(arena.bg, 0, 0, width, 275);
+    else { targetCtx.fillStyle = "#487848"; targetCtx.fillRect(0, 0, width, 275); }
 
     if (arena.b) {
-      ctx.drawImage(arena.b, ep.x, ep.y, enemyPlatW, enemyPlatH);
-      ctx.save();
-      ctx.translate(width, 0);
-      ctx.scale(-1, 1);
-      ctx.drawImage(arena.b, pp.x, pp.y, playerPlatW, playerPlatH);
-      ctx.restore();
+      targetCtx.drawImage(arena.b, ep.x, ep.y, enemyPlatW, enemyPlatH);
+      targetCtx.save();
+      targetCtx.translate(width, 0);
+      targetCtx.scale(-1, 1);
+      targetCtx.drawImage(arena.b, pp.x, pp.y, playerPlatW, playerPlatH);
+      targetCtx.restore();
     }
 
     // Enemy Fainting Sprite (Sliding Down + Fading Opacity)
     if (enemySprite && f.opacity > 0) {
-      ctx.save();
-      ctx.globalAlpha = f.opacity;
-      if (f.hitFlash) ctx.filter = "brightness(1.8) contrast(1.2)";
-      drawFittedBattleSprite(ctx, enemySprite, em.x, em.y + f.eOffsetY, em.size);
-      ctx.restore();
+      targetCtx.save();
+      targetCtx.globalAlpha = f.opacity;
+      if (f.hitFlash) targetCtx.filter = "brightness(1.8) contrast(1.2)";
+      drawFittedBattleSprite(targetCtx, enemySprite, em.x, em.y + f.eOffsetY, em.size);
+      targetCtx.restore();
     }
 
     if (playerSprite) {
-      drawFittedBattleSprite(ctx, playerSprite, pm.x, pm.y, pm.size);
+      drawFittedBattleSprite(targetCtx, playerSprite, pm.x, pm.y, pm.size);
     }
 
-    ctx.filter = "none";
-
     if (f.showEffect) {
-      renderMoveEffect(ctx, { moveKey, type, isSpecial, isPlayerAttacking: true });
+      renderMoveEffect(targetCtx, { moveKey, type, isSpecial, isPlayerAttacking: true });
     }
 
     if (!f.isBlur) {
-      renderBattleHeader(ctx, width, battle, isKo);
-      renderBattleHuds(ctx, battle, isKo, pbAssets, f.enemyHp, playerMon.hp);
-      renderBattleDialogue(ctx, width, height, dialogueLines, f.textLineIdx);
+      renderBattleHeader(targetCtx, width, battle, isKo);
+      renderBattleHuds(targetCtx, battle, isKo, pbAssets, f.enemyHp, playerMon.hp);
+      renderBattleDialogue(targetCtx, width, height, dialogueLines, f.textLineIdx);
     } else {
-      // Clean text-free dialogue box for smooth loading transition
+      // Base empty dialogue box drawn on offCanvas before full-frame blur
       const boxY = 270;
-      ctx.fillStyle = "#131924";
-      ctx.fillRect(0, boxY, width, height - boxY);
-      ctx.strokeStyle = "#0D9488";
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.moveTo(0, boxY);
-      ctx.lineTo(width, boxY);
-      ctx.stroke();
+      targetCtx.fillStyle = "#131924";
+      targetCtx.fillRect(0, boxY, width, height - boxY);
+      targetCtx.strokeStyle = "#0D9488";
+      targetCtx.lineWidth = 2.5;
+      targetCtx.beginPath();
+      targetCtx.moveTo(0, boxY);
+      targetCtx.lineTo(width, boxY);
+      targetCtx.stroke();
+
+      // Apply UNIFIED 100% Full-Screen Blur to the main canvas
+      ctx.clearRect(0, 0, width, height);
+      ctx.filter = "blur(6px) brightness(0.88)";
+      ctx.drawImage(offFaintCanvas, 0, 0, width, height);
+      ctx.filter = "none";
     }
 
     encoder.setDelay(f.delay);
