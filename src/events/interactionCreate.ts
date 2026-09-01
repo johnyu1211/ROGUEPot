@@ -190,13 +190,17 @@ export async function renderBattleMessageData(
   } else if (battle.phase === "DEFEAT") {
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
+        .setCustomId(`battle_retry_${slotId}_${userId}`)
+        .setLabel(isKo ? "🔄 이어하기 (Continue)" : "🔄 Continue")
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
         .setCustomId(`menu_newgame_${userId}`)
-        .setLabel(isKo ? "🔄 새 게임 시작" : "🔄 New Game")
+        .setLabel(isKo ? "➕ 새 게임 시작" : "➕ New Game")
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setCustomId(`menu_back_to_title_${userId}`)
         .setLabel(isKo ? "↩️ 타이틀 화면" : "↩️ Title")
-        .setStyle(ButtonStyle.Danger)
+        .setStyle(ButtonStyle.Secondary)
     );
     components.push(row);
   } else if (battle.phase === "FIGHT") {
@@ -3436,6 +3440,10 @@ export const interactionCreateEvent: BotEvent = {
 
         if (slotData) {
           saveService.setActiveSlot(interaction.user.id, slotId);
+          const battle = battleService.getOrCreateBattle(interaction.user.id, slotId);
+          if (battle.phase === "DEFEAT") {
+            battleService.restartRunFromDefeat(interaction.user.id, slotId, profile.language);
+          }
           const battleData = await renderBattleMessageData(interaction.user.id, slotId);
           await interaction.update(battleData);
         } else {
@@ -3572,6 +3580,16 @@ export const interactionCreateEvent: BotEvent = {
         if (customId.startsWith("battle_nextwave_")) {
           const slotId = parseInt(parts[2], 10) || 1;
           battleService.advanceToNextWave(interaction.user.id, slotId);
+          const battleData = await renderBattleMessageData(interaction.user.id, slotId);
+          await interaction.update(battleData);
+          return;
+        }
+
+        // 2-7-J. Retry / Continue After Defeat
+        if (customId.startsWith("battle_retry_")) {
+          const slotId = parseInt(parts[2], 10) || 1;
+          const profile = saveService.getProfile(interaction.user.id);
+          battleService.restartRunFromDefeat(interaction.user.id, slotId, profile.language);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId);
           await interaction.update(battleData);
           return;
