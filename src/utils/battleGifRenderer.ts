@@ -37,7 +37,7 @@ export interface RenderGifResult {
  * Frame 2: Single Move Effect Strike & Hit Flash (Effect ONCE!)
  * Frame 3: Recoil & Damage Settling (Effect OFF)
  * Frame 4: Neutral Return (Effect OFF)
- * Frame 5: 10-Second Static Hold Buffer (Effect OFF)
+ * Frame 5: 60-Second Static Hold Frame (Effect OFF, holds still)
  */
 export async function renderBattleMoveGif(options: BattleAnimationOptions): Promise<RenderGifResult> {
   const width = 560;
@@ -127,9 +127,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       playerHp: playerHp,
       textLineIdx: 3
     },
-    // Frame 5: 10-Second Static Hold Buffer (10,000ms)
+    // Frame 5: 60-Second Static Hold Frame (60,000ms)
     {
-      delay: 10000,
+      delay: 60000,
       pOffset: { x: 0, y: 0 },
       eOffset: { x: 0, y: 0 },
       showEffect: false,
@@ -140,7 +140,6 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     }
   ];
 
-  // Pure dynamic motion duration (Frames 1~4 = 180+240+220+200 = 840ms)
   const motionDurationMs = framesConfig.slice(0, -1).reduce((sum, f) => sum + f.delay, 0);
 
   const ep = BATTLE_LAYOUT_CONFIG.enemyPlatform;
@@ -204,7 +203,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
  * Frame 2: Sinking begins (Effect OFF)
  * Frame 3: Deep sinking beneath ground (Effect OFF)
  * Frame 4: Disappeared / Empty platform (Effect OFF)
- * Frame 5: 10-Second Static Hold Buffer
+ * Frame 5: 60-Second Static Hold Frame
  */
 export async function renderBattleFaintGif(options: BattleAnimationOptions): Promise<RenderGifResult> {
   const width = 560;
@@ -254,11 +253,10 @@ export async function renderBattleFaintGif(options: BattleAnimationOptions): Pro
     { delay: 220, showEffect: false, hitFlash: false, eOffsetY: 45, opacity: 0.35, enemyHp: 0, textLineIdx: 2 },
     // Frame 4: Completely Gone (200ms) - EFFECT OFF!
     { delay: 200, showEffect: false, hitFlash: false, eOffsetY: 70, opacity: 0.0, enemyHp: 0, textLineIdx: 3 },
-    // Frame 5: 10-Second Static Hold Buffer (10,000ms)
-    { delay: 10000, showEffect: false, hitFlash: false, eOffsetY: 70, opacity: 0.0, enemyHp: 0, textLineIdx: 3 }
+    // Frame 5: 60-Second Static Hold Frame (60,000ms)
+    { delay: 60000, showEffect: false, hitFlash: false, eOffsetY: 70, opacity: 0.0, enemyHp: 0, textLineIdx: 3 }
   ];
 
-  // Pure dynamic motion duration (Frames 1~4 = 180+220+220+200 = 820ms)
   const motionDurationMs = faintFrames.slice(0, -1).reduce((sum, f) => sum + f.delay, 0);
 
   const ep = BATTLE_LAYOUT_CONFIG.enemyPlatform;
@@ -321,7 +319,7 @@ export async function renderBattleFaintGif(options: BattleAnimationOptions): Pro
  * Frame 2: Mid-way Approach (200ms)
  * Frame 3: Near Landing & HUD appears (200ms)
  * Frame 4: Grounded on Platform (220ms)
- * Frame 5: 10-Second Static Hold Buffer (10,000ms)
+ * Frame 5: 60-Second Static Hold Frame (60,000ms)
  */
 export async function renderBattleEntryGif(options: BattleAnimationOptions): Promise<RenderGifResult> {
   const width = 560;
@@ -367,11 +365,10 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
     { delay: 200, pPlatX: -20, ePlatX: 20, pMonX: -25, eMonX: 25, showHud: true, textLineIdx: 1 },
     // Frame 4: Aligned on Platform (220ms)
     { delay: 220, pPlatX: 0, ePlatX: 0, pMonX: 0, eMonX: 0, showHud: true, textLineIdx: 2 },
-    // Frame 5: 10-Second Static Hold Buffer (10,000ms)
-    { delay: 10000, pPlatX: 0, ePlatX: 0, pMonX: 0, eMonX: 0, showHud: true, textLineIdx: 2 }
+    // Frame 5: 60-Second Static Hold Frame (60,000ms)
+    { delay: 60000, pPlatX: 0, ePlatX: 0, pMonX: 0, eMonX: 0, showHud: true, textLineIdx: 2 }
   ];
 
-  // Pure dynamic motion duration (Frames 1~4 = 180+200+200+220 = 800ms)
   const motionDurationMs = entryFrames.slice(0, -1).reduce((sum, f) => sum + f.delay, 0);
 
   const ep = BATTLE_LAYOUT_CONFIG.enemyPlatform;
@@ -392,7 +389,9 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
 
     // Sliding Platforms
     if (arena.b) {
+      // Enemy Platform sliding from right
       ctx.drawImage(arena.b, ep.x + f.ePlatX, ep.y, enemyPlatW, enemyPlatH);
+      // Player Platform sliding from left
       ctx.save();
       ctx.translate(width, 0);
       ctx.scale(-1, 1);
