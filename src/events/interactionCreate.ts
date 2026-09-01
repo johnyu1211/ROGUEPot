@@ -169,6 +169,25 @@ export async function safeInteractionUpdate(interaction: any, data: any) {
   }
 }
 
+/**
+ * Automatically converts an animated battle.gif into a true static battle.png
+ * right after its motion frames finish, so subsequent user clicks never trigger a replay!
+ */
+export function scheduleStaticAutoTransition(interaction: any, userId: string, slotId: number, durationMs: number) {
+  if (durationMs > 0) {
+    setTimeout(async () => {
+      try {
+        const battle = battleService.getOrCreateBattle(userId, slotId);
+        battle.lastMoveEffect = null;
+        const staticData = await renderBattleMessageData(userId, slotId);
+        await safeInteractionUpdate(interaction, staticData).catch(() => null);
+      } catch (e) {
+        // Ignore transient errors
+      }
+    }, durationMs + 120);
+  }
+}
+
 export async function renderBattleMessageData(
   userId: string,
   slotId: number,
@@ -183,8 +202,9 @@ export async function renderBattleMessageData(
     battle.phase = overridePhase;
   }
 
+  const uniqueId = Date.now();
   let imageBuffer: Buffer;
-  let fileName = "battle.png";
+  let fileName = `battle_${uniqueId}.png`;
   let motionDurationMs = 0;
 
   if (isEntryTransition) {
@@ -194,7 +214,7 @@ export async function renderBattleMessageData(
     });
     imageBuffer = res.buffer;
     motionDurationMs = res.motionDurationMs;
-    fileName = "battle.gif";
+    fileName = `battle_${uniqueId}.gif`;
   } else if (battle.phase === "VICTORY" && battle.lastMoveEffect) {
     const res = await renderBattleFaintGif({
       battle,
@@ -202,7 +222,7 @@ export async function renderBattleMessageData(
     });
     imageBuffer = res.buffer;
     motionDurationMs = res.motionDurationMs;
-    fileName = "battle.gif";
+    fileName = `battle_${uniqueId}.gif`;
     battle.lastMoveEffect = null;
   } else if (battle.lastMoveEffect && battle.phase === "MAIN") {
     const res = await renderBattleMoveGif({
@@ -211,13 +231,14 @@ export async function renderBattleMessageData(
     });
     imageBuffer = res.buffer;
     motionDurationMs = res.motionDurationMs;
-    fileName = "battle.gif";
+    fileName = `battle_${uniqueId}.gif`;
     battle.lastMoveEffect = null;
   } else {
     imageBuffer = await renderBattleScreen({
       battle,
       lang: profile.language,
     });
+    fileName = `battle_${uniqueId}.png`;
     motionDurationMs = 0;
   }
 
@@ -3550,6 +3571,7 @@ export const interactionCreateEvent: BotEvent = {
           saveService.setActiveSlot(interaction.user.id, slotNum);
           const battleData = await renderBattleMessageData(interaction.user.id, slotNum, undefined, true);
           await interaction.update(battleData);
+          scheduleStaticAutoTransition(interaction, interaction.user.id, slotNum, battleData.motionDurationMs);
         }
         return;
       }
@@ -3603,6 +3625,7 @@ export const interactionCreateEvent: BotEvent = {
           battleService.executePlayerMove(interaction.user.id, slotId, moveKey, profile.language);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId);
           await safeInteractionUpdate(interaction, battleData);
+          scheduleStaticAutoTransition(interaction, interaction.user.id, slotId, battleData.motionDurationMs);
           return;
         }
 
@@ -3634,6 +3657,7 @@ export const interactionCreateEvent: BotEvent = {
           battleService.advanceToNextWave(interaction.user.id, slotId);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId, undefined, true);
           await safeInteractionUpdate(interaction, battleData);
+          scheduleStaticAutoTransition(interaction, interaction.user.id, slotId, battleData.motionDurationMs);
           return;
         }
 
