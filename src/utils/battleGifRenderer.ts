@@ -104,7 +104,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       textLineIdx: 2
     },
     {
-      delay: 3500,
+      delay: 3800,
       pOffset: { x: 0, y: 0 },
       eOffset: { x: 0, y: 0 },
       showEffect: false,
@@ -220,8 +220,8 @@ export async function renderBattleFaintGif(options: BattleAnimationOptions): Pro
     { delay: 140, showEffect: false, hitFlash: false, eOffsetY: 14, opacity: 0.75, enemyHp: 0, textLineIdx: 2 },
     // Frame 3: Deep Sink & Fade Out (150ms)
     { delay: 150, showEffect: false, hitFlash: false, eOffsetY: 38, opacity: 0.35, enemyHp: 0, textLineIdx: 2 },
-    // Frame 4: Completely Fainted / Empty Platform (Holds for 3500ms)
-    { delay: 3500, showEffect: false, hitFlash: false, eOffsetY: 70, opacity: 0.0, enemyHp: 0, textLineIdx: 3 }
+    // Frame 4: Completely Fainted / Empty Platform (Holds for 3800ms)
+    { delay: 3800, showEffect: false, hitFlash: false, eOffsetY: 70, opacity: 0.0, enemyHp: 0, textLineIdx: 3 }
   ];
 
   const ep = BATTLE_LAYOUT_CONFIG.enemyPlatform;
@@ -325,7 +325,7 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
     { delay: 110, pPlatX: -180, ePlatX: 180, pMonX: -220, eMonX: 220, showHud: false, textLineIdx: 0 },
     { delay: 120, pPlatX: -80, ePlatX: 80, pMonX: -100, eMonX: 100, showHud: false, textLineIdx: 0 },
     { delay: 130, pPlatX: -20, ePlatX: 20, pMonX: -25, eMonX: 25, showHud: true, textLineIdx: 1 },
-    { delay: 3500, pPlatX: 0, ePlatX: 0, pMonX: 0, eMonX: 0, showHud: true, textLineIdx: 2 }
+    { delay: 3800, pPlatX: 0, ePlatX: 0, pMonX: 0, eMonX: 0, showHud: true, textLineIdx: 2 }
   ];
 
   const ep = BATTLE_LAYOUT_CONFIG.enemyPlatform;
