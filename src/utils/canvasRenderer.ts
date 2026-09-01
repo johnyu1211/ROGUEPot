@@ -7,6 +7,7 @@ import { POKEMON_SPECIES_DATA } from "../data/pokemonStats.js";
 import { POKEMON_NAMES_KO } from "../data/pokemonNamesKo.js";
 import { MOVES_DATA } from "../data/movesKo.js";
 import { MOVES_EN_DESC } from "../data/movesEn.js";
+import { renderMoveEffect } from "./moveEffectRenderer.js";
 
 // Register custom pixel dot font
 const fontPath = path.resolve(process.cwd(), "assets/fonts/DungGeunMo.ttf");
@@ -5406,6 +5407,11 @@ export async function renderBattleScreen(options: BattleScreenOptions): Promise<
     drawFittedBattleSprite(ctx, playerSprite, pm.x, pm.y, pm.size);
   }
 
+  // 4.5. Draw PokéRogue Authentic Move Effect (if active in this turn)
+  if (battle.lastMoveEffect) {
+    renderMoveEffect(ctx, battle.lastMoveEffect);
+  }
+
   // 5. Top Right: Biome - Wave, Money & Weather
   const rawBiome = battle.biome || "Town";
   const biomeDisplay = isKo ? (BIOME_NAMES_KO[rawBiome.toLowerCase()] || rawBiome) : rawBiome;
@@ -5699,7 +5705,7 @@ function drawBattleFightMovesGrid(ctx: any, combatMon: any, isKo: boolean, categ
     const defaultDialogue = isKo
       ? `${pDisplayName}(은)는 무엇을 할까?`
       : `What will ${pDisplayName} do?`;
-    const dialogueLines = (battle.dialogueText || defaultDialogue).split("\n");
+    const dialogueLines = (battle.dialogueText || defaultDialogue).replace(/\\n/g, "\n").split("\n");
 
     dialogueLines.slice(0, 3).forEach((line: string, lIdx: number) => {
       ctx.fillText(line, 24, boxY + 16 + lIdx * 25);
