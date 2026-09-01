@@ -83,14 +83,16 @@ export const command: Command = {
 
           console.log(`[OPEN] Found total ${threadsToClose.size} threads to check for user: ${interaction.user.tag}`);
 
-          // D. Filter and completely DELETE previous threads and messages belonging to this user
+          // D. Filter and completely DELETE only PokéRogue game threads created by this BOT for THIS specific user!
           for (const [id, existingThread] of threadsToClose) {
             const tNameLower = (existingThread.name || "").toLowerCase();
-            const isMatch = userTerms.some((term) => tNameLower.includes(term));
-            const isBotPokeRogue = existingThread.ownerId === interaction.client.user.id && (tNameLower.includes("pokérogue") || tNameLower.includes("pokerogue"));
+            const isCreatedByBot = existingThread.ownerId === interaction.client.user.id;
+            const isPokeRogueThread = tNameLower.includes("pokérogue") || tNameLower.includes("pokerogue");
+            const isThisUser = userTerms.some((term) => tNameLower.includes(term));
 
-            if (isMatch || isBotPokeRogue) {
-              console.log(`[OPEN] Deleting previous thread: "${existingThread.name}" (ID: ${id})`);
+            // STRICT SAFETY: Must be created by RogueBot AND must be a PokéRogue thread AND must belong to this specific user
+            if (isCreatedByBot && isPokeRogueThread && isThisUser) {
+              console.log(`[OPEN] Deleting previous bot session thread: "${existingThread.name}" (ID: ${id})`);
               try {
                 await existingThread.delete(`Deleted previous PokéRogue session for ${interaction.user.tag}`);
                 console.log(`[OPEN] Successfully deleted thread: ${id}`);
