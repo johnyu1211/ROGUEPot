@@ -5362,9 +5362,10 @@ export async function renderBattleScreen(options: BattleScreenOptions): Promise<
     drawFittedBattleSprite(ctx, playerSprite, pm.x, pm.y, pm.size);
   }
 
-  // 5. Top Wave & Biome Banner (Only visible when Bag / 가방 is opened)
+  // 5. Top Wave & Banner
   const isBagPhase = battle.phase === "BAG";
   if (isBagPhase) {
+    // Full Top Banner for Bag Screen: Left = Money, Right = Wave & Biome
     ctx.fillStyle = "rgba(17, 24, 39, 0.92)";
     ctx.fillRect(0, 0, width, 30);
     ctx.strokeStyle = "#1F2937";
@@ -5375,15 +5376,41 @@ export async function renderBattleScreen(options: BattleScreenOptions): Promise<
     ctx.stroke();
 
     ctx.textBaseline = "middle";
-    ctx.font = "bold 14px DungGeunMo";
-    ctx.fillStyle = "#38BDF8";
-    ctx.textAlign = "left";
-    ctx.fillText(`Wave ${battle.wave} - ${battle.biome}`, 14, 15);
 
+    // Left: Money
     ctx.font = "bold 13px DungGeunMo";
     ctx.fillStyle = "#FDE047";
+    ctx.textAlign = "left";
+    const moneyLabel = isKo ? `보유 금액: ₩${(battle.money || 0).toLocaleString()}` : `Money: ₩${(battle.money || 0).toLocaleString()}`;
+    ctx.fillText(moneyLabel, 14, 15);
+
+    // Right: Wave & Biome
+    ctx.font = "bold 14px DungGeunMo";
+    ctx.fillStyle = "#38BDF8";
     ctx.textAlign = "right";
-    ctx.fillText(`₩${(battle.money || 0).toLocaleString()} | ${(battle.score || 0).toLocaleString()} P`, width - 14, 15);
+    ctx.fillText(`Wave ${battle.wave || 1} - ${battle.biome}`, width - 14, 15);
+  } else {
+    // Standard Battle Screen: Top-Right Wave Badge
+    const waveText = `Wave ${battle.wave || 1}`;
+    ctx.font = "bold 13px DungGeunMo";
+    const waveW = ctx.measureText(waveText).width;
+    const badgeW = waveW + 16;
+    const badgeH = 20;
+    const badgeX = width - badgeW - 14;
+    const badgeY = 12;
+
+    ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+    ctx.beginPath();
+    ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 4);
+    ctx.fill();
+    ctx.strokeStyle = "#0D9488";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = "#38BDF8";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(waveText, badgeX + badgeW / 2, badgeY + badgeH / 2 + 0.5);
   }
 
   const getStatusBadge = (mon: any) => {
