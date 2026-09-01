@@ -84,6 +84,11 @@ export interface BattlePokemon {
     isShiny?: boolean;
   } | null;
 
+  // Special Mechanic: 2-Turn Charging & Recharge Moves (Solar Beam, Fly, Dig, Hyper Beam, etc.)
+  chargingMove?: string | null;
+  isSemiInvulnerable?: boolean;
+  mustRecharge?: boolean;
+
   isShiny?: boolean;
   shinyTier?: number;
   isBoss?: boolean;
@@ -635,6 +640,15 @@ export class BattleService {
     const targetName = isActorPlayer ? (isKo ? target.nameKo : target.name) : target.name;
     const moveName = isKo ? move.nameKo : move.name.toUpperCase();
 
+    // 0. Recharge Turn Check (Hyper Beam, Giga Impact, etc.)
+    if (actor.mustRecharge) {
+      actor.mustRecharge = false;
+      return {
+        log: isKo ? `${actorName}(은)는 반동으로 움직일 수 없다!` : `${actorName} must recharge!`,
+        damage: 0,
+      };
+    }
+
     // 1. Status Impediment Check (Sleep, Freeze, Paralysis)
     if (actor.status === "slp") {
       actor.sleepTurns = (actor.sleepTurns || 0) + 1;
@@ -676,6 +690,74 @@ export class BattleService {
     }
 
     const moveNameLower = activeMove.name.toLowerCase().replace(/[\s_]+/g, "-");
+
+    // Target Semi-Invulnerable Check (Fly, Dig, Dive, Bounce, Shadow Force)
+    if (target.isSemiInvulnerable) {
+      return {
+        log: isKo ? `${actorName}의 ${moveName}! 하지만 ${targetName}에게는 닿지 않았다!` : `${actorName}'s ${moveName}! But it couldn't hit ${targetName}!`,
+        damage: 0,
+      };
+    }
+
+    // 3.4. 2-Turn Charging Moves (Solar Beam, Solar Blade, Fly, Dig, Dive, Bounce, Skull Bash, Meteor Beam, Sky Attack)
+    const isSolarMove = moveNameLower === "solar-beam" || moveNameLower === "solar-blade";
+    if (isSolarMove) {
+      // In Harsh Sunlight (쾌청): No charging turn needed! Fires immediately!
+      if (battle?.weather !== "sun") {
+        if (actor.chargingMove !== moveNameLower) {
+          actor.chargingMove = moveNameLower;
+          return {
+            log: isKo ? `${actorName}(은)는 빛을 흡수하고 있다!` : `${actorName} took in sunlight!`,
+            damage: 0,
+          };
+        }
+        // Turn 2: Unleash attack
+        actor.chargingMove = null;
+      }
+    } else if (["fly", "dig", "dive", "bounce", "shadow-force", "phantom-force"].includes(moveNameLower)) {
+      if (actor.chargingMove !== moveNameLower) {
+        actor.chargingMove = moveNameLower;
+        actor.isSemiInvulnerable = true;
+        let chargeText = "";
+        if (moveNameLower === "fly") chargeText = isKo ? `${actorName}(은)는 하늘 높이 날아올랐다!` : `${actorName} flew up high!`;
+        else if (moveNameLower === "dig") chargeText = isKo ? `${actorName}(은)는 땅속으로 파고들었다!` : `${actorName} burrowed underground!`;
+        else if (moveNameLower === "dive") chargeText = isKo ? `${actorName}(은)는 물속으로 잠수했다!` : `${actorName} hid underwater!`;
+        else if (moveNameLower === "bounce") chargeText = isKo ? `${actorName}(은)는 높이 튀어올랐다!` : `${actorName} bounced up high!`;
+        else chargeText = isKo ? `${actorName}(은)는 모습을 감췄다!` : `${actorName} vanished instantly!`;
+        return { log: chargeText, damage: 0 };
+      }
+      actor.chargingMove = null;
+      actor.isSemiInvulnerable = false;
+    } else if (moveNameLower === "skull-bash") {
+      if (actor.chargingMove !== moveNameLower) {
+        actor.chargingMove = moveNameLower;
+        actor.stages.def = Math.min(6, actor.stages.def + 1);
+        return {
+          log: isKo ? `${actorName}(은)는 고개를 숙이고 방어를 올렸다! (+1)` : `${actorName} tucked in its head and its Defense rose! (+1)`,
+          damage: 0,
+        };
+      }
+      actor.chargingMove = null;
+    } else if (moveNameLower === "meteor-beam") {
+      if (actor.chargingMove !== moveNameLower) {
+        actor.chargingMove = moveNameLower;
+        actor.stages.spa = Math.min(6, actor.stages.spa + 1);
+        return {
+          log: isKo ? `${actorName}(은)는 우주의 힘을 모으고 특수공격을 올렸다! (+1)` : `${actorName} gathered space power and its Sp. Atk rose! (+1)`,
+          damage: 0,
+        };
+      }
+      actor.chargingMove = null;
+    } else if (moveNameLower === "sky-attack") {
+      if (actor.chargingMove !== moveNameLower) {
+        actor.chargingMove = moveNameLower;
+        return {
+          log: isKo ? `${actorName}(은)는 눈부신 빛에 휩싸였다!` : `${actorName} became cloaked in a harsh light!`,
+          damage: 0,
+        };
+      }
+      actor.chargingMove = null;
+    }
 
     // 3.5. OHKO (One-Hit KO / 일격필살기: 뿔드릴, 가위자르기, 땅가르기, 절대영도)
     const isOHKO = ["horn-drill", "guillotine", "fissure", "sheer-cold"].includes(moveNameLower);
@@ -884,6 +966,7 @@ export class BattleService {
     } else if (battle?.weather === "rain") {
       if (activeMove.type.toLowerCase() === "water") weatherMod = 1.5;
       else if (activeMove.type.toLowerCase() === "fire") weatherMod = 0.5;
+      if (moveNameLower === "solar-beam" || moveNameLower === "solar-blade") weatherMod = 0.5;
     } else if (battle?.weather === "sand" || battle?.weather === "snow") {
       if (moveNameLower === "solar-beam" || moveNameLower === "solar-blade") weatherMod = 0.5;
     }
@@ -951,6 +1034,11 @@ export class BattleService {
 
     if (isCrit && typeMod > 0) effLog += isKo ? " 급소에 맞았다!" : " A critical hit!";
     if (hitCount > 1) effLog += isKo ? ` (${hitCount}회 명중!)` : ` (Hit ${hitCount} times!)`;
+
+    // Set recharge turn requirement for Hyper Beam / Giga Impact family
+    if (["hyper-beam", "giga-impact", "frenzy-plant", "blast-burn", "hydro-cannon", "rock-wrecker", "roar-of-time"].includes(moveNameLower)) {
+      actor.mustRecharge = true;
+    }
 
     const mainLog = isKo
       ? `${actorName}의 ${moveName}! ${damage > 0 ? `${damage} 데미지!` : ""}${effLog}${damageLog}${extraEffects}`
