@@ -70,19 +70,22 @@ export const command: Command = {
             }
           }
 
-          // C. Filter and close threads belonging to this user
+          // C. Filter and completely DELETE previous threads and messages belonging to this user
           for (const [_, existingThread] of threadsToClose) {
-            if (existingThread.archived) continue;
             const tNameLower = existingThread.name.toLowerCase();
             const isMatch = userTerms.some((term) => tNameLower.includes(term));
 
             if (isMatch || (existingThread.ownerId === interaction.client.user.id && (tNameLower.includes("pokérogue") || tNameLower.includes("pokerogue")))) {
-              await existingThread.setLocked(true, `Closed previous session for ${interaction.user.tag}`).catch(() => null);
-              await existingThread.setArchived(true, `Closed previous session for ${interaction.user.tag}`).catch(() => null);
+              // Delete the thread completely (which removes all messages and the thread entirely from Discord)
+              await existingThread.delete(`Deleted previous PokéRogue session for ${interaction.user.tag}`).catch(async () => {
+                // Fallback to locking and archiving if deletion permission is lacking
+                await existingThread.setLocked(true).catch(() => null);
+                await existingThread.setArchived(true).catch(() => null);
+              });
             }
           }
         } catch (threadCloseErr) {
-          console.warn("[OPEN] Note on closing existing threads:", threadCloseErr);
+          console.warn("[OPEN] Note on deleting existing threads:", threadCloseErr);
         }
 
         // 2. Create the fresh new thread
