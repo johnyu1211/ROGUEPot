@@ -2,7 +2,7 @@
 import GIFEncoder from "gif-encoder-2";
 import { createCanvas } from "@napi-rs/canvas";
 import { BattleState } from "../services/battleService.js";
-import { renderMoveEffect } from "./moveEffectRenderer.js";
+import { renderMoveEffect, drawStatBoostEffect, drawStatDropEffect } from "./moveEffectRenderer.js";
 import { POKEMON_SPECIES_DATA } from "../data/pokemonStats.js";
 import {
   BATTLE_LAYOUT_CONFIG,
@@ -33,11 +33,12 @@ export interface RenderGifResult {
 
 /**
  * 1. Standard Move Execution GIF:
+ * Frame 0: Leading Static Buffer (1000ms) - Calm intro announcement
  * Frame 1: Lunge / Windup (No effect)
  * Frame 2: Single Move Effect Strike & Hit Flash (Effect ONCE!)
- * Frame 3: Recoil & Damage Settling (Effect OFF)
- * Frame 4: Neutral Return (Effect OFF)
- * Frame 5: 60-Second Static Hold Frame (Effect OFF, holds still)
+ * Frame 3: Recoil & Damage Settling + Stat Particles Start
+ * Frame 4: Neutral Return + Stat Particles Climax
+ * Frame 5: 11-Minute Static Hold Frame (Effect OFF, holds still)
  */
 export async function renderBattleMoveGif(options: BattleAnimationOptions): Promise<RenderGifResult> {
   const width = 560;
@@ -92,7 +93,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       hitFlash: false,
       enemyHp: enemyHp,
       playerHp: playerHp,
-      textLineIdx: 1
+      textLineIdx: 1,
+      statProgress: undefined,
     },
     // Frame 1: Attacker Windup & Lunge (180ms)
     {
@@ -103,7 +105,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       hitFlash: false,
       enemyHp: enemyHp,
       playerHp: playerHp,
-      textLineIdx: 1
+      textLineIdx: 1,
+      statProgress: undefined,
     },
     // Frame 2: Move Effect Strikes Target (240ms) - ONLY FRAME WITH EFFECT!
     {
@@ -114,9 +117,10 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       hitFlash: true,
       enemyHp: enemyHp,
       playerHp: playerHp,
-      textLineIdx: 1
+      textLineIdx: 1,
+      statProgress: 0.25,
     },
-    // Frame 3: Recoil & Damage Settling (220ms) - EFFECT OFF!
+    // Frame 3: Recoil & Damage Settling + Stat Particles (220ms) - EFFECT OFF!
     {
       delay: 220,
       pOffset: isPlayer ? { x: 6, y: -3 } : { x: 0, y: 0 },
@@ -125,9 +129,10 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       hitFlash: false,
       enemyHp: enemyHp,
       playerHp: playerHp,
-      textLineIdx: 2
+      textLineIdx: 2,
+      statProgress: 0.65,
     },
-    // Frame 4: Neutral Stance Return (200ms) - EFFECT OFF!
+    // Frame 4: Neutral Stance Return + Stat Particles Peak (200ms) - EFFECT OFF!
     {
       delay: 200,
       pOffset: { x: 0, y: 0 },
@@ -136,7 +141,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       hitFlash: false,
       enemyHp: enemyHp,
       playerHp: playerHp,
-      textLineIdx: 3
+      textLineIdx: 3,
+      statProgress: 0.95,
     },
     // Frame 5: 11-Minute Static Hold Frame (655,000ms - Maximum GIF89a unsigned 16-bit delay limit)
     {
@@ -147,7 +153,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       hitFlash: false,
       enemyHp: enemyHp,
       playerHp: playerHp,
-      textLineIdx: 99
+      textLineIdx: 99,
+      statProgress: undefined,
     }
   ];
 
@@ -194,6 +201,20 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
 
     if (f.showEffect) {
       renderMoveEffect(ctx, { moveKey, type, isSpecial, isPlayerAttacking: isPlayer });
+    }
+
+    // Draw Stat Boost (Upward Arrows) / Stat Drop (Downward Arrows)
+    if (f.statProgress !== undefined && battle.lastMoveEffect?.statChanges && battle.lastMoveEffect.statChanges.length > 0) {
+      for (const sc of battle.lastMoveEffect.statChanges) {
+        const centerPos = sc.target === "player"
+          ? { x: pm.x + pm.size / 2, y: pm.y + pm.size * 0.45 }
+          : { x: em.x + em.size / 2, y: em.y + em.size * 0.45 };
+        if (sc.direction === "up") {
+          drawStatBoostEffect(ctx, centerPos, f.statProgress);
+        } else if (sc.direction === "down") {
+          drawStatDropEffect(ctx, centerPos, f.statProgress);
+        }
+      }
     }
 
     renderBattleHeader(ctx, width, battle, isKo);

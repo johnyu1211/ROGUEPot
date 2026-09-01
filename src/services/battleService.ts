@@ -121,6 +121,10 @@ export interface BattleState {
     type: string;
     isSpecial: boolean;
     isPlayerAttacking: boolean;
+    statChanges?: {
+      target: "player" | "enemy";
+      direction: "up" | "down";
+    }[];
   } | null;
 }
 
@@ -538,12 +542,14 @@ export class BattleService {
     enemyMon.isFlinched = false;
 
     // Set Move Effect info for canvas rendering
+    const statChanges: { target: "player" | "enemy"; direction: "up" | "down" }[] = [];
     battle.lastMoveEffect = {
       moveKey: pMoveKey,
       moveName: pMove.name,
       type: pMove.type || "normal",
       isSpecial: pMove.category === "special",
       isPlayerAttacking: true,
+      statChanges,
     };
 
     // First Actor & Second Actor
@@ -568,8 +574,8 @@ export class BattleService {
     }
 
     // 2. Turn-End Effects (Status Damage, Sandstorm, Moody, Speed Boost)
-    this.processTurnEndEffects(playerMon, isKo, turnLogs, battle.weather);
-    this.processTurnEndEffects(enemyMon, isKo, turnLogs, battle.weather);
+    this.processTurnEndEffects(playerMon, isKo, turnLogs, battle.weather, battle);
+    this.processTurnEndEffects(enemyMon, isKo, turnLogs, battle.weather, battle);
 
     // Weather Turn Countdown
     if (battle.weather && battle.weatherTurns) {
@@ -1515,7 +1521,7 @@ export class BattleService {
   /**
    * Processes end of turn effects (Burn, Poison, Sandstorm, Moody, Speed Boost)
    */
-  private processTurnEndEffects(mon: BattlePokemon, isKo: boolean, logs: string[], weather?: "sun" | "rain" | "sand" | "snow" | null) {
+  private processTurnEndEffects(mon: BattlePokemon, isKo: boolean, logs: string[], weather?: "sun" | "rain" | "sand" | "snow" | null, battle?: BattleState) {
     if (mon.hp <= 0) return;
     const name = isKo ? mon.nameKo : mon.name;
 
@@ -1561,12 +1567,25 @@ export class BattleService {
       mon.stages[boostStat] = Math.min(6, mon.stages[boostStat] + 2);
       mon.stages[dropStat] = Math.max(-6, mon.stages[dropStat] - 1);
       logs.push(isKo ? `\n[특성 변덕쟁이!] ${name}의 ${boostStat.toUpperCase()} 크게 상승(+2), ${dropStat.toUpperCase()} 하락(-1)` : `\n[Moody!] ${name}'s ${boostStat.toUpperCase()} sharply rose, ${dropStat.toUpperCase()} fell.`);
+
+      if (battle?.lastMoveEffect) {
+        const isPlayerMon = mon === battle.playerBattleMon || mon === battle.playerParty[battle.playerActiveIndex];
+        battle.lastMoveEffect.statChanges = battle.lastMoveEffect.statChanges || [];
+        battle.lastMoveEffect.statChanges.push({ target: isPlayerMon ? "player" : "enemy", direction: "up" });
+        battle.lastMoveEffect.statChanges.push({ target: isPlayerMon ? "player" : "enemy", direction: "down" });
+      }
     }
 
     // Ability: Speed Boost (가속)
     if (mon.ability === "Speed Boost" || mon.passiveAbility === "Speed Boost") {
       mon.stages.spe = Math.min(6, mon.stages.spe + 1);
       logs.push(isKo ? `\n[특성 가속!] ${name}의 스피드가 올라갔다! (+1)` : `\n[Speed Boost!] ${name}'s Speed rose! (+1)`);
+
+      if (battle?.lastMoveEffect) {
+        const isPlayerMon = mon === battle.playerBattleMon || mon === battle.playerParty[battle.playerActiveIndex];
+        battle.lastMoveEffect.statChanges = battle.lastMoveEffect.statChanges || [];
+        battle.lastMoveEffect.statChanges.push({ target: isPlayerMon ? "player" : "enemy", direction: "up" });
+      }
     }
   }
 
