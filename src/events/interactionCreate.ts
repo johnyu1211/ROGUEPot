@@ -185,30 +185,38 @@ export async function renderBattleMessageData(
 
   let imageBuffer: Buffer;
   let fileName = "battle.png";
+  let motionDurationMs = 0;
 
   if (isEntryTransition) {
-    imageBuffer = await renderBattleEntryGif({
+    const res = await renderBattleEntryGif({
       battle,
       lang: profile.language,
     });
+    imageBuffer = res.buffer;
+    motionDurationMs = res.motionDurationMs;
     fileName = "battle.gif";
   } else if (battle.phase === "VICTORY" && battle.lastMoveEffect) {
-    imageBuffer = await renderBattleFaintGif({
+    const res = await renderBattleFaintGif({
       battle,
       lang: profile.language,
     });
+    imageBuffer = res.buffer;
+    motionDurationMs = res.motionDurationMs;
     fileName = "battle.gif";
   } else if (battle.lastMoveEffect && battle.phase === "MAIN") {
-    imageBuffer = await renderBattleMoveGif({
+    const res = await renderBattleMoveGif({
       battle,
       lang: profile.language,
     });
+    imageBuffer = res.buffer;
+    motionDurationMs = res.motionDurationMs;
     fileName = "battle.gif";
   } else {
     imageBuffer = await renderBattleScreen({
       battle,
       lang: profile.language,
     });
+    motionDurationMs = 0;
   }
 
   const attachment = new AttachmentBuilder(imageBuffer, { name: fileName });
@@ -380,7 +388,7 @@ export async function renderBattleMessageData(
     components.push(mainRow);
   }
 
-  return { embeds: [], files: [attachment], attachments: [], components };
+  return { embeds: [], files: [attachment], attachments: [], components, motionDurationMs };
 }
 
 export function renderSettingsMessageData(userId: string) {
@@ -3541,13 +3549,15 @@ export const interactionCreateEvent: BotEvent = {
           const battleData = await renderBattleMessageData(interaction.user.id, slotNum, undefined, true);
           await interaction.update(battleData);
 
-          // 🎬 Auto-Transition: After encounter entry GIF completes (~0.5s), request static PNG swap at 1.0s (GIF holds for 10s buffer)!
-          setTimeout(async () => {
-            try {
-              const staticData = await renderBattleMessageData(interaction.user.id, slotNum);
-              await safeInteractionUpdate(interaction, staticData).catch(() => null);
-            } catch {}
-          }, 1000);
+          // 🎬 Dynamic Auto-Transition: Fire exactly when the GIF's active motion frames finish!
+          if (battleData.motionDurationMs > 0) {
+            setTimeout(async () => {
+              try {
+                const staticData = await renderBattleMessageData(interaction.user.id, slotNum);
+                await safeInteractionUpdate(interaction, staticData).catch(() => null);
+              } catch {}
+            }, battleData.motionDurationMs);
+          }
         }
         return;
       }
@@ -3605,9 +3615,9 @@ export const interactionCreateEvent: BotEvent = {
           const battleData = await renderBattleMessageData(interaction.user.id, slotId);
           await safeInteractionUpdate(interaction, battleData);
 
-          // 🎬 Auto-Transition: After attack GIF completes (~0.5s), request static PNG swap at 1.0s (GIF holds for 10s buffer)!
+          // 🎬 Dynamic Auto-Transition: Fire exactly when the GIF's active motion frames finish!
           const battle = battleService.getOrCreateBattle(interaction.user.id, slotId);
-          if (battle.lastMoveEffect) {
+          if (battle.lastMoveEffect && battleData.motionDurationMs > 0) {
             setTimeout(async () => {
               try {
                 battle.lastMoveEffect = null;
@@ -3616,7 +3626,7 @@ export const interactionCreateEvent: BotEvent = {
               } catch (e) {
                 // Ignore transient timeout errors
               }
-            }, 1000);
+            }, battleData.motionDurationMs);
           }
           return;
         }
@@ -3650,13 +3660,15 @@ export const interactionCreateEvent: BotEvent = {
           const battleData = await renderBattleMessageData(interaction.user.id, slotId, undefined, true);
           await safeInteractionUpdate(interaction, battleData);
 
-          // 🎬 Auto-Transition: After encounter entry GIF completes (~0.5s), request static PNG swap at 1.0s (GIF holds for 10s buffer)!
-          setTimeout(async () => {
-            try {
-              const staticData = await renderBattleMessageData(interaction.user.id, slotId);
-              await safeInteractionUpdate(interaction, staticData).catch(() => null);
-            } catch {}
-          }, 1000);
+          // 🎬 Dynamic Auto-Transition: Fire exactly when the GIF's active motion frames finish!
+          if (battleData.motionDurationMs > 0) {
+            setTimeout(async () => {
+              try {
+                const staticData = await renderBattleMessageData(interaction.user.id, slotId);
+                await safeInteractionUpdate(interaction, staticData).catch(() => null);
+              } catch {}
+            }, battleData.motionDurationMs);
+          }
           return;
         }
 
