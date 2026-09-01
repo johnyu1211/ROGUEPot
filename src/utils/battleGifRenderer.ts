@@ -83,6 +83,17 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   const playerHp = playerMon.hp;
 
   const framesConfig = [
+    // Frame 0: Leading Static Buffer (1000ms / 1.0s) - Calm intro announcement, absorbs any Discord DOM reset!
+    {
+      delay: 1000,
+      pOffset: { x: 0, y: 0 },
+      eOffset: { x: 0, y: 0 },
+      showEffect: false,
+      hitFlash: false,
+      enemyHp: enemyHp,
+      playerHp: playerHp,
+      textLineIdx: 1
+    },
     // Frame 1: Attacker Windup & Lunge (180ms)
     {
       delay: 180,
@@ -199,6 +210,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
 
 /**
  * 2. Knockout / Fainting GIF:
+ * Frame 0: Leading Static Buffer (1000ms / 1.0s)
  * Frame 1: Hit Strike & KO Flash (Effect ONCE!)
  * Frame 2: Sinking begins (Effect OFF)
  * Frame 3: Deep sinking beneath ground (Effect OFF)
@@ -245,6 +257,8 @@ export async function renderBattleFaintGif(options: BattleAnimationOptions): Pro
   ctx.imageSmoothingEnabled = false;
 
   const faintFrames = [
+    // Frame 0: Leading Static Buffer (1000ms / 1.0s) - Calm pre-strike stance
+    { delay: 1000, showEffect: false, hitFlash: false, eOffsetY: 0, opacity: 1.0, enemyHp: enemy.hp, textLineIdx: 1 },
     // Frame 1: Hit Flash (180ms) - ONLY FRAME WITH EFFECT!
     { delay: 180, showEffect: true, hitFlash: true, eOffsetY: -4, opacity: 1.0, enemyHp: 0, textLineIdx: 1 },
     // Frame 2: Sinking Begins (220ms) - EFFECT OFF!
