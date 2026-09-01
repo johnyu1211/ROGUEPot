@@ -5402,8 +5402,8 @@ export async function renderBattleScreen(options: BattleScreenOptions): Promise<
     drawFittedBattleSprite(ctx, playerSprite, pm.x, pm.y, pm.size);
   }
 
-  // 4.5. Draw PokéRogue Authentic Move Effect (if active in this turn)
-  if (battle.lastMoveEffect) {
+  // 4.5. Draw PokéRogue Authentic Move Effect (only during active turn, never on VICTORY/DEFEAT/MENU screens)
+  if (battle.lastMoveEffect && battle.phase === "MAIN") {
     renderMoveEffect(ctx, battle.lastMoveEffect);
   }
 
