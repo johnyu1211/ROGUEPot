@@ -19,19 +19,11 @@ import {
 export interface BattleAnimationOptions {
   battle: BattleState;
   lang?: "ko" | "en";
-  moveKey: string;
-  attackerName: string;
-  moveNameKo: string;
-  moveNameEn: string;
-  type: string;
-  isSpecial: boolean;
-  isPlayerAttacking: boolean;
-  damage: number;
-  enemyOldHp: number;
-  enemyNewHp: number;
-  playerOldHp: number;
-  playerNewHp: number;
-  dialogueLines: string[];
+  moveKey?: string;
+  type?: string;
+  isSpecial?: boolean;
+  isPlayerAttacking?: boolean;
+  dialogueLines?: string[];
 }
 
 /**
@@ -44,6 +36,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   const battle = options.battle;
   const enemy = battle.enemy;
   const playerMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
+
+  const moveKey = options.moveKey || battle.lastMoveEffect?.moveKey || "tackle";
+  const type = options.type || battle.lastMoveEffect?.type || "normal";
+  const isSpecial = options.isSpecial !== undefined ? options.isSpecial : (battle.lastMoveEffect?.isSpecial ?? false);
+  const isPlayer = options.isPlayerAttacking !== undefined ? options.isPlayerAttacking : (battle.lastMoveEffect?.isPlayerAttacking ?? true);
+
+  const dialogueLines = options.dialogueLines || (battle.dialogueText || "").replace(/\\n/g, "\n").split("\n");
 
   // Preload arena and battler sprites
   const [arena, pbAssets, enemySprite, playerSprite] = await Promise.all([
@@ -63,8 +62,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   ctx.imageSmoothingEnabled = false;
 
   // Frame Configurations (Attacker Lunge -> Strike -> Hit Flash -> Settle)
-  const isPlayer = options.isPlayerAttacking;
-  const isSpecial = options.isSpecial;
+  const enemyHp = enemy.hp;
+  const playerHp = playerMon.hp;
 
   const framesConfig = [
     // Frame 1: Windup & Lunge Start
@@ -73,8 +72,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       eOffset: !isPlayer ? (isSpecial ? { x: 0, y: -8 } : { x: -18, y: 10 }) : { x: 0, y: 0 },
       showEffect: false,
       hitFlash: false,
-      enemyHp: options.enemyOldHp,
-      playerHp: options.playerOldHp,
+      enemyHp: enemyHp,
+      playerHp: playerHp,
       textLineIdx: 1
     },
     // Frame 2: Move Effect Strikes Target
@@ -83,8 +82,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       eOffset: !isPlayer ? (isSpecial ? { x: 0, y: -4 } : { x: -28, y: 16 }) : { x: 0, y: 0 },
       showEffect: true,
       hitFlash: false,
-      enemyHp: options.enemyOldHp,
-      playerHp: options.playerOldHp,
+      enemyHp: enemyHp,
+      playerHp: playerHp,
       textLineIdx: 1
     },
     // Frame 3: Defender Hit Flash & Knockback
@@ -93,8 +92,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       eOffset: isPlayer ? { x: 8, y: -4 } : { x: -12, y: 6 },
       showEffect: true,
       hitFlash: true,
-      enemyHp: Math.round((options.enemyOldHp + options.enemyNewHp) / 2),
-      playerHp: Math.round((options.playerOldHp + options.playerNewHp) / 2),
+      enemyHp: enemyHp,
+      playerHp: playerHp,
       textLineIdx: 2
     },
     // Frame 4: Damage Settled & Final HP
@@ -103,8 +102,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       eOffset: { x: 0, y: 0 },
       showEffect: false,
       hitFlash: false,
-      enemyHp: options.enemyNewHp,
-      playerHp: options.playerNewHp,
+      enemyHp: enemyHp,
+      playerHp: playerHp,
       textLineIdx: 3
     }
   ];
@@ -165,10 +164,10 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     // 6. Draw Move Effect (if active on this frame)
     if (f.showEffect) {
       renderMoveEffect(ctx, {
-        moveKey: options.moveKey,
-        type: options.type,
-        isSpecial: options.isSpecial,
-        isPlayerAttacking: options.isPlayerAttacking
+        moveKey,
+        type,
+        isSpecial,
+        isPlayerAttacking: isPlayer
       });
     }
 
@@ -263,7 +262,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     ctx.font = "bold 15px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
 
-    const linesToShow = options.dialogueLines.slice(0, f.textLineIdx);
+    const linesToShow = dialogueLines.slice(0, f.textLineIdx);
     linesToShow.slice(0, 3).forEach((line: string, lIdx: number) => {
       ctx.fillText(line, 24, boxY + 16 + lIdx * 25);
     });
