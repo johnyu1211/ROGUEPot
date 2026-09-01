@@ -66,8 +66,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   ]);
 
   const encoder = new GIFEncoder(width, height, "octree", true);
-  encoder.setDelay(140); // 140ms per frame
-  encoder.setRepeat(0);  // Loop
+  encoder.setRepeat(-1);  // 1회만 재생 후 마지막 정적 프레임에서 영구 정지 (무한 루프 방지)
   encoder.start();
 
   const canvas = createCanvas(width, height);
@@ -77,10 +76,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   const enemyHp = enemy.hp;
   const playerHp = playerMon.hp;
 
-  // Frame Configurations (Attacker Lunge -> Strike -> Hit Flash -> Settle)
+  // Frame Configurations (Attacker Lunge -> Strike -> Hit Flash -> Settle Hold)
   const framesConfig = [
-    // Frame 1: Windup & Lunge Start
+    // Frame 1: Windup & Lunge Start (120ms)
     {
+      delay: 120,
       pOffset: isPlayer ? (isSpecial ? { x: 0, y: -6 } : { x: 12, y: -6 }) : { x: 0, y: 0 },
       eOffset: !isPlayer ? (isSpecial ? { x: 0, y: -6 } : { x: -12, y: 6 }) : { x: 0, y: 0 },
       showEffect: false,
@@ -89,8 +89,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       playerHp: playerHp,
       textLineIdx: 1
     },
-    // Frame 2: Move Effect Strikes Target
+    // Frame 2: Move Effect Strikes Target (140ms)
     {
+      delay: 140,
       pOffset: isPlayer ? (isSpecial ? { x: 0, y: -4 } : { x: 18, y: -10 }) : { x: 0, y: 0 },
       eOffset: !isPlayer ? (isSpecial ? { x: 0, y: -4 } : { x: -18, y: 10 }) : { x: 0, y: 0 },
       showEffect: true,
@@ -99,8 +100,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       playerHp: playerHp,
       textLineIdx: 1
     },
-    // Frame 3: Defender Hit Flash & Knockback
+    // Frame 3: Defender Hit Flash & Knockback (160ms)
     {
+      delay: 160,
       pOffset: isPlayer ? { x: 8, y: -4 } : { x: 0, y: 0 },
       eOffset: isPlayer ? { x: 8, y: -4 } : { x: -8, y: 4 },
       showEffect: true,
@@ -109,8 +111,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       playerHp: playerHp,
       textLineIdx: 2
     },
-    // Frame 4: Damage Settled & Final HP
+    // Frame 4: Damage Settled & Final Still Result (4000ms 유지 / 정지)
     {
+      delay: 4000,
       pOffset: { x: 0, y: 0 },
       eOffset: { x: 0, y: 0 },
       showEffect: false,
@@ -291,6 +294,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       ctx.fillText(line, 24, boxY + 16 + lIdx * 25);
     });
 
+    encoder.setDelay(f.delay);
     encoder.addFrame(ctx);
   }
 
