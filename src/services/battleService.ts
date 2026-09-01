@@ -1401,6 +1401,27 @@ export class BattleService {
     const isKo = lang === "ko";
     const enemyMonName = isKo ? battle.enemy.nameKo : battle.enemy.name;
 
+    const profile = saveService.getProfile(userId);
+    const slot = profile.slots[slotId];
+    const items = slot?.items || { "poke-ball": 5 };
+    if (items["poke-ball"] === undefined && Object.keys(items).length === 0) {
+      items["poke-ball"] = 5;
+    }
+
+    const currentCount = items[ballType] || 0;
+    if (currentCount <= 0) {
+      battle.phase = "MAIN";
+      battle.dialogueText = isKo ? "몬스터볼이 부족합니다!" : "You don't have enough Poké Balls!";
+      return { success: false, battle };
+    }
+
+    // Deduct 1 ball
+    items[ballType] = currentCount - 1;
+    if (items[ballType] <= 0) {
+      delete items[ballType];
+    }
+    saveService.updateSlot(userId, slotId, { items });
+
     let ballMult = 1.0;
     if (ballType === "great-ball") ballMult = 1.5;
     else if (ballType === "ultra-ball") ballMult = 2.0;
@@ -1437,6 +1458,7 @@ export class BattleService {
         party: battle.playerParty,
         money: battle.money + 200,
         score: battle.score + 50,
+        items,
       });
 
       return { success: true, battle };

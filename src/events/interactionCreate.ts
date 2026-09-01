@@ -244,19 +244,46 @@ export async function renderBattleMessageData(
     );
     components.push(row2);
   } else if (battle.phase === "BAG") {
-    const bagRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder()
-        .setCustomId(`battle_throwball_poke-ball_${slotId}_${userId}`)
-        .setLabel(isKo ? "🔴 몬스터볼" : "🔴 Poké Ball")
-        .setStyle(ButtonStyle.Success),
-      new ButtonBuilder()
-        .setCustomId(`battle_throwball_great-ball_${slotId}_${userId}`)
-        .setLabel(isKo ? "🔵 수퍼볼" : "🔵 Great Ball")
-        .setStyle(ButtonStyle.Primary),
-      new ButtonBuilder()
-        .setCustomId(`battle_throwball_ultra-ball_${slotId}_${userId}`)
-        .setLabel(isKo ? "🟡 하이퍼볼" : "🟡 Ultra Ball")
-        .setStyle(ButtonStyle.Primary),
+    const profile = saveService.getProfile(userId);
+    const slot = profile.slots[slotId];
+    const items = slot?.items || { "poke-ball": 5 };
+    if (items["poke-ball"] === undefined && Object.keys(items).length === 0) {
+      items["poke-ball"] = 5;
+    }
+
+    const ballDefs = [
+      { id: "poke-ball", labelKo: "🔴 몬스터볼", labelEn: "🔴 Poké Ball", style: ButtonStyle.Success },
+      { id: "great-ball", labelKo: "🔵 수퍼볼", labelEn: "🔵 Great Ball", style: ButtonStyle.Primary },
+      { id: "ultra-ball", labelKo: "🟡 하이퍼볼", labelEn: "🟡 Ultra Ball", style: ButtonStyle.Primary },
+      { id: "rogue-ball", labelKo: "🟣 로그볼", labelEn: "🟣 Rogue Ball", style: ButtonStyle.Primary },
+      { id: "master-ball", labelKo: "🟣 마스터볼", labelEn: "🟣 Master Ball", style: ButtonStyle.Danger },
+    ];
+
+    const ownedBalls = ballDefs.filter((b) => (items[b.id] || 0) > 0);
+    const bagRow = new ActionRowBuilder<ButtonBuilder>();
+
+    if (ownedBalls.length > 0) {
+      ownedBalls.forEach((b) => {
+        const count = items[b.id] || 0;
+        const label = `${isKo ? b.labelKo : b.labelEn} x${count}`;
+        bagRow.addComponents(
+          new ButtonBuilder()
+            .setCustomId(`battle_throwball_${b.id}_${slotId}_${userId}`)
+            .setLabel(label)
+            .setStyle(b.style)
+        );
+      });
+    } else {
+      bagRow.addComponents(
+        new ButtonBuilder()
+          .setCustomId(`battle_no_balls_${slotId}_${userId}`)
+          .setLabel(isKo ? "❌ 몬스터볼 없음" : "❌ No Poké Balls")
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(true)
+      );
+    }
+
+    bagRow.addComponents(
       new ButtonBuilder()
         .setCustomId(`battle_cancel_${slotId}_${userId}`)
         .setLabel(isKo ? "↩️ 뒤로" : "↩️ Back")
@@ -292,7 +319,7 @@ export async function renderBattleMessageData(
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setCustomId(`battle_menu_bag_${slotId}_${userId}`)
-        .setLabel(isKo ? "🎒 가방 (Bag)" : "🎒 Bag")
+        .setLabel(isKo ? "⚪ 몬스터볼 (Ball)" : "⚪ PokéBall")
         .setStyle(ButtonStyle.Success),
       new ButtonBuilder()
         .setCustomId(`battle_menu_party_${slotId}_${userId}`)
