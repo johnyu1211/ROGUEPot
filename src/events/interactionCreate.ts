@@ -151,6 +151,23 @@ export async function renderSlotsScreenData(
   return { embeds: [], files: [attachment], attachments: [], components };
 }
 
+export async function safeInteractionUpdate(interaction: any, data: any) {
+  try {
+    if (interaction.replied || interaction.deferred) {
+      await interaction.editReply(data);
+    } else {
+      await interaction.update(data);
+    }
+  } catch (err: any) {
+    if (err.code === 40060 || err.code === 10062) {
+      // 40060: Interaction has already been acknowledged (double-click / rapid response)
+      // 10062: Unknown interaction (expired token)
+      return;
+    }
+    throw err;
+  }
+}
+
 export async function renderBattleMessageData(
   userId: string,
   slotId: number,
@@ -3508,7 +3525,7 @@ export const interactionCreateEvent: BotEvent = {
         if (customId.startsWith("battle_menu_fight_")) {
           const slotId = parseInt(parts[3], 10) || 1;
           const battleData = await renderBattleMessageData(interaction.user.id, slotId, "FIGHT");
-          await interaction.update(battleData);
+          await safeInteractionUpdate(interaction, battleData);
           return;
         }
 
@@ -3516,7 +3533,7 @@ export const interactionCreateEvent: BotEvent = {
         if (customId.startsWith("battle_menu_bag_")) {
           const slotId = parseInt(parts[3], 10) || 1;
           const battleData = await renderBattleMessageData(interaction.user.id, slotId, "BAG");
-          await interaction.update(battleData);
+          await safeInteractionUpdate(interaction, battleData);
           return;
         }
 
@@ -3524,14 +3541,14 @@ export const interactionCreateEvent: BotEvent = {
         if (customId.startsWith("battle_menu_party_")) {
           const slotId = parseInt(parts[3], 10) || 1;
           const battleData = await renderBattleMessageData(interaction.user.id, slotId, "PARTY");
-          await interaction.update(battleData);
+          await safeInteractionUpdate(interaction, battleData);
           return;
         }
 
         // 2-7-D. Run Away (Back to Title)
         if (customId.startsWith("battle_menu_run_")) {
           const titleData = await renderTitleMessageData(client, interaction.user.id);
-          await interaction.update(titleData);
+          await safeInteractionUpdate(interaction, titleData);
           return;
         }
 
@@ -3539,7 +3556,7 @@ export const interactionCreateEvent: BotEvent = {
         if (customId.startsWith("battle_cancel_")) {
           const slotId = parseInt(parts[2], 10) || 1;
           const battleData = await renderBattleMessageData(interaction.user.id, slotId, "MAIN");
-          await interaction.update(battleData);
+          await safeInteractionUpdate(interaction, battleData);
           return;
         }
 
@@ -3550,7 +3567,7 @@ export const interactionCreateEvent: BotEvent = {
           const profile = saveService.getProfile(interaction.user.id);
           battleService.executePlayerMove(interaction.user.id, slotId, moveKey, profile.language);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId);
-          await interaction.update(battleData);
+          await safeInteractionUpdate(interaction, battleData);
           return;
         }
 
@@ -3561,7 +3578,7 @@ export const interactionCreateEvent: BotEvent = {
           const profile = saveService.getProfile(interaction.user.id);
           battleService.attemptCatch(interaction.user.id, slotId, ballType, profile.language);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId);
-          await interaction.update(battleData);
+          await safeInteractionUpdate(interaction, battleData);
           return;
         }
 
@@ -3572,7 +3589,7 @@ export const interactionCreateEvent: BotEvent = {
           const profile = saveService.getProfile(interaction.user.id);
           battleService.switchPlayerPokemon(interaction.user.id, slotId, targetIdx, profile.language);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId);
-          await interaction.update(battleData);
+          await safeInteractionUpdate(interaction, battleData);
           return;
         }
 
@@ -3581,7 +3598,7 @@ export const interactionCreateEvent: BotEvent = {
           const slotId = parseInt(parts[2], 10) || 1;
           battleService.advanceToNextWave(interaction.user.id, slotId);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId);
-          await interaction.update(battleData);
+          await safeInteractionUpdate(interaction, battleData);
           return;
         }
 
@@ -3591,7 +3608,7 @@ export const interactionCreateEvent: BotEvent = {
           const profile = saveService.getProfile(interaction.user.id);
           battleService.restartRunFromDefeat(interaction.user.id, slotId, profile.language);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId);
-          await interaction.update(battleData);
+          await safeInteractionUpdate(interaction, battleData);
           return;
         }
       }
@@ -3669,7 +3686,11 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
     }
-    } catch (err) {
+    } catch (err: any) {
+      if (err?.code === 40060 || err?.code === 10062) {
+        // Ignored safe Discord race condition (e.g. user rapid double-click or token timeout)
+        return;
+      }
       console.error("[ERROR] Unhandled error during interaction handling:", err);
     }
   },
