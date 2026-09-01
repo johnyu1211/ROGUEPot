@@ -115,6 +115,13 @@ export interface BattleState {
   playerMaxExp: number;
   weather?: "sun" | "rain" | "sand" | "snow" | null;
   weatherTurns?: number;
+  lastMoveEffect?: {
+    moveKey: string;
+    moveName?: string;
+    type: string;
+    isSpecial: boolean;
+    isPlayerAttacking: boolean;
+  } | null;
 }
 
 const BIOME_ENCOUNTERS: Record<string, string[]> = {
@@ -520,6 +527,15 @@ export class BattleService {
     enemyMon.isProtected = false;
     playerMon.isFlinched = false;
     enemyMon.isFlinched = false;
+
+    // Set Move Effect info for canvas rendering
+    battle.lastMoveEffect = {
+      moveKey: pMoveKey,
+      moveName: pMove.name,
+      type: pMove.type || "normal",
+      isSpecial: pMove.category === "special",
+      isPlayerAttacking: true,
+    };
 
     // First Actor & Second Actor
     const firstActor = playerGoesFirst ? playerMon : enemyMon;
@@ -1605,6 +1621,7 @@ export class BattleService {
     }
 
     const currentCount = items[ballType] || 0;
+    battle.lastMoveEffect = null;
     if (currentCount <= 0) {
       battle.phase = "MAIN";
       battle.dialogueText = isKo ? "몬스터볼이 부족합니다!" : "You don't have enough Poké Balls!";
