@@ -5450,6 +5450,41 @@ export async function renderBattleScreen(options: BattleScreenOptions): Promise<
     hpLabel: pbAssets.hpLabel,
   });
 
+  // 7.5. Weather Indicator Badge (Top Center)
+  if (battle.weather) {
+    const wType = battle.weather;
+    const wConfig: Record<string, { labelKo: string; labelEn: string; color: string }> = {
+      sun: { labelKo: "쾌청", labelEn: "SUN", color: "#EE8130" },
+      rain: { labelKo: "비바라기", labelEn: "RAIN", color: "#3B82F6" },
+      sand: { labelKo: "모래바람", labelEn: "SAND", color: "#D97706" },
+      snow: { labelKo: "설경", labelEn: "SNOW", color: "#38BDF8" },
+    };
+    const cfg = wConfig[wType] || wConfig.sun;
+    const turnsStr = battle.weatherTurns ? ` ${battle.weatherTurns}${isKo ? "턴" : "T"}` : "";
+    const wText = `[${isKo ? cfg.labelKo : cfg.labelEn}${turnsStr}]`;
+
+    ctx.font = "bold 12px DungGeunMo";
+    const textW = ctx.measureText(wText).width;
+    const wBadgeW = textW + 16;
+    const wBadgeH = 20;
+    const wBadgeX = (width - wBadgeW) / 2;
+    const wBadgeY = 12;
+
+    ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+    ctx.beginPath();
+    ctx.roundRect(wBadgeX, wBadgeY, wBadgeW, wBadgeH, 4);
+    ctx.fill();
+
+    ctx.strokeStyle = cfg.color;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(wText, wBadgeX + wBadgeW / 2, wBadgeY + wBadgeH / 2 + 0.5);
+  }
+
 /**
  * Draws the 2x2 Battle Move Cards Grid during FIGHT phase
  */

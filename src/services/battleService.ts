@@ -524,22 +524,32 @@ export class BattleService {
     const isFirstPlayer = playerGoesFirst;
 
     // EXECUTE 1ST ACTION
-    const res1 = this.executeSingleAction(firstActor, secondActor, firstMove, isFirstPlayer, isKo);
+    const res1 = this.executeSingleAction(firstActor, secondActor, firstMove, isFirstPlayer, isKo, battle);
     turnLogs.push(res1.log);
 
     // CHECK IF 2ND ACTOR FAINTED
     if (secondActor.hp > 0 && !secondActor.isFlinched) {
       // EXECUTE 2ND ACTION
-      const res2 = this.executeSingleAction(secondActor, firstActor, secondMove, !isFirstPlayer, isKo);
+      const res2 = this.executeSingleAction(secondActor, firstActor, secondMove, !isFirstPlayer, isKo, battle);
       turnLogs.push(res2.log);
     } else if (secondActor.isFlinched && secondActor.hp > 0) {
       const monName = isFirstPlayer ? (isKo ? enemyMon.nameKo : enemyMon.name) : playerMon.name;
       turnLogs.push(isKo ? `${monName}(은)는 풀이 죽어 기술을 쓸 수 없었다!` : `${monName} flinched and couldn't move!`);
     }
 
-    // 2. Turn-End Effects (Status Damage, Moody, Speed Boost)
-    this.processTurnEndEffects(playerMon, isKo, turnLogs);
-    this.processTurnEndEffects(enemyMon, isKo, turnLogs);
+    // 2. Turn-End Effects (Status Damage, Sandstorm, Moody, Speed Boost)
+    this.processTurnEndEffects(playerMon, isKo, turnLogs, battle.weather);
+    this.processTurnEndEffects(enemyMon, isKo, turnLogs, battle.weather);
+
+    // Weather Turn Countdown
+    if (battle.weather && battle.weatherTurns) {
+      battle.weatherTurns -= 1;
+      if (battle.weatherTurns <= 0) {
+        battle.weather = null;
+        battle.weatherTurns = undefined;
+        turnLogs.push(isKo ? `날씨가 원래대로 돌아왔다!` : `The weather returned to normal!`);
+      }
+    }
 
     // Sync HP with player party slot
     battle.playerParty[battle.playerActiveIndex].hp = playerMon.hp;
@@ -618,7 +628,8 @@ export class BattleService {
     target: BattlePokemon,
     move: MoveData,
     isActorPlayer: boolean,
-    isKo: boolean
+    isKo: boolean,
+    battle?: BattleState
   ): { log: string; damage: number } {
     const actorName = isActorPlayer ? actor.name : (isKo ? actor.nameKo : actor.name);
     const targetName = isActorPlayer ? (isKo ? target.nameKo : target.name) : target.name;
@@ -659,7 +670,7 @@ export class BattleService {
 
     // 3. Status Move Processing
     if (activeMove.category === "status") {
-      const statLog = this.applyStatusMove(actor, target, activeMove, actorName, targetName, isKo);
+      const statLog = this.applyStatusMove(actor, target, activeMove, actorName, targetName, isKo, battle);
       return { log: `${actorName}의 ${isKo ? activeMove.nameKo : activeMove.name.toUpperCase()}!\n${statLog}`, damage: 0 };
     }
 
@@ -780,8 +791,16 @@ export class BattleService {
       return { log: isKo ? `${actorName}의 ${moveName}! ${targetName}의 HP를 자신의 HP와 같게 맞췄다! (-${damage})` : `${actorName}'s ${moveName}! Matched ${targetName}'s HP! (-${damage})`, damage };
     }
 
-    // 4. Accuracy Check
-    const acc = activeMove.accuracy || 100;
+    // 4. Accuracy Check (Weather Modifications)
+    let acc = activeMove.accuracy || 100;
+    if (battle?.weather === "rain" && (moveNameLower === "thunder" || moveNameLower === "hurricane")) {
+      acc = 1000; // Perfect accuracy in rain
+    } else if (battle?.weather === "snow" && moveNameLower === "blizzard") {
+      acc = 1000; // Perfect accuracy in snow
+    } else if (battle?.weather === "sun" && (moveNameLower === "thunder" || moveNameLower === "hurricane")) {
+      acc = 50; // Accuracy drops in harsh sun
+    }
+
     const accStage = actor.stages.acc - target.stages.eva;
     const finalAcc = acc * getAccuracyMultiplier(accStage);
     if (acc < 100 && Math.random() * 100 > finalAcc) {
@@ -799,9 +818,17 @@ export class BattleService {
       ? actor.spAtk * getStageMultiplier(actor.stages.spa)
       : actor.atk * getStageMultiplier(actor.stages.atk) * (actor.status === "brn" ? 0.5 : 1.0);
 
-    const defStat = isSpecial
+    let defStat = isSpecial
       ? target.spDef * getStageMultiplier(target.stages.spd)
       : target.def * getStageMultiplier(target.stages.def);
+
+    // Weather Stat Boosts (Rock Sp.Def in Sand, Ice Def in Snow)
+    if (battle?.weather === "sand" && target.types.map((t) => t.toLowerCase()).includes("rock") && isSpecial) {
+      defStat = Math.floor(defStat * 1.5);
+    }
+    if (battle?.weather === "snow" && target.types.map((t) => t.toLowerCase()).includes("ice") && !isSpecial) {
+      defStat = Math.floor(defStat * 1.5);
+    }
 
     // Variable Power Calculation
     let power = activeMove.power || 40;
@@ -848,6 +875,18 @@ export class BattleService {
       power = moveNameLower === "explosion" ? 250 : (moveNameLower === "self-destruct" ? 200 : 100);
     }
 
+    // Weather Move Power Multipliers
+    let weatherMod = 1.0;
+    if (battle?.weather === "sun") {
+      if (activeMove.type.toLowerCase() === "fire") weatherMod = 1.5;
+      else if (activeMove.type.toLowerCase() === "water") weatherMod = 0.5;
+    } else if (battle?.weather === "rain") {
+      if (activeMove.type.toLowerCase() === "water") weatherMod = 1.5;
+      else if (activeMove.type.toLowerCase() === "fire") weatherMod = 0.5;
+    } else if (battle?.weather === "sand" || battle?.weather === "snow") {
+      if (moveNameLower === "solar-beam" || moveNameLower === "solar-blade") weatherMod = 0.5;
+    }
+
     const isStab = actor.types.map((t) => t.toLowerCase()).includes(activeMove.type.toLowerCase());
     const stabMod = isStab ? 1.5 : 1.0;
     const typeMod = this.getTypeEffectiveness(activeMove.type, target.types);
@@ -858,7 +897,7 @@ export class BattleService {
 
     let damage = Math.floor(
       (((2 * actor.level / 5 + 2) * power * (atkStat / Math.max(1, defStat))) / 50 + 2) *
-      stabMod * typeMod * critMod * randomMod
+      stabMod * typeMod * critMod * randomMod * weatherMod
     );
     damage = Math.max(typeMod > 0 ? 1 : 0, damage);
 
@@ -1005,7 +1044,8 @@ export class BattleService {
     move: MoveData,
     actorName: string,
     targetName: string,
-    isKo: boolean
+    isKo: boolean,
+    battle?: BattleState
   ): string {
     const mName = move.name.toLowerCase().replace(/[\s_]+/g, "-");
 
@@ -1219,15 +1259,56 @@ export class BattleService {
       return isKo ? `하지만 효과가 없었다!` : `It had no effect!`;
     }
 
+    // 9. WEATHER CONTROL
+    if (mName === "sunny-day") {
+      if (battle) { battle.weather = "sun"; battle.weatherTurns = 5; }
+      return isKo ? `☀️ ${actorName}의 쾌청!\n햇살이 아주 강해졌다! (5턴 지속)` : `☀️ ${actorName} used Sunny Day!\nThe sunlight turned harsh! (5 turns)`;
+    }
+    if (mName === "rain-dance") {
+      if (battle) { battle.weather = "rain"; battle.weatherTurns = 5; }
+      return isKo ? `🌧️ ${actorName}의 비바라기!\n비가 내리기 시작했다! (5턴 지속)` : `🌧️ ${actorName} used Rain Dance!\nIt started to rain! (5 turns)`;
+    }
+    if (mName === "sandstorm") {
+      if (battle) { battle.weather = "sand"; battle.weatherTurns = 5; }
+      return isKo ? `🌪️ ${actorName}의 모래바람!\n모래바람이 세차게 불기 시작했다! (5턴 지속)` : `🌪️ ${actorName} used Sandstorm!\nA sandstorm kicked up! (5 turns)`;
+    }
+    if (mName === "snowscape" || mName === "hail" || mName === "chilly-reception") {
+      if (battle) { battle.weather = "snow"; battle.weatherTurns = 5; }
+      return isKo ? `❄️ ${actorName}의 ${move.nameKo}!\n눈이 내리기 시작했다! (5턴 지속)` : `❄️ ${actorName} used ${move.name.toUpperCase()}!\nSnow started to fall! (5 turns)`;
+    }
+    if (mName === "defog") {
+      if (battle) { battle.weather = null; battle.weatherTurns = undefined; }
+      target.stages.eva = Math.max(-6, target.stages.eva - 1);
+      return isKo ? `💨 ${actorName}의 안개제거!\n날씨가 맑아지고 ${targetName}의 회피율이 떨어졌다! (-1)` : `💨 ${actorName} used Defog!\nThe weather cleared and ${targetName}'s evasiveness fell!`;
+    }
+    if (mName === "synthesis" || mName === "morning-sun" || mName === "moonlight") {
+      const healRatio = battle?.weather === "sun" ? 0.667 : (battle?.weather ? 0.25 : 0.5);
+      const heal = Math.floor(actor.maxHp * healRatio);
+      actor.hp = Math.min(actor.maxHp, actor.hp + heal);
+      return isKo ? `${actorName}의 HP가 ${heal} 회복되었다!` : `${actorName} restored ${heal} HP!`;
+    }
+
     return isKo ? `기술의 효과가 발동했다!` : `The move took effect!`;
   }
 
   /**
-   * Processes end of turn effects (Burn, Poison, Moody, Speed Boost)
+   * Processes end of turn effects (Burn, Poison, Sandstorm, Moody, Speed Boost)
    */
-  private processTurnEndEffects(mon: BattlePokemon, isKo: boolean, logs: string[]) {
+  private processTurnEndEffects(mon: BattlePokemon, isKo: boolean, logs: string[], weather?: "sun" | "rain" | "sand" | "snow" | null) {
     if (mon.hp <= 0) return;
     const name = isKo ? mon.nameKo : mon.name;
+
+    // Sandstorm Chip Damage (1/16 Max HP) to non-Rock/Ground/Steel
+    if (weather === "sand") {
+      const isImmune = mon.types.some((t) => ["rock", "ground", "steel"].includes(t.toLowerCase())) ||
+        mon.ability === "Magic Guard" || mon.ability === "Overcoat" || mon.ability === "Sand Force" ||
+        mon.ability === "Sand Rush" || mon.ability === "Sand Veil";
+      if (!isImmune) {
+        const sandDmg = Math.max(1, Math.floor(mon.maxHp / 16));
+        mon.hp = Math.max(0, mon.hp - sandDmg);
+        logs.push(isKo ? `🌪️ 모래바람이 ${name}을(를) 덮쳤다! (-${sandDmg})` : `🌪️ The sandstorm buffeted ${name}! (-${sandDmg})`);
+      }
+    }
 
     // Burn Damage (1/16 Max HP)
     if (mon.status === "brn") {
