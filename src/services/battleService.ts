@@ -405,7 +405,7 @@ export class BattleService {
       dialogueText,
       phase: "MAIN",
       turnCount: 0,
-      money: slot.money || 1000,
+      money: slot.money ?? 0,
       score: slot.score || 0,
       playerExp: 0,
       playerMaxExp: activeLeader.level * 15,
@@ -805,12 +805,12 @@ export class BattleService {
     const accStage = actor.stages.acc - target.stages.eva;
     const finalAcc = acc * getAccuracyMultiplier(accStage);
     if (acc < 100 && Math.random() * 100 > finalAcc) {
-      return { log: `${actorName}의 ${moveName}! 하지만 공격은 빗나갔다!`, damage: 0 };
+      return { log: isKo ? `${actorName}의 ${moveName}! 하지만 공격은 빗나갔다!` : `${actorName}'s ${moveName}! But the attack missed!`, damage: 0 };
     }
 
     // 5. Target Protection Check
     if (target.isProtected) {
-      return { log: `${actorName}의 ${moveName}! 하지만 ${targetName}(은)는 공격을 막아냈다!`, damage: 0 };
+      return { log: isKo ? `${actorName}의 ${moveName}! 하지만 ${targetName}(은)는 공격을 막아냈다!` : `${actorName}'s ${moveName}! But ${targetName} protected itself!`, damage: 0 };
     }
 
     // 6. Damage Calculation Formula
@@ -952,7 +952,9 @@ export class BattleService {
     if (isCrit && typeMod > 0) effLog += isKo ? " 급소에 맞았다!" : " A critical hit!";
     if (hitCount > 1) effLog += isKo ? ` (${hitCount}회 명중!)` : ` (Hit ${hitCount} times!)`;
 
-    const mainLog = `${actorName}의 ${moveName}! ${damage > 0 ? `${damage} 데미지!` : ""}${effLog}${damageLog}${extraEffects}`;
+    const mainLog = isKo
+      ? `${actorName}의 ${moveName}! ${damage > 0 ? `${damage} 데미지!` : ""}${effLog}${damageLog}${extraEffects}`
+      : `${actorName}'s ${moveName}! ${damage > 0 ? `${damage} damage!` : ""}${effLog}${damageLog}${extraEffects}`;
     return { log: mainLog, damage };
   }
 
@@ -1533,6 +1535,259 @@ export class BattleService {
     battle.dialogueText = switchLog;
     return battle;
   }
+
+  /**
+   * Restarts the run from Wave 1 with original party members reverted to initial base starter forms
+   */
+  public restartRunFromDefeat(userId: string, slotId: number, lang: "ko" | "en" = "ko"): BattleState {
+    const profile = saveService.getProfile(userId);
+    const slot = profile.slots[slotId];
+    const isKo = lang === "ko";
+
+    const currentParty = slot?.party || [];
+    const starterCount = slot?.starter ? Math.max(1, slot.starter.split(",").length) : 1;
+    const starterParty = currentParty.slice(0, starterCount);
+
+    const resetParty: PartyPokemon[] = [];
+
+    (starterParty.length > 0 ? starterParty : currentParty.slice(0, 3)).forEach((p) => {
+      const rawId = p.speciesId.toLowerCase().trim();
+      const baseSpeciesId = BASE_SPECIES_MAP[rawId] || rawId;
+      const starterEntry = Object.values(STARTER_DATABASE).find(
+        (s) => s.speciesId.toLowerCase() === baseSpeciesId
+      );
+      const dexNum = starterEntry?.dexNumber || (POKEMON_SPECIES_DATA[baseSpeciesId] ? POKEMON_SPECIES_DATA[baseSpeciesId].num : undefined);
+
+      const baseNameKo = starterEntry?.nameKo || (dexNum ? POKEMON_NAMES_KO[dexNum] : undefined) || baseSpeciesId;
+      const baseNameEn = starterEntry?.name || (POKEMON_SPECIES_DATA[baseSpeciesId] ? POKEMON_SPECIES_DATA[baseSpeciesId].name : baseSpeciesId);
+
+      // Preserve custom user nickname if set
+      const hasCustomNickname = p.name && p.name !== p.nameKo && p.name !== p.nameEn;
+      const displayName = hasCustomNickname ? p.name : (isKo ? baseNameKo : baseNameEn);
+
+      const baseMoves = starterEntry?.starterMoves && starterEntry.starterMoves.length > 0
+        ? [...starterEntry.starterMoves]
+        : ["Tackle", "Growl"];
+
+      const lvl5Stats = this.calculateStats(baseSpeciesId, 5);
+
+      resetParty.push({
+        speciesId: baseSpeciesId,
+        name: displayName,
+        nameKo: baseNameKo,
+        nameEn: baseNameEn,
+        level: 5,
+        hp: lvl5Stats.maxHp,
+        maxHp: lvl5Stats.maxHp,
+        moves: baseMoves,
+        isShiny: p.isShiny,
+        shinyTier: p.shinyTier || (p.isShiny ? 1 : 0),
+      });
+    });
+
+    if (resetParty.length === 0) {
+      resetParty.push({
+        speciesId: "bulbasaur",
+        name: isKo ? "이상해씨" : "Bulbasaur",
+        nameKo: "이상해씨",
+        nameEn: "Bulbasaur",
+        level: 5,
+        hp: 20,
+        maxHp: 20,
+        moves: ["Tackle", "Growl", "Vine Whip"],
+      });
+    }
+
+    // Save reset slot state in SQLite
+    saveService.updateSlot(userId, slotId, {
+      wave: 1,
+      biome: "Town",
+      party: resetParty,
+      money: 0,
+      score: 0,
+      items: { "poke-ball": 5 },
+    });
+
+    // Reset in-memory active battle
+    const key = this.getBattleKey(userId, slotId);
+    this.activeBattles.delete(key);
+
+    const newBattle = this.getOrCreateBattle(userId, slotId);
+    newBattle.dialogueText = isKo
+      ? "파티원들과 함께 웨이브 1에서 새롭게 도전을 시작합니다!"
+      : "Restarting journey from Wave 1 with your party!";
+
+    return newBattle;
+  }
 }
+
+export const BASE_SPECIES_MAP: Record<string, string> = {
+  // Gen 1
+  "ivysaur": "bulbasaur", "venusaur": "bulbasaur", "venusaur-mega": "bulbasaur", "venusaur-gmax": "bulbasaur",
+  "charmeleon": "charmander", "charizard": "charmander", "charizard-megax": "charmander", "charizard-megay": "charmander", "charizard-gmax": "charmander",
+  "wartortle": "squirtle", "blastoise": "squirtle", "blastoise-mega": "squirtle", "blastoise-gmax": "squirtle",
+  "caterpie": "caterpie", "metapod": "caterpie", "butterfree": "caterpie",
+  "weedle": "weedle", "kakuna": "weedle", "beedrill": "weedle",
+  "pidgeotto": "pidgey", "pidgeot": "pidgey", "pidgeot-mega": "pidgey",
+  "raticate": "rattata", "raticate-alola": "rattata",
+  "raichu": "pichu", "raichu-alola": "pichu", "pikachu": "pichu",
+  "arbok": "ekans",
+  "sandslash": "sandshrew", "sandslash-alola": "sandshrew",
+  "nidorina": "nidoranf", "nidoqueen": "nidoranf",
+  "nidorino": "nidoranm", "nidoking": "nidoranm",
+  "clefable": "cleffa", "clefairy": "cleffa",
+  "ninetales": "vulpix", "ninetales-alola": "vulpix",
+  "wigglytuff": "igglybuff", "jigglypuff": "igglybuff",
+  "golbat": "zubat", "crobat": "zubat",
+  "gloom": "oddish", "vileplume": "oddish", "bellossom": "oddish",
+  "parasect": "paras", "venomoth": "venonat",
+  "dugtrio": "diglett", "dugtrio-alola": "diglett",
+  "persian": "meowth", "persian-alola": "meowth", "perrserker": "meowth",
+  "golduck": "psyduck", "primeape": "mankey", "annihilape": "mankey",
+  "arcanine": "growlithe", "arcanine-hisui": "growlithe",
+  "poliwhirl": "poliwag", "poliwrath": "poliwag", "politoed": "poliwag",
+  "kadabra": "abra", "alakazam": "abra", "alakazam-mega": "abra",
+  "machoke": "machop", "machamp": "machop",
+  "weepinbell": "bellsprout", "victreebel": "bellsprout",
+  "tentacruel": "tentacool",
+  "graveler": "geodude", "golem": "geodude", "graveler-alola": "geodude", "golem-alola": "geodude",
+  "rapidash": "ponyta", "rapidash-galar": "ponyta",
+  "slowbro": "slowpoke", "slowking": "slowpoke",
+  "magneton": "magnemite", "magnezone": "magnemite",
+  "dodrio": "doduo", "dewgong": "seel", "muk": "grimer", "muk-alola": "grimer",
+  "cloyster": "shellder", "haunter": "gastly", "gengar": "gastly", "gengar-mega": "gastly",
+  "steelix": "onix", "hypno": "drowzee", "kingler": "krabby", "electrode": "voltorb",
+  "exeggutor": "exeggcute", "marowak": "cubone", "marowak-alola": "cubone",
+  "hitmonlee": "tyrogue", "hitmonchan": "tyrogue", "hitmontop": "tyrogue",
+  "weezing": "koffing", "weezing-galar": "koffing", "rhydon": "rhyhorn", "rhyperior": "rhyhorn",
+  "blissey": "happiny", "chansey": "happiny", "tangrowth": "tangela", "kingdra": "horsea", "seadra": "horsea",
+  "seaking": "goldeen", "starmie": "staryu", "mr-mime": "mime-jr", "mr-rime": "mime-jr", "scizor": "scyther", "kleavor": "scyther",
+  "jynx": "smoochum", "electabuzz": "elekid", "electivire": "elekid", "magmar": "magby", "magmortar": "magby",
+  "gyarados": "magikarp", "vaporeon": "eevee", "jolteon": "eevee", "flareon": "eevee", "espeon": "eevee", "umbreon": "eevee", "leafeon": "eevee", "glaceon": "eevee", "sylveon": "eevee",
+  "porygon2": "porygon", "porygon-z": "porygon", "omastar": "omanyte", "kabutops": "kabuto",
+  "dragonair": "dratini", "dragonite": "dratini",
+
+  // Gen 2
+  "bayleef": "chikorita", "meganium": "chikorita",
+  "quilava": "cyndaquil", "typhlosion": "cyndaquil", "typhlosion-hisui": "cyndaquil",
+  "croconaw": "totodile", "feraligatr": "totodile",
+  "furret": "sentret", "noctowl": "hoothoot", "ledian": "ledyba", "ariados": "spinarak",
+  "lanturn": "chinchou", "togetic": "togepi", "togekiss": "togepi", "xatu": "natu",
+  "ampharos": "mareep", "flaaffy": "mareep", "azumarill": "azurill", "marill": "azurill",
+  "sudowoodo": "bonsly", "jumpluff": "hoppip", "skiploom": "hoppip",
+  "sunflora": "sunkern", "quagsire": "wooper", "clodsire": "wooper",
+  "wobbuffet": "wynaut", "forretress": "pineco", "ursaring": "teddiursa", "ursaluna": "teddiursa",
+  "magcargo": "slugma", "piloswine": "swinub", "mamoswine": "swinub",
+  "octillery": "remoraid", "houndoom": "houndour", "donphan": "phanpy",
+  "pupitar": "larvitar", "tyranitar": "larvitar",
+
+  // Gen 3
+  "grovyle": "treecko", "sceptile": "treecko",
+  "combusken": "torchic", "blaziken": "torchic",
+  "marshtomp": "mudkip", "swampert": "mudkip",
+  "mightyena": "poochyena", "linoone": "zigzagoon", "obstagoon": "zigzagoon",
+  "beautifly": "wurmple", "dustox": "wurmple", "ludicolo": "lotad", "lombre": "lotad",
+  "shiftry": "seedot", "nuzleaf": "seedot", "swellow": "taillow", "pelipper": "wingull",
+  "gardevoir": "ralts", "gallade": "ralts", "kirlia": "ralts",
+  "masquerain": "surskit", "breloom": "shroomish", "ninjask": "nincada", "shedinja": "nincada",
+  "exploud": "whismur", "loudred": "whismur", "hariyama": "makuhita",
+  "delcatty": "skitty", "manectric": "electrike",
+  "swalot": "gulpin", "sharpedo": "carvanha", "wailord": "wailmer", "camerupt": "numel",
+  "grumpig": "spoink", "flygon": "trapinch", "vibrava": "trapinch", "cacturne": "cacnea",
+  "altaria": "swablu", "crawdaunt": "corphish", "claydol": "baltoy", "cradily": "lileep",
+  "armaldo": "anorith", "milotic": "feebas", "banette": "shuppet", "dusclops": "duskull", "dusknoir": "duskull",
+  "chimecho": "chingling", "walrein": "spheal", "sealeo": "spheal", "huntail": "clamperl", "gorebyss": "clamperl",
+  "shelgon": "bagon", "salamence": "bagon", "metang": "beldum", "metagross": "beldum",
+
+  // Gen 4
+  "grotle": "turtwig", "torterra": "turtwig",
+  "monferno": "chimchar", "infernape": "chimchar",
+  "prinplup": "piplup", "empoleon": "piplup",
+  "staravia": "starly", "staraptor": "starly",
+  "bibarel": "bidoof", "kricketune": "kricketot",
+  "luxio": "shinx", "luxray": "shinx", "roserade": "budew", "roselia": "budew",
+  "rampardos": "cranidos", "bastiodon": "shieldon", "wormadam": "burmy", "mothim": "burmy",
+  "vespiquen": "combee", "floatzel": "buizel", "cherrim": "cherubi", "gastrodon": "shellos",
+  "drifblim": "drifloon", "lopunny": "buneary", "mismagius": "misdreavus", "honchkrow": "murkrow",
+  "purugly": "glameow", "skuntank": "stunky", "bronzong": "bronzor", "lucario": "riolu",
+  "hippowdon": "hippopotas", "drapion": "skorupi", "toxicroak": "croagunk", "abomasnow": "snover",
+  "weavile": "sneasel", "sneasler": "sneasel", "gliscor": "gligar",
+  "gabite": "gible", "garchomp": "gible",
+
+  // Gen 5
+  "servine": "snivy", "serperior": "snivy",
+  "pignite": "tepig", "emboar": "tepig",
+  "dewott": "oshawott", "samurott": "oshawott", "samurott-hisui": "oshawott",
+  "watchog": "patrat", "stoutland": "herdier", "herdier": "lillipup",
+  "liepard": "purrloin", "simisage": "pansage", "simisear": "pansear", "simipour": "panpour",
+  "musharna": "munna", "unfezant": "pidove", "tranquill": "pidove", "zebstrika": "blitzle",
+  "gigalith": "roggenrola", "boldore": "roggenrola", "swoobat": "woobat",
+  "excadrill": "drilbur", "conkeldurr": "timburr", "gurdurr": "timburr",
+  "seismitoad": "tympole", "palpitoad": "tympole", "leavanny": "sewaddle", "swadloon": "sewaddle",
+  "scolipede": "venipede", "whirlipede": "venipede", "whimsicott": "cottonee", "lilligant": "petilil", "lilligant-hisui": "petilil",
+  "krookodile": "sandile", "krokorok": "sandile", "darmanitan": "darumaka", "darmanitan-galar": "darumaka",
+  "crustle": "dwebble", "scrafty": "scraggy", "cofagrigus": "yamask", "runerigus": "yamask",
+  "carracosta": "tirtouga", "archeops": "archen", "garbodor": "trubbish", "zoroark": "zorua", "zoroark-hisui": "zorua",
+  "cinccino": "minccino", "gothitelle": "gothita", "gothorita": "gothita", "reuniclus": "solosis", "duosion": "solosis",
+  "swanna": "ducklett", "vanilluxe": "vanillite", "vanillish": "vanillite", "sawsbuck": "deerling",
+  "escavalier": "karrablast", "amoonguss": "foongus", "jellicent": "frillish", "galvantula": "joltik",
+  "ferrothorn": "ferroseed", "klinklang": "klink", "klang": "klink", "eelektross": "tynamo", "eelektrik": "tynamo",
+  "beheeyem": "elgyem", "chandelure": "litwick", "lampent": "litwick", "haxorus": "axew", "fraxure": "axew",
+  "beartic": "cubchoo", "mienshao": "mienfoo", "golurk": "golett", "bisharp": "pawniard", "kingambit": "pawniard",
+  "braviary": "rufflet", "braviary-hisui": "rufflet", "mandibuzz": "vullaby",
+  "hydreigon": "deino", "zweilous": "deino", "volcarona": "larvesta",
+
+  // Gen 6
+  "quilladin": "chespin", "chesnaught": "chespin",
+  "braixen": "fennekin", "delphox": "fennekin",
+  "frogadier": "froakie", "greninja": "froakie",
+  "diggersby": "bunnelby", "talonflame": "fletchling", "fletchinder": "fletchling",
+  "vivillon": "scatterbug", "spewpa": "scatterbug", "pyroar": "litleo", "florges": "flabebe", "floette": "flabebe",
+  "gogoat": "skiddo", "pangoro": "pancham", "meowstic": "espurr", "aegislash": "honedge", "doublade": "honedge",
+  "aromatisse": "spritzee", "slurpuff": "swirlix", "malamar": "inkay", "barbaracle": "binacle",
+  "dragalge": "skrelp", "clawitzer": "clauncher", "heliolisk": "helioptile", "tyrantrum": "tyrunt", "aurorus": "amaura",
+  "goodra": "goomy", "goodra-hisui": "goomy", "sliggoo": "goomy", "trevenant": "phantump", "gourgeist": "pumpkaboo",
+  "avalugg": "bergmite", "avalugg-hisui": "bergmite", "noivern": "noibat",
+
+  // Gen 7
+  "dartrix": "rowlet", "decidueye": "rowlet", "decidueye-hisui": "rowlet",
+  "torracat": "litten", "incineroar": "litten",
+  "brionne": "popplio", "primarina": "popplio",
+  "toucannon": "pikipek", "trumbeak": "pikipek", "gumshoos": "yungoos",
+  "vikavolt": "grubbin", "charjabug": "grubbin", "crabominable": "crabrawler",
+  "ribombee": "cutiefly", "lycanroc": "rockruff", "toxapex": "mareanie",
+  "mudsdale": "mudbray", "araquanid": "dewpider", "lurantis": "fomantis", "shiinotic": "morelull",
+  "salazzle": "salandit", "bewear": "stufful", "tsareena": "bounsweet", "steenee": "bounsweet",
+  "golisopod": "wimpod", "palossand": "sandygast", "silvally": "type-null", "kommo-o": "jangmo-o", "hakamo-o": "jangmo-o",
+
+  // Gen 8
+  "thwackey": "grookey", "rillaboom": "grookey",
+  "raboot": "scorbunny", "cinderace": "scorbunny",
+  "drizzile": "sobble", "inteleon": "sobble",
+  "greedent": "skwovet", "corvisquire": "rookidee", "corviknight": "rookidee",
+  "orbeetle": "blipbug", "dottler": "blipbug", "thievul": "nickit", "eldegoss": "gossifleur",
+  "dubwool": "wooloo", "drednaw": "chewtle", "boltund": "yamper", "coalossal": "rolycoly", "carkol": "rolycoly",
+  "flapple": "applin", "appletun": "applin", "dipplin": "applin", "hydrapple": "applin",
+  "sandaconda": "silicobra", "centiskorch": "sizzlipede", "grapploct": "clobbopus",
+  "polteageist": "sinistea", "sinistcha": "poltchageist", "hatterene": "hatenna", "hattrem": "hatenna",
+  "grimmsnarl": "impidimp", "morgrem": "impidimp", "cursola": "corsola",
+  "sirfetchd": "farfetchd", "alcremie": "milcery",
+  "frosmoth": "snom", "copperajah": "cufant", "dragapult": "dreepy", "drakloak": "dreepy", "urshifu": "kubfu",
+
+  // Gen 9
+  "floragato": "sprigatito", "meowscarada": "sprigatito",
+  "crocalor": "fuecoco", "skeledirge": "fuecoco",
+  "quaxwell": "quaxly", "quaquaval": "quaxly",
+  "oinkologne": "lechonk", "spidops": "tarountula", "lokix": "nymble", "pawmo": "pawmi", "pawmot": "pawmi",
+  "maushold": "tandemaus", "dachsbun": "fidough", "arboliva": "smoliv", "dolliv": "smoliv",
+  "garganacl": "nacli", "naclstack": "nacli", "armarouge": "charcadet", "ceruledge": "charcadet",
+  "bellibolt": "tadbulb", "kilowattrel": "wattrel", "mabosstiff": "maschiff", "grafaiai": "shroodle",
+  "brambleghast": "bramblin", "toedscruel": "toedscool", "scovillain": "capsakid", "rabsca": "rellor",
+  "espathra": "flittle", "tinkaton": "tinkatink", "tinkatuff": "tinkatink", "wugtrio": "wiglett",
+  "palafin": "finizen", "revavroom": "varoom", "glimmora": "glimmet", "houndstone": "greavard",
+  "cetitan": "cetoddle", "farigiraf": "girafarig",
+  "dudunsparce": "dunsparce", "baxcalibur": "frigibax", "arctibax": "frigibax",
+  "archaludon": "duraludon",
+};
 
 export const battleService = BattleService.getInstance();
