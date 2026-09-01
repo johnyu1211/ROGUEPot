@@ -361,6 +361,15 @@ export class BattleService {
     }
 
     if (existing && existing.wave === slot.wave) {
+      const currentLeader = slot.party[existing.playerActiveIndex || 0] || slot.party[0];
+      if (currentLeader) {
+        const movesChanged = JSON.stringify(existing.playerBattleMon.moves) !== JSON.stringify(currentLeader.moves);
+        const speciesOrLevelChanged = existing.playerBattleMon.speciesId !== currentLeader.speciesId || existing.playerBattleMon.level !== currentLeader.level;
+        if (movesChanged || speciesOrLevelChanged) {
+          existing.playerParty = slot.party;
+          existing.playerBattleMon = this.createPlayerBattleMon(currentLeader, slot.party);
+        }
+      }
       return existing;
     }
 
