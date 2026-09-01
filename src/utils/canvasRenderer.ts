@@ -1,8 +1,10 @@
 import { createCanvas, loadImage, GlobalFonts, Image } from "@napi-rs/canvas";
 import path from "path";
 import fs from "fs";
-import { DexPokemonInfo, getAbilityDetail, getPokemonSpeciesInfo, ABILITY_DETAILED_DESC_KO } from "../services/pokeApiService.js";
-import { StarterEntry, GENERATION_INFO, getStarterByDexNumber, STARTER_DATABASE } from "../data/starterCosts.js";
+import { DexPokemonInfo, getAbilityDetail, getPokemonSpeciesInfo, ABILITY_DETAILED_DESC_KO, ABILITY_DETAILED_DESC_EN } from "../services/pokeApiService.js";
+import { StarterEntry, GENERATION_INFO, getStarterByDexNumber, getStarterBySpeciesId, STARTER_DATABASE } from "../data/starterCosts.js";
+import { POKEMON_SPECIES_DATA } from "../data/pokemonStats.js";
+import { POKEMON_NAMES_KO } from "../data/pokemonNamesKo.js";
 import { MOVES_DATA } from "../data/movesKo.js";
 import { MOVES_EN_DESC } from "../data/movesEn.js";
 
@@ -11,6 +13,51 @@ const fontPath = path.resolve(process.cwd(), "assets/fonts/DungGeunMo.ttf");
 if (fs.existsSync(fontPath)) {
   GlobalFonts.registerFromPath(fontPath, "DungGeunMo");
 }
+
+// ============================================================================
+// ⚙️ [BATTLE FIELD & SPRITE LAYOUT CONFIGURATION]
+// 배틀 화면의 발판 크기/위치 및 포켓몬 크기/착지점 좌표를 최상단에서 손쉽게 조절합니다.
+// ============================================================================
+export const BATTLE_LAYOUT_CONFIG = {
+  // 1. 상대 발판 (우상단 원경)
+  enemyPlatform: {
+    scale: 1.5,
+    x: 95,
+    y: 25,
+  },
+  // 2. 아군 발판 (좌하단 전경 1인칭 미러링)
+  playerPlatform: {
+    scale: 2.0,
+    x: -46,
+    y: 118,
+  },
+  // 3. 상대 포켓몬 (원경)
+  enemyPokemon: {
+    size: 75,      // 실제 픽셀 몸체 크기 (px)
+    x: 418,        // 발판 중심 X
+    y: 135,        // 발판 착지점 Y
+  },
+  // 4. 아군 포켓몬 (전경 1인칭)
+  playerPokemon: {
+    size: 135,     // 실제 픽셀 몸체 크기 (px)
+    x: 175,        // 발판 중심 X
+    y: 268,        // 발판 착지점 Y
+  },
+  // 5. HUD 박스 위치 & 크기 (포켓로그 공식 스프라이트 규격)
+  enemyHud: {
+    x: 16,
+    y: 16,
+    w: 228,
+    h: 54,
+  },
+  playerHud: {
+    x: 316,
+    y: 180,
+    w: 228,
+    h: 74,
+  },
+};
+// ============================================================================
 
 let cachedLogo: Image | null = null;
 
@@ -30,6 +77,8 @@ export interface TitleScreenPartyPokemon {
   name: string;
   nickname?: string;
   level: number;
+  isShiny?: boolean;
+  shinyTier?: number;
 }
 
 export interface TitleScreenOptions {
@@ -47,7 +96,12 @@ const spriteCache = new Map<string, Image>();
 /**
  * Helper to fetch a static pixel sprite from Showdown CDN with in-memory caching
  */
-export async function getPokemonSprite(pokemonName: string, allowFetch: boolean = true, isShiny: boolean | number = false): Promise<any | null> {
+export async function getPokemonSprite(
+  pokemonName: string,
+  allowFetch: boolean = true,
+  isShiny: boolean | number = false,
+  isBack: boolean = false
+): Promise<any | null> {
   try {
     let clean = pokemonName.toLowerCase().trim();
     if (clean === "nidoran-f" || clean === "nidoran_f" || clean === "nidoran♀") clean = "nidoranf";
@@ -111,10 +165,16 @@ export async function getPokemonSprite(pokemonName: string, allowFetch: boolean 
     else if (clean.startsWith("ursaluna")) clean = "ursaluna";
     else if (clean.startsWith("koraidon")) clean = "koraidon";
     else if (clean.startsWith("miraidon")) clean = "miraidon";
-    else clean = clean.replace(/[^a-z0-9]/g, "");
+    else if (clean.includes("gmax") || clean.includes("mega") || clean.includes("alola") || clean.includes("galar") || clean.includes("hisui") || clean.includes("paldea")) {
+      clean = clean.replace(/[^a-z0-9-]/g, "");
+    } else {
+      clean = clean.replace(/[^a-z0-9]/g, "");
+    }
 
     const tier = typeof isShiny === "number" ? isShiny : (isShiny ? 1 : 0);
-    const cacheKey = tier > 0 ? `shiny_${tier}_${clean}` : clean;
+    const cacheKey = isBack
+      ? (tier > 0 ? `shiny_${tier}_back_${clean}` : `back_${clean}`)
+      : (tier > 0 ? `shiny_${tier}_${clean}` : clean);
 
     if (spriteCache.has(cacheKey)) {
       return spriteCache.get(cacheKey)!;
@@ -124,41 +184,76 @@ export async function getPokemonSprite(pokemonName: string, allowFetch: boolean 
       return null;
     }
 
-    // 1. Resolve Dex Number for authentic PokéRogue sprite lookup
+    const isTestSubject = clean === "testsubject12" || clean === "testsubject";
+    const lookupKey = isTestSubject ? "ditto" : clean;
+
+    // 1. Resolve Dex Number for authentic PokéRogue sprite lookup (All 1~1025 Pokemon)
     let dexNo: number | null = null;
-    if (/^\d+$/.test(clean)) {
-      dexNo = parseInt(clean, 10);
-    } else {
-      const matchStarter = STARTER_DATABASE.find((s) => s.speciesId === clean);
-      if (matchStarter) dexNo = matchStarter.dexNumber;
+    if (!isTestSubject) {
+      if (/^\d+$/.test(clean)) {
+        dexNo = parseInt(clean, 10);
+      } else {
+        const spec = POKEMON_SPECIES_DATA[clean] || POKEMON_SPECIES_DATA[clean.replace(/-/g, "")];
+        if (spec && spec.num > 0) {
+          dexNo = spec.num;
+        } else {
+          const matchStarter = STARTER_DATABASE.find((s) => s.speciesId === clean);
+          if (matchStarter && matchStarter.dexNumber > 0) dexNo = matchStarter.dexNumber;
+        }
+      }
     }
 
     let img: any | null = null;
 
-    // 2. Primary Source: Official PokéRogue Extracted Assets (Authentic Tier 0, 1, 2, 3 sprites!)
-    if (dexNo) {
+    // 2. Primary Source: Official PokéRogue Extracted Assets (Front & Back sprites)
+    if (dexNo && !clean.includes("gmax") && !clean.includes("mega")) {
+      const suffix = isBack ? "b" : "";
       try {
-        const rogueUrl = `https://raw.githubusercontent.com/Sandstormer/PokeRogue-Dex/main/images/${dexNo}_${tier}.png`;
+        const rogueUrl = `https://raw.githubusercontent.com/Sandstormer/PokeRogue-Dex/main/images/${dexNo}_${tier}${suffix}.png`;
         img = await loadImage(rogueUrl);
       } catch {
-        img = null;
+        if (tier > 0) {
+          try {
+            img = await loadImage(`https://raw.githubusercontent.com/Sandstormer/PokeRogue-Dex/main/images/${dexNo}_1${suffix}.png`);
+            if (img && tier >= 2 && !isTestSubject) {
+              img = applyShinyTierVariant(img, tier);
+            }
+          } catch {}
+        }
       }
     }
 
-    // 3. Secondary Fallback Source: Showdown CDN + Hue Shift engine
+    // 3. Secondary Fallback Source: Showdown CDN + Hue Shift / White Shading engine
     if (!img) {
-      const folder = tier > 0 ? "gen5-shiny" : "gen5";
-      const url = `https://play.pokemonshowdown.com/sprites/${folder}/${clean}.png`;
-      try {
-        img = await loadImage(url);
-      } catch {
-        if (tier > 0) {
-          img = await loadImage(`https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`).catch(() => null);
+      const folder = isBack
+        ? (tier > 0 && !isTestSubject ? "gen5-back-shiny" : "gen5-back")
+        : (tier > 0 && !isTestSubject ? "gen5-shiny" : "gen5");
+      
+      const candidateKeys = [
+        lookupKey,
+        lookupKey.replace(/gmax/g, "-gmax").replace(/mega/g, "-mega"),
+        lookupKey.replace(/-/g, "")
+      ];
+
+      for (const k of candidateKeys) {
+        if (img) break;
+        try {
+          img = await loadImage(`https://play.pokemonshowdown.com/sprites/${folder}/${k}.png`);
+        } catch {
+          if (isBack) {
+            img = await loadImage(`https://play.pokemonshowdown.com/sprites/${tier > 0 && !isTestSubject ? "gen5-shiny" : "gen5"}/${k}.png`).catch(() => null);
+          } else if (tier > 0 && !isTestSubject) {
+            img = await loadImage(`https://play.pokemonshowdown.com/sprites/gen5/${k}.png`).catch(() => null);
+          }
         }
       }
 
-      if (img && tier >= 2) {
-        img = applyShinyTierVariant(img, tier);
+      if (img) {
+        if (isTestSubject) {
+          img = applyWhiteDittoVariant(img, tier);
+        } else if (tier >= 2) {
+          img = applyShinyTierVariant(img, tier);
+        }
       }
     }
 
@@ -175,6 +270,69 @@ export async function getPokemonSprite(pokemonName: string, allowFetch: boolean 
   } catch (err) {
     console.error(`[CANVAS] Failed to load sprite for ${pokemonName}:`, err);
     return null;
+  }
+}
+
+/**
+ * Generates custom pure white Ditto sprite for Testsubject12
+ * Preserves facial features & outlines while transforming body into a sleek white/platinum tone.
+ */
+function applyWhiteDittoVariant(img: any, tier: number = 0): any {
+  try {
+    const canvas = createCanvas(img.width, img.height);
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0);
+    const imgData = ctx.getImageData(0, 0, img.width, img.height);
+    const data = imgData.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+      const a = data[i + 3];
+      if (a < 10) continue;
+
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+
+      // Dark outlines and facial features (eyes, smile)
+      if (lum < 60) {
+        data[i] = Math.round(r * 0.35);
+        data[i + 1] = Math.round(g * 0.35);
+        data[i + 2] = Math.round(b * 0.35);
+      } else {
+        // Body shading: map 60..255 to 195..255
+        const norm = Math.max(0, Math.min(1, (lum - 60) / (255 - 60)));
+        const whiteLum = Math.round(195 + norm * 60);
+
+        if (tier === 3) {
+          // Epic Red Shiny: Platinum White with subtle crimson/rose highlight
+          data[i] = Math.min(255, Math.round(whiteLum * 1.0));
+          data[i + 1] = Math.min(255, Math.round(whiteLum * 0.93));
+          data[i + 2] = Math.min(255, Math.round(whiteLum * 0.95));
+        } else if (tier === 2) {
+          // Blue Shiny: Icy Diamond White with subtle sky blue luster
+          data[i] = Math.min(255, Math.round(whiteLum * 0.94));
+          data[i + 1] = Math.min(255, Math.round(whiteLum * 0.97));
+          data[i + 2] = Math.min(255, whiteLum);
+        } else if (tier === 1) {
+          // Yellow Shiny: Pearlescent Warm White with subtle golden aura
+          data[i] = Math.min(255, whiteLum);
+          data[i + 1] = Math.min(255, Math.round(whiteLum * 0.99));
+          data[i + 2] = Math.min(255, Math.round(whiteLum * 0.94));
+        } else {
+          // Base White: Pure crisp platinum white
+          data[i] = Math.min(255, Math.round(whiteLum * 0.97));
+          data[i + 1] = Math.min(255, Math.round(whiteLum * 0.98));
+          data[i + 2] = Math.min(255, whiteLum);
+        }
+      }
+    }
+
+    ctx.putImageData(imgData, 0, 0);
+    return canvas;
+  } catch (err) {
+    console.error("[CANVAS] Failed to apply white ditto variant:", err);
+    return img;
   }
 }
 
@@ -342,6 +500,238 @@ export function drawCheckmark(ctx: any, cx: number, cy: number, size: number = 5
 }
 
 /**
+ * Draws a battler sprite tightly fitted by its non-transparent pixel bounding box
+ * so that foreground/background physical size and surface contact are 100% accurate regardless of canvas padding.
+ */
+export function drawFittedBattleSprite(ctx: any, sprite: any, targetX: number, targetY: number, targetSize: number) {
+  if (!sprite || !sprite.width || !sprite.height) return;
+
+  try {
+    const tempCanvas = createCanvas(sprite.width, sprite.height);
+    const tempCtx = tempCanvas.getContext("2d");
+    tempCtx.drawImage(sprite, 0, 0);
+    const data = tempCtx.getImageData(0, 0, sprite.width, sprite.height).data;
+
+    let minX = sprite.width, maxX = 0, minY = sprite.height, maxY = 0;
+    for (let y = 0; y < sprite.height; y++) {
+      for (let x = 0; x < sprite.width; x++) {
+        const a = data[(y * sprite.width + x) * 4 + 3];
+        if (a > 10) {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+
+    if (maxX >= minX && maxY >= minY) {
+      const actW = maxX - minX + 1;
+      const actH = maxY - minY + 1;
+      const maxDim = Math.max(actW, actH);
+      const scale = targetSize / maxDim;
+
+      const drawW = actW * scale;
+      const drawH = actH * scale;
+      const drawX = targetX - drawW / 2;
+      const drawY = targetY - drawH; // bottom-aligned on surface
+
+      ctx.drawImage(sprite, minX, minY, actW, actH, drawX, drawY, drawW, drawH);
+      return;
+    }
+  } catch {}
+
+  ctx.drawImage(sprite, targetX - targetSize / 2, targetY - targetSize, targetSize, targetSize);
+}
+
+/**
+ * Official PokéRogue Type Colors Map
+ */
+export const POKEROGUE_TYPE_COLORS: Record<string, string> = {
+  normal: "#A8A77A", fire: "#EE8130", water: "#6390F0", electric: "#F7D02C",
+  grass: "#7AC74C", ice: "#96D9D6", fighting: "#C22E28", poison: "#A33EA1",
+  ground: "#E2BF65", flying: "#A98FF3", psychic: "#F95587", bug: "#A6B91A",
+  rock: "#B6A136", ghost: "#735797", dragon: "#6F35FC", dark: "#705746",
+  steel: "#B7B7CE", fairy: "#D685AD"
+};
+
+interface PbInfoAssets {
+  playerBox: Image | null;
+  enemyBox: Image | null;
+  bossBox: Image | null;
+  hpLabel: Image | null;
+  categories: Image | null;
+}
+
+let cachedPbInfo: PbInfoAssets | null = null;
+
+export async function getPbInfoAssets(): Promise<PbInfoAssets> {
+  if (cachedPbInfo) return cachedPbInfo;
+  const base = "https://raw.githubusercontent.com/pagefaultgames/pokerogue-assets/beta/images/ui";
+  const imgBase = "https://raw.githubusercontent.com/pagefaultgames/pokerogue-assets/beta/images";
+  try {
+    const [playerBox, enemyBox, bossBox, hpLabel, categories] = await Promise.all([
+      loadImage(`${base}/pbinfo_player.png`).catch(() => null),
+      loadImage(`${base}/pbinfo_enemy_mini.png`).catch(() => null),
+      loadImage(`${base}/pbinfo_enemy_boss.png`).catch(() => null),
+      loadImage(`${base}/text_images/en/battle_ui/overlay_hp_label.png`).catch(() => null),
+      loadImage(`${imgBase}/categories.png`).catch(() => null),
+    ]);
+    cachedPbInfo = { playerBox, enemyBox, bossBox, hpLabel, categories };
+    return cachedPbInfo;
+  } catch {
+    return { playerBox: null, enemyBox: null, bossBox: null, hpLabel: null, categories: null };
+  }
+}
+
+/**
+ * Resolves a Pokémon's display name accurately based on language setting (ko/en)
+ */
+export function getPokemonDisplayName(mon: any, isKo: boolean): string {
+  if (!mon) return isKo ? "포켓몬" : "Pokemon";
+  if (mon.nickname) return mon.nickname;
+
+  const speciesId = (mon.speciesId || "").toLowerCase().replace(/[\s_]+/g, "-");
+  const starter = speciesId ? getStarterBySpeciesId(speciesId) : null;
+  const sData = POKEMON_SPECIES_DATA[speciesId];
+
+  if (isKo) {
+    if (mon.nameKo) return mon.nameKo;
+    if (starter?.nameKo) return starter.nameKo;
+    if (sData?.num && POKEMON_NAMES_KO[sData.num]) return POKEMON_NAMES_KO[sData.num];
+    if (mon.name && /[가-힣]/.test(mon.name)) return mon.name;
+    return mon.name || speciesId || "포켓몬";
+  } else {
+    if (mon.nameEn) return mon.nameEn;
+    if (starter?.name) return starter.name;
+    if (sData?.name) return sData.name;
+    if (mon.name && !/[가-힣]/.test(mon.name)) return mon.name;
+    if (speciesId) {
+      return speciesId.charAt(0).toUpperCase() + speciesId.slice(1).replace(/-/g, " ");
+    }
+    return "Pokemon";
+  }
+}
+
+export interface PokeRogueBattleHudOptions {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  name: string;
+  level: number;
+  hp: number;
+  maxHp: number;
+  isEnemy: boolean;
+  types?: string[];
+  isBoss?: boolean;
+  bossShields?: number;
+  statusBadge?: string;
+  exp?: number;
+  maxExp?: number;
+  isKo?: boolean;
+  hudImage?: any;
+  hpLabel?: any;
+}
+
+/**
+ * Draws the Authentic Official PokéRogue Battle HP/Info Box HUD
+ */
+export function drawPokeRogueBattleHud(ctx: any, opt: PokeRogueBattleHudOptions) {
+  const { x, y, w, h, name, level, hp, maxHp, isEnemy, isBoss, bossShields, statusBadge, exp, maxExp, hudImage, hpLabel } = opt;
+  ctx.save();
+
+  const scale = 1.75;
+
+  if (hudImage) {
+    // 1. Render Authentic Official PokéRogue Battle Box Sprite
+    ctx.drawImage(hudImage, x, y, w, h);
+
+    // 1.1 Render Official Green/Cyan HP Badge on Left of Bar
+    if (hpLabel) {
+      const labelX = isEnemy ? (x + 41.5 * scale) : (x + 51.5 * scale);
+      ctx.drawImage(hpLabel, labelX, y + 17.5 * scale, hpLabel.width * scale, hpLabel.height * scale);
+    }
+
+    // 2. Pokémon Name (Centered in top bar, player shifted slightly right for bevel padding)
+    const displayName = name + (statusBadge || "");
+    ctx.font = "bold 13px DungGeunMo";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    const nameX = isEnemy ? (x + 16 * scale) : (x + 20 * scale);
+    ctx.fillText(displayName, nameX, y + 10.5 * scale);
+
+    // 3. Level Indicator (Centered in top bar with comfortable breathing room)
+    ctx.textAlign = "right";
+    ctx.font = "bold 11px DungGeunMo";
+    ctx.fillStyle = "#F59E0B";
+    const lvLabelX = isEnemy ? (x + w - 34 * scale) : (x + w - 28 * scale);
+    const lvNumX = isEnemy ? (x + w - 20 * scale) : (x + w - 14 * scale);
+    ctx.fillText("Lv.", lvLabelX, y + 10.5 * scale);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "bold 13px DungGeunMo";
+    ctx.fillText(level.toString(), lvNumX, y + 10.5 * scale);
+
+    // 4. HP Bar Gauge inside exact pixel cavity
+    const hpRatio = Math.max(0, Math.min(1.0, hp / maxHp));
+    const hpColor = hpRatio > 0.5 ? "#22C55E" : hpRatio > 0.2 ? "#EAB308" : "#EF4444";
+
+    if (isEnemy) {
+      const slotX = x + 58.5 * scale;
+      const slotY = y + 19.3 * scale;
+      const slotW = (isBoss ? 87 : 48.5) * scale;
+      const slotH = 3.0 * scale;
+
+      if (hpRatio > 0) {
+        ctx.fillStyle = hpColor;
+        ctx.fillRect(slotX, slotY, slotW * hpRatio, slotH);
+      }
+
+      if (isBoss && bossShields !== undefined) {
+        for (let s = 0; s < 3; s++) {
+          ctx.fillStyle = s < bossShields ? "#EF4444" : "#475569";
+          ctx.beginPath();
+          ctx.roundRect(x + w - 60 - s * 14, y + 5, 10, 4, 1);
+          ctx.fill();
+        }
+      }
+    } else {
+      const slotX = x + 68.5 * scale;
+      const slotY = y + 19.3 * scale;
+      const slotW = 48.5 * scale;
+      const slotH = 3.0 * scale;
+
+      if (hpRatio > 0) {
+        ctx.fillStyle = hpColor;
+        ctx.fillRect(slotX, slotY, slotW * hpRatio, slotH);
+      }
+
+      // Player HP Numbers (Centered in bottom bar)
+      ctx.textAlign = "right";
+      ctx.font = "bold 11px DungGeunMo";
+      ctx.fillStyle = "#FFFFFF";
+      ctx.textBaseline = "middle";
+      ctx.fillText(`${hp} / ${maxHp}`, x + w - 14 * scale, y + 31.5 * scale);
+
+      // Player EXP Bar (Bottom dotted line track: x=33..115)
+      const expSlotX = x + 33 * scale;
+      const expSlotY = y + 39 * scale;
+      const expSlotW = 82 * scale;
+      const expSlotH = 2 * scale;
+
+      const expRatio = Math.max(0, Math.min(1.0, (exp || 0) / (maxExp || 100)));
+      if (expRatio > 0) {
+        ctx.fillStyle = "#38BDF8";
+        ctx.fillRect(expSlotX, expSlotY, expSlotW * expRatio, expSlotH);
+      }
+    }
+  }
+
+  ctx.restore();
+}
+
+/**
  * Draws a clean vector Star Icon
  */
 export function drawVectorStar(ctx: any, cx: number, cy: number, spikes: number, outerRadius: number, innerRadius: number, color: string = "#F4A261") {
@@ -413,17 +803,18 @@ export function drawSwordIcon(ctx: any, cx: number, cy: number, size: number = 6
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   // Blade 1
-  ctx.moveTo(cx - size, cy + size);
-  ctx.lineTo(cx + size, cy - size);
+  ctx.moveTo(cx - size, cy - size);
+  ctx.lineTo(cx + size, cy + size);
   // Cross guard 1
-  ctx.moveTo(cx - size * 0.4, cy + size * 0.8);
-  ctx.lineTo(cx - size * 0.8, cy + size * 0.4);
+  ctx.moveTo(cx - size * 0.4, cy - size * 0.8);
+  ctx.lineTo(cx - size * 0.8, cy - size * 0.4);
+
   // Blade 2
-  ctx.moveTo(cx + size, cy + size);
-  ctx.lineTo(cx - size, cy - size);
+  ctx.moveTo(cx + size, cy - size);
+  ctx.lineTo(cx - size, cy + size);
   // Cross guard 2
-  ctx.moveTo(cx + size * 0.4, cy + size * 0.8);
-  ctx.lineTo(cx + size * 0.8, cy + size * 0.4);
+  ctx.moveTo(cx + size * 0.4, cy - size * 0.8);
+  ctx.lineTo(cx + size * 0.8, cy - size * 0.4);
   ctx.stroke();
   ctx.restore();
 }
@@ -565,18 +956,38 @@ async function drawPartyRightPanel(
 
     const pokemon = partyList[i];
     if (pokemon) {
-      const sprite = await getPokemonSprite(pokemon.speciesId);
+      const shinyTier = pokemon.shinyTier !== undefined
+        ? pokemon.shinyTier
+        : (pokemon.isShiny || (pokemon.name && pokemon.name.includes("✨")) ? 1 : 0);
+      const isShiny = shinyTier > 0;
+
+      // Localized full name without hard truncation
+      let displayName = pokemon.nickname || pokemon.name || "Pokemon";
+      if (!pokemon.nickname) {
+        if (pokemon.speciesId === "testsubject12" || pokemon.speciesId === "testsubject") {
+          displayName = "Testsubject12";
+        } else {
+          const spec = POKEMON_SPECIES_DATA[pokemon.speciesId];
+          if (spec) {
+            displayName = isKo ? (POKEMON_NAMES_KO[spec.num] || spec.name) : spec.name;
+          }
+        }
+      }
+      displayName = displayName.replace(/^✨\s*/, "");
+
+      const sprite = await getPokemonSprite(pokemon.speciesId, true, shinyTier);
       if (sprite) {
         const scale = 1.35;
         const sprW = sprite.width * scale;
         const sprH = sprite.height * scale;
         ctx.drawImage(sprite, sx + (slotW - sprW) / 2, sy + (slotH - sprH) / 2 - 8, sprW, sprH);
       }
-      ctx.font = "bold 13px DungGeunMo";
+
+      const fontSize = displayName.length > 10 ? 11 : (displayName.length > 7 ? 12 : 13);
+      ctx.font = `bold ${fontSize}px DungGeunMo`;
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
-      const displayLabel = (pokemon.nickname || pokemon.name || "Pokemon").slice(0, 7);
-      ctx.fillText(displayLabel, sx + slotW / 2, sy + slotH - 8);
+      ctx.fillText(displayName, sx + slotW / 2, sy + slotH - 8);
     } else {
       ctx.fillStyle = "#222636";
       ctx.beginPath();
@@ -632,10 +1043,10 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
     ctx.fillStyle = "#FFFFFF";
 
     if (options?.hasSavedSlots) {
-      ctx.fillText(isKo ? "1. 불러오기" : "1. LOAD GAME", leftPadding + 6, menuStartY);
+      ctx.fillText(isKo ? "1. 이어하기" : "1. CONTINUE", leftPadding + 6, menuStartY);
       ctx.fillText(isKo ? "2. 새 게임" : "2. NEW GAME", leftPadding + 6, menuStartY + 38);
-      ctx.fillText(isKo ? "3. 멀티플레이" : "3. MULTIPLAY", leftPadding + 6, menuStartY + 76);
-      ctx.fillText(isKo ? "4. 인벤토리" : "4. INVENTORY", leftPadding + 6, menuStartY + 114);
+      ctx.fillText(isKo ? "3. 불러오기" : "3. LOAD GAME", leftPadding + 6, menuStartY + 76);
+      ctx.fillText(isKo ? "4. 멀티플레이" : "4. MULTIPLAY", leftPadding + 6, menuStartY + 114);
     } else {
       ctx.fillText(isKo ? "1. 새 게임" : "1. NEW GAME", leftPadding + 6, menuStartY);
       ctx.fillText(isKo ? "2. 멀티플레이" : "2. MULTIPLAY", leftPadding + 6, menuStartY + 38);
@@ -890,7 +1301,7 @@ const TYPE_COLORS: Record<string, string> = {
   dark: "#5A5366",
 };
 
-const TYPE_NAMES_KO: Record<string, string> = {
+export const TYPE_NAMES_KO: Record<string, string> = {
   normal: "노말",
   fire: "불꽃",
   water: "물",
@@ -995,7 +1406,7 @@ export async function renderPokedexScreen(options?: PokedexScreenOptions): Promi
 
     if (p) {
       const displayName = (isKo && p.koreanName) ? p.koreanName : p.name;
-      const dexTag = `#${String(p.dexNumber).padStart(3, "0")}`;
+      const dexTag = p.dexNumber <= 0 ? "#---" : `#${String(p.dexNumber).padStart(3, "0")}`;
 
       // Left Header: Slot Number + Pokemon Name (13px Bold)
       ctx.font = "bold 13px DungGeunMo";
@@ -1484,6 +1895,7 @@ export interface StarterSelectPartyItem {
   shinyTier?: number;
   useHiddenAbility?: boolean;
   usePassive?: boolean;
+  moves?: string[];
 }
 
 export type PartyViewTab = "moves" | "learnable" | "shiny" | "cost";
@@ -1492,6 +1904,11 @@ export interface InGameMessage {
   title: string;
   text: string;
   type?: "info" | "lock" | "success";
+  moveType?: string;
+  moveCategory?: "physical" | "special" | "status";
+  movePower?: string;
+  moveAccuracy?: string;
+  movePp?: string;
 }
 
 export interface StarterSelectScreenOptions {
@@ -1511,6 +1928,7 @@ export interface StarterSelectScreenOptions {
   selectedPartyIdx?: number;
   partyTab?: PartyViewTab;
   selectedMoveIdx?: number;
+  targetMoveSlot?: number;
   inGameMessage?: InGameMessage;
 }
 
@@ -1593,6 +2011,360 @@ function drawMoveCategoryIcon(ctx: any, x: number, y: number, category?: "physic
     ctx.arc(cx + 3.0, cy, 3.0, 0, Math.PI * 2);
     ctx.fill();
   }
+}
+
+/**
+ * Draws PokéRogue / Official style SVG vector Type Icon for all 18 Pokémon Types
+ */
+function drawTypeIcon(ctx: any, x: number, y: number, size: number, typeName: string, shape: "circle" | "rounded" = "rounded") {
+  const cleanType = (typeName || "normal").toLowerCase().trim();
+  const color = TYPE_COLORS[cleanType] || "#777777";
+  const r = size / 2;
+  const cx = x + r;
+  const cy = y + r;
+
+  ctx.save();
+
+  // Background badge container
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  if (shape === "circle") {
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  } else {
+    ctx.roundRect(x, y, size, size, Math.max(3, Math.floor(size * 0.18)));
+  }
+  ctx.fill();
+
+  // Vector Glyph setup
+  ctx.fillStyle = "#FFFFFF";
+  ctx.strokeStyle = "#FFFFFF";
+  ctx.lineWidth = Math.max(1.2, size * 0.08);
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
+  const s = size / 24; // Scale factor based on 24x24 grid
+
+  ctx.translate(cx, cy);
+  ctx.scale(s, s);
+
+  switch (cleanType) {
+    case "fire": {
+      // Flame glyph
+      ctx.beginPath();
+      ctx.moveTo(0, -9);
+      ctx.bezierCurveTo(3.5, -5, 7, -1, 7, 4);
+      ctx.bezierCurveTo(7, 8, 4, 9, 0, 9);
+      ctx.bezierCurveTo(-4, 9, -7, 8, -7, 4);
+      ctx.bezierCurveTo(-7, -1, -3.5, -5, 0, -9);
+      ctx.fill();
+      // Inner flame cutout
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(0, 1.5);
+      ctx.bezierCurveTo(2, 3.5, 3, 5.5, 3, 7);
+      ctx.bezierCurveTo(3, 8.5, 1.5, 8.8, 0, 8.8);
+      ctx.bezierCurveTo(-1.5, 8.8, -3, 8.5, -3, 7);
+      ctx.bezierCurveTo(-3, 5.5, -2, 3.5, 0, 1.5);
+      ctx.fill();
+      break;
+    }
+    case "water": {
+      // Water droplet
+      ctx.beginPath();
+      ctx.moveTo(0, -9);
+      ctx.bezierCurveTo(4, -3, 7, 2, 7, 5);
+      ctx.bezierCurveTo(7, 8.5, 3.5, 9.5, 0, 9.5);
+      ctx.bezierCurveTo(-3.5, 9.5, -7, 8.5, -7, 5);
+      ctx.bezierCurveTo(-7, 2, -4, -3, 0, -9);
+      ctx.fill();
+      // Inner reflection arc
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.arc(0, 4.5, 3.8, -Math.PI * 0.7, -Math.PI * 0.1);
+      ctx.stroke();
+      break;
+    }
+    case "grass": {
+      // Leaf with vein
+      ctx.beginPath();
+      ctx.moveTo(-6, 6);
+      ctx.quadraticCurveTo(-6, -6, 7, -7);
+      ctx.quadraticCurveTo(6, 6, -6, 6);
+      ctx.fill();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(-5, 5);
+      ctx.lineTo(4, -4);
+      ctx.stroke();
+      break;
+    }
+    case "electric": {
+      // Lightning bolt
+      ctx.beginPath();
+      ctx.moveTo(1.5, -9);
+      ctx.lineTo(-6, 0);
+      ctx.lineTo(-0.5, 0);
+      ctx.lineTo(-3, 9);
+      ctx.lineTo(6, -1);
+      ctx.lineTo(1, -1);
+      ctx.closePath();
+      ctx.fill();
+      break;
+    }
+    case "normal": {
+      // Concentric circles
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      ctx.arc(0, 0, 6.5, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+    case "ice": {
+      // Snowflake crystal
+      ctx.lineWidth = 1.8;
+      for (let i = 0; i < 3; i++) {
+        const ang = (i * Math.PI) / 3;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(ang) * -8, Math.sin(ang) * -8);
+        ctx.lineTo(Math.cos(ang) * 8, Math.sin(ang) * 8);
+        ctx.stroke();
+      }
+      ctx.beginPath();
+      ctx.arc(0, 0, 2.2, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+    case "fighting": {
+      // Fist silhouette
+      ctx.beginPath();
+      ctx.roundRect(-6, -6, 12, 12, 3);
+      ctx.fill();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(-2, -6); ctx.lineTo(-2, 2);
+      ctx.moveTo(2, -6); ctx.lineTo(2, 2);
+      ctx.stroke();
+      break;
+    }
+    case "poison": {
+      // Poison skull
+      ctx.beginPath();
+      ctx.arc(0, -2, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillRect(-3.5, 2, 7, 5);
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(-2, -2, 1.4, 0, Math.PI * 2);
+      ctx.arc(2, -2, 1.4, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+    case "ground": {
+      // Mountain earth strata
+      ctx.beginPath();
+      ctx.moveTo(0, -7);
+      ctx.lineTo(7, 5);
+      ctx.lineTo(-7, 5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(-4, 0); ctx.lineTo(4, 0);
+      ctx.stroke();
+      break;
+    }
+    case "flying": {
+      // Dual wings
+      ctx.beginPath();
+      ctx.moveTo(0, 5);
+      ctx.quadraticCurveTo(-4, 0, -8, -5);
+      ctx.quadraticCurveTo(-3, -3, 0, -1);
+      ctx.quadraticCurveTo(3, -3, 8, -5);
+      ctx.quadraticCurveTo(4, 0, 0, 5);
+      ctx.fill();
+      break;
+    }
+    case "psychic": {
+      // Eye with pupil
+      ctx.beginPath();
+      ctx.moveTo(-8, 0);
+      ctx.quadraticCurveTo(0, -6, 8, 0);
+      ctx.quadraticCurveTo(0, 6, -8, 0);
+      ctx.fill();
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+    case "bug": {
+      // Insect silhouette
+      ctx.beginPath();
+      ctx.arc(0, -3, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(0, 3, 5, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(0, -2); ctx.lineTo(0, 8);
+      ctx.stroke();
+      break;
+    }
+    case "rock": {
+      // Faceted Boulder
+      ctx.beginPath();
+      ctx.moveTo(-3, -7);
+      ctx.lineTo(4, -6);
+      ctx.lineTo(7, 1);
+      ctx.lineTo(3, 7);
+      ctx.lineTo(-5, 6);
+      ctx.lineTo(-7, -1);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(-3, -7); ctx.lineTo(0, 0); ctx.lineTo(3, 7);
+      ctx.moveTo(0, 0); ctx.lineTo(-7, -1);
+      ctx.moveTo(0, 0); ctx.lineTo(7, 1);
+      ctx.stroke();
+      break;
+    }
+    case "ghost": {
+      // Spooky wisp
+      ctx.beginPath();
+      ctx.arc(0, -2, 6, Math.PI, 0);
+      ctx.lineTo(6, 4);
+      ctx.lineTo(3, 7);
+      ctx.lineTo(0, 4);
+      ctx.lineTo(-3, 7);
+      ctx.lineTo(-6, 4);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(-2.2, -2, 1.3, 0, Math.PI * 2);
+      ctx.arc(2.2, -2, 1.3, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+    case "dragon": {
+      // Dragon crest
+      ctx.beginPath();
+      ctx.moveTo(-7, 6);
+      ctx.quadraticCurveTo(-4, -6, 6, -6);
+      ctx.lineTo(1, -1);
+      ctx.lineTo(6, 1);
+      ctx.lineTo(0, 4);
+      ctx.lineTo(4, 7);
+      ctx.closePath();
+      ctx.fill();
+      break;
+    }
+    case "dark": {
+      // Crescent Moon
+      ctx.beginPath();
+      ctx.arc(0, 0, 7, -Math.PI * 0.4, Math.PI * 0.7);
+      ctx.arc(-2.5, 0, 5.5, Math.PI * 0.6, -Math.PI * 0.35, true);
+      ctx.closePath();
+      ctx.fill();
+      break;
+    }
+    case "steel": {
+      // Hex nut
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const a = (i * Math.PI) / 3;
+        const hx = Math.cos(a) * 7.2;
+        const hy = Math.sin(a) * 7.2;
+        if (i === 0) ctx.moveTo(hx, hy);
+        else ctx.lineTo(hx, hy);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(0, 0, 3.2, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+    case "fairy": {
+      // 8-point sparkle star
+      ctx.beginPath();
+      const outer = 8;
+      const inner = 2.5;
+      for (let p = 0; p < 8; p++) {
+        const rad = p % 2 === 0 ? outer : inner;
+        const ang = (p * Math.PI) / 4;
+        const fx = Math.cos(ang) * rad;
+        const fy = Math.sin(ang) * rad;
+        if (p === 0) ctx.moveTo(fx, fy);
+        else ctx.lineTo(fx, fy);
+      }
+      ctx.closePath();
+      ctx.fill();
+      break;
+    }
+    default: {
+      ctx.beginPath();
+      ctx.moveTo(0, -6); ctx.lineTo(6, 0); ctx.lineTo(0, 6); ctx.lineTo(-6, 0);
+      ctx.closePath();
+      ctx.fill();
+      break;
+    }
+  }
+
+  ctx.restore();
+}
+
+/**
+ * Draws a sharp, authentic PokéRogue / RPG-style Target / Bullseye (과녁) Icon for Accuracy (🎯)
+ */
+function drawTargetIcon(ctx: any, cx: number, cy: number, r: number = 6.0, color: string = "#38BDF8") {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.3;
+
+  // Outer Ring
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // 4 Crosshairs extending slightly outside and inside
+  const crossIn = r * 0.45;
+  const crossOut = r + 1.6;
+
+  ctx.beginPath();
+  // Top
+  ctx.moveTo(cx, cy - crossOut);
+  ctx.lineTo(cx, cy - crossIn);
+  // Bottom
+  ctx.moveTo(cx, cy + crossIn);
+  ctx.lineTo(cx, cy + crossOut);
+  // Left
+  ctx.moveTo(cx - crossOut, cy);
+  ctx.lineTo(cx - crossIn, cy);
+  // Right
+  ctx.moveTo(cx + crossIn, cy);
+  ctx.lineTo(cx + crossOut, cy);
+  ctx.stroke();
+
+  // Center Bullseye Dot
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 1.8, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
 }
 
 /**
@@ -1821,7 +2593,7 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
       // Dex Tag & Name
       const infoX = showBoxX + showBoxSize + 8;
       const headerY = showBoxY + 11;
-      const dexTag = `#${String(sel.dexNumber).padStart(3, "0")}`;
+      const dexTag = sel.dexNumber <= 0 ? "#---" : `#${String(sel.dexNumber).padStart(3, "0")}`;
 
       ctx.textBaseline = "middle";
       ctx.font = "bold 13px DungGeunMo";
@@ -1923,7 +2695,7 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
       ctx.font = "bold 15px DungGeunMo";
       ctx.fillStyle = "#CBD5E1";
       ctx.textAlign = "center";
-      ctx.fillText(isKo ? "👥 파티원 관리 대시보드" : "👥 Party Overview", panelX + panelW / 2, 32);
+      ctx.fillText(isKo ? "파티원 관리 대시보드" : "Party Overview", panelX + panelW / 2, 32);
 
       ctx.font = "bold 12px DungGeunMo";
       ctx.fillStyle = "#94A3B8";
@@ -2063,7 +2835,7 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
     // Name + Dex next to sprite (Enlarged, True Middle Baseline)
     const infoX = showBoxX + showBoxSize + 10;
     const headerY = showBoxY + 12;
-    const dexTag = `#${String(sel.dexNumber).padStart(3, "0")}`;
+    const dexTag = sel.dexNumber <= 0 ? "#---" : `#${String(sel.dexNumber).padStart(3, "0")}`;
 
     ctx.textBaseline = "middle";
     ctx.font = "bold 14px DungGeunMo";
@@ -2152,15 +2924,20 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
     if (!isPartyView) {
       // =========================================================================
       // STARTER SELECT MODE: Starting Moves Chips (2x2 Grid, width: 133 each, height: 36)
-      // (In Party View, this middle area is left completely blank!)
+      // Reflects customized party moves if this Pokémon is in the current party!
       // =========================================================================
+      const partyMember = party.find((p: StarterSelectPartyItem) => p.dexNumber === sel.dexNumber);
+      const equippedMoves = (partyMember?.moves && partyMember.moves.length > 0)
+        ? partyMember.moves
+        : (sel.starterMoves || []);
+
       const moveChipW = (panelW - 10) / 2;
       const moveChipH = 36;
       for (let mIdx = 0; mIdx < 4; mIdx++) {
-        const rawMove = sel.starterMoves[mIdx] || "---";
+        const rawMove = equippedMoves[mIdx] || "---";
         const moveKey = rawMove.toLowerCase().replace(/[\s_]+/g, "-");
         const moveInfo = MOVES_DATA[moveKey];
-        const mDisplay = isKo ? (moveInfo?.nameKo || rawMove) : rawMove;
+        const mDisplay = isKo ? (moveInfo?.nameKo || rawMove) : (moveInfo?.name ? moveInfo.name.charAt(0).toUpperCase() + moveInfo.name.slice(1).replace(/-/g, " ") : rawMove);
         const category = moveInfo?.category;
 
         const mCol = mIdx % 2;
@@ -2173,19 +2950,20 @@ function renderPreviewAndPartyPanel(ctx: any, args: PreviewAndPartyPanelArgs) {
         ctx.roundRect(mX, mY, moveChipW, moveChipH, 5);
         ctx.fill();
 
-        if (rawMove === "---" || !category) {
+        if (rawMove === "---" || !moveInfo) {
           ctx.textBaseline = "middle";
           ctx.font = "bold 15px DungGeunMo";
           ctx.fillStyle = "#475569";
           ctx.textAlign = "center";
           ctx.fillText(mDisplay, mX + moveChipW / 2, mY + moveChipH / 2);
         } else {
-          // Draw Move Category Icon (Left aligned, 23x22)
+          // Draw Move Type SVG Icon (Left aligned, 22x22)
+          const iconSize = 22;
           const iconX = mX + 6;
-          const iconY = mY + (moveChipH - 22) / 2;
-          drawMoveCategoryIcon(ctx, iconX, iconY, category);
+          const iconY = mY + (moveChipH - iconSize) / 2;
+          drawTypeIcon(ctx, iconX, iconY, iconSize, moveInfo.type, "rounded");
 
-          // Move Name Text (Aligned next to category icon, 15px)
+          // Move Name Text (Aligned next to type icon, 15px)
           ctx.textBaseline = "middle";
           ctx.font = "bold 15px DungGeunMo";
           ctx.fillStyle = "#F8FAFC";
@@ -2327,6 +3105,7 @@ interface PartyCustomizationPanelArgs {
   isKo: boolean;
   tab?: PartyViewTab;
   selectedMoveIdx?: number;
+  targetMoveSlot?: number;
   normalSprite?: Image | null;
   shinySprite?: Image | null;
   tierSprites?: any[];
@@ -2388,25 +3167,78 @@ function drawInGameMessageBox(ctx: any, width: number, height: number, msg: InGa
   ctx.lineWidth = 1;
   ctx.stroke();
 
-  // 3. Header: Pokédex-style Title + Sub-divider line (y: boxY + 16)
+  // 3. Header: Pokédex-style Title + Move Type Badge + Stats on Right
+  let curHeaderX = boxX + 12;
+
+  if (msg.moveType) {
+    drawTypeIcon(ctx, curHeaderX, boxY + 6, 20, msg.moveType, "rounded");
+    curHeaderX += 26;
+  }
+
   ctx.textBaseline = "middle";
-  ctx.font = "bold 13px DungGeunMo";
-  ctx.fillStyle = "#CBD5E1";
+  ctx.font = "bold 15px DungGeunMo";
+  ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "left";
-  ctx.fillText(msg.title, boxX + 12, boxY + 16);
+  const displayTitle = isKo ? msg.title : msg.title.toUpperCase().replace(/[-_]+/g, " ");
+  ctx.fillText(displayTitle, curHeaderX, boxY + 16);
+
+  // Header Right: [Category Icon] + Power + [Target Icon] + Accuracy + PP
+  let curRightX = boxX + boxW - 14;
+  if (msg.movePp) {
+    ctx.font = "bold 14px DungGeunMo";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+    const ppValText = ` ${msg.movePp}`;
+    ctx.fillStyle = "#FCD34D";
+    ctx.fillText(ppValText, curRightX, boxY + 16);
+    const valW = ctx.measureText(ppValText).width;
+    curRightX -= valW;
+
+    ctx.fillStyle = "#F59E0B";
+    ctx.fillText("PP:", curRightX, boxY + 16);
+    curRightX -= ctx.measureText("PP:").width + 10;
+  }
+
+  if (msg.moveAccuracy) {
+    ctx.font = "bold 14px DungGeunMo";
+    ctx.fillStyle = "#F1F5F9";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+    ctx.fillText(msg.moveAccuracy, curRightX, boxY + 16);
+    curRightX -= ctx.measureText(msg.moveAccuracy).width + 6;
+
+    // Draw Target (과녁) SVG Icon
+    drawTargetIcon(ctx, curRightX - 6, boxY + 16, 6.2, "#38BDF8");
+    curRightX -= 20;
+  }
+
+  if (msg.movePower) {
+    ctx.font = "bold 14px DungGeunMo";
+    ctx.fillStyle = "#F1F5F9";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+    ctx.fillText(msg.movePower, curRightX, boxY + 16);
+    curRightX -= ctx.measureText(msg.movePower).width + 10;
+  }
+
+  if (msg.moveCategory) {
+    drawMoveCategoryIcon(ctx, curRightX - 23, boxY + 5, msg.moveCategory);
+  }
 
   // Sub-divider line under header (matching Pokédex Card)
   ctx.strokeStyle = "#282D3D";
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(boxX + 8, boxY + 26);
-  ctx.lineTo(boxX + boxW - 8, boxY + 26);
+  ctx.moveTo(boxX + 8, boxY + 28);
+  ctx.lineTo(boxX + boxW - 8, boxY + 28);
   ctx.stroke();
 
-  // 4. Flavor Text (Official 13px DungGeunMo #F1F5F9 matching Pokédex)
-  ctx.font = "13px DungGeunMo";
+  // 4. Flavor Text (Spacious & Clean Wrapping - pure description only)
+  ctx.textBaseline = "top";
+  ctx.font = "15px DungGeunMo";
   ctx.fillStyle = "#F1F5F9";
-  drawWrappedText(ctx, msg.text, boxX + 12, boxY + 44, boxW - 24, 20);
+  ctx.textAlign = "left";
+  drawWrappedText(ctx, msg.text, boxX + 12, boxY + 38, boxW - 24, 20);
 }
 
 function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelArgs) {
@@ -2503,12 +3335,9 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
       ctx.textAlign = "center";
       ctx.fillText(isKo ? t.labelKo : t.labelEn, tX + (tabW / 2) + 8, tabY + tabH / 2);
     } else if (t.icon === "shiny") {
-      ctx.textBaseline = "middle";
-      ctx.font = "bold 14px DungGeunMo";
-      ctx.fillStyle = isAct ? "#FFFFFF" : "#64748B";
-      ctx.textAlign = "center";
-      ctx.fillText("•", tX + 16, tabY + tabH / 2);
+      drawShinySparkle(ctx, tX + 16, tabY + tabH / 2, 5.5, iconColor);
 
+      ctx.textBaseline = "middle";
       ctx.font = "bold 13px DungGeunMo";
       ctx.fillStyle = isAct ? "#FFFFFF" : "#8E96AB";
       ctx.textAlign = "center";
@@ -2525,115 +3354,78 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
 
   // If No Party Member is inspected (selectedPartyIdx === -1)
   if (!sel || !partyMember) {
-    ctx.textBaseline = "middle";
-    ctx.font = "bold 17px DungGeunMo";
-    ctx.fillStyle = "#FFFFFF";
-    ctx.textAlign = "center";
-    ctx.fillText(isKo ? "🔍 파티원을 선택하세요" : "🔍 Select a Party Member", bodyX + bodyW / 2, 130);
-
-    ctx.font = "bold 13px DungGeunMo";
-    ctx.fillStyle = "#94A3B8";
-    ctx.fillText(isKo ? "위 파티원 버튼(1~6번)을 선택하면" : "Select a party member (1~6)", bodyX + bodyW / 2, 175);
-    ctx.fillText(isKo ? "기술 상세 스펙과 이로치 외형을" : "to view detailed move descriptions", bodyX + bodyW / 2, 200);
-    ctx.fillText(isKo ? "자세히 확인하고 관리할 수 있습니다." : "and customize shiny forms.", bodyX + bodyW / 2, 225);
-
-    // Subtle decoration box
-    ctx.fillStyle = "#222A3C";
-    ctx.beginPath();
-    ctx.roundRect(bodyX + 16, 265, bodyW - 32, 68, 5);
-    ctx.fill();
-    ctx.strokeStyle = "#333E56";
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    ctx.font = "bold 12px DungGeunMo";
-    ctx.fillStyle = "#60A5FA";
-    ctx.fillText(isKo ? "💡 TIP: [START] 버튼을 누르면" : "💡 TIP: Press [START] button", bodyX + bodyW / 2, 290);
-    ctx.fillText(isKo ? "현재 파티로 바로 모험을 시작합니다!" : "to launch your adventure!", bodyX + bodyW / 2, 312);
-
     return;
   }
 
-  // =========================================================================
-  // TAB 1 (DEFAULT): MOVES TAB (Spacious 2x2 Move Tiles + Clean Detail Card)
-  // =========================================================================
   if (currentTab === "moves") {
-    // 1. Move Selection Tiles (Clean 2x2 Grid inside body container)
-    const contentPadding = 10;
-    const contentX = bodyX + contentPadding;
-    const contentW = bodyW - (contentPadding * 2);
-    const chipGap = 8;
-    const moveChipW = Math.floor((contentW - chipGap) / 2);
-    const moveChipH = 48;
+    const contentX = bodyX + 12;
+    const contentW = bodyW - 24;
 
-    for (let m = 0; m < 4; m++) {
-      const rawMove = sel.starterMoves[m] || "---";
-      const moveKey = rawMove.toLowerCase().replace(/[\s_]+/g, "-");
-      const moveInfo = MOVES_DATA[moveKey];
-      const mDisplay = isKo ? (moveInfo?.nameKo || rawMove) : rawMove;
+    // 1. 2x2 Grid of Current Moves (4 Slots)
+    const starterMoves = sel.starterMoves || [];
+    const currentEquippedMoves = (partyMember?.moves && partyMember.moves.length > 0)
+      ? partyMember.moves
+      : starterMoves;
 
-      const mCol = m % 2;
-      const mRow = Math.floor(m / 2);
-      const mX = contentX + mCol * (moveChipW + chipGap);
-      const mY = 50 + mRow * (moveChipH + 8);
-      const isSel = selectedMoveIdx === m;
-      const isEmpty = rawMove === "---" || !moveInfo;
+    const moveChipW = Math.floor((contentW - 8) / 2);
+    const moveChipH = 34;
 
-      // Brightened tiles on top of #1B202D background!
-      ctx.fillStyle = isSel ? "#2E3A56" : (isEmpty ? "#141722" : "#242C3E");
+    for (let mIdx = 0; mIdx < 4; mIdx++) {
+      const rawMove = currentEquippedMoves[mIdx];
+      const isEmpty = !rawMove || rawMove === "---";
+      const mCol = mIdx % 2;
+      const mRow = Math.floor(mIdx / 2);
+      const mX = contentX + mCol * (moveChipW + 8);
+      const mY = bodyY + 12 + mRow * (moveChipH + 6);
+      const isSel = selectedMoveIdx === mIdx;
+
+      ctx.fillStyle = isSel ? "#242E48" : (isEmpty ? "#121520" : "#1A1F2C");
       ctx.beginPath();
-      ctx.roundRect(mX, mY, moveChipW, moveChipH, 6);
+      ctx.roundRect(mX, mY, moveChipW, moveChipH, 4);
       ctx.fill();
 
       if (isSel) {
         ctx.strokeStyle = "#5865F2";
         ctx.lineWidth = 2;
         ctx.stroke();
+      } else {
+        ctx.strokeStyle = isEmpty ? "#1E2333" : "#283044";
+        ctx.lineWidth = 1;
+        ctx.stroke();
       }
 
-      if (rawMove === "---" || !moveInfo) {
-        ctx.textBaseline = "middle";
-        ctx.font = "bold 14px DungGeunMo";
+      if (isEmpty) {
         ctx.fillStyle = "#475569";
-        ctx.textAlign = "center";
-        ctx.fillText("---", mX + moveChipW / 2, mY + moveChipH / 2);
-      } else {
-        // [Type Badge] (Left Front, Vertically Centered)
-        const tLower = moveInfo.type.toLowerCase();
-        const tColor = TYPE_COLORS[tLower] || "#777777";
-        const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || moveInfo.type) : moveInfo.type.toUpperCase();
-        const tW = 34;
-        const tH = 20;
-        const tX = mX + 8;
-        const tY = mY + (moveChipH - tH) / 2;
-
-        ctx.fillStyle = tColor;
-        ctx.beginPath();
-        ctx.roundRect(tX, tY, tW, tH, 3);
-        ctx.fill();
-        ctx.font = "bold 11px DungGeunMo";
-        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "12px DungGeunMo";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillText(tDisplay, tX + tW / 2, tY + tH / 2);
+        ctx.fillText(`- ${isKo ? "기술" : "Move"} ${mIdx + 1} -`, mX + moveChipW / 2, mY + moveChipH / 2);
+      } else {
+        const moveKey = rawMove.toLowerCase().replace(/[\s_]+/g, "-");
+        const mInfo = MOVES_DATA[moveKey];
+        const mDisplay = isKo ? (mInfo?.nameKo || rawMove) : (mInfo?.name?.toUpperCase()?.replace(/[-_]+/g, " ") || rawMove.toUpperCase());
 
-        // [Move Name] (Next to Type Badge, Vertically Centered)
-        ctx.font = "bold 15px DungGeunMo";
+        if (mInfo) {
+          drawTypeIcon(ctx, mX + 6, mY + 6, 22, mInfo.type, "rounded");
+        }
+
+        ctx.font = "bold 13px DungGeunMo";
         ctx.fillStyle = "#FFFFFF";
         ctx.textAlign = "left";
-        ctx.fillText(mDisplay, mX + 48, mY + moveChipH / 2);
+        ctx.textBaseline = "middle";
+        ctx.fillText(mDisplay, mX + 34, mY + moveChipH / 2);
       }
     }
 
     // 2. Symmetric Move Detail Card Container (Matches top 2x2 grid width & aligns layout)
-    const curRawMove = sel.starterMoves[selectedMoveIdx] || "---";
+    const curRawMove = currentEquippedMoves[selectedMoveIdx] || "---";
     const curMoveKey = curRawMove.toLowerCase().replace(/[\s_]+/g, "-");
     const curMoveInfo = MOVES_DATA[curMoveKey];
 
     const cardX = contentX;
-    const cardY = 160;
+    const cardY = bodyY + 96;
     const cardW = contentW;
-    const cardH = 178;
+    const cardH = bodyH - 108;
 
     // Draw Detail Card Box Background
     ctx.fillStyle = "#141824";
@@ -2646,69 +3438,63 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     ctx.stroke();
 
     if (curRawMove !== "---" && curMoveInfo) {
-      // (1) Row 1: [Type Badge] + Move Name (Full Width Available!)
-      const tLower = curMoveInfo.type.toLowerCase();
-      const tColor = TYPE_COLORS[tLower] || "#777777";
-      const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || curMoveInfo.type) : curMoveInfo.type.toUpperCase();
-      const tBadgeW = 34;
-      const tBadgeH = 20;
-      const tBadgeX = cardX + 12;
-      const tBadgeY = cardY + 10;
-
-      ctx.fillStyle = tColor;
-      ctx.beginPath();
-      ctx.roundRect(tBadgeX, tBadgeY, tBadgeW, tBadgeH, 3);
-      ctx.fill();
-
-      ctx.textBaseline = "middle";
-      ctx.font = "bold 11px DungGeunMo";
-      ctx.fillStyle = "#FFFFFF";
-      ctx.textAlign = "center";
-      ctx.fillText(tDisplay, tBadgeX + tBadgeW / 2, tBadgeY + tBadgeH / 2);
+      // (1) Row 1: [SVG Type Badge] + Move Name
+      drawTypeIcon(ctx, cardX + 12, cardY + 10, 22, curMoveInfo.type, "rounded");
 
       // Move Name
-      ctx.font = "bold 16px DungGeunMo";
+      ctx.font = "bold 15px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "left";
-      const moveTitle = isKo ? curMoveInfo.nameKo : curMoveInfo.name.toUpperCase();
-      ctx.fillText(moveTitle, cardX + 52, cardY + 20);
+      ctx.textBaseline = "middle";
+      const moveTitle = isKo ? curMoveInfo.nameKo : curMoveInfo.name.toUpperCase().replace(/[-_]+/g, " ");
+      ctx.fillText(moveTitle, cardX + 40, cardY + 21);
 
-      // (2) Row 2: [Category Icon] + Power | Accuracy | PP (Dedicated Stat Line)
-      const cat = curMoveInfo.category;
-      drawMoveCategoryIcon(ctx, cardX + 12, cardY + 38, cat);
-
+      // (2) Row 2: [Category SVG Icon] + Power + [Target Icon] + Accuracy + PP
       const pwrStr = curMoveInfo.power ? String(curMoveInfo.power) : "-";
       const accStr = curMoveInfo.accuracy ? `${curMoveInfo.accuracy}%` : "-";
       const ppStr = `${curMoveInfo.pp || 35}`;
 
-      const statSummary = isKo
-        ? `${pwrStr}  |  명중: ${accStr}  |  PP: ${ppStr}`
-        : `${pwrStr}  |  Acc: ${accStr}  |  PP: ${ppStr}`;
+      drawMoveCategoryIcon(ctx, cardX + 12, cardY + 36, curMoveInfo.category);
 
+      let curStatX = cardX + 39;
       ctx.font = "bold 13px DungGeunMo";
-      ctx.fillStyle = "#94A3B8";
+      ctx.fillStyle = "#F1F5F9";
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
-      ctx.fillText(statSummary, cardX + 38, cardY + 48);
+      ctx.fillText(pwrStr, curStatX, cardY + 47);
+      curStatX += ctx.measureText(pwrStr).width + 8;
 
-      // (3) Divider Line
-      const divY = cardY + 64;
-      ctx.strokeStyle = "#252E42";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(cardX + 10, divY);
-      ctx.lineTo(cardX + cardW - 10, divY);
-      ctx.stroke();
+      ctx.fillStyle = "#475569";
+      ctx.fillText("|", curStatX, cardY + 47);
+      curStatX += 10;
 
-      // (4) Row 3: Description Content (Spacious & Clean Wrapping)
+      // Draw Target (과녁) SVG Icon
+      drawTargetIcon(ctx, curStatX + 6, cardY + 47, 5.8, "#38BDF8");
+      curStatX += 17;
+
+      ctx.fillStyle = "#F1F5F9";
+      ctx.fillText(accStr, curStatX, cardY + 47);
+      curStatX += ctx.measureText(accStr).width + 8;
+
+      ctx.fillStyle = "#475569";
+      ctx.fillText("|", curStatX, cardY + 47);
+      curStatX += 10;
+
+      ctx.fillStyle = "#F59E0B";
+      ctx.fillText("PP:", curStatX, cardY + 47);
+      const ppLabelW = ctx.measureText("PP:").width;
+      ctx.fillStyle = "#FCD34D";
+      ctx.fillText(` ${ppStr}`, curStatX + ppLabelW, cardY + 47);
+
+      // (3) Row 3: Description Content (Enlarged & Comfortable Line Height)
       ctx.textBaseline = "top";
-      ctx.font = "14px DungGeunMo";
-      ctx.fillStyle = "#E2E8F0";
+      ctx.font = "15px DungGeunMo";
+      ctx.fillStyle = "#F1F5F9";
       ctx.textAlign = "left";
       const desc = isKo
         ? (curMoveInfo.description || "효과 설명이 없습니다.")
         : (curMoveInfo.descriptionEn || MOVES_EN_DESC[curMoveKey] || "No description available.");
-      drawWrappedText(ctx, desc, cardX + 12, cardY + 76, cardW - 24, 21);
+      drawWrappedText(ctx, desc, cardX + 12, cardY + 70, cardW - 24, 22);
     } else {
       ctx.textBaseline = "middle";
       ctx.font = "bold 14px DungGeunMo";
@@ -2801,11 +3587,12 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
             drawShinySparkle(ctx, startStarX + sIdx * starSpacing, starsY, 6, tierColors[t]);
           }
         } else {
+          drawLockIcon(ctx, (cX + tileW / 2) - (isKo ? 22 : 28), starsY, 10, 12, "#475569");
           ctx.textBaseline = "middle";
           ctx.font = "bold 12px DungGeunMo";
           ctx.fillStyle = "#475569";
-          ctx.textAlign = "center";
-          ctx.fillText(isKo ? "🔒 미해금" : "🔒 LOCKED", cX + tileW / 2, starsY);
+          ctx.textAlign = "left";
+          ctx.fillText(isKo ? "미해금" : "LOCKED", (cX + tileW / 2) - (isKo ? 10 : 16), starsY);
         }
       }
 
@@ -2843,78 +3630,205 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
   // TAB 3: COST / CANDY MANAGEMENT TAB
   // =========================================================================
   if (currentTab === "cost") {
-    // 1. Top Info Header Card (y: 44 ~ 138, H: 94)
-    const infoCardY = 44;
-    const infoCardH = 94;
     const cardW = bodyW - 20;
     const cardX = bodyX + 10;
 
-    ctx.fillStyle = "#242C3E";
+    // 1. Top Summary Card (y: 44 ~ 130, H: 86)
+    const infoCardY = 44;
+    const infoCardH = 86;
+
+    ctx.fillStyle = "#1E2638";
     ctx.beginPath();
     ctx.roundRect(cardX, infoCardY, cardW, infoCardH, 6);
     ctx.fill();
 
-    // Candy Icon + Title
-    drawCandyIcon(ctx, cardX + 18, infoCardY + 22, 6.5, "#F59E0B", "#FEF08A");
+    ctx.strokeStyle = "#2D374D";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Candy Icon & Title
+    drawCandyIcon(ctx, cardX + 18, infoCardY + 20, 7.5, "#F59E0B", "#FEF08A");
     ctx.textBaseline = "middle";
     ctx.font = "bold 15px DungGeunMo";
     ctx.fillStyle = "#FCD34D";
     ctx.textAlign = "left";
-    ctx.fillText(isKo ? `보유 사탕: ${candies}개` : `Candies: ${candies}`, cardX + 34, infoCardY + 22);
+    ctx.fillText(isKo ? "포켓몬 사탕 관리" : "Pokemon Candies", cardX + 38, infoCardY + 20);
 
-    // Cost status
-    ctx.font = "bold 13px DungGeunMo";
-    ctx.fillStyle = "#CBD5E1";
-    ctx.fillText(isKo ? `기본 코스트: ${sel.cost} C` : `Base Cost: ${sel.cost} C`, cardX + 12, infoCardY + 48);
-    ctx.fillText(isKo ? `패시브 할인: ${sel.reducedCost} C` : `Discount: ${sel.reducedCost} C`, cardX + 130, infoCardY + 48);
+    ctx.font = "bold 15px DungGeunMo";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "right";
+    ctx.fillText(isKo ? `${candies}개` : `${candies}`, cardX + cardW - 12, infoCardY + 20);
 
-    ctx.font = "bold 12px DungGeunMo";
-    ctx.fillStyle = "#94A3B8";
-    const eggMoveCount = (selProgress?.eggMoves || []).length;
-    ctx.fillText(isKo ? `해금된 알기술: ${eggMoveCount} / 4개` : `Egg Moves: ${eggMoveCount} / 4`, cardX + 12, infoCardY + 74);
-
-    // 2. Action Card 1: Cost Reduction (y: 148 ~ 242, H: 94)
-    const card1Y = 148;
-    const card1H = 94;
-    ctx.fillStyle = "#242C3E";
-    ctx.beginPath();
-    ctx.roundRect(cardX, card1Y, cardW, card1H, 6);
-    ctx.fill();
-
-    ctx.font = "bold 14px DungGeunMo";
-    ctx.fillStyle = "#60A5FA";
-    ctx.fillText(isKo ? "🔻 스타팅 코스트 감소" : "🔻 Cost Reduction", cardX + 12, card1Y + 22);
-
-    ctx.font = "bold 12px DungGeunMo";
-    ctx.fillStyle = "#94A3B8";
-    ctx.fillText(isKo ? "사탕을 소모하여 영구적으로" : "Spend candies to permanently reduce", cardX + 12, card1Y + 48);
-    ctx.fillText(isKo ? "출전 코스트를 낮출 수 있습니다. (준비 중)" : "entry cost. (Coming Soon)", cardX + 12, card1Y + 70);
-
-    // 3. Action Card 2: Passive Unlock (y: 252 ~ 346, H: 94)
-    const card2Y = 252;
-    const card2H = 94;
-    ctx.fillStyle = "#242C3E";
-    ctx.beginPath();
-    ctx.roundRect(cardX, card2Y, cardW, card2H, 6);
-    ctx.fill();
-    ctx.strokeStyle = "#2D3246";
+    // Divider
+    ctx.strokeStyle = "#2D374D";
     ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cardX + 8, infoCardY + 36);
+    ctx.lineTo(cardX + cardW - 8, infoCardY + 36);
     ctx.stroke();
 
-    ctx.font = "bold 14px DungGeunMo";
-    ctx.fillStyle = "#34D399";
-    ctx.fillText(isKo ? "패시브 특성 해금" : "Unlock Passive", cardX + 12, card2Y + 22);
+    // Stats Grid inside header
+    ctx.font = "13px DungGeunMo";
+    ctx.fillStyle = "#CBD5E1";
+    ctx.textAlign = "left";
+    ctx.fillText(isKo ? `기본 코스트: ${sel.cost}C` : `Base Cost: ${sel.cost}C`, cardX + 12, infoCardY + 52);
+    ctx.fillText(isKo ? `포획/부화: ${selProgress?.hatchedCount || 0}회` : `Hatched: ${selProgress?.hatchedCount || 0}`, cardX + cardW / 2 + 8, infoCardY + 52);
 
-    ctx.font = "bold 12px DungGeunMo";
+    const eggMoveCount = (selProgress?.eggMoves || []).length;
+    ctx.fillText(isKo ? `해금된 알기술: ${eggMoveCount} / 4개` : `Egg Moves: ${eggMoveCount} / 4`, cardX + 12, infoCardY + 70);
+
+    const shinyLabel = isKo ? "이로치:" : "Max Shiny:";
+    ctx.fillText(shinyLabel, cardX + cardW / 2 + 8, infoCardY + 70);
+    const sLabelW = ctx.measureText(shinyLabel).width;
+    const sIconX = cardX + cardW / 2 + 8 + sLabelW + 8;
+    if (unlockedMaxShinyTier > 0) {
+      const tierColors = ["#64748B", "#F59E0B", "#3B82F6", "#EF4444"];
+      drawShinySparkle(ctx, sIconX, infoCardY + 70, 5, tierColors[unlockedMaxShinyTier] || "#F59E0B");
+      ctx.fillStyle = "#FCD34D";
+      ctx.fillText(`+${unlockedMaxShinyTier}`, sIconX + 10, infoCardY + 70);
+    } else {
+      ctx.fillStyle = "#64748B";
+      ctx.fillText(isKo ? "없음" : "None", sIconX, infoCardY + 70);
+    }
+
+    // 2. Passive Ability Unlock Tile (y: 138 ~ 234, H: 96)
+    const passiveTileY = 138;
+    const passiveTileH = 96;
+    const passiveCost = Math.max(5, sel.cost * 3); // 3x Cost candies needed
+    const passKey = (sel.passiveAbility || "").toLowerCase().replace(/[\s_]+/g, "-");
+    const passDesc = isKo
+      ? (ABILITY_DETAILED_DESC_KO[passKey] || "포켓몬의 고유한 패시브 효과입니다.")
+      : (ABILITY_DETAILED_DESC_EN[passKey] || "A unique PokeRogue starter passive ability.");
+
+    ctx.fillStyle = hasPassiveUnlocked ? "#1E2A38" : (candies >= passiveCost ? "#242C3E" : "#141824");
+    ctx.beginPath();
+    ctx.roundRect(cardX, passiveTileY, cardW, passiveTileH, 6);
+    ctx.fill();
+
+    if (usePassive) {
+      ctx.strokeStyle = "#22C55E";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    } else if (hasPassiveUnlocked) {
+      ctx.strokeStyle = "#3B82F6";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    } else {
+      ctx.strokeStyle = "#283044";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    ctx.textBaseline = "middle";
+    ctx.font = "bold 14px DungGeunMo";
+    ctx.textAlign = "left";
+
+    // Title line
+    const passTitle = isKo ? `패시브: ${sel.passiveAbilityKo || sel.passiveAbility}` : `Passive: ${sel.passiveAbility || "None"}`;
+    ctx.fillStyle = hasPassiveUnlocked ? "#60A5FA" : "#FFFFFF";
+    ctx.fillText(passTitle, cardX + 12, passiveTileY + 18);
+
+    // Status Tag (Right)
+    ctx.textAlign = "right";
+    if (usePassive) {
+      drawCheckmark(ctx, cardX + cardW - (isKo ? 46 : 56), passiveTileY + 18, 4, "#22C55E");
+      ctx.fillStyle = "#22C55E";
+      ctx.fillText(isKo ? "적용 중" : "Active", cardX + cardW - 8, passiveTileY + 18);
+    } else if (hasPassiveUnlocked) {
+      ctx.fillStyle = "#3B82F6";
+      ctx.fillText(isKo ? "해금 완료" : "Unlocked", cardX + cardW - 8, passiveTileY + 18);
+    } else {
+      const needVal = `${passiveCost}`;
+      ctx.font = "bold 13px DungGeunMo";
+      ctx.fillStyle = candies >= passiveCost ? "#FCD34D" : "#EF4444";
+      ctx.fillText(isKo ? `${needVal}개` : needVal, cardX + cardW - 8, passiveTileY + 18);
+      const valW = ctx.measureText(isKo ? `${needVal}개` : needVal).width;
+      drawCandyIcon(ctx, cardX + cardW - 8 - valW - 10, passiveTileY + 18, 5, "#F59E0B", "#FEF08A");
+    }
+
+    // Sub-divider
+    ctx.strokeStyle = "#252E42";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cardX + 8, passiveTileY + 32);
+    ctx.lineTo(cardX + cardW - 8, passiveTileY + 32);
+    ctx.stroke();
+
+    // Description
+    ctx.textBaseline = "top";
+    ctx.font = "13px DungGeunMo";
+    ctx.fillStyle = "#CBD5E1";
+    ctx.textAlign = "left";
+    drawWrappedText(ctx, passDesc, cardX + 12, passiveTileY + 40, cardW - 24, 18);
+
+    // 3. Cost Reduction Tile (y: 242 ~ 330, H: 88)
+    const costTileY = 242;
+    const costTileH = 88;
+    const reductionCount = partyMember?.cost !== undefined && partyMember.cost < sel.cost ? (sel.cost - partyMember.cost) : (selProgress?.costReductionCount || 0);
+    const nextReductionCost = Math.max(10, (reductionCount + 1) * 15);
+    const maxReductionReached = reductionCount >= 2;
+
+    ctx.fillStyle = maxReductionReached ? "#1E2A38" : (candies >= nextReductionCost ? "#242C3E" : "#141824");
+    ctx.beginPath();
+    ctx.roundRect(cardX, costTileY, cardW, costTileH, 6);
+    ctx.fill();
+
+    if (reductionCount > 0) {
+      ctx.strokeStyle = "#F59E0B";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    } else {
+      ctx.strokeStyle = "#283044";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    ctx.textBaseline = "middle";
+    ctx.font = "bold 14px DungGeunMo";
+    ctx.fillStyle = "#FCD34D";
+    ctx.textAlign = "left";
+    ctx.fillText(isKo ? "코스트 영구 감소" : "Cost Reduction", cardX + 12, costTileY + 18);
+
+    // Status Tag (Right)
+    ctx.textAlign = "right";
+    if (maxReductionReached) {
+      ctx.fillStyle = "#22C55E";
+      ctx.fillText(isKo ? "최대 감소 (2/2)" : "MAX (2/2)", cardX + cardW - 8, costTileY + 18);
+    } else {
+      const needVal = `${nextReductionCost}`;
+      ctx.font = "bold 13px DungGeunMo";
+      ctx.fillStyle = candies >= nextReductionCost ? "#FCD34D" : "#EF4444";
+      ctx.fillText(isKo ? `${needVal}개` : needVal, cardX + cardW - 8, costTileY + 18);
+      const valW = ctx.measureText(isKo ? `${needVal}개` : needVal).width;
+      drawCandyIcon(ctx, cardX + cardW - 8 - valW - 10, costTileY + 18, 5, "#F59E0B", "#FEF08A");
+    }
+
+    // Sub-divider
+    ctx.strokeStyle = "#252E42";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cardX + 8, costTileY + 32);
+    ctx.lineTo(cardX + cardW - 8, costTileY + 32);
+    ctx.stroke();
+
+    // Details Text
+    ctx.textBaseline = "top";
+    ctx.font = "14px DungGeunMo";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "left";
+    const currentEffectiveCost = Math.max(1, sel.cost - reductionCount);
+    ctx.fillText(isKo ? `현재 코스트: ${currentEffectiveCost}C (-${reductionCount}C 적용)` : `Current: ${currentEffectiveCost}C (-${reductionCount}C)`, cardX + 12, costTileY + 38);
+
+    ctx.font = "12px DungGeunMo";
     ctx.fillStyle = "#94A3B8";
-    const passStatusStr = hasPassiveUnlocked ? (isKo ? "이미 해금되었습니다! (상단 버튼으로 토글)" : "Already Unlocked!") : (isKo ? "사탕을 소모하여 패시브를 해금합니다." : "Spend candies to unlock passive.");
-    ctx.fillText(passStatusStr, cardX + 12, card2Y + 48);
-    ctx.fillText(isKo ? `패시브: ${sel.passiveAbilityKo}` : `Passive: ${sel.passiveAbility}`, cardX + 12, card2Y + 70);
+    const reductionDesc = maxReductionReached
+      ? (isKo ? "더 이상 코스트를 줄일 수 없습니다. (최대 -2C)" : "Maximum cost reduction limit reached. (Max -2C)")
+      : (isKo ? "사탕을 사용하여 영구적으로 1C를 추가 감소시킵니다." : "Use candies to permanently reduce starter cost by 1C.");
+    drawWrappedText(ctx, reductionDesc, cardX + 12, costTileY + 56, cardW - 24, 15);
 
     return;
   }
 
-  // =========================================================================
   // =========================================================================
   // TAB 4: LEARNABLE MOVES LIST VIEW (초기 선택 가능한 전체 기술 목록 리스트 뷰)
   // =========================================================================
@@ -2931,116 +3845,83 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
     ctx.roundRect(cardX, headerY, cardW, headerH, 6);
     ctx.fill();
 
-    drawBookIcon(ctx, cardX + 16, headerY + 18, 12, 10, "#60A5FA");
     ctx.textBaseline = "middle";
     ctx.font = "bold 15px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "left";
-    ctx.fillText(isKo ? "배울 수 있는 기술 목록" : "Learnable Moves", cardX + 32, headerY + 18);
+    ctx.fillText(isKo ? "배울 수 있는 기술 목록" : "Learnable Moves", cardX + 16, headerY + 18);
 
     const starterMoves = sel.starterMoves || [];
+    const equippedMoves = (partyMember?.moves && partyMember.moves.length > 0) ? partyMember.moves : starterMoves;
     const eggMoves: string[] = selProgress?.eggMoves || [];
     const allMoves = [...starterMoves, ...eggMoves.filter((m: string) => !starterMoves.includes(m))];
+
+    // Target slot being replaced (0..3):
+    const targetMoveSlot = Math.min(3, Math.max(0, args.targetMoveSlot !== undefined ? args.targetMoveSlot : 0));
+    const moveBeingReplaced = equippedMoves[targetMoveSlot];
+
+    const itemsPerPage = 6;
+    const totalLearnablePages = Math.max(1, Math.ceil(allMoves.length / itemsPerPage));
+    const selectedLearnableIdx = Math.min(Math.max(0, args.selectedMoveIdx || 0), allMoves.length - 1);
+    const currentLearnablePage = Math.floor(selectedLearnableIdx / itemsPerPage) + 1;
+    const startIdx = (currentLearnablePage - 1) * itemsPerPage;
 
     ctx.font = "bold 12px DungGeunMo";
     ctx.fillStyle = "#60A5FA";
     ctx.textAlign = "right";
-    ctx.fillText(isKo ? `총 ${allMoves.length}개` : `${allMoves.length} Moves`, cardX + cardW - 12, headerY + 18);
+    ctx.fillText(isKo ? `총 ${allMoves.length}개 (${currentLearnablePage}/${totalLearnablePages})` : `${allMoves.length} Moves (${currentLearnablePage}/${totalLearnablePages})`, cardX + cardW - 12, headerY + 18);
 
-    // 2. Move Cards List (y: 86 ~ 296)
-    const listStartY = 86;
-    const itemH = 40;
-    const itemGap = 5;
-    const maxShow = 5;
+    // 2. Move Cards List (y: 82 ~ 364, 6 items x 43px)
+    const listStartY = 82;
+    const itemH = 43;
+    const itemGap = 4;
 
-    for (let i = 0; i < Math.min(allMoves.length, maxShow); i++) {
-      const rawMove = allMoves[i];
+    for (let i = 0; i < Math.min(allMoves.length - startIdx, itemsPerPage); i++) {
+      const globalIdx = startIdx + i;
+      const rawMove = allMoves[globalIdx];
       const isEggMove = eggMoves.includes(rawMove);
-      const isEquipped = starterMoves.includes(rawMove);
+      const isEquipped = equippedMoves.includes(rawMove);
+      const isBeingReplaced = rawMove === moveBeingReplaced;
+      const isSelected = selectedLearnableIdx === globalIdx;
       const moveKey = rawMove.toLowerCase().replace(/[\s_]+/g, "-");
       const moveInfo = MOVES_DATA[moveKey];
       const itemY = listStartY + i * (itemH + itemGap);
 
-      ctx.fillStyle = isEquipped ? "#2E3A56" : "#242C3E";
+      ctx.fillStyle = isSelected ? "#2E3A56" : (isBeingReplaced ? "#2A201A" : (isEquipped ? "#1E2638" : "#242C3E"));
       ctx.beginPath();
       ctx.roundRect(cardX, itemY, cardW, itemH, 4);
       ctx.fill();
 
-      if (isEquipped) {
-        ctx.strokeStyle = "#5865F2";
-        ctx.lineWidth = 1.5;
+      if (isBeingReplaced) {
+        ctx.strokeStyle = "#F59E0B"; // Orange border for move being replaced!
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      } else if (isSelected) {
+        ctx.strokeStyle = "#5865F2"; // Blue border for selected preview move
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      } else if (isEquipped) {
+        ctx.strokeStyle = "#22C55E"; // Green border for other equipped moves
+        ctx.lineWidth = 1;
         ctx.stroke();
       }
 
       if (moveInfo) {
-        // Move Category Icon
-        drawMoveCategoryIcon(ctx, cardX + 8, itemY + 9, moveInfo.category);
+        // SVG Vector Type Badge Icon
+        const iconSize = 24;
+        const iconX = cardX + 10;
+        const iconY = itemY + (itemH - iconSize) / 2;
+        drawTypeIcon(ctx, iconX, iconY, iconSize, moveInfo.type, "rounded");
 
-        // Move Name
+        // Move Name (Vertically centered)
         ctx.textBaseline = "middle";
-        ctx.font = "bold 13px DungGeunMo";
-        ctx.fillStyle = isEquipped ? "#FFFFFF" : "#CBD5E1";
+        ctx.font = "bold 15px DungGeunMo";
+        ctx.fillStyle = isBeingReplaced ? "#FCD34D" : (isSelected ? "#FFFFFF" : (isEquipped ? "#86EFAC" : "#CBD5E1"));
         ctx.textAlign = "left";
         const moveName = isKo ? moveInfo.nameKo : moveInfo.name.toUpperCase();
-        ctx.fillText(moveName, cardX + 34, itemY + 13);
-
-        // Type Badge
-        const tLower = moveInfo.type.toLowerCase();
-        const tColor = TYPE_COLORS[tLower] || "#777777";
-        const tDisplay = isKo ? (TYPE_NAMES_KO[tLower] || moveInfo.type) : moveInfo.type.toUpperCase();
-        const tW = 32;
-        const tH = 14;
-        const tX = cardX + 34 + ctx.measureText(moveName).width + 6;
-        const tY = itemY + 6;
-
-        ctx.fillStyle = tColor;
-        ctx.beginPath();
-        ctx.roundRect(tX, tY, tW, tH, 3);
-        ctx.fill();
-        ctx.font = "bold 10px DungGeunMo";
-        ctx.fillStyle = "#FFFFFF";
-        ctx.textAlign = "center";
-        ctx.fillText(tDisplay, tX + tW / 2, tY + tH / 2);
-
-        // Stats (Power / Acc / PP)
-        ctx.font = "bold 11px DungGeunMo";
-        ctx.fillStyle = "#94A3B8";
-        ctx.textAlign = "left";
-        const pwrStr = moveInfo.power ? `${moveInfo.power}` : "-";
-        const accStr = moveInfo.accuracy ? `${moveInfo.accuracy}%` : "-";
-        ctx.fillText(`위력:${pwrStr}  명중:${accStr}  PP:${moveInfo.pp || 35}`, cardX + 34, itemY + 28);
-
-        // Tag: [장착] or [알기술] or [기본]
-        ctx.font = "bold 11px DungGeunMo";
-        ctx.textAlign = "right";
-        if (isEquipped) {
-          drawCheckmark(ctx, cardX + cardW - (isKo ? 46 : 56), itemY + 20, 4, "#22C55E");
-          ctx.fillStyle = "#22C55E";
-          ctx.fillText(isKo ? "장착 중" : "Equipped", cardX + cardW - 8, itemY + 20);
-        } else if (isEggMove) {
-          ctx.fillStyle = "#F59E0B";
-          ctx.fillText(isKo ? "[알기술]" : "[Egg]", cardX + cardW - 8, itemY + 20);
-        } else {
-          ctx.fillStyle = "#64748B";
-          ctx.fillText(isKo ? "[기본]" : "[Base]", cardX + cardW - 8, itemY + 20);
-        }
+        ctx.fillText(`${globalIdx + 1}. ${moveName}`, cardX + 42, itemY + itemH / 2);
       }
     }
-
-    // 3. Bottom Guide Box (y: 310 ~ 362, H: 52)
-    const guideY = 310;
-    const guideH = 52;
-    ctx.fillStyle = "#242C3E";
-    ctx.beginPath();
-    ctx.roundRect(cardX, guideY, cardW, guideH, 4);
-    ctx.fill();
-
-    ctx.textBaseline = "middle";
-    ctx.font = "bold 11px DungGeunMo";
-    ctx.fillStyle = "#94A3B8";
-    ctx.textAlign = "center";
-    ctx.fillText(isKo ? "알 뽑기(Gacha)에서 새로운 알기술을 해금할 수 있습니다." : "Unlock rare egg moves via Egg Gacha!", cardX + cardW / 2, guideY + 16);
-    ctx.fillText(isKo ? "좌측 1~4번 버튼으로 장착된 기술 슬롯을 확인하세요." : "Select slots 1~4 on left to view move details.", cardX + cardW / 2, guideY + 34);
 
     return;
   }
@@ -3052,11 +3933,12 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
 export async function renderStarterSelectScreen(options: StarterSelectScreenOptions): Promise<Buffer> {
   const width = 560;
   const height = 380;
-  const canvas = createCanvas(width, height);
+  const scale = 2;
+  const canvas = createCanvas(width * scale, height * scale);
   const ctx = canvas.getContext("2d");
+  ctx.scale(scale, scale);
 
   ctx.imageSmoothingEnabled = false;
-  ctx.textRendering = "optimizeSpeed";
 
   const isKo = options.lang === "ko";
   const sel = options.selectedStarter;
@@ -3159,6 +4041,7 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
       isKo,
       tab: options.partyTab,
       selectedMoveIdx: options.selectedMoveIdx,
+      targetMoveSlot: options.targetMoveSlot,
       normalSprite: t0Sprite,
       shinySprite: t1Sprite,
       tierSprites: [t0Sprite, t1Sprite, t2Sprite, t3Sprite],
@@ -3341,7 +4224,7 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
         ctx.font = "bold 14px DungGeunMo";
         ctx.fillStyle = "#64748B";
         ctx.textAlign = "right";
-        ctx.fillText(`#${String(s.dexNumber).padStart(3, "0")}`, sx + slotW - 6, sy + slotH - 12);
+        ctx.fillText(s.dexNumber <= 0 ? "#---" : `#${String(s.dexNumber).padStart(3, "0")}`, sx + slotW - 6, sy + slotH - 12);
       }
     } else {
       ctx.textBaseline = "middle";
@@ -3697,3 +4580,1064 @@ export async function renderEggGachaScreen(options: EggGachaScreenOptions): Prom
 
   return canvas.toBuffer("image/png");
 }
+
+export interface SaveSlotsScreenOptions {
+  slots: Record<number, any>;
+  selectedSlotId?: number;
+  deleteMode?: boolean;
+  lang?: "en" | "ko";
+  inGameMessage?: InGameMessage;
+}
+
+function formatSlotDate(dateStr?: string, isKo: boolean = true): string {
+  if (!dateStr) return isKo ? "저장 기록 없음" : "No record";
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    const year = d.getFullYear();
+    const month = d.getMonth() + 1;
+    const date = d.getDate();
+    const hours = d.getHours();
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+    const seconds = String(d.getSeconds()).padStart(2, "0");
+    const ampm = hours >= 12 ? (isKo ? "오후" : "PM") : (isKo ? "오전" : "AM");
+    const h12 = hours % 12 || 12;
+    if (isKo) {
+      return `${year}. ${month}. ${date}. ${ampm} ${h12}:${minutes}:${seconds}`;
+    } else {
+      return `${year}-${String(month).padStart(2, "0")}-${String(date).padStart(2, "0")} ${h12}:${minutes}:${seconds} ${ampm}`;
+    }
+  } catch {
+    return dateStr;
+  }
+}
+
+function drawRetroCornerBrackets(ctx: any, x: number, y: number, w: number, h: number, color: string = "#38BDF8", size: number = 7) {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  // Top-Left
+  ctx.moveTo(x + 5, y + 5 + size);
+  ctx.lineTo(x + 5, y + 5);
+  ctx.lineTo(x + 5 + size, y + 5);
+  // Top-Right
+  ctx.moveTo(x + w - 5 - size, y + 5);
+  ctx.lineTo(x + w - 5, y + 5);
+  ctx.lineTo(x + w - 5, y + 5 + size);
+  // Bottom-Left
+  ctx.moveTo(x + 5, y + h - 5 - size);
+  ctx.lineTo(x + 5, y + h - 5);
+  ctx.lineTo(x + 5 + size, y + h - 5);
+  // Bottom-Right
+  ctx.moveTo(x + w - 5 - size, y + h - 5);
+  ctx.lineTo(x + w - 5, y + h - 5);
+  ctx.lineTo(x + w - 5, y + h - 5 - size);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawSmallHeart(ctx: any, x: number, y: number, size: number = 5.5, color: string = "#F472B6") {
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  const topCurveHeight = size * 0.3;
+  ctx.moveTo(x, y + topCurveHeight);
+  ctx.bezierCurveTo(x, y, x - size / 2, y, x - size / 2, y + topCurveHeight);
+  ctx.bezierCurveTo(x - size / 2, y + (size + topCurveHeight) / 2, x, y + (size + topCurveHeight) / 2, x, y + size);
+  ctx.bezierCurveTo(x, y + (size + topCurveHeight) / 2, x + size / 2, y + (size + topCurveHeight) / 2, x + size / 2, y + topCurveHeight);
+  ctx.bezierCurveTo(x + size / 2, y, x, y, x, y + topCurveHeight);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+/**
+ * Renders the PokéRogue-Style 3 Save Slots Screen (560x380) with 2x SuperSampling
+ */
+export async function renderSaveSlotsScreen(options: SaveSlotsScreenOptions): Promise<Buffer> {
+  const width = 560;
+  const height = 380;
+  const scale = 2;
+  const canvas = createCanvas(width * scale, height * scale);
+  const ctx = canvas.getContext("2d");
+  ctx.scale(scale, scale);
+
+  ctx.imageSmoothingEnabled = false;
+
+  const isKo = options.lang === "ko";
+  const deleteMode = Boolean(options.deleteMode);
+  const selectedSlotId = options.selectedSlotId;
+
+  // Background
+  ctx.fillStyle = "#11141D";
+  ctx.fillRect(0, 0, width, height);
+
+  // Pre-load party sprites for all 3 slots
+  for (let i = 0; i < 3; i++) {
+    const s = options.slots ? options.slots[i + 1] : null;
+    if (s && s.party && Array.isArray(s.party)) {
+      await Promise.all(
+        s.party.slice(0, 6).map((p: any) => p && p.speciesId && getPokemonSprite(p.speciesId, true, p.shinyTier !== undefined ? p.shinyTier : (p.isShiny ? 1 : 0)))
+      );
+    }
+  }
+
+  // Top Header Banner (0 ~ 40)
+  ctx.fillStyle = "#181B26";
+  ctx.fillRect(0, 0, width, 40);
+  ctx.strokeStyle = "#2D3246";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(0, 40);
+  ctx.lineTo(width, 40);
+  ctx.stroke();
+
+  // Header Icon & Title
+  if (deleteMode) {
+    drawVectorWarning(ctx, 24, 20, 9, "#EF4444");
+  } else {
+    drawVectorGlobe(ctx, 24, 20, 8, "#38BDF8");
+  }
+
+  ctx.textBaseline = "middle";
+  ctx.font = "bold 17px DungGeunMo";
+  ctx.fillStyle = deleteMode ? "#EF4444" : "#38BDF8";
+  ctx.textAlign = "left";
+  ctx.fillText(deleteMode ? (isKo ? "세이브 슬롯 삭제 모드" : "DELETE SLOT MODE") : (isKo ? "세이브 슬롯 선택" : "SAVE SLOTS"), 40, 21);
+
+  ctx.font = "bold 13px DungGeunMo";
+  ctx.fillStyle = deleteMode ? "#FCA5A5" : "#94A3B8";
+  ctx.textAlign = "right";
+  ctx.fillText(
+    deleteMode
+      ? (isKo ? "삭제할 슬롯을 선택하세요" : "Select a slot to delete")
+      : (isKo ? "모험을 시작하거나 이어하세요" : "Select a slot to play"),
+    width - 16,
+    21
+  );
+
+  // 3 Slots Grid (Vertical layout: cardW 532, cardH 96, gap 12)
+  const cardW = 532;
+  const cardH = 96;
+  const cardX = 14;
+  const cardYs = [48, 156, 264];
+
+  for (let i = 0; i < 3; i++) {
+    const slotNum = i + 1;
+    const slot = options.slots ? options.slots[slotNum] : null;
+    const cardY = cardYs[i];
+    const isSelected = selectedSlotId === slotNum;
+
+    if (slot) {
+      // Saved Slot Card
+      ctx.fillStyle = isSelected ? "#1E293B" : "#1A212E";
+      ctx.beginPath();
+      ctx.roundRect(cardX, cardY, cardW, cardH, 6);
+      ctx.fill();
+
+      // Border
+      const borderColor = deleteMode ? "#EF4444" : (isSelected ? "#2DD4BF" : "#0D9488");
+      ctx.strokeStyle = borderColor;
+      ctx.lineWidth = isSelected ? 2.5 : 1.8;
+      ctx.stroke();
+
+      // Selected Pointer (▶)
+      if (isSelected) {
+        ctx.fillStyle = "#FFFFFF";
+        ctx.beginPath();
+        const pX = cardX + cardW - 8;
+        const pY = cardY + cardH / 2;
+        ctx.moveTo(pX, pY - 6);
+        ctx.lineTo(pX + 6, pY);
+        ctx.lineTo(pX, pY + 6);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Left Text Information
+      const textX = cardX + 16;
+      ctx.textAlign = "left";
+
+      // Line 1: Mode (Slot #)
+      ctx.textBaseline = "middle";
+      ctx.font = "bold 16px DungGeunMo";
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillText(`${slot.gameMode || (isKo ? "클래식" : "Classic")} (${slotNum})`, textX, cardY + 24);
+
+      // Line 2: Mode - Wave
+      ctx.font = "bold 14px DungGeunMo";
+      ctx.fillStyle = "#E2E8F0";
+      ctx.fillText(`${slot.gameMode || (isKo ? "클래식" : "Classic")} - ${isKo ? "웨이브" : "Wave"} ${slot.wave || 1}`, textX, cardY + 48);
+
+      // Line 3: Saved Timestamp (Last Updated / Saved Time)
+      ctx.font = "12px DungGeunMo";
+      ctx.fillStyle = "#94A3B8";
+      ctx.fillText(formatSlotDate(slot.updatedAt, isKo), textX, cardY + 70);
+
+      // Right Side Party Pokémon (Up to 6)
+      const party = slot.party || [];
+      const partyStartX = cardX + 240;
+      const slotItemW = 46;
+
+      for (let pIdx = 0; pIdx < Math.min(6, party.length); pIdx++) {
+        const p = party[pIdx];
+        if (!p) continue;
+        const px = partyStartX + pIdx * slotItemW;
+        const py = cardY + 10;
+
+        // Sprite
+        const sprite = await getPokemonSprite(p.speciesId, true, p.shinyTier !== undefined ? p.shinyTier : (p.isShiny ? 1 : 0));
+        if (sprite) {
+          ctx.drawImage(sprite, px, py, 34, 34);
+        }
+
+        // Starter Heart Icon on 1st Pokemon
+        if (pIdx === 0) {
+          drawSmallHeart(ctx, px - 2, py + 14, 5.5, "#F472B6");
+        }
+
+        // Level
+        ctx.textAlign = "center";
+        ctx.font = "bold 11px DungGeunMo";
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillText(`Lv${p.level || 5}`, px + 17, py + 46);
+      }
+    } else {
+      // Empty Slot Card
+      ctx.fillStyle = "#131620";
+      ctx.beginPath();
+      ctx.roundRect(cardX, cardY, cardW, cardH, 6);
+      ctx.fill();
+
+      ctx.strokeStyle = isSelected ? "#38BDF8" : "#2A3245";
+      ctx.lineWidth = isSelected ? 2 : 1.2;
+      ctx.stroke();
+
+      const textX = cardX + 20;
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+
+      // Line 1: [슬롯 N] 빈 슬롯
+      ctx.font = "bold 16px DungGeunMo";
+      ctx.fillStyle = isSelected ? "#94A3B8" : "#64748B";
+      ctx.fillText(isKo ? `[슬롯 ${slotNum}] 빈 슬롯` : `[Slot ${slotNum}] Empty Slot`, textX, cardY + 36);
+
+      // Line 2: Description
+      ctx.font = "13px DungGeunMo";
+      ctx.fillStyle = "#475569";
+      ctx.fillText(isKo ? "새로운 모험을 시작할 수 있습니다." : "Start a new adventure in this slot", textX, cardY + 62);
+
+      // Right Button indicator
+      ctx.textAlign = "right";
+      ctx.font = "bold 15px DungGeunMo";
+      ctx.fillStyle = "#38BDF8";
+      ctx.fillText("+ NEW GAME", cardX + cardW - 24, cardY + cardH / 2);
+    }
+  }
+
+  // In-Game Dialogue Box overlay (if active)
+  if (options.inGameMessage) {
+    drawInGameMessageBox(ctx, width, height, options.inGameMessage, isKo);
+  }
+
+  return canvas.toBuffer("image/png");
+}
+
+export interface BattleScreenOptions {
+  battle: any;
+  lang?: "en" | "ko";
+  inGameMessage?: InGameMessage;
+}
+
+function drawBiomeBackground(ctx: any, width: number, biome: string) {
+  const b = biome.toLowerCase();
+
+  if (b.includes("town")) {
+    // 1. Town Sky Gradient
+    const sky = ctx.createLinearGradient(0, 0, 0, 160);
+    sky.addColorStop(0, "#3B82F6");
+    sky.addColorStop(0.6, "#93C5FD");
+    sky.addColorStop(1, "#E0F2FE");
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, width, 160);
+
+    // Soft Clouds
+    ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
+    ctx.beginPath();
+    ctx.arc(80, 45, 24, 0, Math.PI * 2);
+    ctx.arc(105, 40, 30, 0, Math.PI * 2);
+    ctx.arc(130, 45, 22, 0, Math.PI * 2);
+    ctx.arc(420, 35, 20, 0, Math.PI * 2);
+    ctx.arc(445, 30, 26, 0, Math.PI * 2);
+    ctx.arc(470, 35, 18, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Distant Town Houses & Roof Silhouettes (y: 95 ~ 160)
+    ctx.fillStyle = "#64748B";
+    ctx.beginPath();
+    ctx.rect(30, 115, 60, 45);
+    ctx.moveTo(25, 115); ctx.lineTo(60, 85); ctx.lineTo(95, 115);
+    ctx.rect(110, 100, 75, 60);
+    ctx.moveTo(105, 100); ctx.lineTo(147, 72); ctx.lineTo(190, 100);
+    ctx.rect(210, 85, 45, 75);
+    ctx.moveTo(205, 85); ctx.lineTo(232, 60); ctx.lineTo(260, 85);
+    ctx.rect(330, 110, 80, 50);
+    ctx.moveTo(325, 110); ctx.lineTo(370, 80); ctx.lineTo(415, 110);
+    ctx.rect(430, 120, 90, 40);
+    ctx.moveTo(425, 120); ctx.lineTo(475, 95); ctx.lineTo(525, 120);
+    ctx.fill();
+
+    // Midground Fences & Trees
+    ctx.fillStyle = "#10B981";
+    ctx.beginPath();
+    ctx.arc(20, 150, 25, 0, Math.PI * 2);
+    ctx.arc(100, 152, 20, 0, Math.PI * 2);
+    ctx.arc(310, 148, 28, 0, Math.PI * 2);
+    ctx.arc(425, 150, 22, 0, Math.PI * 2);
+    ctx.arc(540, 146, 30, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Cobblestone Paved Ground (y: 160 ~ 270)
+    const ground = ctx.createLinearGradient(0, 160, 0, 270);
+    ground.addColorStop(0, "#94A3B8");
+    ground.addColorStop(1, "#475569");
+    ctx.fillStyle = ground;
+    ctx.fillRect(0, 160, width, 110);
+
+    // Cobblestone Grid Textures
+    ctx.strokeStyle = "rgba(51, 65, 85, 0.4)";
+    ctx.lineWidth = 1;
+    for (let r = 165; r < 270; r += 14) {
+      ctx.beginPath();
+      ctx.moveTo(0, r); ctx.lineTo(width, r);
+      ctx.stroke();
+      const offset = (r % 28 === 0) ? 0 : 15;
+      for (let c = offset; c < width; c += 30) {
+        ctx.beginPath();
+        ctx.moveTo(c, r); ctx.lineTo(c, r + 14);
+        ctx.stroke();
+      }
+    }
+  } else if (b.includes("forest")) {
+    // Forest Twilight Canopy
+    const sky = ctx.createLinearGradient(0, 0, 0, 160);
+    sky.addColorStop(0, "#064E3B");
+    sky.addColorStop(0.5, "#047857");
+    sky.addColorStop(1, "#10B981");
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, width, 160);
+
+    // Dappled Sunlight Rays
+    ctx.fillStyle = "rgba(254, 240, 138, 0.15)";
+    ctx.beginPath();
+    ctx.moveTo(60, 0); ctx.lineTo(140, 270); ctx.lineTo(180, 270); ctx.lineTo(100, 0);
+    ctx.moveTo(280, 0); ctx.lineTo(360, 270); ctx.lineTo(410, 270); ctx.lineTo(330, 0);
+    ctx.fill();
+
+    // Deep Forest Trees & Trunks
+    ctx.fillStyle = "#065F46";
+    ctx.beginPath();
+    ctx.arc(70, 70, 75, 0, Math.PI * 2);
+    ctx.arc(200, 60, 85, 0, Math.PI * 2);
+    ctx.arc(360, 65, 80, 0, Math.PI * 2);
+    ctx.arc(490, 75, 90, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Tree Trunks
+    ctx.fillStyle = "#78350F";
+    ctx.fillRect(55, 100, 28, 65);
+    ctx.fillRect(185, 95, 34, 70);
+    ctx.fillRect(345, 100, 30, 65);
+    ctx.fillRect(475, 105, 32, 60);
+
+    // Forest Floor with Moss & Leaves
+    const ground = ctx.createLinearGradient(0, 160, 0, 270);
+    ground.addColorStop(0, "#14532D");
+    ground.addColorStop(1, "#052E16");
+    ctx.fillStyle = ground;
+    ctx.fillRect(0, 160, width, 110);
+  } else if (b.includes("cave")) {
+    // Cavern Ceiling & Rock Vaults
+    const sky = ctx.createLinearGradient(0, 0, 0, 160);
+    sky.addColorStop(0, "#0F172A");
+    sky.addColorStop(1, "#1E293B");
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, width, 160);
+
+    // Stalactites Hanging from Ceiling
+    ctx.fillStyle = "#334155";
+    ctx.beginPath();
+    const stals = [[30, 65, 20], [80, 95, 26], [140, 55, 18], [210, 80, 22], [280, 110, 30], [350, 70, 20], [420, 90, 24], [480, 60, 18], [530, 85, 22]];
+    for (const [sx, sh, sw] of stals) {
+      ctx.moveTo(sx - sw / 2, 0);
+      ctx.lineTo(sx, sh);
+      ctx.lineTo(sx + sw / 2, 0);
+    }
+    ctx.fill();
+
+    // Glowing Cyan & Purple Crystal Shards
+    ctx.fillStyle = "#38BDF8";
+    ctx.beginPath();
+    ctx.moveTo(115, 140); ctx.lineTo(122, 115); ctx.lineTo(129, 140);
+    ctx.moveTo(435, 135); ctx.lineTo(442, 108); ctx.lineTo(449, 135);
+    ctx.fill();
+    ctx.fillStyle = "#C084FC";
+    ctx.beginPath();
+    ctx.moveTo(250, 145); ctx.lineTo(256, 122); ctx.lineTo(262, 145);
+    ctx.fill();
+
+    // Cave Ground
+    const ground = ctx.createLinearGradient(0, 160, 0, 270);
+    ground.addColorStop(0, "#1E293B");
+    ground.addColorStop(1, "#0B0F19");
+    ctx.fillStyle = ground;
+    ctx.fillRect(0, 160, width, 110);
+  } else if (b.includes("sea")) {
+    // Ocean Horizon & Coastal Sky
+    const sky = ctx.createLinearGradient(0, 0, 0, 145);
+    sky.addColorStop(0, "#0284C7");
+    sky.addColorStop(0.7, "#38BDF8");
+    sky.addColorStop(1, "#BAE6FD");
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, width, 145);
+
+    // Distant Tropical Island Silhouette
+    ctx.fillStyle = "#0F766E";
+    ctx.beginPath();
+    ctx.ellipse(120, 145, 95, 20, 0, Math.PI, 0);
+    ctx.ellipse(440, 145, 80, 16, 0, Math.PI, 0);
+    ctx.fill();
+
+    // Deep Ocean Water Gradient & Wave Lines (y: 145 ~ 270)
+    const ground = ctx.createLinearGradient(0, 145, 0, 270);
+    ground.addColorStop(0, "#0369A1");
+    ground.addColorStop(0.5, "#0284C7");
+    ground.addColorStop(1, "#0C4A6E");
+    ctx.fillStyle = ground;
+    ctx.fillRect(0, 145, width, 125);
+
+    // White Wave Foam Lines
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.45)";
+    ctx.lineWidth = 2;
+    for (let wy = 160; wy < 270; wy += 22) {
+      ctx.beginPath();
+      for (let wx = 0; wx < width; wx += 40) {
+        ctx.quadraticCurveTo(wx + 20, wy - 4, wx + 40, wy);
+      }
+      ctx.stroke();
+    }
+  } else if (b.includes("volcano")) {
+    // Fiery Volcanic Sky with Ash & Smoke
+    const sky = ctx.createLinearGradient(0, 0, 0, 160);
+    sky.addColorStop(0, "#450A0A");
+    sky.addColorStop(0.5, "#7F1D1D");
+    sky.addColorStop(1, "#B91C1C");
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, width, 160);
+
+    // Jagged Obsidian Volcano Mountain Peaks
+    ctx.fillStyle = "#1C1917";
+    ctx.beginPath();
+    ctx.moveTo(0, 160);
+    ctx.lineTo(80, 80);
+    ctx.lineTo(160, 130);
+    ctx.lineTo(260, 60);
+    ctx.lineTo(360, 125);
+    ctx.lineTo(460, 70);
+    ctx.lineTo(width, 150);
+    ctx.lineTo(width, 160);
+    ctx.closePath();
+    ctx.fill();
+
+    // Molten Lava Falls
+    ctx.fillStyle = "#F97316";
+    ctx.beginPath();
+    ctx.moveTo(255, 75); ctx.lineTo(265, 75); ctx.lineTo(270, 160); ctx.lineTo(250, 160);
+    ctx.fill();
+
+    // Scorched Basalt Ground with Magma Glow Fissures
+    const ground = ctx.createLinearGradient(0, 160, 0, 270);
+    ground.addColorStop(0, "#292524");
+    ground.addColorStop(1, "#0C0A09");
+    ctx.fillStyle = ground;
+    ctx.fillRect(0, 160, width, 110);
+
+    // Glowing Orange Lava Cracks
+    ctx.strokeStyle = "#EA580C";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(30, 210); ctx.lineTo(90, 225); ctx.lineTo(150, 215); ctx.lineTo(220, 240);
+    ctx.moveTo(320, 220); ctx.lineTo(390, 205); ctx.lineTo(470, 235); ctx.lineTo(530, 220);
+    ctx.stroke();
+  } else if (b.includes("metropolis")) {
+    // Cyberpunk Metropolis Skyline
+    const sky = ctx.createLinearGradient(0, 0, 0, 160);
+    sky.addColorStop(0, "#0F172A");
+    sky.addColorStop(0.7, "#1E1B4B");
+    sky.addColorStop(1, "#312E81");
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, width, 160);
+
+    // Neon Skyscrapers with Window Grids
+    ctx.fillStyle = "#111827";
+    ctx.fillRect(20, 40, 55, 120);
+    ctx.fillRect(90, 20, 70, 140);
+    ctx.fillRect(175, 55, 60, 105);
+    ctx.fillRect(320, 30, 75, 130);
+    ctx.fillRect(410, 50, 65, 110);
+    ctx.fillRect(490, 25, 55, 135);
+
+    // Cyber Window Lights
+    ctx.fillStyle = "#38BDF8";
+    for (let wy = 35; wy < 155; wy += 14) {
+      ctx.fillRect(102, wy, 8, 5); ctx.fillRect(122, wy, 8, 5); ctx.fillRect(142, wy, 8, 5);
+      ctx.fillRect(335, wy, 8, 5); ctx.fillRect(355, wy, 8, 5); ctx.fillRect(375, wy, 8, 5);
+    }
+
+    // High-tech Cyber Grid Floor
+    const ground = ctx.createLinearGradient(0, 160, 0, 270);
+    ground.addColorStop(0, "#1F2937");
+    ground.addColorStop(1, "#030712");
+    ctx.fillStyle = ground;
+    ctx.fillRect(0, 160, width, 110);
+
+    // Neon Cyan Floor Gridlines
+    ctx.strokeStyle = "rgba(56, 189, 248, 0.4)";
+    ctx.lineWidth = 1.5;
+    for (let gy = 170; gy < 270; gy += 20) {
+      ctx.beginPath();
+      ctx.moveTo(0, gy); ctx.lineTo(width, gy);
+      ctx.stroke();
+    }
+  } else if (b.includes("dojo")) {
+    // Traditional Dojo Screen & Warm Lantern Horizon
+    const sky = ctx.createLinearGradient(0, 0, 0, 160);
+    sky.addColorStop(0, "#78350F");
+    sky.addColorStop(0.6, "#9A3412");
+    sky.addColorStop(1, "#D97706");
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, width, 160);
+
+    // Shoji Screen Wooden Framework
+    ctx.fillStyle = "#451A03";
+    ctx.fillRect(0, 50, width, 10);
+    ctx.fillRect(0, 100, width, 10);
+    for (let sx = 0; sx < width; sx += 55) {
+      ctx.fillRect(sx, 0, 8, 160);
+    }
+
+    // Polished Wooden Floor
+    const ground = ctx.createLinearGradient(0, 160, 0, 270);
+    ground.addColorStop(0, "#92400E");
+    ground.addColorStop(1, "#451A03");
+    ctx.fillStyle = ground;
+    ctx.fillRect(0, 160, width, 110);
+
+    // Wood Floorboard Planks
+    ctx.strokeStyle = "rgba(69, 26, 3, 0.6)";
+    ctx.lineWidth = 2;
+    for (let fy = 168; fy < 270; fy += 16) {
+      ctx.beginPath();
+      ctx.moveTo(0, fy); ctx.lineTo(width, fy);
+      ctx.stroke();
+    }
+  } else {
+    // Default / Plains / Grass: Scenic Rolling Hills & Open Sky
+    const sky = ctx.createLinearGradient(0, 0, 0, 160);
+    sky.addColorStop(0, "#38BDF8");
+    sky.addColorStop(0.6, "#7DD3FC");
+    sky.addColorStop(1, "#E0F2FE");
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, width, 160);
+
+    // Cumulus Pixel Clouds
+    ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+    ctx.beginPath();
+    ctx.arc(120, 45, 28, 0, Math.PI * 2);
+    ctx.arc(155, 38, 36, 0, Math.PI * 2);
+    ctx.arc(190, 45, 26, 0, Math.PI * 2);
+    ctx.arc(380, 40, 24, 0, Math.PI * 2);
+    ctx.arc(410, 32, 32, 0, Math.PI * 2);
+    ctx.arc(440, 40, 22, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Distant Rolling Green Hills
+    ctx.fillStyle = "#15803D";
+    ctx.beginPath();
+    ctx.ellipse(140, 160, 180, 45, 0, Math.PI, 0);
+    ctx.ellipse(450, 160, 160, 40, 0, Math.PI, 0);
+    ctx.fill();
+
+    // Foreground Green Meadow
+    const ground = ctx.createLinearGradient(0, 160, 0, 270);
+    ground.addColorStop(0, "#22C55E");
+    ground.addColorStop(1, "#15803D");
+    ctx.fillStyle = ground;
+    ctx.fillRect(0, 160, width, 110);
+  }
+}
+
+function drawBattlePlatforms(ctx: any, biome: string) {
+  const b = biome.toLowerCase();
+
+  const getPlatformColors = () => {
+    if (b.includes("cave")) return { top: "#475569", rim: "#334155", shadow: "rgba(15, 23, 42, 0.6)", border: "#94A3B8" };
+    if (b.includes("forest")) return { top: "#166534", rim: "#14532D", shadow: "rgba(5, 46, 22, 0.6)", border: "#4ADE80" };
+    if (b.includes("town")) return { top: "#64748B", rim: "#475569", shadow: "rgba(30, 41, 59, 0.5)", border: "#CBD5E1" };
+    if (b.includes("sea")) return { top: "#FDE047", rim: "#CA8A04", shadow: "rgba(12, 74, 110, 0.6)", border: "#FEF08A" };
+    if (b.includes("volcano")) return { top: "#44403C", rim: "#292524", shadow: "rgba(120, 53, 15, 0.7)", border: "#F97316" };
+    if (b.includes("metropolis")) return { top: "#1E293B", rim: "#0F172A", shadow: "rgba(2, 6, 23, 0.7)", border: "#38BDF8" };
+    if (b.includes("dojo")) return { top: "#B45309", rim: "#78350F", shadow: "rgba(69, 26, 3, 0.6)", border: "#FCD34D" };
+    return { top: "#4ADE80", rim: "#16A34A", shadow: "rgba(20, 83, 45, 0.55)", border: "#86EFAC" };
+  };
+
+  const pCol = getPlatformColors();
+
+  const draw3DPlatform = (cx: number, cy: number, rx: number, ry: number, extrude: number) => {
+    // 1. Ground Drop Shadow
+    ctx.fillStyle = pCol.shadow;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + extrude + 4, rx + 4, ry + 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 2. 3D Extrusion Rim Body
+    ctx.fillStyle = pCol.rim;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + extrude, rx, ry, 0, 0, Math.PI);
+    ctx.lineTo(cx - rx, cy);
+    ctx.ellipse(cx, cy, rx, ry, 0, Math.PI, 0, true);
+    ctx.closePath();
+    ctx.fill();
+
+    // 3. Top Surface
+    ctx.fillStyle = pCol.top;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 4. Highlight Rim Stroke
+    ctx.strokeStyle = pCol.border;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  };
+
+  // Draw Enemy Platform (extrude: 6)
+  draw3DPlatform(415, 138, 78, 16, 6);
+
+  // Draw Player Platform (extrude: 8)
+  draw3DPlatform(145, 228, 85, 18, 8);
+}
+
+const arenaCache = new Map<string, { bg: Image | null; a: Image | null; b: Image | null }>();
+
+export async function getArenaAssets(biomeName: string): Promise<{ bg: Image | null; a: Image | null; b: Image | null }> {
+  let clean = (biomeName || "Town").toLowerCase().trim()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-z0-9_]/g, "");
+
+  if (clean === "grass") clean = "grass";
+  if (clean === "plains") clean = "plains";
+  if (clean === "sea" || clean === "ocean") clean = "sea";
+  if (clean === "fairycave" || clean === "fairy_cave") clean = "fairy_cave";
+  if (clean === "icecave" || clean === "ice_cave") clean = "ice_cave";
+  if (clean === "powerplant" || clean === "power_plant") clean = "power_plant";
+  if (clean === "snowyforest" || clean === "snowy_forest") clean = "snowy_forest";
+  if (clean === "rocky_coast" || clean === "rockycoast") clean = "rockycoast";
+  if (clean === "tallgrass" || clean === "tall_grass") clean = "tall_grass";
+  if (clean === "constructionsite" || clean === "construction_site") clean = "construction_site";
+
+  if (arenaCache.has(clean)) {
+    return arenaCache.get(clean)!;
+  }
+
+  const baseUrl = "https://raw.githubusercontent.com/pagefaultgames/pokerogue-assets/beta/images/arenas";
+  try {
+    const [bg, a, b] = await Promise.all([
+      loadImage(`${baseUrl}/${clean}_bg.png`).catch(() => loadImage(`${baseUrl}/town_bg.png`).catch(() => null)),
+      loadImage(`${baseUrl}/${clean}_a.png`).catch(() => loadImage(`${baseUrl}/town_a.png`).catch(() => null)),
+      loadImage(`${baseUrl}/${clean}_b.png`).catch(() => loadImage(`${baseUrl}/town_b.png`).catch(() => null)),
+    ]);
+
+    const result = { bg, a, b };
+    arenaCache.set(clean, result);
+    return result;
+  } catch (err) {
+    console.error(`[CANVAS] Failed to load arena assets for ${biomeName}:`, err);
+    return { bg: null, a: null, b: null };
+  }
+}
+
+/**
+ * Renders the Authentic PokéRogue Battle Screen (560x380) with 2x SuperSampling
+ */
+export async function renderBattleScreen(options: BattleScreenOptions): Promise<Buffer> {
+  const width = 560;
+  const height = 380;
+  const scale = 2;
+  const canvas = createCanvas(width * scale, height * scale);
+  const ctx = canvas.getContext("2d");
+  ctx.scale(scale, scale);
+
+  ctx.imageSmoothingEnabled = false;
+
+  const isKo = options.lang === "ko";
+  const battle = options.battle;
+  const enemy = battle.enemy;
+  const playerParty = battle.playerParty || [];
+  const playerMon = (battle as any).playerBattleMon || playerParty[battle.playerActiveIndex] || playerParty[0] || {
+    speciesId: "bulbasaur",
+    name: "이상해씨",
+    level: 5,
+    hp: 20,
+    maxHp: 20,
+  };
+
+  // 1. Draw Official PokéRogue Arena Background & Preload Authentic HUD Sprites
+  const [arena, pbAssets] = await Promise.all([
+    getArenaAssets(battle.biome || "Town"),
+    getPbInfoAssets(),
+  ]);
+  if (arena.bg) {
+    ctx.drawImage(arena.bg, 0, 0, width, 275);
+  } else {
+    drawBiomeBackground(ctx, width, battle.biome || "Town");
+  }
+
+  // 2. Draw Official PokéRogue 3D Platforms using BATTLE_LAYOUT_CONFIG
+  const ep = BATTLE_LAYOUT_CONFIG.enemyPlatform;
+  const pp = BATTLE_LAYOUT_CONFIG.playerPlatform;
+  const enemyPlatW = 320 * ep.scale;
+  const enemyPlatH = 132 * ep.scale;
+  const playerPlatW = 320 * pp.scale;
+  const playerPlatH = 132 * pp.scale;
+
+  if (arena.b) {
+    // Enemy Platform (Top-Right)
+    ctx.drawImage(arena.b, ep.x, ep.y, enemyPlatW, enemyPlatH);
+
+    // Player Platform (Foreground Bottom-Left, mirrored)
+    ctx.save();
+    ctx.translate(width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(arena.b, pp.x, pp.y, playerPlatW, playerPlatH);
+    ctx.restore();
+  } else if (arena.a) {
+    ctx.drawImage(arena.a, 0, 48 * (275 / 180), width, enemyPlatH);
+  } else {
+    drawBattlePlatforms(ctx, battle.biome || "Town");
+  }
+
+  // 3. Preload & Draw Pokémon Sprites (Transform, Illusion, and Accurate Shiny Tier Front & Back support)
+  const enemyActiveSpecies = (enemy as any).isTransformed ? ((enemy as any).transformedSpeciesId || enemy.speciesId) : enemy.speciesId;
+  const playerActiveSpecies = (playerMon as any).isTransformed
+    ? ((playerMon as any).transformedSpeciesId || playerMon.speciesId)
+    : ((playerMon as any).hasIllusion && (playerMon as any).illusionTarget ? (playerMon as any).illusionTarget.speciesId : playerMon.speciesId);
+
+  const enemyShinyTier = (enemy as any).shinyTier !== undefined
+    ? (enemy as any).shinyTier
+    : (enemy.isShiny ? 1 : 0);
+
+  const playerShinyTier = ((playerMon as any).hasIllusion && (playerMon as any).illusionTarget)
+    ? ((playerMon as any).illusionTarget.shinyTier !== undefined ? (playerMon as any).illusionTarget.shinyTier : ((playerMon as any).illusionTarget.isShiny ? 1 : 0))
+    : ((playerMon as any).shinyTier !== undefined ? (playerMon as any).shinyTier : ((playerMon as any).isShiny ? 1 : 0));
+
+  const playerIsShiny = playerShinyTier > 0;
+  const enemyIsShiny = enemyShinyTier > 0;
+
+  const [enemySprite, playerSprite] = await Promise.all([
+    getPokemonSprite(enemyActiveSpecies, true, enemyShinyTier, false),
+    getPokemonSprite(playerActiveSpecies, true, playerShinyTier, true),
+  ]);
+
+  // Draw Battler Sprites using BATTLE_LAYOUT_CONFIG
+  const em = BATTLE_LAYOUT_CONFIG.enemyPokemon;
+  const pm = BATTLE_LAYOUT_CONFIG.playerPokemon;
+
+  if (enemySprite) {
+    drawFittedBattleSprite(ctx, enemySprite, em.x, em.y, em.size);
+  }
+
+  if (playerSprite) {
+    drawFittedBattleSprite(ctx, playerSprite, pm.x, pm.y, pm.size);
+  }
+
+  // 5. Top Wave & Biome Banner (Only visible when Bag / 가방 is opened)
+  const isBagPhase = battle.phase === "BAG";
+  if (isBagPhase) {
+    ctx.fillStyle = "rgba(17, 24, 39, 0.92)";
+    ctx.fillRect(0, 0, width, 30);
+    ctx.strokeStyle = "#1F2937";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, 30);
+    ctx.lineTo(width, 30);
+    ctx.stroke();
+
+    ctx.textBaseline = "middle";
+    ctx.font = "bold 14px DungGeunMo";
+    ctx.fillStyle = "#38BDF8";
+    ctx.textAlign = "left";
+    ctx.fillText(`Wave ${battle.wave} - ${battle.biome}`, 14, 15);
+
+    ctx.font = "bold 13px DungGeunMo";
+    ctx.fillStyle = "#FDE047";
+    ctx.textAlign = "right";
+    ctx.fillText(`₩${(battle.money || 0).toLocaleString()} | ${(battle.score || 0).toLocaleString()} P`, width - 14, 15);
+  }
+
+  const getStatusBadge = (mon: any) => {
+    if (mon.status === "par") return isKo ? " [마비]" : " [PAR]";
+    if (mon.status === "brn") return isKo ? " [화상]" : " [BRN]";
+    if (mon.status === "slp") return isKo ? " [수면]" : " [SLP]";
+    if (mon.status === "psn" || mon.status === "tox") return isKo ? " [독]" : " [PSN]";
+    if (mon.status === "frz") return isKo ? " [빙결]" : " [FRZ]";
+    if (mon.substituteHp && mon.substituteHp > 0) return isKo ? " [대타]" : " [SUB]";
+    return "";
+  };
+
+  // 6. Draw Authentic PokéRogue Enemy HUD Box
+  const eh = BATTLE_LAYOUT_CONFIG.enemyHud;
+  const enemyHudY = isBagPhase ? 38 : eh.y;
+  let cleanEnemyName = getPokemonDisplayName(enemy, isKo).replace(/[^\w\s가-힣0-9\(\)\-\.]/g, "").trim();
+  const enemySpeciesData = POKEMON_SPECIES_DATA[enemy.speciesId] || POKEMON_SPECIES_DATA[enemyActiveSpecies] || null;
+  const enemyTypes = enemy.types || (enemySpeciesData ? enemySpeciesData.types : ["normal"]);
+
+  drawPokeRogueBattleHud(ctx, {
+    x: eh.x,
+    y: enemyHudY,
+    w: eh.w,
+    h: eh.h,
+    name: cleanEnemyName,
+    level: enemy.level,
+    hp: enemy.hp,
+    maxHp: enemy.maxHp,
+    isEnemy: true,
+    types: enemyTypes,
+    isBoss: enemy.isBoss,
+    bossShields: enemy.bossShields,
+    statusBadge: getStatusBadge(enemy),
+    isKo,
+    hudImage: enemy.isBoss ? pbAssets.bossBox : pbAssets.enemyBox,
+    hpLabel: pbAssets.hpLabel,
+  });
+
+  // 7. Draw Authentic PokéRogue Player HUD Box
+  const ph = BATTLE_LAYOUT_CONFIG.playerHud;
+  const illusionMon = (playerMon as any).hasIllusion && (playerMon as any).illusionTarget
+    ? (playerMon as any).illusionTarget
+    : playerMon;
+  let cleanPlayerName = getPokemonDisplayName(illusionMon, isKo).replace(/[^\w\s가-힣0-9\(\)\-\.]/g, "").trim();
+  const playerSpeciesData = POKEMON_SPECIES_DATA[playerMon.speciesId] || POKEMON_SPECIES_DATA[playerActiveSpecies] || null;
+  const playerTypes = playerMon.types || (playerSpeciesData ? playerSpeciesData.types : ["normal"]);
+
+  drawPokeRogueBattleHud(ctx, {
+    x: ph.x,
+    y: ph.y,
+    w: ph.w,
+    h: ph.h,
+    name: cleanPlayerName,
+    level: playerMon.level,
+    hp: playerMon.hp,
+    maxHp: playerMon.maxHp,
+    isEnemy: false,
+    types: playerTypes,
+    statusBadge: getStatusBadge(playerMon),
+    exp: battle.playerExp || 0,
+    maxExp: battle.playerMaxExp || 100,
+    isKo,
+    hudImage: pbAssets.playerBox,
+    hpLabel: pbAssets.hpLabel,
+  });
+
+/**
+ * Draws the 2x2 Battle Move Cards Grid during FIGHT phase
+ */
+function drawBattleFightMovesGrid(ctx: any, combatMon: any, isKo: boolean, categoriesSprite?: any) {
+  const boxY = 270;
+  const colW = 264;
+  const rowH = 47;
+  const startX = 12;
+  const startY = boxY + 5;
+  const gapX = 8;
+  const gapY = 6;
+
+  const moves: string[] = (combatMon?.moves && combatMon.moves.length > 0)
+    ? combatMon.moves
+    : ["Tackle", "Growl"];
+  const movePps: number[] = combatMon?.movePps || [];
+
+  for (let i = 0; i < 4; i++) {
+    const col = i % 2;
+    const row = Math.floor(i / 2);
+    const cX = startX + col * (colW + gapX);
+    const cY = startY + row * (rowH + gapY);
+
+    const mKey = moves[i];
+    const cleanKey = mKey ? mKey.toLowerCase().replace(/[\s_]+/g, "-") : null;
+    const mData = cleanKey ? MOVES_DATA[cleanKey] || { name: mKey, nameKo: mKey, type: "normal", power: 40, accuracy: 100, pp: 35, category: "physical" as const, id: 0, description: "" } : null;
+
+    if (!mData) {
+      // Empty slot card
+      ctx.fillStyle = "rgba(19, 25, 36, 0.6)";
+      ctx.beginPath();
+      ctx.roundRect(cX, cY, colW, rowH, 4);
+      ctx.fill();
+      ctx.strokeStyle = "#334155";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.fillStyle = "#64748B";
+      ctx.font = "12px DungGeunMo";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(isKo ? "- 기술 없음 -" : "- Empty -", cX + colW / 2, cY + rowH / 2);
+      continue;
+    }
+
+    const typeColor = TYPE_COLORS[mData.type?.toLowerCase()] || "#A8A77A";
+    const typeLabel = isKo ? (TYPE_NAMES_KO[mData.type?.toLowerCase()] || mData.type) : (mData.type || "NORMAL").toUpperCase();
+
+    // Card background
+    ctx.fillStyle = "#18202F";
+    ctx.beginPath();
+    ctx.roundRect(cX, cY, colW, rowH, 4);
+    ctx.fill();
+
+    // Card border
+    ctx.strokeStyle = typeColor;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Left Type color strip
+    ctx.fillStyle = typeColor;
+    ctx.beginPath();
+    ctx.roundRect(cX, cY, 4, rowH, [4, 0, 0, 4]);
+    ctx.fill();
+
+    // 1. Move Name (e.g. "1. 몸통박치기")
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.font = "bold 13px DungGeunMo";
+    ctx.fillStyle = "#FFFFFF";
+    const moveName = `${i + 1}. ${isKo ? mData.nameKo : (mData.name ? mData.name.charAt(0).toUpperCase() + mData.name.slice(1).replace(/-/g, " ") : mKey)}`;
+    ctx.fillText(moveName, cX + 10, cY + 14);
+
+    // 2. Type Badge (Upper Right)
+    const badgeW = isKo ? 32 : 38;
+    const badgeH = 14;
+    const badgeX = cX + colW - badgeW - 6;
+    const badgeY = cY + 7;
+    ctx.fillStyle = typeColor;
+    ctx.beginPath();
+    ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 3);
+    ctx.fill();
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = "bold 10px DungGeunMo";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText(typeLabel, badgeX + badgeW / 2, badgeY + badgeH / 2 + 0.5);
+
+    // 3. Official Category Icon (Physical / Special / Status)
+    if (categoriesSprite) {
+      const catSx = mData.category === "special" ? 28 : (mData.category === "status" ? 56 : 0);
+      const iconW = 28 * 1.25; // 35px
+      const iconH = 11 * 1.25; // 13.75px
+      const iconX = badgeX - iconW - 5;
+      const iconY = cY + 7;
+      ctx.drawImage(categoriesSprite, catSx, 0, 28, 11, iconX, iconY, iconW, iconH);
+    } else {
+      const catColor = mData.category === "special" ? "#3B82F6" : mData.category === "status" ? "#64748B" : "#E11D48";
+      const catLabel = isKo
+        ? (mData.category === "special" ? "특수" : mData.category === "status" ? "변화" : "물리")
+        : (mData.category === "special" ? "SPEC" : mData.category === "status" ? "STAT" : "PHYS");
+      const catBadgeW = isKo ? 28 : 32;
+      const catBadgeX = badgeX - catBadgeW - 4;
+      ctx.fillStyle = catColor;
+      ctx.beginPath();
+      ctx.roundRect(catBadgeX, badgeY, catBadgeW, badgeH, 3);
+      ctx.fill();
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillText(catLabel, catBadgeX + catBadgeW / 2, badgeY + badgeH / 2 + 0.5);
+    }
+
+    // 4. Bottom Line: Power / Accuracy / PP
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.font = "11px DungGeunMo";
+    ctx.fillStyle = "#94A3B8";
+
+    const powStr = isKo ? `위력 ${mData.power !== null ? mData.power : "--"}` : `Pow ${mData.power !== null ? mData.power : "--"}`;
+    const accStr = isKo ? `명중 ${mData.accuracy !== null ? mData.accuracy : "--"}` : `Acc ${mData.accuracy !== null ? mData.accuracy : "--"}`;
+    ctx.fillText(`${powStr}  ${accStr}`, cX + 10, cY + 33);
+
+    // PP on bottom right (Default: White, Low: Yellow, Almost empty/0: Red)
+    const curPp = (movePps && movePps[i] !== undefined) ? movePps[i] : mData.pp;
+    const maxPp = mData.pp;
+    const ppRatio = maxPp > 0 ? (curPp / maxPp) : 1;
+    const ppColor = (curPp === 0 || ppRatio <= 0.15)
+      ? "#EF4444" // 빨간색 (거의 없거나 0)
+      : ppRatio <= 0.4
+      ? "#F59E0B" // 노란색 (부족할 때)
+      : "#FFFFFF"; // 흰색 (기본)
+
+    ctx.textAlign = "right";
+    ctx.font = "bold 11px DungGeunMo";
+    ctx.fillStyle = ppColor;
+    ctx.fillText(`PP ${curPp}/${maxPp}`, cX + colW - 8, cY + 33);
+  }
+}
+
+  // 8. Bottom Dialogue & Command Box (Full Width 100%: x 0, y 270, w 560, h 110)
+  const boxY = 270;
+  const boxH = height - boxY;
+  ctx.fillStyle = "#131924";
+  ctx.fillRect(0, boxY, width, boxH);
+
+  if (battle.phase !== "FIGHT") {
+    // Top Accent Border Line
+    ctx.strokeStyle = battle.phase === "VICTORY" ? "#22C55E" : battle.phase === "DEFEAT" ? "#EF4444" : "#0D9488";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(0, boxY);
+    ctx.lineTo(width, boxY);
+    ctx.stroke();
+
+    // Subtle Inner Highlight Line
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, boxY + 2);
+    ctx.lineTo(width, boxY + 2);
+    ctx.stroke();
+  }
+
+  if (battle.phase === "FIGHT") {
+    // ⚔️ Render 2x2 Battle Move Cards Grid during FIGHT phase
+    drawBattleFightMovesGrid(ctx, playerMon, isKo, pbAssets.categories);
+  } else {
+    // Dialogue Text
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.font = "bold 15px DungGeunMo";
+    ctx.fillStyle = "#FFFFFF";
+
+    const pDisplayName = getPokemonDisplayName(playerMon, isKo);
+    const defaultDialogue = isKo
+      ? `${pDisplayName}(은)는 무엇을 할까?`
+      : `What will ${pDisplayName} do?`;
+    const dialogueLines = (battle.dialogueText || defaultDialogue).split("\n");
+
+    dialogueLines.slice(0, 3).forEach((line: string, lIdx: number) => {
+      ctx.fillText(line, 24, boxY + 16 + lIdx * 25);
+    });
+  }
+
+  // In-Game Message Modal overlay
+  if (options.inGameMessage) {
+    drawInGameMessageBox(ctx, width, height, options.inGameMessage, isKo);
+  }
+
+  return canvas.toBuffer("image/png");
+}
+

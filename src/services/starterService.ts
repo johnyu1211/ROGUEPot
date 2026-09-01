@@ -16,7 +16,7 @@ export interface UserStarterProgress {
   caughtCount: number;
 }
 
-// 1~9 Gen Default Starters (Grass, Fire, Water trios - 27 Pokemon)
+// 1~9 Gen Default Starters (Grass, Fire, Water trios + Sunkern - 28 Pokemon)
 const DEFAULT_STARTER_SPECIES = new Set([
   "bulbasaur", "charmander", "squirtle",
   "chikorita", "cyndaquil", "totodile",
@@ -27,11 +27,13 @@ const DEFAULT_STARTER_SPECIES = new Set([
   "rowlet", "litten", "popplio",
   "grookey", "scorbunny", "sobble",
   "sprigatito", "fuecoco", "quaxly",
+  "sunkern", // 해너츠: 최약체 포켓몬 (종족값 180 / 테스트용 모든 기술 완벽 해금)
+  "testsubject12", // 테스트용 흰색 메타몽 (전 기술 습득 가능)
 ]);
 
 /**
  * Initializes and fetches all starter progress for a user.
- * Automatically unlocks the 27 default starters if not already initialized.
+ * Automatically unlocks default starters if not already initialized.
  */
 export function getUserStarters(userId: string): Map<string, UserStarterProgress> {
   const rows = db.prepare(`SELECT * FROM user_starters WHERE user_id = ?`).all(userId) as any[];
@@ -72,11 +74,44 @@ export function getUserStarters(userId: string): Map<string, UserStarterProgress
     )
   `);
 
-  // Test Starter Grants (Gen 1 trio with Shiny Tiers 1, 2, 3)
-  const testTiers: Record<string, { shinyTier: number; hasHA: boolean; passive: boolean }> = {
+  // Test Starter Grants (Gen 1 trio + Sunkern with all moves unlocked)
+  const testTiers: Record<string, { shinyTier: number; hasHA: boolean; passive: boolean; eggMoves?: string[] }> = {
     bulbasaur: { shinyTier: 3, hasHA: true, passive: true }, // Tier 3 Red Shiny (+3 Luck)
     charmander: { shinyTier: 2, hasHA: true, passive: true }, // Tier 2 Blue Shiny (+2 Luck)
     squirtle: { shinyTier: 1, hasHA: true, passive: true }, // Tier 1 Yellow Shiny (+1 Luck)
+    sunkern: {
+      shinyTier: 3,
+      hasHA: true,
+      passive: true,
+      eggMoves: [
+        "Fiery Dance",
+        "Earth Power",
+        "Weather Ball",
+        "Strength Sap",
+        "Giga Drain",
+        "Leaf Storm",
+        "Synthesis"
+      ]
+    },
+    testsubject12: {
+      shinyTier: 3,
+      hasHA: true,
+      passive: true,
+      eggMoves: [
+        "Transform",
+        "Metronome",
+        "Substitute",
+        "Recover",
+        "Judgment",
+        "Spore",
+        "V-create",
+        "Dragon Dance",
+        "Geomancy",
+        "Astral Barrage",
+        "Close Combat",
+        "Oblivion Wing"
+      ]
+    },
   };
 
   const tx = db.transaction(() => {
@@ -87,6 +122,7 @@ export function getUserStarters(userId: string): Map<string, UserStarterProgress
       const initialShiny = testGrant ? testGrant.shinyTier : 0;
       const initialHA = testGrant ? 1 : 0;
       const initialPassive = testGrant ? 1 : 0;
+      const initialEggMoves = testGrant?.eggMoves ? JSON.stringify(testGrant.eggMoves) : "[]";
 
       if (!progressMap.has(entry.speciesId)) {
         insertStmt.run(
@@ -99,7 +135,7 @@ export function getUserStarters(userId: string): Map<string, UserStarterProgress
           initialPassive,
           0, // cost_reduction_count
           50, // candies
-          "[]",
+          initialEggMoves,
           0, // hatched_count
           0, // caught_count
           now,
@@ -116,23 +152,27 @@ export function getUserStarters(userId: string): Map<string, UserStarterProgress
           passiveUnlocked: Boolean(initialPassive),
           costReductionCount: 0,
           candies: 50,
-          eggMoves: [],
+          eggMoves: testGrant?.eggMoves ? [...testGrant.eggMoves] : [],
           hatchedCount: 0,
           caughtCount: 0,
         });
       } else if (testGrant) {
         // Upgrade existing DB record if lower than test grant
         const current = progressMap.get(entry.speciesId)!;
-        if (current.shinyTier < testGrant.shinyTier || !current.hasHiddenAbility || !current.passiveUnlocked) {
+        const needsEggMovesUpdate = Boolean(testGrant.eggMoves && (!current.eggMoves || current.eggMoves.length < testGrant.eggMoves.length));
+        if (current.shinyTier < testGrant.shinyTier || !current.hasHiddenAbility || !current.passiveUnlocked || !current.isUnlocked || needsEggMovesUpdate) {
+          const updatedEggMoves = testGrant.eggMoves || current.eggMoves;
           db.prepare(`
             UPDATE user_starters
-            SET shiny_tier = ?, has_hidden_ability = 1, passive_unlocked = 1, candies = MAX(candies, 50), updated_at = ?
+            SET is_unlocked = 1, shiny_tier = MAX(shiny_tier, ?), has_hidden_ability = 1, passive_unlocked = 1, egg_moves = ?, candies = MAX(candies, 50), updated_at = ?
             WHERE user_id = ? AND species_id = ?
-          `).run(testGrant.shinyTier, now, userId, entry.speciesId);
+          `).run(testGrant.shinyTier, JSON.stringify(updatedEggMoves), now, userId, entry.speciesId);
 
-          current.shinyTier = testGrant.shinyTier;
+          current.isUnlocked = true;
+          current.shinyTier = Math.max(current.shinyTier, testGrant.shinyTier);
           current.hasHiddenAbility = true;
           current.passiveUnlocked = true;
+          current.eggMoves = updatedEggMoves;
           current.candies = Math.max(current.candies, 50);
         }
       }
@@ -245,6 +285,24 @@ export function unlockPassiveAbility(userId: string, speciesId: string, candyCos
   db.prepare(`
     UPDATE user_starters
     SET passive_unlocked = 1, candies = candies - ?, updated_at = ?
+    WHERE user_id = ? AND species_id = ?
+  `).run(candyCost, new Date().toISOString(), userId, speciesId);
+
+  return true;
+}
+
+/**
+ * Permanently reduces starter cost by 1C using candies (max 2 times)
+ */
+export function reduceStarterCost(userId: string, speciesId: string, candyCost: number): boolean {
+  const current = getUserStarter(userId, speciesId);
+  if (!current || current.costReductionCount >= 2 || current.candies < candyCost) {
+    return false;
+  }
+
+  db.prepare(`
+    UPDATE user_starters
+    SET cost_reduction_count = cost_reduction_count + 1, candies = candies - ?, updated_at = ?
     WHERE user_id = ? AND species_id = ?
   `).run(candyCost, new Date().toISOString(), userId, speciesId);
 

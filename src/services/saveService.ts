@@ -6,12 +6,19 @@ initDatabase();
 export interface PartyPokemon {
   speciesId: string;
   name: string;
+  nameKo?: string;
+  nameEn?: string;
   nickname?: string;
   level: number;
   hp: number;
   maxHp: number;
   moves?: string[];
   ability?: string;
+  passiveAbility?: string;
+  useHiddenAbility?: boolean;
+  usePassive?: boolean;
+  isShiny?: boolean;
+  shinyTier?: number;
   nature?: string;
   ivs?: Record<string, number>;
   heldItems?: string[];
@@ -279,6 +286,40 @@ class SaveService {
   public setActiveSlot(userId: string, slotId: number): void {
     const now = new Date().toISOString();
     db.prepare("UPDATE users SET active_slot_id = ?, updated_at = ? WHERE user_id = ?").run(slotId, now, userId);
+  }
+
+  public updateSlot(userId: string, slotId: number, data: Partial<GameSlot>): void {
+    const profile = this.getProfile(userId);
+    const existing = profile.slots[slotId];
+    if (!existing) return;
+
+    const now = new Date().toISOString();
+    const updatedWave = data.wave !== undefined ? data.wave : existing.wave;
+    const updatedBiome = data.biome !== undefined ? data.biome : existing.biome;
+    const updatedParty = data.party !== undefined ? data.party : existing.party;
+    const updatedItems = data.items !== undefined ? data.items : existing.items;
+    const updatedMoney = data.money !== undefined ? data.money : existing.money;
+    const updatedScore = data.score !== undefined ? data.score : existing.score;
+
+    db.prepare(`
+      UPDATE game_slots
+      SET wave = ?, biome = ?, party = ?, items = ?, money = ?, score = ?, updated_at = ?
+      WHERE user_id = ? AND slot_id = ?
+    `).run(
+      updatedWave,
+      updatedBiome,
+      JSON.stringify(updatedParty),
+      JSON.stringify(updatedItems),
+      updatedMoney,
+      updatedScore,
+      now,
+      userId,
+      slotId
+    );
+
+    if (updatedWave > profile.highestWave) {
+      db.prepare("UPDATE users SET highest_wave = ?, updated_at = ? WHERE user_id = ?").run(updatedWave, now, userId);
+    }
   }
 
   public addBagPokemon(userId: string, pokemon: PartyPokemon): { success: boolean; messageKo: string; messageEn: string } {
