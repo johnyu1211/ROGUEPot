@@ -25,7 +25,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 35,
     "category": "physical",
-    "description": "긴 꼬리나 손 등을 사용하여 상대를 때려서 공격한다."
+    "description": "긴 꼬리나 손 등을 사용하여 상대를 때려서 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "karate-chop": {
     "id": 2,
@@ -36,7 +37,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 25,
     "category": "physical",
-    "description": "날카로운 당수로 상대를 때려서 공격한다. 급소에 맞기 쉽다."
+    "description": "날카로운 당수로 상대를 때려서 공격한다. 급소에 맞기 쉽다.",
+    "descriptionEn": "Has a higher chance for a critical hit."
   },
   "double-slap": {
     "id": 3,
@@ -47,7 +49,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 10,
     "category": "physical",
-    "description": "연속 뺨치기로 상대를 때려서 공격한다. 2-5회 동안 연속으로 쓴다."
+    "description": "연속 뺨치기로 상대를 때려서 공격한다. 2-5회 동안 연속으로 쓴다.",
+    "descriptionEn": "Hits two to five times. Has a 35% chance to hit two or three times and a 15% chance to hit four or five times. If one of the hits breaks the target's substitute, it will take damage for the remaining hits. If the user has the Skill Link Ability, this move will always hit five times."
   },
   "comet-punch": {
     "id": 4,
@@ -58,7 +61,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 15,
     "category": "physical",
-    "description": "노도 같은 펀치로 상대를 세게 때려서 공격한다. 2-5회 동안 연속으로 쓴다."
+    "description": "노도 같은 펀치로 상대를 세게 때려서 공격한다. 2-5회 동안 연속으로 쓴다.",
+    "descriptionEn": "Hits two to five times. Has a 35% chance to hit two or three times and a 15% chance to hit four or five times. If one of the hits breaks the target's substitute, it will take damage for the remaining hits. If the user has the Skill Link Ability, this move will always hit five times."
   },
   "mega-punch": {
     "id": 5,
@@ -69,7 +73,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 20,
     "category": "physical",
-    "description": "힘을 담은 펀치로 상대를 공격한다."
+    "description": "힘을 담은 펀치로 상대를 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "pay-day": {
     "id": 6,
@@ -80,7 +85,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "상대의 몸에 돈을 세게 던져서 공격한다. 배틀 후에 돈을 받을 수 있다."
+    "description": "상대의 몸에 돈을 세게 던져서 공격한다. 배틀 후에 돈을 받을 수 있다.",
+    "descriptionEn": "No additional effect."
   },
   "fire-punch": {
     "id": 7,
@@ -91,7 +97,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "불꽃을 담은 펀치로 상대를 공격한다. 화상 상태로 만들 때가 있다."
+    "description": "불꽃을 담은 펀치로 상대를 공격한다. 화상 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 10% chance to burn the target."
   },
   "ice-punch": {
     "id": 8,
@@ -102,7 +109,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "냉기를 담은 펀치로 상대를 공격한다. 얼음 상태로 만들 때가 있다."
+    "description": "냉기를 담은 펀치로 상대를 공격한다. 얼음 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 10% chance to freeze the target."
   },
   "thunder-punch": {
     "id": 9,
@@ -113,7 +121,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "전격을 담은 펀치로 상대를 공격한다. 마비 상태로 만들 때가 있다."
+    "description": "전격을 담은 펀치로 상대를 공격한다. 마비 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 10% chance to paralyze the target."
   },
   "scratch": {
     "id": 10,
@@ -124,7 +133,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 35,
     "category": "physical",
-    "description": "단단하고 뾰족한 날카로운 손톱으로 상대를 할퀴어서 공격한다."
+    "description": "단단하고 뾰족한 날카로운 손톱으로 상대를 할퀴어서 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "vice-grip": {
     "id": 11,
@@ -135,7 +145,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 30,
     "category": "physical",
-    "description": "상대를 양쪽에서 집어서 데미지를 준다."
+    "description": "상대를 양쪽에서 집어서 데미지를 준다.",
+    "descriptionEn": "No additional effect."
   },
   "guillotine": {
     "id": 12,
@@ -146,7 +157,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 30,
     "pp": 5,
     "category": "physical",
-    "description": "큰 집게로 상대를 베어 갈라 공격한다. 맞으면 일격에 기절한다."
+    "description": "큰 집게로 상대를 베어 갈라 공격한다. 맞으면 일격에 기절한다.",
+    "descriptionEn": "Deals damage to the target equal to the target's maximum HP. Ignores accuracy and evasiveness modifiers. This attack's accuracy is equal to (user's level - target's level + 30)%, and fails if the target is at a higher level. Pokemon with the Sturdy Ability are immune."
   },
   "razor-wind": {
     "id": 13,
@@ -157,7 +169,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "바람의 칼날을 만들어 2턴째에 상대를 공격한다. 급소에 맞기 쉽다."
+    "description": "바람의 칼날을 만들어 2턴째에 상대를 공격한다. 급소에 맞기 쉽다.",
+    "descriptionEn": "Has a higher chance for a critical hit. This attack charges on the first turn and executes on the second. If the user is holding a Power Herb, the move completes in one turn."
   },
   "swords-dance": {
     "id": 14,
@@ -168,7 +181,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "싸움의 춤을 격렬하게 추며 기세를 높인다. 자신의 공격을 크게 올린다."
+    "description": "싸움의 춤을 격렬하게 추며 기세를 높인다. 자신의 공격을 크게 올린다.",
+    "descriptionEn": "Raises the user's Attack by 2 stages."
   },
   "cut": {
     "id": 15,
@@ -179,7 +193,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 30,
     "category": "physical",
-    "description": "낫이나 발톱 등으로 상대를 베어 공격한다. 가느다란 나무도 자를 수 있다."
+    "description": "낫이나 발톱 등으로 상대를 베어 공격한다. 가느다란 나무도 자를 수 있다.",
+    "descriptionEn": "No additional effect."
   },
   "gust": {
     "id": 16,
@@ -190,7 +205,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 35,
     "category": "special",
-    "description": "날개로 일으킨 격한 바람을 상대에게 부딪쳐서 공격한다."
+    "description": "날개로 일으킨 격한 바람을 상대에게 부딪쳐서 공격한다.",
+    "descriptionEn": "Power doubles if the target is using Bounce, Fly, or Sky Drop, or is under the effect of Sky Drop."
   },
   "wing-attack": {
     "id": 17,
@@ -201,7 +217,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 35,
     "category": "physical",
-    "description": "크게 펼친 훌륭한 날개를 상대에게 부딪쳐서 공격한다."
+    "description": "크게 펼친 훌륭한 날개를 상대에게 부딪쳐서 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "whirlwind": {
     "id": 18,
@@ -212,7 +229,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "상대를 날려버려서 교대할 포켓몬을 끌어낸다. 야생의 경우에는 배틀이 끝난다."
+    "description": "상대를 날려버려서 교대할 포켓몬을 끌어낸다. 야생의 경우에는 배틀이 끝난다.",
+    "descriptionEn": "The target is forced to switch out and be replaced with a random unfainted ally. Fails if the target is the last unfainted Pokemon in its party, or if the target used Ingrain previously or has the Suction Cups Ability."
   },
   "fly": {
     "id": 19,
@@ -223,7 +241,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 15,
     "category": "physical",
-    "description": "1턴째에 하늘을 날아 2턴째에 상대를 공격한다. 알고 있는 도시로 날아갈 수 있다."
+    "description": "1턴째에 하늘을 날아 2턴째에 상대를 공격한다. 알고 있는 도시로 날아갈 수 있다.",
+    "descriptionEn": "This attack charges on the first turn and executes on the second. On the first turn, the user avoids all attacks other than Gust, Hurricane, Sky Uppercut, Smack Down, Thousand Arrows, Thunder, and Twister, and Gust and Twister have doubled power when used against it. If the user is holding a Power Herb, the move completes in one turn."
   },
   "bind": {
     "id": 20,
@@ -234,7 +253,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 20,
     "category": "physical",
-    "description": "긴 몸이나 덩굴 등을 써서 4-5턴 동안 상대를 조여 공격한다."
+    "description": "긴 몸이나 덩굴 등을 써서 4-5턴 동안 상대를 조여 공격한다.",
+    "descriptionEn": "Prevents the target from switching for four or five turns (seven turns if the user is holding Grip Claw). Causes damage to the target equal to 1/8 of its maximum HP (1/6 if the user is holding Binding Band), rounded down, at the end of each turn during effect. The target can still switch out if it is holding Shed Shell or uses Baton Pass, Flip Turn, Parting Shot, Shed Tail, Teleport, U-turn, or Volt Switch. The effect ends if either the user or the target leaves the field, or if the target uses Mortal Spin, Rapid Spin, or Substitute successfully. This effect is not stackable or reset by using this or another binding move."
   },
   "slam": {
     "id": 21,
@@ -245,7 +265,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 75,
     "pp": 20,
     "category": "physical",
-    "description": "긴 꼬리나 덩굴 등을 사용해 상대를 힘껏 쳐서 공격한다."
+    "description": "긴 꼬리나 덩굴 등을 사용해 상대를 힘껏 쳐서 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "vine-whip": {
     "id": 22,
@@ -256,7 +277,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 25,
     "category": "physical",
-    "description": "채찍처럼 휘어지는 가늘고 긴 덩굴로 상대를 힘껏 쳐서 공격한다."
+    "description": "채찍처럼 휘어지는 가늘고 긴 덩굴로 상대를 힘껏 쳐서 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "stomp": {
     "id": 23,
@@ -267,7 +289,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "큰 발로 상대를 짓밟아서 공격한다. 상대를 풀죽게 만들 때가 있다."
+    "description": "큰 발로 상대를 짓밟아서 공격한다. 상대를 풀죽게 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to make the target flinch. Damage doubles and no accuracy check is done if the target has used Minimize while active."
   },
   "double-kick": {
     "id": 24,
@@ -278,7 +301,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 30,
     "category": "physical",
-    "description": "2개의 다리로 상대를 걷어차서 공격한다. 2회 연속으로 데미지를 준다."
+    "description": "2개의 다리로 상대를 걷어차서 공격한다. 2회 연속으로 데미지를 준다.",
+    "descriptionEn": "Hits twice. If the first hit breaks the target's substitute, it will take damage for the second hit."
   },
   "mega-kick": {
     "id": 25,
@@ -289,7 +313,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 75,
     "pp": 5,
     "category": "physical",
-    "description": "굉장한 힘을 담은 킥으로 상대를 걷어차서 공격한다."
+    "description": "굉장한 힘을 담은 킥으로 상대를 걷어차서 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "jump-kick": {
     "id": 26,
@@ -300,7 +325,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 10,
     "category": "physical",
-    "description": "높이 점프해서 킥으로 상대를 공격한다. 빗나가면 자신이 데미지를 입는다."
+    "description": "높이 점프해서 킥으로 상대를 공격한다. 빗나가면 자신이 데미지를 입는다.",
+    "descriptionEn": "If this attack is not successful, the user loses half of its maximum HP, rounded down, as crash damage. Pokemon with the Magic Guard Ability are unaffected by crash damage."
   },
   "rolling-kick": {
     "id": 27,
@@ -311,7 +337,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 15,
     "category": "physical",
-    "description": "몸을 재빨리 회전시키며 걷어차서 공격한다. 상대를 풀죽게 만들 때가 있다."
+    "description": "몸을 재빨리 회전시키며 걷어차서 공격한다. 상대를 풀죽게 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to make the target flinch."
   },
   "sand-attack": {
     "id": 28,
@@ -322,7 +349,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "status",
-    "description": "상대의 얼굴에 모래를 뿌려서 명중률을 떨어뜨린다."
+    "description": "상대의 얼굴에 모래를 뿌려서 명중률을 떨어뜨린다.",
+    "descriptionEn": "Lowers the target's accuracy by 1 stage."
   },
   "headbutt": {
     "id": 29,
@@ -333,7 +361,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "머리를 내밀어 곧장 돌진하여 공격한다. 상대를 풀죽게 만들 때가 있다."
+    "description": "머리를 내밀어 곧장 돌진하여 공격한다. 상대를 풀죽게 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to make the target flinch."
   },
   "horn-attack": {
     "id": 30,
@@ -344,7 +373,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 25,
     "category": "physical",
-    "description": "날카롭고 뾰족한 뿔로 상대를 공격한다."
+    "description": "날카롭고 뾰족한 뿔로 상대를 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "fury-attack": {
     "id": 31,
@@ -355,7 +385,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 20,
     "category": "physical",
-    "description": "뿔이나 부리로 상대를 찔러서 공격한다. 2-5회 동안 연속으로 쓴다."
+    "description": "뿔이나 부리로 상대를 찔러서 공격한다. 2-5회 동안 연속으로 쓴다.",
+    "descriptionEn": "Hits two to five times. Has a 35% chance to hit two or three times and a 15% chance to hit four or five times. If one of the hits breaks the target's substitute, it will take damage for the remaining hits. If the user has the Skill Link Ability, this move will always hit five times. If the user is holding Loaded Dice, this move will hit 4-5 times."
   },
   "horn-drill": {
     "id": 32,
@@ -366,7 +397,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 30,
     "pp": 5,
     "category": "physical",
-    "description": "회전하는 뿔을 상대에게 꿰찔러서 공격한다. 맞으면 일격에 기절한다."
+    "description": "회전하는 뿔을 상대에게 꿰찔러서 공격한다. 맞으면 일격에 기절한다.",
+    "descriptionEn": "Deals damage to the target equal to the target's maximum HP. Ignores accuracy and evasiveness modifiers. This attack's accuracy is equal to (user's level - target's level + 30)%, and fails if the target is at a higher level. Pokemon with the Sturdy Ability are immune."
   },
   "tackle": {
     "id": 33,
@@ -377,7 +409,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 35,
     "category": "physical",
-    "description": "상대를 향해서 몸 전체를 부딪쳐가며 공격한다."
+    "description": "상대를 향해서 몸 전체를 부딪쳐가며 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "body-slam": {
     "id": 34,
@@ -388,7 +421,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "몸 전체로 상대를 덮쳐 눌러 공격한다. 마비 상태로 만들 때가 있다."
+    "description": "몸 전체로 상대를 덮쳐 눌러 공격한다. 마비 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to paralyze the target. Damage doubles and no accuracy check is done if the target has used Minimize while active."
   },
   "wrap": {
     "id": 35,
@@ -399,7 +433,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 20,
     "category": "physical",
-    "description": "긴 몸이나 덩굴 등을 사용해 4-5턴 동안 상대를 휘감아 공격한다."
+    "description": "긴 몸이나 덩굴 등을 사용해 4-5턴 동안 상대를 휘감아 공격한다.",
+    "descriptionEn": "Prevents the target from switching for four or five turns (seven turns if the user is holding Grip Claw). Causes damage to the target equal to 1/8 of its maximum HP (1/6 if the user is holding Binding Band), rounded down, at the end of each turn during effect. The target can still switch out if it is holding Shed Shell or uses Baton Pass, Flip Turn, Parting Shot, Shed Tail, Teleport, U-turn, or Volt Switch. The effect ends if either the user or the target leaves the field, or if the target uses Mortal Spin, Rapid Spin, or Substitute successfully. This effect is not stackable or reset by using this or another binding move."
   },
   "take-down": {
     "id": 36,
@@ -410,7 +445,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 20,
     "category": "physical",
-    "description": "굉장한 기세로 상대에게 부딪쳐 공격한다. 자신도 조금 데미지를 입는다."
+    "description": "굉장한 기세로 상대에게 부딪쳐 공격한다. 자신도 조금 데미지를 입는다.",
+    "descriptionEn": "If the target lost HP, the user takes recoil damage equal to 1/4 the HP lost by the target, rounded half up, but not less than 1 HP."
   },
   "thrash": {
     "id": 37,
@@ -421,7 +457,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "2-3턴 동안 마구 난동 부려서 상대를 공격한다. 난동 부린 뒤에는 혼란에 빠진다."
+    "description": "2-3턴 동안 마구 난동 부려서 상대를 공격한다. 난동 부린 뒤에는 혼란에 빠진다.",
+    "descriptionEn": "The user spends two or three turns locked into this move and becomes confused immediately after its move on the last turn of the effect if it is not already. This move targets an opposing Pokemon at random on each turn. If the user is prevented from moving, is asleep at the beginning of a turn, or the attack is not successful against the target on the first turn of the effect or the second turn of a three-turn effect, the effect ends without causing confusion. If this move is called by Sleep Talk and the user is asleep, the move is used for one turn and does not confuse the user."
   },
   "double-edge": {
     "id": 38,
@@ -432,7 +469,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "목숨을 걸고 상대에게 돌진하여 공격을 한다. 자신도 상당한 데미지를 입는다."
+    "description": "목숨을 걸고 상대에게 돌진하여 공격을 한다. 자신도 상당한 데미지를 입는다.",
+    "descriptionEn": "If the target lost HP, the user takes recoil damage equal to 33% the HP lost by the target, rounded half up, but not less than 1 HP."
   },
   "tail-whip": {
     "id": 39,
@@ -443,7 +481,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 30,
     "category": "status",
-    "description": "꼬리를 좌우로 귀엽게 흔들어 방심을 유도한다. 상대의 방어를 떨어뜨린다."
+    "description": "꼬리를 좌우로 귀엽게 흔들어 방심을 유도한다. 상대의 방어를 떨어뜨린다.",
+    "descriptionEn": "Lowers the target's Defense by 1 stage."
   },
   "poison-sting": {
     "id": 40,
@@ -454,7 +493,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 35,
     "category": "physical",
-    "description": "독이 있는 침을 상대에게 꿰찔러서 공격한다. 독 상태로 만들 때가 있다."
+    "description": "독이 있는 침을 상대에게 꿰찔러서 공격한다. 독 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to poison the target."
   },
   "twineedle": {
     "id": 41,
@@ -465,7 +505,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "2개의 침을 상대에게 꿰찔러 2회 연속으로 데미지를 준다. 독 상태로 만들 때가 있다."
+    "description": "2개의 침을 상대에게 꿰찔러 2회 연속으로 데미지를 준다. 독 상태로 만들 때가 있다.",
+    "descriptionEn": "Hits twice, with each hit having a 20% chance to poison the target. If the first hit breaks the target's substitute, it will take damage for the second hit."
   },
   "pin-missile": {
     "id": 42,
@@ -476,7 +517,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 20,
     "category": "physical",
-    "description": "날카로운 침을 상대에게 발사해서 공격한다. 2-5회 동안 연속으로 쓴다."
+    "description": "날카로운 침을 상대에게 발사해서 공격한다. 2-5회 동안 연속으로 쓴다.",
+    "descriptionEn": "Hits two to five times. Has a 35% chance to hit two or three times and a 15% chance to hit four or five times. If one of the hits breaks the target's substitute, it will take damage for the remaining hits. If the user has the Skill Link Ability, this move will always hit five times. If the user is holding Loaded Dice, this move will hit 4-5 times."
   },
   "leer": {
     "id": 43,
@@ -487,7 +529,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 30,
     "category": "status",
-    "description": "날카로운 눈초리로 겁을 주어 상대의 방어를 떨어뜨린다."
+    "description": "날카로운 눈초리로 겁을 주어 상대의 방어를 떨어뜨린다.",
+    "descriptionEn": "Lowers the target's Defense by 1 stage."
   },
   "bite": {
     "id": 44,
@@ -498,7 +541,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 25,
     "category": "physical",
-    "description": "날카롭고 뾰족한 이빨로 물어서 공격한다. 상대를 풀죽게 만들 때가 있다."
+    "description": "날카롭고 뾰족한 이빨로 물어서 공격한다. 상대를 풀죽게 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to make the target flinch."
   },
   "growl": {
     "id": 45,
@@ -509,7 +553,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 40,
     "category": "status",
-    "description": "귀여운 울음소리를 들려주고 관심을 끌어 방심한 사이에 상대의 공격을 떨어뜨린다."
+    "description": "귀여운 울음소리를 들려주고 관심을 끌어 방심한 사이에 상대의 공격을 떨어뜨린다.",
+    "descriptionEn": "Lowers the target's Attack by 1 stage."
   },
   "roar": {
     "id": 46,
@@ -520,7 +565,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "상대를 도망가게 해서 교대할 포켓몬을 끌어낸다. 야생의 경우에는 배틀이 끝난다."
+    "description": "상대를 도망가게 해서 교대할 포켓몬을 끌어낸다. 야생의 경우에는 배틀이 끝난다.",
+    "descriptionEn": "The target is forced to switch out and be replaced with a random unfainted ally. Fails if the target is the last unfainted Pokemon in its party, or if the target used Ingrain previously or has the Suction Cups Ability."
   },
   "sing": {
     "id": 47,
@@ -531,7 +577,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 55,
     "pp": 15,
     "category": "status",
-    "description": "기분 좋은 예쁜 노랫소리를 들려주고 상대를 잠듦 상태로 만든다."
+    "description": "기분 좋은 예쁜 노랫소리를 들려주고 상대를 잠듦 상태로 만든다.",
+    "descriptionEn": "Causes the target to fall asleep."
   },
   "supersonic": {
     "id": 48,
@@ -542,7 +589,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 55,
     "pp": 20,
     "category": "status",
-    "description": "특수한 음파를 몸에서 발산하여 상대를 혼란시킨다."
+    "description": "특수한 음파를 몸에서 발산하여 상대를 혼란시킨다.",
+    "descriptionEn": "Causes the target to become confused."
   },
   "sonic-boom": {
     "id": 49,
@@ -553,7 +601,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 20,
     "category": "special",
-    "description": "충격파를 상대에 부딪쳐서 공격한다. 언제나 20의 데미지를 준다."
+    "description": "충격파를 상대에 부딪쳐서 공격한다. 언제나 20의 데미지를 준다.",
+    "descriptionEn": "Deals 20 HP of damage to the target."
   },
   "disable": {
     "id": 50,
@@ -564,7 +613,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "status",
-    "description": "상대의 움직임을 막아 바로 전에 쓴 기술을 4턴 동안 사용할 수 없게 만든다."
+    "description": "상대의 움직임을 막아 바로 전에 쓴 기술을 4턴 동안 사용할 수 없게 만든다.",
+    "descriptionEn": "For 4 turns, the target's last move used becomes disabled. Fails if one of the target's moves is already disabled, if the target has not made a move, if the target no longer knows the move, or if the move was a Max or G-Max Move."
   },
   "acid": {
     "id": 51,
@@ -575,7 +625,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 30,
     "category": "special",
-    "description": "강한 산을 상대에게 끼얹어 공격한다. 상대의 특수방어를 떨어뜨릴 때가 있다."
+    "description": "강한 산을 상대에게 끼얹어 공격한다. 상대의 특수방어를 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 10% chance to lower the target's Special Defense by 1 stage."
   },
   "ember": {
     "id": 52,
@@ -586,7 +637,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 25,
     "category": "special",
-    "description": "작은 불꽃을 상대에게 발사하여 공격한다. 화상 상태로 만들 때가 있다."
+    "description": "작은 불꽃을 상대에게 발사하여 공격한다. 화상 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 10% chance to burn the target."
   },
   "flamethrower": {
     "id": 53,
@@ -597,7 +649,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "special",
-    "description": "세찬 불꽃을 상대에게 발사하여 공격한다. 화상 상태로 만들 때가 있다."
+    "description": "세찬 불꽃을 상대에게 발사하여 공격한다. 화상 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 10% chance to burn the target."
   },
   "mist": {
     "id": 54,
@@ -608,7 +661,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 30,
     "category": "status",
-    "description": "하얀 안개로 몸을 덮는다. 5턴 동안 상대에 의해 능력이 떨어지지 않게 된다."
+    "description": "하얀 안개로 몸을 덮는다. 5턴 동안 상대에 의해 능력이 떨어지지 않게 된다.",
+    "descriptionEn": "For 5 turns, the user and its party members are protected from having their stat stages lowered by other Pokemon. Fails if the effect is already active on the user's side."
   },
   "water-gun": {
     "id": 55,
@@ -619,7 +673,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 25,
     "category": "special",
-    "description": "물을 기세 좋게 상대에게 발사하여 공격한다."
+    "description": "물을 기세 좋게 상대에게 발사하여 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "hydro-pump": {
     "id": 56,
@@ -630,7 +685,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 80,
     "pp": 5,
     "category": "special",
-    "description": "대량의 물을 세찬 기세로 상대에게 발사하여 공격한다."
+    "description": "대량의 물을 세찬 기세로 상대에게 발사하여 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "surf": {
     "id": 57,
@@ -641,7 +697,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "special",
-    "description": "큰 파도로 자신의 주위에 있는 포켓몬을 공격한다. 물 위도 헤엄쳐서 나아간다."
+    "description": "큰 파도로 자신의 주위에 있는 포켓몬을 공격한다. 물 위도 헤엄쳐서 나아간다.",
+    "descriptionEn": "Damage doubles if the target is using Dive."
   },
   "ice-beam": {
     "id": 58,
@@ -652,7 +709,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "냉동빔을 상대에게 발사하여 공격한다. 얼음 상태로 만들 때가 있다."
+    "description": "냉동빔을 상대에게 발사하여 공격한다. 얼음 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 10% chance to freeze the target."
   },
   "blizzard": {
     "id": 59,
@@ -663,7 +721,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 70,
     "pp": 5,
     "category": "special",
-    "description": "세찬 눈보라를 상대에게 내뿜어 공격한다. 얼음 상태로 만들 때가 있다."
+    "description": "세찬 눈보라를 상대에게 내뿜어 공격한다. 얼음 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 10% chance to freeze the target. If the weather is Snow, this move does not check accuracy."
   },
   "psybeam": {
     "id": 60,
@@ -674,7 +733,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "special",
-    "description": "이상한 광선을 상대에게 발사하여 공격한다. 혼란시킬 때가 있다."
+    "description": "이상한 광선을 상대에게 발사하여 공격한다. 혼란시킬 때가 있다.",
+    "descriptionEn": "Has a 10% chance to confuse the target."
   },
   "bubble-beam": {
     "id": 61,
@@ -685,7 +745,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "special",
-    "description": "거품을 기세 좋게 상대에게 발사하여 공격한다. 스피드를 떨어뜨릴 때가 있다."
+    "description": "거품을 기세 좋게 상대에게 발사하여 공격한다. 스피드를 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 10% chance to lower the target's Speed by 1 stage."
   },
   "aurora-beam": {
     "id": 62,
@@ -696,7 +757,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "special",
-    "description": "무지개색의 빔을 상대에게 발사하여 공격한다. 공격을 떨어뜨릴 때가 있다."
+    "description": "무지개색의 빔을 상대에게 발사하여 공격한다. 공격을 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 10% chance to lower the target's Attack by 1 stage."
   },
   "hyper-beam": {
     "id": 63,
@@ -707,7 +769,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 5,
     "category": "special",
-    "description": "강한 광선을 상대에게 발사하여 공격한다. 다음 턴은 움직일 수 없다."
+    "description": "강한 광선을 상대에게 발사하여 공격한다. 다음 턴은 움직일 수 없다.",
+    "descriptionEn": "If this move is successful, the user must recharge on the following turn and cannot select a move."
   },
   "peck": {
     "id": 64,
@@ -718,7 +781,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 35,
     "category": "physical",
-    "description": "날카롭고 뾰족한 부리나 뿔로 상대를 쪼아서 공격한다."
+    "description": "날카롭고 뾰족한 부리나 뿔로 상대를 쪼아서 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "drill-peck": {
     "id": 65,
@@ -729,7 +793,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "회전하면서 뾰족한 부리를 상대에게 꿰찔러 공격한다."
+    "description": "회전하면서 뾰족한 부리를 상대에게 꿰찔러 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "submission": {
     "id": 66,
@@ -740,7 +805,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 80,
     "pp": 20,
     "category": "physical",
-    "description": "땅에 자신과 함께 상대를 내던져 공격한다. 자신도 조금 데미지를 입는다."
+    "description": "땅에 자신과 함께 상대를 내던져 공격한다. 자신도 조금 데미지를 입는다.",
+    "descriptionEn": "If the target lost HP, the user takes recoil damage equal to 1/4 the HP lost by the target, rounded half up, but not less than 1 HP."
   },
   "low-kick": {
     "id": 67,
@@ -751,7 +817,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "발을 강하게 걸고 상대를 넘어뜨려 공격한다. 상대가 무거울수록 위력이 올라간다."
+    "description": "발을 강하게 걸고 상대를 넘어뜨려 공격한다. 상대가 무거울수록 위력이 올라간다.",
+    "descriptionEn": "This move's power is 20 if the target weighs less than 10 kg, 40 if less than 25 kg, 60 if less than 50 kg, 80 if less than 100 kg, 100 if less than 200 kg, and 120 if greater than or equal to 200 kg."
   },
   "counter": {
     "id": 68,
@@ -762,7 +829,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "상대로부터 받은 물리공격의 데미지를 2배로 만들어 같은 상대에게 돌려준다."
+    "description": "상대로부터 받은 물리공격의 데미지를 2배로 만들어 같은 상대에게 돌려준다.",
+    "descriptionEn": "Deals damage to the last opposing Pokemon to hit the user with a physical attack this turn equal to twice the HP lost by the user from that attack. If the user did not lose HP from the attack, this move deals 1 HP of damage instead. If that opposing Pokemon's position is no longer in use and there is another opposing Pokemon on the field, the damage is done to it instead. Only the last hit of a multi-hit attack is counted. Fails if the user was not hit by an opposing Pokemon's physical attack this turn."
   },
   "seismic-toss": {
     "id": 69,
@@ -773,7 +841,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "인력을 사용해 내던진다. 자신의 레벨과 똑같은 데미지를 상대에게 준다."
+    "description": "인력을 사용해 내던진다. 자신의 레벨과 똑같은 데미지를 상대에게 준다.",
+    "descriptionEn": "Deals damage to the target equal to the user's level."
   },
   "strength": {
     "id": 70,
@@ -784,7 +853,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "혼신의 힘으로 상대를 세게 때려서 공격한다. 무거운 돌을 밀 수도 있다."
+    "description": "혼신의 힘으로 상대를 세게 때려서 공격한다. 무거운 돌을 밀 수도 있다.",
+    "descriptionEn": "No additional effect."
   },
   "absorb": {
     "id": 71,
@@ -795,7 +865,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 25,
     "category": "special",
-    "description": "양분을 흡수하여 공격한다. 상대에게 입힌 데미지의 절반에 해당하는 HP를 회복할 수 있다."
+    "description": "양분을 흡수하여 공격한다. 상대에게 입힌 데미지의 절반에 해당하는 HP를 회복할 수 있다.",
+    "descriptionEn": "The user recovers 1/2 the HP lost by the target, rounded half up. If Big Root is held by the user, the HP recovered is 1.3x normal, rounded half down."
   },
   "mega-drain": {
     "id": 72,
@@ -806,7 +877,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "special",
-    "description": "양분을 흡수하여 공격한다. 상대에게 입힌 데미지의 절반에 해당하는 HP를 회복할 수 있다."
+    "description": "양분을 흡수하여 공격한다. 상대에게 입힌 데미지의 절반에 해당하는 HP를 회복할 수 있다.",
+    "descriptionEn": "The user recovers 1/2 the HP lost by the target, rounded half up. If Big Root is held by the user, the HP recovered is 1.3x normal, rounded half down."
   },
   "leech-seed": {
     "id": 73,
@@ -817,7 +889,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "status",
-    "description": "씨가 뿌려진 상대의 HP를 매 턴 조금씩 흡수하여 자신의 HP를 회복한다."
+    "description": "씨가 뿌려진 상대의 HP를 매 턴 조금씩 흡수하여 자신의 HP를 회복한다.",
+    "descriptionEn": "The Pokemon at the user's position steals 1/8 of the target's maximum HP, rounded down, at the end of each turn. If Big Root is held by the recipient, the HP recovered is 1.3x normal, rounded half down. If the target uses Baton Pass, the replacement will continue being leeched. If the target switches out or uses Mortal Spin or Rapid Spin successfully, the effect ends. Grass-type Pokemon are immune to this move on use, but not its effect."
   },
   "growth": {
     "id": 74,
@@ -828,7 +901,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "몸을 일시에 크게 성장시켜 공격과 특수공격을 올린다."
+    "description": "몸을 일시에 크게 성장시켜 공격과 특수공격을 올린다.",
+    "descriptionEn": "Raises the user's Attack and Special Attack by 1 stage. If the weather is Sun or Intense Sun, this move raises the user's Attack and Special Attack by 2 stages. If the user is holding Utility Umbrella, this move will only raise the user's Attack and Special Attack by 1 stage, even if the weather is Sun or Intense Sun."
   },
   "razor-leaf": {
     "id": 75,
@@ -839,7 +913,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 25,
     "category": "physical",
-    "description": "잎사귀를 날려 상대를 베어 공격한다. 급소에 맞기 쉽다."
+    "description": "잎사귀를 날려 상대를 베어 공격한다. 급소에 맞기 쉽다.",
+    "descriptionEn": "Has a higher chance for a critical hit."
   },
   "solar-beam": {
     "id": 76,
@@ -850,7 +925,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "1턴째에 빛을 가득 모아 2턴째에 빛의 다발을 발사하여 공격한다."
+    "description": "1턴째에 빛을 가득 모아 2턴째에 빛의 다발을 발사하여 공격한다.",
+    "descriptionEn": "This attack charges on the first turn and executes on the second. Power is halved if the weather is Heavy Rain, Rain, Sandstorm, or Snow and the user is not holding Utility Umbrella. If the user is holding a Power Herb or the weather is Intense Sun or Sun, the move completes in one turn. If the user is holding Utility Umbrella and the weather is Intense Sun or Sun, the move still requires a turn to charge."
   },
   "poison-powder": {
     "id": 77,
@@ -861,7 +937,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 75,
     "pp": 35,
     "category": "status",
-    "description": "독이 있는 가루를 많이 흩뿌려서 상대를 독 상태로 만든다."
+    "description": "독이 있는 가루를 많이 흩뿌려서 상대를 독 상태로 만든다.",
+    "descriptionEn": "Poisons the target."
   },
   "stun-spore": {
     "id": 78,
@@ -872,7 +949,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 75,
     "pp": 30,
     "category": "status",
-    "description": "저리 가루를 많이 흩뿌려서 상대를 마비 상태로 만든다."
+    "description": "저리 가루를 많이 흩뿌려서 상대를 마비 상태로 만든다.",
+    "descriptionEn": "Paralyzes the target."
   },
   "sleep-powder": {
     "id": 79,
@@ -883,7 +961,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 75,
     "pp": 15,
     "category": "status",
-    "description": "잠이 오는 가루를 많이 흩뿌려서 상대를 잠듦 상태로 만든다."
+    "description": "잠이 오는 가루를 많이 흩뿌려서 상대를 잠듦 상태로 만든다.",
+    "descriptionEn": "Causes the target to fall asleep."
   },
   "petal-dance": {
     "id": 80,
@@ -894,7 +973,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "2-3턴 동안 꽃을 흩뿌려서 상대를 공격한다. 흩뿌린 뒤에는 혼란에 빠진다."
+    "description": "2-3턴 동안 꽃을 흩뿌려서 상대를 공격한다. 흩뿌린 뒤에는 혼란에 빠진다.",
+    "descriptionEn": "The user spends two or three turns locked into this move and becomes confused immediately after its move on the last turn of the effect if it is not already. This move targets an opposing Pokemon at random on each turn. If the user is prevented from moving, is asleep at the beginning of a turn, or the attack is not successful against the target on the first turn of the effect or the second turn of a three-turn effect, the effect ends without causing confusion. If this move is called by Sleep Talk and the user is asleep, the move is used for one turn and does not confuse the user."
   },
   "string-shot": {
     "id": 81,
@@ -905,7 +985,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 40,
     "category": "status",
-    "description": "입에서 뿜어낸 실을 휘감아서 상대의 스피드를 크게 떨어뜨린다."
+    "description": "입에서 뿜어낸 실을 휘감아서 상대의 스피드를 크게 떨어뜨린다.",
+    "descriptionEn": "Lowers the target's Speed by 2 stages."
   },
   "dragon-rage": {
     "id": 82,
@@ -916,7 +997,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "분노의 충격파를 상대에게 부딪쳐서 공격한다. 언제나 40의 데미지를 준다."
+    "description": "분노의 충격파를 상대에게 부딪쳐서 공격한다. 언제나 40의 데미지를 준다.",
+    "descriptionEn": "Deals 40 HP of damage to the target."
   },
   "fire-spin": {
     "id": 83,
@@ -927,7 +1009,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 15,
     "category": "special",
-    "description": "세차게 소용돌이치는 불꽃 속에 4-5턴 동안 상대를 가두어 공격한다."
+    "description": "세차게 소용돌이치는 불꽃 속에 4-5턴 동안 상대를 가두어 공격한다.",
+    "descriptionEn": "Prevents the target from switching for four or five turns (seven turns if the user is holding Grip Claw). Causes damage to the target equal to 1/8 of its maximum HP (1/6 if the user is holding Binding Band), rounded down, at the end of each turn during effect. The target can still switch out if it is holding Shed Shell or uses Baton Pass, Flip Turn, Parting Shot, Shed Tail, Teleport, U-turn, or Volt Switch. The effect ends if either the user or the target leaves the field, or if the target uses Mortal Spin, Rapid Spin, or Substitute successfully. This effect is not stackable or reset by using this or another binding move."
   },
   "thunder-shock": {
     "id": 84,
@@ -938,7 +1021,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 30,
     "category": "special",
-    "description": "전기 자극을 상대에게 날려서 공격한다. 마비 상태로 만들 때가 있다."
+    "description": "전기 자극을 상대에게 날려서 공격한다. 마비 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 10% chance to paralyze the target."
   },
   "thunderbolt": {
     "id": 85,
@@ -949,7 +1033,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "special",
-    "description": "강한 전격을 상대에게 날려서 공격한다. 마비 상태로 만들 때가 있다."
+    "description": "강한 전격을 상대에게 날려서 공격한다. 마비 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 10% chance to paralyze the target."
   },
   "thunder-wave": {
     "id": 86,
@@ -960,7 +1045,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 20,
     "category": "status",
-    "description": "약한 전격을 날려서 상대를 마비 상태로 만든다."
+    "description": "약한 전격을 날려서 상대를 마비 상태로 만든다.",
+    "descriptionEn": "Paralyzes the target. This move does not ignore type immunity."
   },
   "thunder": {
     "id": 87,
@@ -971,7 +1057,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 70,
     "pp": 10,
     "category": "special",
-    "description": "강한 번개를 상대에게 떨어뜨려 공격한다. 마비 상태로 만들 때가 있다."
+    "description": "강한 번개를 상대에게 떨어뜨려 공격한다. 마비 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to paralyze the target. This move can hit a target using Bounce, Fly, or Sky Drop, or is under the effect of Sky Drop. If the weather is Heavy Rain or Rain, this move does not check accuracy. If the weather is Intense Sun or Sun, this move's accuracy is 50%. If this move is used against a Pokemon holding Utility Umbrella, this move's accuracy remains at 70%."
   },
   "rock-throw": {
     "id": 88,
@@ -982,7 +1069,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 15,
     "category": "physical",
-    "description": "작은 바위를 들어올려 상대에게 내던져서 공격한다."
+    "description": "작은 바위를 들어올려 상대에게 내던져서 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "earthquake": {
     "id": 89,
@@ -993,7 +1081,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "지진의 충격으로 자신의 주위에 있는 포켓몬을 공격한다."
+    "description": "지진의 충격으로 자신의 주위에 있는 포켓몬을 공격한다.",
+    "descriptionEn": "Damage doubles if the target is using Dig."
   },
   "fissure": {
     "id": 90,
@@ -1004,7 +1093,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 30,
     "pp": 5,
     "category": "physical",
-    "description": "땅이 갈라진 곳에 상대를 떨어뜨려 공격한다. 맞으면 일격에 기절한다."
+    "description": "땅이 갈라진 곳에 상대를 떨어뜨려 공격한다. 맞으면 일격에 기절한다.",
+    "descriptionEn": "Deals damage to the target equal to the target's maximum HP. Ignores accuracy and evasiveness modifiers. This attack's accuracy is equal to (user's level - target's level + 30)%, and fails if the target is at a higher level. Pokemon with the Sturdy Ability are immune."
   },
   "dig": {
     "id": 91,
@@ -1015,7 +1105,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "1턴째에 파고들어 2턴째에 상대를 공격한다. 동굴에서 탈출할 수도 있다."
+    "description": "1턴째에 파고들어 2턴째에 상대를 공격한다. 동굴에서 탈출할 수도 있다.",
+    "descriptionEn": "This attack charges on the first turn and executes on the second. On the first turn, the user avoids all attacks other than Earthquake and Magnitude but takes double damage from them, and is also unaffected by weather. If the user is holding a Power Herb, the move completes in one turn."
   },
   "toxic": {
     "id": 92,
@@ -1026,7 +1117,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "status",
-    "description": "상대를 맹독의 상태로 만든다. 턴이 진행될수록 독의 데미지가 증가한다."
+    "description": "상대를 맹독의 상태로 만든다. 턴이 진행될수록 독의 데미지가 증가한다.",
+    "descriptionEn": "Badly poisons the target. If a Poison-type Pokemon uses this move, the target cannot avoid the attack, even if the target is in the middle of a two-turn move."
   },
   "confusion": {
     "id": 93,
@@ -1037,7 +1129,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 25,
     "category": "special",
-    "description": "약한 염동력을 상대에게 보내어 공격한다. 상대를 혼란시킬 때가 있다."
+    "description": "약한 염동력을 상대에게 보내어 공격한다. 상대를 혼란시킬 때가 있다.",
+    "descriptionEn": "Has a 10% chance to confuse the target."
   },
   "psychic": {
     "id": 94,
@@ -1048,7 +1141,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "강한 염동력을 상대에게 보내어 공격한다. 상대의 특수방어를 떨어뜨릴 때가 있다."
+    "description": "강한 염동력을 상대에게 보내어 공격한다. 상대의 특수방어를 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 10% chance to lower the target's Special Defense by 1 stage."
   },
   "hypnosis": {
     "id": 95,
@@ -1059,7 +1153,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 60,
     "pp": 20,
     "category": "status",
-    "description": "졸음을 유도하는 암시를 걸어서 상대를 잠듦 상태로 만든다."
+    "description": "졸음을 유도하는 암시를 걸어서 상대를 잠듦 상태로 만든다.",
+    "descriptionEn": "Causes the target to fall asleep."
   },
   "meditate": {
     "id": 96,
@@ -1070,7 +1165,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 40,
     "category": "status",
-    "description": "잠들어 있는 힘을 몸속에서 끌어내어 자신의 공격을 올린다."
+    "description": "잠들어 있는 힘을 몸속에서 끌어내어 자신의 공격을 올린다.",
+    "descriptionEn": "Raises the user's Attack by 1 stage."
   },
   "agility": {
     "id": 97,
@@ -1081,7 +1177,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 30,
     "category": "status",
-    "description": "힘을 빼고 몸을 가볍게 해서 고속으로 움직인다. 자신의 스피드를 크게 올린다."
+    "description": "힘을 빼고 몸을 가볍게 해서 고속으로 움직인다. 자신의 스피드를 크게 올린다.",
+    "descriptionEn": "Raises the user's Speed by 2 stages."
   },
   "quick-attack": {
     "id": 98,
@@ -1092,7 +1189,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 30,
     "category": "physical",
-    "description": "눈에 보이지 않는 굉장한 속도로 상대에게 돌진한다. 반드시 선제공격할 수 있다."
+    "description": "눈에 보이지 않는 굉장한 속도로 상대에게 돌진한다. 반드시 선제공격할 수 있다.",
+    "descriptionEn": "No additional effect."
   },
   "rage": {
     "id": 99,
@@ -1103,7 +1201,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "기술을 썼을 때 공격을 받으면 분노의 힘으로 공격이 올라간다."
+    "description": "기술을 썼을 때 공격을 받으면 분노의 힘으로 공격이 올라간다.",
+    "descriptionEn": "Once this move is successfully used, the user's Attack is raised by 1 stage every time it is hit by another Pokemon's attack as long as this move is chosen for use."
   },
   "teleport": {
     "id": 100,
@@ -1114,7 +1213,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "야생 포켓몬과 배틀을 그만둔다. 마지막에 들어갔던 포켓몬센터가 있는 도시에도 갈 수 있다."
+    "description": "야생 포켓몬과 배틀을 그만둔다. 마지막에 들어갔던 포켓몬센터가 있는 도시에도 갈 수 있다.",
+    "descriptionEn": "If this move is successful and the user has not fainted, the user switches out even if it is trapped and is replaced immediately by a selected party member. The user does not switch out if there are no unfainted party members."
   },
   "night-shade": {
     "id": 101,
@@ -1125,7 +1225,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "special",
-    "description": "무시무시한 환상을 보게 해서 자신의 레벨과 똑같은 만큼의 데미지를 상대에게 준다."
+    "description": "무시무시한 환상을 보게 해서 자신의 레벨과 똑같은 만큼의 데미지를 상대에게 준다.",
+    "descriptionEn": "Deals damage to the target equal to the user's level."
   },
   "mimic": {
     "id": 102,
@@ -1136,7 +1237,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "상대가 마지막에 사용한 기술을 배틀을 하는 동안 자신의 기술로 만들 수 있다."
+    "description": "상대가 마지막에 사용한 기술을 배틀을 하는 동안 자신의 기술로 만들 수 있다.",
+    "descriptionEn": "While the user remains active, this move is replaced by the last move used by the target. The copied move has the maximum PP for that move. Fails if the target has not made a move, if the user has Transformed, if the user already knows the move, or if the move is Assist, Behemoth Bash, Behemoth Blade, Belch, Blazing Torque, Celebrate, Chatter, Combat Torque, Copycat, Dynamax Cannon, Hold Hands, Magical Torque, Me First, Metronome, Mimic, Mirror Move, Nature Power, Noxious Torque, Sketch, Sleep Talk, Struggle, Tera Starstorm, Transform, or Wicked Torque."
   },
   "screech": {
     "id": 103,
@@ -1147,7 +1249,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 40,
     "category": "status",
-    "description": "그만 귀를 막아버리고 싶은 싫은 소리를 내어 상대의 방어를 크게 떨어뜨린다."
+    "description": "그만 귀를 막아버리고 싶은 싫은 소리를 내어 상대의 방어를 크게 떨어뜨린다.",
+    "descriptionEn": "Lowers the target's Defense by 2 stages."
   },
   "double-team": {
     "id": 104,
@@ -1158,7 +1261,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 15,
     "category": "status",
-    "description": "재빠른 움직임으로 분신을 만들어 상대를 혼란시켜 회피율을 올린다."
+    "description": "재빠른 움직임으로 분신을 만들어 상대를 혼란시켜 회피율을 올린다.",
+    "descriptionEn": "Raises the user's evasiveness by 1 stage."
   },
   "recover": {
     "id": 105,
@@ -1169,7 +1273,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 5,
     "category": "status",
-    "description": "세포를 재생시켜 자신의 최대 HP의 절반만큼 HP를 회복한다."
+    "description": "세포를 재생시켜 자신의 최대 HP의 절반만큼 HP를 회복한다.",
+    "descriptionEn": "The user restores 1/2 of its maximum HP, rounded half up."
   },
   "harden": {
     "id": 106,
@@ -1180,7 +1285,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 30,
     "category": "status",
-    "description": "전신에 힘을 담아 몸을 단단하게 해서 자신의 방어를 올린다."
+    "description": "전신에 힘을 담아 몸을 단단하게 해서 자신의 방어를 올린다.",
+    "descriptionEn": "Raises the user's Defense by 1 stage."
   },
   "minimize": {
     "id": 107,
@@ -1191,7 +1297,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "몸을 축소하여 작게 보임으로써 자신의 회피율을 크게 올린다."
+    "description": "몸을 축소하여 작게 보임으로써 자신의 회피율을 크게 올린다.",
+    "descriptionEn": "Raises the user's evasiveness by 2 stages. Whether or not the user's evasiveness was changed, Body Slam, Dragon Rush, Flying Press, Heat Crash, Heavy Slam, Malicious Moonsault, Steamroller, Stomp, and Supercell Slam will not check accuracy and have their damage doubled if used against the user while it is active."
   },
   "smokescreen": {
     "id": 108,
@@ -1202,7 +1309,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "status",
-    "description": "연기나 먹물을 내뿜어 상대의 명중률을 떨어뜨린다."
+    "description": "연기나 먹물을 내뿜어 상대의 명중률을 떨어뜨린다.",
+    "descriptionEn": "Lowers the target's accuracy by 1 stage."
   },
   "confuse-ray": {
     "id": 109,
@@ -1213,7 +1321,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "status",
-    "description": "이상한 빛을 상대에게 비춰 당황하게 한다. 상대를 혼란시킨다."
+    "description": "이상한 빛을 상대에게 비춰 당황하게 한다. 상대를 혼란시킨다.",
+    "descriptionEn": "Causes the target to become confused."
   },
   "withdraw": {
     "id": 110,
@@ -1224,7 +1333,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 40,
     "category": "status",
-    "description": "껍질에 숨어 몸을 보호하여 자신의 방어를 올린다."
+    "description": "껍질에 숨어 몸을 보호하여 자신의 방어를 올린다.",
+    "descriptionEn": "Raises the user's Defense by 1 stage."
   },
   "defense-curl": {
     "id": 111,
@@ -1235,7 +1345,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 40,
     "category": "status",
-    "description": "몸을 둥글게 웅크려서 자신의 방어를 올린다."
+    "description": "몸을 둥글게 웅크려서 자신의 방어를 올린다.",
+    "descriptionEn": "Raises the user's Defense by 1 stage. As long as the user remains active, the power of the user's Ice Ball and Rollout will be doubled (this effect is not stackable)."
   },
   "barrier": {
     "id": 112,
@@ -1246,7 +1357,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "튼튼한 장막을 만들어 자신의 방어를 크게 올린다."
+    "description": "튼튼한 장막을 만들어 자신의 방어를 크게 올린다.",
+    "descriptionEn": "Raises the user's Defense by 2 stages."
   },
   "light-screen": {
     "id": 113,
@@ -1257,7 +1369,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 30,
     "category": "status",
-    "description": "5턴 동안 이상한 장막으로 상대로부터 받는 특수공격의 데미지를 약하게 한다."
+    "description": "5턴 동안 이상한 장막으로 상대로부터 받는 특수공격의 데미지를 약하게 한다.",
+    "descriptionEn": "For 5 turns, the user and its party members take 0.5x damage from special attacks, or 0.66x damage if in a Double Battle. Damage is not reduced further with Aurora Veil. Critical hits ignore this effect. It is removed from the user's side if the user or an ally is successfully hit by Brick Break, Psychic Fangs, or Defog. Lasts for 8 turns if the user is holding Light Clay. Fails if the effect is already active on the user's side."
   },
   "haze": {
     "id": 114,
@@ -1268,7 +1381,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 30,
     "category": "status",
-    "description": "흑안개를 뿜어 배틀에 참가 중인 포켓몬 전원의 능력 변화를 원래대로 돌린다."
+    "description": "흑안개를 뿜어 배틀에 참가 중인 포켓몬 전원의 능력 변화를 원래대로 돌린다.",
+    "descriptionEn": "Resets the stat stages of all active Pokemon to 0."
   },
   "reflect": {
     "id": 115,
@@ -1279,7 +1393,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "5턴 동안 이상한 장막으로 상대로부터 받는 물리공격의 데미지를 약하게 한다."
+    "description": "5턴 동안 이상한 장막으로 상대로부터 받는 물리공격의 데미지를 약하게 한다.",
+    "descriptionEn": "For 5 turns, the user and its party members take 0.5x damage from physical attacks, or 0.66x damage if in a Double Battle. Damage is not reduced further with Aurora Veil. Critical hits ignore this effect. It is removed from the user's side if the user or an ally is successfully hit by Brick Break, Psychic Fangs, or Defog. Lasts for 8 turns if the user is holding Light Clay. Fails if the effect is already active on the user's side."
   },
   "focus-energy": {
     "id": 116,
@@ -1290,7 +1405,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 30,
     "category": "status",
-    "description": "깊게 숨을 들이마셔 기합을 넣는다. 자신의 공격이 급소에 맞기 쉬워진다."
+    "description": "깊게 숨을 들이마셔 기합을 넣는다. 자신의 공격이 급소에 맞기 쉬워진다.",
+    "descriptionEn": "Raises the user's chance for a critical hit by 2 stages. Fails if the user already has the effect. Baton Pass can be used to transfer this effect to an ally."
   },
   "bide": {
     "id": 117,
@@ -1301,7 +1417,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "physical",
-    "description": "2턴 동안 공격을 견뎌 입은 데미지를 2배로 만들어 상대에게 돌려준다."
+    "description": "2턴 동안 공격을 견뎌 입은 데미지를 2배로 만들어 상대에게 돌려준다.",
+    "descriptionEn": "The user spends two turns locked into this move and then, on the second turn after using this move, the user attacks the last Pokemon that hit it, inflicting double the damage in HP it lost to attacks during the two turns. If the last Pokemon that hit it is no longer active, the user attacks a random opposing Pokemon instead. If the user is prevented from moving during this move's use, the effect ends. This move does not check accuracy and does not ignore type immunity."
   },
   "metronome": {
     "id": 118,
@@ -1312,7 +1429,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "손가락을 흔들어 자신의 뇌를 자극해서 모든 기술 중 어느 하나를 날린다."
+    "description": "손가락을 흔들어 자신의 뇌를 자극해서 모든 기술 중 어느 하나를 날린다.",
+    "descriptionEn": "A random move is selected for use, other than After You, Apple Acid, Armor Cannon, Assist, Astral Barrage, Aura Wheel, Baneful Bunker, Beak Blast, Behemoth Bash, Behemoth Blade, Belch, Bestow, Blazing Torque, Body Press, Branch Poke, Breaking Swipe, Celebrate, Chatter, Chilling Water, Chilly Reception, Clangorous Soul, Collision Course, Combat Torque, Comeuppance, Copycat, Counter, Covet, Crafty Shield, Decorate, Destiny Bond, Detect, Diamond Storm, Doodle, Double Iron Bash, Double Shock, Dragon Ascent, Dragon Energy, Drum Beating, Dynamax Cannon, Electro Drift, Endure, Eternabeam, False Surrender, Feint, Fiery Wrath, Fillet Away, Fleur Cannon, Focus Punch, Follow Me, Freeze Shock, Freezing Glare, Glacial Lance, Grav Apple, Helping Hand, Hold Hands, Hyper Drill, Hyperspace Fury, Hyperspace Hole, Ice Burn, Instruct, Jet Punch, Jungle Healing, King's Shield, Life Dew, Light of Ruin, Magical Torque, Make It Rain, Mat Block, Me First, Meteor Assault, Metronome, Mimic, Mind Blown, Mirror Coat, Mirror Move, Moongeist Beam, Nature Power, Nature's Madness, Noxious Torque, Obstruct, Order Up, Origin Pulse, Overdrive, Photon Geyser, Plasma Fists, Population Bomb, Pounce, Power Shift, Precipice Blades, Protect, Pyro Ball, Quash, Quick Guard, Rage Fist, Rage Powder, Raging Bull, Raging Fury, Relic Song, Revival Blessing, Ruination, Salt Cure, Secret Sword, Shed Tail, Shell Trap, Silk Trap, Sketch, Sleep Talk, Snap Trap, Snarl, Snatch, Snore, Snowscape, Spectral Thief, Spicy Extract, Spiky Shield, Spirit Break, Spotlight, Springtide Storm, Steam Eruption, Steel Beam, Strange Steam, Struggle, Sunsteel Strike, Surging Strikes, Switcheroo, Techno Blast, Tera Starstorm, Thief, Thousand Arrows, Thousand Waves, Thunder Cage, Thunderous Kick, Tidy Up, Trailblaze, Transform, Trick, Twin Beam, V-create, Wicked Blow, Wicked Torque, or Wide Guard."
   },
   "mirror-move": {
     "id": 119,
@@ -1323,7 +1441,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "상대가 사용한 기술을 흉내 내어 자신도 똑같은 기술을 쓴다."
+    "description": "상대가 사용한 기술을 흉내 내어 자신도 똑같은 기술을 쓴다.",
+    "descriptionEn": "The user uses the last move used by the target. The copied move is used against that target, if possible. Fails if the target has not made a move, or if the last move used cannot be copied by this move."
   },
   "self-destruct": {
     "id": 120,
@@ -1334,7 +1453,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": "폭발을 일으켜서 자신의 주위에 있는 포켓몬을 공격한다. 쓰고 나서 기절하게 된다."
+    "description": "폭발을 일으켜서 자신의 주위에 있는 포켓몬을 공격한다. 쓰고 나서 기절하게 된다.",
+    "descriptionEn": "The user faints after using this move, even if this move fails for having no target. This move is prevented from executing if any active Pokemon has the Damp Ability."
   },
   "egg-bomb": {
     "id": 121,
@@ -1345,7 +1465,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 75,
     "pp": 10,
     "category": "physical",
-    "description": "큰 알을 온 힘을 다해 상대에게 내던져서 공격한다."
+    "description": "큰 알을 온 힘을 다해 상대에게 내던져서 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "lick": {
     "id": 122,
@@ -1356,7 +1477,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 30,
     "category": "physical",
-    "description": "긴 혀로 상대를 핥아서 공격한다. 마비 상태로 만들 때가 있다."
+    "description": "긴 혀로 상대를 핥아서 공격한다. 마비 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to paralyze the target."
   },
   "smog": {
     "id": 123,
@@ -1367,7 +1489,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 70,
     "pp": 20,
     "category": "special",
-    "description": "더러운 가스를 상대에게 내뿜어 공격한다. 독 상태로 만들 때가 있다."
+    "description": "더러운 가스를 상대에게 내뿜어 공격한다. 독 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 40% chance to poison the target."
   },
   "sludge": {
     "id": 124,
@@ -1378,7 +1501,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "special",
-    "description": "더러운 오물을 상대에게 내던져서 공격한다. 독 상태로 만들 때가 있다."
+    "description": "더러운 오물을 상대에게 내던져서 공격한다. 독 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to poison the target."
   },
   "bone-club": {
     "id": 125,
@@ -1389,7 +1513,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 20,
     "category": "physical",
-    "description": "손에 들고 있는 뼈로 상대를 세게 때려서 공격한다. 상대를 풀죽게 만들 때가 있다."
+    "description": "손에 들고 있는 뼈로 상대를 세게 때려서 공격한다. 상대를 풀죽게 만들 때가 있다.",
+    "descriptionEn": "Has a 10% chance to make the target flinch."
   },
   "fire-blast": {
     "id": 126,
@@ -1400,7 +1525,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 5,
     "category": "special",
-    "description": "큰 대자의 불꽃으로 상대를 불태운다. 화상 상태로 만들 때가 있다."
+    "description": "큰 대자의 불꽃으로 상대를 불태운다. 화상 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 10% chance to burn the target."
   },
   "waterfall": {
     "id": 127,
@@ -1411,7 +1537,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "굉장한 기세로 상대에게 돌진한다. 상대를 풀죽게 만들 때가 있다. 폭포도 거슬러 올라갈 수 있다."
+    "description": "굉장한 기세로 상대에게 돌진한다. 상대를 풀죽게 만들 때가 있다. 폭포도 거슬러 올라갈 수 있다.",
+    "descriptionEn": "Has a 20% chance to make the target flinch."
   },
   "clamp": {
     "id": 128,
@@ -1422,7 +1549,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 15,
     "category": "physical",
-    "description": "매우 튼튼하고 두꺼운 껍질에 4-5턴 동안 상대를 끼워서 공격한다."
+    "description": "매우 튼튼하고 두꺼운 껍질에 4-5턴 동안 상대를 끼워서 공격한다.",
+    "descriptionEn": "Prevents the target from switching for four or five turns (seven turns if the user is holding Grip Claw). Causes damage to the target equal to 1/8 of its maximum HP (1/6 if the user is holding Binding Band), rounded down, at the end of each turn during effect. The target can still switch out if it is holding Shed Shell or uses Baton Pass, Flip Turn, Parting Shot, Shed Tail, Teleport, U-turn, or Volt Switch. The effect ends if either the user or the target leaves the field, or if the target uses Mortal Spin, Rapid Spin, or Substitute successfully. This effect is not stackable or reset by using this or another binding move."
   },
   "swift": {
     "id": 129,
@@ -1433,7 +1561,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "special",
-    "description": "별 모양의 빛을 발사해서 상대를 공격한다. 공격은 반드시 명중한다."
+    "description": "별 모양의 빛을 발사해서 상대를 공격한다. 공격은 반드시 명중한다.",
+    "descriptionEn": "This move does not check accuracy."
   },
   "skull-bash": {
     "id": 130,
@@ -1444,7 +1573,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "1턴째에 머리를 움츠려 방어를 올린다. 2턴째에 상대를 공격한다."
+    "description": "1턴째에 머리를 움츠려 방어를 올린다. 2턴째에 상대를 공격한다.",
+    "descriptionEn": "This attack charges on the first turn and executes on the second. Raises the user's Defense by 1 stage on the first turn. If the user is holding a Power Herb, the move completes in one turn."
   },
   "spike-cannon": {
     "id": 131,
@@ -1455,7 +1585,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "날카로운 침을 상대에게 발사해서 공격한다. 2-5회 동안 연속으로 쓴다."
+    "description": "날카로운 침을 상대에게 발사해서 공격한다. 2-5회 동안 연속으로 쓴다.",
+    "descriptionEn": "Hits two to five times. Has a 35% chance to hit two or three times and a 15% chance to hit four or five times. If one of the hits breaks the target's substitute, it will take damage for the remaining hits. If the user has the Skill Link Ability, this move will always hit five times."
   },
   "constrict": {
     "id": 132,
@@ -1466,7 +1597,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 35,
     "category": "physical",
-    "description": "촉수나 덩굴 등을 휘감아서 공격한다. 상대의 스피드를 떨어뜨릴 때가 있다."
+    "description": "촉수나 덩굴 등을 휘감아서 공격한다. 상대의 스피드를 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 10% chance to lower the target's Speed by 1 stage."
   },
   "amnesia": {
     "id": 133,
@@ -1477,7 +1609,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "머리를 비워서 순간적으로 무언가를 잊어버림으로써 자신의 특수방어를 크게 올린다."
+    "description": "머리를 비워서 순간적으로 무언가를 잊어버림으로써 자신의 특수방어를 크게 올린다.",
+    "descriptionEn": "Raises the user's Special Defense by 2 stages."
   },
   "kinesis": {
     "id": 134,
@@ -1488,7 +1621,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 80,
     "pp": 15,
     "category": "status",
-    "description": "숟가락을 휘어서 주의를 끌어 상대의 명중률을 낮춘다."
+    "description": "숟가락을 휘어서 주의를 끌어 상대의 명중률을 낮춘다.",
+    "descriptionEn": "Lowers the target's accuracy by 1 stage."
   },
   "soft-boiled": {
     "id": 135,
@@ -1499,7 +1633,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 5,
     "category": "status",
-    "description": "자신의 최대 HP 절반을 회복한다. 동료에게 HP를 나누어 줄 수도 있다."
+    "description": "자신의 최대 HP 절반을 회복한다. 동료에게 HP를 나누어 줄 수도 있다.",
+    "descriptionEn": "The user restores 1/2 of its maximum HP, rounded half up."
   },
   "high-jump-kick": {
     "id": 136,
@@ -1510,7 +1645,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "physical",
-    "description": "점프해서 무릎차기로 상대를 공격한다. 빗나가면 자신이 데미지를 입는다."
+    "description": "점프해서 무릎차기로 상대를 공격한다. 빗나가면 자신이 데미지를 입는다.",
+    "descriptionEn": "If this attack is not successful, the user loses half of its maximum HP, rounded down, as crash damage. Pokemon with the Magic Guard Ability are unaffected by crash damage."
   },
   "glare": {
     "id": 137,
@@ -1521,7 +1657,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 30,
     "category": "status",
-    "description": "배의 무늬로 겁을 주어 상대를 마비 상태로 만든다."
+    "description": "배의 무늬로 겁을 주어 상대를 마비 상태로 만든다.",
+    "descriptionEn": "Paralyzes the target."
   },
   "dream-eater": {
     "id": 138,
@@ -1532,7 +1669,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "special",
-    "description": "잠자고 있는 상대의 꿈을 먹어 공격한다. 데미지의 절반을 HP로 회복한다."
+    "description": "잠자고 있는 상대의 꿈을 먹어 공격한다. 데미지의 절반을 HP로 회복한다.",
+    "descriptionEn": "The target is unaffected by this move unless it is asleep. The user recovers 1/2 the HP lost by the target, rounded half up. If Big Root is held by the user, the HP recovered is 1.3x normal, rounded half down."
   },
   "poison-gas": {
     "id": 139,
@@ -1543,7 +1681,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 40,
     "category": "status",
-    "description": "독가스를 상대의 얼굴에 내뿜어 독 상태로 만든다."
+    "description": "독가스를 상대의 얼굴에 내뿜어 독 상태로 만든다.",
+    "descriptionEn": "Poisons the target."
   },
   "barrage": {
     "id": 140,
@@ -1554,7 +1693,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 20,
     "category": "physical",
-    "description": "둥근 것을 상대에게 내던져서 공격한다. 2-5회 동안 연속으로 쓴다."
+    "description": "둥근 것을 상대에게 내던져서 공격한다. 2-5회 동안 연속으로 쓴다.",
+    "descriptionEn": "Hits two to five times. Has a 35% chance to hit two or three times and a 15% chance to hit four or five times. If one of the hits breaks the target's substitute, it will take damage for the remaining hits. If the user has the Skill Link Ability, this move will always hit five times."
   },
   "leech-life": {
     "id": 141,
@@ -1565,7 +1705,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "피를 빨아서 상대를 공격한다. 준 데미지의 절반을 HP로 회복한다."
+    "description": "피를 빨아서 상대를 공격한다. 준 데미지의 절반을 HP로 회복한다.",
+    "descriptionEn": "The user recovers 1/2 the HP lost by the target, rounded half up. If Big Root is held by the user, the HP recovered is 1.3x normal, rounded half down."
   },
   "lovely-kiss": {
     "id": 142,
@@ -1576,7 +1717,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 75,
     "pp": 10,
     "category": "status",
-    "description": "무서운 얼굴로 키스한다. 상대를 잠듦 상태로 만든다."
+    "description": "무서운 얼굴로 키스한다. 상대를 잠듦 상태로 만든다.",
+    "descriptionEn": "Causes the target to fall asleep."
   },
   "sky-attack": {
     "id": 143,
@@ -1587,7 +1729,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 5,
     "category": "physical",
-    "description": "2턴째에 상대를 공격한다. 가끔 풀죽게 만든다. 급소에도 맞기 쉽다."
+    "description": "2턴째에 상대를 공격한다. 가끔 풀죽게 만든다. 급소에도 맞기 쉽다.",
+    "descriptionEn": "Has a 30% chance to make the target flinch and a higher chance for a critical hit. This attack charges on the first turn and executes on the second. If the user is holding a Power Herb, the move completes in one turn."
   },
   "transform": {
     "id": 144,
@@ -1598,7 +1741,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "상대 포켓몬으로 변신하여 상대와 완전히 똑같은 기술을 사용할 수 있다."
+    "description": "상대 포켓몬으로 변신하여 상대와 완전히 똑같은 기술을 사용할 수 있다.",
+    "descriptionEn": "The user transforms into the target. The target's current stats, stat stages, types, moves, Ability, weight, gender, and sprite are copied. The user's level and HP remain the same and each copied move receives only 5 PP, with a maximum of 5 PP each. The user can no longer change formes if it would have the ability to do so. This move fails if it hits a substitute, if either the user or the target is already transformed, or if either is behind an Illusion."
   },
   "bubble": {
     "id": 145,
@@ -1609,7 +1753,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 30,
     "category": "special",
-    "description": "매우 많은 거품을 상대에게 내뿜어 공격한다. 상대의 스피드를 떨어뜨릴 때가 있다."
+    "description": "매우 많은 거품을 상대에게 내뿜어 공격한다. 상대의 스피드를 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 10% chance to lower the target's Speed by 1 stage."
   },
   "dizzy-punch": {
     "id": 146,
@@ -1620,7 +1765,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "리드미컬한 펀치를 날려 상대를 공격한다. 혼란시킬 때가 있다."
+    "description": "리드미컬한 펀치를 날려 상대를 공격한다. 혼란시킬 때가 있다.",
+    "descriptionEn": "Has a 20% chance to confuse the target."
   },
   "spore": {
     "id": 147,
@@ -1631,7 +1777,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "status",
-    "description": "최면 효과가 있는 포자를 훌훌 흩뿌려서 상대를 잠듦 상태로 만든다."
+    "description": "최면 효과가 있는 포자를 훌훌 흩뿌려서 상대를 잠듦 상태로 만든다.",
+    "descriptionEn": "Causes the target to fall asleep."
   },
   "flash": {
     "id": 148,
@@ -1642,7 +1789,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "status",
-    "description": "눈이 부신 빛으로 상대의 명중률을 떨어뜨린다."
+    "description": "눈이 부신 빛으로 상대의 명중률을 떨어뜨린다.",
+    "descriptionEn": "Lowers the target's accuracy by 1 stage."
   },
   "psywave": {
     "id": 149,
@@ -1653,7 +1801,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "special",
-    "description": "이상한 염력파를 상대에게 발사하여 공격한다. 사용할 때마다 데미지가 바뀐다."
+    "description": "이상한 염력파를 상대에게 발사하여 공격한다. 사용할 때마다 데미지가 바뀐다.",
+    "descriptionEn": "Deals damage to the target equal to (user's level) * (X + 50) / 100, where X is a random number from 0 to 100, rounded down, but not less than 1 HP."
   },
   "splash": {
     "id": 150,
@@ -1664,7 +1813,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 40,
     "category": "status",
-    "description": "공격도 하지 않고 팔딱팔딱 튈 뿐 아무 일도 일어나지 않는다..."
+    "description": "공격도 하지 않고 팔딱팔딱 튈 뿐 아무 일도 일어나지 않는다...",
+    "descriptionEn": "No competitive use."
   },
   "acid-armor": {
     "id": 151,
@@ -1675,7 +1825,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "세포의 변화로 액체가 되어 자신의 방어를 크게 올린다."
+    "description": "세포의 변화로 액체가 되어 자신의 방어를 크게 올린다.",
+    "descriptionEn": "Raises the user's Defense by 2 stages."
   },
   "crabhammer": {
     "id": 152,
@@ -1686,7 +1837,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "physical",
-    "description": "큰 집게를 상대에게 내리쳐서 공격한다. 급소에 맞기 쉽다."
+    "description": "큰 집게를 상대에게 내리쳐서 공격한다. 급소에 맞기 쉽다.",
+    "descriptionEn": "Has a higher chance for a critical hit."
   },
   "explosion": {
     "id": 153,
@@ -1697,7 +1849,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": "큰 폭발로 자신의 주위에 있는 포켓몬을 공격한다. 쓰고 나서는 기절한다."
+    "description": "큰 폭발로 자신의 주위에 있는 포켓몬을 공격한다. 쓰고 나서는 기절한다.",
+    "descriptionEn": "The user faints after using this move, even if this move fails for having no target. This move is prevented from executing if any active Pokemon has the Damp Ability."
   },
   "fury-swipes": {
     "id": 154,
@@ -1708,7 +1861,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 80,
     "pp": 15,
     "category": "physical",
-    "description": "손톱이나 낫 등으로 상대를 할퀴어서 공격한다. 2-5회 동안 연속으로 쓴다."
+    "description": "손톱이나 낫 등으로 상대를 할퀴어서 공격한다. 2-5회 동안 연속으로 쓴다.",
+    "descriptionEn": "Hits two to five times. Has a 35% chance to hit two or three times and a 15% chance to hit four or five times. If one of the hits breaks the target's substitute, it will take damage for the remaining hits. If the user has the Skill Link Ability, this move will always hit five times. If the user is holding Loaded Dice, this move will hit 4-5 times."
   },
   "bonemerang": {
     "id": 155,
@@ -1719,7 +1873,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "physical",
-    "description": "손에 들고 있는 뼈를 상대에게 날려서 날아갈 때와 돌아올 때 2회 연속 데미지를 준다."
+    "description": "손에 들고 있는 뼈를 상대에게 날려서 날아갈 때와 돌아올 때 2회 연속 데미지를 준다.",
+    "descriptionEn": "Hits twice. If the first hit breaks the target's substitute, it will take damage for the second hit."
   },
   "rest": {
     "id": 156,
@@ -1730,7 +1885,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 5,
     "category": "status",
-    "description": "2턴 동안 계속 잠잔다. 자신의 HP와 상태 이상을 모두 회복한다."
+    "description": "2턴 동안 계속 잠잔다. 자신의 HP와 상태 이상을 모두 회복한다.",
+    "descriptionEn": "The user falls asleep for the next two turns and restores all of its HP, curing itself of any non-volatile status condition in the process. Fails if the user has full HP, is already asleep, or if another effect is preventing sleep."
   },
   "rock-slide": {
     "id": 157,
@@ -1741,7 +1897,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "physical",
-    "description": "큰 바위를 세차게 부딪쳐서 공격한다. 상대를 풀죽게 만들 때가 있다."
+    "description": "큰 바위를 세차게 부딪쳐서 공격한다. 상대를 풀죽게 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to make the target flinch."
   },
   "hyper-fang": {
     "id": 158,
@@ -1752,7 +1909,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 15,
     "category": "physical",
-    "description": "날카로운 앞니로 강하게 물어서 공격한다. 상대를 풀죽게 만들 때가 있다."
+    "description": "날카로운 앞니로 강하게 물어서 공격한다. 상대를 풀죽게 만들 때가 있다.",
+    "descriptionEn": "Has a 10% chance to make the target flinch."
   },
   "sharpen": {
     "id": 159,
@@ -1763,7 +1921,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 30,
     "category": "status",
-    "description": "몸의 각을 늘려서 더욱 각지게 하여 자신의 공격을 올린다."
+    "description": "몸의 각을 늘려서 더욱 각지게 하여 자신의 공격을 올린다.",
+    "descriptionEn": "Raises the user's Attack by 1 stage."
   },
   "conversion": {
     "id": 160,
@@ -1774,7 +1933,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 30,
     "category": "status",
-    "description": "자신의 타입을 배운 기술 중 가장 위에 있는 기술과 같은 타입으로 바꾼다."
+    "description": "자신의 타입을 배운 기술 중 가장 위에 있는 기술과 같은 타입으로 바꾼다.",
+    "descriptionEn": "The user's type changes to match the original type of the move in its first move slot. Fails if the user cannot change its type, or if the type is one of the user's current types."
   },
   "tri-attack": {
     "id": 161,
@@ -1785,7 +1945,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "3개의 광선으로 공격한다. 마비, 화상 또는 얼음 상태 중 어느 하나로 만들 때가 있다."
+    "description": "3개의 광선으로 공격한다. 마비, 화상 또는 얼음 상태 중 어느 하나로 만들 때가 있다.",
+    "descriptionEn": "Has a 20% chance to either burn, freeze, or paralyze the target."
   },
   "super-fang": {
     "id": 162,
@@ -1796,7 +1957,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "physical",
-    "description": "날카로운 앞니로 강하게 물어서 공격한다. 상대의 HP는 절반이 된다."
+    "description": "날카로운 앞니로 강하게 물어서 공격한다. 상대의 HP는 절반이 된다.",
+    "descriptionEn": "Deals damage to the target equal to half of its current HP, rounded down, but not less than 1 HP."
   },
   "slash": {
     "id": 163,
@@ -1807,7 +1969,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "발톱이나 낫 등으로 상대를 베어 갈라서 공격한다. 급소에 맞기 쉽다."
+    "description": "발톱이나 낫 등으로 상대를 베어 갈라서 공격한다. 급소에 맞기 쉽다.",
+    "descriptionEn": "Has a higher chance for a critical hit."
   },
   "substitute": {
     "id": 164,
@@ -1818,7 +1981,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "자신의 HP를 조금 깎아서 분신을 만든다. 분신은 자신의 대타가 된다."
+    "description": "자신의 HP를 조금 깎아서 분신을 만든다. 분신은 자신의 대타가 된다.",
+    "descriptionEn": "The user takes 1/4 of its maximum HP, rounded down, and puts it into a substitute to take its place in battle. The substitute is removed once enough damage is inflicted on it, if the user switches out or faints, or if any Pokemon uses Tidy Up. Baton Pass can be used to transfer the substitute to an ally, and the substitute will keep its remaining HP. Until the substitute is broken, it receives damage from all attacks made by other Pokemon and shields the user from status effects and stat stage changes caused by other Pokemon. Sound-based moves and Pokemon with the Infiltrator Ability ignore substitutes. The user still takes normal damage from weather and status effects while behind its substitute. If the substitute breaks during a multi-hit attack, the user will take damage from any remaining hits. If a substitute is created while the user is trapped by a binding move, the binding effect ends immediately. Fails if the user does not have enough HP remaining to create a substitute without fainting, or if it already has a substitute."
   },
   "struggle": {
     "id": 165,
@@ -1829,7 +1993,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "physical",
-    "description": "자신의 PP가 떨어지면 발버둥 쳐 상대를 공격한다. 자신도 조금 데미지를 입는다."
+    "description": "자신의 PP가 떨어지면 발버둥 쳐 상대를 공격한다. 자신도 조금 데미지를 입는다.",
+    "descriptionEn": "Deals typeless damage to a random opposing Pokemon. If this move was successful, the user loses 1/4 of its maximum HP, rounded half up, and the Rock Head Ability does not prevent this. This move is automatically used if none of the user's known moves can be selected."
   },
   "sketch": {
     "id": 166,
@@ -1840,7 +2005,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "status",
-    "description": "상대가 쓴 기술을 자신의 것으로 만든다. 한 번 사용하면 스케치는 사라진다."
+    "description": "상대가 쓴 기술을 자신의 것으로 만든다. 한 번 사용하면 스케치는 사라진다.",
+    "descriptionEn": "This move is permanently replaced by the last move used by the target. The copied move has the maximum PP for that move. Fails if the target has not made a move, if the user has Transformed, or if the move is Blazing Torque, Combat Torque, Dark Void, Hyperspace Fury, Magical Torque, Noxious Torque, Revival Blessing, Sketch, Struggle, Tera Starstorm, Wicked Torque, or any move the user knows."
   },
   "triple-kick": {
     "id": 167,
@@ -1851,7 +2017,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "physical",
-    "description": "3회 연속으로 킥을 날려 공격한다. 기술이 맞을 때마다 위력이 올라간다."
+    "description": "3회 연속으로 킥을 날려 공격한다. 기술이 맞을 때마다 위력이 올라간다.",
+    "descriptionEn": "Hits three times. Power increases to 20 for the second hit and 30 for the third. This move checks accuracy for each hit, and the attack ends if the target avoids a hit. If one of the hits breaks the target's substitute, it will take damage for the remaining hits. If the user has the Skill Link Ability, this move will always hit three times."
   },
   "thief": {
     "id": 168,
@@ -1862,7 +2029,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 25,
     "category": "physical",
-    "description": "공격과 동시에 도구를 훔친다. 자신이 도구를 지니고 있을 경우에는 훔칠 수 없다."
+    "description": "공격과 동시에 도구를 훔친다. 자신이 도구를 지니고 있을 경우에는 훔칠 수 없다.",
+    "descriptionEn": "If this attack was successful and the user has not fainted, it steals the target's held item if the user is not holding one. A target with the Sticky Hold Ability does not lose its held item if it has not fainted. The target's item is not stolen if it is a Blue Orb, Red Orb, Adamant Crystal, Lustrous Globe, Griseous Core, Plate, Drive, Memory, Rusted Sword, Rusted Shield, Booster Energy, or Mask held by a Kyogre, Groudon, Dialga, Palkia, Giratina, Arceus, Genesect, Silvally, Zacian, Zamazenta, Paradox Pokemon, or Ogerpon, respectively, or if the user is one of those species and the target is holding the respective item. In this case, Paradox Pokemon include every species with the Protosynthesis and Quark Drive Abilities, except Gouging Fire, Raging Bolt, Iron Boulder, and Iron Crown. Items lost to this move cannot be regained with Recycle or the Harvest Ability."
   },
   "spider-web": {
     "id": 169,
@@ -1873,7 +2041,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "끈적끈적하고 가는 실을 칭칭 휘감아 상대를 배틀에서 도망칠 수 없게 한다."
+    "description": "끈적끈적하고 가는 실을 칭칭 휘감아 상대를 배틀에서 도망칠 수 없게 한다.",
+    "descriptionEn": "Prevents the target from switching out. The target can still switch out if it is holding Shed Shell or uses Baton Pass, Flip Turn, Parting Shot, Teleport, U-turn, or Volt Switch. The effect ends if either the user or the target leaves the field."
   },
   "mind-reader": {
     "id": 170,
@@ -1884,7 +2053,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 5,
     "category": "status",
-    "description": "상대의 움직임을 마음으로 읽고 다음 공격이 반드시 상대에게 명중되게 한다."
+    "description": "상대의 움직임을 마음으로 읽고 다음 공격이 반드시 상대에게 명중되게 한다.",
+    "descriptionEn": "Until the end of the next turn, the target cannot avoid the user's moves, even if the target is in the middle of a two-turn move. The effect ends if either the user or the target leaves the field. Fails if this effect is active for the user."
   },
   "nightmare": {
     "id": 171,
@@ -1895,7 +2065,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "status",
-    "description": "잠듦 상태의 상대에게 악몽을 꾸게 하여 매 턴 조금씩 HP를 떨어뜨려 간다."
+    "description": "잠듦 상태의 상대에게 악몽을 꾸게 하여 매 턴 조금씩 HP를 떨어뜨려 간다.",
+    "descriptionEn": "Causes the target to lose 1/4 of its maximum HP, rounded down, at the end of each turn as long as it is asleep. This move does not affect the target unless it is asleep. The effect ends when the target wakes up, even if it falls asleep again in the same turn."
   },
   "flame-wheel": {
     "id": 172,
@@ -1906,7 +2077,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 25,
     "category": "physical",
-    "description": "불꽃을 둘러 상대에게 돌진하여 공격한다. 화상 상태로 만들 때가 있다."
+    "description": "불꽃을 둘러 상대에게 돌진하여 공격한다. 화상 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 10% chance to burn the target."
   },
   "snore": {
     "id": 173,
@@ -1917,7 +2089,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "special",
-    "description": "자신이 잠들어있을 때 소음을 내어 공격한다. 상대를 풀죽게 만들 때가 있다."
+    "description": "자신이 잠들어있을 때 소음을 내어 공격한다. 상대를 풀죽게 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to make the target flinch. Fails if the user is not asleep."
   },
   "curse": {
     "id": 174,
@@ -1928,7 +2101,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "기술을 쓰는 포켓몬이 고스트타입일 때와 그 이외의 타입일 때는 효과가 다르다."
+    "description": "기술을 쓰는 포켓몬이 고스트타입일 때와 그 이외의 타입일 때는 효과가 다르다.",
+    "descriptionEn": "If the user is not a Ghost type, lowers the user's Speed by 1 stage and raises the user's Attack and Defense by 1 stage. If the user is a Ghost type, the user loses 1/2 of its maximum HP, rounded down and even if it would cause fainting, in exchange for the target losing 1/4 of its maximum HP, rounded down, at the end of each turn while it is active. If the target uses Baton Pass, the replacement will continue to be affected. Fails if there is no target or if the target is already affected."
   },
   "flail": {
     "id": 175,
@@ -1939,7 +2113,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "바둥바둥 난동 부려서 공격한다. 자신의 HP가 적을수록 기술의 위력이 올라간다."
+    "description": "바둥바둥 난동 부려서 공격한다. 자신의 HP가 적을수록 기술의 위력이 올라간다.",
+    "descriptionEn": "The power of this move is 20 if X is 33 to 48, 40 if X is 17 to 32, 80 if X is 10 to 16, 100 if X is 5 to 9, 150 if X is 2 to 4, and 200 if X is 0 or 1, where X is equal to (user's current HP * 48 / user's maximum HP), rounded down."
   },
   "conversion-2": {
     "id": 176,
@@ -1950,7 +2125,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 30,
     "category": "status",
-    "description": "상대가 마지막으로 쓴 기술에 저항할 수 있도록 자신의 타입을 변화시킨다."
+    "description": "상대가 마지막으로 쓴 기술에 저항할 수 있도록 자신의 타입을 변화시킨다.",
+    "descriptionEn": "The user's type changes to match a type that resists or is immune to the type of the last move used by the target, but not either of its current types. The determined type of the move is used rather than the original type. Fails if the target has not made a move, if the user cannot change its type, or if this move would only be able to select one of the user's current types."
   },
   "aeroblast": {
     "id": 177,
@@ -1961,7 +2137,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 5,
     "category": "special",
-    "description": "공기의 소용돌이를 발사하여 공격한다. 급소에 맞기 쉽다."
+    "description": "공기의 소용돌이를 발사하여 공격한다. 급소에 맞기 쉽다.",
+    "descriptionEn": "Has a higher chance for a critical hit."
   },
   "cotton-spore": {
     "id": 178,
@@ -1972,7 +2149,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 40,
     "category": "status",
-    "description": "솜처럼 폭신폭신한 포자를 착 달라붙게 해서 상대의 스피드를 크게 떨어뜨린다."
+    "description": "솜처럼 폭신폭신한 포자를 착 달라붙게 해서 상대의 스피드를 크게 떨어뜨린다.",
+    "descriptionEn": "Lowers the target's Speed by 2 stages."
   },
   "reversal": {
     "id": 179,
@@ -1983,7 +2161,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "힘을 쥐어짜서 공격한다. 자신의 HP가 적을수록 기술의 위력이 올라간다."
+    "description": "힘을 쥐어짜서 공격한다. 자신의 HP가 적을수록 기술의 위력이 올라간다.",
+    "descriptionEn": "The power of this move is 20 if X is 33 to 48, 40 if X is 17 to 32, 80 if X is 10 to 16, 100 if X is 5 to 9, 150 if X is 2 to 4, and 200 if X is 0 or 1, where X is equal to (user's current HP * 48 / user's maximum HP), rounded down."
   },
   "spite": {
     "id": 180,
@@ -1994,7 +2173,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "status",
-    "description": "상대가 마지막으로 사용한 기술에 원한을 품어 그 기술의 PP를 4만큼 줄인다."
+    "description": "상대가 마지막으로 사용한 기술에 원한을 품어 그 기술의 PP를 4만큼 줄인다.",
+    "descriptionEn": "Causes the target's last move used to lose 4 PP. Fails if the target has not made a move, if the move has 0 PP, or if it no longer knows the move."
   },
   "powder-snow": {
     "id": 181,
@@ -2005,7 +2185,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 25,
     "category": "special",
-    "description": "차가운 가랑눈을 상대에게 내뿜어 공격한다. 얼음 상태로 만들 때가 있다."
+    "description": "차가운 가랑눈을 상대에게 내뿜어 공격한다. 얼음 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 10% chance to freeze the target."
   },
   "protect": {
     "id": 182,
@@ -2016,7 +2197,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "상대의 공격을 전혀 받지 않는다. 연속으로 쓰면 실패하기 쉽다."
+    "description": "상대의 공격을 전혀 받지 않는다. 연속으로 쓰면 실패하기 쉽다.",
+    "descriptionEn": "The user is protected from most attacks made by other Pokemon during this turn. This move has a 1/X chance of being successful, where X starts at 1 and triples each time this move is successfully used. X resets to 1 if this move fails, if the user's last move used is not Baneful Bunker, Burning Bulwark, Detect, Endure, King's Shield, Max Guard, Obstruct, Protect, Quick Guard, Silk Trap, Spiky Shield, or Wide Guard, or if it was one of those moves and the user's protection was broken. Fails if the user moves last this turn."
   },
   "mach-punch": {
     "id": 183,
@@ -2027,7 +2209,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 30,
     "category": "physical",
-    "description": "눈에 보이지 않는 굉장한 속도로 펀치를 날린다. 반드시 선제공격을 할 수 있다."
+    "description": "눈에 보이지 않는 굉장한 속도로 펀치를 날린다. 반드시 선제공격을 할 수 있다.",
+    "descriptionEn": "No additional effect."
   },
   "scary-face": {
     "id": 184,
@@ -2038,7 +2221,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "status",
-    "description": "무서운 얼굴로 노려보고 겁주어 상대의 스피드를 크게 떨어뜨린다."
+    "description": "무서운 얼굴로 노려보고 겁주어 상대의 스피드를 크게 떨어뜨린다.",
+    "descriptionEn": "Lowers the target's Speed by 2 stages."
   },
   "feint-attack": {
     "id": 185,
@@ -2049,7 +2233,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "physical",
-    "description": "슬금슬금 상대에게 다가가 방심한 틈을 타서 세게 때린다. 공격은 반드시 명중한다."
+    "description": "슬금슬금 상대에게 다가가 방심한 틈을 타서 세게 때린다. 공격은 반드시 명중한다.",
+    "descriptionEn": "This move does not check accuracy."
   },
   "sweet-kiss": {
     "id": 186,
@@ -2060,7 +2245,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 75,
     "pp": 10,
     "category": "status",
-    "description": "천사처럼 귀엽게 키스하여 상대를 혼란시킨다."
+    "description": "천사처럼 귀엽게 키스하여 상대를 혼란시킨다.",
+    "descriptionEn": "Causes the target to become confused."
   },
   "belly-drum": {
     "id": 187,
@@ -2071,7 +2257,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "자신의 HP를 최대 HP의 절반만큼 감소시켜 자신의 공격을 최대로 올린다."
+    "description": "자신의 HP를 최대 HP의 절반만큼 감소시켜 자신의 공격을 최대로 올린다.",
+    "descriptionEn": "Raises the user's Attack by 12 stages in exchange for the user losing 1/2 of its maximum HP, rounded down. Fails if the user would faint or if its Attack stat stage is 6."
   },
   "sludge-bomb": {
     "id": 188,
@@ -2082,7 +2269,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "더러운 오물을 상대에게 내던져서 공격한다. 독 상태로 만들 때가 있다."
+    "description": "더러운 오물을 상대에게 내던져서 공격한다. 독 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to poison the target."
   },
   "mud-slap": {
     "id": 189,
@@ -2093,7 +2281,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "상대의 얼굴 등에 진흙을 내던져서 공격한다. 명중률을 떨어뜨린다."
+    "description": "상대의 얼굴 등에 진흙을 내던져서 공격한다. 명중률을 떨어뜨린다.",
+    "descriptionEn": "Has a 100% chance to lower the target's accuracy by 1 stage."
   },
   "octazooka": {
     "id": 190,
@@ -2104,7 +2293,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 10,
     "category": "special",
-    "description": "상대의 얼굴 등에 먹물을 내뿜어 공격한다. 명중률을 떨어뜨릴 때가 있다."
+    "description": "상대의 얼굴 등에 먹물을 내뿜어 공격한다. 명중률을 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 50% chance to lower the target's accuracy by 1 stage."
   },
   "spikes": {
     "id": 191,
@@ -2115,7 +2305,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "상대의 발밑에 압정을 뿌린다. 교체된 상대 포켓몬에게 데미지를 준다."
+    "description": "상대의 발밑에 압정을 뿌린다. 교체된 상대 포켓몬에게 데미지를 준다.",
+    "descriptionEn": "Sets up a hazard on the opposing side of the field, damaging each opposing Pokemon that switches in, unless it is a Flying-type Pokemon or has the Levitate Ability. Can be used up to three times before failing. Opponents lose 1/8 of their maximum HP with one layer, 1/6 of their maximum HP with two layers, and 1/4 of their maximum HP with three layers, all rounded down. Can be removed from the opposing side if any Pokemon uses Tidy Up, or if any opposing Pokemon uses Mortal Spin, Rapid Spin, or Defog successfully, or is hit by Defog."
   },
   "zap-cannon": {
     "id": 192,
@@ -2126,7 +2317,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 50,
     "pp": 5,
     "category": "special",
-    "description": "대포처럼 전기를 발사해서 공격한다. 상대를 마비 상태로 만든다."
+    "description": "대포처럼 전기를 발사해서 공격한다. 상대를 마비 상태로 만든다.",
+    "descriptionEn": "Has a 100% chance to paralyze the target."
   },
   "foresight": {
     "id": 193,
@@ -2137,7 +2329,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 40,
     "category": "status",
-    "description": "고스트타입에 효과가 없는 기술이나 회피율이 높은 상대라 할지라도 공격이 맞게 된다."
+    "description": "고스트타입에 효과가 없는 기술이나 회피율이 높은 상대라 할지라도 공격이 맞게 된다.",
+    "descriptionEn": "As long as the target remains active, its evasiveness stat stage is ignored during accuracy checks against it if it is greater than 0, and Normal- and Fighting-type attacks can hit the target if it is a Ghost type. Fails if the target is already affected, or affected by Miracle Eye or Odor Sleuth."
   },
   "destiny-bond": {
     "id": 194,
@@ -2148,7 +2341,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 5,
     "category": "status",
-    "description": "기술을 쓴 뒤 공격을 받아 기절했을 때 길동무의 대상도 기절하게 한다."
+    "description": "기술을 쓴 뒤 공격을 받아 기절했을 때 길동무의 대상도 기절하게 한다.",
+    "descriptionEn": "Until the user's next move, if an opposing Pokemon's attack knocks the user out, that Pokemon faints as well, unless the attack was Doom Desire or Future Sight. Fails if the user used this move successfully as its last move, disregarding moves used through the Dancer Ability."
   },
   "perish-song": {
     "id": 195,
@@ -2159,7 +2353,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 5,
     "category": "status",
-    "description": "노래를 들은 포켓몬은 3턴이 지나면 기절한다. 교체되면 효과가 없어진다."
+    "description": "노래를 들은 포켓몬은 3턴이 지나면 기절한다. 교체되면 효과가 없어진다.",
+    "descriptionEn": "Each active Pokemon receives a perish count of 4 if it doesn't already have a perish count. At the end of each turn including the turn used, the perish count of all active Pokemon lowers by 1 and Pokemon faint if the number reaches 0. The perish count is removed from Pokemon that switch out. If a Pokemon uses Baton Pass while it has a perish count, the replacement will gain the perish count and continue to count down."
   },
   "icy-wind": {
     "id": 196,
@@ -2170,7 +2365,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 15,
     "category": "special",
-    "description": "차가운 냉기를 상대에게 내뿜어 공격한다. 상대의 스피드를 떨어뜨린다."
+    "description": "차가운 냉기를 상대에게 내뿜어 공격한다. 상대의 스피드를 떨어뜨린다.",
+    "descriptionEn": "Has a 100% chance to lower the target's Speed by 1 stage."
   },
   "detect": {
     "id": 197,
@@ -2181,7 +2377,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 5,
     "category": "status",
-    "description": "상대의 공격을 전혀 받지 않는다. 연속으로 쓰면 실패하기 쉽다."
+    "description": "상대의 공격을 전혀 받지 않는다. 연속으로 쓰면 실패하기 쉽다.",
+    "descriptionEn": "The user is protected from most attacks made by other Pokemon during this turn. This move has a 1/X chance of being successful, where X starts at 1 and triples each time this move is successfully used. X resets to 1 if this move fails, if the user's last move used is not Baneful Bunker, Burning Bulwark, Detect, Endure, King's Shield, Max Guard, Obstruct, Protect, Quick Guard, Silk Trap, Spiky Shield, or Wide Guard, or if it was one of those moves and the user's protection was broken. Fails if the user moves last this turn."
   },
   "bone-rush": {
     "id": 198,
@@ -2192,7 +2389,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "physical",
-    "description": "단단한 뼈로 상대를 세게 때려서 공격한다. 2-5회 동안 연속으로 쓴다."
+    "description": "단단한 뼈로 상대를 세게 때려서 공격한다. 2-5회 동안 연속으로 쓴다.",
+    "descriptionEn": "Hits two to five times. Has a 35% chance to hit two or three times and a 15% chance to hit four or five times. If one of the hits breaks the target's substitute, it will take damage for the remaining hits. If the user has the Skill Link Ability, this move will always hit five times. If the user is holding Loaded Dice, this move will hit 4-5 times."
   },
   "lock-on": {
     "id": 199,
@@ -2203,7 +2401,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 5,
     "category": "status",
-    "description": "조준을 잘 맞춰 다음 공격이 반드시 상대에게 명중하도록 한다."
+    "description": "조준을 잘 맞춰 다음 공격이 반드시 상대에게 명중하도록 한다.",
+    "descriptionEn": "Until the end of the next turn, the target cannot avoid the user's moves, even if the target is in the middle of a two-turn move. The effect ends if either the user or the target leaves the field. Fails if this effect is active for the user."
   },
   "outrage": {
     "id": 200,
@@ -2214,7 +2413,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "2-3턴 동안 마구 난동 부려서 공격한다. 난동 부린 뒤에는 혼란에 빠진다."
+    "description": "2-3턴 동안 마구 난동 부려서 공격한다. 난동 부린 뒤에는 혼란에 빠진다.",
+    "descriptionEn": "The user spends two or three turns locked into this move and becomes confused immediately after its move on the last turn of the effect if it is not already. This move targets an opposing Pokemon at random on each turn. If the user is prevented from moving, is asleep at the beginning of a turn, or the attack is not successful against the target on the first turn of the effect or the second turn of a three-turn effect, the effect ends without causing confusion. If this move is called by Sleep Talk and the user is asleep, the move is used for one turn and does not confuse the user."
   },
   "sandstorm": {
     "id": 201,
@@ -2225,7 +2425,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "5턴 동안 모래바람으로 바위, 땅, 강철타입 이외의 포켓몬에게 데미지를 준다."
+    "description": "5턴 동안 모래바람으로 바위, 땅, 강철타입 이외의 포켓몬에게 데미지를 준다.",
+    "descriptionEn": "For 5 turns, the weather becomes Sandstorm. At the end of each turn except the last, all active Pokemon lose 1/16 of their maximum HP, rounded down, unless they are a Ground, Rock, or Steel type, or have the Magic Guard, Overcoat, Sand Force, Sand Rush, or Sand Veil Abilities. During the effect, the Special Defense of Rock-type Pokemon is multiplied by 1.5 when taking damage from a special attack. Lasts for 8 turns if the user is holding Smooth Rock. Fails if the current weather is Sandstorm."
   },
   "giga-drain": {
     "id": 202,
@@ -2236,7 +2437,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "양분을 흡수하여 공격한다. 입힌 데미지의 절반에 해당하는 HP를 회복할 수 있다."
+    "description": "양분을 흡수하여 공격한다. 입힌 데미지의 절반에 해당하는 HP를 회복할 수 있다.",
+    "descriptionEn": "The user recovers 1/2 the HP lost by the target, rounded half up. If Big Root is held by the user, the HP recovered is 1.3x normal, rounded half down."
   },
   "endure": {
     "id": 203,
@@ -2247,7 +2449,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "공격을 받아도 HP를 반드시 1만큼은 남긴다. 연속으로 쓰면 실패하기 쉽다."
+    "description": "공격을 받아도 HP를 반드시 1만큼은 남긴다. 연속으로 쓰면 실패하기 쉽다.",
+    "descriptionEn": "The user will survive attacks made by other Pokemon during this turn with at least 1 HP. This move has a 1/X chance of being successful, where X starts at 1 and triples each time this move is successfully used. X resets to 1 if this move fails, if the user's last move used is not Baneful Bunker, Burning Bulwark, Detect, Endure, King's Shield, Max Guard, Obstruct, Protect, Quick Guard, Silk Trap, Spiky Shield, or Wide Guard, or if it was one of those moves and the user's protection was broken. Fails if the user moves last this turn."
   },
   "charm": {
     "id": 204,
@@ -2258,7 +2461,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "status",
-    "description": "귀엽게 바라보고 방심을 유도하여 상대의 공격을 크게 떨어뜨린다."
+    "description": "귀엽게 바라보고 방심을 유도하여 상대의 공격을 크게 떨어뜨린다.",
+    "descriptionEn": "Lowers the target's Attack by 2 stages."
   },
   "rollout": {
     "id": 205,
@@ -2269,7 +2473,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 20,
     "category": "physical",
-    "description": "5턴 동안 구르기를 반복하여 공격한다. 기술이 맞을 때마다 위력이 올라간다."
+    "description": "5턴 동안 구르기를 반복하여 공격한다. 기술이 맞을 때마다 위력이 올라간다.",
+    "descriptionEn": "If this move is successful, the user is locked into this move and cannot make another move until it misses, 5 turns have passed, or the attack cannot be used. Power doubles with each successful hit of this move and doubles again if Defense Curl was used previously by the user. If this move is called by Sleep Talk, the move is used for one turn."
   },
   "false-swipe": {
     "id": 206,
@@ -2280,7 +2485,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 40,
     "category": "physical",
-    "description": "상대의 HP가 반드시 1만큼 남도록 조절하여 공격한다."
+    "description": "상대의 HP가 반드시 1만큼 남도록 조절하여 공격한다.",
+    "descriptionEn": "Leaves the target with at least 1 HP."
   },
   "swagger": {
     "id": 207,
@@ -2291,7 +2497,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 15,
     "category": "status",
-    "description": "상대를 화내게 해서 혼란시킨다. 분노로 상대의 공격은 크게 올라가 버린다."
+    "description": "상대를 화내게 해서 혼란시킨다. 분노로 상대의 공격은 크게 올라가 버린다.",
+    "descriptionEn": "Raises the target's Attack by 2 stages and confuses it."
   },
   "milk-drink": {
     "id": 208,
@@ -2302,7 +2509,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 5,
     "category": "status",
-    "description": "자신의 최대 HP 절반을 회복한다. 동료에게 HP를 나누어 줄 수도 있다."
+    "description": "자신의 최대 HP 절반을 회복한다. 동료에게 HP를 나누어 줄 수도 있다.",
+    "descriptionEn": "The user restores 1/2 of its maximum HP, rounded half up."
   },
   "spark": {
     "id": 209,
@@ -2313,7 +2521,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "전기를 둘러 상대에게 돌진하여 공격한다. 마비 상태로 만들 때가 있다."
+    "description": "전기를 둘러 상대에게 돌진하여 공격한다. 마비 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to paralyze the target."
   },
   "fury-cutter": {
     "id": 210,
@@ -2324,7 +2533,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 20,
     "category": "physical",
-    "description": "낫이나 발톱 등으로 상대를 베어 공격한다. 연속으로 맞히면 위력이 올라간다."
+    "description": "낫이나 발톱 등으로 상대를 베어 공격한다. 연속으로 맞히면 위력이 올라간다.",
+    "descriptionEn": "Power doubles with each successful hit, up to a maximum of 160 power. The power is reset if this move misses or another move is used."
   },
   "steel-wing": {
     "id": 211,
@@ -2335,7 +2545,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 25,
     "category": "physical",
-    "description": "단단한 날개를 상대에게 부딪쳐서 공격한다. 자신의 방어가 올라갈 때가 있다."
+    "description": "단단한 날개를 상대에게 부딪쳐서 공격한다. 자신의 방어가 올라갈 때가 있다.",
+    "descriptionEn": "Has a 10% chance to raise the user's Defense by 1 stage."
   },
   "mean-look": {
     "id": 212,
@@ -2346,7 +2557,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 5,
     "category": "status",
-    "description": "빨려 들어갈 것 같은 까만 눈빛으로 가만히 응시하여 상대를 배틀에서 도망갈 수 없게 한다."
+    "description": "빨려 들어갈 것 같은 까만 눈빛으로 가만히 응시하여 상대를 배틀에서 도망갈 수 없게 한다.",
+    "descriptionEn": "Prevents the target from switching out. The target can still switch out if it is holding Shed Shell or uses Baton Pass, Flip Turn, Parting Shot, Teleport, U-turn, or Volt Switch. The effect ends if either the user or the target leaves the field."
   },
   "attract": {
     "id": 213,
@@ -2357,7 +2569,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "status",
-    "description": "수컷은 암컷을 암컷은 수컷을 유혹하여 헤롱헤롱하게 만든다. 상대가 기술을 쓰기 어려워진다."
+    "description": "수컷은 암컷을 암컷은 수컷을 유혹하여 헤롱헤롱하게 만든다. 상대가 기술을 쓰기 어려워진다.",
+    "descriptionEn": "Causes the target to become infatuated, making it unable to attack 50% of the time. Fails if both the user and the target are the same gender, if either is genderless, or if the target is already infatuated. The effect ends when either the user or the target is no longer active. Pokemon with the Oblivious Ability or protected by the Aroma Veil Ability are immune."
   },
   "sleep-talk": {
     "id": 214,
@@ -2368,7 +2581,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "자신이 배운 기술 중 하나를 무작위로 날린다. 자신이 잠들어 있을 때만 쓸 수 있다."
+    "description": "자신이 배운 기술 중 하나를 무작위로 날린다. 자신이 잠들어 있을 때만 쓸 수 있다.",
+    "descriptionEn": "One of the user's known moves, besides this move, is selected for use at random. Fails if the user is not asleep. The selected move does not have PP deducted from it, and can currently have 0 PP. This move cannot select Assist, Beak Blast, Belch, Bide, Blazing Torque, Celebrate, Chatter, Combat Torque, Copycat, Dynamax Cannon, Focus Punch, Hold Hands, Magical Torque, Me First, Metronome, Mimic, Mirror Move, Nature Power, Noxious Torque, Shell Trap, Sketch, Sleep Talk, Struggle, Uproar, Wicked Torque, or any two-turn move."
   },
   "heal-bell": {
     "id": 215,
@@ -2379,7 +2593,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 5,
     "category": "status",
-    "description": "기분 좋은 방울소리를 들려주어 같은 편 전원의 상태 이상을 회복한다."
+    "description": "기분 좋은 방울소리를 들려주어 같은 편 전원의 상태 이상을 회복한다.",
+    "descriptionEn": "Every Pokemon in the user's party is cured of its non-volatile status condition. Active Pokemon with the Soundproof Ability are not cured, unless they are the user."
   },
   "return": {
     "id": 216,
@@ -2390,7 +2605,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "트레이너를 위해 전력으로 상대를 공격한다. 친밀할수록 위력이 올라간다."
+    "description": "트레이너를 위해 전력으로 상대를 공격한다. 친밀할수록 위력이 올라간다.",
+    "descriptionEn": "Power is equal to the greater of (user's Happiness * 2/5), rounded down, or 1."
   },
   "present": {
     "id": 217,
@@ -2401,7 +2617,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 15,
     "category": "physical",
-    "description": "덫을 설치한 상자를 상대에게 건네어 공격한다. HP가 회복돼버릴 때도 있다."
+    "description": "덫을 설치한 상자를 상대에게 건네어 공격한다. HP가 회복돼버릴 때도 있다.",
+    "descriptionEn": "If this move is successful, it deals damage or heals the target. 40% chance for 40 power, 30% chance for 80 power, 10% chance for 120 power, and 20% chance to heal the target by 1/4 of its maximum HP, rounded down."
   },
   "frustration": {
     "id": 218,
@@ -2412,7 +2629,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "불만을 풀기 위해 전력으로 상대를 공격한다. 친밀하지 않을수록 위력이 올라간다."
+    "description": "불만을 풀기 위해 전력으로 상대를 공격한다. 친밀하지 않을수록 위력이 올라간다.",
+    "descriptionEn": "Power is equal to the greater of ((255 - user's Happiness) * 2/5), rounded down, or 1."
   },
   "safeguard": {
     "id": 219,
@@ -2423,7 +2641,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 25,
     "category": "status",
-    "description": "5턴 동안 이상한 힘으로 보호받아 상태 이상이 되지 않는다."
+    "description": "5턴 동안 이상한 힘으로 보호받아 상태 이상이 되지 않는다.",
+    "descriptionEn": "For 5 turns, the user and its party members cannot have non-volatile status conditions or confusion inflicted on them by other Pokemon. Pokemon on the user's side cannot become affected by Yawn but can fall asleep from its effect. It is removed from the user's side if the user or an ally is successfully hit by Defog. Fails if the effect is already active on the user's side."
   },
   "pain-split": {
     "id": 220,
@@ -2434,7 +2653,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "자신의 HP와 상대의 HP를 합친 것을 자신과 상대가 사이좋게 나눈다."
+    "description": "자신의 HP와 상대의 HP를 합친 것을 자신과 상대가 사이좋게 나눈다.",
+    "descriptionEn": "The user and the target's HP become the average of their current HP, rounded down, but not more than the maximum HP of either one."
   },
   "sacred-fire": {
     "id": 221,
@@ -2445,7 +2665,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 5,
     "category": "physical",
-    "description": "신비한 불꽃으로 상대를 태워서 공격한다. 화상 상태로 만들 때가 있다."
+    "description": "신비한 불꽃으로 상대를 태워서 공격한다. 화상 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 50% chance to burn the target."
   },
   "magnitude": {
     "id": 222,
@@ -2456,7 +2677,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 30,
     "category": "physical",
-    "description": "땅을 흔들어서 자신의 주위에 있는 포켓몬을 공격한다. 기술의 위력이 여러모로 바뀐다."
+    "description": "땅을 흔들어서 자신의 주위에 있는 포켓몬을 공격한다. 기술의 위력이 여러모로 바뀐다.",
+    "descriptionEn": "The power of this move varies; 5% chances for 10 and 150 power, 10% chances for 30 and 110 power, 20% chances for 50 and 90 power, and 30% chance for 70 power. Damage doubles if the target is using Dig."
   },
   "dynamic-punch": {
     "id": 223,
@@ -2467,7 +2689,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 50,
     "pp": 5,
     "category": "physical",
-    "description": "혼신의 힘으로 펀치를 날려서 공격한다. 상대를 반드시 혼란시킨다."
+    "description": "혼신의 힘으로 펀치를 날려서 공격한다. 상대를 반드시 혼란시킨다.",
+    "descriptionEn": "Has a 100% chance to confuse the target."
   },
   "megahorn": {
     "id": 224,
@@ -2478,7 +2701,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 10,
     "category": "physical",
-    "description": "단단하고 훌륭한 뿔로 마음껏 상대를 꿰찔러서 공격한다."
+    "description": "단단하고 훌륭한 뿔로 마음껏 상대를 꿰찔러서 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "dragon-breath": {
     "id": 225,
@@ -2489,7 +2713,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "special",
-    "description": "굉장한 숨결을 상대에게 내뿜어 공격한다. 마비 상태로 만들 때가 있다."
+    "description": "굉장한 숨결을 상대에게 내뿜어 공격한다. 마비 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to paralyze the target."
   },
   "baton-pass": {
     "id": 226,
@@ -2500,7 +2725,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 40,
     "category": "status",
-    "description": "교대 포켓몬과 바뀐다. 능력 변화는 바뀐 포켓몬이 그대로 이어받는다."
+    "description": "교대 포켓몬과 바뀐다. 능력 변화는 바뀐 포켓몬이 그대로 이어받는다.",
+    "descriptionEn": "The user is replaced with another Pokemon in its party. The selected Pokemon has the user's stat stage changes transferred to it, as well as the effects of confusion, Aqua Ring, Curse, Dragon Cheer, Embargo, Focus Energy, Gastro Acid, Heal Block, Ingrain, Leech Seed, Lock-On (Mind Reader), Magnet Rise, Perish Song, Power Trick, Telekinesis, and a substitute with its remaining HP. The effect of Gastro Acid is not transferred if the recipient has an Ability that cannot be affected."
   },
   "encore": {
     "id": 227,
@@ -2511,7 +2737,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "status",
-    "description": "상대가 마지막으로 사용한 기술을 3턴 동안 계속 쓰게 한다."
+    "description": "상대가 마지막으로 사용한 기술을 3턴 동안 계속 쓰게 한다.",
+    "descriptionEn": "For its next 3 turns, the target is forced to repeat its last move used. If the affected move runs out of PP, the effect ends. Fails if the target is already under this effect, if it has not made a move, if the move has 0 PP, or if the move is Assist, Blazing Torque, Combat Torque, Copycat, Dynamax Cannon, Encore, Magical Torque, Me First, Metronome, Mimic, Mirror Move, Nature Power, Noxious Torque, Sketch, Sleep Talk, Struggle, Transform, or Wicked Torque."
   },
   "pursuit": {
     "id": 228,
@@ -2522,7 +2749,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "상대 포켓몬이 교체될 때 기술을 쓰면 2배의 위력으로 공격할 수 있다."
+    "description": "상대 포켓몬이 교체될 때 기술을 쓰면 2배의 위력으로 공격할 수 있다.",
+    "descriptionEn": "If an opposing Pokemon switches out this turn, this move hits that Pokemon before it leaves the field, even if it was not the original target. If the user moves after an opponent using Flip Turn, Parting Shot, Teleport, U-turn, or Volt Switch, but not Baton Pass, it will hit that opponent before it leaves the field. Power doubles and no accuracy check is done if the user hits an opponent switching out, and the user's turn is over; if an opponent faints from this, the replacement Pokemon does not become active until the end of the turn."
   },
   "rapid-spin": {
     "id": 229,
@@ -2533,7 +2761,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 40,
     "category": "physical",
-    "description": "회전해서 상대를 공격한다. 조이기, 김밥말이, 씨뿌리기, 압정뿌리기 등도 날려버린다."
+    "description": "회전해서 상대를 공격한다. 조이기, 김밥말이, 씨뿌리기, 압정뿌리기 등도 날려버린다.",
+    "descriptionEn": "If this move is successful and the user has not fainted, the effects of Leech Seed and binding moves end for the user, and all hazards are removed from the user's side of the field. Has a 100% chance to raise the user's Speed by 1 stage."
   },
   "sweet-scent": {
     "id": 230,
@@ -2544,7 +2773,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "status",
-    "description": "향기로 상대의 회피율을 크게 떨어뜨린다. 풀밭 등에서 쓰면 포켓몬이 다가온다."
+    "description": "향기로 상대의 회피율을 크게 떨어뜨린다. 풀밭 등에서 쓰면 포켓몬이 다가온다.",
+    "descriptionEn": "Lowers the target's evasiveness by 2 stages."
   },
   "iron-tail": {
     "id": 231,
@@ -2555,7 +2785,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 75,
     "pp": 15,
     "category": "physical",
-    "description": "단단한 꼬리로 상대를 힘껏 쳐서 공격한다. 상대의 방어를 떨어뜨릴 때가 있다."
+    "description": "단단한 꼬리로 상대를 힘껏 쳐서 공격한다. 상대의 방어를 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 30% chance to lower the target's Defense by 1 stage."
   },
   "metal-claw": {
     "id": 232,
@@ -2566,7 +2797,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 35,
     "category": "physical",
-    "description": "강철의 발톱으로 상대를 베어 갈라 공격한다. 자신의 공격이 올라갈 때도 있다."
+    "description": "강철의 발톱으로 상대를 베어 갈라 공격한다. 자신의 공격이 올라갈 때도 있다.",
+    "descriptionEn": "Has a 10% chance to raise the user's Attack by 1 stage."
   },
   "vital-throw": {
     "id": 233,
@@ -2577,7 +2809,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "physical",
-    "description": "상대보다 나중에 공격한다. 그 대신 자신의 공격은 반드시 명중한다."
+    "description": "상대보다 나중에 공격한다. 그 대신 자신의 공격은 반드시 명중한다.",
+    "descriptionEn": "This move does not check accuracy."
   },
   "morning-sun": {
     "id": 234,
@@ -2588,7 +2821,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 5,
     "category": "status",
-    "description": "자신의 HP를 회복한다. 날씨에 따라 회복량이 변한다."
+    "description": "자신의 HP를 회복한다. 날씨에 따라 회복량이 변한다.",
+    "descriptionEn": "The user restores 1/2 of its maximum HP if Strong Winds or no weather conditions are in effect or if the user is holding Utility Umbrella, 2/3 of its maximum HP if the weather is Intense Sun or Sun, and 1/4 of its maximum HP if the weather is Heavy Rain, Rain, Sandstorm, or Snow, all rounded half down."
   },
   "synthesis": {
     "id": 235,
@@ -2599,7 +2833,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 5,
     "category": "status",
-    "description": "자신의 HP를 회복한다. 날씨에 따라 회복량이 변한다."
+    "description": "자신의 HP를 회복한다. 날씨에 따라 회복량이 변한다.",
+    "descriptionEn": "The user restores 1/2 of its maximum HP if Strong Winds or no weather conditions are in effect or if the user is holding Utility Umbrella, 2/3 of its maximum HP if the weather is Intense Sun or Sun, and 1/4 of its maximum HP if the weather is Heavy Rain, Rain, Sandstorm, or Snow, all rounded half down."
   },
   "moonlight": {
     "id": 236,
@@ -2610,7 +2845,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 5,
     "category": "status",
-    "description": "자신의 HP를 회복한다. 날씨에 따라 회복량이 변한다."
+    "description": "자신의 HP를 회복한다. 날씨에 따라 회복량이 변한다.",
+    "descriptionEn": "The user restores 1/2 of its maximum HP if Strong Winds or no weather conditions are in effect or if the user is holding Utility Umbrella, 2/3 of its maximum HP if the weather is Intense Sun or Sun, and 1/4 of its maximum HP if the weather is Heavy Rain, Rain, Sandstorm, or Snow, all rounded half down."
   },
   "hidden-power": {
     "id": 237,
@@ -2621,7 +2857,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "special",
-    "description": "기술을 쓴 포켓몬에 따라 기술의 타입이 바뀐다."
+    "description": "기술을 쓴 포켓몬에 따라 기술의 타입이 바뀐다.",
+    "descriptionEn": "This move's type depends on the user's individual values (IVs), and can be any type but Fairy and Normal."
   },
   "cross-chop": {
     "id": 238,
@@ -2632,7 +2869,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 80,
     "pp": 5,
     "category": "physical",
-    "description": "양손으로 당수를 상대에게 힘껏 쳐서 공격한다. 급소에 맞기 쉽다."
+    "description": "양손으로 당수를 상대에게 힘껏 쳐서 공격한다. 급소에 맞기 쉽다.",
+    "descriptionEn": "Has a higher chance for a critical hit."
   },
   "twister": {
     "id": 239,
@@ -2643,7 +2881,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "special",
-    "description": "회오리를 일으켜 상대를 끌어들여 공격한다. 상대를 풀죽게 만들 때가 있다."
+    "description": "회오리를 일으켜 상대를 끌어들여 공격한다. 상대를 풀죽게 만들 때가 있다.",
+    "descriptionEn": "Has a 20% chance to make the target flinch. Power doubles if the target is using Bounce, Fly, or Sky Drop, or is under the effect of Sky Drop."
   },
   "rain-dance": {
     "id": 240,
@@ -2654,7 +2893,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 5,
     "category": "status",
-    "description": "5턴 동안 비를 내리게 하여 물타입 기술의 위력을 올린다."
+    "description": "5턴 동안 비를 내리게 하여 물타입 기술의 위력을 올린다.",
+    "descriptionEn": "For 5 turns, the weather becomes Rain. The damage of Water-type attacks is multiplied by 1.5 and the damage of Fire-type attacks is multiplied by 0.5 during the effect. Lasts for 8 turns if the user is holding Damp Rock. Fails if the current weather is Rain."
   },
   "sunny-day": {
     "id": 241,
@@ -2665,7 +2905,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 5,
     "category": "status",
-    "description": "5턴 동안 햇살을 강하게 해서 불꽃타입 기술의 위력을 올린다."
+    "description": "5턴 동안 햇살을 강하게 해서 불꽃타입 기술의 위력을 올린다.",
+    "descriptionEn": "For 5 turns, the weather becomes Sun. The damage of Fire-type attacks is multiplied by 1.5 and the damage of Water-type attacks is multiplied by 0.5 during the effect. Lasts for 8 turns if the user is holding Heat Rock. Fails if the current weather is Sun."
   },
   "crunch": {
     "id": 242,
@@ -2676,7 +2917,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "날카로운 이빨로 상대를 깨물어 부숴서 공격한다. 상대의 방어를 떨어뜨릴 때가 있다."
+    "description": "날카로운 이빨로 상대를 깨물어 부숴서 공격한다. 상대의 방어를 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 20% chance to lower the target's Defense by 1 stage."
   },
   "mirror-coat": {
     "id": 243,
@@ -2687,7 +2929,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "special",
-    "description": "상대에게 받은 특수공격의 데미지를 2배로 만들어 그 상대에게 돌려준다."
+    "description": "상대에게 받은 특수공격의 데미지를 2배로 만들어 그 상대에게 돌려준다.",
+    "descriptionEn": "Deals damage to the last opposing Pokemon to hit the user with a special attack this turn equal to twice the HP lost by the user from that attack. If the user did not lose HP from the attack, this move deals 1 HP of damage instead. If that opposing Pokemon's position is no longer in use and there is another opposing Pokemon on the field, the damage is done to it instead. Only the last hit of a multi-hit attack is counted. Fails if the user was not hit by an opposing Pokemon's special attack this turn."
   },
   "psych-up": {
     "id": 244,
@@ -2698,7 +2941,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "자신에게 암시를 걸어서 능력 변화 상태를 상대와 똑같은 상태로 만든다."
+    "description": "자신에게 암시를 걸어서 능력 변화 상태를 상대와 똑같은 상태로 만든다.",
+    "descriptionEn": "The user copies all of the target's current stat stage changes."
   },
   "extreme-speed": {
     "id": 245,
@@ -2709,7 +2953,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": "눈에 보이지 않는 굉장한 속도로 상대에게 돌진하여 공격한다. 반드시 선제공격을 할 수 있다."
+    "description": "눈에 보이지 않는 굉장한 속도로 상대에게 돌진하여 공격한다. 반드시 선제공격을 할 수 있다.",
+    "descriptionEn": "No additional effect."
   },
   "ancient-power": {
     "id": 246,
@@ -2720,7 +2965,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": "원시의 힘으로 공격한다. 자신의 모든 능력이 오를 때가 있다."
+    "description": "원시의 힘으로 공격한다. 자신의 모든 능력이 오를 때가 있다.",
+    "descriptionEn": "Has a 10% chance to raise the user's Attack, Defense, Special Attack, Special Defense, and Speed by 1 stage."
   },
   "shadow-ball": {
     "id": 247,
@@ -2731,7 +2977,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "special",
-    "description": "까만 그림자의 덩어리를 내던져서 공격한다. 상대의 특수방어를 떨어뜨릴 때가 있다."
+    "description": "까만 그림자의 덩어리를 내던져서 공격한다. 상대의 특수방어를 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 20% chance to lower the target's Special Defense by 1 stage."
   },
   "future-sight": {
     "id": 248,
@@ -2742,7 +2989,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "기술을 사용한 2턴 뒤에 상대에게 염동력의 덩어리를 보내어 공격한다."
+    "description": "기술을 사용한 2턴 뒤에 상대에게 염동력의 덩어리를 보내어 공격한다.",
+    "descriptionEn": "Deals damage two turns after this move is used. At the end of that turn, the damage is calculated at that time and dealt to the Pokemon at the position the target had when the move was used. If the user is no longer active at the time, damage is calculated based on the user's natural Special Attack stat, types, and level, with no boosts from its held item or Ability. Fails if this move or Doom Desire is already in effect for the target's position."
   },
   "rock-smash": {
     "id": 249,
@@ -2753,7 +3001,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "펀치로 공격한다. 상대의 방어를 떨어뜨릴 때가 있다. 바위를 깰 수도 있다."
+    "description": "펀치로 공격한다. 상대의 방어를 떨어뜨릴 때가 있다. 바위를 깰 수도 있다.",
+    "descriptionEn": "Has a 50% chance to lower the target's Defense by 1 stage."
   },
   "whirlpool": {
     "id": 250,
@@ -2764,7 +3013,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 15,
     "category": "special",
-    "description": "세차게 소용돌이치는 물속에 4-5턴 동안 상대를 가두어 공격한다."
+    "description": "세차게 소용돌이치는 물속에 4-5턴 동안 상대를 가두어 공격한다.",
+    "descriptionEn": "Prevents the target from switching for four or five turns (seven turns if the user is holding Grip Claw). Causes damage to the target equal to 1/8 of its maximum HP (1/6 if the user is holding Binding Band), rounded down, at the end of each turn during effect. The target can still switch out if it is holding Shed Shell or uses Baton Pass, Flip Turn, Parting Shot, Shed Tail, Teleport, U-turn, or Volt Switch. The effect ends if either the user or the target leaves the field, or if the target uses Mortal Spin, Rapid Spin, or Substitute successfully. This effect is not stackable or reset by using this or another binding move."
   },
   "beat-up": {
     "id": 251,
@@ -2775,7 +3025,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "같은 편 전원이 공격한다. 동료 포켓몬이 많을수록 기술의 공격 횟수가 증가한다."
+    "description": "같은 편 전원이 공격한다. 동료 포켓몬이 많을수록 기술의 공격 횟수가 증가한다.",
+    "descriptionEn": "Hits one time for the user and one time for each unfainted Pokemon without a non-volatile status condition in the user's party. The power of each hit is equal to 5+(X/10), where X is each participating Pokemon's base Attack; each hit is considered to come from the user."
   },
   "fake-out": {
     "id": 252,
@@ -2786,7 +3037,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "선제공격으로 상대를 풀죽게 한다. 배틀에 나가서 바로 쓰지 않으면 성공할 수 없다."
+    "description": "선제공격으로 상대를 풀죽게 한다. 배틀에 나가서 바로 쓰지 않으면 성공할 수 없다.",
+    "descriptionEn": "Has a 100% chance to make the target flinch. Fails unless it is the user's first turn on the field."
   },
   "uproar": {
     "id": 253,
@@ -2797,7 +3049,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "3턴 동안 소란 피워 공격한다. 그 동안은 아무도 잠들지 않게 된다."
+    "description": "3턴 동안 소란 피워 공격한다. 그 동안은 아무도 잠들지 않게 된다.",
+    "descriptionEn": "The user spends three turns locked into this move. This move targets an opponent at random on each turn. On the first of the three turns, all sleeping active Pokemon wake up. During the three turns, no active Pokemon can fall asleep by any means, and Pokemon switched in during the effect do not wake up. If the user is prevented from moving or the attack is not successful against the target during one of the turns, the effect ends."
   },
   "stockpile": {
     "id": 254,
@@ -2808,7 +3061,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "힘을 비축해서 자신의 방어와 특수방어를 올린다. 최대 3회까지 비축할 수 있다."
+    "description": "힘을 비축해서 자신의 방어와 특수방어를 올린다. 최대 3회까지 비축할 수 있다.",
+    "descriptionEn": "Raises the user's Defense and Special Defense by 1 stage. The user's Stockpile count increases by 1. Fails if the user's Stockpile count is 3. The user's Stockpile count is reset to 0 when it is no longer active."
   },
   "spit-up": {
     "id": 255,
@@ -2819,7 +3073,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "비축된 힘을 상대에게 부딪쳐서 공격한다. 비축된 만큼 위력이 올라간다."
+    "description": "비축된 힘을 상대에게 부딪쳐서 공격한다. 비축된 만큼 위력이 올라간다.",
+    "descriptionEn": "Power is equal to 100 times the user's Stockpile count. Fails if the user's Stockpile count is 0. Whether or not this move is successful, the user's Defense and Special Defense decrease by as many stages as Stockpile had increased them, and the user's Stockpile count resets to 0."
   },
   "swallow": {
     "id": 256,
@@ -2830,7 +3085,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "비축된 힘을 꿀꺽해서 자신의 HP를 회복한다. 비축된 만큼 회복한다."
+    "description": "비축된 힘을 꿀꺽해서 자신의 HP를 회복한다. 비축된 만큼 회복한다.",
+    "descriptionEn": "The user restores its HP based on its Stockpile count. Restores 1/4 of its maximum HP if it's 1, 1/2 of its maximum HP if it's 2, both rounded half down, and all of its HP if it's 3. Fails if the user's Stockpile count is 0. The user's Defense and Special Defense decrease by as many stages as Stockpile had increased them, and the user's Stockpile count resets to 0."
   },
   "heat-wave": {
     "id": 257,
@@ -2841,7 +3097,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "special",
-    "description": "뜨거운 숨결을 상대에게 내뿜어 공격한다. 화상 상태로 만들 때가 있다."
+    "description": "뜨거운 숨결을 상대에게 내뿜어 공격한다. 화상 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 10% chance to burn the target."
   },
   "hail": {
     "id": 258,
@@ -2852,7 +3109,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "5턴 동안 싸라기눈을 내리게 해 얼음타입이 아닌 포켓몬 모두에게 데미지를 준다."
+    "description": "5턴 동안 싸라기눈을 내리게 해 얼음타입이 아닌 포켓몬 모두에게 데미지를 준다.",
+    "descriptionEn": "For 5 turns, the weather becomes Hail. At the end of each turn except the last, all active Pokemon lose 1/16 of their maximum HP, rounded down, unless they are an Ice type or have the Ice Body, Magic Guard, Overcoat, or Snow Cloak Abilities. Lasts for 8 turns if the user is holding Icy Rock. Fails if the current weather is Hail."
   },
   "torment": {
     "id": 259,
@@ -2863,7 +3121,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "status",
-    "description": "상대에게 트집을 잡아서 똑같은 기술을 2회 연속으로 쓸 수 없게 한다."
+    "description": "상대에게 트집을 잡아서 똑같은 기술을 2회 연속으로 쓸 수 없게 한다.",
+    "descriptionEn": "Prevents the target from selecting the same move for use two turns in a row. This effect ends when the target is no longer active."
   },
   "flatter": {
     "id": 260,
@@ -2874,7 +3133,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "status",
-    "description": "상대를 부추겨서 혼란시킨다. 동시에 상대의 특수공격도 올라가 버린다."
+    "description": "상대를 부추겨서 혼란시킨다. 동시에 상대의 특수공격도 올라가 버린다.",
+    "descriptionEn": "Raises the target's Special Attack by 1 stage and confuses it."
   },
   "will-o-wisp": {
     "id": 261,
@@ -2885,7 +3145,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 15,
     "category": "status",
-    "description": "으스스하고 괴상한 불꽃을 쏘아 상대를 화상 상태로 만든다."
+    "description": "으스스하고 괴상한 불꽃을 쏘아 상대를 화상 상태로 만든다.",
+    "descriptionEn": "Burns the target."
   },
   "memento": {
     "id": 262,
@@ -2896,7 +3157,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "status",
-    "description": "자신은 기절하게 되지만 그 대신 상대의 공격과 특수공격을 크게 떨어뜨린다."
+    "description": "자신은 기절하게 되지만 그 대신 상대의 공격과 특수공격을 크게 떨어뜨린다.",
+    "descriptionEn": "Lowers the target's Attack and Special Attack by 2 stages. The user faints unless this move misses or there is no target. Fails entirely if this move hits a substitute, but does not fail if the target's stats cannot be changed."
   },
   "facade": {
     "id": 263,
@@ -2907,7 +3169,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "자신이 독, 마비, 화상 상태일 때 날리면 기술의 위력이 2배가 된다."
+    "description": "자신이 독, 마비, 화상 상태일 때 날리면 기술의 위력이 2배가 된다.",
+    "descriptionEn": "Power doubles if the user is burned, paralyzed, or poisoned. The physical damage halving effect from the user's burn is ignored."
   },
   "focus-punch": {
     "id": 264,
@@ -2918,7 +3181,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "정신력을 높여 펀치를 날린다. 기술을 쓰기 전에 공격을 받으면 실패한다."
+    "description": "정신력을 높여 펀치를 날린다. 기술을 쓰기 전에 공격을 받으면 실패한다.",
+    "descriptionEn": "The user loses its focus and does nothing if it is hit by a damaging attack this turn before it can execute the move."
   },
   "smelling-salts": {
     "id": 265,
@@ -2929,7 +3193,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "마비 상태의 상대에게는 위력이 2배가 되지만 대신 상대의 마비가 풀린다."
+    "description": "마비 상태의 상대에게는 위력이 2배가 되지만 대신 상대의 마비가 풀린다.",
+    "descriptionEn": "Power doubles if the target is paralyzed. If the user has not fainted, the target is cured of paralysis."
   },
   "follow-me": {
     "id": 266,
@@ -2940,7 +3205,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "자신에게 주목시켜 상대로부터의 공격을 모두 자신에게 향하게 한다."
+    "description": "자신에게 주목시켜 상대로부터의 공격을 모두 자신에게 향하게 한다.",
+    "descriptionEn": "Until the end of the turn, all single-target attacks from the opposing side are redirected to the user. Such attacks are redirected to the user before they can be reflected by Magic Coat or the Magic Bounce Ability, or drawn in by the Lightning Rod or Storm Drain Abilities. Fails if it is not a Double Battle or Battle Royal. This effect is ignored while the user is under the effect of Sky Drop."
   },
   "nature-power": {
     "id": 267,
@@ -2951,7 +3217,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "자연의 힘으로 공격한다. 사용하는 장소에 따라 나오는 기술이 변화한다."
+    "description": "자연의 힘으로 공격한다. 사용하는 장소에 따라 나오는 기술이 변화한다.",
+    "descriptionEn": "This move calls another move for use based on the battle terrain. Tri Attack on the regular Wi-Fi terrain, Thunderbolt during Electric Terrain, Moonblast during Misty Terrain, Energy Ball during Grassy Terrain, and Psychic during Psychic Terrain."
   },
   "charge": {
     "id": 268,
@@ -2962,7 +3229,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "다음 턴에 쓸 전기타입 기술의 위력을 올린다. 자신의 특수방어도 올라간다."
+    "description": "다음 턴에 쓸 전기타입 기술의 위력을 올린다. 자신의 특수방어도 올라간다.",
+    "descriptionEn": "Raises the user's Special Defense by 1 stage. The user's next Electric-type attack will have its power doubled; the effect ends when the user is no longer active, or after the user attempts to use any Electric-type move besides Charge, even if it is not successful."
   },
   "taunt": {
     "id": 269,
@@ -2973,7 +3241,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "status",
-    "description": "상대를 화나게 한다. 3턴 동안 상대는 데미지를 주는 기술밖에 쓸 수 없게 된다."
+    "description": "상대를 화나게 한다. 3턴 동안 상대는 데미지를 주는 기술밖에 쓸 수 없게 된다.",
+    "descriptionEn": "Prevents the target from using non-damaging moves for its next three turns. Pokemon with the Oblivious Ability or protected by the Aroma Veil Ability are immune."
   },
   "helping-hand": {
     "id": 270,
@@ -2984,7 +3253,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "동료를 돕는다. 도움받은 포켓몬이 쓰는 기술의 위력은 여느 때보다 커진다."
+    "description": "동료를 돕는다. 도움받은 포켓몬이 쓰는 기술의 위력은 여느 때보다 커진다.",
+    "descriptionEn": "The power of the target's attack this turn is multiplied by 1.5 (this effect is stackable). Fails if there is no ally adjacent to the user or if the ally already moved this turn, but does not fail if the ally is using a two-turn move."
   },
   "trick": {
     "id": 271,
@@ -2995,7 +3265,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "status",
-    "description": "상대의 빈틈을 노려 자신과 상대가 지닌 물건을 교환한다."
+    "description": "상대의 빈틈을 노려 자신과 상대가 지닌 물건을 교환한다.",
+    "descriptionEn": "The user swaps its held item with the target's held item. Fails if both the user and the target have no held item, or if the user is trying to give or take a Blue Orb, Red Orb, Adamant Crystal, Lustrous Globe, Griseous Core, Plate, Drive, Memory, Rusted Sword, Rusted Shield, Booster Energy, or Mask to or from a Kyogre, Groudon, Dialga, Palkia, Giratina, Arceus, Genesect, Silvally, Zacian, Zamazenta, Paradox Pokemon, or Ogerpon, respectively. In this case, Paradox Pokemon include every species with the Protosynthesis and Quark Drive Abilities, except Gouging Fire, Raging Bolt, Iron Boulder, and Iron Crown. The target is immune to this move if it has the Sticky Hold Ability."
   },
   "role-play": {
     "id": 272,
@@ -3006,7 +3277,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "상대의 역할을 하여 자신도 상대와 같은 특성으로 변화한다."
+    "description": "상대의 역할을 하여 자신도 상대와 같은 특성으로 변화한다.",
+    "descriptionEn": "The user's Ability changes to match the target's Ability. Fails if the user's Ability is As One, Battle Bond, Comatose, Disguise, Gulp Missile, Ice Face, Multitype, Power Construct, RKS System, Schooling, Shields Down, Stance Change, Tera Shift, Zen Mode, Zero to Hero, or already matches the target, or if the target's Ability is As One, Battle Bond, Comatose, Commander, Disguise, Embody Aspect, Flower Gift, Forecast, Hunger Switch, Ice Face, Illusion, Imposter, Multitype, Neutralizing Gas, Poison Puppeteer, Power Construct, Power of Alchemy, Protosynthesis, Quark Drive, Receiver, RKS System, Schooling, Shields Down, Stance Change, Tera Shell, Tera Shift, Teraform Zero, Trace, Wonder Guard, Zen Mode, or Zero to Hero."
   },
   "wish": {
     "id": 273,
@@ -3017,7 +3289,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "다음 턴에 자신의 HP를 최대 HP의 절반만큼 회복한다."
+    "description": "다음 턴에 자신의 HP를 최대 HP의 절반만큼 회복한다.",
+    "descriptionEn": "At the end of the next turn, the Pokemon at the user's position has 1/2 of the user's maximum HP restored to it, rounded down. Fails if this move is already in effect for the user's position."
   },
   "assist": {
     "id": 274,
@@ -3028,7 +3301,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "서둘러서 같은 편의 도움을 받아 교대 포켓몬이 기억하고 있는 기술 중 하나를 쓴다."
+    "description": "서둘러서 같은 편의 도움을 받아 교대 포켓몬이 기억하고 있는 기술 중 하나를 쓴다.",
+    "descriptionEn": "A random move among those known by the user's party members is selected for use. Does not select Assist, Baneful Bunker, Beak Blast, Belch, Bestow, Blazing Torque, Bounce, Celebrate, Chatter, Circle Throw, Combat Torque, Copycat, Counter, Covet, Destiny Bond, Detect, Dig, Dive, Dragon Tail, Endure, Feint, Fly, Focus Punch, Follow Me, Helping Hand, Hold Hands, King's Shield, Magical Torque, Mat Block, Me First, Metronome, Mimic, Mirror Coat, Mirror Move, Nature Power, Noxious Torque, Phantom Force, Protect, Rage Powder, Roar, Shadow Force, Shell Trap, Sketch, Sky Drop, Sleep Talk, Snatch, Spiky Shield, Spotlight, Struggle, Switcheroo, Tera Starstorm, Thief, Transform, Trick, Whirlwind, or Wicked Torque."
   },
   "ingrain": {
     "id": 275,
@@ -3039,7 +3313,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "대지에 뿌리를 박아 매 턴마다 자신의 HP를 회복한다. 뿌리 박고 있으므로 교체할 수 없다."
+    "description": "대지에 뿌리를 박아 매 턴마다 자신의 HP를 회복한다. 뿌리 박고 있으므로 교체할 수 없다.",
+    "descriptionEn": "The user has 1/16 of its maximum HP restored at the end of each turn, but it is prevented from switching out and other Pokemon cannot force the user to switch out. The user can still switch out if it uses Baton Pass, Flip Turn, Parting Shot, Teleport, U-turn, or Volt Switch. If the user leaves the field using Baton Pass, the replacement will remain trapped and still receive the healing effect. During the effect, the user can be hit normally by Ground-type attacks and be affected by Spikes, Toxic Spikes, and Sticky Web, even if the user is a Flying type or has the Levitate Ability."
   },
   "superpower": {
     "id": 276,
@@ -3050,7 +3325,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": "엄청난 힘을 발휘하여 상대를 공격한다. 자신의 공격과 방어가 떨어진다."
+    "description": "엄청난 힘을 발휘하여 상대를 공격한다. 자신의 공격과 방어가 떨어진다.",
+    "descriptionEn": "Lowers the user's Attack and Defense by 1 stage."
   },
   "magic-coat": {
     "id": 277,
@@ -3061,7 +3337,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 15,
     "category": "status",
-    "description": "상대가 상태 이상이 되는 기술이나 씨뿌리기 등을 썼을 때 되받아친다."
+    "description": "상대가 상태 이상이 되는 기술이나 씨뿌리기 등을 썼을 때 되받아친다.",
+    "descriptionEn": "Until the end of the turn, the user is unaffected by certain non-damaging moves directed at it and will instead use such moves against the original user. Moves reflected in this way are unable to be reflected again by this or the Magic Bounce Ability's effect. Spikes, Stealth Rock, Sticky Web, and Toxic Spikes can only be reflected once per side, by the leftmost Pokemon under this or the Magic Bounce Ability's effect. The Lightning Rod and Storm Drain Abilities redirect their respective moves before this move takes effect."
   },
   "recycle": {
     "id": 278,
@@ -3072,7 +3349,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "배틀 중에 사용하여 없어진 자신의 지닌 물건을 재생시켜 사용할 수 있게 한다."
+    "description": "배틀 중에 사용하여 없어진 자신의 지닌 물건을 재생시켜 사용할 수 있게 한다.",
+    "descriptionEn": "The user regains the item it last used. Fails if the user is holding an item, if the user has not held an item, if the item was a popped Air Balloon, if the item was picked up by a Pokemon with the Pickup Ability, or if the item was lost to Bug Bite, Corrosive Gas, Covet, Incinerate, Knock Off, Pluck, or Thief. Items thrown with Fling can be regained."
   },
   "revenge": {
     "id": 279,
@@ -3083,7 +3361,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "상대에게 기술을 받으면 그 상대에게 주는 데미지가 2배가 된다."
+    "description": "상대에게 기술을 받으면 그 상대에게 주는 데미지가 2배가 된다.",
+    "descriptionEn": "Power doubles if the user was hit by the target this turn."
   },
   "brick-break": {
     "id": 280,
@@ -3094,7 +3373,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "수도로 기세 좋게 내려쳐서 상대를 공격한다. 빛의장막이나 리플렉터도 파괴할 수 있다."
+    "description": "수도로 기세 좋게 내려쳐서 상대를 공격한다. 빛의장막이나 리플렉터도 파괴할 수 있다.",
+    "descriptionEn": "If this attack does not miss, the effects of Reflect, Light Screen, and Aurora Veil end for the target's side of the field before damage is calculated."
   },
   "yawn": {
     "id": 281,
@@ -3105,7 +3385,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "큰 하품으로 졸음을 유도한다. 다음 턴에 상대를 잠듦 상태로 만든다."
+    "description": "큰 하품으로 졸음을 유도한다. 다음 턴에 상대를 잠듦 상태로 만든다.",
+    "descriptionEn": "Causes the target to fall asleep at the end of the next turn. Fails when used if the target cannot fall asleep or if it already has a non-volatile status condition. At the end of the next turn, if the target is still active, does not have a non-volatile status condition, and can fall asleep, it falls asleep. If the target becomes affected, this effect cannot be prevented by Safeguard or a substitute, or by falling asleep and waking up during the effect."
   },
   "knock-off": {
     "id": 282,
@@ -3116,7 +3397,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "상대의 지닌 물건을 탁 쳐서 떨어뜨려 배틀이 끝날 때까지 사용할 수 없게 한다. 물건을 가진 상대에게는 데미지를 더 준다."
+    "description": "상대의 지닌 물건을 탁 쳐서 떨어뜨려 배틀이 끝날 때까지 사용할 수 없게 한다. 물건을 가진 상대에게는 데미지를 더 준다.",
+    "descriptionEn": "This move's power is multiplied by 1.5 if the target is holding an item, and the target loses its held item if the user has not fainted. A target with the Sticky Hold Ability does not lose its held item if it has not fainted. This move does not increase in power or remove the target's item if it is a Blue Orb, Red Orb, Adamant Crystal, Lustrous Globe, Griseous Core, Plate, Drive, Memory, Rusted Sword, Rusted Shield, Booster Energy, or Mask held by a Kyogre, Groudon, Dialga, Palkia, Giratina, Arceus, Genesect, Silvally, Zacian, Zamazenta, Paradox Pokemon, or Ogerpon, respectively, or if the user is one of those species and the target is holding the respective item. In this case, Paradox Pokemon include every species with the Protosynthesis and Quark Drive Abilities, except Gouging Fire, Raging Bolt, Iron Boulder, and Iron Crown. Items lost to this move cannot be regained with Recycle or the Harvest Ability."
   },
   "endeavor": {
     "id": 283,
@@ -3127,7 +3409,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": "상대의 HP가 자신의 HP와 같아지도록 데미지를 준다."
+    "description": "상대의 HP가 자신의 HP와 같아지도록 데미지를 준다.",
+    "descriptionEn": "Deals damage to the target equal to (target's current HP - user's current HP). The target is unaffected if its current HP is less than or equal to the user's current HP."
   },
   "eruption": {
     "id": 284,
@@ -3138,7 +3421,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": "분노를 폭발시켜 상대를 공격한다. 자신의 HP가 적을수록 기술의 위력이 떨어진다."
+    "description": "분노를 폭발시켜 상대를 공격한다. 자신의 HP가 적을수록 기술의 위력이 떨어진다.",
+    "descriptionEn": "Power is equal to (user's current HP * 150 / user's maximum HP), rounded down, but not less than 1."
   },
   "skill-swap": {
     "id": 285,
@@ -3149,7 +3433,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "초능력으로 자신의 특성과 상대의 특성을 바꾼다."
+    "description": "초능력으로 자신의 특성과 상대의 특성을 바꾼다.",
+    "descriptionEn": "The user swaps its Ability with the target's Ability. Fails if either the user or the target's Ability is As One, Battle Bond, Comatose, Commander, Disguise, Embody Aspect, Hunger Switch, Ice Face, Illusion, Multitype, Neutralizing Gas, Poison Puppeteer, Power Construct, Protosynthesis, Quark Drive, RKS System, Schooling, Shields Down, Stance Change, Tera Shell, Tera Shift, Teraform Zero, Wonder Guard, Zen Mode, or Zero to Hero."
   },
   "imprison": {
     "id": 286,
@@ -3160,7 +3445,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "상대가 자신과 같은 기술을 기억하고 있으면 상대만 그 기술을 사용할 수 없게 한다."
+    "description": "상대가 자신과 같은 기술을 기억하고 있으면 상대만 그 기술을 사용할 수 없게 한다.",
+    "descriptionEn": "The user prevents all opposing Pokemon from using any moves that the user also knows as long as the user remains active."
   },
   "refresh": {
     "id": 287,
@@ -3171,7 +3457,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "몸을 쉬게 하여 자신이 입은 독, 마비, 화상의 상태 이상을 치료한다."
+    "description": "몸을 쉬게 하여 자신이 입은 독, 마비, 화상의 상태 이상을 치료한다.",
+    "descriptionEn": "The user cures its burn, poison, or paralysis. Fails if the user is not burned, poisoned, or paralyzed."
   },
   "grudge": {
     "id": 288,
@@ -3182,7 +3469,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 5,
     "category": "status",
-    "description": "상대의 기술로 기절하면 원념을 담아 그 기술의 PP를 0으로 만든다."
+    "description": "상대의 기술로 기절하면 원념을 담아 그 기술의 PP를 0으로 만든다.",
+    "descriptionEn": "Until the user's next turn, if an opposing Pokemon's attack knocks the user out, that move loses all its remaining PP."
   },
   "snatch": {
     "id": 289,
@@ -3193,7 +3481,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "상대가 사용하려고 한 회복 기술이나 능력 변화의 기술을 빼앗아 자신에게 쓴다."
+    "description": "상대가 사용하려고 한 회복 기술이나 능력 변화의 기술을 빼앗아 자신에게 쓴다.",
+    "descriptionEn": "If another Pokemon uses certain non-damaging moves this turn, the user steals that move to use itself. If multiple Pokemon use one of those moves this turn, the applicable moves are all stolen by the first Pokemon in turn order that used this move this turn. This effect is ignored while the user is under the effect of Sky Drop."
   },
   "secret-power": {
     "id": 290,
@@ -3204,7 +3493,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "비밀의 힘으로 상대를 공격한다. 사용 장소에 따라 추가 효과가 변화한다."
+    "description": "비밀의 힘으로 상대를 공격한다. 사용 장소에 따라 추가 효과가 변화한다.",
+    "descriptionEn": "Has a 30% chance to cause a secondary effect on the target based on the battle terrain. Causes paralysis on the regular Wi-Fi terrain, causes paralysis during Electric Terrain, lowers Special Attack by 1 stage during Misty Terrain, causes sleep during Grassy Terrain and lowers Speed by 1 stage during Psychic Terrain."
   },
   "dive": {
     "id": 291,
@@ -3215,7 +3505,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "1턴째에 잠수했다가 2턴째에 떠올라 공격한다."
+    "description": "1턴째에 잠수했다가 2턴째에 떠올라 공격한다.",
+    "descriptionEn": "This attack charges on the first turn and executes on the second. On the first turn, the user avoids all attacks other than Surf and Whirlpool but takes double damage from them, and is also unaffected by weather. If the user is holding a Power Herb, the move completes in one turn."
   },
   "arm-thrust": {
     "id": 292,
@@ -3226,7 +3517,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "펼친 양손으로 상대를 번갈아 쳐서 공격한다. 2-5회 동안 연속으로 쓴다."
+    "description": "펼친 양손으로 상대를 번갈아 쳐서 공격한다. 2-5회 동안 연속으로 쓴다.",
+    "descriptionEn": "Hits two to five times. Has a 35% chance to hit two or three times and a 15% chance to hit four or five times. If one of the hits breaks the target's substitute, it will take damage for the remaining hits. If the user has the Skill Link Ability, this move will always hit five times. If the user is holding Loaded Dice, this move will hit 4-5 times."
   },
   "camouflage": {
     "id": 293,
@@ -3237,7 +3529,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "물가나 풀밭, 동굴 등 있는 장소에 맞춰서 자신의 타입을 바꾼다."
+    "description": "물가나 풀밭, 동굴 등 있는 장소에 맞춰서 자신의 타입을 바꾼다.",
+    "descriptionEn": "The user's type changes based on the battle terrain. Normal type on the regular Wi-Fi terrain, Electric type during Electric Terrain, Fairy type during Misty Terrain, Grass type during Grassy Terrain, and Psychic type during Psychic Terrain. Fails if the user's type cannot be changed or if the user is already purely that type."
   },
   "tail-glow": {
     "id": 294,
@@ -3248,7 +3541,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "깜빡거리는 빛을 바라보고 자신의 정신을 통일하여 특수공격을 매우 크게 올린다."
+    "description": "깜빡거리는 빛을 바라보고 자신의 정신을 통일하여 특수공격을 매우 크게 올린다.",
+    "descriptionEn": "Raises the user's Special Attack by 3 stages."
   },
   "luster-purge": {
     "id": 295,
@@ -3259,7 +3553,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": "눈부신 빛을 발산하여 공격한다. 상대의 특수방어를 떨어뜨릴 때가 있다."
+    "description": "눈부신 빛을 발산하여 공격한다. 상대의 특수방어를 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 50% chance to lower the target's Special Defense by 1 stage."
   },
   "mist-ball": {
     "id": 296,
@@ -3270,7 +3565,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": "안개의 깃털로 둘러싸 공격한다. 상대의 특수공격을 떨어뜨릴 때가 있다."
+    "description": "안개의 깃털로 둘러싸 공격한다. 상대의 특수공격을 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 50% chance to lower the target's Special Attack by 1 stage."
   },
   "feather-dance": {
     "id": 297,
@@ -3281,7 +3577,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "status",
-    "description": "깃털을 흩뿌려 상대의 몸에 휘감는다. 상대의 공격을 크게 떨어뜨린다."
+    "description": "깃털을 흩뿌려 상대의 몸에 휘감는다. 상대의 공격을 크게 떨어뜨린다.",
+    "descriptionEn": "Lowers the target's Attack by 2 stages."
   },
   "teeter-dance": {
     "id": 298,
@@ -3292,7 +3589,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "status",
-    "description": "흔들흔들 댄스를 춰서 주위에 있는 포켓몬을 혼란 상태로 만든다."
+    "description": "흔들흔들 댄스를 춰서 주위에 있는 포켓몬을 혼란 상태로 만든다.",
+    "descriptionEn": "Causes the target to become confused."
   },
   "blaze-kick": {
     "id": 299,
@@ -3303,7 +3601,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "physical",
-    "description": "공격한 상대를 화상 상태로 만들 때가 있다. 급소에도 맞기 쉽다."
+    "description": "공격한 상대를 화상 상태로 만들 때가 있다. 급소에도 맞기 쉽다.",
+    "descriptionEn": "Has a 10% chance to burn the target and a higher chance for a critical hit."
   },
   "mud-sport": {
     "id": 300,
@@ -3314,7 +3613,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 15,
     "category": "status",
-    "description": "주위를 진흙투성이로 만든다. 5턴 동안 전기타입의 기술을 약하게 한다."
+    "description": "주위를 진흙투성이로 만든다. 5턴 동안 전기타입의 기술을 약하게 한다.",
+    "descriptionEn": "For 5 turns, all Electric-type attacks used by any active Pokemon have their power multiplied by 0.33. Fails if this effect is already active."
   },
   "ice-ball": {
     "id": 301,
@@ -3325,7 +3625,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 20,
     "category": "physical",
-    "description": "5턴 동안 구르기를 반복하여 상대를 공격한다. 기술이 맞을 때마다 위력이 올라간다."
+    "description": "5턴 동안 구르기를 반복하여 상대를 공격한다. 기술이 맞을 때마다 위력이 올라간다.",
+    "descriptionEn": "If this move is successful, the user is locked into this move and cannot make another move until it misses, 5 turns have passed, or the attack cannot be used. Power doubles with each successful hit of this move and doubles again if Defense Curl was used previously by the user. If this move is called by Sleep Talk, the move is used for one turn."
   },
   "needle-arm": {
     "id": 302,
@@ -3336,7 +3637,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "바늘팔을 세차게 흔들어 공격한다. 상대를 풀죽게 만들 때가 있다."
+    "description": "바늘팔을 세차게 흔들어 공격한다. 상대를 풀죽게 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to make the target flinch."
   },
   "slack-off": {
     "id": 303,
@@ -3347,7 +3649,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 5,
     "category": "status",
-    "description": "게으름 피우며 쉰다. 자신의 HP를 최대 HP의 절반만큼 회복한다."
+    "description": "게으름 피우며 쉰다. 자신의 HP를 최대 HP의 절반만큼 회복한다.",
+    "descriptionEn": "The user restores 1/2 of its maximum HP, rounded half up."
   },
   "hyper-voice": {
     "id": 304,
@@ -3358,7 +3661,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "시끄럽게 울려서 큰 진동을 상대에게 전달하여 공격한다."
+    "description": "시끄럽게 울려서 큰 진동을 상대에게 전달하여 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "poison-fang": {
     "id": 305,
@@ -3369,7 +3673,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "독이 있는 이빨로 상대를 물어서 공격한다. 맹독을 주입할 때가 있다."
+    "description": "독이 있는 이빨로 상대를 물어서 공격한다. 맹독을 주입할 때가 있다.",
+    "descriptionEn": "Has a 50% chance to badly poison the target."
   },
   "crush-claw": {
     "id": 306,
@@ -3380,7 +3685,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 10,
     "category": "physical",
-    "description": "단단하고 날카로운 손톱으로 베어 갈라서 공격한다. 상대의 방어를 떨어뜨릴 때가 있다."
+    "description": "단단하고 날카로운 손톱으로 베어 갈라서 공격한다. 상대의 방어를 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 50% chance to lower the target's Defense by 1 stage."
   },
   "blast-burn": {
     "id": 307,
@@ -3391,7 +3697,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 5,
     "category": "special",
-    "description": "폭발하는 불꽃으로 상대를 태워서 공격한다. 다음 턴은 움직일 수 없다."
+    "description": "폭발하는 불꽃으로 상대를 태워서 공격한다. 다음 턴은 움직일 수 없다.",
+    "descriptionEn": "If this move is successful, the user must recharge on the following turn and cannot select a move."
   },
   "hydro-cannon": {
     "id": 308,
@@ -3402,7 +3709,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 5,
     "category": "special",
-    "description": "물의 대포를 상대에게 발사해서 공격한다. 다음 턴은 움직일 수 없다."
+    "description": "물의 대포를 상대에게 발사해서 공격한다. 다음 턴은 움직일 수 없다.",
+    "descriptionEn": "If this move is successful, the user must recharge on the following turn and cannot select a move."
   },
   "meteor-mash": {
     "id": 309,
@@ -3413,7 +3721,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "physical",
-    "description": "혜성과 같은 펀치를 날려서 상대를 공격한다. 자신의 공격이 올라갈 때가 있다."
+    "description": "혜성과 같은 펀치를 날려서 상대를 공격한다. 자신의 공격이 올라갈 때가 있다.",
+    "descriptionEn": "Has a 20% chance to raise the user's Attack by 1 stage."
   },
   "astonish": {
     "id": 310,
@@ -3424,7 +3733,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "큰 소리 등으로 불시에 놀래켜서 공격한다. 상대를 풀죽게 만들 때가 있다."
+    "description": "큰 소리 등으로 불시에 놀래켜서 공격한다. 상대를 풀죽게 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to make the target flinch."
   },
   "weather-ball": {
     "id": 311,
@@ -3435,7 +3745,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "사용했을 때의 날씨에 따라서 기술 타입과 위력이 바뀐다."
+    "description": "사용했을 때의 날씨에 따라서 기술 타입과 위력이 바뀐다.",
+    "descriptionEn": "Power doubles if a weather condition other than Strong Winds is active, and this move's type changes to match. Ice type during Snow, Water type during Heavy Rain or Rain, Rock type during Sandstorm, and Fire type during Intense Sun or Sun. If the user is holding Utility Umbrella and uses Weather Ball during Heavy Rain, Rain, Intense Sun, or Sun, this move remains Normal type and does not double in power."
   },
   "aromatherapy": {
     "id": 312,
@@ -3446,7 +3757,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 5,
     "category": "status",
-    "description": "기분 좋은 평온한 향기를 맡게 하여 같은 편 모두의 상태 이상을 회복한다."
+    "description": "기분 좋은 평온한 향기를 맡게 하여 같은 편 모두의 상태 이상을 회복한다.",
+    "descriptionEn": "Every Pokemon in the user's party is cured of its non-volatile status condition. Active Pokemon with the Sap Sipper Ability are not cured, unless they are the user."
   },
   "fake-tears": {
     "id": 313,
@@ -3457,7 +3769,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "status",
-    "description": "우는 척을 하며 눈물을 흘린다. 난처하게 만들어 상대의 특수방어를 크게 떨어뜨린다."
+    "description": "우는 척을 하며 눈물을 흘린다. 난처하게 만들어 상대의 특수방어를 크게 떨어뜨린다.",
+    "descriptionEn": "Lowers the target's Special Defense by 2 stages."
   },
   "air-cutter": {
     "id": 314,
@@ -3468,7 +3781,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 25,
     "category": "special",
-    "description": "날카로운 바람으로 상대를 베어 공격한다. 급소에 맞기 쉽다."
+    "description": "날카로운 바람으로 상대를 베어 공격한다. 급소에 맞기 쉽다.",
+    "descriptionEn": "Has a higher chance for a critical hit."
   },
   "overheat": {
     "id": 315,
@@ -3479,7 +3793,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 5,
     "category": "special",
-    "description": "풀 파워로 상대를 공격한다. 쓰면 반동으로 자신의 특수공격이 크게 떨어진다."
+    "description": "풀 파워로 상대를 공격한다. 쓰면 반동으로 자신의 특수공격이 크게 떨어진다.",
+    "descriptionEn": "Lowers the user's Special Attack by 2 stages."
   },
   "odor-sleuth": {
     "id": 316,
@@ -3490,7 +3805,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 40,
     "category": "status",
-    "description": "고스트타입에 효과가 없는 기술이나 회피율이 높은 상대라 할지라도 공격이 맞게 된다."
+    "description": "고스트타입에 효과가 없는 기술이나 회피율이 높은 상대라 할지라도 공격이 맞게 된다.",
+    "descriptionEn": "As long as the target remains active, its evasiveness stat stage is ignored during accuracy checks against it if it is greater than 0, and Normal- and Fighting-type attacks can hit the target if it is a Ghost type. Fails if the target is already affected, or affected by Foresight or Miracle Eye."
   },
   "rock-tomb": {
     "id": 317,
@@ -3501,7 +3817,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 15,
     "category": "physical",
-    "description": "암석을 내던져서 공격한다. 상대의 움직임을 봉인함으로써 스피드를 떨어뜨린다."
+    "description": "암석을 내던져서 공격한다. 상대의 움직임을 봉인함으로써 스피드를 떨어뜨린다.",
+    "descriptionEn": "Has a 100% chance to lower the target's Speed by 1 stage."
   },
   "silver-wind": {
     "id": 318,
@@ -3512,7 +3829,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": "바람에 날개 가루를 날려서 상대를 공격한다. 자신의 모든 능력이 올라갈 때가 있다."
+    "description": "바람에 날개 가루를 날려서 상대를 공격한다. 자신의 모든 능력이 올라갈 때가 있다.",
+    "descriptionEn": "Has a 10% chance to raise the user's Attack, Defense, Special Attack, Special Defense, and Speed by 1 stage."
   },
   "metal-sound": {
     "id": 319,
@@ -3523,7 +3841,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 40,
     "category": "status",
-    "description": "금속을 긁을 때 나는 듯한 싫은 소리를 들려준다. 상대의 특수방어를 크게 떨어뜨린다."
+    "description": "금속을 긁을 때 나는 듯한 싫은 소리를 들려준다. 상대의 특수방어를 크게 떨어뜨린다.",
+    "descriptionEn": "Lowers the target's Special Defense by 2 stages."
   },
   "grass-whistle": {
     "id": 320,
@@ -3534,7 +3853,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 55,
     "pp": 15,
     "category": "status",
-    "description": "기분 좋은 피리 소리를 들려주어 상대를 잠듦 상태로 만든다."
+    "description": "기분 좋은 피리 소리를 들려주어 상대를 잠듦 상태로 만든다.",
+    "descriptionEn": "Causes the target to fall asleep."
   },
   "tickle": {
     "id": 321,
@@ -3545,7 +3865,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "status",
-    "description": "몸을 간질여 웃게 만들어서 상대의 공격과 방어를 떨어뜨린다."
+    "description": "몸을 간질여 웃게 만들어서 상대의 공격과 방어를 떨어뜨린다.",
+    "descriptionEn": "Lowers the target's Attack and Defense by 1 stage."
   },
   "cosmic-power": {
     "id": 322,
@@ -3556,7 +3877,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "우주로부터 신비한 힘을 손에 넣음으로써 자신의 방어와 특수방어를 올린다."
+    "description": "우주로부터 신비한 힘을 손에 넣음으로써 자신의 방어와 특수방어를 올린다.",
+    "descriptionEn": "Raises the user's Defense and Special Defense by 1 stage."
   },
   "water-spout": {
     "id": 323,
@@ -3567,7 +3889,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": "바닷물을 내뿜어 공격한다. 자신의 HP가 적을수록 기술의 위력이 떨어진다."
+    "description": "바닷물을 내뿜어 공격한다. 자신의 HP가 적을수록 기술의 위력이 떨어진다.",
+    "descriptionEn": "Power is equal to (user's current HP * 150 / user's maximum HP), rounded down, but not less than 1."
   },
   "signal-beam": {
     "id": 324,
@@ -3578,7 +3901,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "special",
-    "description": "이상한 빛을 발사해서 공격한다. 상대를 혼란시킬 때가 있다."
+    "description": "이상한 빛을 발사해서 공격한다. 상대를 혼란시킬 때가 있다.",
+    "descriptionEn": "Has a 10% chance to confuse the target."
   },
   "shadow-punch": {
     "id": 325,
@@ -3589,7 +3913,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "physical",
-    "description": "그림자에 섞여 펀치를 날린다. 공격은 반드시 명중한다."
+    "description": "그림자에 섞여 펀치를 날린다. 공격은 반드시 명중한다.",
+    "descriptionEn": "This move does not check accuracy."
   },
   "extrasensory": {
     "id": 326,
@@ -3600,7 +3925,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "special",
-    "description": "보이지 않는 이상한 힘을 보내어 공격한다. 상대를 풀죽게 만들 때가 있다."
+    "description": "보이지 않는 이상한 힘을 보내어 공격한다. 상대를 풀죽게 만들 때가 있다.",
+    "descriptionEn": "Has a 10% chance to make the target flinch."
   },
   "sky-uppercut": {
     "id": 327,
@@ -3611,7 +3937,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 15,
     "category": "physical",
-    "description": "하늘을 향하는 듯한 높은 업퍼로 상대를 밀어올려 공격한다."
+    "description": "하늘을 향하는 듯한 높은 업퍼로 상대를 밀어올려 공격한다.",
+    "descriptionEn": "This move can hit a target using Bounce, Fly, or Sky Drop, or is under the effect of Sky Drop."
   },
   "sand-tomb": {
     "id": 328,
@@ -3622,7 +3949,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 15,
     "category": "physical",
-    "description": "세차게 불어대는 모래바람 속에 4-5턴 동안 상대를 가두어 공격한다."
+    "description": "세차게 불어대는 모래바람 속에 4-5턴 동안 상대를 가두어 공격한다.",
+    "descriptionEn": "Prevents the target from switching for four or five turns (seven turns if the user is holding Grip Claw). Causes damage to the target equal to 1/8 of its maximum HP (1/6 if the user is holding Binding Band), rounded down, at the end of each turn during effect. The target can still switch out if it is holding Shed Shell or uses Baton Pass, Flip Turn, Parting Shot, Shed Tail, Teleport, U-turn, or Volt Switch. The effect ends if either the user or the target leaves the field, or if the target uses Mortal Spin, Rapid Spin, or Substitute successfully. This effect is not stackable or reset by using this or another binding move."
   },
   "sheer-cold": {
     "id": 329,
@@ -3633,7 +3961,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 30,
     "pp": 5,
     "category": "special",
-    "description": "절대영도의 추위로 상대를 공격한다. 맞으면 일격에 기절한다."
+    "description": "절대영도의 추위로 상대를 공격한다. 맞으면 일격에 기절한다.",
+    "descriptionEn": "Deals damage to the target equal to the target's maximum HP. Ignores accuracy and evasiveness modifiers. This attack's accuracy is equal to (user's level - target's level + X)%, where X is 30 if the user is an Ice type and 20 otherwise, and fails if the target is at a higher level. Ice-type Pokemon and Pokemon with the Sturdy Ability are immune."
   },
   "muddy-water": {
     "id": 330,
@@ -3644,7 +3973,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 10,
     "category": "special",
-    "description": "탁해진 물을 상대에게 발사하여 공격한다. 명중률을 떨어뜨릴 때가 있다."
+    "description": "탁해진 물을 상대에게 발사하여 공격한다. 명중률을 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 30% chance to lower the target's accuracy by 1 stage."
   },
   "bullet-seed": {
     "id": 331,
@@ -3655,7 +3985,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 30,
     "category": "physical",
-    "description": "씨앗을 기세 좋게 상대에게 발사하여 공격한다. 2-5회 동안 연속으로 쓴다."
+    "description": "씨앗을 기세 좋게 상대에게 발사하여 공격한다. 2-5회 동안 연속으로 쓴다.",
+    "descriptionEn": "Hits two to five times. Has a 35% chance to hit two or three times and a 15% chance to hit four or five times. If one of the hits breaks the target's substitute, it will take damage for the remaining hits. If the user has the Skill Link Ability, this move will always hit five times. If the user is holding Loaded Dice, this move will hit 4-5 times."
   },
   "aerial-ace": {
     "id": 332,
@@ -3666,7 +3997,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "physical",
-    "description": "재빠른 움직임으로 상대를 농락해 벤다. 공격은 반드시 명중한다."
+    "description": "재빠른 움직임으로 상대를 농락해 벤다. 공격은 반드시 명중한다.",
+    "descriptionEn": "This move does not check accuracy."
   },
   "icicle-spear": {
     "id": 333,
@@ -3677,7 +4009,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 30,
     "category": "physical",
-    "description": "날카로운 고드름을 상대에게 발사하여 공격한다. 2-5회 동안 연속으로 쓴다."
+    "description": "날카로운 고드름을 상대에게 발사하여 공격한다. 2-5회 동안 연속으로 쓴다.",
+    "descriptionEn": "Hits two to five times. Has a 35% chance to hit two or three times and a 15% chance to hit four or five times. If one of the hits breaks the target's substitute, it will take damage for the remaining hits. If the user has the Skill Link Ability, this move will always hit five times. If the user is holding Loaded Dice, this move will hit 4-5 times."
   },
   "iron-defense": {
     "id": 334,
@@ -3688,7 +4021,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 15,
     "category": "status",
-    "description": "피부를 쇠처럼 단단하게 함으로써 자신의 방어를 크게 올린다."
+    "description": "피부를 쇠처럼 단단하게 함으로써 자신의 방어를 크게 올린다.",
+    "descriptionEn": "Raises the user's Defense by 2 stages."
   },
   "block": {
     "id": 335,
@@ -3699,7 +4033,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 5,
     "category": "status",
-    "description": "양팔을 벌려 막아서서 상대의 도주로를 가로막아 도망칠 수 없게 한다."
+    "description": "양팔을 벌려 막아서서 상대의 도주로를 가로막아 도망칠 수 없게 한다.",
+    "descriptionEn": "Prevents the target from switching out. The target can still switch out if it is holding Shed Shell or uses Baton Pass, Flip Turn, Parting Shot, Teleport, U-turn, or Volt Switch. The effect ends if either the user or the target leaves the field."
   },
   "howl": {
     "id": 336,
@@ -3710,7 +4045,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 40,
     "category": "status",
-    "description": "큰 소리로 짖고 기합을 높여 자신의 공격을 올린다."
+    "description": "큰 소리로 짖고 기합을 높여 자신의 공격을 올린다.",
+    "descriptionEn": "Raises the Attack of the user and all allies 1 stage."
   },
   "dragon-claw": {
     "id": 337,
@@ -3721,7 +4057,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "날카롭고 뾰족한 거대한 발톱으로 상대를 베어 갈라서 공격한다."
+    "description": "날카롭고 뾰족한 거대한 발톱으로 상대를 베어 갈라서 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "frenzy-plant": {
     "id": 338,
@@ -3732,7 +4069,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 5,
     "category": "special",
-    "description": "큰 나무로 상대를 힘껏 쳐서 공격한다. 다음 턴은 움직일 수 없게 된다."
+    "description": "큰 나무로 상대를 힘껏 쳐서 공격한다. 다음 턴은 움직일 수 없게 된다.",
+    "descriptionEn": "If this move is successful, the user must recharge on the following turn and cannot select a move."
   },
   "bulk-up": {
     "id": 339,
@@ -3743,7 +4081,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "몸에 힘을 담아 근육을 두껍게 해서 자신의 공격과 방어를 올린다."
+    "description": "몸에 힘을 담아 근육을 두껍게 해서 자신의 공격과 방어를 올린다.",
+    "descriptionEn": "Raises the user's Attack and Defense by 1 stage."
   },
   "bounce": {
     "id": 340,
@@ -3754,7 +4093,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 5,
     "category": "physical",
-    "description": "하늘 높이 뛰어올라 2턴째에 상대를 공격한다. 마비 상태로 만들 때가 있다."
+    "description": "하늘 높이 뛰어올라 2턴째에 상대를 공격한다. 마비 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to paralyze the target. This attack charges on the first turn and executes on the second. On the first turn, the user avoids all attacks other than Gust, Hurricane, Sky Uppercut, Smack Down, Thousand Arrows, Thunder, and Twister, and Gust and Twister have doubled power when used against it. If the user is holding a Power Herb, the move completes in one turn."
   },
   "mud-shot": {
     "id": 341,
@@ -3765,7 +4105,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 15,
     "category": "special",
-    "description": "진흙 덩어리를 상대에게 내던져서 공격한다. 동시에 상대의 스피드를 떨어뜨린다."
+    "description": "진흙 덩어리를 상대에게 내던져서 공격한다. 동시에 상대의 스피드를 떨어뜨린다.",
+    "descriptionEn": "Has a 100% chance to lower the target's Speed by 1 stage."
   },
   "poison-tail": {
     "id": 342,
@@ -3776,7 +4117,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 25,
     "category": "physical",
-    "description": "꼬리로 때린다. 독 상태로 만들 때가 있고 급소에도 맞기 쉽다."
+    "description": "꼬리로 때린다. 독 상태로 만들 때가 있고 급소에도 맞기 쉽다.",
+    "descriptionEn": "Has a 10% chance to poison the target and a higher chance for a critical hit."
   },
   "covet": {
     "id": 343,
@@ -3787,7 +4129,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 25,
     "category": "physical",
-    "description": "귀엽게 애교부리며 상대에게 다가가 지니고 있는 도구를 뺏는다."
+    "description": "귀엽게 애교부리며 상대에게 다가가 지니고 있는 도구를 뺏는다.",
+    "descriptionEn": "If this attack was successful and the user has not fainted, it steals the target's held item if the user is not holding one. A target with the Sticky Hold Ability does not lose its held item if it has not fainted. The target's item is not stolen if it is a Blue Orb, Red Orb, Adamant Crystal, Lustrous Globe, Griseous Core, Plate, Drive, Memory, Rusted Sword, Rusted Shield, Booster Energy, or Mask held by a Kyogre, Groudon, Dialga, Palkia, Giratina, Arceus, Genesect, Silvally, Zacian, Zamazenta, Paradox Pokemon, or Ogerpon, respectively, or if the user is one of those species and the target is holding the respective item. In this case, Paradox Pokemon include every species with the Protosynthesis and Quark Drive Abilities, except Gouging Fire, Raging Bolt, Iron Boulder, and Iron Crown. Items lost to this move cannot be regained with Recycle or the Harvest Ability."
   },
   "volt-tackle": {
     "id": 344,
@@ -3798,7 +4141,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "전기를 한데 모아 돌진한다. 자신도 상당한 데미지를 입는다. 마비 상태로 만들 때가 있다."
+    "description": "전기를 한데 모아 돌진한다. 자신도 상당한 데미지를 입는다. 마비 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 10% chance to paralyze the target. If the target lost HP, the user takes recoil damage equal to 33% the HP lost by the target, rounded half up, but not less than 1 HP."
   },
   "magical-leaf": {
     "id": 345,
@@ -3809,7 +4153,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "special",
-    "description": "상대를 추적하는 이상한 잎사귀를 흩뿌린다. 공격은 반드시 명중한다."
+    "description": "상대를 추적하는 이상한 잎사귀를 흩뿌린다. 공격은 반드시 명중한다.",
+    "descriptionEn": "This move does not check accuracy."
   },
   "water-sport": {
     "id": 346,
@@ -3820,7 +4165,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 15,
     "category": "status",
-    "description": "주위를 물로 흠뻑 젖게 만든다. 5턴 동안 불꽃타입의 기술을 약하게 한다."
+    "description": "주위를 물로 흠뻑 젖게 만든다. 5턴 동안 불꽃타입의 기술을 약하게 한다.",
+    "descriptionEn": "For 5 turns, all Fire-type attacks used by any active Pokemon have their power multiplied by 0.33. Fails if this effect is already active."
   },
   "calm-mind": {
     "id": 347,
@@ -3831,7 +4177,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "조용히 정신을 통일하고 마음을 가라앉혀서 자신의 특수공격과 특수방어를 올린다."
+    "description": "조용히 정신을 통일하고 마음을 가라앉혀서 자신의 특수공격과 특수방어를 올린다.",
+    "descriptionEn": "Raises the user's Special Attack and Special Defense by 1 stage."
   },
   "leaf-blade": {
     "id": 348,
@@ -3842,7 +4189,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "잎사귀를 칼처럼 이용해 상대를 베어 공격한다. 급소에 맞기 쉽다."
+    "description": "잎사귀를 칼처럼 이용해 상대를 베어 공격한다. 급소에 맞기 쉽다.",
+    "descriptionEn": "Has a higher chance for a critical hit."
   },
   "dragon-dance": {
     "id": 349,
@@ -3853,7 +4201,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "신비롭고 힘센 춤을 격렬하게 춘다. 자신의 공격과 스피드를 올린다."
+    "description": "신비롭고 힘센 춤을 격렬하게 춘다. 자신의 공격과 스피드를 올린다.",
+    "descriptionEn": "Raises the user's Attack and Speed by 1 stage."
   },
   "rock-blast": {
     "id": 350,
@@ -3864,7 +4213,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "physical",
-    "description": "단단한 암석을 상대에게 발사하여 공격한다. 2-5회 동안 연속으로 쓴다."
+    "description": "단단한 암석을 상대에게 발사하여 공격한다. 2-5회 동안 연속으로 쓴다.",
+    "descriptionEn": "Hits two to five times. Has a 35% chance to hit two or three times and a 15% chance to hit four or five times. If one of the hits breaks the target's substitute, it will take damage for the remaining hits. If the user has the Skill Link Ability, this move will always hit five times. If the user is holding Loaded Dice, this move will hit 4-5 times."
   },
   "shock-wave": {
     "id": 351,
@@ -3875,7 +4225,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "special",
-    "description": "전격을 재빠르게 상대에게 날린다. 공격은 반드시 명중한다."
+    "description": "전격을 재빠르게 상대에게 날린다. 공격은 반드시 명중한다.",
+    "descriptionEn": "This move does not check accuracy."
   },
   "water-pulse": {
     "id": 352,
@@ -3886,7 +4237,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "special",
-    "description": "물의 진동을 상대에게 가하여 공격한다. 상대를 혼란시킬 때가 있다."
+    "description": "물의 진동을 상대에게 가하여 공격한다. 상대를 혼란시킬 때가 있다.",
+    "descriptionEn": "Has a 20% chance to confuse the target."
   },
   "doom-desire": {
     "id": 353,
@@ -3897,7 +4249,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": "기술을 사용한 2턴 뒤에 무수한 빛의 다발이 상대를 공격한다."
+    "description": "기술을 사용한 2턴 뒤에 무수한 빛의 다발이 상대를 공격한다.",
+    "descriptionEn": "Deals damage two turns after this move is used. At the end of that turn, the damage is calculated at that time and dealt to the Pokemon at the position the target had when the move was used. If the user is no longer active at the time, damage is calculated based on the user's natural Special Attack stat, types, and level, with no boosts from its held item or Ability. Fails if this move or Future Sight is already in effect for the target's position."
   },
   "psycho-boost": {
     "id": 354,
@@ -3908,7 +4261,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 5,
     "category": "special",
-    "description": "풀 파워로 상대를 공격한다. 쓰면 반동으로 자신의 특수공격이 크게 떨어진다."
+    "description": "풀 파워로 상대를 공격한다. 쓰면 반동으로 자신의 특수공격이 크게 떨어진다.",
+    "descriptionEn": "Lowers the user's Special Attack by 2 stages."
   },
   "roost": {
     "id": 355,
@@ -3919,7 +4273,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 5,
     "category": "status",
-    "description": "땅에 내려와 몸을 쉬게 한다. 최대 HP의 절반만큼 HP를 회복한다."
+    "description": "땅에 내려와 몸을 쉬게 한다. 최대 HP의 절반만큼 HP를 회복한다.",
+    "descriptionEn": "The user restores 1/2 of its maximum HP, rounded half up. If the user is not Terastallized, until the end of the turn Flying-type users lose their Flying type and pure Flying-type users become Normal type. Does nothing if the user's HP is full."
   },
   "gravity": {
     "id": 356,
@@ -3930,7 +4285,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 5,
     "category": "status",
-    "description": "5턴 동안 중력을 강하게 해서 부유나 하늘을 나는 기술을 사용할 수 없게 한다."
+    "description": "5턴 동안 중력을 강하게 해서 부유나 하늘을 나는 기술을 사용할 수 없게 한다.",
+    "descriptionEn": "For 5 turns, the evasiveness of all active Pokemon is multiplied by 0.6. At the time of use, Bounce, Fly, Magnet Rise, Sky Drop, and Telekinesis end immediately for all active Pokemon. During the effect, Bounce, Fly, Flying Press, High Jump Kick, Jump Kick, Magnet Rise, Sky Drop, Splash, and Telekinesis are prevented from being used by all active Pokemon. Ground-type attacks, Spikes, Toxic Spikes, Sticky Web, and the Arena Trap Ability can affect Flying types or Pokemon with the Levitate Ability. Fails if this move is already in effect."
   },
   "miracle-eye": {
     "id": 357,
@@ -3941,7 +4297,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 40,
     "category": "status",
-    "description": "악타입에 효과가 없는 기술이나 회피율이 높은 상대라 할지라도 공격이 맞게 된다."
+    "description": "악타입에 효과가 없는 기술이나 회피율이 높은 상대라 할지라도 공격이 맞게 된다.",
+    "descriptionEn": "As long as the target remains active, its evasiveness stat stage is ignored during accuracy checks against it if it is greater than 0, and Psychic-type attacks can hit the target if it is a Dark type. Fails if the target is already affected, or affected by Foresight or Odor Sleuth."
   },
   "wake-up-slap": {
     "id": 358,
@@ -3952,7 +4309,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "잠듦 상태의 상대에게 큰 데미지를 준다. 대신 상대는 잠에서 깬다."
+    "description": "잠듦 상태의 상대에게 큰 데미지를 준다. 대신 상대는 잠에서 깬다.",
+    "descriptionEn": "Power doubles if the target is asleep. If the user has not fainted, the target wakes up."
   },
   "hammer-arm": {
     "id": 359,
@@ -3963,7 +4321,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "physical",
-    "description": "강하고 무거운 주먹을 휘둘러 데미지를 준다. 자신의 스피드가 떨어진다."
+    "description": "강하고 무거운 주먹을 휘둘러 데미지를 준다. 자신의 스피드가 떨어진다.",
+    "descriptionEn": "Lowers the user's Speed by 1 stage."
   },
   "gyro-ball": {
     "id": 360,
@@ -3974,7 +4333,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": "몸을 고속으로 회전시켜 몸통박치기한다. 상대보다 스피드가 낮을수록 위력은 올라간다."
+    "description": "몸을 고속으로 회전시켜 몸통박치기한다. 상대보다 스피드가 낮을수록 위력은 올라간다.",
+    "descriptionEn": "Power is equal to (25 * target's current Speed / user's current Speed) + 1, rounded down, but not more than 150. If the user's current Speed is 0, this move's power is 1."
   },
   "healing-wish": {
     "id": 361,
@@ -3985,7 +4345,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "자신은 기절하지만 교대하여 나오는 포켓몬의 상태 이상과 HP를 회복한다."
+    "description": "자신은 기절하지만 교대하여 나오는 포켓몬의 상태 이상과 HP를 회복한다.",
+    "descriptionEn": "The user faints, and if the Pokemon brought out to replace it does not have full HP or has a non-volatile status condition, its HP is fully restored along with having any non-volatile status condition cured. The replacement is sent out at the end of the turn, and the healing happens before hazards take effect. This effect continues until a Pokemon that meets either of these conditions switches in at the user's position or gets swapped into the position with Ally Switch. Fails if the user is the last unfainted Pokemon in its party."
   },
   "brine": {
     "id": 362,
@@ -3996,7 +4357,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "상대가 HP의 절반 정도 상처를 입고 있으면 기술의 위력이 2배가 된다."
+    "description": "상대가 HP의 절반 정도 상처를 입고 있으면 기술의 위력이 2배가 된다.",
+    "descriptionEn": "Power doubles if the target has less than or equal to half of its maximum HP remaining."
   },
   "natural-gift": {
     "id": 363,
@@ -4007,7 +4369,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "나무열매에서 힘을 얻어 공격한다. 지니게 한 나무열매에 따라 기술의 타입과 위력이 바뀐다."
+    "description": "나무열매에서 힘을 얻어 공격한다. 지니게 한 나무열매에 따라 기술의 타입과 위력이 바뀐다.",
+    "descriptionEn": "The type and power of this move depend on the user's held Berry, and the Berry is lost. Fails if the user is not holding a Berry, if the user has the Klutz Ability, or if Embargo or Magic Room is in effect for the user."
   },
   "feint": {
     "id": 364,
@@ -4018,7 +4381,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "방어나 판별을 하고 있는 상대에게 공격할 수 있다. 방어 효과를 해제시킨다."
+    "description": "방어나 판별을 하고 있는 상대에게 공격할 수 있다. 방어 효과를 해제시킨다.",
+    "descriptionEn": "If this move is successful, it breaks through the target's Baneful Bunker, Detect, King's Shield, Protect, or Spiky Shield for this turn, allowing other Pokemon to attack the target normally. If the target's side is protected by Crafty Shield, Mat Block, Quick Guard, or Wide Guard, that protection is also broken for this turn and other Pokemon may attack the target's side normally."
   },
   "pluck": {
     "id": 365,
@@ -4029,7 +4393,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "부리로 공격한다. 상대가 나무열매를 지니고 있을 때 먹어서 나무열매의 효과를 받을 수 있다."
+    "description": "부리로 공격한다. 상대가 나무열매를 지니고 있을 때 먹어서 나무열매의 효과를 받을 수 있다.",
+    "descriptionEn": "If this move is successful and the user has not fainted, it steals the target's held Berry if it is holding one and eats it immediately, gaining its effects even if the user's item is being ignored. Items lost to this move cannot be regained with Recycle or the Harvest Ability."
   },
   "tailwind": {
     "id": 366,
@@ -4040,7 +4405,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 15,
     "category": "status",
-    "description": "세차게 불어대는 바람의 소용돌이를 만들어 4턴 동안 같은 편 모두의 스피드를 올린다."
+    "description": "세차게 불어대는 바람의 소용돌이를 만들어 4턴 동안 같은 편 모두의 스피드를 올린다.",
+    "descriptionEn": "For 4 turns, the user and its party members have their Speed doubled. Fails if this move is already in effect for the user's side."
   },
   "acupressure": {
     "id": 367,
@@ -4051,7 +4417,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 30,
     "category": "status",
-    "description": "경혈을 눌러 몸을 활성화시킨다. 능력 중 하나를 크게 올린다."
+    "description": "경혈을 눌러 몸을 활성화시킨다. 능력 중 하나를 크게 올린다.",
+    "descriptionEn": "Raises a random stat by 2 stages as long as the stat is not already at stage 6. The user can choose to use this move on itself or an adjacent ally. Fails if no stat stage can be raised or if used on an ally with a substitute."
   },
   "metal-burst": {
     "id": 368,
@@ -4062,7 +4429,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "기술을 쓰기 전에 마지막으로 받은 기술의 데미지를 늘려서 기술을 쓴 상대에게 돌려준다."
+    "description": "기술을 쓰기 전에 마지막으로 받은 기술의 데미지를 늘려서 기술을 쓴 상대에게 돌려준다.",
+    "descriptionEn": "Deals damage to the last opposing Pokemon to hit the user with a physical or special attack this turn equal to 1.5 times the HP lost by the user from that attack, rounded down. If the user did not lose HP from that attack, this move deals 1 HP of damage instead. If that opposing Pokemon's position is no longer in use and there is another opposing Pokemon on the field, the damage is done to it instead. Only the last hit of a multi-hit attack is counted. Fails if the user was not hit by an opposing Pokemon's physical or special attack this turn."
   },
   "u-turn": {
     "id": 369,
@@ -4073,7 +4441,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "공격한 뒤 굉장한 스피드로 돌아와서 교대 포켓몬과 교체한다."
+    "description": "공격한 뒤 굉장한 스피드로 돌아와서 교대 포켓몬과 교체한다.",
+    "descriptionEn": "If this move is successful and the user has not fainted, the user switches out even if it is trapped and is replaced immediately by a selected party member. The user does not switch out if there are no unfainted party members, or if the target switched out using an Eject Button or through the effect of the Emergency Exit or Wimp Out Abilities."
   },
   "close-combat": {
     "id": 370,
@@ -4084,7 +4453,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": "방어를 포기하고 상대 깊숙이 돌격한다. 자신의 방어와 특수방어가 떨어진다."
+    "description": "방어를 포기하고 상대 깊숙이 돌격한다. 자신의 방어와 특수방어가 떨어진다.",
+    "descriptionEn": "Lowers the user's Defense and Special Defense by 1 stage."
   },
   "payback": {
     "id": 371,
@@ -4095,7 +4465,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "모아서 공격한다. 상대보다 뒤에 공격할 수 있으면 기술의 위력은 2배가 된다."
+    "description": "모아서 공격한다. 상대보다 뒤에 공격할 수 있으면 기술의 위력은 2배가 된다.",
+    "descriptionEn": "Power doubles if the user moves after the target this turn, including actions taken through Instruct or the Dancer Ability. Switching in does not count as an action."
   },
   "assurance": {
     "id": 372,
@@ -4106,7 +4477,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "그 턴에 상대가 이미 데미지를 입었다면 기술의 위력은 2배가 된다."
+    "description": "그 턴에 상대가 이미 데미지를 입었다면 기술의 위력은 2배가 된다.",
+    "descriptionEn": "Power doubles if the target has already taken damage this turn, other than direct damage from Belly Drum, confusion, Curse, or Pain Split."
   },
   "embargo": {
     "id": 373,
@@ -4117,7 +4489,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "status",
-    "description": "지니게 한 도구를 쓸 수 없게 한다. 트레이너도 그 포켓몬에게는 도구를 쓸 수 없다."
+    "description": "지니게 한 도구를 쓸 수 없게 한다. 트레이너도 그 포켓몬에게는 도구를 쓸 수 없다.",
+    "descriptionEn": "For 5 turns, the target's held item has no effect. An item's effect of causing forme changes is unaffected, but any other effects from such items are negated. During the effect, Fling and Natural Gift are prevented from being used by the target. Items thrown at the target with Fling will still activate for it. If the target uses Baton Pass, the replacement will remain unable to use items."
   },
   "fling": {
     "id": 374,
@@ -4128,7 +4501,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "지니게 한 도구를 재빠르게 내던져서 공격한다. 도구에 따라 위력과 효과가 바뀐다."
+    "description": "지니게 한 도구를 재빠르게 내던져서 공격한다. 도구에 따라 위력과 효과가 바뀐다.",
+    "descriptionEn": "The power of this move is based on the user's held item. The held item is lost and it activates for the target if applicable. If there is no target or the target avoids this move by protecting itself, the user's held item is still lost. The user can regain a thrown item with Recycle or the Harvest Ability. Fails if the user has no held item, if the held item cannot be thrown, if the user is under the effect of Embargo or Magic Room, or if the user has the Klutz Ability."
   },
   "psycho-shift": {
     "id": 375,
@@ -4139,7 +4513,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "status",
-    "description": "초능력으로 암시를 걸어서 자신에게 걸려 있는 상태 이상을 상대에게 옮긴다."
+    "description": "초능력으로 암시를 걸어서 자신에게 걸려 있는 상태 이상을 상대에게 옮긴다.",
+    "descriptionEn": "The user's non-volatile status condition is transferred to the target, and the user is then cured. Fails if the user has no non-volatile status condition or if the target already has one."
   },
   "trump-card": {
     "id": 376,
@@ -4150,7 +4525,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 5,
     "category": "special",
-    "description": "마지막수단의 남은 PP가 적으면 적을수록 기술의 위력이 올라간다."
+    "description": "마지막수단의 남은 PP가 적으면 적을수록 기술의 위력이 올라간다.",
+    "descriptionEn": "The power of this move is based on the amount of PP remaining after normal PP reduction and the Pressure Ability resolve. 200 power for 0 PP, 80 power for 1 PP, 60 power for 2 PP, 50 power for 3 PP, and 40 power for 4 or more PP."
   },
   "heal-block": {
     "id": 377,
@@ -4161,7 +4537,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "status",
-    "description": "5턴 동안 기술이나 특성, 지니고 있는 도구에 의한 HP 회복을 할 수 없게 한다."
+    "description": "5턴 동안 기술이나 특성, 지니고 있는 도구에 의한 HP 회복을 할 수 없게 한다.",
+    "descriptionEn": "For 5 turns, the target is prevented from restoring any HP as long as it remains active. During the effect, healing and draining moves are unusable, and Abilities and items that grant healing will not heal the user. If an affected Pokemon uses Baton Pass, the replacement will remain unable to restore its HP. Pain Split and the Regenerator Ability are unaffected."
   },
   "wring-out": {
     "id": 378,
@@ -4172,7 +4549,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": "강하게 조여 공격을 한다. 상대의 HP가 많이 남아 있을수록 위력이 올라간다."
+    "description": "강하게 조여 공격을 한다. 상대의 HP가 많이 남아 있을수록 위력이 올라간다.",
+    "descriptionEn": "Power is equal to 120 * (target's current HP / target's maximum HP), rounded half down, but not less than 1."
   },
   "power-trick": {
     "id": 379,
@@ -4183,7 +4561,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "초능력으로 자신의 공격과 방어의 힘을 교환한다."
+    "description": "초능력으로 자신의 공격과 방어의 힘을 교환한다.",
+    "descriptionEn": "The user swaps its Attack and Defense stats, and stat stage changes remain on their respective stats. This move can be used again to swap the stats back. If the user uses Baton Pass, the replacement will have its Attack and Defense stats swapped if the effect is active. If the user has its stats recalculated by changing forme while its stats are swapped, this effect is ignored but is still active for the purposes of Baton Pass."
   },
   "gastro-acid": {
     "id": 380,
@@ -4194,7 +4573,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "status",
-    "description": "상대의 몸에 위액을 내뱉는다. 달라붙은 위액은 상대의 특성 효과를 지운다."
+    "description": "상대의 몸에 위액을 내뱉는다. 달라붙은 위액은 상대의 특성 효과를 지운다.",
+    "descriptionEn": "Causes the target's Ability to be rendered ineffective as long as it remains active. If the target uses Baton Pass, the replacement will remain under this effect. If the target's Ability is As One, Battle Bond, Comatose, Disguise, Gulp Missile, Ice Face, Multitype, Power Construct, RKS System, Schooling, Shields Down, Stance Change, Tera Shift, Zen Mode, or Zero to Hero, this move fails, and receiving the effect through Baton Pass ends the effect immediately."
   },
   "lucky-chant": {
     "id": 381,
@@ -4205,7 +4585,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 30,
     "category": "status",
-    "description": "하늘을 향해 기도를 올려 상대의 공격을 급소에 맞지 않게 한다."
+    "description": "하늘을 향해 기도를 올려 상대의 공격을 급소에 맞지 않게 한다.",
+    "descriptionEn": "For 5 turns, the user and its party members cannot be struck by a critical hit. Fails if the effect is already active on the user's side."
   },
   "me-first": {
     "id": 382,
@@ -4216,7 +4597,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "위력을 올려 상대가 쓰려고 하는 기술을 먼저 쓴다. 먼저 쓰지 않으면 실패한다."
+    "description": "위력을 올려 상대가 쓰려고 하는 기술을 먼저 쓴다. 먼저 쓰지 않으면 실패한다.",
+    "descriptionEn": "The user uses the move the target chose for use this turn against it, if possible, with its power multiplied by 1.5. The move must be a damaging move other than Beak Blast, Belch, Blazing Torque, Combat Torque, Comeuppance, Counter, Covet, Focus Punch, Magical Torque, Me First, Metal Burst, Mirror Coat, Noxious Torque, Shell Trap, Struggle, Thief, or Wicked Torque. Fails if the target moves before the user. Ignores the target's substitute for the purpose of copying the move."
   },
   "copycat": {
     "id": 383,
@@ -4227,7 +4609,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "직전에 나온 기술을 흉내 내어 같은 기술을 쓴다. 기술이 나오지 않았으면 실패한다."
+    "description": "직전에 나온 기술을 흉내 내어 같은 기술을 쓴다. 기술이 나오지 않았으면 실패한다.",
+    "descriptionEn": "The user uses the last move used by any Pokemon, including itself. Fails if no move has been used, or if the last move used was Assist, Baneful Bunker, Beak Blast, Behemoth Bash, Behemoth Blade, Belch, Bestow, Blazing Torque, Celebrate, Chatter, Circle Throw, Combat Torque, Copycat, Counter, Covet, Destiny Bond, Detect, Dragon Tail, Dynamax Cannon, Endure, Feint, Focus Punch, Follow Me, Helping Hand, Hold Hands, King's Shield, Magical Torque, Mat Block, Me First, Metronome, Mimic, Mirror Move, Nature Power, Noxious Torque, Protect, Rage Powder, Roar, Shell Trap, Sketch, Sleep Talk, Snatch, Spiky Shield, Spotlight, Struggle, Switcheroo, Tera Starstorm, Thief, Transform, Trick, Whirlwind, or Wicked Torque."
   },
   "power-swap": {
     "id": 384,
@@ -4238,7 +4621,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "초능력으로 자신과 상대의 공격과 특수공격의 능력 변화를 교체한다."
+    "description": "초능력으로 자신과 상대의 공격과 특수공격의 능력 변화를 교체한다.",
+    "descriptionEn": "The user swaps its Attack and Special Attack stat stage changes with the target."
   },
   "guard-swap": {
     "id": 385,
@@ -4249,7 +4633,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "초능력으로 자신과 상대의 방어와 특수방어의 능력 변화를 교체한다."
+    "description": "초능력으로 자신과 상대의 방어와 특수방어의 능력 변화를 교체한다.",
+    "descriptionEn": "The user swaps its Defense and Special Defense stat stage changes with the target."
   },
   "punishment": {
     "id": 386,
@@ -4260,7 +4645,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": "능력 변화로 상대가 파워업한 만큼 기술의 위력이 올라간다."
+    "description": "능력 변화로 상대가 파워업한 만큼 기술의 위력이 올라간다.",
+    "descriptionEn": "Power is equal to 60+(X*20), where X is the target's total stat stage changes that are greater than 0, but not more than 200 power."
   },
   "last-resort": {
     "id": 387,
@@ -4271,7 +4657,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": "배틀 중에 기억하고 있는 기술을 모두 사용하면 그때부터 쓸 수 있는 필살기이다."
+    "description": "배틀 중에 기억하고 있는 기술을 모두 사용하면 그때부터 쓸 수 있는 필살기이다.",
+    "descriptionEn": "This move fails unless the user knows this move and at least one other move, and has used all the other moves it knows at least once each since it became active or Transformed."
   },
   "worry-seed": {
     "id": 388,
@@ -4282,7 +4669,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "status",
-    "description": "마음을 괴롭히는 씨앗을 심는다. 상대를 잠잘 수 없게 해서 특성을 불면으로 만든다."
+    "description": "마음을 괴롭히는 씨앗을 심는다. 상대를 잠잘 수 없게 해서 특성을 불면으로 만든다.",
+    "descriptionEn": "Causes the target's Ability to become Insomnia. Fails if the target's Ability is As One, Battle Bond, Comatose, Disguise, Gulp Missile, Ice Face, Insomnia, Multitype, Power Construct, RKS System, Schooling, Shields Down, Stance Change, Tera Shift, Truant, Zen Mode, or Zero to Hero."
   },
   "sucker-punch": {
     "id": 389,
@@ -4293,7 +4681,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": "상대보다 먼저 공격할 수 있다. 상대가 쓴 기술이 공격기술이 아니면 실패한다."
+    "description": "상대보다 먼저 공격할 수 있다. 상대가 쓴 기술이 공격기술이 아니면 실패한다.",
+    "descriptionEn": "Fails if the target did not select a physical attack, special attack, or Me First for use this turn, or if the target moves before the user."
   },
   "toxic-spikes": {
     "id": 390,
@@ -4304,7 +4693,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "상대의 발밑에 독압정을 뿌린다. 교체로 나온 상대 포켓몬에 독을 덮어씌운다."
+    "description": "상대의 발밑에 독압정을 뿌린다. 교체로 나온 상대 포켓몬에 독을 덮어씌운다.",
+    "descriptionEn": "Sets up a hazard on the opposing side of the field, poisoning each opposing Pokemon that switches in, unless it is a Flying-type Pokemon or has the Levitate Ability. Can be used up to two times before failing. Opposing Pokemon become poisoned with one layer and badly poisoned with two layers. Can be removed from the opposing side if any Pokemon uses Tidy Up, or if any opposing Pokemon uses Mortal Spin, Rapid Spin, or Defog successfully, is hit by Defog, or a grounded Poison-type Pokemon switches in. Safeguard prevents the opposing party from being poisoned on switch-in, but a substitute does not."
   },
   "heart-swap": {
     "id": 391,
@@ -4315,7 +4705,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "초능력으로 자신과 상대에 걸려있는 능력 변화를 교체한다."
+    "description": "초능력으로 자신과 상대에 걸려있는 능력 변화를 교체한다.",
+    "descriptionEn": "The user swaps all its stat stage changes with the target."
   },
   "aqua-ring": {
     "id": 392,
@@ -4326,7 +4717,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "자신의 몸 주변을 물로 만든 베일로 덮는다. 매 턴 HP를 회복한다."
+    "description": "자신의 몸 주변을 물로 만든 베일로 덮는다. 매 턴 HP를 회복한다.",
+    "descriptionEn": "The user has 1/16 of its maximum HP, rounded down, restored at the end of each turn while it remains active. If Big Root is held by the user, the HP recovered is 1.3x normal, rounded half down. If the user uses Baton Pass, the replacement will receive the healing effect."
   },
   "magnet-rise": {
     "id": 393,
@@ -4337,7 +4729,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "전기로 만든 자력의 힘으로 허공에 뜬다. 5턴 동안 부유할 수 있다."
+    "description": "전기로 만든 자력의 힘으로 허공에 뜬다. 5턴 동안 부유할 수 있다.",
+    "descriptionEn": "For 5 turns, the user is immune to Ground-type attacks and the effects of Spikes, Toxic Spikes, Sticky Web, and the Arena Trap Ability as long as it remains active. If the user uses Baton Pass, the replacement will gain the effect. Ingrain, Smack Down, Thousand Arrows, and Iron Ball override this move if the user is under any of their effects. Fails if the user is already under this effect or the effects of Ingrain, Smack Down, or Thousand Arrows."
   },
   "flare-blitz": {
     "id": 394,
@@ -4348,7 +4741,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "불꽃을 두르고 돌진한다. 자신도 상당한 데미지를 입는다. 화상 상태로 만들 때가 있다."
+    "description": "불꽃을 두르고 돌진한다. 자신도 상당한 데미지를 입는다. 화상 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 10% chance to burn the target. If the target lost HP, the user takes recoil damage equal to 33% the HP lost by the target, rounded half up, but not less than 1 HP."
   },
   "force-palm": {
     "id": 395,
@@ -4359,7 +4753,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "상대의 몸에 충격파를 부딪쳐 공격한다. 마비 상태로 만들 때가 있다."
+    "description": "상대의 몸에 충격파를 부딪쳐 공격한다. 마비 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to paralyze the target."
   },
   "aura-sphere": {
     "id": 396,
@@ -4370,7 +4765,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "special",
-    "description": "몸속에서 파동의 힘을 끌어내 쏜다. 공격은 반드시 명중한다."
+    "description": "몸속에서 파동의 힘을 끌어내 쏜다. 공격은 반드시 명중한다.",
+    "descriptionEn": "This move does not check accuracy."
   },
   "rock-polish": {
     "id": 397,
@@ -4381,7 +4777,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "자신의 몸을 갈아 공기의 저항을 적게 한다. 스피드를 크게 올릴 수 있다."
+    "description": "자신의 몸을 갈아 공기의 저항을 적게 한다. 스피드를 크게 올릴 수 있다.",
+    "descriptionEn": "Raises the user's Speed by 2 stages."
   },
   "poison-jab": {
     "id": 398,
@@ -4392,7 +4789,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "독에 물든 촉수나 팔로 상대를 꿰찌른다. 독 상태로 만들 때가 있다."
+    "description": "독에 물든 촉수나 팔로 상대를 꿰찌른다. 독 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to poison the target."
   },
   "dark-pulse": {
     "id": 399,
@@ -4403,7 +4801,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "special",
-    "description": "몸에서 악의로 가득한 무서운 오라를 발한다. 상대를 풀죽게 만들 때가 있다."
+    "description": "몸에서 악의로 가득한 무서운 오라를 발한다. 상대를 풀죽게 만들 때가 있다.",
+    "descriptionEn": "Has a 20% chance to make the target flinch."
   },
   "night-slash": {
     "id": 400,
@@ -4414,7 +4813,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "순간적으로 틈을 노려 상대를 베어 버린다. 급소에 맞기 쉽다."
+    "description": "순간적으로 틈을 노려 상대를 베어 버린다. 급소에 맞기 쉽다.",
+    "descriptionEn": "Has a higher chance for a critical hit."
   },
   "aqua-tail": {
     "id": 401,
@@ -4425,7 +4825,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "physical",
-    "description": "세차게 날뛰는 거친 파도와 같이 큰 꼬리를 흔들어서 상대를 공격한다."
+    "description": "세차게 날뛰는 거친 파도와 같이 큰 꼬리를 흔들어서 상대를 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "seed-bomb": {
     "id": 402,
@@ -4436,7 +4837,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "단단한 껍질을 가지고 있는 큰 씨앗을 힘껏 내던져 상대를 공격한다."
+    "description": "단단한 껍질을 가지고 있는 큰 씨앗을 힘껏 내던져 상대를 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "air-slash": {
     "id": 403,
@@ -4447,7 +4849,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 15,
     "category": "special",
-    "description": "하늘까지 베어 가르는 공기의 칼날로 공격한다. 상대를 풀죽게 만들 때가 있다."
+    "description": "하늘까지 베어 가르는 공기의 칼날로 공격한다. 상대를 풀죽게 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to make the target flinch."
   },
   "x-scissor": {
     "id": 404,
@@ -4458,7 +4861,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "낫이나 발톱을 가위처럼 교차시키면서 상대를 베어 가른다."
+    "description": "낫이나 발톱을 가위처럼 교차시키면서 상대를 베어 가른다.",
+    "descriptionEn": "No additional effect."
   },
   "bug-buzz": {
     "id": 405,
@@ -4469,7 +4873,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "날개의 진동으로 음파를 일으켜서 공격한다. 상대의 특수방어를 떨어뜨릴 때가 있다."
+    "description": "날개의 진동으로 음파를 일으켜서 공격한다. 상대의 특수방어를 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 10% chance to lower the target's Special Defense by 1 stage."
   },
   "dragon-pulse": {
     "id": 406,
@@ -4480,7 +4885,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "큰 입으로 충격파를 일으켜서 상대를 공격한다."
+    "description": "큰 입으로 충격파를 일으켜서 상대를 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "dragon-rush": {
     "id": 407,
@@ -4491,7 +4897,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 75,
     "pp": 10,
     "category": "physical",
-    "description": "굉장한 살기로 위압하면서 몸통박치기한다. 상대를 풀죽게 만들 때가 있다."
+    "description": "굉장한 살기로 위압하면서 몸통박치기한다. 상대를 풀죽게 만들 때가 있다.",
+    "descriptionEn": "Has a 20% chance to make the target flinch. Damage doubles and no accuracy check is done if the target has used Minimize while active."
   },
   "power-gem": {
     "id": 408,
@@ -4502,7 +4909,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "special",
-    "description": "보석처럼 반짝이는 빛을 발사하여 상대를 공격한다."
+    "description": "보석처럼 반짝이는 빛을 발사하여 상대를 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "drain-punch": {
     "id": 409,
@@ -4513,7 +4921,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "주먹으로 상대의 힘을 흡수한다. 입힌 데미지의 절반에 해당하는 HP를 회복할 수 있다."
+    "description": "주먹으로 상대의 힘을 흡수한다. 입힌 데미지의 절반에 해당하는 HP를 회복할 수 있다.",
+    "descriptionEn": "The user recovers 1/2 the HP lost by the target, rounded half up. If Big Root is held by the user, the HP recovered is 1.3x normal, rounded half down."
   },
   "vacuum-wave": {
     "id": 410,
@@ -4524,7 +4933,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 30,
     "category": "special",
-    "description": "주먹을 흔들어 진공의 파도를 일으킨다. 반드시 선제공격을 할 수 있다."
+    "description": "주먹을 흔들어 진공의 파도를 일으킨다. 반드시 선제공격을 할 수 있다.",
+    "descriptionEn": "No additional effect."
   },
   "focus-blast": {
     "id": 411,
@@ -4535,7 +4945,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 70,
     "pp": 5,
     "category": "special",
-    "description": "기합을 높여서 혼신의 힘을 방출한다. 상대의 특수방어를 떨어뜨릴 때가 있다."
+    "description": "기합을 높여서 혼신의 힘을 방출한다. 상대의 특수방어를 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 10% chance to lower the target's Special Defense by 1 stage."
   },
   "energy-ball": {
     "id": 412,
@@ -4546,7 +4957,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "자연으로부터 모은 생명의 힘을 발사한다. 상대의 특수방어를 떨어뜨릴 때가 있다."
+    "description": "자연으로부터 모은 생명의 힘을 발사한다. 상대의 특수방어를 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 10% chance to lower the target's Special Defense by 1 stage."
   },
   "brave-bird": {
     "id": 413,
@@ -4557,7 +4969,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "날개를 접어 저공비행으로 돌격한다. 자신도 상당한 데미지를 입는다."
+    "description": "날개를 접어 저공비행으로 돌격한다. 자신도 상당한 데미지를 입는다.",
+    "descriptionEn": "If the target lost HP, the user takes recoil damage equal to 33% the HP lost by the target, rounded half up, but not less than 1 HP."
   },
   "earth-power": {
     "id": 414,
@@ -4568,7 +4981,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "상대의 발밑에 대지의 힘을 방출한다. 상대의 특수방어를 떨어뜨릴 때가 있다."
+    "description": "상대의 발밑에 대지의 힘을 방출한다. 상대의 특수방어를 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 10% chance to lower the target's Special Defense by 1 stage."
   },
   "switcheroo": {
     "id": 415,
@@ -4579,7 +4993,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "status",
-    "description": "눈에 보이지 않는 속도로 자신과 상대가 지닌 물건을 교환한다."
+    "description": "눈에 보이지 않는 속도로 자신과 상대가 지닌 물건을 교환한다.",
+    "descriptionEn": "The user swaps its held item with the target's held item. Fails if both the user and the target have no held item, or if the user is trying to give or take a Blue Orb, Red Orb, Adamant Crystal, Lustrous Globe, Griseous Core, Plate, Drive, Memory, Rusted Sword, Rusted Shield, Booster Energy, or Mask to or from a Kyogre, Groudon, Dialga, Palkia, Giratina, Arceus, Genesect, Silvally, Zacian, Zamazenta, Paradox Pokemon, or Ogerpon, respectively. In this case, Paradox Pokemon include every species with the Protosynthesis and Quark Drive Abilities, except Gouging Fire, Raging Bolt, Iron Boulder, and Iron Crown. The target is immune to this move if it has the Sticky Hold Ability."
   },
   "giga-impact": {
     "id": 416,
@@ -4590,7 +5005,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 5,
     "category": "physical",
-    "description": "가진 힘을 모두 사용해서 상대에게 돌격한다. 다음 턴은 움직일 수 없다."
+    "description": "가진 힘을 모두 사용해서 상대에게 돌격한다. 다음 턴은 움직일 수 없다.",
+    "descriptionEn": "If this move is successful, the user must recharge on the following turn and cannot select a move."
   },
   "nasty-plot": {
     "id": 417,
@@ -4601,7 +5017,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "나쁜 일을 생각해서 머리를 활성화시킨다. 자신의 특수공격을 크게 올린다."
+    "description": "나쁜 일을 생각해서 머리를 활성화시킨다. 자신의 특수공격을 크게 올린다.",
+    "descriptionEn": "Raises the user's Special Attack by 2 stages."
   },
   "bullet-punch": {
     "id": 418,
@@ -4612,7 +5029,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 30,
     "category": "physical",
-    "description": "탄환처럼 빠르고 단단한 펀치를 상대에게 날린다. 반드시 선제공격을 할 수 있다."
+    "description": "탄환처럼 빠르고 단단한 펀치를 상대에게 날린다. 반드시 선제공격을 할 수 있다.",
+    "descriptionEn": "No additional effect."
   },
   "avalanche": {
     "id": 419,
@@ -4623,7 +5041,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "상대로부터 기술을 받으면 그 상대에 대해서 기술의 위력이 2배가 된다."
+    "description": "상대로부터 기술을 받으면 그 상대에 대해서 기술의 위력이 2배가 된다.",
+    "descriptionEn": "Power doubles if the user was hit by the target this turn."
   },
   "ice-shard": {
     "id": 420,
@@ -4634,7 +5053,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 30,
     "category": "physical",
-    "description": "얼음 덩어리를 순식간에 만들어 상대에게 빠르게 쏜다. 반드시 선제공격을 할 수 있다."
+    "description": "얼음 덩어리를 순식간에 만들어 상대에게 빠르게 쏜다. 반드시 선제공격을 할 수 있다.",
+    "descriptionEn": "No additional effect."
   },
   "shadow-claw": {
     "id": 421,
@@ -4645,7 +5065,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "그림자로 만든 날카로운 발톱으로 상대를 베어 가른다. 급소에 맞기 쉽다."
+    "description": "그림자로 만든 날카로운 발톱으로 상대를 베어 가른다. 급소에 맞기 쉽다.",
+    "descriptionEn": "Has a higher chance for a critical hit."
   },
   "thunder-fang": {
     "id": 422,
@@ -4656,7 +5077,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 15,
     "category": "physical",
-    "description": "전기를 모은 이빨로 문다. 상대를 풀죽게 하거나 마비 상태로 만들 때가 있다."
+    "description": "전기를 모은 이빨로 문다. 상대를 풀죽게 하거나 마비 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 10% chance to paralyze the target and a 10% chance to make it flinch."
   },
   "ice-fang": {
     "id": 423,
@@ -4667,7 +5089,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 15,
     "category": "physical",
-    "description": "냉기를 품은 이빨로 문다. 상대를 풀죽게 하거나 얼음 상태로 만들 때가 있다."
+    "description": "냉기를 품은 이빨로 문다. 상대를 풀죽게 하거나 얼음 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 10% chance to freeze the target and a 10% chance to make it flinch."
   },
   "fire-fang": {
     "id": 424,
@@ -4678,7 +5101,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 15,
     "category": "physical",
-    "description": "불꽃을 두른 이빨로 문다. 상대를 풀죽게 하거나 화상 상태로 만들 때가 있다."
+    "description": "불꽃을 두른 이빨로 문다. 상대를 풀죽게 하거나 화상 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 10% chance to burn the target and a 10% chance to make it flinch."
   },
   "shadow-sneak": {
     "id": 425,
@@ -4689,7 +5113,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 30,
     "category": "physical",
-    "description": "그림자를 늘려 상대의 배후에서 공격한다. 반드시 선제공격할 수 있다."
+    "description": "그림자를 늘려 상대의 배후에서 공격한다. 반드시 선제공격할 수 있다.",
+    "descriptionEn": "No additional effect."
   },
   "mud-bomb": {
     "id": 426,
@@ -4700,7 +5125,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 10,
     "category": "special",
-    "description": "단단한 진흙구슬을 상대에게 발사하여 공격한다. 명중률을 떨어뜨릴 때가 있다."
+    "description": "단단한 진흙구슬을 상대에게 발사하여 공격한다. 명중률을 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 30% chance to lower the target's accuracy by 1 stage."
   },
   "psycho-cut": {
     "id": 427,
@@ -4711,7 +5137,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "실체화시킨 마음의 칼날로 상대를 베어 가른다. 급소에 맞기 쉽다."
+    "description": "실체화시킨 마음의 칼날로 상대를 베어 가른다. 급소에 맞기 쉽다.",
+    "descriptionEn": "Has a higher chance for a critical hit."
   },
   "zen-headbutt": {
     "id": 428,
@@ -4722,7 +5149,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 15,
     "category": "physical",
-    "description": "사념의 힘을 이마에 모아서 공격한다. 상대를 풀죽게 만들 때가 있다."
+    "description": "사념의 힘을 이마에 모아서 공격한다. 상대를 풀죽게 만들 때가 있다.",
+    "descriptionEn": "Has a 20% chance to make the target flinch."
   },
   "mirror-shot": {
     "id": 429,
@@ -4733,7 +5161,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 10,
     "category": "special",
-    "description": "갈고 닦은 몸에서 섬광의 힘을 상대에게 쏜다. 명중률을 떨어뜨릴 때가 있다."
+    "description": "갈고 닦은 몸에서 섬광의 힘을 상대에게 쏜다. 명중률을 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 30% chance to lower the target's accuracy by 1 stage."
   },
   "flash-cannon": {
     "id": 430,
@@ -4744,7 +5173,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "몸의 빛을 한곳에 모아서 힘을 쏜다. 상대의 특수방어를 떨어뜨릴 때가 있다."
+    "description": "몸의 빛을 한곳에 모아서 힘을 쏜다. 상대의 특수방어를 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 10% chance to lower the target's Special Defense by 1 stage."
   },
   "rock-climb": {
     "id": 431,
@@ -4755,7 +5185,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 20,
     "category": "physical",
-    "description": "굉장한 기세로 상대에게 돌진하여 공격한다. 상대를 혼란시킬 때가 있다."
+    "description": "굉장한 기세로 상대에게 돌진하여 공격한다. 상대를 혼란시킬 때가 있다.",
+    "descriptionEn": "Has a 20% chance to confuse the target."
   },
   "defog": {
     "id": 432,
@@ -4766,7 +5197,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 15,
     "category": "status",
-    "description": "강한 바람으로 상대의 리플렉터나 빛의장막 등을 제거한다. 회피율도 떨어뜨린다."
+    "description": "강한 바람으로 상대의 리플렉터나 빛의장막 등을 제거한다. 회피율도 떨어뜨린다.",
+    "descriptionEn": "Lowers the target's evasiveness by 1 stage. If this move is successful and whether or not the target's evasiveness was affected, the effects of Reflect, Light Screen, Aurora Veil, Safeguard, Mist, Spikes, Toxic Spikes, Stealth Rock, and Sticky Web end for the target's side, and the effects of Spikes, Toxic Spikes, Stealth Rock, and Sticky Web end for the user's side. Ignores a target's substitute, although a substitute will still block the lowering of evasiveness. If there is a terrain active and this move is successful, the terrain will be cleared."
   },
   "trick-room": {
     "id": 433,
@@ -4777,7 +5209,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 5,
     "category": "status",
-    "description": "이상한 공간을 만든다. 5턴 동안 느린 포켓몬부터 행동할 수 있다."
+    "description": "이상한 공간을 만든다. 5턴 동안 느린 포켓몬부터 행동할 수 있다.",
+    "descriptionEn": "For 5 turns, the Speed of every Pokemon is recalculated for the purposes of determining turn order. During the effect, each Pokemon's Speed is considered to be (10000 - its normal Speed), and if this value is greater than 8191, 8192 is subtracted from it. If this move is used during the effect, the effect ends."
   },
   "draco-meteor": {
     "id": 434,
@@ -4788,7 +5221,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 5,
     "category": "special",
-    "description": "천공에서 운석을 상대에게 떨어뜨린다. 사용하면 반동으로 자신의 특수공격이 크게 떨어진다."
+    "description": "천공에서 운석을 상대에게 떨어뜨린다. 사용하면 반동으로 자신의 특수공격이 크게 떨어진다.",
+    "descriptionEn": "Lowers the user's Special Attack by 2 stages."
   },
   "discharge": {
     "id": 435,
@@ -4799,7 +5233,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "special",
-    "description": "눈부신 전격으로 자신의 주위에 있는 포켓몬을 공격한다. 마비 상태로 만들 때가 있다."
+    "description": "눈부신 전격으로 자신의 주위에 있는 포켓몬을 공격한다. 마비 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to paralyze the target."
   },
   "lava-plume": {
     "id": 436,
@@ -4810,7 +5245,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "special",
-    "description": "새빨간 불꽃으로 자신의 주위에 있는 포켓몬을 공격한다. 화상 상태로 만들 때가 있다."
+    "description": "새빨간 불꽃으로 자신의 주위에 있는 포켓몬을 공격한다. 화상 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to burn the target."
   },
   "leaf-storm": {
     "id": 437,
@@ -4821,7 +5257,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 5,
     "category": "special",
-    "description": "뾰족한 잎사귀로 상대에게 바람을 일으킨다. 사용하면 반동으로 자신의 특수공격이 크게 떨어진다."
+    "description": "뾰족한 잎사귀로 상대에게 바람을 일으킨다. 사용하면 반동으로 자신의 특수공격이 크게 떨어진다.",
+    "descriptionEn": "Lowers the user's Special Attack by 2 stages."
   },
   "power-whip": {
     "id": 438,
@@ -4832,7 +5269,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 10,
     "category": "physical",
-    "description": "덩굴이나 촉수를 세차게 흔들어 상대를 힘껏 쳐서 공격한다."
+    "description": "덩굴이나 촉수를 세차게 흔들어 상대를 힘껏 쳐서 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "rock-wrecker": {
     "id": 439,
@@ -4843,7 +5281,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 5,
     "category": "physical",
-    "description": "거대한 바위를 상대에게 발사하여 공격한다. 다음 턴은 움직일 수 없게 된다."
+    "description": "거대한 바위를 상대에게 발사하여 공격한다. 다음 턴은 움직일 수 없게 된다.",
+    "descriptionEn": "If this move is successful, the user must recharge on the following turn and cannot select a move."
   },
   "cross-poison": {
     "id": 440,
@@ -4854,7 +5293,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "독 칼날로 상대를 베어 가른다. 독 상태로 만들 때가 있고 급소에도 맞기 쉽다."
+    "description": "독 칼날로 상대를 베어 가른다. 독 상태로 만들 때가 있고 급소에도 맞기 쉽다.",
+    "descriptionEn": "Has a 10% chance to poison the target and a higher chance for a critical hit."
   },
   "gunk-shot": {
     "id": 441,
@@ -4865,7 +5305,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 80,
     "pp": 5,
     "category": "physical",
-    "description": "더러운 쓰레기를 상대에게 부딪쳐서 공격한다. 독 상태로 만들 때가 있다."
+    "description": "더러운 쓰레기를 상대에게 부딪쳐서 공격한다. 독 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to poison the target."
   },
   "iron-head": {
     "id": 442,
@@ -4876,7 +5317,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "강철과 같은 단단한 머리로 공격한다. 상대를 풀죽게 만들 때가 있다."
+    "description": "강철과 같은 단단한 머리로 공격한다. 상대를 풀죽게 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to make the target flinch."
   },
   "magnet-bomb": {
     "id": 443,
@@ -4887,7 +5329,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "physical",
-    "description": "상대에게 달라붙는 강철의 폭탄을 발사한다. 공격은 반드시 명중한다."
+    "description": "상대에게 달라붙는 강철의 폭탄을 발사한다. 공격은 반드시 명중한다.",
+    "descriptionEn": "This move does not check accuracy."
   },
   "stone-edge": {
     "id": 444,
@@ -4898,7 +5341,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 80,
     "pp": 5,
     "category": "physical",
-    "description": "뾰족한 바위를 상대에게 꿰찔러서 공격한다. 급소에 맞기 쉽다."
+    "description": "뾰족한 바위를 상대에게 꿰찔러서 공격한다. 급소에 맞기 쉽다.",
+    "descriptionEn": "Has a higher chance for a critical hit."
   },
   "captivate": {
     "id": 445,
@@ -4909,7 +5353,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "status",
-    "description": "수컷은 암컷을 암컷은 수컷을 유혹하여 상대의 특수공격을 크게 떨어뜨린다."
+    "description": "수컷은 암컷을 암컷은 수컷을 유혹하여 상대의 특수공격을 크게 떨어뜨린다.",
+    "descriptionEn": "Lowers the target's Special Attack by 2 stages. The target is unaffected if both the user and the target are the same gender, or if either is genderless. Pokemon with the Oblivious Ability are immune."
   },
   "stealth-rock": {
     "id": 446,
@@ -4920,7 +5365,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "상대의 주위에 무수한 바위를 띄워 교체해서 나온 상대 포켓몬에게 데미지를 준다."
+    "description": "상대의 주위에 무수한 바위를 띄워 교체해서 나온 상대 포켓몬에게 데미지를 준다.",
+    "descriptionEn": "Sets up a hazard on the opposing side of the field, damaging each opposing Pokemon that switches in. Fails if the effect is already active on the opposing side. Foes lose 1/32, 1/16, 1/8, 1/4, or 1/2 of their maximum HP, rounded down, based on their weakness to the Rock type; 0.25x, 0.5x, neutral, 2x, or 4x, respectively. Can be removed from the opposing side if any Pokemon uses Tidy Up, or if any opposing Pokemon uses Mortal Spin, Rapid Spin, or Defog successfully, or is hit by Defog."
   },
   "grass-knot": {
     "id": 447,
@@ -4931,7 +5377,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "special",
-    "description": "풀을 휘감아서 상대를 쓰러뜨린다. 상대가 무거울수록 위력이 올라간다."
+    "description": "풀을 휘감아서 상대를 쓰러뜨린다. 상대가 무거울수록 위력이 올라간다.",
+    "descriptionEn": "This move's power is 20 if the target weighs less than 10 kg, 40 if less than 25 kg, 60 if less than 50 kg, 80 if less than 100 kg, 100 if less than 200 kg, and 120 if greater than or equal to 200 kg."
   },
   "chatter": {
     "id": 448,
@@ -4942,7 +5389,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "special",
-    "description": "기억한 말로 음파를 일으켜서 공격한다. 상대를 혼란시킨다."
+    "description": "기억한 말로 음파를 일으켜서 공격한다. 상대를 혼란시킨다.",
+    "descriptionEn": "Has a 100% chance to confuse the target."
   },
   "judgment": {
     "id": 449,
@@ -4953,7 +5401,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "무수한 광탄을 상대에게 방출한다. 자신이 가지고 있는 플레이트에 따라 타입이 바뀐다."
+    "description": "무수한 광탄을 상대에게 방출한다. 자신이 가지고 있는 플레이트에 따라 타입이 바뀐다.",
+    "descriptionEn": "This move's type depends on the user's held Plate."
   },
   "bug-bite": {
     "id": 450,
@@ -4964,7 +5413,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "물어서 공격한다. 상대가 나무열매를 지니고 있을 때 먹어서 나무열매의 효과를 받을 수 있다."
+    "description": "물어서 공격한다. 상대가 나무열매를 지니고 있을 때 먹어서 나무열매의 효과를 받을 수 있다.",
+    "descriptionEn": "If this move is successful and the user has not fainted, it steals the target's held Berry if it is holding one and eats it immediately, gaining its effects even if the user's item is being ignored. Items lost to this move cannot be regained with Recycle or the Harvest Ability."
   },
   "charge-beam": {
     "id": 451,
@@ -4975,7 +5425,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "special",
-    "description": "전격의 다발을 상대에게 발사한다. 전기를 모아서 자신의 특수공격을 올릴 때가 있다."
+    "description": "전격의 다발을 상대에게 발사한다. 전기를 모아서 자신의 특수공격을 올릴 때가 있다.",
+    "descriptionEn": "Has a 70% chance to raise the user's Special Attack by 1 stage."
   },
   "wood-hammer": {
     "id": 452,
@@ -4986,7 +5437,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "단단한 몸통을 상대에게 부딪쳐서 공격한다. 자신도 상당한 데미지를 입는다."
+    "description": "단단한 몸통을 상대에게 부딪쳐서 공격한다. 자신도 상당한 데미지를 입는다.",
+    "descriptionEn": "If the target lost HP, the user takes recoil damage equal to 33% the HP lost by the target, rounded half up, but not less than 1 HP."
   },
   "aqua-jet": {
     "id": 453,
@@ -4997,7 +5449,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "눈에 보이지 않는 굉장한 속도로 상대에게 돌진한다. 반드시 선제공격할 수 있다."
+    "description": "눈에 보이지 않는 굉장한 속도로 상대에게 돌진한다. 반드시 선제공격할 수 있다.",
+    "descriptionEn": "No additional effect."
   },
   "attack-order": {
     "id": 454,
@@ -5008,7 +5461,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "부하를 불러내어 상대를 향해서 공격시킨다. 급소에 맞기 쉽다."
+    "description": "부하를 불러내어 상대를 향해서 공격시킨다. 급소에 맞기 쉽다.",
+    "descriptionEn": "Has a higher chance for a critical hit."
   },
   "defend-order": {
     "id": 455,
@@ -5019,7 +5473,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "부하를 불러내어 자신의 몸을 뒤덮게 한다. 방어와 특수방어를 올릴 수 있다."
+    "description": "부하를 불러내어 자신의 몸을 뒤덮게 한다. 방어와 특수방어를 올릴 수 있다.",
+    "descriptionEn": "Raises the user's Defense and Special Defense by 1 stage."
   },
   "heal-order": {
     "id": 456,
@@ -5030,7 +5485,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "부하를 불러내어 상처를 회복한다. 최대 HP의 절반만큼 자신의 HP를 회복한다."
+    "description": "부하를 불러내어 상처를 회복한다. 최대 HP의 절반만큼 자신의 HP를 회복한다.",
+    "descriptionEn": "The user restores 1/2 of its maximum HP, rounded half up."
   },
   "head-smash": {
     "id": 457,
@@ -5041,7 +5497,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 80,
     "pp": 5,
     "category": "physical",
-    "description": "목숨을 걸고 혼신의 힘으로 상대에게 박치기를 한다. 자신도 굉장한 데미지를 입는다."
+    "description": "목숨을 걸고 혼신의 힘으로 상대에게 박치기를 한다. 자신도 굉장한 데미지를 입는다.",
+    "descriptionEn": "If the target lost HP, the user takes recoil damage equal to 1/2 the HP lost by the target, rounded half up, but not less than 1 HP."
   },
   "double-hit": {
     "id": 458,
@@ -5052,7 +5509,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "physical",
-    "description": "꼬리 등을 써서 상대를 때려 공격한다. 2회 연속으로 데미지를 준다."
+    "description": "꼬리 등을 써서 상대를 때려 공격한다. 2회 연속으로 데미지를 준다.",
+    "descriptionEn": "Hits twice. If the first hit breaks the target's substitute, it will take damage for the second hit."
   },
   "roar-of-time": {
     "id": 459,
@@ -5063,7 +5521,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 5,
     "category": "special",
-    "description": "시간이 뒤틀릴 정도의 힘을 사용해서 상대를 공격한다. 다음 턴은 움직일 수 없다."
+    "description": "시간이 뒤틀릴 정도의 힘을 사용해서 상대를 공격한다. 다음 턴은 움직일 수 없다.",
+    "descriptionEn": "If this move is successful, the user must recharge on the following turn and cannot select a move."
   },
   "spacial-rend": {
     "id": 460,
@@ -5074,7 +5533,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 5,
     "category": "special",
-    "description": "주위의 공간과 더불어 상대를 찢어서 데미지를 준다. 급소에 맞기 쉽다."
+    "description": "주위의 공간과 더불어 상대를 찢어서 데미지를 준다. 급소에 맞기 쉽다.",
+    "descriptionEn": "Has a higher chance for a critical hit."
   },
   "lunar-dance": {
     "id": 461,
@@ -5085,7 +5545,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "자신은 기절하지만 교대하여 나오는 포켓몬의 모든 상태를 회복한다."
+    "description": "자신은 기절하지만 교대하여 나오는 포켓몬의 모든 상태를 회복한다.",
+    "descriptionEn": "The user faints, and if the Pokemon brought out to replace it does not have full HP or PP, or has a non-volatile status condition, its HP and PP are fully restored along with having any non-volatile status condition cured. The replacement is sent out at the end of the turn, and the healing happens before hazards take effect. This effect continues until a Pokemon that meets any of these conditions switches in at the user's position or gets swapped into the position with Ally Switch. Fails if the user is the last unfainted Pokemon in its party."
   },
   "crush-grip": {
     "id": 462,
@@ -5096,7 +5557,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": "굉장한 힘으로 상대를 묵사발로 만든다. 상대의 HP가 남아 있을수록 위력이 올라간다."
+    "description": "굉장한 힘으로 상대를 묵사발로 만든다. 상대의 HP가 남아 있을수록 위력이 올라간다.",
+    "descriptionEn": "Power is equal to 120 * (target's current HP / target's maximum HP), rounded half down, but not less than 1."
   },
   "magma-storm": {
     "id": 463,
@@ -5107,7 +5569,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 75,
     "pp": 5,
     "category": "special",
-    "description": "세차게 타오르는 불꽃 속에 4-5턴 동안 상대를 가두어 공격한다."
+    "description": "세차게 타오르는 불꽃 속에 4-5턴 동안 상대를 가두어 공격한다.",
+    "descriptionEn": "Prevents the target from switching for four or five turns (seven turns if the user is holding Grip Claw). Causes damage to the target equal to 1/8 of its maximum HP (1/6 if the user is holding Binding Band), rounded down, at the end of each turn during effect. The target can still switch out if it is holding Shed Shell or uses Baton Pass, Flip Turn, Parting Shot, Shed Tail, Teleport, U-turn, or Volt Switch. The effect ends if either the user or the target leaves the field, or if the target uses Mortal Spin, Rapid Spin, or Substitute successfully. This effect is not stackable or reset by using this or another binding move."
   },
   "dark-void": {
     "id": 464,
@@ -5118,7 +5581,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 50,
     "pp": 10,
     "category": "status",
-    "description": "암흑의 세계로 끌고 가서 떨어뜨려 상대를 잠듦 상태로 만든다."
+    "description": "암흑의 세계로 끌고 가서 떨어뜨려 상대를 잠듦 상태로 만든다.",
+    "descriptionEn": "Causes the target to fall asleep. This move cannot be used successfully unless the user's current form, while considering Transform, is Darkrai."
   },
   "seed-flare": {
     "id": 465,
@@ -5129,7 +5593,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 5,
     "category": "special",
-    "description": "몸속에서 충격파를 발생시킨다. 상대의 특수방어를 크게 떨어뜨릴 때가 있다."
+    "description": "몸속에서 충격파를 발생시킨다. 상대의 특수방어를 크게 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 40% chance to lower the target's Special Defense by 2 stages."
   },
   "ominous-wind": {
     "id": 466,
@@ -5140,7 +5605,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": "소름이 끼칠 만한 돌풍으로 상대를 공격한다. 자신의 모든 능력이 올라갈 때가 있다."
+    "description": "소름이 끼칠 만한 돌풍으로 상대를 공격한다. 자신의 모든 능력이 올라갈 때가 있다.",
+    "descriptionEn": "Has a 10% chance to raise the user's Attack, Defense, Special Attack, Special Defense, and Speed by 1 stage."
   },
   "shadow-force": {
     "id": 467,
@@ -5151,7 +5617,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": "1턴째에 모습을 감춰 2턴째에 상대를 공격한다. 방어하고 있어도 공격은 맞는다."
+    "description": "1턴째에 모습을 감춰 2턴째에 상대를 공격한다. 방어하고 있어도 공격은 맞는다.",
+    "descriptionEn": "If this move is successful, it breaks through the target's Baneful Bunker, Detect, King's Shield, Protect, or Spiky Shield for this turn, allowing other Pokemon to attack the target normally. If the target's side is protected by Crafty Shield, Mat Block, Quick Guard, or Wide Guard, that protection is also broken for this turn and other Pokemon may attack the target's side normally. This attack charges on the first turn and executes on the second. On the first turn, the user avoids all attacks. If the user is holding a Power Herb, the move completes in one turn."
   },
   "hone-claws": {
     "id": 468,
@@ -5162,7 +5629,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 15,
     "category": "status",
-    "description": "손톱을 갈아 날카롭게 한다. 자신의 공격과 명중률을 올린다."
+    "description": "손톱을 갈아 날카롭게 한다. 자신의 공격과 명중률을 올린다.",
+    "descriptionEn": "Raises the user's Attack and accuracy by 1 stage."
   },
   "wide-guard": {
     "id": 469,
@@ -5173,7 +5641,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "같은 편 전원에게 향하는 공격을 1턴 동안 막는다. "
+    "description": "같은 편 전원에게 향하는 공격을 1턴 동안 막는다. ",
+    "descriptionEn": "The user and its party members are protected from moves made by other Pokemon, including allies, during this turn that target all adjacent foes or all adjacent Pokemon. This move modifies the same 1/X chance of being successful used by other protection moves, where X starts at 1 and triples each time this move is successfully used, but does not use the chance to check for failure. X resets to 1 if this move fails, if the user's last move used is not Baneful Bunker, Burning Bulwark, Detect, Endure, King's Shield, Max Guard, Obstruct, Protect, Quick Guard, Silk Trap, Spiky Shield, or Wide Guard, or if it was one of those moves and the user's protection was broken. Fails if the user moves last this turn or if this move is already in effect for the user's side."
   },
   "guard-split": {
     "id": 470,
@@ -5184,7 +5653,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "초능력으로 자신과 상대의 방어와 특수방어를 더해서 반으로 나눈다."
+    "description": "초능력으로 자신과 상대의 방어와 특수방어를 더해서 반으로 나눈다.",
+    "descriptionEn": "The user and the target have their Defense and Special Defense stats set to be equal to the average of the user and the target's Defense and Special Defense stats, respectively, rounded down. Stat stage changes are unaffected."
   },
   "power-split": {
     "id": 471,
@@ -5195,7 +5665,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "초능력으로 자신과 상대의 공격과 특수공격을 더해서 반으로 나눈다."
+    "description": "초능력으로 자신과 상대의 공격과 특수공격을 더해서 반으로 나눈다.",
+    "descriptionEn": "The user and the target have their Attack and Special Attack stats set to be equal to the average of the user and the target's Attack and Special Attack stats, respectively, rounded down. Stat stage changes are unaffected."
   },
   "wonder-room": {
     "id": 472,
@@ -5206,7 +5677,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "이상한 공간을 만든다. 5턴 동안 모든 포켓몬의 방어와 특수방어가 바뀐다."
+    "description": "이상한 공간을 만든다. 5턴 동안 모든 포켓몬의 방어와 특수방어가 바뀐다.",
+    "descriptionEn": "For 5 turns, all active Pokemon have their Defense and Special Defense stats swapped. Stat stage changes are unaffected. If this move is used during the effect, the effect ends."
   },
   "psyshock": {
     "id": 473,
@@ -5217,7 +5689,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "이상한 염력파를 실체화하여 상대를 공격한다. 물리적인 데미지를 준다."
+    "description": "이상한 염력파를 실체화하여 상대를 공격한다. 물리적인 데미지를 준다.",
+    "descriptionEn": "Deals damage to the target based on its Defense instead of Special Defense."
   },
   "venoshock": {
     "id": 474,
@@ -5228,7 +5701,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "특수한 독액을 끼얹는다. 독 상태의 상대에게는 위력이 2배가 된다."
+    "description": "특수한 독액을 끼얹는다. 독 상태의 상대에게는 위력이 2배가 된다.",
+    "descriptionEn": "Power doubles if the target is poisoned."
   },
   "autotomize": {
     "id": 475,
@@ -5239,7 +5713,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 15,
     "category": "status",
-    "description": "몸의 쓸모없는 부분을 깎는다. 자신의 스피드를 크게 올리고 체중도 가벼워진다."
+    "description": "몸의 쓸모없는 부분을 깎는다. 자신의 스피드를 크게 올리고 체중도 가벼워진다.",
+    "descriptionEn": "Raises the user's Speed by 2 stages. If the user's Speed was changed, the user's weight is reduced by 100 kg as long as it remains active. This effect is stackable but cannot reduce the user's weight to less than 0.1 kg."
   },
   "rage-powder": {
     "id": 476,
@@ -5250,7 +5725,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "안절부절못하게 하는 가루를 자신에게 뿌려서 주의를 끈다. 상대의 공격은 모두 자신에게 향한다."
+    "description": "안절부절못하게 하는 가루를 자신에게 뿌려서 주의를 끈다. 상대의 공격은 모두 자신에게 향한다.",
+    "descriptionEn": "Until the end of the turn, all single-target attacks from the opposing side are redirected to the user. Such attacks are redirected to the user before they can be reflected by Magic Coat or the Magic Bounce Ability, or drawn in by the Lightning Rod or Storm Drain Abilities. Fails if it is not a Double Battle or Battle Royal. This effect is ignored while the user is under the effect of Sky Drop."
   },
   "telekinesis": {
     "id": 477,
@@ -5261,7 +5737,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 15,
     "category": "status",
-    "description": "초능력으로 상대를 띄운다. 3턴 동안 공격이 상대에게 맞기 쉬워진다."
+    "description": "초능력으로 상대를 띄운다. 3턴 동안 공격이 상대에게 맞기 쉬워진다.",
+    "descriptionEn": "For 3 turns, the target cannot avoid any attacks made against it, other than OHKO moves, as long as it remains active. During the effect, the target is immune to Ground-type attacks and the effects of Spikes, Toxic Spikes, Sticky Web, and the Arena Trap Ability as long as it remains active. If the target uses Baton Pass, the replacement will gain the effect. Ingrain, Smack Down, Thousand Arrows, and Iron Ball override this move if the target is under any of their effects. Fails if the target is already under this effect or the effects of Ingrain, Smack Down, or Thousand Arrows. The target is immune to this move on use if its species is Diglett, Dugtrio, Alolan Diglett, Alolan Dugtrio, Sandygast, Palossand, or Gengar while Mega-Evolved. Mega Gengar cannot be under this effect by any means."
   },
   "magic-room": {
     "id": 478,
@@ -5272,7 +5749,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "이상한 공간을 만든다. 5턴 동안 모든 포켓몬의 도구의 효과가 사라진다."
+    "description": "이상한 공간을 만든다. 5턴 동안 모든 포켓몬의 도구의 효과가 사라진다.",
+    "descriptionEn": "For 5 turns, the held items of all active Pokemon have no effect. An item's effect of causing forme changes is unaffected, but any other effects from such items are negated. During the effect, Fling and Natural Gift are prevented from being used by all active Pokemon. If this move is used during the effect, the effect ends."
   },
   "smack-down": {
     "id": 479,
@@ -5283,7 +5761,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "돌이나 구슬을 던져서 날고 있는 상대를 공격한다. 맞은 상대는 땅에 떨어진다."
+    "description": "돌이나 구슬을 던져서 날고 있는 상대를 공격한다. 맞은 상대는 땅에 떨어진다.",
+    "descriptionEn": "This move can hit a target using Bounce, Fly, or Sky Drop, or is under the effect of Sky Drop. If this move hits a target under the effect of Bounce, Fly, Magnet Rise, or Telekinesis, the effect ends. If the target is a Flying type that has not used Roost this turn or a Pokemon with the Levitate Ability, it loses its immunity to Ground-type attacks and the Arena Trap Ability as long as it remains active. During the effect, Magnet Rise fails for the target and Telekinesis fails against the target."
   },
   "storm-throw": {
     "id": 480,
@@ -5294,7 +5773,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "강렬한 일격을 상대에게 날린다. 공격은 반드시 급소에 맞는다."
+    "description": "강렬한 일격을 상대에게 날린다. 공격은 반드시 급소에 맞는다.",
+    "descriptionEn": "This move is always a critical hit unless the target is under the effect of Lucky Chant or has the Battle Armor or Shell Armor Abilities."
   },
   "flame-burst": {
     "id": 481,
@@ -5305,7 +5785,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "special",
-    "description": "맞으면 튀는 불꽃으로 상대를 공격한다. 튕긴 불꽃은 옆의 상대에게도 쏟아진다."
+    "description": "맞으면 튀는 불꽃으로 상대를 공격한다. 튕긴 불꽃은 옆의 상대에게도 쏟아진다.",
+    "descriptionEn": "If this move is successful, the target's ally loses 1/16 of its maximum HP, rounded down, unless it has the Magic Guard Ability."
   },
   "sludge-wave": {
     "id": 482,
@@ -5316,7 +5797,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "오물 파도로 자신의 주위에 있는 포켓몬을 공격한다. 독 상태로 만들 때가 있다."
+    "description": "오물 파도로 자신의 주위에 있는 포켓몬을 공격한다. 독 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 10% chance to poison the target."
   },
   "quiver-dance": {
     "id": 483,
@@ -5327,7 +5809,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "신비롭고 아름다운 춤을 경쾌하게 춘다. 자신의 특수공격과 특수방어와 스피드를 올린다."
+    "description": "신비롭고 아름다운 춤을 경쾌하게 춘다. 자신의 특수공격과 특수방어와 스피드를 올린다.",
+    "descriptionEn": "Raises the user's Special Attack, Special Defense, and Speed by 1 stage."
   },
   "heavy-slam": {
     "id": 484,
@@ -5338,7 +5821,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "무거운 몸으로 상대에게 부딪쳐 공격한다. 자신이 상대보다 무거울수록 위력이 올라간다."
+    "description": "무거운 몸으로 상대에게 부딪쳐 공격한다. 자신이 상대보다 무거울수록 위력이 올라간다.",
+    "descriptionEn": "The power of this move depends on (user's weight / target's weight), rounded down. Power is equal to 120 if the result is 5 or more, 100 if 4, 80 if 3, 60 if 2, and 40 if 1 or less. Damage doubles and no accuracy check is done if the target has used Minimize while active."
   },
   "synchronoise": {
     "id": 485,
@@ -5349,7 +5833,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "이상한 전파로 주위에 있는 자신과 같은 타입의 포켓몬에게 데미지를 준다."
+    "description": "이상한 전파로 주위에 있는 자신과 같은 타입의 포켓몬에게 데미지를 준다.",
+    "descriptionEn": "The target is immune if it does not share a type with the user."
   },
   "electro-ball": {
     "id": 486,
@@ -5360,7 +5845,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "전기 덩어리를 상대에게 부딪쳐서 공격한다. 상대보다 스피드가 빠를수록 위력이 올라간다."
+    "description": "전기 덩어리를 상대에게 부딪쳐서 공격한다. 상대보다 스피드가 빠를수록 위력이 올라간다.",
+    "descriptionEn": "The power of this move depends on (user's current Speed / target's current Speed), rounded down. Power is equal to 150 if the result is 4 or more, 120 if 3, 80 if 2, 60 if 1, 40 if less than 1. If the target's current Speed is 0, this move's power is 40."
   },
   "soak": {
     "id": 487,
@@ -5371,7 +5857,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "status",
-    "description": "많은 물을 끼얹어서 상대를 물타입으로 바꾼다."
+    "description": "많은 물을 끼얹어서 상대를 물타입으로 바꾼다.",
+    "descriptionEn": "Causes the target to become a Water type. Fails if the target is an Arceus or a Silvally, if the target is already purely Water type, or if the target is Terastallized."
   },
   "flame-charge": {
     "id": 488,
@@ -5382,7 +5869,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "불꽃을 둘러 상대를 공격한다. 힘을 모아서 자신의 스피드를 올린다."
+    "description": "불꽃을 둘러 상대를 공격한다. 힘을 모아서 자신의 스피드를 올린다.",
+    "descriptionEn": "Has a 100% chance to raise the user's Speed by 1 stage."
   },
   "coil": {
     "id": 489,
@@ -5393,7 +5881,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "똬리를 틀어서 집중한다. 자신의 공격과 방어와 명중률을 올린다."
+    "description": "똬리를 틀어서 집중한다. 자신의 공격과 방어와 명중률을 올린다.",
+    "descriptionEn": "Raises the user's Attack, Defense, and accuracy by 1 stage."
   },
   "low-sweep": {
     "id": 490,
@@ -5404,7 +5893,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "재빠른 움직임으로 상대의 다리를 노려 공격한다. 상대의 스피드를 떨어뜨린다."
+    "description": "재빠른 움직임으로 상대의 다리를 노려 공격한다. 상대의 스피드를 떨어뜨린다.",
+    "descriptionEn": "Has a 100% chance to lower the target's Speed by 1 stage."
   },
   "acid-spray": {
     "id": 491,
@@ -5415,7 +5905,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "special",
-    "description": "상대를 녹이는 액체를 토해내서 공격한다. 상대의 특수방어를 크게 떨어뜨린다."
+    "description": "상대를 녹이는 액체를 토해내서 공격한다. 상대의 특수방어를 크게 떨어뜨린다.",
+    "descriptionEn": "Has a 100% chance to lower the target's Special Defense by 2 stages."
   },
   "foul-play": {
     "id": 492,
@@ -5426,7 +5917,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "상대의 힘을 이용한다. 싸우고 있는 상대의 공격이 높을수록 데미지가 올라간다."
+    "description": "상대의 힘을 이용한다. 싸우고 있는 상대의 공격이 높을수록 데미지가 올라간다.",
+    "descriptionEn": "Damage is calculated using the target's Attack stat, including stat stage changes. The user's Ability, item, and burn are used as normal."
   },
   "simple-beam": {
     "id": 493,
@@ -5437,7 +5929,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "status",
-    "description": "수수께끼의 염력파를 상대에게 보낸다. 염력파를 받은 상대는 특성이 단순으로 바뀐다."
+    "description": "수수께끼의 염력파를 상대에게 보낸다. 염력파를 받은 상대는 특성이 단순으로 바뀐다.",
+    "descriptionEn": "Causes the target's Ability to become Simple. Fails if the target's Ability is As One, Battle Bond, Comatose, Disguise, Gulp Missile, Ice Face, Multitype, Power Construct, RKS System, Schooling, Shields Down, Simple, Stance Change, Tera Shift, Truant, Zen Mode, or Zero to Hero."
   },
   "entrainment": {
     "id": 494,
@@ -5448,7 +5941,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "status",
-    "description": "이상한 리듬으로 춤춘다. 움직임을 흉내 내게 해서 자신과 상대의 특성을 똑같게 만든다."
+    "description": "이상한 리듬으로 춤춘다. 움직임을 흉내 내게 해서 자신과 상대의 특성을 똑같게 만든다.",
+    "descriptionEn": "Causes the target's Ability to become the same as the user's. Fails if the target's Ability is As One, Battle Bond, Comatose, Disguise, Gulp Missile, Ice Face, Multitype, Power Construct, RKS System, Schooling, Shields Down, Stance Change, Tera Shift, Truant, Zen Mode, or Zero to Hero, or the same Ability as the user, or if the user's Ability is As One, Battle Bond, Comatose, Commander, Disguise, Embody Aspect, Flower Gift, Forecast, Hunger Switch, Ice Face, Illusion, Imposter, Multitype, Neutralizing Gas, Poison Puppeteer, Power Construct, Power of Alchemy, Protosynthesis, Quark Drive, Receiver, RKS System, Schooling, Shields Down, Stance Change, Tera Shell, Tera Shift, Teraform Zero, Trace, Wonder Guard, Zen Mode, or Zero to Hero."
   },
   "after-you": {
     "id": 495,
@@ -5459,7 +5953,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 15,
     "category": "status",
-    "description": "상대의 행동을 도와서 자신이 행동한 뒤에 바로 움직일 수 있도록 한다."
+    "description": "상대의 행동을 도와서 자신이 행동한 뒤에 바로 움직일 수 있도록 한다.",
+    "descriptionEn": "The target makes its move immediately after the user this turn, no matter the priority of its selected move. Fails if the target would have moved next anyway, or if the target already moved this turn."
   },
   "round": {
     "id": 496,
@@ -5470,7 +5965,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "special",
-    "description": "노래로 상대를 공격한다. 함께 돌림노래를 하면 계속해서 쓸 수 있고 위력도 올라간다."
+    "description": "노래로 상대를 공격한다. 함께 돌림노래를 하면 계속해서 쓸 수 있고 위력도 올라간다.",
+    "descriptionEn": "If there are other active Pokemon that chose this move for use this turn, those Pokemon take their turn immediately after the user, in Speed order, and this move's power is 120 for each other user."
   },
   "echoed-voice": {
     "id": 497,
@@ -5481,7 +5977,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "special",
-    "description": "울리는 목소리로 상대를 공격한다. 매 턴 누군가 기술을 계속해서 쓰면 위력이 올라간다."
+    "description": "울리는 목소리로 상대를 공격한다. 매 턴 누군가 기술을 계속해서 쓰면 위력이 올라간다.",
+    "descriptionEn": "For every consecutive turn that this move is used by at least one Pokemon, this move's power is multiplied by the number of turns to pass, but not more than 5."
   },
   "chip-away": {
     "id": 498,
@@ -5492,7 +5989,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "틈을 보며 착실하게 공격한다. 상대의 능력 변화에 관계없이 데미지를 준다."
+    "description": "틈을 보며 착실하게 공격한다. 상대의 능력 변화에 관계없이 데미지를 준다.",
+    "descriptionEn": "Ignores the target's stat stage changes, including evasiveness."
   },
   "clear-smog": {
     "id": 499,
@@ -5503,7 +6001,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 15,
     "category": "special",
-    "description": "특수한 진흙 덩어리를 상대에게 내던져서 공격한다. 능력 변화를 원래대로 돌린다."
+    "description": "특수한 진흙 덩어리를 상대에게 내던져서 공격한다. 능력 변화를 원래대로 돌린다.",
+    "descriptionEn": "Resets all of the target's stat stages to 0."
   },
   "stored-power": {
     "id": 500,
@@ -5514,7 +6013,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "축적된 파워로 상대를 공격한다. 자신의 능력이 올라가 있는 만큼 위력이 오른다."
+    "description": "축적된 파워로 상대를 공격한다. 자신의 능력이 올라가 있는 만큼 위력이 오른다.",
+    "descriptionEn": "Power is equal to 20+(X*20), where X is the user's total stat stage changes that are greater than 0."
   },
   "quick-guard": {
     "id": 501,
@@ -5525,7 +6025,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 15,
     "category": "status",
-    "description": "자신과 같은 편을 상대의 선제공격으로부터 지킨다. "
+    "description": "자신과 같은 편을 상대의 선제공격으로부터 지킨다. ",
+    "descriptionEn": "The user and its party members are protected from attacks with original or altered priority greater than 0 made by other Pokemon, including allies, during this turn. This move modifies the same 1/X chance of being successful used by other protection moves, where X starts at 1 and triples each time this move is successfully used, but does not use the chance to check for failure. X resets to 1 if this move fails, if the user's last move used is not Baneful Bunker, Burning Bulwark, Detect, Endure, King's Shield, Max Guard, Obstruct, Protect, Quick Guard, Silk Trap, Spiky Shield, or Wide Guard, or if it was one of those moves and the user's protection was broken. Fails if the user moves last this turn or if this move is already in effect for the user's side."
   },
   "ally-switch": {
     "id": 502,
@@ -5536,7 +6037,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 15,
     "category": "status",
-    "description": "이상한 힘으로 순간이동하여 자신과 같은 편이 있는 장소를 바꾼다."
+    "description": "이상한 힘으로 순간이동하여 자신과 같은 편이 있는 장소를 바꾼다.",
+    "descriptionEn": "The user swaps positions with its ally. Fails if the user is the only Pokemon on its side. This move has a 1/X chance of being successful, where X starts at 1 and triples each time this move is successfully used. X resets to 1 if this move fails or if the user's last move used is not Ally Switch."
   },
   "scald": {
     "id": 503,
@@ -5547,7 +6049,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "special",
-    "description": "뜨겁게 끓어오르는 물을 상대에게 발사해서 공격한다. 화상 상태로 만들 때가 있다."
+    "description": "뜨겁게 끓어오르는 물을 상대에게 발사해서 공격한다. 화상 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to burn the target. The target thaws out if it is frozen."
   },
   "shell-smash": {
     "id": 504,
@@ -5558,7 +6061,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 15,
     "category": "status",
-    "description": "껍질을 깨서 자신의 방어와 특수방어를 떨어뜨리지만 공격과 특수공격, 스피드를 크게 올린다."
+    "description": "껍질을 깨서 자신의 방어와 특수방어를 떨어뜨리지만 공격과 특수공격, 스피드를 크게 올린다.",
+    "descriptionEn": "Lowers the user's Defense and Special Defense by 1 stage. Raises the user's Attack, Special Attack, and Speed by 2 stages."
   },
   "heal-pulse": {
     "id": 505,
@@ -5569,7 +6073,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "치유파동을 날려서 최대 HP의 절반만큼 상대의 HP를 회복한다."
+    "description": "치유파동을 날려서 최대 HP의 절반만큼 상대의 HP를 회복한다.",
+    "descriptionEn": "The target restores 1/2 of its maximum HP, rounded half up. If the user has the Mega Launcher Ability, the target instead restores 3/4 of its maximum HP, rounded half down."
   },
   "hex": {
     "id": 506,
@@ -5580,7 +6085,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "엎친 데 덮친 격으로 공격한다. 상태 이상인 상대에게 큰 데미지를 준다."
+    "description": "엎친 데 덮친 격으로 공격한다. 상태 이상인 상대에게 큰 데미지를 준다.",
+    "descriptionEn": "Power doubles if the target has a non-volatile status condition."
   },
   "sky-drop": {
     "id": 507,
@@ -5591,7 +6097,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "1턴째에 상대를 하늘로 끌고 가서 2턴째에 떨어뜨려 공격한다. 끌려간 상대는 움직일 수 없다."
+    "description": "1턴째에 상대를 하늘로 끌고 가서 2턴째에 떨어뜨려 공격한다. 끌려간 상대는 움직일 수 없다.",
+    "descriptionEn": "This attack takes the target into the air with the user on the first turn and executes on the second. Pokemon weighing 200 kg or more cannot be lifted. On the first turn, the user and the target avoid all attacks other than Gust, Hurricane, Sky Uppercut, Smack Down, Thousand Arrows, Thunder, and Twister. The user and the target cannot make a move between turns, but the target can select a move to use. This move cannot damage Flying-type Pokemon. Fails on the first turn if the target is an ally, if the target has a substitute, or if the target is using Bounce, Dig, Dive, Fly, Phantom Force, Shadow Force, or Sky Drop."
   },
   "shift-gear": {
     "id": 508,
@@ -5602,7 +6109,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "톱니바퀴를 돌려서 자신의 공격을 올리는 것뿐만 아니라 스피드도 크게 올린다."
+    "description": "톱니바퀴를 돌려서 자신의 공격을 올리는 것뿐만 아니라 스피드도 크게 올린다.",
+    "descriptionEn": "Raises the user's Speed by 2 stages and its Attack by 1 stage."
   },
   "circle-throw": {
     "id": 509,
@@ -5613,7 +6121,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "physical",
-    "description": "상대를 내던져서 교대할 포켓몬을 끌어낸다. 야생의 경우에는 배틀이 끝난다."
+    "description": "상대를 내던져서 교대할 포켓몬을 끌어낸다. 야생의 경우에는 배틀이 끝난다.",
+    "descriptionEn": "If both the user and the target have not fainted, the target is forced to switch out and be replaced with a random unfainted ally. This effect fails if the target is under the effect of Ingrain, has the Suction Cups Ability, or this move hit a substitute."
   },
   "incinerate": {
     "id": 510,
@@ -5624,7 +6133,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "special",
-    "description": "불꽃으로 상대를 공격한다. 상대가 나무열매 등을 지니고 있을 때 불태워서 쓸 수 없게 만든다."
+    "description": "불꽃으로 상대를 공격한다. 상대가 나무열매 등을 지니고 있을 때 불태워서 쓸 수 없게 만든다.",
+    "descriptionEn": "The target loses its held item if it is a Berry or a Gem. This move cannot cause Pokemon with the Sticky Hold Ability to lose their held item. Items lost to this move cannot be regained with Recycle or the Harvest Ability."
   },
   "quash": {
     "id": 511,
@@ -5635,7 +6145,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "status",
-    "description": "상대를 억눌러서 행동의 순서를 마지막으로 만든다."
+    "description": "상대를 억눌러서 행동의 순서를 마지막으로 만든다.",
+    "descriptionEn": "Causes the target to take its turn after all other Pokemon this turn, no matter the priority of its selected move. Fails if the target already moved this turn."
   },
   "acrobatics": {
     "id": 512,
@@ -5646,7 +6157,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "경쾌하게 상대를 공격한다. 자신이 도구를 지니고 있지 않을 때 큰 데미지를 준다."
+    "description": "경쾌하게 상대를 공격한다. 자신이 도구를 지니고 있지 않을 때 큰 데미지를 준다.",
+    "descriptionEn": "Power doubles if the user has no held item."
   },
   "reflect-type": {
     "id": 513,
@@ -5657,7 +6169,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 15,
     "category": "status",
-    "description": "상대의 타입을 반사해서 자신도 똑같은 타입이 된다."
+    "description": "상대의 타입을 반사해서 자신도 똑같은 타입이 된다.",
+    "descriptionEn": "Causes the user's types to become the same as the current types of the target. If the target's current types include typeless and a non-added type, typeless is ignored. If the target's current types include typeless and an added type from Forest's Curse or Trick-or-Treat, typeless is copied as the Normal type instead. Fails if the user is an Arceus or a Silvally, if the user is Terastallized, or if the target's current type is typeless alone."
   },
   "retaliate": {
     "id": 514,
@@ -5668,7 +6181,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": "쓰러진 같은 편의 원수를 갚는다. 앞 턴에서 같은 편이 쓰러졌다면 위력이 올라간다."
+    "description": "쓰러진 같은 편의 원수를 갚는다. 앞 턴에서 같은 편이 쓰러졌다면 위력이 올라간다.",
+    "descriptionEn": "Power doubles if one of the user's party members fainted last turn."
   },
   "final-gambit": {
     "id": 515,
@@ -5679,7 +6193,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": "목숨을 걸고 상대를 공격한다. 자신은 기절하게 되지만 상대에게 HP만큼의 데미지를 준다."
+    "description": "목숨을 걸고 상대를 공격한다. 자신은 기절하게 되지만 상대에게 HP만큼의 데미지를 준다.",
+    "descriptionEn": "Deals damage to the target equal to the user's current HP. If this move is successful, the user faints."
   },
   "bestow": {
     "id": 516,
@@ -5690,7 +6205,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 15,
     "category": "status",
-    "description": "상대가 도구를 지니고 있지 않을 때 자신이 지니고 있는 도구를 상대에게 건넨다."
+    "description": "상대가 도구를 지니고 있지 않을 때 자신이 지니고 있는 도구를 상대에게 건넨다.",
+    "descriptionEn": "The target receives the user's held item. Fails if the user has no item or is holding a Z-Crystal, if the target is already holding an item, if the item is a Mega Stone and either the user or the target is the species that can Mega Evolve with it, or if the item is a Blue Orb, Red Orb, Griseous Orb, Plate, Drive, or Memory and either the user or the target is a Kyogre, Groudon, Giratina, Arceus, Genesect, or Silvally, respectively."
   },
   "inferno": {
     "id": 517,
@@ -5701,7 +6217,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 50,
     "pp": 5,
     "category": "special",
-    "description": "격렬한 불꽃으로 상대를 둘러싸 공격한다. 화상 상태로 만든다."
+    "description": "격렬한 불꽃으로 상대를 둘러싸 공격한다. 화상 상태로 만든다.",
+    "descriptionEn": "Has a 100% chance to burn the target."
   },
   "water-pledge": {
     "id": 518,
@@ -5712,7 +6229,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "물기둥으로 공격한다. 불꽃과 조합하면 위력이 올라가고 하늘에 무지개가 걸린다."
+    "description": "물기둥으로 공격한다. 불꽃과 조합하면 위력이 올라가고 하늘에 무지개가 걸린다.",
+    "descriptionEn": "If one of the user's allies chose to use Fire Pledge or Grass Pledge this turn and has not moved yet, it takes its turn immediately after the user and the user's move does nothing. If combined with Fire Pledge, the ally uses Water Pledge with 150 power and a rainbow appears on the user's side for 4 turns, which doubles secondary effect chances and stacks with the Serene Grace Ability, except effects that cause flinching can only have their chance doubled once. If combined with Grass Pledge, the ally uses Grass Pledge with 150 power and a swamp appears on the target's side for 4 turns, which quarters the Speed of each Pokemon on that side. When used as a combined move, this move gains STAB no matter what the user's type is. This move does not consume the user's Water Gem, and cannot be redirected by the Storm Drain Ability."
   },
   "fire-pledge": {
     "id": 519,
@@ -5723,7 +6241,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "불꽃기둥으로 공격한다. 풀과 조합하면 위력이 올라가고 주위가 불바다가 된다."
+    "description": "불꽃기둥으로 공격한다. 풀과 조합하면 위력이 올라가고 주위가 불바다가 된다.",
+    "descriptionEn": "If one of the user's allies chose to use Grass Pledge or Water Pledge this turn and has not moved yet, it takes its turn immediately after the user and the user's move does nothing. If combined with Grass Pledge, the ally uses Fire Pledge with 150 power and a sea of fire appears on the target's side for 4 turns, which causes damage to non-Fire types equal to 1/8 of their maximum HP, rounded down, at the end of each turn during effect, including the last turn. If combined with Water Pledge, the ally uses Water Pledge with 150 power and a rainbow appears on the user's side for 4 turns, which doubles secondary effect chances and stacks with the Serene Grace Ability, except effects that cause flinching can only have their chance doubled once. When used as a combined move, this move gains STAB no matter what the user's type is. This move does not consume the user's Fire Gem."
   },
   "grass-pledge": {
     "id": 520,
@@ -5734,7 +6253,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "풀기둥으로 공격한다. 물과 조합하면 위력이 올라가고 주변이 습지초원이 된다."
+    "description": "풀기둥으로 공격한다. 물과 조합하면 위력이 올라가고 주변이 습지초원이 된다.",
+    "descriptionEn": "If one of the user's allies chose to use Fire Pledge or Water Pledge this turn and has not moved yet, it takes its turn immediately after the user and the user's move does nothing. If combined with Fire Pledge, the ally uses Fire Pledge with 150 power and a sea of fire appears on the target's side for 4 turns, which causes damage to non-Fire types equal to 1/8 of their maximum HP, rounded down, at the end of each turn during effect, including the last turn. If combined with Water Pledge, the ally uses Grass Pledge with 150 power and a swamp appears on the target's side for 4 turns, which quarters the Speed of each Pokemon on that side. When used as a combined move, this move gains STAB no matter what the user's type is. This move does not consume the user's Grass Gem."
   },
   "volt-switch": {
     "id": 521,
@@ -5745,7 +6265,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "special",
-    "description": "공격한 뒤 굉장한 스피드로 돌아와서 교대 포켓몬과 교체한다."
+    "description": "공격한 뒤 굉장한 스피드로 돌아와서 교대 포켓몬과 교체한다.",
+    "descriptionEn": "If this move is successful and the user has not fainted, the user switches out even if it is trapped and is replaced immediately by a selected party member. The user does not switch out if there are no unfainted party members, or if the target switched out using an Eject Button or through the effect of the Emergency Exit or Wimp Out Abilities."
   },
   "struggle-bug": {
     "id": 522,
@@ -5756,7 +6277,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "special",
-    "description": "저항해서 상대를 공격한다. 상대의 특수공격을 떨어뜨린다."
+    "description": "저항해서 상대를 공격한다. 상대의 특수공격을 떨어뜨린다.",
+    "descriptionEn": "Has a 100% chance to lower the target's Special Attack by 1 stage."
   },
   "bulldoze": {
     "id": 523,
@@ -5767,7 +6289,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "땅을 힘껏 밟아 자신의 주위에 있는 포켓몬을 공격한다. 상대의 스피드를 떨어뜨린다."
+    "description": "땅을 힘껏 밟아 자신의 주위에 있는 포켓몬을 공격한다. 상대의 스피드를 떨어뜨린다.",
+    "descriptionEn": "Has a 100% chance to lower the target's Speed by 1 stage."
   },
   "frost-breath": {
     "id": 524,
@@ -5778,7 +6301,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "special",
-    "description": "차가운 숨결을 상대에게 내뿜어 공격한다. 반드시 급소에 맞는다."
+    "description": "차가운 숨결을 상대에게 내뿜어 공격한다. 반드시 급소에 맞는다.",
+    "descriptionEn": "This move is always a critical hit unless the target is under the effect of Lucky Chant or has the Battle Armor or Shell Armor Abilities."
   },
   "dragon-tail": {
     "id": 525,
@@ -5789,7 +6313,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "physical",
-    "description": "상대를 튕겨내서 교대할 포켓몬을 끌어낸다. 야생의 경우에는 배틀이 끝난다."
+    "description": "상대를 튕겨내서 교대할 포켓몬을 끌어낸다. 야생의 경우에는 배틀이 끝난다.",
+    "descriptionEn": "If both the user and the target have not fainted, the target is forced to switch out and be replaced with a random unfainted ally. This effect fails if the target used Ingrain previously, has the Suction Cups Ability, or this move hit a substitute."
   },
   "work-up": {
     "id": 526,
@@ -5800,7 +6325,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 30,
     "category": "status",
-    "description": "스스로 분발해서 공격과 특수공격을 올린다."
+    "description": "스스로 분발해서 공격과 특수공격을 올린다.",
+    "descriptionEn": "Raises the user's Attack and Special Attack by 1 stage."
   },
   "electroweb": {
     "id": 527,
@@ -5811,7 +6337,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 15,
     "category": "special",
-    "description": "전기 네트로 상대를 붙잡아서 공격한다. 상대의 스피드를 떨어뜨린다."
+    "description": "전기 네트로 상대를 붙잡아서 공격한다. 상대의 스피드를 떨어뜨린다.",
+    "descriptionEn": "Has a 100% chance to lower the target's Speed by 1 stage."
   },
   "wild-charge": {
     "id": 528,
@@ -5822,7 +6349,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "전기를 두르고 상대에게 부딪쳐 공격한다. 자신도 조금 데미지를 입는다."
+    "description": "전기를 두르고 상대에게 부딪쳐 공격한다. 자신도 조금 데미지를 입는다.",
+    "descriptionEn": "If the target lost HP, the user takes recoil damage equal to 1/4 the HP lost by the target, rounded half up, but not less than 1 HP."
   },
   "drill-run": {
     "id": 529,
@@ -5833,7 +6361,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 10,
     "category": "physical",
-    "description": "드릴처럼 몸을 회전시켜서 상대에게 몸통박치기한다. 급소에 맞기 쉽다."
+    "description": "드릴처럼 몸을 회전시켜서 상대에게 몸통박치기한다. 급소에 맞기 쉽다.",
+    "descriptionEn": "Has a higher chance for a critical hit."
   },
   "dual-chop": {
     "id": 530,
@@ -5844,7 +6373,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 15,
     "category": "physical",
-    "description": "몸의 단단한 부분으로 상대를 때려 공격한다. 2회 연속으로 데미지를 준다."
+    "description": "몸의 단단한 부분으로 상대를 때려 공격한다. 2회 연속으로 데미지를 준다.",
+    "descriptionEn": "Hits twice. If the first hit breaks the target's substitute, it will take damage for the second hit."
   },
   "heart-stamp": {
     "id": 531,
@@ -5855,7 +6385,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 25,
     "category": "physical",
-    "description": "귀여운 모습으로 방심시켜서 강렬한 일격을 날린다. 상대를 풀죽게 만들 때가 있다."
+    "description": "귀여운 모습으로 방심시켜서 강렬한 일격을 날린다. 상대를 풀죽게 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to make the target flinch."
   },
   "horn-leech": {
     "id": 532,
@@ -5866,7 +6397,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "뿔을 꿰찔러서 상대의 양분을 흡수한다. 입힌 데미지의 절반에 해당하는 HP를 회복할 수 있다."
+    "description": "뿔을 꿰찔러서 상대의 양분을 흡수한다. 입힌 데미지의 절반에 해당하는 HP를 회복할 수 있다.",
+    "descriptionEn": "The user recovers 1/2 the HP lost by the target, rounded half up. If Big Root is held by the user, the HP recovered is 1.3x normal, rounded half down."
   },
   "sacred-sword": {
     "id": 533,
@@ -5877,7 +6409,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "긴 뿔로 베어 공격한다. 상대의 능력 변화에 관계없이 데미지를 준다."
+    "description": "긴 뿔로 베어 공격한다. 상대의 능력 변화에 관계없이 데미지를 준다.",
+    "descriptionEn": "Ignores the target's stat stage changes, including evasiveness."
   },
   "razor-shell": {
     "id": 534,
@@ -5888,7 +6421,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 10,
     "category": "physical",
-    "description": "날카로운 조개껍질로 베어 공격한다. 상대의 방어를 떨어뜨릴 때가 있다."
+    "description": "날카로운 조개껍질로 베어 공격한다. 상대의 방어를 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 50% chance to lower the target's Defense by 1 stage."
   },
   "heat-crash": {
     "id": 535,
@@ -5899,7 +6433,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "불타는 몸으로 상대에게 부딪쳐서 공격한다. 자신이 상대보다 무거울수록 위력이 올라간다."
+    "description": "불타는 몸으로 상대에게 부딪쳐서 공격한다. 자신이 상대보다 무거울수록 위력이 올라간다.",
+    "descriptionEn": "The power of this move depends on (user's weight / target's weight), rounded down. Power is equal to 120 if the result is 5 or more, 100 if 4, 80 if 3, 60 if 2, and 40 if 1 or less. Damage doubles and no accuracy check is done if the target has used Minimize while active."
   },
   "leaf-tornado": {
     "id": 536,
@@ -5910,7 +6445,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "special",
-    "description": "날카로운 잎사귀로 상대를 둘러싸서 공격한다. 명중률을 떨어뜨릴 때가 있다."
+    "description": "날카로운 잎사귀로 상대를 둘러싸서 공격한다. 명중률을 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 50% chance to lower the target's accuracy by 1 stage."
   },
   "steamroller": {
     "id": 537,
@@ -5921,7 +6457,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "둥글게 뭉친 몸을 회전하여 상대를 뭉개 버린다. 상대를 풀죽게 만들 때가 있다."
+    "description": "둥글게 뭉친 몸을 회전하여 상대를 뭉개 버린다. 상대를 풀죽게 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to make the target flinch. Damage doubles and no accuracy check is done if the target has used Minimize while active."
   },
   "cotton-guard": {
     "id": 538,
@@ -5932,7 +6469,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "푹신푹신한 솜털로 자신의 몸을 둘러싸서 지킨다. 방어를 매우 크게 올린다."
+    "description": "푹신푹신한 솜털로 자신의 몸을 둘러싸서 지킨다. 방어를 매우 크게 올린다.",
+    "descriptionEn": "Raises the user's Defense by 3 stages."
   },
   "night-daze": {
     "id": 539,
@@ -5943,7 +6481,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 10,
     "category": "special",
-    "description": "암흑의 충격파를 날려서 상대를 공격한다. 명중률을 떨어뜨릴 때가 있다."
+    "description": "암흑의 충격파를 날려서 상대를 공격한다. 명중률을 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 40% chance to lower the target's accuracy by 1 stage."
   },
   "psystrike": {
     "id": 540,
@@ -5954,7 +6493,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "이상한 염력파를 실체화하여 상대를 공격한다. 물리적인 데미지를 준다."
+    "description": "이상한 염력파를 실체화하여 상대를 공격한다. 물리적인 데미지를 준다.",
+    "descriptionEn": "Deals damage to the target based on its Defense instead of Special Defense."
   },
   "tail-slap": {
     "id": 541,
@@ -5965,7 +6505,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 10,
     "category": "physical",
-    "description": "단단한 꼬리로 상대를 때려서 공격한다. 2-5회 동안 연속으로 쓴다."
+    "description": "단단한 꼬리로 상대를 때려서 공격한다. 2-5회 동안 연속으로 쓴다.",
+    "descriptionEn": "Hits two to five times. Has a 35% chance to hit two or three times and a 15% chance to hit four or five times. If one of the hits breaks the target's substitute, it will take damage for the remaining hits. If the user has the Skill Link Ability, this move will always hit five times. If the user is holding Loaded Dice, this move will hit 4-5 times."
   },
   "hurricane": {
     "id": 542,
@@ -5976,7 +6517,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 70,
     "pp": 10,
     "category": "special",
-    "description": "강렬한 바람으로 상대를 둘러싸서 공격한다. 상대를 혼란시킬 때가 있다."
+    "description": "강렬한 바람으로 상대를 둘러싸서 공격한다. 상대를 혼란시킬 때가 있다.",
+    "descriptionEn": "Has a 30% chance to confuse the target. This move can hit a target using Bounce, Fly, or Sky Drop, or is under the effect of Sky Drop. If the weather is Heavy Rain or Rain, this move does not check accuracy. If the weather is Intense Sun or Sun, this move's accuracy is 50%. If this move is used against a Pokemon holding Utility Umbrella, this move's accuracy remains at 70%."
   },
   "head-charge": {
     "id": 543,
@@ -5987,7 +6529,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "굉장한 아프로 머리로 상대에게 돌진하여 공격한다. 자신도 조금 데미지를 입는다."
+    "description": "굉장한 아프로 머리로 상대에게 돌진하여 공격한다. 자신도 조금 데미지를 입는다.",
+    "descriptionEn": "If the target lost HP, the user takes recoil damage equal to 1/4 the HP lost by the target, rounded half up, but not less than 1 HP."
   },
   "gear-grind": {
     "id": 544,
@@ -5998,7 +6541,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 15,
     "category": "physical",
-    "description": "강철의 기어를 상대에게 던져서 공격한다. 2회 연속으로 데미지를 준다."
+    "description": "강철의 기어를 상대에게 던져서 공격한다. 2회 연속으로 데미지를 준다.",
+    "descriptionEn": "Hits twice. If the first hit breaks the target's substitute, it will take damage for the second hit."
   },
   "searing-shot": {
     "id": 545,
@@ -6009,7 +6553,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": "새빨간 불꽃으로 자신의 주위에 있는 포켓몬을 공격한다. 화상 상태로 만들 때가 있다."
+    "description": "새빨간 불꽃으로 자신의 주위에 있는 포켓몬을 공격한다. 화상 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to burn the target."
   },
   "techno-blast": {
     "id": 546,
@@ -6020,7 +6565,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": "광탄을 상대에게 방출한다. 자신이 지니고 있는 카세트에 의해 타입이 바뀐다."
+    "description": "광탄을 상대에게 방출한다. 자신이 지니고 있는 카세트에 의해 타입이 바뀐다.",
+    "descriptionEn": "This move's type depends on the user's held Drive."
   },
   "relic-song": {
     "id": 547,
@@ -6031,7 +6577,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "옛노래를 상대에게 들려주고 마음에 호소하여 공격한다. 잠듦 상태로 만들 때가 있다."
+    "description": "옛노래를 상대에게 들려주고 마음에 호소하여 공격한다. 잠듦 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 10% chance to cause the target to fall asleep. If this move is successful on at least one target and the user is a Meloetta, it changes to Pirouette Forme if it is currently in Aria Forme, or changes to Aria Forme if it is currently in Pirouette Forme. This forme change does not happen if the Meloetta has the Sheer Force Ability. The Pirouette Forme reverts to Aria Forme when Meloetta is not active."
   },
   "secret-sword": {
     "id": 548,
@@ -6042,7 +6589,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "긴 뿔로 베어 공격한다. 뿔이 머금은 이상한 힘은 물리적인 데미지를 준다."
+    "description": "긴 뿔로 베어 공격한다. 뿔이 머금은 이상한 힘은 물리적인 데미지를 준다.",
+    "descriptionEn": "Deals damage to the target based on its Defense instead of Special Defense."
   },
   "glaciate": {
     "id": 549,
@@ -6053,7 +6601,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 10,
     "category": "special",
-    "description": "차가운 냉기를 상대에게 내뿜어 공격한다. 상대의 스피드를 떨어뜨린다."
+    "description": "차가운 냉기를 상대에게 내뿜어 공격한다. 상대의 스피드를 떨어뜨린다.",
+    "descriptionEn": "Has a 100% chance to lower the target's Speed by 1 stage."
   },
   "bolt-strike": {
     "id": 550,
@@ -6064,7 +6613,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 5,
     "category": "physical",
-    "description": "방대한 전기를 몸에 둘러 상대에게 돌진해서 공격한다. 마비 상태로 만들 때가 있다."
+    "description": "방대한 전기를 몸에 둘러 상대에게 돌진해서 공격한다. 마비 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 20% chance to paralyze the target."
   },
   "blue-flare": {
     "id": 551,
@@ -6075,7 +6625,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 5,
     "category": "special",
-    "description": "아름다우면서도 격렬한 푸른불꽃으로 상대를 둘러싸서 공격한다. 화상 상태로 만들 때가 있다."
+    "description": "아름다우면서도 격렬한 푸른불꽃으로 상대를 둘러싸서 공격한다. 화상 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 20% chance to burn the target."
   },
   "fiery-dance": {
     "id": 552,
@@ -6086,7 +6637,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "불꽃을 둘러 날개를 쳐서 공격한다. 자신의 특수공격이 오를 때가 있다."
+    "description": "불꽃을 둘러 날개를 쳐서 공격한다. 자신의 특수공격이 오를 때가 있다.",
+    "descriptionEn": "Has a 50% chance to raise the user's Special Attack by 1 stage."
   },
   "freeze-shock": {
     "id": 553,
@@ -6097,7 +6649,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 5,
     "category": "physical",
-    "description": "전기를 두른 얼음 덩어리로 2턴째에 상대를 내리친다. 마비 상태로 만들 때가 있다."
+    "description": "전기를 두른 얼음 덩어리로 2턴째에 상대를 내리친다. 마비 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to paralyze the target. This attack charges on the first turn and executes on the second. If the user is holding a Power Herb, the move completes in one turn."
   },
   "ice-burn": {
     "id": 554,
@@ -6108,7 +6661,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 5,
     "category": "special",
-    "description": "모든 것을 얼려버리는 격렬한 냉기로 2턴째에 상대를 둘러싼다. 화상 상태로 만들 때가 있다."
+    "description": "모든 것을 얼려버리는 격렬한 냉기로 2턴째에 상대를 둘러싼다. 화상 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to burn the target. This attack charges on the first turn and executes on the second. If the user is holding a Power Herb, the move completes in one turn."
   },
   "snarl": {
     "id": 555,
@@ -6119,7 +6673,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 15,
     "category": "special",
-    "description": "호되게 호통을 쳐서 상대의 특수공격을 떨어뜨린다."
+    "description": "호되게 호통을 쳐서 상대의 특수공격을 떨어뜨린다.",
+    "descriptionEn": "Has a 100% chance to lower the target's Special Attack by 1 stage."
   },
   "icicle-crash": {
     "id": 556,
@@ -6130,7 +6685,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "physical",
-    "description": "큰 고드름을 격렬하게 부딪쳐서 공격한다. 상대를 풀죽게 만들 때가 있다."
+    "description": "큰 고드름을 격렬하게 부딪쳐서 공격한다. 상대를 풀죽게 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to make the target flinch."
   },
   "v-create": {
     "id": 557,
@@ -6141,7 +6697,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 5,
     "category": "physical",
-    "description": "작열하는 불꽃을 이마에서 발생시켜 이판사판으로 몸통박치기한다. 방어, 특수방어, 스피드가 떨어진다."
+    "description": "작열하는 불꽃을 이마에서 발생시켜 이판사판으로 몸통박치기한다. 방어, 특수방어, 스피드가 떨어진다.",
+    "descriptionEn": "Lowers the user's Speed, Defense, and Special Defense by 1 stage."
   },
   "fusion-flare": {
     "id": 558,
@@ -6152,7 +6709,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": "거대한 불꽃을 내리친다. 거대한 천둥의 영향을 받아 기술의 위력이 올라간다."
+    "description": "거대한 불꽃을 내리친다. 거대한 천둥의 영향을 받아 기술의 위력이 올라간다.",
+    "descriptionEn": "Power doubles if the last move used by any Pokemon this turn was Fusion Bolt."
   },
   "fusion-bolt": {
     "id": 559,
@@ -6163,7 +6721,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": "거대한 천둥을 내리친다. 거대한 불꽃의 영향을 받아 기술의 위력이 올라간다."
+    "description": "거대한 천둥을 내리친다. 거대한 불꽃의 영향을 받아 기술의 위력이 올라간다.",
+    "descriptionEn": "Power doubles if the last move used by any Pokemon this turn was Fusion Flare."
   },
   "flying-press": {
     "id": 560,
@@ -6174,7 +6733,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 10,
     "category": "physical",
-    "description": "공중에서 상대에게 다이브한다. 이 기술은 격투타입임과 동시에 비행타입이기도 하다."
+    "description": "공중에서 상대에게 다이브한다. 이 기술은 격투타입임과 동시에 비행타입이기도 하다.",
+    "descriptionEn": "This move combines Flying in its type effectiveness against the target. Damage doubles and no accuracy check is done if the target has used Minimize while active."
   },
   "mat-block": {
     "id": 561,
@@ -6185,7 +6745,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "뒤집어 세운 마룻바닥을 방패로 하여 자신과 같은 편으로 향하는 기술 데미지를 막는다. 변화 기술은 막을 수 없다."
+    "description": "뒤집어 세운 마룻바닥을 방패로 하여 자신과 같은 편으로 향하는 기술 데미지를 막는다. 변화 기술은 막을 수 없다.",
+    "descriptionEn": "The user and its party members are protected from damaging attacks made by other Pokemon, including allies, during this turn. Fails unless it is the user's first turn on the field, if the user moves last this turn, or if this move is already in effect for the user's side."
   },
   "belch": {
     "id": 562,
@@ -6196,7 +6757,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "special",
-    "description": "상대를 향해 트림을 하여 데미지를 준다. 나무열매를 먹지 않으면 쓸 수 없다."
+    "description": "상대를 향해 트림을 하여 데미지를 준다. 나무열매를 먹지 않으면 쓸 수 없다.",
+    "descriptionEn": "This move cannot be selected until the user eats a Berry, either by eating one that was held, stealing and eating one off another Pokemon with Bug Bite or Pluck, or eating one that was thrown at it with Fling. Once the condition is met, this move can be selected and used for the rest of the battle even if the user gains or uses another item or switches out. Consuming a Berry with Natural Gift does not count for the purposes of eating one."
   },
   "rototiller": {
     "id": 563,
@@ -6207,7 +6769,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "땅을 일구어 초목이 자라기 쉽게 한다. 풀타입의 공격과 특수공격이 오른다."
+    "description": "땅을 일구어 초목이 자라기 쉽게 한다. 풀타입의 공격과 특수공격이 오른다.",
+    "descriptionEn": "Raises the Attack and Special Attack of all grounded Grass-type Pokemon on the field by 1 stage."
   },
   "sticky-web": {
     "id": 564,
@@ -6218,7 +6781,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "상대의 주위에 끈적끈적한 네트를 둘러 펼쳐 교체되어 나온 상대의 스피드를 떨어뜨린다."
+    "description": "상대의 주위에 끈적끈적한 네트를 둘러 펼쳐 교체되어 나온 상대의 스피드를 떨어뜨린다.",
+    "descriptionEn": "Sets up a hazard on the opposing side of the field, lowering the Speed by 1 stage of each opposing Pokemon that switches in, unless it is a Flying-type Pokemon or has the Levitate Ability. Fails if the effect is already active on the opposing side. Can be removed from the opposing side if any Pokemon uses Tidy Up, or if any opposing Pokemon uses Mortal Spin, Rapid Spin, or Defog successfully, or is hit by Defog."
   },
   "fell-stinger": {
     "id": 565,
@@ -6229,7 +6793,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 25,
     "category": "physical",
-    "description": "이 기술을 사용하여 상대를 쓰러뜨리면 공격이 크게 오른다."
+    "description": "이 기술을 사용하여 상대를 쓰러뜨리면 공격이 크게 오른다.",
+    "descriptionEn": "Raises the user's Attack by 3 stages if this move knocks out the target."
   },
   "phantom-force": {
     "id": 566,
@@ -6240,7 +6805,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "1턴째에 어디론가 사라져서 2턴째에 상대를 공격한다. 기술 방어를 무시하고 공격할 수 있다."
+    "description": "1턴째에 어디론가 사라져서 2턴째에 상대를 공격한다. 기술 방어를 무시하고 공격할 수 있다.",
+    "descriptionEn": "If this move is successful, it breaks through the target's Baneful Bunker, Detect, King's Shield, Protect, or Spiky Shield for this turn, allowing other Pokemon to attack the target normally. If the target's side is protected by Crafty Shield, Mat Block, Quick Guard, or Wide Guard, that protection is also broken for this turn and other Pokemon may attack the target's side normally. This attack charges on the first turn and executes on the second. On the first turn, the user avoids all attacks. If the user is holding a Power Herb, the move completes in one turn."
   },
   "trick-or-treat": {
     "id": 567,
@@ -6251,7 +6817,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "status",
-    "description": "상대를 핼러윈으로 초대한다. 상대 타입에 고스트타입이 추가된다."
+    "description": "상대를 핼러윈으로 초대한다. 상대 타입에 고스트타입이 추가된다.",
+    "descriptionEn": "Causes the Ghost type to be added to the target, effectively making it have two or three types. Fails if the target is already a Ghost type. If Forest's Curse adds a type to the target, it replaces the type added by this move and vice versa."
   },
   "noble-roar": {
     "id": 568,
@@ -6262,7 +6829,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 30,
     "category": "status",
-    "description": "우렁차게 부르짖어서 상대를 위협하여 상대의 공격과 특수공격을 떨어뜨린다."
+    "description": "우렁차게 부르짖어서 상대를 위협하여 상대의 공격과 특수공격을 떨어뜨린다.",
+    "descriptionEn": "Lowers the target's Attack and Special Attack by 1 stage."
   },
   "ion-deluge": {
     "id": 569,
@@ -6273,7 +6841,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 25,
     "category": "status",
-    "description": "전기를 띤 입자를 확산시켜 노말타입 기술을 전기타입으로 바꿔버린다."
+    "description": "전기를 띤 입자를 확산시켜 노말타입 기술을 전기타입으로 바꿔버린다.",
+    "descriptionEn": "Causes Normal-type moves to become Electric type this turn. The effect happens after other effects that change a move's type."
   },
   "parabolic-charge": {
     "id": 570,
@@ -6284,7 +6853,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "special",
-    "description": "주위에 있는 모든 포켓몬에게 데미지를 준다. 준 데미지의 절반을 자신이 회복한다."
+    "description": "주위에 있는 모든 포켓몬에게 데미지를 준다. 준 데미지의 절반을 자신이 회복한다.",
+    "descriptionEn": "The user recovers 1/2 the HP lost by the target, rounded half up. If Big Root is held by the user, the HP recovered is 1.3x normal, rounded half down."
   },
   "forests-curse": {
     "id": 571,
@@ -6295,7 +6865,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "status",
-    "description": "상대에게 숲의 저주를 건다. 저주에 걸린 상대는 타입에 풀타입이 추가된다."
+    "description": "상대에게 숲의 저주를 건다. 저주에 걸린 상대는 타입에 풀타입이 추가된다.",
+    "descriptionEn": "Causes the Grass type to be added to the target, effectively making it have two or three types. Fails if the target is already a Grass type. If Trick-or-Treat adds a type to the target, it replaces the type added by this move and vice versa."
   },
   "petal-blizzard": {
     "id": 572,
@@ -6306,7 +6877,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "세찬 꽃보라를 일으켜서 주위에 있는 포켓몬을 공격하여 데미지를 준다."
+    "description": "세찬 꽃보라를 일으켜서 주위에 있는 포켓몬을 공격하여 데미지를 준다.",
+    "descriptionEn": "No additional effect."
   },
   "freeze-dry": {
     "id": 573,
@@ -6317,7 +6889,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "special",
-    "description": "상대를 급격히 차갑게 하여 얼음 상태로 만들 때가 있다. 물타입 포켓몬에게도 효과가 굉장해진다."
+    "description": "상대를 급격히 차갑게 하여 얼음 상태로 만들 때가 있다. 물타입 포켓몬에게도 효과가 굉장해진다.",
+    "descriptionEn": "Has a 10% chance to freeze the target. This move's type effectiveness against Water is changed to be super effective no matter what this move's type is."
   },
   "disarming-voice": {
     "id": 574,
@@ -6328,7 +6901,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 15,
     "category": "special",
-    "description": "매혹적인 울음소리를 내어 상대에게 정신적 데미지를 준다. 공격은 반드시 명중한다."
+    "description": "매혹적인 울음소리를 내어 상대에게 정신적 데미지를 준다. 공격은 반드시 명중한다.",
+    "descriptionEn": "This move does not check accuracy."
   },
   "parting-shot": {
     "id": 575,
@@ -6339,7 +6913,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "status",
-    "description": "막말을 내뱉어 상대를 위협하여 공격과 특수공격을 떨어뜨린 후 교대 포켓몬과 교체한다."
+    "description": "막말을 내뱉어 상대를 위협하여 공격과 특수공격을 떨어뜨린 후 교대 포켓몬과 교체한다.",
+    "descriptionEn": "Lowers the target's Attack and Special Attack by 1 stage. If this move is successful, the user switches out even if it is trapped and is replaced immediately by a selected party member. The user does not switch out if the target's Attack and Special Attack stat stages were both unchanged, or if there are no unfainted party members."
   },
   "topsy-turvy": {
     "id": 576,
@@ -6350,7 +6925,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "상대에게 걸려 있는 모든 능력 변화를 뒤집어서 반대로 만든다."
+    "description": "상대에게 걸려 있는 모든 능력 변화를 뒤집어서 반대로 만든다.",
+    "descriptionEn": "The target's positive stat stages become negative and vice versa. Fails if all of the target's stat stages are 0."
   },
   "draining-kiss": {
     "id": 577,
@@ -6361,7 +6937,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "키스로 상대로부터 HP를 흡수한다. 준 데미지의 반 이상 HP를 회복한다."
+    "description": "키스로 상대로부터 HP를 흡수한다. 준 데미지의 반 이상 HP를 회복한다.",
+    "descriptionEn": "The user recovers 3/4 the HP lost by the target, rounded half up. If Big Root is held by the user, the HP recovered is 1.3x normal, rounded half down."
   },
   "crafty-shield": {
     "id": 578,
@@ -6372,7 +6949,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "이상한 힘을 사용하여 같은 편을 공격하는 변화 기술을 막는다. 데미지 기술은 받는다."
+    "description": "이상한 힘을 사용하여 같은 편을 공격하는 변화 기술을 막는다. 데미지 기술은 받는다.",
+    "descriptionEn": "The user and its party members are protected from non-damaging attacks made by other Pokemon, including allies, during this turn. Fails if the user moves last this turn or if this move is already in effect for the user's side."
   },
   "flower-shield": {
     "id": 579,
@@ -6383,7 +6961,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "이상한 힘을 사용하여 배틀에 나와있는 모든 풀타입 포켓몬의 방어를 올린다."
+    "description": "이상한 힘을 사용하여 배틀에 나와있는 모든 풀타입 포켓몬의 방어를 올린다.",
+    "descriptionEn": "Raises the Defense of all active Grass-type Pokemon by 1 stage. Fails if there are no active Grass-type Pokemon."
   },
   "grassy-terrain": {
     "id": 580,
@@ -6394,7 +6973,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "5턴 동안 발밑을 그래스필드로 만든다. 땅에 있는 포켓몬은 매 턴 회복한다."
+    "description": "5턴 동안 발밑을 그래스필드로 만든다. 땅에 있는 포켓몬은 매 턴 회복한다.",
+    "descriptionEn": "For 5 turns, the terrain becomes Grassy Terrain. During the effect, the power of Grass-type attacks used by grounded Pokemon is multiplied by 1.3, the power of Bulldoze, Earthquake, and Magnitude used against grounded Pokemon is multiplied by 0.5, and grounded Pokemon have 1/16 of their maximum HP, rounded down, restored at the end of each turn, including the last turn. Camouflage transforms the user into a Grass type, Nature Power becomes Energy Ball, and Secret Power has a 30% chance to cause sleep. Fails if the current terrain is Grassy Terrain."
   },
   "misty-terrain": {
     "id": 581,
@@ -6405,7 +6985,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "5턴 동안 발밑을 미스트필드로 만든다. 땅에 있으면 상태 이상이 되지 않는다."
+    "description": "5턴 동안 발밑을 미스트필드로 만든다. 땅에 있으면 상태 이상이 되지 않는다.",
+    "descriptionEn": "For 5 turns, the terrain becomes Misty Terrain. During the effect, the power of Dragon-type attacks used against grounded Pokemon is multiplied by 0.5 and grounded Pokemon cannot be inflicted with a non-volatile status condition nor confusion. Grounded Pokemon can become affected by Yawn but cannot fall asleep from its effect. Camouflage transforms the user into a Fairy type, Nature Power becomes Moonblast, and Secret Power has a 30% chance to lower Special Attack by 1 stage. Fails if the current terrain is Misty Terrain."
   },
   "electrify": {
     "id": 582,
@@ -6416,7 +6997,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "상대가 기술을 쓰기 전에 송전하면 그 턴에 상대가 사용하는 기술은 전기타입이 된다."
+    "description": "상대가 기술을 쓰기 전에 송전하면 그 턴에 상대가 사용하는 기술은 전기타입이 된다.",
+    "descriptionEn": "Causes the target's move to become Electric type this turn. Among effects that can change a move's type, this effect happens last. Fails if the target already moved this turn."
   },
   "play-rough": {
     "id": 583,
@@ -6427,7 +7009,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "physical",
-    "description": "상대에게 치근거리며 공격한다. 상대의 공격을 떨어뜨릴 때가 있다."
+    "description": "상대에게 치근거리며 공격한다. 상대의 공격을 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 10% chance to lower the target's Attack by 1 stage."
   },
   "fairy-wind": {
     "id": 584,
@@ -6438,7 +7021,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 30,
     "category": "special",
-    "description": "요정의 바람을 일으켜 상대에게 몰아쳐서 공격한다."
+    "description": "요정의 바람을 일으켜 상대에게 몰아쳐서 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "moonblast": {
     "id": 585,
@@ -6449,7 +7033,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "special",
-    "description": "달의 파워를 빌려서 상대를 공격한다. 상대의 특수공격을 떨어뜨릴 때가 있다."
+    "description": "달의 파워를 빌려서 상대를 공격한다. 상대의 특수공격을 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 30% chance to lower the target's Special Attack by 1 stage."
   },
   "boomburst": {
     "id": 586,
@@ -6460,7 +7045,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "무시무시한 폭음의 파괴력으로 주위에 있는 포켓몬을 공격한다."
+    "description": "무시무시한 폭음의 파괴력으로 주위에 있는 포켓몬을 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "fairy-lock": {
     "id": 587,
@@ -6471,7 +7057,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "록을 걸어 다음 턴의 모든 포켓몬을 도망가지 못하게 한다."
+    "description": "록을 걸어 다음 턴의 모든 포켓몬을 도망가지 못하게 한다.",
+    "descriptionEn": "Prevents all active Pokemon from switching next turn. A Pokemon can still switch out if it is holding Shed Shell or uses Baton Pass, Flip Turn, Parting Shot, Teleport, U-turn, or Volt Switch. Fails if the effect is already active."
   },
   "kings-shield": {
     "id": 588,
@@ -6482,7 +7069,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "상대의 공격을 막음과 동시에 방어 태세를 갖춘다. 접촉한 상대의 공격을 크게 떨어뜨린다."
+    "description": "상대의 공격을 막음과 동시에 방어 태세를 갖춘다. 접촉한 상대의 공격을 크게 떨어뜨린다.",
+    "descriptionEn": "The user is protected from most attacks made by other Pokemon during this turn, and Pokemon trying to make contact with the user have their Attack lowered by 1 stage. Non-damaging moves go through this protection. This move has a 1/X chance of being successful, where X starts at 1 and triples each time this move is successfully used. X resets to 1 if this move fails, if the user's last move used is not Baneful Bunker, Burning Bulwark, Detect, Endure, King's Shield, Max Guard, Obstruct, Protect, Quick Guard, Silk Trap, Spiky Shield, or Wide Guard, or if it was one of those moves and the user's protection was broken. Fails if the user moves last this turn."
   },
   "play-nice": {
     "id": 589,
@@ -6493,7 +7081,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "상대와 친해져서 싸울 마음을 잃게 하여 상대의 공격을 떨어뜨린다."
+    "description": "상대와 친해져서 싸울 마음을 잃게 하여 상대의 공격을 떨어뜨린다.",
+    "descriptionEn": "Lowers the target's Attack by 1 stage."
   },
   "confide": {
     "id": 590,
@@ -6504,7 +7093,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "비밀 이야기를 하면서 상대의 집중력을 잃게 하여 상대의 특수공격을 떨어뜨린다."
+    "description": "비밀 이야기를 하면서 상대의 집중력을 잃게 하여 상대의 특수공격을 떨어뜨린다.",
+    "descriptionEn": "Lowers the target's Special Attack by 1 stage."
   },
   "diamond-storm": {
     "id": 591,
@@ -6515,7 +7105,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 5,
     "category": "physical",
-    "description": "다이아 폭풍을 일으켜 데미지를 준다. 자신의 방어를 올릴 때가 있다."
+    "description": "다이아 폭풍을 일으켜 데미지를 준다. 자신의 방어를 올릴 때가 있다.",
+    "descriptionEn": "Has a 50% chance to raise the user's Defense by 2 stages."
   },
   "steam-eruption": {
     "id": 592,
@@ -6526,7 +7117,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 5,
     "category": "special",
-    "description": "상대에게 굉장히 뜨거운 증기를 뿜는다. 상대는 화상을 입기도 한다."
+    "description": "상대에게 굉장히 뜨거운 증기를 뿜는다. 상대는 화상을 입기도 한다.",
+    "descriptionEn": "Has a 30% chance to burn the target. The target thaws out if it is frozen."
   },
   "hyperspace-hole": {
     "id": 593,
@@ -6537,7 +7129,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 5,
     "category": "special",
-    "description": "다른차원홀로 갑자기 상대 바로 옆에 나타나 공격한다. 방어나 판별도 무시할 수 있다."
+    "description": "다른차원홀로 갑자기 상대 바로 옆에 나타나 공격한다. 방어나 판별도 무시할 수 있다.",
+    "descriptionEn": "If this move is successful, it breaks through the target's Baneful Bunker, Detect, King's Shield, Protect, or Spiky Shield for this turn, allowing other Pokemon to attack the target normally. If the target's side is protected by Crafty Shield, Mat Block, Quick Guard, or Wide Guard, that protection is also broken for this turn and other Pokemon may attack the target's side normally."
   },
   "water-shuriken": {
     "id": 594,
@@ -6548,7 +7141,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "special",
-    "description": "점액으로 만든 수리검을 2-5회 동안 연속으로 던진다. 반드시 선제공격할 수 있다."
+    "description": "점액으로 만든 수리검을 2-5회 동안 연속으로 던진다. 반드시 선제공격할 수 있다.",
+    "descriptionEn": "Hits two to five times. Has a 35% chance to hit two or three times and a 15% chance to hit four or five times. If one of the hits breaks the target's substitute, it will take damage for the remaining hits. If the user has the Skill Link Ability, this move will always hit five times. If the user is an Ash-Greninja with the Battle Bond Ability, this move has a power of 20 and always hits three times. If the user is holding Loaded Dice, this move will hit 4-5 times."
   },
   "mystical-fire": {
     "id": 595,
@@ -6559,7 +7153,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "입에서 내뱉는 아주 뜨거운 불꽃으로 공격한다. 상대의 특수공격을 떨어뜨린다."
+    "description": "입에서 내뱉는 아주 뜨거운 불꽃으로 공격한다. 상대의 특수공격을 떨어뜨린다.",
+    "descriptionEn": "Has a 100% chance to lower the target's Special Attack by 1 stage."
   },
   "spiky-shield": {
     "id": 596,
@@ -6570,7 +7165,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "상대의 공격을 막음과 동시에 접촉한 상대의 체력을 떨어뜨린다."
+    "description": "상대의 공격을 막음과 동시에 접촉한 상대의 체력을 떨어뜨린다.",
+    "descriptionEn": "The user is protected from most attacks made by other Pokemon during this turn, and Pokemon making contact with the user lose 1/8 of their maximum HP, rounded down. This move has a 1/X chance of being successful, where X starts at 1 and triples each time this move is successfully used. X resets to 1 if this move fails, if the user's last move used is not Baneful Bunker, Burning Bulwark, Detect, Endure, King's Shield, Max Guard, Obstruct, Protect, Quick Guard, Silk Trap, Spiky Shield, or Wide Guard, or if it was one of those moves and the user's protection was broken. Fails if the user moves last this turn."
   },
   "aromatic-mist": {
     "id": 597,
@@ -6581,7 +7177,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "신비한 아로마 향으로 같은 편의 특수방어를 올린다. "
+    "description": "신비한 아로마 향으로 같은 편의 특수방어를 올린다. ",
+    "descriptionEn": "Raises the target's Special Defense by 1 stage. Fails if there is no ally adjacent to the user."
   },
   "eerie-impulse": {
     "id": 598,
@@ -6592,7 +7189,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "status",
-    "description": "몸에서 괴전파를 내어 상대에게 쏨으로써 특수공격을 크게 떨어뜨린다."
+    "description": "몸에서 괴전파를 내어 상대에게 쏨으로써 특수공격을 크게 떨어뜨린다.",
+    "descriptionEn": "Lowers the target's Special Attack by 2 stages."
   },
   "venom-drench": {
     "id": 599,
@@ -6603,7 +7201,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "status",
-    "description": "특수한 독액을 끼얹는다. 독 상태인 상대는 공격, 특수공격, 스피드가 떨어진다."
+    "description": "특수한 독액을 끼얹는다. 독 상태인 상대는 공격, 특수공격, 스피드가 떨어진다.",
+    "descriptionEn": "Lowers the target's Attack, Special Attack, and Speed by 1 stage if the target is poisoned. Fails if the target is not poisoned."
   },
   "powder": {
     "id": 600,
@@ -6614,7 +7213,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "status",
-    "description": "분진을 뒤집어쓴 상대가 불꽃 기술을 쓰면 폭발하여 데미지를 준다."
+    "description": "분진을 뒤집어쓴 상대가 불꽃 기술을 쓰면 폭발하여 데미지를 준다.",
+    "descriptionEn": "If the target uses a Fire-type move this turn, it is prevented from executing and the target loses 1/4 of its maximum HP, rounded half up. This effect does not happen if the Fire-type move is prevented by Primordial Sea."
   },
   "geomancy": {
     "id": 601,
@@ -6625,7 +7225,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "1턴째에 에너지를 흡수하여 2턴째에 특수공격, 특수방어, 스피드를 크게 올린다."
+    "description": "1턴째에 에너지를 흡수하여 2턴째에 특수공격, 특수방어, 스피드를 크게 올린다.",
+    "descriptionEn": "Raises the user's Special Attack, Special Defense, and Speed by 2 stages. This attack charges on the first turn and executes on the second. If the user is holding a Power Herb, the move completes in one turn."
   },
   "magnetic-flux": {
     "id": 602,
@@ -6636,7 +7237,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "자기장 조작으로 인해 특성 플러스와 마이너스의 방어, 특수방어가 오른다."
+    "description": "자기장 조작으로 인해 특성 플러스와 마이너스의 방어, 특수방어가 오른다.",
+    "descriptionEn": "Raises the Defense and Special Defense of Pokemon on the user's side with the Plus or Minus Abilities by 1 stage."
   },
   "happy-hour": {
     "id": 603,
@@ -6647,7 +7249,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 30,
     "category": "status",
-    "description": "해피타임 기술을 쓰면 배틀 후에 받을 수 있는 돈이 배가 된다."
+    "description": "해피타임 기술을 쓰면 배틀 후에 받을 수 있는 돈이 배가 된다.",
+    "descriptionEn": "No competitive use."
   },
   "electric-terrain": {
     "id": 604,
@@ -6658,7 +7261,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "5턴 동안 발밑을 일렉트릭필드로 만든다. 땅에 있는 포켓몬은 잠들지 않게 된다."
+    "description": "5턴 동안 발밑을 일렉트릭필드로 만든다. 땅에 있는 포켓몬은 잠들지 않게 된다.",
+    "descriptionEn": "For 5 turns, the terrain becomes Electric Terrain. During the effect, the power of Electric-type attacks made by grounded Pokemon is multiplied by 1.3 and grounded Pokemon cannot fall asleep; Pokemon already asleep do not wake up. Grounded Pokemon cannot become affected by Yawn or fall asleep from its effect. Camouflage transforms the user into an Electric type, Nature Power becomes Thunderbolt, and Secret Power has a 30% chance to cause paralysis. Fails if the current terrain is Electric Terrain."
   },
   "dazzling-gleam": {
     "id": 605,
@@ -6669,7 +7273,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "강력한 빛을 내어 상대에게 데미지를 준다."
+    "description": "강력한 빛을 내어 상대에게 데미지를 준다.",
+    "descriptionEn": "No additional effect."
   },
   "celebrate": {
     "id": 606,
@@ -6680,7 +7285,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 40,
     "category": "status",
-    "description": "포켓몬이 매우 행복한 당신을 축하해 준다."
+    "description": "포켓몬이 매우 행복한 당신을 축하해 준다.",
+    "descriptionEn": "No competitive use."
   },
   "hold-hands": {
     "id": 607,
@@ -6691,7 +7297,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 40,
     "category": "status",
-    "description": "같은 편 포켓몬끼리 손에 손을 잡는다. 굉장히 행복한 기분이 들게 된다."
+    "description": "같은 편 포켓몬끼리 손에 손을 잡는다. 굉장히 행복한 기분이 들게 된다.",
+    "descriptionEn": "No competitive use. Fails if there is no ally adjacent to the user."
   },
   "baby-doll-eyes": {
     "id": 608,
@@ -6702,7 +7309,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 30,
     "category": "status",
-    "description": "초롱초롱한 눈동자로 상대를 바라보며 공격을 떨어뜨린다. 반드시 선제공격할 수 있다."
+    "description": "초롱초롱한 눈동자로 상대를 바라보며 공격을 떨어뜨린다. 반드시 선제공격할 수 있다.",
+    "descriptionEn": "Lowers the target's Attack by 1 stage."
   },
   "nuzzle": {
     "id": 609,
@@ -6713,7 +7321,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "전기가 흐르는 볼을 비벼서 공격한다. 상대를 마비 상태로 만든다."
+    "description": "전기가 흐르는 볼을 비벼서 공격한다. 상대를 마비 상태로 만든다.",
+    "descriptionEn": "Has a 100% chance to paralyze the target."
   },
   "hold-back": {
     "id": 610,
@@ -6724,7 +7333,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 40,
     "category": "physical",
-    "description": "적당히 공격하여 상대의 HP를 반드시 1은 남긴다."
+    "description": "적당히 공격하여 상대의 HP를 반드시 1은 남긴다.",
+    "descriptionEn": "Leaves the target with at least 1 HP."
   },
   "infestation": {
     "id": 611,
@@ -6735,7 +7345,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "special",
-    "description": "4-5턴 동안 상대에게 엉겨 붙어서 공격한다. 그동안 상대는 도망갈 수 없다."
+    "description": "4-5턴 동안 상대에게 엉겨 붙어서 공격한다. 그동안 상대는 도망갈 수 없다.",
+    "descriptionEn": "Prevents the target from switching for four or five turns (seven turns if the user is holding Grip Claw). Causes damage to the target equal to 1/8 of its maximum HP (1/6 if the user is holding Binding Band), rounded down, at the end of each turn during effect. The target can still switch out if it is holding Shed Shell or uses Baton Pass, Flip Turn, Parting Shot, Shed Tail, Teleport, U-turn, or Volt Switch. The effect ends if either the user or the target leaves the field, or if the target uses Mortal Spin, Rapid Spin, or Substitute successfully. This effect is not stackable or reset by using this or another binding move."
   },
   "power-up-punch": {
     "id": 612,
@@ -6746,7 +7357,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "반복하여 때리면 점점 주먹이 단단해진다. 상대를 때리면 공격이 오른다."
+    "description": "반복하여 때리면 점점 주먹이 단단해진다. 상대를 때리면 공격이 오른다.",
+    "descriptionEn": "Has a 100% chance to raise the user's Attack by 1 stage."
   },
   "oblivion-wing": {
     "id": 613,
@@ -6757,7 +7369,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "조준한 상대로부터 HP를 흡수한다. 준 데미지의 반 이상 HP를 회복한다."
+    "description": "조준한 상대로부터 HP를 흡수한다. 준 데미지의 반 이상 HP를 회복한다.",
+    "descriptionEn": "The user recovers 3/4 the HP lost by the target, rounded half up. If Big Root is held by the user, the HP recovered is 1.3x normal, rounded half down."
   },
   "thousand-arrows": {
     "id": 614,
@@ -6768,7 +7381,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "떠 있는 포켓몬도 맞힐 수 있다. 떠 있던 상대는 맞아서 땅에 떨어진다."
+    "description": "떠 있는 포켓몬도 맞힐 수 있다. 떠 있던 상대는 맞아서 땅에 떨어진다.",
+    "descriptionEn": "This move can hit airborne Pokemon, which includes Flying-type Pokemon, Pokemon with the Levitate Ability, Pokemon holding an Air Balloon, and Pokemon under the effect of Magnet Rise or Telekinesis. If the target is a Flying type and is not already grounded, this move deals neutral damage regardless of its other type(s). This move can hit a target using Bounce, Fly, or Sky Drop. If this move hits a target under the effect of Bounce, Fly, Magnet Rise, or Telekinesis, the effect ends. If the target is a Flying type that has not used Roost this turn or a Pokemon with the Levitate Ability, it loses its immunity to Ground-type attacks and the Arena Trap Ability as long as it remains active. During the effect, Magnet Rise fails for the target and Telekinesis fails against the target."
   },
   "thousand-waves": {
     "id": 615,
@@ -6779,7 +7393,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "땅 위를 뻗어 나가는 파도로 공격한다. 파도에 휩쓸린 상대는 전투에서 도망칠 수 없게 된다."
+    "description": "땅 위를 뻗어 나가는 파도로 공격한다. 파도에 휩쓸린 상대는 전투에서 도망칠 수 없게 된다.",
+    "descriptionEn": "Prevents the target from switching out. The target can still switch out if it is holding Shed Shell or uses Baton Pass, Flip Turn, Parting Shot, Teleport, U-turn, or Volt Switch. The effect ends if either the user or the target leaves the field."
   },
   "lands-wrath": {
     "id": 616,
@@ -6790,7 +7405,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "대지의 힘을 모으고 그 힘을 상대에게 집중시켜서 데미지를 준다."
+    "description": "대지의 힘을 모으고 그 힘을 상대에게 집중시켜서 데미지를 준다.",
+    "descriptionEn": "No additional effect."
   },
   "light-of-ruin": {
     "id": 617,
@@ -6801,7 +7417,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 5,
     "category": "special",
-    "description": "영원의 꽃의 파워를 빌려서 강력한 광선을 쏜다. 자신도 상당한 데미지를 입는다."
+    "description": "영원의 꽃의 파워를 빌려서 강력한 광선을 쏜다. 자신도 상당한 데미지를 입는다.",
+    "descriptionEn": "If the target lost HP, the user takes recoil damage equal to 1/2 the HP lost by the target, rounded half up, but not less than 1 HP."
   },
   "origin-pulse": {
     "id": 618,
@@ -6812,7 +7429,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 10,
     "category": "special",
-    "description": "파랗게 빛나는 무수한 광선으로 상대를 공격한다."
+    "description": "파랗게 빛나는 무수한 광선으로 상대를 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "precipice-blades": {
     "id": 619,
@@ -6823,7 +7441,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 10,
     "category": "physical",
-    "description": "대지의 힘을 칼날로 바꿔 상대를 공격한다."
+    "description": "대지의 힘을 칼날로 바꿔 상대를 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "dragon-ascent": {
     "id": 620,
@@ -6834,7 +7453,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": "넓은 하늘에서 급속으로 강하하여 상대를 공격한다. 자신의 방어와 특수방어가 떨어진다."
+    "description": "넓은 하늘에서 급속으로 강하하여 상대를 공격한다. 자신의 방어와 특수방어가 떨어진다.",
+    "descriptionEn": "Lowers the user's Defense and Special Defense by 1 stage."
   },
   "hyperspace-fury": {
     "id": 621,
@@ -6845,7 +7465,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 5,
     "category": "physical",
-    "description": "많은 팔을 사용하여 방어와 판별을 무시하는 연속 공격이다. 자신의 방어가 떨어진다."
+    "description": "많은 팔을 사용하여 방어와 판별을 무시하는 연속 공격이다. 자신의 방어가 떨어진다.",
+    "descriptionEn": "Lowers the user's Defense by 1 stage. This move cannot be used successfully unless the user's current form, while considering Transform, is Hoopa Unbound. If this move is successful, it breaks through the target's Baneful Bunker, Detect, King's Shield, Protect, or Spiky Shield for this turn, allowing other Pokemon to attack the target normally. If the target's side is protected by Crafty Shield, Mat Block, Quick Guard, or Wide Guard, that protection is also broken for this turn and other Pokemon may attack the target's side normally."
   },
   "breakneck-blitz--physical": {
     "id": 622,
@@ -6856,7 +7477,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "physical",
-    "description": "Z파워로 기세를 몰아 전력으로 상대에게 부딪친다. 원래 기술에 따라 위력이 변한다."
+    "description": "Z파워로 기세를 몰아 전력으로 상대에게 부딪친다. 원래 기술에 따라 위력이 변한다.",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "breakneck-blitz--special": {
     "id": 623,
@@ -6867,7 +7489,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "special",
-    "description": "Dummy Data"
+    "description": "Dummy Data",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "all-out-pummeling--physical": {
     "id": 624,
@@ -6878,7 +7501,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "physical",
-    "description": "Z파워로 만든 에너지 구슬을 전력으로 상대에게 부딪친다. 원래 기술에 따라 위력이 변한다."
+    "description": "Z파워로 만든 에너지 구슬을 전력으로 상대에게 부딪친다. 원래 기술에 따라 위력이 변한다.",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "all-out-pummeling--special": {
     "id": 625,
@@ -6889,7 +7513,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "special",
-    "description": "Dummy Data"
+    "description": "Dummy Data",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "supersonic-skystrike--physical": {
     "id": 626,
@@ -6900,7 +7525,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "physical",
-    "description": "Z파워로 기세 좋게 날아올라 상대를 향해 전력으로 낙하한다. 원래 기술에 따라 위력이 변한다."
+    "description": "Z파워로 기세 좋게 날아올라 상대를 향해 전력으로 낙하한다. 원래 기술에 따라 위력이 변한다.",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "supersonic-skystrike--special": {
     "id": 627,
@@ -6911,7 +7537,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "special",
-    "description": "Dummy Data"
+    "description": "Dummy Data",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "acid-downpour--physical": {
     "id": 628,
@@ -6922,7 +7549,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "physical",
-    "description": "Z파워로 독의 늪을 만들어 전력으로 상대를 가라앉힌다. 원래 기술에 따라 위력이 변한다."
+    "description": "Z파워로 독의 늪을 만들어 전력으로 상대를 가라앉힌다. 원래 기술에 따라 위력이 변한다.",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "acid-downpour--special": {
     "id": 629,
@@ -6933,7 +7561,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "special",
-    "description": "Dummy Data"
+    "description": "Dummy Data",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "tectonic-rage--physical": {
     "id": 630,
@@ -6944,7 +7573,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "physical",
-    "description": "Z파워로 땅 깊숙이 파고들어 전력으로 상대에게 부딪친다. 원래 기술에 따라 위력이 변한다."
+    "description": "Z파워로 땅 깊숙이 파고들어 전력으로 상대에게 부딪친다. 원래 기술에 따라 위력이 변한다.",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "tectonic-rage--special": {
     "id": 631,
@@ -6955,7 +7585,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "special",
-    "description": "Dummy Data"
+    "description": "Dummy Data",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "continental-crush--physical": {
     "id": 632,
@@ -6966,7 +7597,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "physical",
-    "description": "Z파워로 큰 바위산을 불러내 전력으로 상대에게 부딪친다. 원래 기술에 따라 위력이 변한다."
+    "description": "Z파워로 큰 바위산을 불러내 전력으로 상대에게 부딪친다. 원래 기술에 따라 위력이 변한다.",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "continental-crush--special": {
     "id": 633,
@@ -6977,7 +7609,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "special",
-    "description": "Dummy Data"
+    "description": "Dummy Data",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "savage-spin-out--physical": {
     "id": 634,
@@ -6988,7 +7621,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "physical",
-    "description": "Z파워로 뱉어낸 실이 전력으로 상대를 붙들어 맨다. 원래 기술에 따라 위력이 변한다."
+    "description": "Z파워로 뱉어낸 실이 전력으로 상대를 붙들어 맨다. 원래 기술에 따라 위력이 변한다.",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "savage-spin-out--special": {
     "id": 635,
@@ -6999,7 +7633,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "special",
-    "description": "Dummy Data"
+    "description": "Dummy Data",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "never-ending-nightmare--physical": {
     "id": 636,
@@ -7010,7 +7645,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "physical",
-    "description": "Z파워로 불러낸 강한 원념이 전력으로 상대에게 쏟아진다. 원래 기술에 따라 위력이 변한다."
+    "description": "Z파워로 불러낸 강한 원념이 전력으로 상대에게 쏟아진다. 원래 기술에 따라 위력이 변한다.",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "never-ending-nightmare--special": {
     "id": 637,
@@ -7021,7 +7657,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "special",
-    "description": "Dummy Data"
+    "description": "Dummy Data",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "corkscrew-crash--physical": {
     "id": 638,
@@ -7032,7 +7669,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "physical",
-    "description": "Z파워로 고속 회전을 하여 전력으로 상대에게 부딪친다. 원래 기술에 따라 위력이 변한다."
+    "description": "Z파워로 고속 회전을 하여 전력으로 상대에게 부딪친다. 원래 기술에 따라 위력이 변한다.",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "corkscrew-crash--special": {
     "id": 639,
@@ -7043,7 +7681,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "special",
-    "description": "Dummy Data"
+    "description": "Dummy Data",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "inferno-overdrive--physical": {
     "id": 640,
@@ -7054,7 +7693,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "physical",
-    "description": "Z파워로 활활 타는 불꽃을 뱉어내 전력으로 상대에게 부딪친다. 원래 기술에 따라 위력이 변한다."
+    "description": "Z파워로 활활 타는 불꽃을 뱉어내 전력으로 상대에게 부딪친다. 원래 기술에 따라 위력이 변한다.",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "inferno-overdrive--special": {
     "id": 641,
@@ -7065,7 +7705,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "special",
-    "description": "Dummy Data"
+    "description": "Dummy Data",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "hydro-vortex--physical": {
     "id": 642,
@@ -7076,7 +7717,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "physical",
-    "description": "Z파워로 큰 바다회오리를 만들어 전력으로 상대를 집어삼킨다. 원래 기술에 따라 위력이 변한다."
+    "description": "Z파워로 큰 바다회오리를 만들어 전력으로 상대를 집어삼킨다. 원래 기술에 따라 위력이 변한다.",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "hydro-vortex--special": {
     "id": 643,
@@ -7087,7 +7729,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "special",
-    "description": "Dummy Data"
+    "description": "Dummy Data",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "bloom-doom--physical": {
     "id": 644,
@@ -7098,7 +7741,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "physical",
-    "description": "Z파워로 화초들의 에너지를 빌려 전력으로 상대를 공격한다. 원래 기술에 따라 위력이 변한다."
+    "description": "Z파워로 화초들의 에너지를 빌려 전력으로 상대를 공격한다. 원래 기술에 따라 위력이 변한다.",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "bloom-doom--special": {
     "id": 645,
@@ -7109,7 +7753,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "special",
-    "description": "Dummy Data"
+    "description": "Dummy Data",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "gigavolt-havoc--physical": {
     "id": 646,
@@ -7120,7 +7765,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "physical",
-    "description": "Z파워로 비축한 강한 전기를 전력으로 상대에게 부딪친다. 원래 기술에 따라 위력이 변한다."
+    "description": "Z파워로 비축한 강한 전기를 전력으로 상대에게 부딪친다. 원래 기술에 따라 위력이 변한다.",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "gigavolt-havoc--special": {
     "id": 647,
@@ -7131,7 +7777,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "special",
-    "description": "Dummy Data"
+    "description": "Dummy Data",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "shattered-psyche--physical": {
     "id": 648,
@@ -7142,7 +7789,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "physical",
-    "description": "Z파워로 상대를 조종해 전력으로 매서운 맛을 보여준다. 원래 기술에 따라 위력이 변한다."
+    "description": "Z파워로 상대를 조종해 전력으로 매서운 맛을 보여준다. 원래 기술에 따라 위력이 변한다.",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "shattered-psyche--special": {
     "id": 649,
@@ -7153,7 +7801,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "special",
-    "description": "Dummy Data"
+    "description": "Dummy Data",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "subzero-slammer--physical": {
     "id": 650,
@@ -7164,7 +7813,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "physical",
-    "description": "Z파워로 기온을 급격하게 떨어뜨려 전력으로 상대를 얼린다. 원래 기술에 따라 위력이 변한다."
+    "description": "Z파워로 기온을 급격하게 떨어뜨려 전력으로 상대를 얼린다. 원래 기술에 따라 위력이 변한다.",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "subzero-slammer--special": {
     "id": 651,
@@ -7175,7 +7825,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "special",
-    "description": "Dummy Data"
+    "description": "Dummy Data",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "devastating-drake--physical": {
     "id": 652,
@@ -7186,7 +7837,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "physical",
-    "description": "Z파워로 오라를 실체화시켜 전력으로 상대를 공격한다. 원래 기술에 따라 위력이 변한다."
+    "description": "Z파워로 오라를 실체화시켜 전력으로 상대를 공격한다. 원래 기술에 따라 위력이 변한다.",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "devastating-drake--special": {
     "id": 653,
@@ -7197,7 +7849,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "special",
-    "description": "Dummy Data"
+    "description": "Dummy Data",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "black-hole-eclipse--physical": {
     "id": 654,
@@ -7208,7 +7861,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "physical",
-    "description": "Z파워로 어둠의 에너지를 모아 전력으로 상대를 끌어당긴다. 원래 기술에 따라 위력이 변한다."
+    "description": "Z파워로 어둠의 에너지를 모아 전력으로 상대를 끌어당긴다. 원래 기술에 따라 위력이 변한다.",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "black-hole-eclipse--special": {
     "id": 655,
@@ -7219,7 +7873,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "special",
-    "description": "Dummy Data"
+    "description": "Dummy Data",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "twinkle-tackle--physical": {
     "id": 656,
@@ -7230,7 +7885,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "physical",
-    "description": "Z파워로 매혹의 공간을 만들어 전력으로 상대를 가지고 논다. 원래 기술에 따라 위력이 변한다."
+    "description": "Z파워로 매혹의 공간을 만들어 전력으로 상대를 가지고 논다. 원래 기술에 따라 위력이 변한다.",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "twinkle-tackle--special": {
     "id": 657,
@@ -7241,7 +7897,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "special",
-    "description": "Dummy Data"
+    "description": "Dummy Data",
+    "descriptionEn": "Power is equal to the base move's Z-Power."
   },
   "catastropika": {
     "id": 658,
@@ -7252,7 +7909,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "physical",
-    "description": "Z파워로 최대 전력을 몸에 두른 피카츄가 전력으로 상대에게 덤벼든다."
+    "description": "Z파워로 최대 전력을 몸에 두른 피카츄가 전력으로 상대에게 덤벼든다.",
+    "descriptionEn": "No additional effect."
   },
   "shore-up": {
     "id": 659,
@@ -7263,7 +7921,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 5,
     "category": "status",
-    "description": "자신의 최대 HP 절반을 회복한다. 모래바람일 때는 많이 회복한다."
+    "description": "자신의 최대 HP 절반을 회복한다. 모래바람일 때는 많이 회복한다.",
+    "descriptionEn": "The user restores 1/2 of its maximum HP, rounded half down. If the weather is Sandstorm, the user instead restores 2/3 of its maximum HP, rounded half down."
   },
   "first-impression": {
     "id": 660,
@@ -7274,7 +7933,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "위력이 높은 기술이지만 배틀에 나가서 바로 쓰지 않으면 성공할 수 없다."
+    "description": "위력이 높은 기술이지만 배틀에 나가서 바로 쓰지 않으면 성공할 수 없다.",
+    "descriptionEn": "Fails unless it is the user's first turn on the field."
   },
   "baneful-bunker": {
     "id": 661,
@@ -7285,7 +7945,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "상대의 공격을 막음과 동시에 접촉한 상대에게 독을 퍼뜨린다."
+    "description": "상대의 공격을 막음과 동시에 접촉한 상대에게 독을 퍼뜨린다.",
+    "descriptionEn": "The user is protected from most attacks made by other Pokemon during this turn, and Pokemon making contact with the user become poisoned. This move has a 1/X chance of being successful, where X starts at 1 and triples each time this move is successfully used. X resets to 1 if this move fails, if the user's last move used is not Baneful Bunker, Burning Bulwark, Detect, Endure, King's Shield, Max Guard, Obstruct, Protect, Quick Guard, Silk Trap, Spiky Shield, or Wide Guard, or if it was one of those moves and the user's protection was broken. Fails if the user moves last this turn."
   },
   "spirit-shackle": {
     "id": 662,
@@ -7296,7 +7957,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "공격과 동시에 상대의 그림자를 꿰매 도망칠 수 없게 한다."
+    "description": "공격과 동시에 상대의 그림자를 꿰매 도망칠 수 없게 한다.",
+    "descriptionEn": "Prevents the target from switching out. The target can still switch out if it is holding Shed Shell or uses Baton Pass, Flip Turn, Parting Shot, Teleport, U-turn, or Volt Switch. The effect ends if either the user or the target leaves the field."
   },
   "darkest-lariat": {
     "id": 663,
@@ -7307,7 +7969,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "양팔을 돌려 상대에 부딪친다. 상대의 능력 변화에 상관없이 데미지를 준다."
+    "description": "양팔을 돌려 상대에 부딪친다. 상대의 능력 변화에 상관없이 데미지를 준다.",
+    "descriptionEn": "Ignores the target's stat stage changes, including evasiveness."
   },
   "sparkling-aria": {
     "id": 664,
@@ -7318,7 +7981,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "노래 부르는 것으로 많은 벌룬을 방출한다. 기술에 맞으면 화상이 낫는다."
+    "description": "노래 부르는 것으로 많은 벌룬을 방출한다. 기술에 맞으면 화상이 낫는다.",
+    "descriptionEn": "If the user has not fainted, the target is cured of its burn."
   },
   "ice-hammer": {
     "id": 665,
@@ -7329,7 +7993,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "physical",
-    "description": "강하고 무거운 주먹을 휘둘러 데미지를 준다. 자신의 스피드가 떨어진다."
+    "description": "강하고 무거운 주먹을 휘둘러 데미지를 준다. 자신의 스피드가 떨어진다.",
+    "descriptionEn": "Lowers the user's Speed by 1 stage."
   },
   "floral-healing": {
     "id": 666,
@@ -7340,7 +8005,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "최대 HP의 절반만큼 상대의 HP를 회복한다. 그래스필드일 때 효과가 올라간다."
+    "description": "최대 HP의 절반만큼 상대의 HP를 회복한다. 그래스필드일 때 효과가 올라간다.",
+    "descriptionEn": "The target restores 1/2 of its maximum HP, rounded half up. If the terrain is Grassy Terrain, the target instead restores 2/3 of its maximum HP, rounded half down."
   },
   "high-horsepower": {
     "id": 667,
@@ -7351,7 +8017,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 10,
     "category": "physical",
-    "description": "온몸을 써서 상대에게 맹렬히 어택한다."
+    "description": "온몸을 써서 상대에게 맹렬히 어택한다.",
+    "descriptionEn": "No additional effect."
   },
   "strength-sap": {
     "id": 668,
@@ -7362,7 +8029,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "status",
-    "description": "상대 공격력과 동일하게 자신의 HP를 회복한다. 그리고 상대의 공격을 떨어뜨린다."
+    "description": "상대 공격력과 동일하게 자신의 HP를 회복한다. 그리고 상대의 공격을 떨어뜨린다.",
+    "descriptionEn": "Lowers the target's Attack by 1 stage. The user restores its HP equal to the target's Attack stat calculated with its stat stage before this move was used. If Big Root is held by the user, the HP recovered is 1.3x normal, rounded half down. Fails if the target's Attack stat stage is -6."
   },
   "solar-blade": {
     "id": 669,
@@ -7373,7 +8041,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "1턴째 빛을 가득하게 모으고 2턴째 그 힘을 검에 담아 공격한다."
+    "description": "1턴째 빛을 가득하게 모으고 2턴째 그 힘을 검에 담아 공격한다.",
+    "descriptionEn": "This attack charges on the first turn and executes on the second. Power is halved if the weather is Hail, Heavy Rain, Rain, or Sandstorm and the user is not holding Utility Umbrella. If the user is holding a Power Herb or the weather is Intense Sun or Sun, the move completes in one turn. If the user is holding Utility Umbrella and the weather is Intense Sun or Sun, the move still requires a turn to charge."
   },
   "leafage": {
     "id": 670,
@@ -7384,7 +8053,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 40,
     "category": "physical",
-    "description": "잎을 상대에 맞춰 공격한다."
+    "description": "잎을 상대에 맞춰 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "spotlight": {
     "id": 671,
@@ -7395,7 +8065,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 15,
     "category": "status",
-    "description": "포켓몬에게 스포트라이트를 비춰 그 턴에서 그 포켓몬만 공격할 수 있게 한다."
+    "description": "포켓몬에게 스포트라이트를 비춰 그 턴에서 그 포켓몬만 공격할 수 있게 한다.",
+    "descriptionEn": "Until the end of the turn, all single-target attacks from opponents of the target are redirected to the target. Such attacks are redirected to the target before they can be reflected by Magic Coat or the Magic Bounce Ability, or drawn in by the Lightning Rod or Storm Drain Abilities. Fails if it is not a Double Battle or Battle Royal."
   },
   "toxic-thread": {
     "id": 672,
@@ -7406,7 +8077,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "status",
-    "description": "독이 섞인 실을 뿜어낸다. 상대를 독 상태로 만들고 스피드를 떨어뜨린다."
+    "description": "독이 섞인 실을 뿜어낸다. 상대를 독 상태로 만들고 스피드를 떨어뜨린다.",
+    "descriptionEn": "Lowers the target's Speed by 1 stage and poisons it."
   },
   "laser-focus": {
     "id": 673,
@@ -7417,7 +8089,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 30,
     "category": "status",
-    "description": "정신을 집중해서 다음 공격을 반드시 급소에 맞춘다."
+    "description": "정신을 집중해서 다음 공격을 반드시 급소에 맞춘다.",
+    "descriptionEn": "Until the end of the next turn, the user's attacks will be critical hits."
   },
   "gear-up": {
     "id": 674,
@@ -7428,7 +8101,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "기어를 넣는 것으로 특성 플러스와 마이너스의 공격과 특수공격이 올라간다."
+    "description": "기어를 넣는 것으로 특성 플러스와 마이너스의 공격과 특수공격이 올라간다.",
+    "descriptionEn": "Raises the Attack and Special Attack of Pokemon on the user's side with the Plus or Minus Abilities by 1 stage."
   },
   "throat-chop": {
     "id": 675,
@@ -7439,7 +8113,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "이 기술에 맞은 상대는 지옥의 고통 때문에 2턴 동안 소리 기술을 낼 수 없다."
+    "description": "이 기술에 맞은 상대는 지옥의 고통 때문에 2턴 동안 소리 기술을 낼 수 없다.",
+    "descriptionEn": "For 2 turns, the target cannot use sound-based moves."
   },
   "pollen-puff": {
     "id": 676,
@@ -7450,7 +8125,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "special",
-    "description": "상대에게는 폭발하는 경단을 사용하여 공격한다. 같은 편에게는 회복하는 경단을 준다."
+    "description": "상대에게는 폭발하는 경단을 사용하여 공격한다. 같은 편에게는 회복하는 경단을 준다.",
+    "descriptionEn": "If the target is an ally, this move restores 1/2 of its maximum HP, rounded down, instead of dealing damage."
   },
   "anchor-shot": {
     "id": 677,
@@ -7461,7 +8137,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "앵커를 상대에게 휘감아서 공격한다. 상대는 도망칠 수 없게 된다."
+    "description": "앵커를 상대에게 휘감아서 공격한다. 상대는 도망칠 수 없게 된다.",
+    "descriptionEn": "Prevents the target from switching out. The target can still switch out if it is holding Shed Shell or uses Baton Pass, Flip Turn, Parting Shot, Teleport, U-turn, or Volt Switch. The effect ends if either the user or the target leaves the field."
   },
   "psychic-terrain": {
     "id": 678,
@@ -7472,7 +8149,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "5턴 동안 땅에 있으면 선제공격을 받지 않는다. 에스퍼타입의 위력이 올라간다."
+    "description": "5턴 동안 땅에 있으면 선제공격을 받지 않는다. 에스퍼타입의 위력이 올라간다.",
+    "descriptionEn": "For 5 turns, the terrain becomes Psychic Terrain. During the effect, the power of Psychic-type attacks made by grounded Pokemon is multiplied by 1.3 and grounded Pokemon cannot be hit by moves with priority greater than 0, unless the target is an ally. Camouflage transforms the user into a Psychic type, Nature Power becomes Psychic, and Secret Power has a 30% chance to lower the target's Speed by 1 stage. Fails if the current terrain is Psychic Terrain."
   },
   "lunge": {
     "id": 679,
@@ -7483,7 +8161,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "전력으로 상대에게 덤벼들며 공격한다. 상대의 공격을 떨어뜨린다."
+    "description": "전력으로 상대에게 덤벼들며 공격한다. 상대의 공격을 떨어뜨린다.",
+    "descriptionEn": "Has a 100% chance to lower the target's Attack by 1 stage."
   },
   "fire-lash": {
     "id": 680,
@@ -7494,7 +8173,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "불타는 채찍으로 상대를 친다. 공격을 받은 상대는 방어가 떨어진다."
+    "description": "불타는 채찍으로 상대를 친다. 공격을 받은 상대는 방어가 떨어진다.",
+    "descriptionEn": "Has a 100% chance to lower the target's Defense by 1 stage."
   },
   "power-trip": {
     "id": 681,
@@ -7505,7 +8185,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "자신의 강함을 뻐기고 공격한다. 자신의 능력이 올라가 있는 만큼 위력이 오른다."
+    "description": "자신의 강함을 뻐기고 공격한다. 자신의 능력이 올라가 있는 만큼 위력이 오른다.",
+    "descriptionEn": "Power is equal to 20+(X*20), where X is the user's total stat stage changes that are greater than 0."
   },
   "burn-up": {
     "id": 682,
@@ -7516,7 +8197,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": "전신의 불꽃을 모두 태워서 큰 데미지를 준다. 자신의 불꽃타입이 없어진다."
+    "description": "전신의 불꽃을 모두 태워서 큰 데미지를 준다. 자신의 불꽃타입이 없어진다.",
+    "descriptionEn": "Fails unless the user is a Fire type. If this move is successful and the user is not Terastallized, the user's Fire type becomes typeless as long as it remains active."
   },
   "speed-swap": {
     "id": 683,
@@ -7527,7 +8209,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "상대의 스피드와 자신의 스피드를 교체한다."
+    "description": "상대의 스피드와 자신의 스피드를 교체한다.",
+    "descriptionEn": "The user swaps its Speed stat with the target. Stat stage changes are unaffected."
   },
   "smart-strike": {
     "id": 684,
@@ -7538,7 +8221,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "physical",
-    "description": "뾰족한 뿔로 상대를 꿰찔러서 공격한다. 공격은 반드시 명중한다."
+    "description": "뾰족한 뿔로 상대를 꿰찔러서 공격한다. 공격은 반드시 명중한다.",
+    "descriptionEn": "This move does not check accuracy."
   },
   "purify": {
     "id": 685,
@@ -7549,7 +8233,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "상대의 상태 이상을 회복한다. 회복하면 자신은 HP를 회복할 수 있다."
+    "description": "상대의 상태 이상을 회복한다. 회복하면 자신은 HP를 회복할 수 있다.",
+    "descriptionEn": "The target is cured if it has a non-volatile status condition. If the target was cured, the user restores 1/2 of its maximum HP, rounded down."
   },
   "revelation-dance": {
     "id": 686,
@@ -7560,7 +8245,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "special",
-    "description": "전력으로 춤추며 공격한다. 이 기술의 타입은 자신의 타입과 같아진다."
+    "description": "전력으로 춤추며 공격한다. 이 기술의 타입은 자신의 타입과 같아진다.",
+    "descriptionEn": "This move's type depends on the user's primary type. If the user's primary type is typeless, this move's type is the user's secondary type if it has one, otherwise the added type from Forest's Curse or Trick-or-Treat. This move is typeless if the user's type is typeless alone."
   },
   "core-enforcer": {
     "id": 687,
@@ -7571,7 +8257,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "데미지를 준 상대가 이미 행동을 끝냈다면 상대의 특성을 없애버린다."
+    "description": "데미지를 준 상대가 이미 행동을 끝냈다면 상대의 특성을 없애버린다.",
+    "descriptionEn": "If the user moves after the target, the target's Ability is rendered ineffective as long as it remains active. If the target uses Baton Pass, the replacement will remain under this effect. If the target's Ability is As One, Battle Bond, Comatose, Disguise, Gulp Missile, Ice Face, Multitype, Power Construct, RKS System, Schooling, Shields Down, Stance Change, Tera Shift, Zen Mode, or Zero to Hero, this effect does not happen, and receiving the effect through Baton Pass ends the effect immediately."
   },
   "trop-kick": {
     "id": 688,
@@ -7582,7 +8269,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "남쪽 나라에서 유래된 뜨거운 킥을 상대에게 날린다. 상대의 공격을 떨어뜨린다."
+    "description": "남쪽 나라에서 유래된 뜨거운 킥을 상대에게 날린다. 상대의 공격을 떨어뜨린다.",
+    "descriptionEn": "Has a 100% chance to lower the target's Attack by 1 stage."
   },
   "instruct": {
     "id": 689,
@@ -7593,7 +8281,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 15,
     "category": "status",
-    "description": "상대에게 지시하여 상대가 쓴 기술을 다시 한 번 쓰게 할 수 있다."
+    "description": "상대에게 지시하여 상대가 쓴 기술을 다시 한 번 쓰게 할 수 있다.",
+    "descriptionEn": "The target immediately uses its last used move. Fails if the target has not made a move, if the move has 0 PP, if the target is preparing to use Beak Blast, Focus Punch, or Shell Trap, or if the move is Assist, Beak Blast, Belch, Bide, Blazing Torque, Celebrate, Chatter, Combat Torque, Copycat, Dynamax Cannon, Focus Punch, Hold Hands, Ice Ball, Instruct, King's Shield, Magical Torque, Me First, Metronome, Mimic, Mirror Move, Nature Power, Noxious Torque, Obstruct, Outrage, Petal Dance, Rollout, Shell Trap, Sketch, Sleep Talk, Struggle, Thrash, Transform, Uproar, Wicked Torque, any two-turn move, or any recharge move."
   },
   "beak-blast": {
     "id": 690,
@@ -7604,7 +8293,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "먼저 부리를 가열시킨 다음 공격을 날린다. 가열 중에 만지면 화상을 입는다."
+    "description": "먼저 부리를 가열시킨 다음 공격을 날린다. 가열 중에 만지면 화상을 입는다.",
+    "descriptionEn": "If the user is hit by a contact move this turn before it can execute this move, the attacker is burned."
   },
   "clanging-scales": {
     "id": 691,
@@ -7615,7 +8305,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": "전신의 비늘을 비벼서 큰 소리를 내 공격한다. 공격 후 자신의 방어가 떨어진다."
+    "description": "전신의 비늘을 비벼서 큰 소리를 내 공격한다. 공격 후 자신의 방어가 떨어진다.",
+    "descriptionEn": "Lowers the user's Defense by 1 stage."
   },
   "dragon-hammer": {
     "id": 692,
@@ -7626,7 +8317,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "몸을 해머처럼 써서 상대를 덮쳐 데미지를 준다."
+    "description": "몸을 해머처럼 써서 상대를 덮쳐 데미지를 준다.",
+    "descriptionEn": "No additional effect."
   },
   "brutal-swing": {
     "id": 693,
@@ -7637,7 +8329,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "자신의 몸을 세차게 휘둘러서 상대에게 데미지를 준다."
+    "description": "자신의 몸을 세차게 휘둘러서 상대에게 데미지를 준다.",
+    "descriptionEn": "No additional effect."
   },
   "aurora-veil": {
     "id": 694,
@@ -7648,7 +8341,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "5턴 동안 물리와 특수 기술의 데미지를 약하게 한다. 싸라기눈일 때만 쓸 수 있다."
+    "description": "5턴 동안 물리와 특수 기술의 데미지를 약하게 한다. 싸라기눈일 때만 쓸 수 있다.",
+    "descriptionEn": "For 5 turns, the user and its party members take 0.5x damage from physical and special attacks, or 0.66x damage if in a Double Battle; does not reduce damage further with Reflect or Light Screen. Critical hits ignore this protection. It is removed from the user's side if the user or an ally is successfully hit by Brick Break, Psychic Fangs, or Defog. Brick Break and Psychic Fangs remove the effect before damage is calculated. Lasts for 8 turns if the user is holding Light Clay. Fails unless the weather is Snow."
   },
   "sinister-arrow-raid": {
     "id": 695,
@@ -7659,7 +8353,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "physical",
-    "description": "Z파워로 무수한 화살을 만들어낸 모크나이퍼가 전력으로 상대를 꿰뚫는 공격이다."
+    "description": "Z파워로 무수한 화살을 만들어낸 모크나이퍼가 전력으로 상대를 꿰뚫는 공격이다.",
+    "descriptionEn": "No additional effect."
   },
   "malicious-moonsault": {
     "id": 696,
@@ -7670,7 +8365,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "physical",
-    "description": "Z파워로 강한 육체를 얻은 어흥염이 전력으로 상대에게 부딪쳐 공격한다."
+    "description": "Z파워로 강한 육체를 얻은 어흥염이 전력으로 상대에게 부딪쳐 공격한다.",
+    "descriptionEn": "Damage doubles and no accuracy check is done if the target has used Minimize while active."
   },
   "oceanic-operetta": {
     "id": 697,
@@ -7681,7 +8377,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "special",
-    "description": "Z파워로 대량의 물을 부른 누리레느가 전력으로 상대를 공격한다."
+    "description": "Z파워로 대량의 물을 부른 누리레느가 전력으로 상대를 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "guardian-of-alola": {
     "id": 698,
@@ -7692,7 +8389,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "special",
-    "description": "Z파워로 알로라의 힘을 얻은 토속신포켓몬 전력의 공격. 상대의 남은 HP를 많이 줄인다."
+    "description": "Z파워로 알로라의 힘을 얻은 토속신포켓몬 전력의 공격. 상대의 남은 HP를 많이 줄인다.",
+    "descriptionEn": "Deals damage to the target equal to 3/4 of its current HP, rounded down, but not less than 1 HP."
   },
   "soul-stealing-7-star-strike": {
     "id": 699,
@@ -7703,7 +8401,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "physical",
-    "description": "Z파워를 얻은 마샤도가 펀치와 킥의 연속기술을 전력으로 상대에게 퍼붓는다."
+    "description": "Z파워를 얻은 마샤도가 펀치와 킥의 연속기술을 전력으로 상대에게 퍼붓는다.",
+    "descriptionEn": "No additional effect."
   },
   "stoked-sparksurfer": {
     "id": 700,
@@ -7714,7 +8413,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "special",
-    "description": "Z파워를 얻은 알로라지방의 라이츄가 전력으로 공격한다. 상대를 마비 상태로 만든다."
+    "description": "Z파워를 얻은 알로라지방의 라이츄가 전력으로 공격한다. 상대를 마비 상태로 만든다.",
+    "descriptionEn": "Has a 100% chance to paralyze the target."
   },
   "pulverizing-pancake": {
     "id": 701,
@@ -7725,7 +8425,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "physical",
-    "description": "Z파워로 진심을 낸 잠만보가 거대한 몸을 움직여서 전력으로 상대를 공격한다."
+    "description": "Z파워로 진심을 낸 잠만보가 거대한 몸을 움직여서 전력으로 상대를 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "extreme-evoboost": {
     "id": 702,
@@ -7736,7 +8437,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "status",
-    "description": "Z파워를 얻은 이브이가 진화한 동료들의 힘을 빌려 능력을 크게 올린다."
+    "description": "Z파워를 얻은 이브이가 진화한 동료들의 힘을 빌려 능력을 크게 올린다.",
+    "descriptionEn": "Raises the user's Attack, Defense, Special Attack, Special Defense, and Speed by 2 stages."
   },
   "genesis-supernova": {
     "id": 703,
@@ -7747,7 +8449,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "special",
-    "description": "Z파워를 얻은 뮤가 전력으로 상대를 공격한다. 발밑이 사이코필드가 된다."
+    "description": "Z파워를 얻은 뮤가 전력으로 상대를 공격한다. 발밑이 사이코필드가 된다.",
+    "descriptionEn": "If this move is successful, the terrain becomes Psychic Terrain."
   },
   "shell-trap": {
     "id": 704,
@@ -7758,7 +8461,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": "껍질의 트랩을 설치한다. 상대가 물리 기술을 쓰면 폭발해서 데미지를 준다."
+    "description": "껍질의 트랩을 설치한다. 상대가 물리 기술을 쓰면 폭발해서 데미지를 준다.",
+    "descriptionEn": "Fails unless the user is hit by a physical attack from an opponent this turn before it can execute the move. If the user was hit and has not fainted, it attacks immediately after being hit, and the effect ends. If the opponent's physical attack had a secondary effect removed by the Sheer Force Ability, it does not count for the purposes of this effect."
   },
   "fleur-cannon": {
     "id": 705,
@@ -7769,7 +8473,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 5,
     "category": "special",
-    "description": "강력한 빔을 발산한 후 자신의 특수공격이 크게 떨어진다."
+    "description": "강력한 빔을 발산한 후 자신의 특수공격이 크게 떨어진다.",
+    "descriptionEn": "Lowers the user's Special Attack by 2 stages."
   },
   "psychic-fangs": {
     "id": 706,
@@ -7780,7 +8485,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "사이코 파워로 물어서 상대를 공격한다. 빛의장막이나 리플렉터도 파괴할 수 있다."
+    "description": "사이코 파워로 물어서 상대를 공격한다. 빛의장막이나 리플렉터도 파괴할 수 있다.",
+    "descriptionEn": "If this attack does not miss, the effects of Reflect, Light Screen, and Aurora Veil end for the target's side of the field before damage is calculated."
   },
   "stomping-tantrum": {
     "id": 707,
@@ -7791,7 +8497,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "분함을 발판삼아 공격한다. 앞 턴에서 기술이 빗나갔다면 위력이 배가 된다."
+    "description": "분함을 발판삼아 공격한다. 앞 턴에서 기술이 빗나갔다면 위력이 배가 된다.",
+    "descriptionEn": "Power doubles if the user's last move on the previous turn, including moves called by other moves or those used through Instruct, Magic Coat, Snatch, or the Dancer or Magic Bounce Abilities, failed to do any of its normal effects, not including damage from an unsuccessful High Jump Kick, Jump Kick, or Mind Blown, or if the user was prevented from moving by any effect other than recharging or Sky Drop. A move that was blocked by Baneful Bunker, Detect, King's Shield, Protect, Spiky Shield, Crafty Shield, Mat Block, Quick Guard, or Wide Guard will not double this move's power, nor will Bounce or Fly ending early due to the effect of Gravity, Smack Down, or Thousand Arrows."
   },
   "shadow-bone": {
     "id": 708,
@@ -7802,7 +8509,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "영혼이 머물고 있는 뼈로 상대를 세게 때려서 공격한다. 상대의 방어를 떨어뜨릴 때가 있다."
+    "description": "영혼이 머물고 있는 뼈로 상대를 세게 때려서 공격한다. 상대의 방어를 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 20% chance to lower the target's Defense by 1 stage."
   },
   "accelerock": {
     "id": 709,
@@ -7813,7 +8521,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "재빠른 스피드로 상대에게 부딪쳐서 공격한다. 반드시 선제공격할 수 있다."
+    "description": "재빠른 스피드로 상대에게 부딪쳐서 공격한다. 반드시 선제공격할 수 있다.",
+    "descriptionEn": "No additional effect."
   },
   "liquidation": {
     "id": 710,
@@ -7824,7 +8533,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "물의 힘으로 상대에게 부딪쳐서 공격한다. 상대의 방어를 떨어뜨릴 때가 있다."
+    "description": "물의 힘으로 상대에게 부딪쳐서 공격한다. 상대의 방어를 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 20% chance to lower the target's Defense by 1 stage."
   },
   "prismatic-laser": {
     "id": 711,
@@ -7835,7 +8545,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "프리즘의 힘으로 강력한 광선을 발사한다. 다음 턴은 움직일 수 없다."
+    "description": "프리즘의 힘으로 강력한 광선을 발사한다. 다음 턴은 움직일 수 없다.",
+    "descriptionEn": "If this move is successful, the user must recharge on the following turn and cannot select a move."
   },
   "spectral-thief": {
     "id": 712,
@@ -7846,7 +8557,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "상대의 그림자에 숨어들어 상대의 능력이 올라가는 것을 뺏어 공격한다."
+    "description": "상대의 그림자에 숨어들어 상대의 능력이 올라가는 것을 뺏어 공격한다.",
+    "descriptionEn": "The target's stat stages greater than 0 are stolen from it and applied to the user before dealing damage."
   },
   "sunsteel-strike": {
     "id": 713,
@@ -7857,7 +8569,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": "유성 같은 기세로 돌진한다. 상대의 특성을 무시하고 공격할 수 있다."
+    "description": "유성 같은 기세로 돌진한다. 상대의 특성을 무시하고 공격할 수 있다.",
+    "descriptionEn": "This move and its effects ignore the Abilities of other Pokemon."
   },
   "moongeist-beam": {
     "id": 714,
@@ -7868,7 +8581,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": "괴상한 광선을 쏘아 공격한다. 상대의 특성을 무시하고 공격할 수 있다."
+    "description": "괴상한 광선을 쏘아 공격한다. 상대의 특성을 무시하고 공격할 수 있다.",
+    "descriptionEn": "This move and its effects ignore the Abilities of other Pokemon."
   },
   "tearful-look": {
     "id": 715,
@@ -7879,7 +8593,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "status",
-    "description": "눈물을 그렁그렁거려 상대의 전의를 상실하게 한다. 상대의 공격과 특수공격이 떨어진다."
+    "description": "눈물을 그렁그렁거려 상대의 전의를 상실하게 한다. 상대의 공격과 특수공격이 떨어진다.",
+    "descriptionEn": "Lowers the target's Attack and Special Attack by 1 stage."
   },
   "zing-zap": {
     "id": 716,
@@ -7890,7 +8605,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "상대에게 부딪쳐 강력한 전기를 날려서 찌리리따끔따끔하게 만든다. 상대를 풀죽게 만들 때가 있다."
+    "description": "상대에게 부딪쳐 강력한 전기를 날려서 찌리리따끔따끔하게 만든다. 상대를 풀죽게 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to make the target flinch."
   },
   "natures-madness": {
     "id": 717,
@@ -7901,7 +8617,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "special",
-    "description": "자연의 분노를 상대에게 부딪친다. 상대의 HP는 절반이 된다."
+    "description": "자연의 분노를 상대에게 부딪친다. 상대의 HP는 절반이 된다.",
+    "descriptionEn": "Deals damage to the target equal to half of its current HP, rounded down, but not less than 1 HP."
   },
   "multi-attack": {
     "id": 718,
@@ -7912,7 +8629,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "높은 에너지를 둘러싸 상대에게 부딪쳐 공격한다. 메모리에 따라 타입이 바뀐다."
+    "description": "높은 에너지를 둘러싸 상대에게 부딪쳐 공격한다. 메모리에 따라 타입이 바뀐다.",
+    "descriptionEn": "This move's type depends on the user's held Memory."
   },
   "10-000-000-volt-thunderbolt": {
     "id": 719,
@@ -7923,7 +8641,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "special",
-    "description": "모자를 쓴 피카츄가 Z파워로 파워업한 전격을 쏜다. 급소에 맞기 쉽다."
+    "description": "모자를 쓴 피카츄가 Z파워로 파워업한 전격을 쏜다. 급소에 맞기 쉽다.",
+    "descriptionEn": "Has a very high chance for a critical hit."
   },
   "mind-blown": {
     "id": 720,
@@ -7934,7 +8653,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": "자신의 머리를 폭발시켜 주위의 모든 것을 공격한다. 자신도 데미지를 받는다."
+    "description": "자신의 머리를 폭발시켜 주위의 모든 것을 공격한다. 자신도 데미지를 받는다.",
+    "descriptionEn": "Whether or not this move is successful and even if it would cause fainting, the user loses 1/2 of its maximum HP, rounded up, unless the user has the Magic Guard Ability. This move is prevented from executing and the user does not lose HP if any active Pokemon has the Damp Ability, or if this move is Fire type and the user is affected by Powder or the weather is Heavy Rain."
   },
   "plasma-fists": {
     "id": 721,
@@ -7945,7 +8665,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "전기를 두른 주먹으로 공격한다. 노말타입 기술을 전기타입으로 바꿔버린다."
+    "description": "전기를 두른 주먹으로 공격한다. 노말타입 기술을 전기타입으로 바꿔버린다.",
+    "descriptionEn": "If this move is successful, causes Normal-type moves to become Electric type this turn."
   },
   "photon-geyser": {
     "id": 722,
@@ -7956,7 +8677,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": "빛의 기둥으로 공격한다. 공격과 특수공격을 비교해서 높은 쪽으로 데미지를 준다."
+    "description": "빛의 기둥으로 공격한다. 공격과 특수공격을 비교해서 높은 쪽으로 데미지를 준다.",
+    "descriptionEn": "This move becomes a physical attack if the user's Attack is greater than its Special Attack, including stat stage changes. This move and its effects ignore the Abilities of other Pokemon."
   },
   "light-that-burns-the-sky": {
     "id": 723,
@@ -7967,7 +8689,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "special",
-    "description": "네크로즈마가 상대의 특성 효과를 무시하고 공격과 특수공격 중 높은 쪽으로 데미지를 준다."
+    "description": "네크로즈마가 상대의 특성 효과를 무시하고 공격과 특수공격 중 높은 쪽으로 데미지를 준다.",
+    "descriptionEn": "This move becomes a physical attack if the user's Attack is greater than its Special Attack, including stat stage changes. This move and its effects ignore the Abilities of other Pokemon."
   },
   "searing-sunraze-smash": {
     "id": 724,
@@ -7978,7 +8701,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "physical",
-    "description": "Z파워를 얻은 솔가레오가 전력으로 공격한다. 상대의 특성 효과를 무시할 수 있다."
+    "description": "Z파워를 얻은 솔가레오가 전력으로 공격한다. 상대의 특성 효과를 무시할 수 있다.",
+    "descriptionEn": "This move and its effects ignore the Abilities of other Pokemon."
   },
   "menacing-moonraze-maelstrom": {
     "id": 725,
@@ -7989,7 +8713,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "special",
-    "description": "Z파워를 얻은 루나아라가 전력으로 공격한다. 상대의 특성 효과를 무시할 수 있다."
+    "description": "Z파워를 얻은 루나아라가 전력으로 공격한다. 상대의 특성 효과를 무시할 수 있다.",
+    "descriptionEn": "This move and its effects ignore the Abilities of other Pokemon."
   },
   "lets-snuggle-forever": {
     "id": 726,
@@ -8000,7 +8725,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "physical",
-    "description": "Z파워를 얻은 따라큐가 전력으로 투닥투닥 공격한다."
+    "description": "Z파워를 얻은 따라큐가 전력으로 투닥투닥 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "splintered-stormshards": {
     "id": 727,
@@ -8011,7 +8737,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "physical",
-    "description": "Z파워를 얻은 루가루암이 전력으로 공격한다. 추가로 필드 상태를 없앤다."
+    "description": "Z파워를 얻은 루가루암이 전력으로 공격한다. 추가로 필드 상태를 없앤다.",
+    "descriptionEn": "Ends the effects of Electric Terrain, Grassy Terrain, Misty Terrain, and Psychic Terrain."
   },
   "clangorous-soulblaze": {
     "id": 728,
@@ -8022,7 +8749,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "special",
-    "description": "Z파워를 얻은 짜랑고우거가 전력으로 상대를 공격한다. 추가로 자신의 능력이 올라간다."
+    "description": "Z파워를 얻은 짜랑고우거가 전력으로 상대를 공격한다. 추가로 자신의 능력이 올라간다.",
+    "descriptionEn": "Raises the user's Attack, Defense, Special Attack, Special Defense, and Speed by 1 stage."
   },
   "zippy-zap": {
     "id": 729,
@@ -8033,7 +8761,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "맹렬한 속도의 전격 공격. 반드시 선제공격할 수 있고 급소에 맞는다."
+    "description": "맹렬한 속도의 전격 공격. 반드시 선제공격할 수 있고 급소에 맞는다.",
+    "descriptionEn": "Has a 100% chance to raise the user's evasion by 1 stage."
   },
   "splishy-splash": {
     "id": 730,
@@ -8044,7 +8773,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "special",
-    "description": "커다란 파도에 전기를 날리고 상대에게 부딪쳐서 공격한다. 마비 상태로 만들 때가 있다."
+    "description": "커다란 파도에 전기를 날리고 상대에게 부딪쳐서 공격한다. 마비 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to paralyze the target."
   },
   "floaty-fall": {
     "id": 731,
@@ -8055,7 +8785,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 15,
     "category": "physical",
-    "description": "두둥실 떠오른 다음 단숨에 급강하해서 공격한다. 상대를 풀죽게 만들 때가 있다."
+    "description": "두둥실 떠오른 다음 단숨에 급강하해서 공격한다. 상대를 풀죽게 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to make the target flinch."
   },
   "pika-papow": {
     "id": 732,
@@ -8066,7 +8797,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "special",
-    "description": "트레이너를 좋아하는 피카츄의 마음이 강할수록 위력이 올라가는 전격. 반드시 명중한다."
+    "description": "트레이너를 좋아하는 피카츄의 마음이 강할수록 위력이 올라가는 전격. 반드시 명중한다.",
+    "descriptionEn": "Power is equal to the greater of (user's Happiness * 2/5), rounded down, or 1."
   },
   "bouncy-bubble": {
     "id": 733,
@@ -8077,7 +8809,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "special",
-    "description": "물덩어리를 부딪쳐서 공격한다. 물을 흡수하여 데미지의 절반만큼 HP를 회복한다."
+    "description": "물덩어리를 부딪쳐서 공격한다. 물을 흡수하여 데미지의 절반만큼 HP를 회복한다.",
+    "descriptionEn": "The user recovers 1/2 the HP lost by the target, rounded half up. If Big Root is held by the user, the HP recovered is 1.3x normal, rounded half down."
   },
   "buzzy-buzz": {
     "id": 734,
@@ -8088,7 +8821,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "special",
-    "description": "전기를 상대에게 날려서 공격한다. 상대를 마비 상태로 만든다."
+    "description": "전기를 상대에게 날려서 공격한다. 상대를 마비 상태로 만든다.",
+    "descriptionEn": "Has a 100% chance to paralyze the foe."
   },
   "sizzly-slide": {
     "id": 735,
@@ -8099,7 +8833,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "불꽃을 두른 몸으로 기세 좋게 상대에게 부딪친다. 상대를 화상 상태로 만든다."
+    "description": "불꽃을 두른 몸으로 기세 좋게 상대에게 부딪친다. 상대를 화상 상태로 만든다.",
+    "descriptionEn": "Has a 100% chance to burn the foe."
   },
   "glitzy-glow": {
     "id": 736,
@@ -8110,7 +8845,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 15,
     "category": "special",
-    "description": "염동력을 한가득 날린다. 상대의 특수공격을 약하게 만드는 이상한 장막을 만든다."
+    "description": "염동력을 한가득 날린다. 상대의 특수공격을 약하게 만드는 이상한 장막을 만든다.",
+    "descriptionEn": "This move summons Light Screen for 5 turns upon use."
   },
   "baddy-bad": {
     "id": 737,
@@ -8121,7 +8857,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 15,
     "category": "special",
-    "description": "악함을 어필해서 공격한다. 상대의 물리공격을 약하게 만드는 이상한 장막을 만든다."
+    "description": "악함을 어필해서 공격한다. 상대의 물리공격을 약하게 만드는 이상한 장막을 만든다.",
+    "descriptionEn": "This move summons Reflect for 5 turns upon use."
   },
   "sappy-seed": {
     "id": 738,
@@ -8132,7 +8869,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "physical",
-    "description": "거대한 덩굴을 자라게 하고 씨를 흩뿌려서 공격한다. 씨는 매 턴 상대의 HP를 흡수한다."
+    "description": "거대한 덩굴을 자라게 하고 씨를 흩뿌려서 공격한다. 씨는 매 턴 상대의 HP를 흡수한다.",
+    "descriptionEn": "This move summons Leech Seed on the foe."
   },
   "freezy-frost": {
     "id": 739,
@@ -8143,7 +8881,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "special",
-    "description": "차갑게 얼어붙은 흑안개의 결정으로 공격한다. 전원의 능력 변화를 원래대로 돌린다."
+    "description": "차갑게 얼어붙은 흑안개의 결정으로 공격한다. 전원의 능력 변화를 원래대로 돌린다.",
+    "descriptionEn": "Resets the stat stages of all active Pokemon to 0."
   },
   "sparkly-swirl": {
     "id": 740,
@@ -8154,7 +8893,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 5,
     "category": "special",
-    "description": "숨 막힐 듯 진한 향기의 회오리로 상대를 휘감아 공격한다. 같은 편의 상태 이상을 회복한다."
+    "description": "숨 막힐 듯 진한 향기의 회오리로 상대를 휘감아 공격한다. 같은 편의 상태 이상을 회복한다.",
+    "descriptionEn": "Every Pokemon in the user's party is cured of its non-volatile status condition."
   },
   "veevee-volley": {
     "id": 741,
@@ -8165,7 +8905,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 20,
     "category": "physical",
-    "description": "트레이너를 좋아하는 이브이의 마음이 강할수록 위력이 올라가는 몸통박치기. 반드시 명중한다."
+    "description": "트레이너를 좋아하는 이브이의 마음이 강할수록 위력이 올라가는 몸통박치기. 반드시 명중한다.",
+    "descriptionEn": "Power is equal to the greater of (user's Happiness * 2/5), rounded down, or 1."
   },
   "double-iron-bash": {
     "id": 742,
@@ -8176,7 +8917,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": "가슴의 너트를 축으로 회전시켜 2번 연속 팔로 힘껏 친다. 상대를 풀죽게 만들 때가 있다."
+    "description": "가슴의 너트를 축으로 회전시켜 2번 연속 팔로 힘껏 친다. 상대를 풀죽게 만들 때가 있다.",
+    "descriptionEn": "Hits twice. If the first hit breaks the target's substitute, it will take damage for the second hit. Has a 30% chance to make the target flinch."
   },
   "max-guard": {
     "id": 743,
@@ -8187,7 +8929,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "상대의 공격을 전혀 받지 않는다. 연속으로 쓰면 실패하기 쉽다."
+    "description": "상대의 공격을 전혀 받지 않는다. 연속으로 쓰면 실패하기 쉽다.",
+    "descriptionEn": "The user is protected from nearly all attacks made by other Pokemon during this turn, including Max and G-Max Moves. This move has a 1/X chance of being successful, where X starts at 1 and triples each time this move is successfully used. X resets to 1 if this move fails, if the user's last move used is not Baneful Bunker, Detect, Endure, King's Shield, Max Guard, Obstruct, Protect, Quick Guard, Spiky Shield, or Wide Guard, or if it was one of those moves and the user's protection was broken. Fails if the user moves last this turn."
   },
   "dynamax-cannon": {
     "id": 744,
@@ -8198,7 +8941,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": "코어에서 빔을 발사해서 공격한다. 상대가 다이맥스 중이면 데미지가 2배가 된다."
+    "description": "코어에서 빔을 발사해서 공격한다. 상대가 다이맥스 중이면 데미지가 2배가 된다.",
+    "descriptionEn": "No additional effect."
   },
   "snipe-shot": {
     "id": 745,
@@ -8209,7 +8953,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "special",
-    "description": "상대의 기술을 끌어모으는 특성이나 기술의 영향을 무시하고 선택한 상대를 공격할 수 있다."
+    "description": "상대의 기술을 끌어모으는 특성이나 기술의 영향을 무시하고 선택한 상대를 공격할 수 있다.",
+    "descriptionEn": "Has a higher chance for a critical hit. This move cannot be redirected to a different target by any effect."
   },
   "jaw-lock": {
     "id": 746,
@@ -8220,7 +8965,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "어느 한쪽이 기절할 때까지 교체할 수 없게 된다. 한쪽의 포켓몬이 없어지면 효과가 사라진다."
+    "description": "어느 한쪽이 기절할 때까지 교체할 수 없게 된다. 한쪽의 포켓몬이 없어지면 효과가 사라진다.",
+    "descriptionEn": "Prevents the user and the target from switching out. The user and the target can still switch out if either of them is holding Shed Shell or uses Baton Pass, Flip Turn, Parting Shot, Teleport, U-turn, or Volt Switch. The effect ends if either the user or the target leaves the field."
   },
   "stuff-cheeks": {
     "id": 747,
@@ -8231,7 +8977,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "지니고 있는 나무열매를 먹고 방어를 크게 올린다."
+    "description": "지니고 있는 나무열매를 먹고 방어를 크게 올린다.",
+    "descriptionEn": "This move cannot be selected unless the user is holding a Berry. The user eats its Berry and raises its Defense by 2 stages. This effect is not prevented by the Klutz or Unnerve Abilities, or the effects of Embargo or Magic Room. Fails if the user is not holding a Berry."
   },
   "no-retreat": {
     "id": 748,
@@ -8242,7 +8989,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 5,
     "category": "status",
-    "description": "자신의 모든 능력이 올라가지만 교체하거나 도망칠 수 없게 된다."
+    "description": "자신의 모든 능력이 올라가지만 교체하거나 도망칠 수 없게 된다.",
+    "descriptionEn": "Raises the user's Attack, Defense, Special Attack, Special Defense, and Speed by 1 stage, but it becomes prevented from switching out. The user can still switch out if it uses Baton Pass, Flip Turn, Parting Shot, Teleport, U-turn, or Volt Switch. Fails if the user has already been prevented from switching by this effect."
   },
   "tar-shot": {
     "id": 749,
@@ -8253,7 +9001,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "status",
-    "description": "끈적끈적한 타르를 날려서 상대의 스피드를 떨어뜨린다. 상대는 불꽃이 약점이 된다."
+    "description": "끈적끈적한 타르를 날려서 상대의 스피드를 떨어뜨린다. 상대는 불꽃이 약점이 된다.",
+    "descriptionEn": "Lowers the target's Speed by 1 stage. Until the target switches out, the effectiveness of Fire-type moves is doubled against it."
   },
   "magic-powder": {
     "id": 750,
@@ -8264,7 +9013,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "status",
-    "description": "마법가루를 날려서 상대를 에스퍼타입으로 바꾼다."
+    "description": "마법가루를 날려서 상대를 에스퍼타입으로 바꾼다.",
+    "descriptionEn": "Causes the target to become a Psychic type. Fails if the target is an Arceus or a Silvally, if the target is already purely Psychic type, or if the target is Terastallized."
   },
   "dragon-darts": {
     "id": 751,
@@ -8275,7 +9025,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "드라꼰으로 2번 공격한다. 상대가 2마리일 때는 각각 1번씩 공격한다."
+    "description": "드라꼰으로 2번 공격한다. 상대가 2마리일 때는 각각 1번씩 공격한다.",
+    "descriptionEn": "Hits twice. If the first hit breaks the target's substitute, it will take damage for the second hit. In Double Battles, this move attempts to hit the targeted Pokemon and its ally once each. If hitting one of these Pokemon would be prevented by immunity, protection, semi-invulnerability, an Ability, or accuracy, it attempts to hit the other Pokemon twice instead. If this move is redirected, it hits that target twice."
   },
   "teatime": {
     "id": 752,
@@ -8286,7 +9037,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "다과회를 열어서 배틀에 나와 있는 포켓몬이 각각 지니고 있는 나무열매를 먹는다."
+    "description": "다과회를 열어서 배틀에 나와 있는 포켓몬이 각각 지니고 있는 나무열매를 먹는다.",
+    "descriptionEn": "All active Pokemon consume their held Berries. This effect is not prevented by substitutes, the Klutz or Unnerve Abilities, or the effects of Embargo or Magic Room. Fails if no active Pokemon is holding a Berry."
   },
   "octolock": {
     "id": 753,
@@ -8297,7 +9049,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "status",
-    "description": "상대를 도망칠 수 없게 한다. 굳히기에 당한 상대는 매 턴 방어와 특수방어가 떨어진다."
+    "description": "상대를 도망칠 수 없게 한다. 굳히기에 당한 상대는 매 턴 방어와 특수방어가 떨어진다.",
+    "descriptionEn": "Prevents the target from switching out. At the end of each turn during effect, the target's Defense and Special Defense are lowered by 1 stage. The target can still switch out if it is holding Shed Shell or uses Baton Pass, Flip Turn, Parting Shot, Teleport, U-turn, or Volt Switch. The effect ends if either the user or the target leaves the field."
   },
   "bolt-beak": {
     "id": 754,
@@ -8308,7 +9061,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "전기를 두른 부리로 찌른다. 상대보다 먼저 공격하면 기술의 위력은 2배가 된다."
+    "description": "전기를 두른 부리로 찌른다. 상대보다 먼저 공격하면 기술의 위력은 2배가 된다.",
+    "descriptionEn": "Power doubles if the user moves before the target."
   },
   "fishious-rend": {
     "id": 755,
@@ -8319,7 +9073,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "단단한 아가미로 문다. 상대보다 먼저 공격하면 기술의 위력은 2배가 된다."
+    "description": "단단한 아가미로 문다. 상대보다 먼저 공격하면 기술의 위력은 2배가 된다.",
+    "descriptionEn": "Power doubles if the user moves before the target."
   },
   "court-change": {
     "id": 756,
@@ -8330,7 +9085,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "status",
-    "description": "이상한 힘으로 서로의 필드 효과를 교체한다."
+    "description": "이상한 힘으로 서로의 필드 효과를 교체한다.",
+    "descriptionEn": "Switches the Mist, Light Screen, Reflect, Spikes, Safeguard, Tailwind, Toxic Spikes, Stealth Rock, Water Pledge, Fire Pledge, Grass Pledge, Sticky Web, Aurora Veil, G-Max Steelsurge, G-Max Cannonade, G-Max Vine Lash, and G-Max Wildfire effects from the user's side to the opposing side and vice versa."
   },
   "max-flare": {
     "id": 757,
@@ -8341,7 +9097,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "physical",
-    "description": "다이맥스한 포켓몬이 날리는 불꽃타입의 공격. 5턴 동안 햇살을 강하게 만든다."
+    "description": "다이맥스한 포켓몬이 날리는 불꽃타입의 공격. 5턴 동안 햇살을 강하게 만든다.",
+    "descriptionEn": "Power is equal to the base move's Max Move power. If this move is successful, the effect of Sun begins. This effect does not happen if the user is not Dynamaxed. If this move is used as a base move, it deals damage with a power of 0."
   },
   "max-flutterby": {
     "id": 758,
@@ -8352,7 +9109,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "physical",
-    "description": "다이맥스한 포켓몬이 날리는 벌레타입의 공격. 상대의 특수공격을 떨어뜨린다."
+    "description": "다이맥스한 포켓몬이 날리는 벌레타입의 공격. 상대의 특수공격을 떨어뜨린다.",
+    "descriptionEn": "Power is equal to the base move's Max Move power. If this move is successful, the Special Attack of each Pokemon on the opposing side is lowered by 1 stage, even if they have a substitute. This effect does not happen if the user is not Dynamaxed. If this move is used as a base move, it deals damage with a power of 0."
   },
   "max-lightning": {
     "id": 759,
@@ -8363,7 +9121,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "physical",
-    "description": "다이맥스한 포켓몬이 날리는 전기타입의 공격. 5턴 동안 일렉트릭필드로 만든다."
+    "description": "다이맥스한 포켓몬이 날리는 전기타입의 공격. 5턴 동안 일렉트릭필드로 만든다.",
+    "descriptionEn": "Power is equal to the base move's Max Move power. If this move is successful, the effect of Electric Terrain begins. This effect does not happen if the user is not Dynamaxed. If this move is used as a base move, it deals damage with a power of 0."
   },
   "max-strike": {
     "id": 760,
@@ -8374,7 +9133,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "physical",
-    "description": "다이맥스한 포켓몬이 날리는 노말타입의 공격. 상대의 스피드를 떨어뜨린다."
+    "description": "다이맥스한 포켓몬이 날리는 노말타입의 공격. 상대의 스피드를 떨어뜨린다.",
+    "descriptionEn": "Power is equal to the base move's Max Move power. If this move is successful, the Speed of each Pokemon on the opposing side is lowered by 1 stage, even if they have a substitute. This effect does not happen if the user is not Dynamaxed. If this move is used as a base move, it deals damage with a power of 0."
   },
   "max-knuckle": {
     "id": 761,
@@ -8385,7 +9145,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "physical",
-    "description": "다이맥스한 포켓몬이 날리는 격투타입의 공격. 같은 편의 공격을 올린다."
+    "description": "다이맥스한 포켓몬이 날리는 격투타입의 공격. 같은 편의 공격을 올린다.",
+    "descriptionEn": "Boosts the user and its allies' Attack by 1 stage. BP scales with the base move's BP. This effect does not happen if the user is not Dynamaxed. If this move is used as a base move, it deals damage with a power of 0."
   },
   "max-phantasm": {
     "id": 762,
@@ -8396,7 +9157,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "physical",
-    "description": "다이맥스한 포켓몬이 날리는 고스트타입의 공격. 상대의 방어를 떨어뜨린다."
+    "description": "다이맥스한 포켓몬이 날리는 고스트타입의 공격. 상대의 방어를 떨어뜨린다.",
+    "descriptionEn": "Power is equal to the base move's Max Move power. If this move is successful, the Defense of each Pokemon on the opposing side is lowered by 1 stage, even if they have a substitute. This effect does not happen if the user is not Dynamaxed. If this move is used as a base move, it deals damage with a power of 0."
   },
   "max-hailstorm": {
     "id": 763,
@@ -8407,7 +9169,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "physical",
-    "description": "다이맥스한 포켓몬이 날리는 얼음타입의 공격. 5턴 동안 싸라기눈을 내리게 한다."
+    "description": "다이맥스한 포켓몬이 날리는 얼음타입의 공격. 5턴 동안 싸라기눈을 내리게 한다.",
+    "descriptionEn": "Power is equal to the base move's Max Move power. If this move is successful, the effect of Hail begins. This effect does not happen if the user is not Dynamaxed. If this move is used as a base move, it deals damage with a power of 0."
   },
   "max-ooze": {
     "id": 764,
@@ -8418,7 +9181,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "physical",
-    "description": "다이맥스한 포켓몬이 날리는 독타입의 공격. 같은 편의 특수공격을 올린다."
+    "description": "다이맥스한 포켓몬이 날리는 독타입의 공격. 같은 편의 특수공격을 올린다.",
+    "descriptionEn": "Power is equal to the base move's Max Move power. If this move is successful, the Special Attack of each Pokemon on the user's side is raised by 1 stage, even if they have a substitute. This effect does not happen if the user is not Dynamaxed. If this move is used as a base move, it deals damage with a power of 0."
   },
   "max-geyser": {
     "id": 765,
@@ -8429,7 +9193,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "physical",
-    "description": "다이맥스한 포켓몬이 날리는 물타입의 공격. 5턴 동안 비를 내리게 한다."
+    "description": "다이맥스한 포켓몬이 날리는 물타입의 공격. 5턴 동안 비를 내리게 한다.",
+    "descriptionEn": "Power is equal to the base move's Max Move power. If this move is successful, the effect of Rain begins. This effect does not happen if the user is not Dynamaxed. If this move is used as a base move, it deals damage with a power of 0."
   },
   "max-airstream": {
     "id": 766,
@@ -8440,7 +9205,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "physical",
-    "description": "다이맥스한 포켓몬이 날리는 비행타입의 공격. 같은 편의 스피드를 올린다."
+    "description": "다이맥스한 포켓몬이 날리는 비행타입의 공격. 같은 편의 스피드를 올린다.",
+    "descriptionEn": "Power is equal to the base move's Max Move power. If this move is successful, the Speed of each Pokemon on the user's side is raised by 1 stage, even if they have a substitute. This effect does not happen if the user is not Dynamaxed. If this move is used as a base move, it deals damage with a power of 0."
   },
   "max-starfall": {
     "id": 767,
@@ -8451,7 +9217,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "physical",
-    "description": "다이맥스한 포켓몬이 날리는 페어리타입의 공격. 5턴 동안 미스트필드로 만든다."
+    "description": "다이맥스한 포켓몬이 날리는 페어리타입의 공격. 5턴 동안 미스트필드로 만든다.",
+    "descriptionEn": "Power is equal to the base move's Max Move power. If this move is successful, the effect of Misty Terrain begins. This effect does not happen if the user is not Dynamaxed. If this move is used as a base move, it deals damage with a power of 0."
   },
   "max-wyrmwind": {
     "id": 768,
@@ -8462,7 +9229,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "physical",
-    "description": "다이맥스한 포켓몬이 날리는 드래곤타입의 공격. 상대의 공격을 떨어뜨린다."
+    "description": "다이맥스한 포켓몬이 날리는 드래곤타입의 공격. 상대의 공격을 떨어뜨린다.",
+    "descriptionEn": "Power is equal to the base move's Max Move power. If this move is successful, the Attack of each Pokemon on the opposing side is lowered by 1 stage, even if they have a substitute. This effect does not happen if the user is not Dynamaxed. If this move is used as a base move, it deals damage with a power of 0."
   },
   "max-mindstorm": {
     "id": 769,
@@ -8473,7 +9241,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "physical",
-    "description": "다이맥스한 포켓몬이 날리는 에스퍼타입의 공격. 5턴 동안 사이코필드로 만든다."
+    "description": "다이맥스한 포켓몬이 날리는 에스퍼타입의 공격. 5턴 동안 사이코필드로 만든다.",
+    "descriptionEn": "Power is equal to the base move's Max Move power. If this move is successful, the effect of Psychic Terrain begins. This effect does not happen if the user is not Dynamaxed. If this move is used as a base move, it deals damage with a power of 0."
   },
   "max-rockfall": {
     "id": 770,
@@ -8484,7 +9253,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "physical",
-    "description": "다이맥스한 포켓몬이 날리는 바위타입의 공격. 5턴 동안 날씨를 모래바람으로 만든다."
+    "description": "다이맥스한 포켓몬이 날리는 바위타입의 공격. 5턴 동안 날씨를 모래바람으로 만든다.",
+    "descriptionEn": "Power is equal to the base move's Max Move power. If this move is successful, the effect of Sandstorm begins. This effect does not happen if the user is not Dynamaxed. If this move is used as a base move, it deals damage with a power of 0."
   },
   "max-quake": {
     "id": 771,
@@ -8495,7 +9265,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "physical",
-    "description": "다이맥스한 포켓몬이 날리는 땅타입의 공격. 같은 편의 특수방어를 올린다."
+    "description": "다이맥스한 포켓몬이 날리는 땅타입의 공격. 같은 편의 특수방어를 올린다.",
+    "descriptionEn": "Power is equal to the base move's Max Move power. If this move is successful, the Special Defense of each Pokemon on the user's side is raised by 1 stage, even if they have a substitute. This effect does not happen if the user is not Dynamaxed. If this move is used as a base move, it deals damage with a power of 0."
   },
   "max-darkness": {
     "id": 772,
@@ -8506,7 +9277,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "physical",
-    "description": "다이맥스한 포켓몬이 날리는 악타입의 공격. 상대의 특수방어를 떨어뜨린다."
+    "description": "다이맥스한 포켓몬이 날리는 악타입의 공격. 상대의 특수방어를 떨어뜨린다.",
+    "descriptionEn": "Power is equal to the base move's Max Move power. If this move is successful, the Special Defense of each Pokemon on the opposing side is lowered by 1 stage, even if they have a substitute. This effect does not happen if the user is not Dynamaxed. If this move is used as a base move, it deals damage with a power of 0."
   },
   "max-overgrowth": {
     "id": 773,
@@ -8517,7 +9289,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "physical",
-    "description": "다이맥스한 포켓몬이 날리는 풀타입의 공격. 5턴 동안 그래스필드로 만든다."
+    "description": "다이맥스한 포켓몬이 날리는 풀타입의 공격. 5턴 동안 그래스필드로 만든다.",
+    "descriptionEn": "Power is equal to the base move's Max Move power. If this move is successful, the effect of Grassy Terrain begins. This effect does not happen if the user is not Dynamaxed. If this move is used as a base move, it deals damage with a power of 0."
   },
   "max-steelspike": {
     "id": 774,
@@ -8528,7 +9301,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "physical",
-    "description": "다이맥스한 포켓몬이 날리는 강철타입의 공격. 같은 편의 방어를 올린다."
+    "description": "다이맥스한 포켓몬이 날리는 강철타입의 공격. 같은 편의 방어를 올린다.",
+    "descriptionEn": "Power is equal to the base move's Max Move power. If this move is successful, the Defense of each Pokemon on the user's side is raised by 1 stage, even if they have a substitute. This effect does not happen if the user is not Dynamaxed. If this move is used as a base move, it deals damage with a power of 0."
   },
   "clangorous-soul": {
     "id": 775,
@@ -8539,7 +9313,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "status",
-    "description": "자신의 HP를 조금 깎아서 모든 능력을 올린다."
+    "description": "자신의 HP를 조금 깎아서 모든 능력을 올린다.",
+    "descriptionEn": "Raises the user's Attack, Defense, Special Attack, Special Defense, and Speed by 1 stage in exchange for the user losing 33% of its maximum HP, rounded down. Fails if the user would faint or if its Attack, Defense, Special Attack, Special Defense, and Speed stat stages would not change."
   },
   "body-press": {
     "id": 776,
@@ -8550,7 +9325,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "몸을 부딪쳐서 공격한다. 방어가 높을수록 주는 데미지가 올라간다."
+    "description": "몸을 부딪쳐서 공격한다. 방어가 높을수록 주는 데미지가 올라간다.",
+    "descriptionEn": "Damage is calculated using the user's Defense stat as its Attack, including stat stage changes. Other effects that modify the Attack stat are used as normal."
   },
   "decorate": {
     "id": 777,
@@ -8561,7 +9337,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 15,
     "category": "status",
-    "description": "데코레이션을 해서 상대의 공격과 특수공격을 크게 올린다."
+    "description": "데코레이션을 해서 상대의 공격과 특수공격을 크게 올린다.",
+    "descriptionEn": "Raises the target's Attack and Special Attack by 2 stages."
   },
   "drum-beating": {
     "id": 778,
@@ -8572,7 +9349,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "드럼의 뿌리를 연주로 조종해서 공격하는 것으로 상대의 스피드를 떨어뜨린다."
+    "description": "드럼의 뿌리를 연주로 조종해서 공격하는 것으로 상대의 스피드를 떨어뜨린다.",
+    "descriptionEn": "Has a 100% chance to lower the target's Speed by 1 stage."
   },
   "snap-trap": {
     "id": 779,
@@ -8583,7 +9361,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "집게덫으로 붙잡은 뒤 4-5턴 동안 상대를 끼워서 공격한다."
+    "description": "집게덫으로 붙잡은 뒤 4-5턴 동안 상대를 끼워서 공격한다.",
+    "descriptionEn": "Prevents the target from switching for four or five turns (seven turns if the user is holding Grip Claw). Causes damage to the target equal to 1/8 of its maximum HP (1/6 if the user is holding Binding Band), rounded down, at the end of each turn during effect. The target can still switch out if it is holding Shed Shell or uses Baton Pass, Flip Turn, Parting Shot, Shed Tail, Teleport, U-turn, or Volt Switch. The effect ends if either the user or the target leaves the field, or if the target uses Mortal Spin, Rapid Spin, or Substitute successfully. This effect is not stackable or reset by using this or another binding move."
   },
   "pyro-ball": {
     "id": 780,
@@ -8594,7 +9373,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 5,
     "category": "physical",
-    "description": "작은 돌을 태운 불꽃의 공으로 상대를 공격한다. 화상 상태로 만들 때가 있다."
+    "description": "작은 돌을 태운 불꽃의 공으로 상대를 공격한다. 화상 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 10% chance to burn the target."
   },
   "behemoth-blade": {
     "id": 781,
@@ -8605,7 +9385,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": "거대한 검이 되어 베어버린다. 상대가 다이맥스 중이면 데미지가 2배가 된다."
+    "description": "거대한 검이 되어 베어버린다. 상대가 다이맥스 중이면 데미지가 2배가 된다.",
+    "descriptionEn": "No additional effect."
   },
   "behemoth-bash": {
     "id": 782,
@@ -8616,7 +9397,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": "거대한 방패가 되어 부딪친다. 상대가 다이맥스 중이면 데미지가 2배가 된다."
+    "description": "거대한 방패가 되어 부딪친다. 상대가 다이맥스 중이면 데미지가 2배가 된다.",
+    "descriptionEn": "No additional effect."
   },
   "aura-wheel": {
     "id": 783,
@@ -8627,7 +9409,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "볼주머니에 저장해둔 에너지로 공격하고 자신의 스피드를 올린다. 모르페코의 모습에 따라 타입이 바뀐다."
+    "description": "볼주머니에 저장해둔 에너지로 공격하고 자신의 스피드를 올린다. 모르페코의 모습에 따라 타입이 바뀐다.",
+    "descriptionEn": "Has a 100% chance to raise the user's Speed by 1 stage. If the user is a Morpeko in Full Belly Mode, this move is Electric type. If the user is a Morpeko in Hangry Mode, this move is Dark type. This move cannot be used successfully unless the user's current form, while considering Transform, is Full Belly or Hangry Mode Morpeko."
   },
   "breaking-swipe": {
     "id": 784,
@@ -8638,7 +9421,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "강인한 꼬리를 세차게 휘둘러서 상대를 공격한다. 상대의 공격을 떨어뜨린다."
+    "description": "강인한 꼬리를 세차게 휘둘러서 상대를 공격한다. 상대의 공격을 떨어뜨린다.",
+    "descriptionEn": "Has a 100% chance to lower the target's Attack by 1 stage."
   },
   "branch-poke": {
     "id": 785,
@@ -8649,7 +9433,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 40,
     "category": "physical",
-    "description": "날카롭고 뾰족한 가지로 상대를 찔러서 공격한다."
+    "description": "날카롭고 뾰족한 가지로 상대를 찔러서 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "overdrive": {
     "id": 786,
@@ -8660,7 +9445,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "기타나 베이스를 쳐서 큰 울림과 강한 진동을 상대에게 전달하여 공격한다."
+    "description": "기타나 베이스를 쳐서 큰 울림과 강한 진동을 상대에게 전달하여 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "apple-acid": {
     "id": 787,
@@ -8671,7 +9457,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "새콤한 사과에서 만들어 낸 산성 액체로 공격한다. 상대의 특수방어를 떨어뜨린다."
+    "description": "새콤한 사과에서 만들어 낸 산성 액체로 공격한다. 상대의 특수방어를 떨어뜨린다.",
+    "descriptionEn": "Has a 100% chance to lower the target's Special Defense by 1 stage."
   },
   "grav-apple": {
     "id": 788,
@@ -8682,7 +9469,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "높은 곳에서 사과를 떨어뜨려서 데미지를 준다. 상대의 방어를 떨어뜨린다."
+    "description": "높은 곳에서 사과를 떨어뜨려서 데미지를 준다. 상대의 방어를 떨어뜨린다.",
+    "descriptionEn": "Has a 100% chance to lower the target's Defense by 1 stage. Power is multiplied by 1.5 during Gravity's effect."
   },
   "spirit-break": {
     "id": 789,
@@ -8693,7 +9481,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": "맞으면 기가 꺾여버릴 것 같은 기세로 공격한다. 상대의 특수공격을 떨어뜨린다."
+    "description": "맞으면 기가 꺾여버릴 것 같은 기세로 공격한다. 상대의 특수공격을 떨어뜨린다.",
+    "descriptionEn": "Has a 100% chance to lower the target's Special Attack by 1 stage."
   },
   "strange-steam": {
     "id": 790,
@@ -8704,7 +9493,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 10,
     "category": "special",
-    "description": "연기를 분출해서 상대를 공격한다. 혼란시킬 때가 있다."
+    "description": "연기를 분출해서 상대를 공격한다. 혼란시킬 때가 있다.",
+    "descriptionEn": "Has a 20% chance to confuse the target."
   },
   "life-dew": {
     "id": 791,
@@ -8715,7 +9505,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "신비한 물을 흩뿌려서 자신과 배틀에 나와 있는 같은 편의 HP를 회복한다."
+    "description": "신비한 물을 흩뿌려서 자신과 배틀에 나와 있는 같은 편의 HP를 회복한다.",
+    "descriptionEn": "Each Pokemon on the user's side restores 1/4 of its maximum HP, rounded half up."
   },
   "obstruct": {
     "id": 792,
@@ -8726,7 +9517,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "status",
-    "description": "상대의 공격을 전혀 받지 않는다. 연속으로 쓰면 실패하기 쉽다. 접촉한 상대의 방어를 크게 떨어뜨린다."
+    "description": "상대의 공격을 전혀 받지 않는다. 연속으로 쓰면 실패하기 쉽다. 접촉한 상대의 방어를 크게 떨어뜨린다.",
+    "descriptionEn": "The user is protected from most attacks made by other Pokemon during this turn, and Pokemon trying to make contact with the user have their Defense lowered by 2 stages. Non-damaging moves go through this protection. This move has a 1/X chance of being successful, where X starts at 1 and triples each time this move is successfully used. X resets to 1 if this move fails, if the user's last move used is not Baneful Bunker, Burning Bulwark, Detect, Endure, King's Shield, Max Guard, Obstruct, Protect, Quick Guard, Silk Trap, Spiky Shield, or Wide Guard, or if it was one of those moves and the user's protection was broken. Fails if the user moves last this turn."
   },
   "false-surrender": {
     "id": 793,
@@ -8737,7 +9529,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "physical",
-    "description": "고개를 숙이는 척하면서 흐트러진 머리카락으로 찌른다. 공격은 반드시 명중한다."
+    "description": "고개를 숙이는 척하면서 흐트러진 머리카락으로 찌른다. 공격은 반드시 명중한다.",
+    "descriptionEn": "This move does not check accuracy."
   },
   "meteor-assault": {
     "id": 794,
@@ -8748,7 +9541,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": "굵은 줄기를 휘둘러서 공격한다. 단 자신도 비틀거리기 때문에 다음 턴은 움직일 수 없다."
+    "description": "굵은 줄기를 휘둘러서 공격한다. 단 자신도 비틀거리기 때문에 다음 턴은 움직일 수 없다.",
+    "descriptionEn": "If this move is successful, the user must recharge on the following turn and cannot select a move."
   },
   "eternabeam": {
     "id": 795,
@@ -8759,7 +9553,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 5,
     "category": "special",
-    "description": "본래의 모습이 된 무한다이노 최대의 공격. 다음 턴은 움직일 수 없다."
+    "description": "본래의 모습이 된 무한다이노 최대의 공격. 다음 턴은 움직일 수 없다.",
+    "descriptionEn": "If this move is successful, the user must recharge on the following turn and cannot select a move."
   },
   "steel-beam": {
     "id": 796,
@@ -8770,7 +9565,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 5,
     "category": "special",
-    "description": "전신에서 끌어모은 강철을 빔으로 바꿔 세차게 발사한다. 자신도 데미지를 받는다."
+    "description": "전신에서 끌어모은 강철을 빔으로 바꿔 세차게 발사한다. 자신도 데미지를 받는다.",
+    "descriptionEn": "Whether or not this move is successful and even if it would cause fainting, the user loses 1/2 of its maximum HP, rounded up, unless the user has the Magic Guard Ability."
   },
   "expanding-force": {
     "id": 797,
@@ -8781,7 +9577,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "사이코 파워로 상대를 공격한다. 사이코필드일 때는 위력이 오르며 모든 상대에게 데미지를 준다."
+    "description": "사이코 파워로 상대를 공격한다. 사이코필드일 때는 위력이 오르며 모든 상대에게 데미지를 준다.",
+    "descriptionEn": "If the current terrain is Psychic Terrain and the user is grounded, this move hits all opposing Pokemon and has its power multiplied by 1.5."
   },
   "steel-roller": {
     "id": 798,
@@ -8792,7 +9589,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": "필드를 파괴하면서 공격한다. 필드가 어떤 상태로든 변해 있지 않은 경우 기술은 실패한다."
+    "description": "필드를 파괴하면서 공격한다. 필드가 어떤 상태로든 변해 있지 않은 경우 기술은 실패한다.",
+    "descriptionEn": "Fails if there is no terrain active. Ends the effects of Electric Terrain, Grassy Terrain, Misty Terrain, and Psychic Terrain."
   },
   "scale-shot": {
     "id": 799,
@@ -8803,7 +9601,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 20,
     "category": "physical",
-    "description": "비늘을 쏘아서 공격한다. 2-5회 동안 연속으로 쓴다. 스피드가 올라가지만 방어가 떨어진다."
+    "description": "비늘을 쏘아서 공격한다. 2-5회 동안 연속으로 쓴다. 스피드가 올라가지만 방어가 떨어진다.",
+    "descriptionEn": "Hits two to five times. Lowers the user's Defense by 1 stage and raises the user's Speed by 1 stage after the last hit. Has a 35% chance to hit two or three times and a 15% chance to hit four or five times. If one of the hits breaks the target's substitute, it will take damage for the remaining hits. If the user has the Skill Link Ability, this move will always hit five times. If the user is holding Loaded Dice, this move will hit 4-5 times."
   },
   "meteor-beam": {
     "id": 800,
@@ -8814,7 +9613,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "special",
-    "description": "1턴째에 우주의 힘을 모아서 특수공격을 올리고 2턴째에 상대를 공격한다."
+    "description": "1턴째에 우주의 힘을 모아서 특수공격을 올리고 2턴째에 상대를 공격한다.",
+    "descriptionEn": "This attack charges on the first turn and executes on the second. Raises the user's Special Attack by 1 stage on the first turn. If the user is holding a Power Herb, the move completes in one turn."
   },
   "shell-side-arm": {
     "id": 801,
@@ -8825,7 +9625,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "물리와 특수 중 더 많은 데미지를 줄 수 있는 능력으로 공격한다. 독 상태로 만들 때가 있다."
+    "description": "물리와 특수 중 더 많은 데미지를 줄 수 있는 능력으로 공격한다. 독 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 20% chance to poison the target. This move becomes a physical attack that makes contact if the value of ((((2 * the user's level / 5 + 2) * 90 * X) / Y) / 50), where X is the user's Attack stat and Y is the target's Defense stat, is greater than the same value where X is the user's Special Attack stat and Y is the target's Special Defense stat. No stat modifiers other than stat stage changes are considered for this purpose. If the two values are equal, this move chooses a damage category at random."
   },
   "misty-explosion": {
     "id": 802,
@@ -8836,7 +9637,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": "자신의 주위에 있는 모두를 공격하지만 사용하면 기절한다. 미스트필드일 때 위력이 올라간다."
+    "description": "자신의 주위에 있는 모두를 공격하지만 사용하면 기절한다. 미스트필드일 때 위력이 올라간다.",
+    "descriptionEn": "If the current terrain is Misty Terrain and the user is grounded, this move's power is multiplied by 1.5. The user faints after using this move, even if this move fails for having no target. This move is prevented from executing if any active Pokemon has the Damp Ability."
   },
   "grassy-glide": {
     "id": 803,
@@ -8847,7 +9649,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "지면에 미끄러지듯 상대를 공격한다. 그래스필드일 때 반드시 선제공격할 수 있다."
+    "description": "지면에 미끄러지듯 상대를 공격한다. 그래스필드일 때 반드시 선제공격할 수 있다.",
+    "descriptionEn": "If the current terrain is Grassy Terrain and the user is grounded, this move has its priority increased by 1."
   },
   "rising-voltage": {
     "id": 804,
@@ -8858,7 +9661,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "special",
-    "description": "지면에서 올라오는 전격으로 공격한다. 상대가 일렉트릭필드 위에 있을 때 기술의 위력이 2배가 된다."
+    "description": "지면에서 올라오는 전격으로 공격한다. 상대가 일렉트릭필드 위에 있을 때 기술의 위력이 2배가 된다.",
+    "descriptionEn": "If the current terrain is Electric Terrain and the target is grounded, this move's power is doubled."
   },
   "terrain-pulse": {
     "id": 805,
@@ -8869,7 +9673,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "필드의 힘을 빌려서 공격한다. 사용했을 때의 필드 상태에 따라서 기술 타입과 위력이 바뀐다."
+    "description": "필드의 힘을 빌려서 공격한다. 사용했을 때의 필드 상태에 따라서 기술 타입과 위력이 바뀐다.",
+    "descriptionEn": "Power doubles if the user is grounded and a terrain is active, and this move's type changes to match. Electric type during Electric Terrain, Grass type during Grassy Terrain, Fairy type during Misty Terrain, and Psychic type during Psychic Terrain."
   },
   "skitter-smack": {
     "id": 806,
@@ -8880,7 +9685,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "physical",
-    "description": "배후에서 엄습해서 공격한다. 상대의 특수공격을 떨어뜨린다."
+    "description": "배후에서 엄습해서 공격한다. 상대의 특수공격을 떨어뜨린다.",
+    "descriptionEn": "Has a 100% chance to lower the target's Special Attack by 1 stage."
   },
   "burning-jealousy": {
     "id": 807,
@@ -8891,7 +9697,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": "질투의 에너지로 상대를 공격한다. 그 턴에 능력이 올라간 포켓몬을 화상 상태로 만든다."
+    "description": "질투의 에너지로 상대를 공격한다. 그 턴에 능력이 올라간 포켓몬을 화상 상태로 만든다.",
+    "descriptionEn": "Has a 100% chance to burn the target if it had a stat stage raised this turn."
   },
   "lash-out": {
     "id": 808,
@@ -8902,7 +9709,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": "상대에 대한 울분이 담긴 공격을 한다. 그 턴에 능력이 떨어져 있으면 기술의 위력이 2배가 된다."
+    "description": "상대에 대한 울분이 담긴 공격을 한다. 그 턴에 능력이 떨어져 있으면 기술의 위력이 2배가 된다.",
+    "descriptionEn": "Power doubles if the user had a stat stage lowered this turn."
   },
   "poltergeist": {
     "id": 809,
@@ -8913,7 +9721,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 5,
     "category": "physical",
-    "description": "상대의 지닌 물건을 조종해서 공격한다. 상대가 도구를 지니고 있지 않으면 실패한다."
+    "description": "상대의 지닌 물건을 조종해서 공격한다. 상대가 도구를 지니고 있지 않으면 실패한다.",
+    "descriptionEn": "Fails if the target has no held item."
   },
   "corrosive-gas": {
     "id": 810,
@@ -8924,7 +9733,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 40,
     "category": "status",
-    "description": "주위에 있는 모든 것을 강력한 산성 가스로 뒤덮어서 지니고 있는 도구를 녹여버린다."
+    "description": "주위에 있는 모든 것을 강력한 산성 가스로 뒤덮어서 지니고 있는 도구를 녹여버린다.",
+    "descriptionEn": "The target loses its held item. This move cannot cause Pokemon with the Sticky Hold Ability to lose their held item or cause a Kyogre, Groudon, Dialga, Palkia, Giratina, Arceus, Genesect, Silvally, Zacian, Zamazenta, Paradox Pokemon, or Ogerpon to lose their Blue Orb, Red Orb, Adamant Crystal, Lustrous Globe, Griseous Core, Plate, Drive, Memory, Rusted Sword, Rusted Shield, Booster Energy, or Mask, respectively. In this case, Paradox Pokemon include every species with the Protosynthesis and Quark Drive Abilities, except Gouging Fire, Raging Bolt, Iron Boulder, and Iron Crown. Items lost to this move cannot be regained with Recycle or the Harvest Ability."
   },
   "coaching": {
     "id": 811,
@@ -8935,7 +9745,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "적절한 지도를 통해서 같은 편 전원의 공격과 방어를 올린다."
+    "description": "적절한 지도를 통해서 같은 편 전원의 공격과 방어를 올린다.",
+    "descriptionEn": "Raises the target's Attack and Defense by 1 stage. Fails if there is no ally adjacent to the user."
   },
   "flip-turn": {
     "id": 812,
@@ -8946,7 +9757,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": "공격한 뒤 굉장한 스피드로 돌아와서 교대 포켓몬과 교체한다."
+    "description": "공격한 뒤 굉장한 스피드로 돌아와서 교대 포켓몬과 교체한다.",
+    "descriptionEn": "If this move is successful and the user has not fainted, the user switches out even if it is trapped and is replaced immediately by a selected party member. The user does not switch out if there are no unfainted party members, or if the target switched out using an Eject Button or through the effect of the Emergency Exit or Wimp Out Abilities."
   },
   "triple-axel": {
     "id": 813,
@@ -8957,7 +9769,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "physical",
-    "description": "3회 연속으로 킥을 날려 공격한다. 기술이 맞을 때마다 위력이 올라간다."
+    "description": "3회 연속으로 킥을 날려 공격한다. 기술이 맞을 때마다 위력이 올라간다.",
+    "descriptionEn": "Hits three times. Power increases to 40 for the second hit and 60 for the third. This move checks accuracy for each hit, and the attack ends if the target avoids a hit. If one of the hits breaks the target's substitute, it will take damage for the remaining hits. If the user has the Skill Link Ability, this move will always hit three times."
   },
   "dual-wingbeat": {
     "id": 814,
@@ -8968,7 +9781,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "physical",
-    "description": "날개를 상대에게 부딪쳐서 공격한다. 2회 연속으로 데미지를 준다."
+    "description": "날개를 상대에게 부딪쳐서 공격한다. 2회 연속으로 데미지를 준다.",
+    "descriptionEn": "Hits twice. If the first hit breaks the target's substitute, it will take damage for the second hit."
   },
   "scorching-sands": {
     "id": 815,
@@ -8979,7 +9793,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "뜨겁게 달궈진 모래를 상대에게 부딪쳐서 공격한다. 화상 상태로 만들 때가 있다."
+    "description": "뜨겁게 달궈진 모래를 상대에게 부딪쳐서 공격한다. 화상 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to burn the target. The target thaws out if it is frozen."
   },
   "jungle-healing": {
     "id": 816,
@@ -8990,7 +9805,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": "정글과 하나가 되어 자신과 배틀에 나와 있는 같은 편의 HP와 모든 상태를 회복한다."
+    "description": "정글과 하나가 되어 자신과 배틀에 나와 있는 같은 편의 HP와 모든 상태를 회복한다.",
+    "descriptionEn": "Each Pokemon on the user's side restores 1/4 of its maximum HP, rounded half up, and has its status condition cured."
   },
   "wicked-blow": {
     "id": 817,
@@ -9001,7 +9817,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": "악의 태세가 극에 달하여 강렬한 일격을 날린다. 반드시 급소에 맞는다."
+    "description": "악의 태세가 극에 달하여 강렬한 일격을 날린다. 반드시 급소에 맞는다.",
+    "descriptionEn": "This move is always a critical hit unless the target is under the effect of Lucky Chant or has the Battle Armor or Shell Armor Abilities."
   },
   "surging-strikes": {
     "id": 818,
@@ -9012,7 +9829,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": "물의 태세가 극에 달하여 물 흐르듯 3회의 연격을 날린다. 반드시 급소에 맞는다."
+    "description": "물의 태세가 극에 달하여 물 흐르듯 3회의 연격을 날린다. 반드시 급소에 맞는다.",
+    "descriptionEn": "Hits three times. This move is always a critical hit unless the target is under the effect of Lucky Chant or has the Battle Armor or Shell Armor Abilities."
   },
   "thunder-cage": {
     "id": 819,
@@ -9023,7 +9841,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 15,
     "category": "special",
-    "description": "전기가 흐르는 우리 안에 4-5턴 동안 상대를 가두어 공격한다."
+    "description": "전기가 흐르는 우리 안에 4-5턴 동안 상대를 가두어 공격한다.",
+    "descriptionEn": "Prevents the target from switching for four or five turns (seven turns if the user is holding Grip Claw). Causes damage to the target equal to 1/8 of its maximum HP (1/6 if the user is holding Binding Band), rounded down, at the end of each turn during effect. The target can still switch out if it is holding Shed Shell or uses Baton Pass, Flip Turn, Parting Shot, Shed Tail, Teleport, U-turn, or Volt Switch. The effect ends if either the user or the target leaves the field, or if the target uses Mortal Spin, Rapid Spin, or Substitute successfully. This effect is not stackable or reset by using this or another binding move."
   },
   "dragon-energy": {
     "id": 820,
@@ -9034,7 +9853,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": "생명력을 파워로 바꿔서 상대를 공격한다. 자신의 HP가 적을수록 기술의 위력이 떨어진다."
+    "description": "생명력을 파워로 바꿔서 상대를 공격한다. 자신의 HP가 적을수록 기술의 위력이 떨어진다.",
+    "descriptionEn": "Power is equal to (user's current HP * 150 / user's maximum HP), rounded down, but not less than 1."
   },
   "freezing-glare": {
     "id": 821,
@@ -9045,7 +9865,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "두 눈에서 사이코 파워를 발사해서 공격한다. 얼음 상태로 만들 때가 있다."
+    "description": "두 눈에서 사이코 파워를 발사해서 공격한다. 얼음 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 10% chance to freeze the target."
   },
   "fiery-wrath": {
     "id": 822,
@@ -9056,7 +9877,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": "분노를 불꽃 같은 오라로 바꿔서 공격한다. 상대를 풀죽게 만들 때가 있다."
+    "description": "분노를 불꽃 같은 오라로 바꿔서 공격한다. 상대를 풀죽게 만들 때가 있다.",
+    "descriptionEn": "Has a 20% chance to make the target flinch."
   },
   "thunderous-kick": {
     "id": 823,
@@ -9067,7 +9889,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": "번개 같은 움직임으로 상대를 농락하며 킥을 날린다. 상대의 방어를 떨어뜨린다."
+    "description": "번개 같은 움직임으로 상대를 농락하며 킥을 날린다. 상대의 방어를 떨어뜨린다.",
+    "descriptionEn": "Has a 100% chance to lower the target's Defense by 1 stage."
   },
   "glacial-lance": {
     "id": 824,
@@ -9078,7 +9901,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": "눈보라를 두른 얼음의 창을 상대에게 던져서 공격한다."
+    "description": "눈보라를 두른 얼음의 창을 상대에게 던져서 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "astral-barrage": {
     "id": 825,
@@ -9089,7 +9913,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": "수많은 작은 영체를 상대에게 부딪쳐서 공격한다."
+    "description": "수많은 작은 영체를 상대에게 부딪쳐서 공격한다.",
+    "descriptionEn": "No additional effect."
   },
   "eerie-spell": {
     "id": 826,
@@ -9100,7 +9925,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": "강력한 사이코 파워로 공격한다. 상대가 마지막으로 사용한 기술의 PP를 3만큼 줄인다."
+    "description": "강력한 사이코 파워로 공격한다. 상대가 마지막으로 사용한 기술의 PP를 3만큼 줄인다.",
+    "descriptionEn": "If this move is successful and the user has not fainted, the target loses 3 PP from its last move."
   },
   "dire-claw": {
     "id": 827,
@@ -9111,7 +9937,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": ""
+    "description": "상대를 공격하여 독, 마비, 졸음 상태 중 하나를 부여한다. 급소율이 높다.",
+    "descriptionEn": "Has a 50% chance to cause the target to either fall asleep, become poisoned, or become paralyzed."
   },
   "psyshield-bash": {
     "id": 828,
@@ -9122,7 +9949,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "physical",
-    "description": ""
+    "description": "염동력의 장막을 두르고 돌진한다. 자신의 방어와 특수방어가 오른다.",
+    "descriptionEn": "Has a 100% chance to raise the user's Defense by 1 stage."
   },
   "power-shift": {
     "id": 829,
@@ -9133,7 +9961,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": ""
+    "description": "자신의 공격과 방어, 특수공격과 특수방어 능력치를 맞바꾼다.",
+    "descriptionEn": "The user swaps its Attack and Defense stats, and stat stage changes remain on their respective stats. This move can be used again to swap the stats back. If the user uses Baton Pass, the replacement will have its Attack and Defense stats swapped if the effect is active. If the user has its stats recalculated by changing forme while its stats are swapped, this effect is ignored but is still active for the purposes of Baton Pass."
   },
   "stone-axe": {
     "id": 830,
@@ -9144,7 +9973,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 15,
     "category": "physical",
-    "description": ""
+    "description": "돌도끼로 상대를 베어가른다. 필드에 스텔스록(바위 조각)을 흩뿌린다.",
+    "descriptionEn": "If this move is successful, it sets up a hazard on the opposing side of the field, damaging each opposing Pokemon that switches in. Foes lose 1/32, 1/16, 1/8, 1/4, or 1/2 of their maximum HP, rounded down, based on their weakness to the Rock type; 0.25x, 0.5x, neutral, 2x, or 4x, respectively. Can be removed from the opposing side if any Pokemon uses Tidy Up, or if any opposing Pokemon uses Mortal Spin, Rapid Spin, or Defog successfully, or is hit by Defog."
   },
   "springtide-storm": {
     "id": 831,
@@ -9155,7 +9985,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 80,
     "pp": 5,
     "category": "special",
-    "description": ""
+    "description": "봄의 폭풍으로 상대를 공격한다. 상대의 공격을 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 30% chance to lower the target's Attack by 1 stage."
   },
   "mystical-power": {
     "id": 832,
@@ -9166,7 +9997,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "special",
-    "description": ""
+    "description": "신비한 힘으로 상대를 공격한다. 자신의 특수공격이 오른다.",
+    "descriptionEn": "Has a 100% chance to raise the user's Special Attack by 1 stage."
   },
   "raging-fury": {
     "id": 833,
@@ -9177,7 +10009,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": ""
+    "description": "격렬한 분노로 불꽃을 뿜어 공격한다. 2~3턴 동안 난동부린 뒤 혼란에 빠진다.",
+    "descriptionEn": "The user spends two or three turns locked into this move and becomes confused immediately after its move on the last turn of the effect if it is not already. This move targets an opposing Pokemon at random on each turn. If the user is prevented from moving, is asleep at the beginning of a turn, or the attack is not successful against the target on the first turn of the effect or the second turn of a three-turn effect, the effect ends without causing confusion. If this move is called by Sleep Talk and the user is asleep, the move is used for one turn and does not confuse the user."
   },
   "wave-crash": {
     "id": 834,
@@ -9188,7 +10021,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": ""
+    "description": "물결을 두르고 전력으로 돌진한다. 상대에게 준 데미지의 일부를 반동으로 받는다.",
+    "descriptionEn": "If the target lost HP, the user takes recoil damage equal to 33% the HP lost by the target, rounded half up, but not less than 1 HP."
   },
   "chloroblast": {
     "id": 835,
@@ -9199,7 +10033,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 5,
     "category": "special",
-    "description": ""
+    "description": "체내의 엽록소 에너지를 모아 폭발시킨다. 자신의 최대 HP의 절반을 소모한다.",
+    "descriptionEn": "If this move is successful, the user loses 1/2 of its maximum HP, rounded up, unless the user has the Magic Guard or Rock Head Abilities."
   },
   "mountain-gale": {
     "id": 836,
@@ -9210,7 +10045,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 10,
     "category": "physical",
-    "description": ""
+    "description": "거대한 빙산을 일으켜 내려친다. 상대를 풀죽게 만들 때가 있다.",
+    "descriptionEn": "Has a 30% chance to make the target flinch."
   },
   "victory-dance": {
     "id": 837,
@@ -9221,7 +10057,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": ""
+    "description": "승리를 기원하는 춤을 춘다. 자신의 공격, 방어, 스피드가 1랭크씩 오른다.",
+    "descriptionEn": "Raises the user's Attack, Defense, and Speed by 1 stage."
   },
   "headlong-rush": {
     "id": 838,
@@ -9232,7 +10069,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": ""
+    "description": "무방비 상태로 상대를 향해 전력 돌진한다. 자신의 방어와 특수방어가 떨어진다.",
+    "descriptionEn": "Lowers the user's Defense and Special Defense by 1 stage."
   },
   "barb-barrage": {
     "id": 839,
@@ -9243,7 +10081,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": ""
+    "description": "독가시를 무수히 발사한다. 상대가 상태이상일 경우 데미지가 2배가 된다.",
+    "descriptionEn": "Has a 50% chance to poison the target. Power doubles if the target is already poisoned."
   },
   "esper-wing": {
     "id": 840,
@@ -9254,7 +10093,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": ""
+    "description": "오로라 날개로 공격한다. 급소에 맞기 쉬우며 자신의 스피드가 오른다.",
+    "descriptionEn": "Has a 100% chance to raise the user's Speed by 1 stage and a higher chance for a critical hit."
   },
   "bitter-malice": {
     "id": 841,
@@ -9265,7 +10105,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": ""
+    "description": "원념의 오라로 공격한다. 상대가 상태이상일 경우 위력이 2배가 된다.",
+    "descriptionEn": "Has a 100% chance to lower the target's Attack by 1 stage."
   },
   "shelter": {
     "id": 842,
@@ -9276,7 +10117,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": ""
+    "description": "단단한 껍질 속으로 몸을 숨겨 방어와 회피율을 크게 올린다.",
+    "descriptionEn": "Raises the user's Defense by 2 stages."
   },
   "triple-arrows": {
     "id": 843,
@@ -9287,7 +10129,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": ""
+    "description": "연속으로 세 발의 화살을 날린다. 급소율이 높고 상대의 방어를 떨어뜨리거나 풀죽인다.",
+    "descriptionEn": "Has a 50% chance to lower the target's Defense by 1 stage, a 30% chance to make it flinch, and a higher chance for a critical hit."
   },
   "infernal-parade": {
     "id": 844,
@@ -9298,7 +10141,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "special",
-    "description": ""
+    "description": "원혼의 불꽃을 발사한다. 상대가 상태이상일 경우 위력이 2배가 된다.",
+    "descriptionEn": "Has a 30% chance to burn the target. Power doubles if the target has a non-volatile status condition."
   },
   "ceaseless-edge": {
     "id": 845,
@@ -9309,7 +10153,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 15,
     "category": "physical",
-    "description": ""
+    "description": "쉼 없이 도검을 휘둘러 공격한다. 필드에 압정뿌리기(스파이크)를 설치한다.",
+    "descriptionEn": "If this move is successful, it sets up a hazard on the opposing side of the field, damaging each opposing Pokemon that switches in, unless it is a Flying-type Pokemon or has the Levitate Ability. A maximum of three layers may be set, and opponents lose 1/8 of their maximum HP with one layer, 1/6 of their maximum HP with two layers, and 1/4 of their maximum HP with three layers, all rounded down. Can be removed from the opposing side if any Pokemon uses Tidy Up, or if any opposing Pokemon uses Mortal Spin, Rapid Spin, or Defog successfully, or is hit by Defog."
   },
   "bleakwind-storm": {
     "id": 846,
@@ -9320,7 +10165,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 80,
     "pp": 10,
     "category": "special",
-    "description": ""
+    "description": "혹한의 폭풍을 일으켜 공격한다. 상대의 스피드를 떨어뜨릴 때가 있다.",
+    "descriptionEn": "Has a 30% chance to lower the target's Speed by 1 stage. If the weather is Heavy Rain or Rain, this move does not check accuracy. If this move is used against a Pokemon holding Utility Umbrella, this move's accuracy remains at 80%."
   },
   "wildbolt-storm": {
     "id": 847,
@@ -9331,7 +10177,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 80,
     "pp": 10,
     "category": "special",
-    "description": ""
+    "description": "격렬한 번개의 폭풍을 일으켜 공격한다. 상대를 마비 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 20% chance to paralyze the target. If the weather is Heavy Rain or Rain, this move does not check accuracy. If this move is used against a Pokemon holding Utility Umbrella, this move's accuracy remains at 80%."
   },
   "sandsear-storm": {
     "id": 848,
@@ -9342,7 +10189,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 80,
     "pp": 10,
     "category": "special",
-    "description": ""
+    "description": "작열하는 모래 폭풍을 일으켜 공격한다. 상대를 화상 상태로 만들 때가 있다.",
+    "descriptionEn": "Has a 20% chance to burn the target. If the weather is Heavy Rain or Rain, this move does not check accuracy. If this move is used against a Pokemon holding Utility Umbrella, this move's accuracy remains at 80%."
   },
   "lunar-blessing": {
     "id": 849,
@@ -9353,7 +10201,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 5,
     "category": "status",
-    "description": ""
+    "description": "달빛의 축복을 받아 파티 전체의 HP를 회복하고 상태이상을 모두 치료한다.",
+    "descriptionEn": "Each Pokemon on the user's side restores 1/4 of its maximum HP, rounded half up, and has its status condition cured."
   },
   "take-heart": {
     "id": 850,
@@ -9364,7 +10213,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": ""
+    "description": "스스로 마음을 다잡아 자신의 상태이상을 치유하고 특수공격과 특수방어를 올린다.",
+    "descriptionEn": "The user cures its non-volatile status condition. Raises the user's Special Attack and Special Defense by 1 stage."
   },
   "tera-blast": {
     "id": 851,
@@ -9375,7 +10225,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": ""
+    "description": "If the user is Terastallized, this move becomes a physical attack if the user's Attack is greater than its Special Attack, including stat stage changes, and this move's type becomes the same as the user's Tera Type. In addition, if the user's Tera Type is Stellar, this move has 100 power, is super effective against Terastallized targets and neutral against other targets, and lowers the user's Attack and Special Attack by 1 stage.",
+    "descriptionEn": "If the user is Terastallized, this move becomes a physical attack if the user's Attack is greater than its Special Attack, including stat stage changes, and this move's type becomes the same as the user's Tera Type. In addition, if the user's Tera Type is Stellar, this move has 100 power, is super effective against Terastallized targets and neutral against other targets, and lowers the user's Attack and Special Attack by 1 stage."
   },
   "silk-trap": {
     "id": 852,
@@ -9386,7 +10237,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": ""
+    "description": "실로 만든 방패로 공격을 막아내며, 접촉한 상대의 스피드를 1랭크 떨어뜨린다.",
+    "descriptionEn": "The user is protected from most attacks made by other Pokemon during this turn, and Pokemon trying to make contact with the user have their Speed lowered by 1 stage. Non-damaging moves go through this protection. This move has a 1/X chance of being successful, where X starts at 1 and triples each time this move is successfully used. X resets to 1 if this move fails, if the user's last move used is not Baneful Bunker, Burning Bulwark, Detect, Endure, King's Shield, Max Guard, Obstruct, Protect, Quick Guard, Silk Trap, Spiky Shield, or Wide Guard, or if it was one of those moves and the user's protection was broken. Fails if the user moves last this turn."
   },
   "axe-kick": {
     "id": 853,
@@ -9397,7 +10249,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "physical",
-    "description": ""
+    "description": "높이 뛰어올라 도끼차기를 날린다. 상대를 혼란에 빠뜨릴 수 있지만 실패하면 자신이 다친다.",
+    "descriptionEn": "Has a 30% chance to confuse the target. If this attack is not successful, the user loses half of its maximum HP, rounded down, as crash damage. Pokemon with the Magic Guard Ability are unaffected by crash damage."
   },
   "last-respects": {
     "id": 854,
@@ -9408,7 +10261,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": ""
+    "description": "쓰러진 동료들의 원혼을 모아 공격한다. 아군이 쓰러질 때마다 위력이 50씩 증가한다.",
+    "descriptionEn": "Power is equal to 50+(X*50), where X is the total number of times any Pokemon has fainted on the user's side, and X cannot be greater than 100."
   },
   "lumina-crash": {
     "id": 855,
@@ -9419,7 +10273,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": ""
+    "description": "눈부신 빛으로 공격한다. 상대의 특수방어를 2랭크 떨어뜨린다.",
+    "descriptionEn": "Has a 100% chance to lower the target's Special Defense by 2 stages."
   },
   "order-up": {
     "id": 856,
@@ -9430,7 +10285,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": ""
+    "description": "어써러셔가 싸리용의 지휘를 받아 공격한다. 싸리용의 형태에 따라 능력치가 오른다.",
+    "descriptionEn": "If an ally Tatsugiri has activated its Commander Ability, this move raises the user's Attack by 1 stage if the Tatsugiri is Curly Form, Defense by 1 stage if Droopy Form, or Speed by 1 stage if Stretchy Form. The effect happens even if the Tatsugiri that activated the effect has since fainted."
   },
   "jet-punch": {
     "id": 857,
@@ -9441,7 +10297,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": ""
+    "description": "물줄기를 두른 눈에 보이지 않는 펀치를 날린다. 반드시 선공한다.",
+    "descriptionEn": "No additional effect."
   },
   "spicy-extract": {
     "id": 858,
@@ -9452,7 +10309,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 15,
     "category": "status",
-    "description": ""
+    "description": "매운 추출물을 발사하여 상대의 방어를 2랭크 낮추고 공격을 2랭크 올린다.",
+    "descriptionEn": "Raises the target's Attack by 2 stages and lowers its Defense by 2 stages."
   },
   "spin-out": {
     "id": 859,
@@ -9463,7 +10321,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": ""
+    "description": "바퀴를 전속력으로 회전시켜 돌진한다. 자신의 스피드가 2랭크 떨어진다.",
+    "descriptionEn": "Lowers the user's Speed by 2 stages."
   },
   "population-bomb": {
     "id": 860,
@@ -9474,7 +10333,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "physical",
-    "description": ""
+    "description": "쥐 무리가 연속으로 공격한다. 1~10회 연속으로 명중한다.",
+    "descriptionEn": "Hits ten times. This move checks accuracy for each hit, and the attack ends if the target avoids a hit. If one of the hits breaks the target's substitute, it will take damage for the remaining hits. If the user has the Skill Link Ability, this move will always hit ten times. If the user is holding Loaded Dice, this move hits four to ten times at random without checking accuracy between hits."
   },
   "ice-spinner": {
     "id": 861,
@@ -9485,7 +10345,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": ""
+    "description": "얼음의 힘을 두르고 회전하며 필드의 필드 효과를 모두 제거한다.",
+    "descriptionEn": "Ends the effects of Electric Terrain, Grassy Terrain, Misty Terrain, and Psychic Terrain."
   },
   "glaive-rush": {
     "id": 862,
@@ -9496,7 +10357,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": ""
+    "description": "If this move is successful, moves targeted at the user deal double damage and do not check accuracy until the user's next turn.",
+    "descriptionEn": "If this move is successful, moves targeted at the user deal double damage and do not check accuracy until the user's next turn."
   },
   "revival-blessing": {
     "id": 863,
@@ -9507,7 +10369,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 1,
     "category": "status",
-    "description": ""
+    "description": "A fainted party member is selected and revived with 1/2 its max HP, rounded down. Fails if there are no fainted party members.",
+    "descriptionEn": "A fainted party member is selected and revived with 1/2 its max HP, rounded down. Fails if there are no fainted party members."
   },
   "salt-cure": {
     "id": 864,
@@ -9518,7 +10381,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": ""
+    "description": "상대를 소금에 절인다. 강철/물 타입 상대는 매 턴 최대 HP의 1/4 데미지를 받는다.",
+    "descriptionEn": "Causes damage to the target equal to 1/8 of its maximum HP (1/4 if the target is Steel or Water type), rounded down, at the end of each turn during effect. This effect ends when the target is no longer active."
   },
   "triple-dive": {
     "id": 865,
@@ -9529,7 +10393,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 10,
     "category": "physical",
-    "description": ""
+    "description": "물속으로 3번 연속 다이빙하여 공격한다.",
+    "descriptionEn": "Hits three times."
   },
   "mortal-spin": {
     "id": 866,
@@ -9540,7 +10405,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": ""
+    "description": "몸을 회전시켜 상대를 독 상태로 만들고 바인드/씨뿌리기 등을 날려버린다.",
+    "descriptionEn": "If this move is successful and the user has not fainted, the effects of Leech Seed and binding moves end for the user, and all hazards are removed from the user's side of the field. Has a 100% chance to poison the target."
   },
   "doodle": {
     "id": 867,
@@ -9551,7 +10417,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "status",
-    "description": ""
+    "description": "상대의 특성을 흉내 내어 자신과 아군의 특성을 상대의 특성으로 바꾼다.",
+    "descriptionEn": "The user and its ally's Abilities change to match the target's Ability. Does not change Ability if the user's or its ally's is As One, Battle Bond, Comatose, Disguise, Gulp Missile, Ice Face, Multitype, Power Construct, RKS System, Schooling, Shields Down, Stance Change, Tera Shift, Zen Mode, Zero to Hero, or already matches the target. Fails if both the user and its ally's Ability already matches the target, or if the target's Ability is As One, Battle Bond, Comatose, Commander, Disguise, Embody Aspect, Flower Gift, Forecast, Hunger Switch, Ice Face, Illusion, Imposter, Multitype, Neutralizing Gas, Poison Puppeteer, Power Construct, Power of Alchemy, Protosynthesis, Quark Drive, Receiver, RKS System, Schooling, Shields Down, Stance Change, Tera Shell, Tera Shift, Teraform Zero, Trace, Wonder Guard, Zen Mode, or Zero to Hero."
   },
   "fillet-away": {
     "id": 868,
@@ -9562,7 +10429,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": ""
+    "description": "자신의 살점을 깎아내어 공격, 특수공격, 스피드를 2랭크 올린다.",
+    "descriptionEn": "Raises the user's Attack, Special Attack, and Speed by 2 stages in exchange for the user losing 1/2 of its maximum HP, rounded down. Fails if the user would faint or if its Attack, Special Attack, and Speed stat stages would not change."
   },
   "kowtow-cleave": {
     "id": 869,
@@ -9573,7 +10441,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "physical",
-    "description": ""
+    "description": "상대에게 절을 하는 척하며 기습 베기를 날린다. 필중 공격기이다.",
+    "descriptionEn": "This move does not check accuracy."
   },
   "flower-trick": {
     "id": 870,
@@ -9584,7 +10453,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "physical",
-    "description": ""
+    "description": "속임수 꽃다발을 던져 공격한다. 반드시 명중하며 항상 급소에 맞는다.",
+    "descriptionEn": "This move is always a critical hit unless the target is under the effect of Lucky Chant or has the Battle Armor or Shell Armor Abilities. This move does not check accuracy."
   },
   "torch-song": {
     "id": 871,
@@ -9595,7 +10465,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": ""
+    "description": "노래를 부르며 불꽃을 발사한다. 자신의 특수공격이 1랭크 오른다.",
+    "descriptionEn": "Has a 100% chance to raise the user's Special Attack by 1 stage."
   },
   "aqua-step": {
     "id": 872,
@@ -9606,7 +10477,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": ""
+    "description": "경쾌한 스텝을 밟으며 발차기를 날린다. 자신의 스피드가 1랭크 오른다.",
+    "descriptionEn": "Has a 100% chance to raise the user's Speed by 1 stage."
   },
   "raging-bull": {
     "id": 873,
@@ -9617,7 +10489,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": ""
+    "description": "If this attack does not miss, the effects of Reflect, Light Screen, and Aurora Veil end for the target's side of the field before damage is calculated. If the user's current form is a Paldean Tauros, this move's type changes to match. Fighting type for Combat Breed, Fire type for Blaze Breed, and Water type for Aqua Breed.",
+    "descriptionEn": "If this attack does not miss, the effects of Reflect, Light Screen, and Aurora Veil end for the target's side of the field before damage is calculated. If the user's current form is a Paldean Tauros, this move's type changes to match. Fighting type for Combat Breed, Fire type for Blaze Breed, and Water type for Aqua Breed."
   },
   "make-it-rain": {
     "id": 874,
@@ -9628,7 +10501,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": ""
+    "description": "Lowers the user's Special Attack by 1 stage.",
+    "descriptionEn": "Lowers the user's Special Attack by 1 stage."
   },
   "psyblade": {
     "id": 875,
@@ -9639,7 +10513,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": ""
+    "description": "사이코 에너지 검으로 베어 공격한다. 일렉트릭필드 상태에서 위력이 1.5배가 된다.",
+    "descriptionEn": "If the current terrain is Electric Terrain, this move's power is multiplied by 1.5."
   },
   "hydro-steam": {
     "id": 876,
@@ -9650,7 +10525,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "special",
-    "description": ""
+    "description": "뜨거운 증기 광선을 발사한다. 쾌청 상태에서도 위력이 감소하지 않고 오히려 증가한다.",
+    "descriptionEn": "If the current weather is Sun and the user is not holding Utility Umbrella, this move's damage is multiplied by 1.5 instead of halved for being Water type."
   },
   "ruination": {
     "id": 877,
@@ -9661,7 +10537,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 10,
     "category": "special",
-    "description": ""
+    "description": "Deals damage to the target equal to half of its current HP, rounded down, but not less than 1 HP.",
+    "descriptionEn": "Deals damage to the target equal to half of its current HP, rounded down, but not less than 1 HP."
   },
   "collision-course": {
     "id": 878,
@@ -9672,7 +10549,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": ""
+    "description": "Damage is multiplied by 1.3333 if this move is super effective against the target.",
+    "descriptionEn": "Damage is multiplied by 1.3333 if this move is super effective against the target."
   },
   "electro-drift": {
     "id": 879,
@@ -9683,7 +10561,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": ""
+    "description": "Damage is multiplied by 1.3333 if this move is super effective against the target.",
+    "descriptionEn": "Damage is multiplied by 1.3333 if this move is super effective against the target."
   },
   "shed-tail": {
     "id": 880,
@@ -9694,7 +10573,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": ""
+    "description": "The user takes 1/2 of its maximum HP, rounded up, and creates a substitute that has 1/4 of the user's maximum HP, rounded down. The user is replaced with another Pokemon in its party and the selected Pokemon has the substitute transferred to it. Fails if the user would faint, or if there are no unfainted party members.",
+    "descriptionEn": "The user takes 1/2 of its maximum HP, rounded up, and creates a substitute that has 1/4 of the user's maximum HP, rounded down. The user is replaced with another Pokemon in its party and the selected Pokemon has the substitute transferred to it. Fails if the user would faint, or if there are no unfainted party members."
   },
   "chilly-reception": {
     "id": 881,
@@ -9705,7 +10585,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": ""
+    "description": "For 5 turns, the weather becomes Snow. The user switches out even if it is trapped and is replaced immediately by a selected party member. The user does not switch out if there are no unfainted party members.",
+    "descriptionEn": "For 5 turns, the weather becomes Snow. The user switches out even if it is trapped and is replaced immediately by a selected party member. The user does not switch out if there are no unfainted party members."
   },
   "tidy-up": {
     "id": 882,
@@ -9716,7 +10597,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": ""
+    "description": "Raises the user's Attack and Speed by 1 stage. Removes substitutes from all active Pokemon and ends the effects of Spikes, Stealth Rock, Sticky Web, and Toxic Spikes for both sides.",
+    "descriptionEn": "Raises the user's Attack and Speed by 1 stage. Removes substitutes from all active Pokemon and ends the effects of Spikes, Stealth Rock, Sticky Web, and Toxic Spikes for both sides."
   },
   "snowscape": {
     "id": 883,
@@ -9727,7 +10609,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": ""
+    "description": "For 5 turns, the weather becomes Snow. During the effect, the Defense of Ice-type Pokemon is multiplied by 1.5 when taking damage from a physical attack. Lasts for 8 turns if the user is holding Icy Rock. Fails if the current weather is Snow.",
+    "descriptionEn": "For 5 turns, the weather becomes Snow. During the effect, the Defense of Ice-type Pokemon is multiplied by 1.5 when taking damage from a physical attack. Lasts for 8 turns if the user is holding Icy Rock. Fails if the current weather is Snow."
   },
   "pounce": {
     "id": 884,
@@ -9738,7 +10621,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": ""
+    "description": "Has a 100% chance to lower the target's Speed by 1 stage.",
+    "descriptionEn": "Has a 100% chance to lower the target's Speed by 1 stage."
   },
   "trailblaze": {
     "id": 885,
@@ -9749,7 +10633,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": ""
+    "description": "Has a 100% chance to raise the user's Speed by 1 stage.",
+    "descriptionEn": "Has a 100% chance to raise the user's Speed by 1 stage."
   },
   "chilling-water": {
     "id": 886,
@@ -9760,7 +10645,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "special",
-    "description": ""
+    "description": "Has a 100% chance to lower the target's Attack by 1 stage.",
+    "descriptionEn": "Has a 100% chance to lower the target's Attack by 1 stage."
   },
   "hyper-drill": {
     "id": 887,
@@ -9771,7 +10657,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": ""
+    "description": "끝이 뾰족한 드릴로 방어를 관통하여 공격한다. 방어/판별 상태를 뚫는다.",
+    "descriptionEn": "Bypasses protection without breaking it."
   },
   "twin-beam": {
     "id": 888,
@@ -9782,7 +10669,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": ""
+    "description": "두 눈에서 신비한 광선을 2회 연속으로 발사한다.",
+    "descriptionEn": "Hits twice. If the first hit breaks the target's substitute, it will take damage for the second hit."
   },
   "rage-fist": {
     "id": 889,
@@ -9793,7 +10681,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": ""
+    "description": "맞을 때마다 분노가 축적된다. 피격 횟수당 위력이 50씩 영구 증가한다.",
+    "descriptionEn": "Power is equal to 50+(X*50), where X is the total number of times the user has been hit by a damaging attack during the battle, even if the user did not lose HP from the attack. X cannot be greater than 6 and does not reset upon switching out or fainting. Each hit of a multi-hit attack is counted, but confusion damage is not counted."
   },
   "armor-cannon": {
     "id": 890,
@@ -9804,7 +10693,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": ""
+    "description": "갑옷의 일부를 탄환으로 발사한다. 자신의 방어와 특수방어가 떨어진다.",
+    "descriptionEn": "Lowers the user's Defense and Special Defense by 1 stage."
   },
   "bitter-blade": {
     "id": 891,
@@ -9815,7 +10705,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": ""
+    "description": "검으로 상대의 생명력을 흡수한다. 가한 데미지의 절반만큼 HP를 회복한다.",
+    "descriptionEn": "The user recovers 1/2 the HP lost by the target, rounded half up. If Big Root is held by the user, the HP recovered is 1.3x normal, rounded half down."
   },
   "double-shock": {
     "id": 892,
@@ -9826,7 +10717,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": ""
+    "description": "자신의 모든 전기를 방출하여 공격한다. 사용 후 자신의 전기 타입이 사라진다.",
+    "descriptionEn": "Fails unless the user is an Electric type. If this move is successful and the user is not Terastallized, the user's Electric type becomes typeless as long as it remains active."
   },
   "gigaton-hammer": {
     "id": 893,
@@ -9837,7 +10729,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": ""
+    "description": "거대한 철퇴로 강타한다. 2회 연속으로 사용할 수 없다.",
+    "descriptionEn": "Cannot be selected the turn after it's used."
   },
   "comeuppance": {
     "id": 894,
@@ -9848,7 +10741,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": ""
+    "description": "Deals damage to the last opposing Pokemon to hit the user with a physical or special attack this turn equal to 1.5 times the HP lost by the user from that attack, rounded down. If the user did not lose HP from that attack, this move deals 1 HP of damage instead. If that opposing Pokemon's position is no longer in use and there is another opposing Pokemon on the field, the damage is done to it instead. Only the last hit of a multi-hit attack is counted. Fails if the user was not hit by an opposing Pokemon's physical or special attack this turn.",
+    "descriptionEn": "Deals damage to the last opposing Pokemon to hit the user with a physical or special attack this turn equal to 1.5 times the HP lost by the user from that attack, rounded down. If the user did not lose HP from that attack, this move deals 1 HP of damage instead. If that opposing Pokemon's position is no longer in use and there is another opposing Pokemon on the field, the damage is done to it instead. Only the last hit of a multi-hit attack is counted. Fails if the user was not hit by an opposing Pokemon's physical or special attack this turn."
   },
   "aqua-cutter": {
     "id": 895,
@@ -9859,7 +10753,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 20,
     "category": "physical",
-    "description": ""
+    "description": "Has a higher chance for a critical hit.",
+    "descriptionEn": "Has a higher chance for a critical hit."
   },
   "blazing-torque": {
     "id": 896,
@@ -9870,7 +10765,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": ""
+    "description": "Has a 30% chance to burn the target.",
+    "descriptionEn": "Has a 30% chance to burn the target."
   },
   "wicked-torque": {
     "id": 897,
@@ -9881,7 +10777,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": ""
+    "description": "Has a 10% chance to cause the target to fall asleep.",
+    "descriptionEn": "Has a 10% chance to cause the target to fall asleep."
   },
   "noxious-torque": {
     "id": 898,
@@ -9892,7 +10789,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": ""
+    "description": "Has a 30% chance to poison the target.",
+    "descriptionEn": "Has a 30% chance to poison the target."
   },
   "combat-torque": {
     "id": 899,
@@ -9903,7 +10801,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": ""
+    "description": "Has a 30% chance to paralyze the target.",
+    "descriptionEn": "Has a 30% chance to paralyze the target."
   },
   "magical-torque": {
     "id": 900,
@@ -9914,7 +10813,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": ""
+    "description": "Has a 30% chance to confuse the target.",
+    "descriptionEn": "Has a 30% chance to confuse the target."
   },
   "blood-moon": {
     "id": 901,
@@ -9925,7 +10825,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": ""
+    "description": "붉은 달의 힘을 해방하여 공격한다. 2회 연속으로 사용할 수 없다.",
+    "descriptionEn": "Cannot be selected the turn after it's used."
   },
   "matcha-gotcha": {
     "id": 902,
@@ -9936,7 +10837,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 90,
     "pp": 15,
     "category": "special",
-    "description": ""
+    "description": "따뜻한 말차를 뿜어 공격한다. 데미지의 절반을 회복하며 화상을 입힐 때가 있다.",
+    "descriptionEn": "Has a 20% chance to burn the target. The user recovers 1/2 the HP lost by the target, rounded half up. If Big Root is held by the user, the HP recovered is 1.3x normal, rounded half down. The target thaws out if it is frozen."
   },
   "syrup-bomb": {
     "id": 903,
@@ -9947,7 +10849,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 85,
     "pp": 10,
     "category": "special",
-    "description": ""
+    "description": "끈적이는 시럽을 던져 공격한다. 3턴 동안 상대의 스피드를 매 턴 1랭크씩 낮춘다.",
+    "descriptionEn": "If this move is successful, it causes the target's Speed to be lowered by 1 stage at the end of each turn for 3 turns."
   },
   "ivy-cudgel": {
     "id": 904,
@@ -9958,7 +10861,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": ""
+    "description": "덩굴 방망이로 내리친다. 착용한 가면의 형태에 따라 타입이 바뀐다.",
+    "descriptionEn": "Has a higher chance for a critical hit. If the user is an Ogerpon, this move's type changes depending on its form. Water type for Wellspring Mask, Fire type for Hearthflame Mask, and Rock type for Cornerstone Mask."
   },
   "electro-shot": {
     "id": 905,
@@ -9969,7 +10873,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": ""
+    "description": "전기를 모아 특수공격을 1랭크 올린 뒤 다음 턴에 번개를 발사한다. 비가 오면 즉시 발사된다.",
+    "descriptionEn": "This attack charges on the first turn and executes on the second. Raises the user's Special Attack by 1 stage on the first turn. If the user is holding a Power Herb or the weather is Heavy Rain or Rain, the move completes in one turn. If the user is holding Utility Umbrella and the weather is Heavy Rain or Rain, the move still requires a turn to charge."
   },
   "tera-starstorm": {
     "id": 906,
@@ -9980,7 +10885,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": ""
+    "description": "테라스탈 에너지의 유성을 쏟아붓는다. 스텔라 형태에서는 전체 공격기가 된다.",
+    "descriptionEn": "If the user is a Terapagos in Stellar Form, this move's type becomes Stellar, hits all opposing Pokemon, and becomes a physical attack if the user's Attack is greater than its Special Attack, including stat stage changes."
   },
   "fickle-beam": {
     "id": 907,
@@ -9991,7 +10897,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": ""
+    "description": "변덕스러운 빔을 발사한다. 때때로 모든 머리가 힘을 합쳐 위력이 2배가 된다.",
+    "descriptionEn": "Has a 30% chance this move's power is doubled."
   },
   "burning-bulwark": {
     "id": 908,
@@ -10002,7 +10909,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "status",
-    "description": ""
+    "description": "불꽃의 방패로 공격을 막아낸다. 접촉한 상대에게 화상을 입힌다.",
+    "descriptionEn": "The user is protected from most attacks made by other Pokemon during this turn, and Pokemon trying to make contact with the user become burned. Non-damaging moves go through this protection. This move has a 1/X chance of being successful, where X starts at 1 and triples each time this move is successfully used. X resets to 1 if this move fails, if the user's last move used is not Baneful Bunker, Burning Bulwark, Detect, Endure, King's Shield, Max Guard, Obstruct, Protect, Quick Guard, Silk Trap, Spiky Shield, or Wide Guard, or if it was one of those moves and the user's protection was broken. Fails if the user moves last this turn."
   },
   "thunderclap": {
     "id": 909,
@@ -10013,7 +10921,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": ""
+    "description": "상대가 공격 기술을 쓰려고 할 때 먼저 벼락을 내려친다.",
+    "descriptionEn": "Fails if the target did not select a physical attack, special attack, or Me First for use this turn, or if the target moves before the user."
   },
   "mighty-cleave": {
     "id": 910,
@@ -10024,7 +10933,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "physical",
-    "description": ""
+    "description": "거대한 바위 검으로 방어를 관통하여 공격한다.",
+    "descriptionEn": "Bypasses protection without breaking it."
   },
   "tachyon-cutter": {
     "id": 911,
@@ -10035,7 +10945,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 10,
     "category": "special",
-    "description": ""
+    "description": "입자 칼날을 2회 연속으로 발사한다. 반드시 명중한다.",
+    "descriptionEn": "Hits twice. If the first hit breaks the target's substitute, it will take damage for the second hit. This move does not check accuracy."
   },
   "hard-press": {
     "id": 912,
@@ -10046,7 +10957,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": ""
+    "description": "상대를 강하게 짓누른다. 상대의 남은 HP가 많을수록 위력이 올라간다.",
+    "descriptionEn": "Power is equal to 100 * (target's current HP / target's maximum HP), rounded half down, but not less than 1."
   },
   "dragon-cheer": {
     "id": 913,
@@ -10057,7 +10969,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": null,
     "pp": 15,
     "category": "status",
-    "description": ""
+    "description": "포효하여 아군의 사기를 북돋운다. 아군의 급소율을 올린다.",
+    "descriptionEn": "Raises the target's chance for a critical hit by 1 stage, or by 2 stages if the target is Dragon type. Fails if there is no ally adjacent to the user, or if the target already has this effect or the Focus Energy effect. Baton Pass can be used to transfer this effect to an ally."
   },
   "alluring-voice": {
     "id": 914,
@@ -10068,7 +10981,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": ""
+    "description": "매혹적인 목소리로 공격한다. 랭크가 상승한 상대를 혼란 상태로 만든다.",
+    "descriptionEn": "Has a 100% chance to confuse the target if it had a stat stage raised this turn."
   },
   "temper-flare": {
     "id": 915,
@@ -10079,7 +10993,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "physical",
-    "description": ""
+    "description": "분노의 불꽃을 발사한다. 직전 기술이 빗나갔다면 위력이 2배가 된다.",
+    "descriptionEn": "Power doubles if the user's last move on the previous turn, including moves called by other moves or those used through Instruct, Magic Coat, Snatch, or the Dancer or Magic Bounce Abilities, failed to do any of its normal effects, not including damage from an unsuccessful High Jump Kick, Jump Kick, or Mind Blown, or if the user was prevented from moving by any effect other than recharging or Sky Drop. A move that was blocked by Baneful Bunker, Detect, King's Shield, Protect, Spiky Shield, Crafty Shield, Mat Block, Quick Guard, or Wide Guard will not double this move's power, nor will Bounce or Fly ending early due to the effect of Gravity, Smack Down, or Thousand Arrows."
   },
   "supercell-slam": {
     "id": 916,
@@ -10090,7 +11005,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 95,
     "pp": 15,
     "category": "physical",
-    "description": ""
+    "description": "전신에 전기를 두르고 돌진한다. 빗나가면 자신이 큰 데미지를 입는다.",
+    "descriptionEn": "If this attack is not successful, the user loses half of its maximum HP, rounded down, as crash damage. Pokemon with the Magic Guard Ability are unaffected by crash damage. Damage doubles and no accuracy check is done if the target has used Minimize while active."
   },
   "psychic-noise": {
     "id": 917,
@@ -10101,7 +11017,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 10,
     "category": "special",
-    "description": ""
+    "description": "불쾌한 음파로 공격한다. 공격받은 상대는 2턴 동안 회복을 할 수 없다.",
+    "descriptionEn": "For 2 turns, the target is prevented from restoring any HP as long as it remains active. During the effect, healing and draining moves are unusable, and Abilities and items that grant healing will not heal the user. If an affected Pokemon uses Baton Pass, the replacement will remain unable to restore its HP. Pain Split and the Regenerator Ability are unaffected."
   },
   "upper-hand": {
     "id": 918,
@@ -10112,7 +11029,8 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 15,
     "category": "physical",
-    "description": ""
+    "description": "상대의 선공기를 예측하여 기습한다. 상대를 풀죽게 만든다.",
+    "descriptionEn": "Has a 100% chance to make the target flinch. Fails if the target did not select a physical or special attack for use this turn with altered priority greater than 0, or if the target moves before the user."
   },
   "malignant-chain": {
     "id": 919,
@@ -10123,21 +11041,7 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "accuracy": 100,
     "pp": 5,
     "category": "special",
-    "description": ""
+    "description": "맹독의 사슬로 상대를 묶는다. 맹독과 혼란 상태를 동시에 부여할 수 있다.",
+    "descriptionEn": "Has a 50% chance to badly poison the target."
   }
 };
-
-export const MOVE_NAME_TO_ID: Record<string, string> = {};
-
-for (const [key, move] of Object.entries(MOVES_DATA)) {
-  MOVE_NAME_TO_ID[move.name.toLowerCase()] = key;
-  MOVE_NAME_TO_ID[move.nameKo.toLowerCase()] = key;
-  const cleanKo = move.nameKo.replace(/\s+/g, "").toLowerCase();
-  MOVE_NAME_TO_ID[cleanKo] = key;
-}
-
-export function getMoveInfo(query: string): MoveData | null {
-  const clean = query.trim().toLowerCase().replace(/\s+/g, "");
-  const key = MOVE_NAME_TO_ID[clean] || MOVE_NAME_TO_ID[query.trim().toLowerCase()] || query.toLowerCase().replace(/\s+/g, "-");
-  return MOVES_DATA[key] || null;
-}

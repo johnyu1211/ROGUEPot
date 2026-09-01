@@ -605,7 +605,7 @@ import { POKEMON_NAMES_KO, POKEMON_NAME_TO_DEX } from "../data/pokemonNamesKo.js
 
 // Full 1~1025 National Pokédex Korean Name dataset
 const DEX_TO_KOREAN_DICT: Record<number, string> = POKEMON_NAMES_KO;
-const KOREAN_POKEMON_DICT: Record<string, number> = POKEMON_NAME_TO_DEX;
+export const KOREAN_POKEMON_DICT: Record<string, number> = POKEMON_NAME_TO_DEX;
 
 /**
  * Fetches Pokémon data by National Pokédex number (1 ~ 1025)

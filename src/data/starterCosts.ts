@@ -76,6 +76,13 @@ export const STARTER_DATABASE: StarterEntry[] = [
     ability: "Run Away", abilityKo: "도주", hiddenAbility: "Hustle", hiddenAbilityKo: "의욕",
     passiveAbility: "Guts", passiveAbilityKo: "근성", starterMoves: ["Tackle", "Tail Whip", "Quick Attack"]
   },
+  {
+    dexNumber: 0, name: "Testsubject12", nameKo: "Testsubject12", speciesId: "testsubject12", gen: 1, cost: 1, reducedCost: 1,
+    types: ["normal"],
+    ability: "Limber", abilityKo: "유연", hiddenAbility: "Imposter", hiddenAbilityKo: "괴짜",
+    passiveAbility: "Moody", passiveAbilityKo: "변덕쟁이",
+    starterMoves: ["Transform", "Metronome", "Substitute", "Recover"]
+  },
 
   // Generation 2 (Johto)
   {
@@ -119,6 +126,13 @@ export const STARTER_DATABASE: StarterEntry[] = [
     types: ["bug", "poison"],
     ability: "Swarm", abilityKo: "벌레의알림", hiddenAbility: "Sniper", hiddenAbilityKo: "스나이퍼",
     passiveAbility: "Merciless", passiveAbilityKo: "무자비", starterMoves: ["Poison Sting", "String Shot", "Constrict"]
+  },
+  {
+    dexNumber: 191, name: "Sunkern", nameKo: "해너츠", speciesId: "sunkern", gen: 2, cost: 1, reducedCost: 1,
+    types: ["grass"],
+    ability: "Chlorophyll", abilityKo: "엽록소", hiddenAbility: "Solar Power", hiddenAbilityKo: "선파워",
+    passiveAbility: "Drought", passiveAbilityKo: "가뭄",
+    starterMoves: ["Absorb", "Growth", "Mega Drain", "Solar Beam"]
   },
 
   // Generation 3 (Hoenn)
@@ -403,4 +417,13 @@ export function getStartersByGen(gen: number): StarterEntry[] {
  */
 export function getStarterByDexNumber(dexNo: number): StarterEntry | undefined {
   return STARTER_DATABASE.find((s) => s.dexNumber === dexNo);
+}
+
+/**
+ * Get starter entry by Species ID
+ */
+export function getStarterBySpeciesId(speciesId: string): StarterEntry | undefined {
+  if (!speciesId) return undefined;
+  const clean = speciesId.toLowerCase().replace(/[\s_]+/g, "-");
+  return STARTER_DATABASE.find((s) => s.speciesId.toLowerCase() === clean);
 }
