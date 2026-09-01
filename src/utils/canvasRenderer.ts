@@ -5383,56 +5383,34 @@ export async function renderBattleScreen(options: BattleScreenOptions): Promise<
     drawFittedBattleSprite(ctx, playerSprite, pm.x, pm.y, pm.size);
   }
 
-  // 5. Top Wave & Banner
-  const isBagPhase = battle.phase === "BAG";
+  // 5. Top Right: Biome - Wave & Money
   const rawBiome = battle.biome || "Town";
   const biomeDisplay = isKo ? (BIOME_NAMES_KO[rawBiome.toLowerCase()] || rawBiome) : rawBiome;
   const waveText = `${biomeDisplay} - ${battle.wave || 1}`;
+  const moneyText = `₩${(battle.money || 0).toLocaleString()}`;
 
-  if (isBagPhase) {
-    // Full Top Banner for Bag Screen: Left = Money, Right = Biome - Wave
-    ctx.fillStyle = "rgba(17, 24, 39, 0.92)";
-    ctx.fillRect(0, 0, width, 30);
-    ctx.strokeStyle = "#1F2937";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(0, 30);
-    ctx.lineTo(width, 30);
-    ctx.stroke();
+  ctx.textAlign = "right";
+  ctx.textBaseline = "top";
+  const textX = width - 24;
 
-    ctx.textBaseline = "middle";
+  // 1) Biome - Wave (White text with dark outline)
+  const waveY = 14;
+  ctx.font = "bold 15px DungGeunMo";
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.85)";
+  ctx.lineWidth = 3.5;
+  ctx.lineJoin = "round";
+  ctx.strokeText(waveText, textX, waveY);
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fillText(waveText, textX, waveY);
 
-    // Left: Money
-    ctx.font = "bold 13px DungGeunMo";
-    ctx.fillStyle = "#FDE047";
-    ctx.textAlign = "left";
-    const moneyLabel = isKo ? `보유 금액: ₩${(battle.money || 0).toLocaleString()}` : `Money: ₩${(battle.money || 0).toLocaleString()}`;
-    ctx.fillText(moneyLabel, 14, 15);
-
-    // Right: Biome - Wave
-    ctx.font = "bold 14px DungGeunMo";
-    ctx.fillStyle = "#38BDF8";
-    ctx.textAlign = "right";
-    ctx.fillText(waveText, width - 14, 15);
-  } else {
-    // Standard Battle Screen: Clean White Text with Dark Outline (Biome - Wave)
-    ctx.font = "bold 15px DungGeunMo";
-    ctx.textAlign = "right";
-    ctx.textBaseline = "top";
-
-    const textX = width - 16;
-    const textY = 14;
-
-    // Dark Outline Stroke
-    ctx.strokeStyle = "rgba(0, 0, 0, 0.85)";
-    ctx.lineWidth = 3.5;
-    ctx.lineJoin = "round";
-    ctx.strokeText(waveText, textX, textY);
-
-    // Pure White Foreground
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fillText(waveText, textX, textY);
-  }
+  // 2) Money right below Biome (Gold yellow text with dark outline)
+  const moneyY = waveY + 20;
+  ctx.font = "bold 13px DungGeunMo";
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.85)";
+  ctx.lineWidth = 3.0;
+  ctx.strokeText(moneyText, textX, moneyY);
+  ctx.fillStyle = "#FDE047";
+  ctx.fillText(moneyText, textX, moneyY);
 
   const getStatusBadge = (mon: any) => {
     if (mon.status === "par") return isKo ? " [마비]" : " [PAR]";
@@ -5446,7 +5424,7 @@ export async function renderBattleScreen(options: BattleScreenOptions): Promise<
 
   // 6. Draw Authentic PokéRogue Enemy HUD Box
   const eh = BATTLE_LAYOUT_CONFIG.enemyHud;
-  const enemyHudY = isBagPhase ? 38 : eh.y;
+  const enemyHudY = eh.y;
   let cleanEnemyName = getPokemonDisplayName(enemy, isKo).replace(/[^\w\s가-힣0-9\(\)\-\.]/g, "").trim();
   const enemySpeciesData = POKEMON_SPECIES_DATA[enemy.speciesId] || POKEMON_SPECIES_DATA[enemyActiveSpecies] || null;
   const enemyTypes = enemy.types || (enemySpeciesData ? enemySpeciesData.types : ["normal"]);

@@ -671,7 +671,8 @@ export class BattleService {
     // 3. Status Move Processing
     if (activeMove.category === "status") {
       const statLog = this.applyStatusMove(actor, target, activeMove, actorName, targetName, isKo, battle);
-      return { log: `${actorName}의 ${isKo ? activeMove.nameKo : activeMove.name.toUpperCase()}!\n${statLog}`, damage: 0 };
+      const statusHeader = isKo ? `${actorName}의 ${activeMove.nameKo}!` : `${actorName} used ${activeMove.name.toUpperCase()}!`;
+      return { log: `${statusHeader}\n${statLog}`, damage: 0 };
     }
 
     const moveNameLower = activeMove.name.toLowerCase().replace(/[\s_]+/g, "-");
