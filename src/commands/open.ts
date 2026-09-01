@@ -54,38 +54,55 @@ export const command: Command = {
 
           const threadsToClose = new Map<string, any>();
 
-          // A. Fetch all active threads in the current channel
+          // A. Fetch all active threads in the current channel & guild
           const channelActive = await channel.threads.fetchActive().catch(() => null);
           if (channelActive?.threads) {
-            for (const [id, t] of channelActive.threads) {
-              threadsToClose.set(id, t);
-            }
+            for (const [id, t] of channelActive.threads) threadsToClose.set(id, t);
           }
 
-          // B. Fetch all active threads in the guild
           const guildActive = await interaction.guild.channels.fetchActiveThreads().catch(() => null);
           if (guildActive?.threads) {
-            for (const [id, t] of guildActive.threads) {
-              threadsToClose.set(id, t);
-            }
+            for (const [id, t] of guildActive.threads) threadsToClose.set(id, t);
           }
 
-          // C. Filter and completely DELETE previous threads and messages belonging to this user
-          for (const [_, existingThread] of threadsToClose) {
-            const tNameLower = existingThread.name.toLowerCase();
-            const isMatch = userTerms.some((term) => tNameLower.includes(term));
+          // B. Fetch all archived threads in the channel (both public and private)
+          const channelArchivedPub = await (channel as any).threads.fetchArchived({ type: "public" }).catch(() => null);
+          if (channelArchivedPub?.threads) {
+            for (const [id, t] of channelArchivedPub.threads) threadsToClose.set(id, t);
+          }
 
-            if (isMatch || (existingThread.ownerId === interaction.client.user.id && (tNameLower.includes("pokérogue") || tNameLower.includes("pokerogue")))) {
-              // Delete the thread completely (which removes all messages and the thread entirely from Discord)
-              await existingThread.delete(`Deleted previous PokéRogue session for ${interaction.user.tag}`).catch(async () => {
-                // Fallback to locking and archiving if deletion permission is lacking
+          const channelArchivedPriv = await (channel as any).threads.fetchArchived({ type: "private" }).catch(() => null);
+          if (channelArchivedPriv?.threads) {
+            for (const [id, t] of channelArchivedPriv.threads) threadsToClose.set(id, t);
+          }
+
+          // C. Also check guild channel cache
+          for (const [id, ch] of interaction.guild.channels.cache) {
+            if (ch.isThread()) threadsToClose.set(id, ch);
+          }
+
+          console.log(`[OPEN] Found total ${threadsToClose.size} threads to check for user: ${interaction.user.tag}`);
+
+          // D. Filter and completely DELETE previous threads and messages belonging to this user
+          for (const [id, existingThread] of threadsToClose) {
+            const tNameLower = (existingThread.name || "").toLowerCase();
+            const isMatch = userTerms.some((term) => tNameLower.includes(term));
+            const isBotPokeRogue = existingThread.ownerId === interaction.client.user.id && (tNameLower.includes("pokérogue") || tNameLower.includes("pokerogue"));
+
+            if (isMatch || isBotPokeRogue) {
+              console.log(`[OPEN] Deleting previous thread: "${existingThread.name}" (ID: ${id})`);
+              try {
+                await existingThread.delete(`Deleted previous PokéRogue session for ${interaction.user.tag}`);
+                console.log(`[OPEN] Successfully deleted thread: ${id}`);
+              } catch (delErr) {
+                console.warn(`[OPEN] Delete failed for ${id}, falling back to lock/archive:`, delErr);
                 await existingThread.setLocked(true).catch(() => null);
                 await existingThread.setArchived(true).catch(() => null);
-              });
+              }
             }
           }
         } catch (threadCloseErr) {
-          console.warn("[OPEN] Note on deleting existing threads:", threadCloseErr);
+          console.error("[OPEN] Error during thread cleanup:", threadCloseErr);
         }
 
         // 2. Create the fresh new thread
