@@ -28,7 +28,7 @@ export const BATTLE_LAYOUT_CONFIG = {
   // 2. 아군 발판 (좌하단 전경 1인칭 미러링)
   playerPlatform: {
     scale: 2.0,
-    x: -10,
+    x: -25,
     y: 118,
   },
   // 3. 상대 포켓몬 (원경)

@@ -556,6 +556,111 @@ export class BattleService {
       }
     }
 
+    // 3. AUTO-CONTINUATION: If player is locked in a 2-turn charging move (Solar Beam, Fly, Dig, etc.)
+    // or must recharge (Hyper Beam, etc.), automatically resolve Turn 2 in sequence without manual clicks!
+    if (playerMon.hp > 0 && enemyMon.hp > 0 && (playerMon.chargingMove || playerMon.mustRecharge)) {
+      if (playerMon.chargingMove) {
+        const nextMoveKey = playerMon.chargingMove;
+        const nextMove = MOVES_DATA[nextMoveKey] || pMove;
+
+        // Reset single-turn flags for Turn 2
+        playerMon.isProtected = false;
+        enemyMon.isProtected = false;
+        playerMon.isFlinched = false;
+        enemyMon.isFlinched = false;
+
+        // Enemy chooses next random move
+        const eMoveRaw2 = enemyMon.moves[Math.floor(Math.random() * enemyMon.moves.length)] || "Tackle";
+        const eMoveKey2 = eMoveRaw2.toLowerCase().replace(/[\s_]+/g, "-");
+        const eMove2 = MOVES_DATA[eMoveKey2] || {
+          id: 0,
+          name: eMoveRaw2,
+          nameKo: eMoveRaw2,
+          type: "normal",
+          power: 40,
+          accuracy: 100,
+          pp: 35,
+          category: "physical",
+          description: "기본 공격 기술",
+        };
+
+        const pPri2 = this.getMovePriority(nextMoveKey);
+        const ePri2 = this.getMovePriority(eMoveKey2);
+        const pSpd2 = playerMon.speed * getStageMultiplier(playerMon.stages.spe) * (playerMon.status === "par" ? 0.5 : 1.0);
+        const eSpd2 = enemyMon.speed * getStageMultiplier(enemyMon.stages.spe) * (enemyMon.status === "par" ? 0.5 : 1.0);
+
+        let pFirst2 = true;
+        if (pPri2 > ePri2) pFirst2 = true;
+        else if (pPri2 < ePri2) pFirst2 = false;
+        else pFirst2 = pSpd2 >= eSpd2;
+
+        const firstActor2 = pFirst2 ? playerMon : enemyMon;
+        const firstMove2 = pFirst2 ? nextMove : eMove2;
+        const secondActor2 = pFirst2 ? enemyMon : playerMon;
+        const secondMove2 = pFirst2 ? eMove2 : nextMove;
+
+        const r1 = this.executeSingleAction(firstActor2, secondActor2, firstMove2, pFirst2, isKo, battle);
+        turnLogs.push(r1.log);
+
+        if (secondActor2.hp > 0 && !secondActor2.isFlinched) {
+          const r2 = this.executeSingleAction(secondActor2, firstActor2, secondMove2, !pFirst2, isKo, battle);
+          turnLogs.push(r2.log);
+        } else if (secondActor2.isFlinched && secondActor2.hp > 0) {
+          const monName = pFirst2 ? (isKo ? enemyMon.nameKo : enemyMon.name) : playerMon.name;
+          turnLogs.push(isKo ? `${monName}(은)는 풀이 죽어 기술을 쓸 수 없었다!` : `${monName} flinched and couldn't move!`);
+        }
+
+        this.processTurnEndEffects(playerMon, isKo, turnLogs, battle.weather);
+        this.processTurnEndEffects(enemyMon, isKo, turnLogs, battle.weather);
+
+        if (battle.weather && battle.weatherTurns) {
+          battle.weatherTurns -= 1;
+          if (battle.weatherTurns <= 0) {
+            battle.weather = null;
+            battle.weatherTurns = undefined;
+            turnLogs.push(isKo ? `날씨가 원래대로 돌아왔다!` : `The weather returned to normal!`);
+          }
+        }
+      } else if (playerMon.mustRecharge) {
+        playerMon.isProtected = false;
+        enemyMon.isProtected = false;
+        playerMon.isFlinched = false;
+        enemyMon.isFlinched = false;
+
+        const eMoveRaw2 = enemyMon.moves[Math.floor(Math.random() * enemyMon.moves.length)] || "Tackle";
+        const eMoveKey2 = eMoveRaw2.toLowerCase().replace(/[\s_]+/g, "-");
+        const eMove2 = MOVES_DATA[eMoveKey2] || {
+          id: 0,
+          name: eMoveRaw2,
+          nameKo: eMoveRaw2,
+          type: "normal",
+          power: 40,
+          accuracy: 100,
+          pp: 35,
+          category: "physical",
+          description: "기본 공격 기술",
+        };
+
+        turnLogs.push(isKo ? `${playerMon.name}(은)는 반동으로 움직일 수 없다!` : `${playerMon.name} must recharge!`);
+        playerMon.mustRecharge = false;
+
+        const rEnemy = this.executeSingleAction(enemyMon, playerMon, eMove2, false, isKo, battle);
+        turnLogs.push(rEnemy.log);
+
+        this.processTurnEndEffects(playerMon, isKo, turnLogs, battle.weather);
+        this.processTurnEndEffects(enemyMon, isKo, turnLogs, battle.weather);
+
+        if (battle.weather && battle.weatherTurns) {
+          battle.weatherTurns -= 1;
+          if (battle.weatherTurns <= 0) {
+            battle.weather = null;
+            battle.weatherTurns = undefined;
+            turnLogs.push(isKo ? `날씨가 원래대로 돌아왔다!` : `The weather returned to normal!`);
+          }
+        }
+      }
+    }
+
     // Sync HP with player party slot
     battle.playerParty[battle.playerActiveIndex].hp = playerMon.hp;
 
