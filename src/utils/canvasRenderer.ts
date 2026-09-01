@@ -5268,6 +5268,27 @@ export async function getArenaAssets(biomeName: string): Promise<{ bg: Image | n
   }
 }
 
+export const BIOME_NAMES_KO: Record<string, string> = {
+  town: "마을",
+  plains: "평원",
+  grass: "풀숲",
+  forest: "숲",
+  cave: "동굴",
+  sea: "바다",
+  metropolis: "대도시",
+  dojo: "도장",
+  volcano: "화산",
+  mountain: "산",
+  jungle: "정글",
+  swamp: "늪지대",
+  desert: "사막",
+  "snowy forest": "설원",
+  "power plant": "발전소",
+  graveyard: "묘지",
+  space: "우주",
+  abyss: "심연",
+};
+
 /**
  * Renders the Authentic PokéRogue Battle Screen (560x380) with 2x SuperSampling
  */
@@ -5364,8 +5385,12 @@ export async function renderBattleScreen(options: BattleScreenOptions): Promise<
 
   // 5. Top Wave & Banner
   const isBagPhase = battle.phase === "BAG";
+  const rawBiome = battle.biome || "Town";
+  const biomeDisplay = isKo ? (BIOME_NAMES_KO[rawBiome.toLowerCase()] || rawBiome) : rawBiome;
+  const waveText = `${biomeDisplay} - ${battle.wave || 1}`;
+
   if (isBagPhase) {
-    // Full Top Banner for Bag Screen: Left = Money, Right = Wave & Biome
+    // Full Top Banner for Bag Screen: Left = Money, Right = Biome - Wave
     ctx.fillStyle = "rgba(17, 24, 39, 0.92)";
     ctx.fillRect(0, 0, width, 30);
     ctx.strokeStyle = "#1F2937";
@@ -5384,33 +5409,29 @@ export async function renderBattleScreen(options: BattleScreenOptions): Promise<
     const moneyLabel = isKo ? `보유 금액: ₩${(battle.money || 0).toLocaleString()}` : `Money: ₩${(battle.money || 0).toLocaleString()}`;
     ctx.fillText(moneyLabel, 14, 15);
 
-    // Right: Wave & Biome
+    // Right: Biome - Wave
     ctx.font = "bold 14px DungGeunMo";
     ctx.fillStyle = "#38BDF8";
     ctx.textAlign = "right";
-    ctx.fillText(`Wave ${battle.wave || 1} - ${battle.biome}`, width - 14, 15);
+    ctx.fillText(waveText, width - 14, 15);
   } else {
-    // Standard Battle Screen: Top-Right Wave Badge
-    const waveText = `Wave ${battle.wave || 1}`;
-    ctx.font = "bold 13px DungGeunMo";
-    const waveW = ctx.measureText(waveText).width;
-    const badgeW = waveW + 16;
-    const badgeH = 20;
-    const badgeX = width - badgeW - 14;
-    const badgeY = 12;
+    // Standard Battle Screen: Clean White Text with Dark Outline (Biome - Wave)
+    ctx.font = "bold 15px DungGeunMo";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "top";
 
-    ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
-    ctx.beginPath();
-    ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 4);
-    ctx.fill();
-    ctx.strokeStyle = "#0D9488";
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
+    const textX = width - 16;
+    const textY = 14;
 
-    ctx.fillStyle = "#38BDF8";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(waveText, badgeX + badgeW / 2, badgeY + badgeH / 2 + 0.5);
+    // Dark Outline Stroke
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.85)";
+    ctx.lineWidth = 3.5;
+    ctx.lineJoin = "round";
+    ctx.strokeText(waveText, textX, textY);
+
+    // Pure White Foreground
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText(waveText, textX, textY);
   }
 
   const getStatusBadge = (mon: any) => {
