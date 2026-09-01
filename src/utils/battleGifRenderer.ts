@@ -127,9 +127,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       playerHp: playerHp,
       textLineIdx: 3
     },
-    // Frame 5: 60-Second Static Hold Frame (60,000ms)
+    // Frame 5: 11-Minute Static Hold Frame (655,000ms - Maximum GIF89a unsigned 16-bit delay limit)
     {
-      delay: 60000,
+      delay: 655000,
       pOffset: { x: 0, y: 0 },
       eOffset: { x: 0, y: 0 },
       showEffect: false,
@@ -253,8 +253,8 @@ export async function renderBattleFaintGif(options: BattleAnimationOptions): Pro
     { delay: 220, showEffect: false, hitFlash: false, eOffsetY: 45, opacity: 0.35, enemyHp: 0, textLineIdx: 2 },
     // Frame 4: Completely Gone (200ms) - EFFECT OFF!
     { delay: 200, showEffect: false, hitFlash: false, eOffsetY: 70, opacity: 0.0, enemyHp: 0, textLineIdx: 3 },
-    // Frame 5: 60-Second Static Hold Frame (60,000ms)
-    { delay: 60000, showEffect: false, hitFlash: false, eOffsetY: 70, opacity: 0.0, enemyHp: 0, textLineIdx: 99 }
+    // Frame 5: 11-Minute Static Hold Frame (655,000ms - Maximum GIF89a unsigned 16-bit delay limit)
+    { delay: 655000, showEffect: false, hitFlash: false, eOffsetY: 70, opacity: 0.0, enemyHp: 0, textLineIdx: 99 }
   ];
 
   const motionDurationMs = faintFrames.slice(0, -1).reduce((sum, f) => sum + f.delay, 0);
@@ -319,7 +319,7 @@ export async function renderBattleFaintGif(options: BattleAnimationOptions): Pro
  * Frame 2: Mid-way Approach (200ms)
  * Frame 3: Near Landing & HUD appears (200ms)
  * Frame 4: Grounded on Platform (220ms)
- * Frame 5: 60-Second Static Hold Frame (60,000ms)
+ * Frame 5: 11-Minute Static Hold Frame (655,000ms - Maximum GIF89a unsigned 16-bit delay limit)
  */
 export async function renderBattleEntryGif(options: BattleAnimationOptions): Promise<RenderGifResult> {
   const width = 560;
@@ -365,8 +365,8 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
     { delay: 200, pPlatX: -20, ePlatX: 20, pMonX: -25, eMonX: 25, showHud: true, textLineIdx: 1 },
     // Frame 4: Aligned on Platform (220ms)
     { delay: 220, pPlatX: 0, ePlatX: 0, pMonX: 0, eMonX: 0, showHud: true, textLineIdx: 2 },
-    // Frame 5: 60-Second Static Hold Frame (60,000ms)
-    { delay: 60000, pPlatX: 0, ePlatX: 0, pMonX: 0, eMonX: 0, showHud: true, textLineIdx: 99 }
+    // Frame 5: 11-Minute Static Hold Frame (655,000ms - Maximum GIF89a unsigned 16-bit delay limit)
+    { delay: 655000, pPlatX: 0, ePlatX: 0, pMonX: 0, eMonX: 0, showHud: true, textLineIdx: 99 }
   ];
 
   const motionDurationMs = entryFrames.slice(0, -1).reduce((sum, f) => sum + f.delay, 0);
