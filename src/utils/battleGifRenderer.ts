@@ -84,9 +84,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   const playerHp = playerMon.hp;
 
   const framesConfig = [
-    // Frame 0: Leading Cinematic Soft-Blur Loading Frame (500ms) - Atmospheric focus transition without text!
+    // Frame 0: Leading Cinematic Soft-Blur Loading Frame (800ms / 0.8s) - Atmospheric focus transition without text!
     {
-      delay: 500,
+      delay: 800,
       pOffset: { x: 0, y: 0 },
       eOffset: { x: 0, y: 0 },
       showEffect: false,
@@ -308,8 +308,8 @@ export async function renderBattleFaintGif(options: BattleAnimationOptions): Pro
   ctx.imageSmoothingEnabled = false;
 
   const faintFrames = [
-    // Frame 0: Leading Cinematic Soft-Blur Loading Frame (500ms) - Calm pre-strike stance without text!
-    { delay: 500, showEffect: false, hitFlash: false, eOffsetY: 0, opacity: 1.0, enemyHp: enemy.hp, textLineIdx: 0, isBlur: true },
+    // Frame 0: Leading Cinematic Soft-Blur Loading Frame (800ms / 0.8s) - Calm pre-strike stance without text!
+    { delay: 800, showEffect: false, hitFlash: false, eOffsetY: 0, opacity: 1.0, enemyHp: enemy.hp, textLineIdx: 0, isBlur: true },
     // Frame 1: Hit Flash (180ms) - ONLY FRAME WITH EFFECT!
     { delay: 180, showEffect: true, hitFlash: true, eOffsetY: -4, opacity: 1.0, enemyHp: 0, textLineIdx: 1, isBlur: false },
     // Frame 2: Sinking Begins (220ms) - EFFECT OFF!
