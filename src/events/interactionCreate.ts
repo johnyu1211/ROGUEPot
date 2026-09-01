@@ -203,6 +203,7 @@ export async function renderBattleMessageData(
     imageBuffer = res.buffer;
     motionDurationMs = res.motionDurationMs;
     fileName = "battle.gif";
+    battle.lastMoveEffect = null;
   } else if (battle.lastMoveEffect && battle.phase === "MAIN") {
     const res = await renderBattleMoveGif({
       battle,
@@ -211,6 +212,7 @@ export async function renderBattleMessageData(
     imageBuffer = res.buffer;
     motionDurationMs = res.motionDurationMs;
     fileName = "battle.gif";
+    battle.lastMoveEffect = null;
   } else {
     imageBuffer = await renderBattleScreen({
       battle,
@@ -3548,16 +3550,6 @@ export const interactionCreateEvent: BotEvent = {
           saveService.setActiveSlot(interaction.user.id, slotNum);
           const battleData = await renderBattleMessageData(interaction.user.id, slotNum, undefined, true);
           await interaction.update(battleData);
-
-          // 🎬 Dynamic Auto-Transition: Fire exactly when the GIF's active motion frames finish!
-          if (battleData.motionDurationMs > 0) {
-            setTimeout(async () => {
-              try {
-                const staticData = await renderBattleMessageData(interaction.user.id, slotNum);
-                await safeInteractionUpdate(interaction, staticData).catch(() => null);
-              } catch {}
-            }, battleData.motionDurationMs);
-          }
         }
         return;
       }
@@ -3614,20 +3606,6 @@ export const interactionCreateEvent: BotEvent = {
           battleService.executePlayerMove(interaction.user.id, slotId, moveKey, profile.language);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId);
           await safeInteractionUpdate(interaction, battleData);
-
-          // 🎬 Dynamic Auto-Transition: Fire exactly when the GIF's active motion frames finish!
-          const battle = battleService.getOrCreateBattle(interaction.user.id, slotId);
-          if (battle.lastMoveEffect && battleData.motionDurationMs > 0) {
-            setTimeout(async () => {
-              try {
-                battle.lastMoveEffect = null;
-                const staticData = await renderBattleMessageData(interaction.user.id, slotId);
-                await safeInteractionUpdate(interaction, staticData).catch(() => null);
-              } catch (e) {
-                // Ignore transient timeout errors
-              }
-            }, battleData.motionDurationMs);
-          }
           return;
         }
 
@@ -3659,16 +3637,6 @@ export const interactionCreateEvent: BotEvent = {
           battleService.advanceToNextWave(interaction.user.id, slotId);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId, undefined, true);
           await safeInteractionUpdate(interaction, battleData);
-
-          // 🎬 Dynamic Auto-Transition: Fire exactly when the GIF's active motion frames finish!
-          if (battleData.motionDurationMs > 0) {
-            setTimeout(async () => {
-              try {
-                const staticData = await renderBattleMessageData(interaction.user.id, slotId);
-                await safeInteractionUpdate(interaction, staticData).catch(() => null);
-              } catch {}
-            }, battleData.motionDurationMs);
-          }
           return;
         }
 
