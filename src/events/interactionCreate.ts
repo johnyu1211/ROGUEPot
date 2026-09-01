@@ -316,30 +316,19 @@ export async function renderBattleMessageData(
     components.push(partyRow);
   } else {
     // MAIN Action Row
-    let fightLabel = isKo ? "⚔️ 싸운다 (Fight)" : "⚔️ Fight";
-    let fightStyle = ButtonStyle.Primary;
-    const isLockedAction = !!(combatMon?.chargingMove || combatMon?.mustRecharge);
-    if (combatMon?.chargingMove) {
-      fightLabel = isKo ? "⚡ 공격 발사! (Unleash)" : "⚡ Unleash!";
-      fightStyle = ButtonStyle.Danger;
-    } else if (combatMon?.mustRecharge) {
-      fightLabel = isKo ? "⏳ 숨고르기 (Recharge)" : "⏳ Recharge";
-      fightStyle = ButtonStyle.Secondary;
-    }
-
     const mainRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
         .setCustomId(`battle_menu_fight_${slotId}_${userId}`)
-        .setLabel(fightLabel)
-        .setStyle(fightStyle),
+        .setLabel(isKo ? "⚔️ 싸운다 (Fight)" : "⚔️ Fight")
+        .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setCustomId(`battle_menu_bag_${slotId}_${userId}`)
         .setLabel(isKo ? "⚪ 몬스터볼 (Ball)" : "⚪ PokéBall")
-        .setStyle(ButtonStyle.Success)
-        .setDisabled(isLockedAction),
+        .setStyle(ButtonStyle.Success),
       new ButtonBuilder()
         .setCustomId(`battle_menu_party_${slotId}_${userId}`)
         .setLabel(isKo ? "🔄 교체 (Party)" : "🔄 Party")
+        .setStyle(ButtonStyle.Primary)
         .setDisabled(battle.playerParty.length <= 1),
       new ButtonBuilder()
         .setCustomId(`battle_menu_run_${slotId}_${userId}`)
@@ -3518,19 +3507,6 @@ export const interactionCreateEvent: BotEvent = {
         // 2-7-A. Fight Menu Selected
         if (customId.startsWith("battle_menu_fight_")) {
           const slotId = parseInt(parts[3], 10) || 1;
-          const battle = battleService.getOrCreateBattle(interaction.user.id, slotId);
-          const combatMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
-
-          // If locked into a 2-turn charging move or recharge turn, auto-fire without opening move submenu!
-          if (combatMon && (combatMon.chargingMove || combatMon.mustRecharge)) {
-            const moveKey = combatMon.chargingMove || "recharge";
-            const profile = saveService.getProfile(interaction.user.id);
-            battleService.executePlayerMove(interaction.user.id, slotId, moveKey, profile.language);
-            const battleData = await renderBattleMessageData(interaction.user.id, slotId);
-            await interaction.update(battleData);
-            return;
-          }
-
           const battleData = await renderBattleMessageData(interaction.user.id, slotId, "FIGHT");
           await interaction.update(battleData);
           return;
