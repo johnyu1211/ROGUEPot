@@ -565,8 +565,8 @@ export class BattleService {
 
       turnLogs.push(
         isKo
-          ? `🏆 상대 ${enemyMon.nameKo}(이)가 쓰러졌다! 획득: +${moneyGain.toLocaleString()} P | +${expGain} EXP`
-          : `🏆 Foe ${enemyMon.name} fainted! Won: +${moneyGain.toLocaleString()} P | +${expGain} EXP`
+          ? `🏆 상대 ${enemyMon.nameKo}(이)가 쓰러졌다! 획득: +P ${moneyGain.toLocaleString()} | +${expGain} EXP`
+          : `🏆 Foe ${enemyMon.name} fainted! Won: +P ${moneyGain.toLocaleString()} | +${expGain} EXP`
       );
 
       // Level Up Check

@@ -215,7 +215,7 @@ class SaveService {
     // Save into SQLite
     db.prepare(`
       INSERT OR REPLACE INTO game_slots (user_id, slot_id, game_mode, wave, biome, starter, party, items, money, score, created_at, updated_at)
-      VALUES (?, ?, 'Classic', 1, 'Town', ?, ?, ?, 1000, 0, ?, ?)
+      VALUES (?, ?, 'Classic', 1, 'Town', ?, ?, ?, 0, 0, ?, ?)
     `).run(userId, slotId, starterSpecies, JSON.stringify(initialParty), JSON.stringify({ "poke-ball": 5 }), now, now);
 
     db.prepare(`
@@ -230,7 +230,7 @@ class SaveService {
       starter: starterSpecies,
       party: initialParty,
       items: { "poke-ball": 5 },
-      money: 1000,
+      money: 0,
       score: 0,
       updatedAt: now,
     };
@@ -249,7 +249,7 @@ class SaveService {
     // Save into SQLite
     db.prepare(`
       INSERT OR REPLACE INTO game_slots (user_id, slot_id, game_mode, wave, biome, starter, party, items, money, score, created_at, updated_at)
-      VALUES (?, ?, 'Classic', 1, 'Town', ?, ?, ?, 1000, 0, ?, ?)
+      VALUES (?, ?, 'Classic', 1, 'Town', ?, ?, ?, 0, 0, ?, ?)
     `).run(userId, slotId, starterNames, JSON.stringify(starterParty), JSON.stringify({ "poke-ball": 5 }), now, now);
 
     db.prepare(`
@@ -264,7 +264,7 @@ class SaveService {
       starter: starterNames,
       party: starterParty,
       items: { "poke-ball": 5 },
-      money: 1000,
+      money: 0,
       score: 0,
       updatedAt: now,
     };
