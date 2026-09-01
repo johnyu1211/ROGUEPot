@@ -663,6 +663,123 @@ export class BattleService {
       return { log: `${actorName}의 ${isKo ? activeMove.nameKo : activeMove.name.toUpperCase()}!\n${statLog}`, damage: 0 };
     }
 
+    const moveNameLower = activeMove.name.toLowerCase().replace(/[\s_]+/g, "-");
+
+    // 3.5. OHKO (One-Hit KO / 일격필살기: 뿔드릴, 가위자르기, 땅가르기, 절대영도)
+    const isOHKO = ["horn-drill", "guillotine", "fissure", "sheer-cold"].includes(moveNameLower);
+    if (isOHKO) {
+      // Level check
+      if (actor.level < target.level) {
+        return {
+          log: isKo
+            ? `${actorName}의 ${moveName}! 하지만 레벨이 낮아 상대에게 통하지 않았다!`
+            : `${actorName}'s ${moveName}! But it didn't affect ${targetName} due to lower level!`,
+          damage: 0,
+        };
+      }
+
+      // Type immunity check (Ghost vs Normal, Flying vs Ground, Ice vs Sheer Cold)
+      const typeMod = this.getTypeEffectiveness(activeMove.type, target.types);
+      if (typeMod === 0 || (moveNameLower === "sheer-cold" && target.types.map((t) => t.toLowerCase()).includes("ice"))) {
+        return {
+          log: isKo
+            ? `${actorName}의 ${moveName}! 하지만 ${targetName}에게는 효과가 없는 것 같다...`
+            : `${actorName}'s ${moveName}! It doesn't affect ${targetName}...`,
+          damage: 0,
+        };
+      }
+
+      // Accuracy formula: 30 + (User Level - Target Level)%
+      const ohkoAcc = Math.min(100, Math.max(0, 30 + (actor.level - target.level)));
+      if (Math.random() * 100 > ohkoAcc) {
+        return {
+          log: isKo
+            ? `${actorName}의 ${moveName}! 하지만 공격은 빗나갔다!`
+            : `${actorName}'s ${moveName}! But it missed!`,
+          damage: 0,
+        };
+      }
+
+      // Target Protection Check
+      if (target.isProtected) {
+        return {
+          log: isKo
+            ? `${actorName}의 ${moveName}! 하지만 ${targetName}(은)는 공격을 막아냈다!`
+            : `${actorName}'s ${moveName}! But ${targetName} protected itself!`,
+          damage: 0,
+        };
+      }
+
+      // Sturdy check
+      if (target.ability === "Sturdy") {
+        return {
+          log: isKo
+            ? `${actorName}의 ${moveName}!\n[특성 옹골참!] 일격필살 공격을 무효화했다!`
+            : `${actorName}'s ${moveName}!\n[Sturdy!] It was immune to the One-Hit KO!`,
+          damage: 0,
+        };
+      }
+
+      const damage = target.hp;
+      target.hp = 0;
+      return {
+        log: isKo
+          ? `💥 ${actorName}의 ${moveName}!\n일격필살! ${targetName}(은)는 쓰러졌다!`
+          : `💥 ${actorName}'s ${moveName}!\nIt's a One-Hit KO! ${targetName} fainted!`,
+        damage,
+      };
+    }
+
+    // 3.6. Fixed Damage Moves (지구던지기, 나이트헤드, 용의분노, 음파, 분노의앞니, 죽기살기)
+    if (moveNameLower === "seismic-toss" || moveNameLower === "night-shade") {
+      const typeMod = this.getTypeEffectiveness(activeMove.type, target.types);
+      if (typeMod === 0) {
+        return { log: isKo ? `${actorName}의 ${moveName}! 하지만 ${targetName}에게는 효과가 없는 것 같다...` : `${actorName}'s ${moveName}! It doesn't affect ${targetName}...`, damage: 0 };
+      }
+      const damage = actor.level;
+      target.hp = Math.max(0, target.hp - damage);
+      return { log: isKo ? `${actorName}의 ${moveName}! ${targetName}에게 ${damage}의 고정 데미지!` : `${actorName}'s ${moveName}! Dealt ${damage} fixed damage!`, damage };
+    }
+
+    if (moveNameLower === "dragon-rage") {
+      const typeMod = this.getTypeEffectiveness(activeMove.type, target.types);
+      if (typeMod === 0) {
+        return { log: isKo ? `${actorName}의 ${moveName}! 하지만 ${targetName}에게는 효과가 없는 것 같다...` : `${actorName}'s ${moveName}! It doesn't affect ${targetName}...`, damage: 0 };
+      }
+      const damage = 40;
+      target.hp = Math.max(0, target.hp - damage);
+      return { log: isKo ? `${actorName}의 ${moveName}! ${targetName}에게 40의 고정 데미지!` : `${actorName}'s ${moveName}! Dealt 40 fixed damage!`, damage };
+    }
+
+    if (moveNameLower === "sonic-boom") {
+      const typeMod = this.getTypeEffectiveness(activeMove.type, target.types);
+      if (typeMod === 0) {
+        return { log: isKo ? `${actorName}의 ${moveName}! 하지만 ${targetName}에게는 효과가 없는 것 같다...` : `${actorName}'s ${moveName}! It doesn't affect ${targetName}...`, damage: 0 };
+      }
+      const damage = 20;
+      target.hp = Math.max(0, target.hp - damage);
+      return { log: isKo ? `${actorName}의 ${moveName}! ${targetName}에게 20의 고정 데미지!` : `${actorName}'s ${moveName}! Dealt 20 fixed damage!`, damage };
+    }
+
+    if (moveNameLower === "super-fang") {
+      const typeMod = this.getTypeEffectiveness(activeMove.type, target.types);
+      if (typeMod === 0) {
+        return { log: isKo ? `${actorName}의 ${moveName}! 하지만 ${targetName}에게는 효과가 없는 것 같다...` : `${actorName}'s ${moveName}! It doesn't affect ${targetName}...`, damage: 0 };
+      }
+      const damage = Math.max(1, Math.floor(target.hp / 2));
+      target.hp = Math.max(0, target.hp - damage);
+      return { log: isKo ? `${actorName}의 ${moveName}! ${targetName}의 현재 HP를 절반으로 깎았다! (-${damage})` : `${actorName}'s ${moveName}! Cut ${targetName}'s HP in half! (-${damage})`, damage };
+    }
+
+    if (moveNameLower === "endeavor") {
+      if (actor.hp >= target.hp) {
+        return { log: isKo ? `${actorName}의 ${moveName}! 하지만 아무 일도 일어나지 않았다!` : `${actorName}'s ${moveName}! But nothing happened!`, damage: 0 };
+      }
+      const damage = target.hp - actor.hp;
+      target.hp = actor.hp;
+      return { log: isKo ? `${actorName}의 ${moveName}! ${targetName}의 HP를 자신의 HP와 같게 맞췄다! (-${damage})` : `${actorName}'s ${moveName}! Matched ${targetName}'s HP! (-${damage})`, damage };
+    }
+
     // 4. Accuracy Check
     const acc = activeMove.accuracy || 100;
     const accStage = actor.stages.acc - target.stages.eva;
@@ -686,7 +803,51 @@ export class BattleService {
       ? target.spDef * getStageMultiplier(target.stages.spd)
       : target.def * getStageMultiplier(target.stages.def);
 
-    const power = activeMove.power || 40;
+    // Variable Power Calculation
+    let power = activeMove.power || 40;
+
+    // Eruption / Water Spout / Dragon Energy (분화, 해수스파우팅, 드래곤에너지)
+    if (moveNameLower === "eruption" || moveNameLower === "water-spout" || moveNameLower === "dragon-energy") {
+      power = Math.max(1, Math.floor(150 * (actor.hp / Math.max(1, actor.maxHp))));
+    }
+
+    // Reversal / Flail (기사회생, 버티고버티기)
+    if (moveNameLower === "reversal" || moveNameLower === "flail") {
+      const hpRatio = actor.hp / Math.max(1, actor.maxHp);
+      if (hpRatio < 0.0417) power = 200;
+      else if (hpRatio < 0.1042) power = 150;
+      else if (hpRatio < 0.2083) power = 100;
+      else if (hpRatio < 0.3542) power = 80;
+      else if (hpRatio < 0.6875) power = 40;
+      else power = 20;
+    }
+
+    // Gyro Ball (자이로볼)
+    if (moveNameLower === "gyro-ball") {
+      power = Math.min(150, Math.floor(25 * (target.speed / Math.max(1, actor.speed))) + 1);
+    }
+
+    // Electro Ball (일렉트릭볼)
+    if (moveNameLower === "electro-ball") {
+      const spdRatio = actor.speed / Math.max(1, target.speed);
+      if (spdRatio >= 4) power = 150;
+      else if (spdRatio >= 3) power = 120;
+      else if (spdRatio >= 2) power = 80;
+      else if (spdRatio >= 1) power = 60;
+      else power = 40;
+    }
+
+    // Grass Knot / Low Kick / Heavy Slam / Heat Crash (풀묶기, 안다리걸기, 헤비봄버, 히트스탬프)
+    if (moveNameLower === "grass-knot" || moveNameLower === "low-kick" || moveNameLower === "heavy-slam" || moveNameLower === "heat-crash") {
+      power = 80;
+    }
+
+    // Self-Destruct / Explosion / Misty Explosion (자폭, 대폭발, 미스트버스트)
+    const isSelfDestruct = moveNameLower === "explosion" || moveNameLower === "self-destruct" || moveNameLower === "misty-explosion";
+    if (isSelfDestruct) {
+      power = moveNameLower === "explosion" ? 250 : (moveNameLower === "self-destruct" ? 200 : 100);
+    }
+
     const isStab = actor.types.map((t) => t.toLowerCase()).includes(activeMove.type.toLowerCase());
     const stabMod = isStab ? 1.5 : 1.0;
     const typeMod = this.getTypeEffectiveness(activeMove.type, target.types);
@@ -731,6 +892,12 @@ export class BattleService {
       } else {
         target.hp = Math.max(0, target.hp - damage);
       }
+    }
+
+    // Self-destruct faints actor
+    if (isSelfDestruct) {
+      actor.hp = 0;
+      damageLog += isKo ? `\n💥 ${actorName}(은)는 폭발하여 스스로 쓰러졌다!` : `\n💥 ${actorName} self-destructed and fainted!`;
     }
 
     // 8. Secondary Effects (Drain, Recoil, Status Infliction, Stat Stages)
@@ -874,15 +1041,79 @@ export class BattleService {
       return isKo ? `${actorName}의 HP가 ${heal} 회복되었다!` : `${actorName} restored ${heal} HP!`;
     }
 
-    // 5. STAT STAGES UP
+    // 5. SPECIAL SETUP & SACRIFICE (Belly Drum, Shell Smash, Haze, Memento)
+    if (mName === "belly-drum") {
+      const halfHp = Math.floor(actor.maxHp * 0.5);
+      if (actor.hp > halfHp && actor.stages.atk < 6) {
+        actor.hp -= halfHp;
+        actor.stages.atk = 6;
+        return isKo
+          ? `🥁 ${actorName}의 배북!\n자신의 HP를 깎아 공격을 최대치(+6)까지 올렸다!`
+          : `🥁 ${actorName} used Belly Drum!\nCut its own HP to max out Attack (+6)!`;
+      }
+      return isKo ? `하지만 기술은 실패했다!` : `But it failed!`;
+    }
+
+    if (mName === "shell-smash") {
+      actor.stages.def = Math.max(-6, actor.stages.def - 1);
+      actor.stages.spd = Math.max(-6, actor.stages.spd - 1);
+      actor.stages.atk = Math.min(6, actor.stages.atk + 2);
+      actor.stages.spa = Math.min(6, actor.stages.spa + 2);
+      actor.stages.spe = Math.min(6, actor.stages.spe + 2);
+      return isKo
+        ? `✨ ${actorName}의 껍질깨기!\n방어/특방이 떨어지고 공격/특공/스피드가 크게 올랐다! (+2)`
+        : `✨ ${actorName} used Shell Smash!\nDefense/Sp.Def fell, Attack/Sp.Atk/Speed sharply rose! (+2)`;
+    }
+
+    if (mName === "haze") {
+      actor.stages = { atk: 0, def: 0, spa: 0, spd: 0, spe: 0, acc: 0, eva: 0 };
+      target.stages = { atk: 0, def: 0, spa: 0, spd: 0, spe: 0, acc: 0, eva: 0 };
+      return isKo
+        ? `🌫️ ${actorName}의 흑안개!\n모든 포켓몬의 능력치 변화가 초기화되었다!`
+        : `🌫️ ${actorName} used Haze!\nAll stat changes were reset!`;
+    }
+
+    if (mName === "memento") {
+      actor.hp = 0;
+      target.stages.atk = Math.max(-6, target.stages.atk - 2);
+      target.stages.spa = Math.max(-6, target.stages.spa - 2);
+      return isKo
+        ? `👻 ${actorName}의 추억의선물!\n${actorName}(은)는 쓰러지고 ${targetName}의 공격/특수공격이 크게 떨어졌다! (-2)`
+        : `👻 ${actorName} used Memento!\n${actorName} fainted, and ${targetName}'s Attack and Sp. Atk harshly fell! (-2)`;
+    }
+
+    if (mName === "healing-wish" || mName === "lunar-dance") {
+      actor.hp = 0;
+      return isKo
+        ? `🌙 ${actorName}의 ${move.nameKo}!\n자신을 희생하여 다음 포켓몬을 위한 소원을 빌었다!`
+        : `🌙 ${actorName} used ${move.name.toUpperCase()}!\nSacrificed itself for a healing wish!`;
+    }
+
+    // 6. STAT STAGES UP
     if (mName === "swords-dance") {
       actor.stages.atk = Math.min(6, actor.stages.atk + 2);
       return isKo ? `${actorName}의 공격이 크게 올랐다! (+2)` : `${actorName}'s Attack sharply rose! (+2)`;
+    }
+    if (mName === "nasty-plot" || mName === "tail-glow") {
+      const boost = mName === "tail-glow" ? 3 : 2;
+      actor.stages.spa = Math.min(6, actor.stages.spa + boost);
+      return isKo ? `${actorName}의 특수공격이 크게 올랐다! (+${boost})` : `${actorName}'s Sp. Atk sharply rose! (+${boost})`;
     }
     if (mName === "dragon-dance") {
       actor.stages.atk = Math.min(6, actor.stages.atk + 1);
       actor.stages.spe = Math.min(6, actor.stages.spe + 1);
       return isKo ? `${actorName}의 공격과 스피드가 올랐다! (+1)` : `${actorName}'s Attack and Speed rose! (+1)`;
+    }
+    if (mName === "quiver-dance") {
+      actor.stages.spa = Math.min(6, actor.stages.spa + 1);
+      actor.stages.spd = Math.min(6, actor.stages.spd + 1);
+      actor.stages.spe = Math.min(6, actor.stages.spe + 1);
+      return isKo ? `${actorName}의 특공, 특방, 스피드가 올랐다! (+1)` : `${actorName}'s Sp.Atk, Sp.Def, and Speed rose! (+1)`;
+    }
+    if (mName === "shift-gear") {
+      actor.stages.atk = Math.min(6, actor.stages.atk + 1);
+      actor.stages.spe = Math.min(6, actor.stages.spe + 2);
+      return isKo ? `${actorName}의 공격(+1)과 스피드가 크게(+2) 올랐다!` : `${actorName}'s Attack (+1) and Speed sharply (+2) rose!`;
     }
     if (mName === "geomancy") {
       actor.stages.spa = Math.min(6, actor.stages.spa + 2);
@@ -890,16 +1121,50 @@ export class BattleService {
       actor.stages.spe = Math.min(6, actor.stages.spe + 2);
       return isKo ? `${actorName}의 특수공격, 특수방어, 스피드가 크게 올랐다! (+2)` : `${actorName}'s Sp. Atk, Sp. Def, and Speed sharply rose! (+2)`;
     }
-    if (mName === "calm-mind") {
+    if (mName === "calm-mind" || mName === "bulk-up" || mName === "coil") {
+      if (mName === "bulk-up") {
+        actor.stages.atk = Math.min(6, actor.stages.atk + 1);
+        actor.stages.def = Math.min(6, actor.stages.def + 1);
+        return isKo ? `${actorName}의 공격과 방어가 올랐다! (+1)` : `${actorName}'s Attack and Defense rose! (+1)`;
+      }
+      if (mName === "coil") {
+        actor.stages.atk = Math.min(6, actor.stages.atk + 1);
+        actor.stages.def = Math.min(6, actor.stages.def + 1);
+        actor.stages.acc = Math.min(6, actor.stages.acc + 1);
+        return isKo ? `${actorName}의 공격, 방어, 명중률이 올랐다! (+1)` : `${actorName}'s Attack, Defense, and Accuracy rose! (+1)`;
+      }
       actor.stages.spa = Math.min(6, actor.stages.spa + 1);
       actor.stages.spd = Math.min(6, actor.stages.spd + 1);
       return isKo ? `${actorName}의 특수공격과 특수방어가 올랐다! (+1)` : `${actorName}'s Sp. Atk and Sp. Def rose! (+1)`;
     }
+    if (mName === "iron-defense" || mName === "acid-armor" || mName === "barrier" || mName === "cotton-guard") {
+      const boost = mName === "cotton-guard" ? 3 : 2;
+      actor.stages.def = Math.min(6, actor.stages.def + boost);
+      return isKo ? `${actorName}의 방어가 크게 올랐다! (+${boost})` : `${actorName}'s Defense sharply rose! (+${boost})`;
+    }
+    if (mName === "amnesia") {
+      actor.stages.spd = Math.min(6, actor.stages.spd + 2);
+      return isKo ? `${actorName}의 특수방어가 크게 올랐다! (+2)` : `${actorName}'s Sp. Def sharply rose! (+2)`;
+    }
+    if (mName === "agility" || mName === "rock-polish" || mName === "autotomize") {
+      actor.stages.spe = Math.min(6, actor.stages.spe + 2);
+      return isKo ? `${actorName}의 스피드가 크게 올랐다! (+2)` : `${actorName}'s Speed sharply rose! (+2)`;
+    }
+    if (mName === "minimize" || mName === "double-team") {
+      const boost = mName === "minimize" ? 2 : 1;
+      actor.stages.eva = Math.min(6, actor.stages.eva + boost);
+      return isKo ? `${actorName}의 회피율이 올랐다! (+${boost})` : `${actorName}'s Evasiveness rose! (+${boost})`;
+    }
 
-    // 6. STAT STAGES DOWN
-    if (mName === "growl") {
+    // 7. STAT STAGES DOWN
+    if (mName === "growl" || mName === "play-nice") {
       target.stages.atk = Math.max(-6, target.stages.atk - 1);
       return isKo ? `${targetName}의 공격이 떨어졌다! (-1)` : `${targetName}'s Attack fell! (-1)`;
+    }
+    if (mName === "charm" || mName === "feather-dance" || mName === "baby-doll-eyes") {
+      const drop = mName === "baby-doll-eyes" ? 1 : 2;
+      target.stages.atk = Math.max(-6, target.stages.atk - drop);
+      return isKo ? `${targetName}의 공격이 크게 떨어졌다! (-${drop})` : `${targetName}'s Attack harshly fell! (-${drop})`;
     }
     if (mName === "tail-whip" || mName === "leer") {
       target.stages.def = Math.max(-6, target.stages.def - 1);
@@ -909,16 +1174,28 @@ export class BattleService {
       target.stages.def = Math.max(-6, target.stages.def - 2);
       return isKo ? `${targetName}의 방어가 크게 떨어졌다! (-2)` : `${targetName}'s Defense harshly fell! (-2)`;
     }
+    if (mName === "fake-tears" || mName === "metal-sound") {
+      target.stages.spd = Math.max(-6, target.stages.spd - 2);
+      return isKo ? `${targetName}의 특수방어가 크게 떨어졌다! (-2)` : `${targetName}'s Sp. Def harshly fell! (-2)`;
+    }
+    if (mName === "flash" || mName === "sand-attack" || mName === "smokescreen" || mName === "kinesis") {
+      target.stages.acc = Math.max(-6, target.stages.acc - 1);
+      return isKo ? `${targetName}의 명중률이 떨어졌다! (-1)` : `${targetName}'s Accuracy fell! (-1)`;
+    }
+    if (mName === "sweet-scent") {
+      target.stages.eva = Math.max(-6, target.stages.eva - 2);
+      return isKo ? `${targetName}의 회피율이 크게 떨어졌다! (-2)` : `${targetName}'s Evasiveness harshly fell! (-2)`;
+    }
 
-    // 7. STATUS AILMENTS
-    if (mName === "thunder-wave" || mName === "glare") {
+    // 8. STATUS AILMENTS
+    if (mName === "thunder-wave" || mName === "glare" || mName === "stun-spore" || mName === "nuzzle") {
       if (!target.types.includes("electric") && !target.status) {
         target.status = "par";
         return isKo ? `${targetName}(은)는 마비되어 기술을 쓰기 어려워졌다!` : `${targetName} is paralyzed!`;
       }
       return isKo ? `하지만 효과가 없었다!` : `It had no effect!`;
     }
-    if (mName === "spore" || mName === "sleep-powder" || mName === "hypnosis") {
+    if (mName === "spore" || mName === "sleep-powder" || mName === "hypnosis" || mName === "sing" || mName === "dark-void" || mName === "grass-whistle" || mName === "lovely-kiss") {
       if (!target.types.includes("grass") && !target.status) {
         target.status = "slp";
         target.sleepTurns = 0;
@@ -933,11 +1210,11 @@ export class BattleService {
       }
       return isKo ? `하지만 효과가 없었다!` : `It had no effect!`;
     }
-    if (mName === "toxic") {
+    if (mName === "toxic" || mName === "poison-powder" || mName === "poison-gas") {
       if (!target.types.includes("poison") && !target.types.includes("steel") && !target.status) {
-        target.status = "tox";
+        target.status = mName === "toxic" ? "tox" : "psn";
         target.toxicCounter = 1;
-        return isKo ? `${targetName}(은)는 맹독에 중독되었다!` : `${targetName} was badly poisoned!`;
+        return isKo ? `${targetName}(은)는 독에 중독되었다!` : `${targetName} was poisoned!`;
       }
       return isKo ? `하지만 효과가 없었다!` : `It had no effect!`;
     }
