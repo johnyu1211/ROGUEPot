@@ -43,24 +43,42 @@ export const command: Command = {
 
       let thread;
       if (channel instanceof TextChannel || channel instanceof NewsChannel) {
-        // 1. Close (archive) all previous active threads of this user in the server
+        // 1. Close (archive & lock) all previous active threads of this user in the server
         try {
-          const guildActive = await interaction.guild.channels.fetchActiveThreads().catch(() => null);
-          const targetName = `${interaction.user.username}'s PokéRogue`;
-          if (guildActive?.threads) {
-            for (const [_, existingThread] of guildActive.threads) {
-              if (existingThread.name === targetName || existingThread.name.includes(`${interaction.user.username}'s`)) {
-                await existingThread.setArchived(true, `Closed previous session for ${interaction.user.tag}`).catch(() => null);
-              }
+          const userTerms = [
+            interaction.user.username.toLowerCase(),
+            (interaction.user.globalName || "").toLowerCase(),
+            (interaction.user.displayName || "").toLowerCase(),
+            interaction.user.id,
+          ].filter(Boolean);
+
+          const threadsToClose = new Map<string, any>();
+
+          // A. Fetch all active threads in the current channel
+          const channelActive = await channel.threads.fetchActive().catch(() => null);
+          if (channelActive?.threads) {
+            for (const [id, t] of channelActive.threads) {
+              threadsToClose.set(id, t);
             }
-          } else {
-            const channelActive = await channel.threads.fetchActive().catch(() => null);
-            if (channelActive?.threads) {
-              for (const [_, existingThread] of channelActive.threads) {
-                if (existingThread.name === targetName || existingThread.name.includes(`${interaction.user.username}'s`)) {
-                  await existingThread.setArchived(true, `Closed previous session for ${interaction.user.tag}`).catch(() => null);
-                }
-              }
+          }
+
+          // B. Fetch all active threads in the guild
+          const guildActive = await interaction.guild.channels.fetchActiveThreads().catch(() => null);
+          if (guildActive?.threads) {
+            for (const [id, t] of guildActive.threads) {
+              threadsToClose.set(id, t);
+            }
+          }
+
+          // C. Filter and close threads belonging to this user
+          for (const [_, existingThread] of threadsToClose) {
+            if (existingThread.archived) continue;
+            const tNameLower = existingThread.name.toLowerCase();
+            const isMatch = userTerms.some((term) => tNameLower.includes(term));
+
+            if (isMatch || (existingThread.ownerId === interaction.client.user.id && (tNameLower.includes("pokérogue") || tNameLower.includes("pokerogue")))) {
+              await existingThread.setLocked(true, `Closed previous session for ${interaction.user.tag}`).catch(() => null);
+              await existingThread.setArchived(true, `Closed previous session for ${interaction.user.tag}`).catch(() => null);
             }
           }
         } catch (threadCloseErr) {
