@@ -185,7 +185,7 @@ export async function renderBattleMessageData(
   let imageBuffer: Buffer;
   let fileName = "battle.png";
 
-  if (battle.lastMoveEffect && battle.phase === "MAIN") {
+  if (battle.lastMoveEffect && (battle.phase === "MAIN" || battle.phase === "VICTORY" || battle.phase === "DEFEAT")) {
     imageBuffer = await renderBattleMoveGif({
       battle,
       lang: profile.language,
