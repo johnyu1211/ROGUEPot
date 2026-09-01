@@ -5394,7 +5394,8 @@ export async function renderBattleScreen(options: BattleScreenOptions): Promise<
   const em = BATTLE_LAYOUT_CONFIG.enemyPokemon;
   const pm = BATTLE_LAYOUT_CONFIG.playerPokemon;
 
-  if (enemySprite) {
+  // On VICTORY screen, fainted enemy is gone (empty platform)
+  if (enemySprite && (battle.phase !== "VICTORY" || enemy.hp > 0)) {
     drawFittedBattleSprite(ctx, enemySprite, em.x, em.y, em.size);
   }
 

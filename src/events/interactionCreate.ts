@@ -14,7 +14,7 @@ import {
 import { BotEvent, ExtendedClient } from "../types/index.js";
 import { createBaseEmbed, COLORS } from "../utils/embed.js";
 import { renderTitleScreen, renderBagScreen, renderMultiplayerScreen, renderPokedexScreen, renderStarterSelectScreen, renderGenSelectScreen, renderEggGachaScreen, renderSaveSlotsScreen, renderBattleScreen, StarterSelectPartyItem, PartyViewTab, InGameMessage, getPokemonSprite, isSpriteCached, TYPE_NAMES_KO } from "../utils/canvasRenderer.js";
-import { renderBattleMoveGif } from "../utils/battleGifRenderer.js";
+import { renderBattleMoveGif, renderBattleFaintGif, renderBattleEntryGif } from "../utils/battleGifRenderer.js";
 import { MOVES_DATA } from "../data/movesKo.js";
 import { MOVES_EN_DESC } from "../data/movesEn.js";
 import { saveService, PartyPokemon } from "../services/saveService.js";
@@ -172,7 +172,8 @@ export async function safeInteractionUpdate(interaction: any, data: any) {
 export async function renderBattleMessageData(
   userId: string,
   slotId: number,
-  overridePhase?: "MAIN" | "FIGHT" | "BAG" | "PARTY"
+  overridePhase?: "MAIN" | "FIGHT" | "BAG" | "PARTY",
+  isEntryTransition?: boolean
 ) {
   const profile = saveService.getProfile(userId);
   const isKo = profile.language === "ko";
@@ -185,7 +186,19 @@ export async function renderBattleMessageData(
   let imageBuffer: Buffer;
   let fileName = "battle.png";
 
-  if (battle.lastMoveEffect && (battle.phase === "MAIN" || battle.phase === "VICTORY" || battle.phase === "DEFEAT")) {
+  if (isEntryTransition) {
+    imageBuffer = await renderBattleEntryGif({
+      battle,
+      lang: profile.language,
+    });
+    fileName = "battle.gif";
+  } else if (battle.phase === "VICTORY" && battle.lastMoveEffect) {
+    imageBuffer = await renderBattleFaintGif({
+      battle,
+      lang: profile.language,
+    });
+    fileName = "battle.gif";
+  } else if (battle.lastMoveEffect && battle.phase === "MAIN") {
     imageBuffer = await renderBattleMoveGif({
       battle,
       lang: profile.language,
@@ -3525,8 +3538,16 @@ export const interactionCreateEvent: BotEvent = {
           await interaction.update(starterData);
         } else {
           saveService.setActiveSlot(interaction.user.id, slotNum);
-          const battleData = await renderBattleMessageData(interaction.user.id, slotNum);
+          const battleData = await renderBattleMessageData(interaction.user.id, slotNum, undefined, true);
           await interaction.update(battleData);
+
+          // 🎬 Auto-Transition: After encounter entry GIF completes (~1.2s), convert message to true static PNG!
+          setTimeout(async () => {
+            try {
+              const staticData = await renderBattleMessageData(interaction.user.id, slotNum);
+              await safeInteractionUpdate(interaction, staticData).catch(() => null);
+            } catch {}
+          }, 1200);
         }
         return;
       }
@@ -3626,8 +3647,16 @@ export const interactionCreateEvent: BotEvent = {
         if (customId.startsWith("battle_nextwave_")) {
           const slotId = parseInt(parts[2], 10) || 1;
           battleService.advanceToNextWave(interaction.user.id, slotId);
-          const battleData = await renderBattleMessageData(interaction.user.id, slotId);
+          const battleData = await renderBattleMessageData(interaction.user.id, slotId, undefined, true);
           await safeInteractionUpdate(interaction, battleData);
+
+          // 🎬 Auto-Transition: After encounter entry GIF completes (~1.2s), convert message to true static PNG!
+          setTimeout(async () => {
+            try {
+              const staticData = await renderBattleMessageData(interaction.user.id, slotId);
+              await safeInteractionUpdate(interaction, staticData).catch(() => null);
+            } catch {}
+          }, 1200);
           return;
         }
 
