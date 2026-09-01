@@ -367,7 +367,7 @@ export class BattleService {
     const playerBattleMon = this.createPlayerBattleMon(activeLeader, slot.party);
 
     let dialogueText = wildPokemon.isBoss
-      ? (isKo ? `🚨 보스 포켓몬 ${wildPokemon.nameKo}(이)가 나타났다!` : `🚨 Boss Pokémon ${wildPokemon.name} appeared!`)
+      ? (isKo ? `보스 포켓몬 ${wildPokemon.nameKo}(이)가 나타났다!` : `Boss Pokémon ${wildPokemon.name} appeared!`)
       : (isKo ? `야생의 ${wildPokemon.nameKo}(이)가 나타났다!` : `Wild ${wildPokemon.name} appeared!`);
 
     // Entry Ability Trigger 1: Imposter (괴짜) Auto-Transform
@@ -565,8 +565,8 @@ export class BattleService {
 
       turnLogs.push(
         isKo
-          ? `🏆 상대 ${enemyMon.nameKo}(이)가 쓰러졌다! 획득: +P ${moneyGain.toLocaleString()} | +${expGain} EXP`
-          : `🏆 Foe ${enemyMon.name} fainted! Won: +P ${moneyGain.toLocaleString()} | +${expGain} EXP`
+          ? `상대 ${enemyMon.nameKo}(이)가 쓰러졌다! 획득: +P ${moneyGain.toLocaleString()} | +${expGain} EXP`
+          : `Foe ${enemyMon.name} fainted! Won: +P ${moneyGain.toLocaleString()} | +${expGain} EXP`
       );
 
       // Level Up Check
@@ -585,7 +585,7 @@ export class BattleService {
         battle.playerParty[battle.playerActiveIndex].level = playerMon.level;
         battle.playerParty[battle.playerActiveIndex].hp = playerMon.hp;
         battle.playerParty[battle.playerActiveIndex].maxHp = playerMon.maxHp;
-        turnLogs.push(isKo ? `🎉 ${playerMon.name}의 레벨이 ${playerMon.level}(으)로 올랐다!` : `🎉 ${playerMon.name} grew to Lv. ${playerMon.level}!`);
+        turnLogs.push(isKo ? `${playerMon.name}의 레벨이 ${playerMon.level}(으)로 올랐다!` : `${playerMon.name} grew to Lv. ${playerMon.level}!`);
       }
     } else if (playerMon.hp <= 0) {
       const aliveIdx = battle.playerParty.findIndex((p) => p.hp > 0);
@@ -594,12 +594,12 @@ export class BattleService {
         battle.playerBattleMon = this.createPlayerBattleMon(battle.playerParty[aliveIdx], battle.playerParty);
         turnLogs.push(
           isKo
-            ? `💀 ${playerMon.name}(이)가 쓰러졌다! 가랏, ${battle.playerBattleMon.name}!`
-            : `💀 ${playerMon.name} fainted! Go, ${battle.playerBattleMon.name}!`
+            ? `${playerMon.name}(이)가 쓰러졌다! 가랏, ${battle.playerBattleMon.name}!`
+            : `${playerMon.name} fainted! Go, ${battle.playerBattleMon.name}!`
         );
       } else {
         battle.phase = "DEFEAT";
-        turnLogs.push(isKo ? `💀 모든 포켓몬이 쓰러졌다... 눈앞이 캄캄해졌다!` : `💀 All Pokémon fainted... You blacked out!`);
+        turnLogs.push(isKo ? `모든 포켓몬이 쓰러졌다... 눈앞이 캄캄해졌다!` : `All Pokémon fainted... You blacked out!`);
       }
     }
 
@@ -736,8 +736,8 @@ export class BattleService {
       target.hp = 0;
       return {
         log: isKo
-          ? `💥 ${actorName}의 ${moveName}!\n일격필살! ${targetName}(은)는 쓰러졌다!`
-          : `💥 ${actorName}'s ${moveName}!\nIt's a One-Hit KO! ${targetName} fainted!`,
+          ? `${actorName}의 ${moveName}!\n일격필살! ${targetName}(은)는 쓰러졌다!`
+          : `${actorName}'s ${moveName}!\nIt's a One-Hit KO! ${targetName} fainted!`,
         damage,
       };
     }
@@ -922,7 +922,7 @@ export class BattleService {
       if (target.hasIllusion) {
         target.hasIllusion = false;
         target.illusionTarget = null;
-        damageLog += isKo ? `\n✨ 일루전이 깨져 본래의 ${isActorPlayer ? target.name : target.nameKo} 모습이 드러났다!` : `\n✨ The illusion broke!`;
+        damageLog += isKo ? `\n일루전이 깨져 본래의 ${isActorPlayer ? target.name : target.nameKo} 모습이 드러났다!` : `\nThe illusion broke!`;
       }
 
       // Sturdy check
@@ -937,7 +937,7 @@ export class BattleService {
     // Self-destruct faints actor
     if (isSelfDestruct) {
       actor.hp = 0;
-      damageLog += isKo ? `\n💥 ${actorName}(은)는 폭발하여 스스로 쓰러졌다!` : `\n💥 ${actorName} self-destructed and fainted!`;
+      damageLog += isKo ? `\n${actorName}(은)는 폭발하여 스스로 쓰러졌다!` : `\n${actorName} self-destructed and fainted!`;
     }
 
     // 8. Secondary Effects (Drain, Recoil, Status Infliction, Stat Stages)
@@ -980,7 +980,7 @@ export class BattleService {
       const drainRatio = mName === "oblivion-wing" ? 0.75 : 0.5;
       const healAmount = Math.max(1, Math.floor(damageDealt * drainRatio));
       actor.hp = Math.min(actor.maxHp, actor.hp + healAmount);
-      log += isKo ? `\n✨ 상대의 체력을 ${healAmount} 흡수했다!` : `\n✨ Restored ${healAmount} HP!`;
+      log += isKo ? `\n상대의 체력을 ${healAmount} 흡수했다!` : `\nRestored ${healAmount} HP!`;
     }
 
     // Recoil Moves
@@ -992,7 +992,7 @@ export class BattleService {
       const recoilRatio = mName === "head-smash" ? 0.5 : 0.33;
       const recoilDmg = Math.max(1, Math.floor(damageDealt * recoilRatio));
       actor.hp = Math.max(0, actor.hp - recoilDmg);
-      log += isKo ? `\n💥 반동으로 ${recoilDmg} 데미지를 입었다!` : `\n💥 Hit with ${recoilDmg} recoil damage!`;
+      log += isKo ? `\n반동으로 ${recoilDmg} 데미지를 입었다!` : `\nHit with ${recoilDmg} recoil damage!`;
     }
 
     // Stat Drops on Self (Close Combat, Draco Meteor, etc.)
@@ -1020,17 +1020,17 @@ export class BattleService {
       if ((mName === "flamethrower" || mName === "fire-blast" || mName === "scald") && Math.random() < 0.3) {
         if (!target.types.includes("fire")) {
           target.status = "brn";
-          log += isKo ? `\n🔥 ${target.name}(은)는 화상을 입었다!` : `\n🔥 ${target.name} was burned!`;
+          log += isKo ? `\n${target.name}(은)는 화상을 입었다!` : `\n${target.name} was burned!`;
         }
       } else if ((mName === "thunderbolt" || mName === "discharge" || mName === "spark") && Math.random() < 0.3) {
         if (!target.types.includes("electric")) {
           target.status = "par";
-          log += isKo ? `\n⚡ ${target.name}(은)는 마비되어 저려왔다!` : `\n⚡ ${target.name} is paralyzed!`;
+          log += isKo ? `\n${target.name}(은)는 마비되어 저려왔다!` : `\n${target.name} is paralyzed!`;
         }
       } else if ((mName === "sludge-bomb" || mName === "poison-jab") && Math.random() < 0.3) {
         if (!target.types.includes("poison") && !target.types.includes("steel")) {
           target.status = "psn";
-          log += isKo ? `\n🟣 ${target.name}(은)는 독에 걸렸다!` : `\n🟣 ${target.name} was poisoned!`;
+          log += isKo ? `\n${target.name}(은)는 독에 걸렸다!` : `\n${target.name} was poisoned!`;
         }
       }
     }
@@ -1091,8 +1091,8 @@ export class BattleService {
         actor.hp -= halfHp;
         actor.stages.atk = 6;
         return isKo
-          ? `🥁 ${actorName}의 배북!\n자신의 HP를 깎아 공격을 최대치(+6)까지 올렸다!`
-          : `🥁 ${actorName} used Belly Drum!\nCut its own HP to max out Attack (+6)!`;
+          ? `${actorName}의 배북!\n자신의 HP를 깎아 공격을 최대치(+6)까지 올렸다!`
+          : `${actorName} used Belly Drum!\nCut its own HP to max out Attack (+6)!`;
       }
       return isKo ? `하지만 기술은 실패했다!` : `But it failed!`;
     }
@@ -1104,16 +1104,16 @@ export class BattleService {
       actor.stages.spa = Math.min(6, actor.stages.spa + 2);
       actor.stages.spe = Math.min(6, actor.stages.spe + 2);
       return isKo
-        ? `✨ ${actorName}의 껍질깨기!\n방어/특방이 떨어지고 공격/특공/스피드가 크게 올랐다! (+2)`
-        : `✨ ${actorName} used Shell Smash!\nDefense/Sp.Def fell, Attack/Sp.Atk/Speed sharply rose! (+2)`;
+        ? `${actorName}의 껍질깨기!\n방어/특방이 떨어지고 공격/특공/스피드가 크게 올랐다! (+2)`
+        : `${actorName} used Shell Smash!\nDefense/Sp.Def fell, Attack/Sp.Atk/Speed sharply rose! (+2)`;
     }
 
     if (mName === "haze") {
       actor.stages = { atk: 0, def: 0, spa: 0, spd: 0, spe: 0, acc: 0, eva: 0 };
       target.stages = { atk: 0, def: 0, spa: 0, spd: 0, spe: 0, acc: 0, eva: 0 };
       return isKo
-        ? `🌫️ ${actorName}의 흑안개!\n모든 포켓몬의 능력치 변화가 초기화되었다!`
-        : `🌫️ ${actorName} used Haze!\nAll stat changes were reset!`;
+        ? `${actorName}의 흑안개!\n모든 포켓몬의 능력치 변화가 초기화되었다!`
+        : `${actorName} used Haze!\nAll stat changes were reset!`;
     }
 
     if (mName === "memento") {
@@ -1121,15 +1121,15 @@ export class BattleService {
       target.stages.atk = Math.max(-6, target.stages.atk - 2);
       target.stages.spa = Math.max(-6, target.stages.spa - 2);
       return isKo
-        ? `👻 ${actorName}의 추억의선물!\n${actorName}(은)는 쓰러지고 ${targetName}의 공격/특수공격이 크게 떨어졌다! (-2)`
-        : `👻 ${actorName} used Memento!\n${actorName} fainted, and ${targetName}'s Attack and Sp. Atk harshly fell! (-2)`;
+        ? `${actorName}의 추억의선물!\n${actorName}(은)는 쓰러지고 ${targetName}의 공격/특수공격이 크게 떨어졌다! (-2)`
+        : `${actorName} used Memento!\n${actorName} fainted, and ${targetName}'s Attack and Sp. Atk harshly fell! (-2)`;
     }
 
     if (mName === "healing-wish" || mName === "lunar-dance") {
       actor.hp = 0;
       return isKo
-        ? `🌙 ${actorName}의 ${move.nameKo}!\n자신을 희생하여 다음 포켓몬을 위한 소원을 빌었다!`
-        : `🌙 ${actorName} used ${move.name.toUpperCase()}!\nSacrificed itself for a healing wish!`;
+        ? `${actorName}의 ${move.nameKo}!\n자신을 희생하여 다음 포켓몬을 위한 소원을 빌었다!`
+        : `${actorName} used ${move.name.toUpperCase()}!\nSacrificed itself for a healing wish!`;
     }
 
     // 6. STAT STAGES UP
@@ -1265,24 +1265,24 @@ export class BattleService {
     // 9. WEATHER CONTROL
     if (mName === "sunny-day") {
       if (battle) { battle.weather = "sun"; battle.weatherTurns = 5; }
-      return isKo ? `☀️ ${actorName}의 쾌청!\n햇살이 아주 강해졌다! (5턴 지속)` : `☀️ ${actorName} used Sunny Day!\nThe sunlight turned harsh! (5 turns)`;
+      return isKo ? `${actorName}의 쾌청!\n햇살이 아주 강해졌다! (5턴 지속)` : `${actorName} used Sunny Day!\nThe sunlight turned harsh! (5 turns)`;
     }
     if (mName === "rain-dance") {
       if (battle) { battle.weather = "rain"; battle.weatherTurns = 5; }
-      return isKo ? `🌧️ ${actorName}의 비바라기!\n비가 내리기 시작했다! (5턴 지속)` : `🌧️ ${actorName} used Rain Dance!\nIt started to rain! (5 turns)`;
+      return isKo ? `${actorName}의 비바라기!\n비가 내리기 시작했다! (5턴 지속)` : `${actorName} used Rain Dance!\nIt started to rain! (5 turns)`;
     }
     if (mName === "sandstorm") {
       if (battle) { battle.weather = "sand"; battle.weatherTurns = 5; }
-      return isKo ? `🌪️ ${actorName}의 모래바람!\n모래바람이 세차게 불기 시작했다! (5턴 지속)` : `🌪️ ${actorName} used Sandstorm!\nA sandstorm kicked up! (5 turns)`;
+      return isKo ? `${actorName}의 모래바람!\n모래바람이 세차게 불기 시작했다! (5턴 지속)` : `${actorName} used Sandstorm!\nA sandstorm kicked up! (5 turns)`;
     }
     if (mName === "snowscape" || mName === "hail" || mName === "chilly-reception") {
       if (battle) { battle.weather = "snow"; battle.weatherTurns = 5; }
-      return isKo ? `❄️ ${actorName}의 ${move.nameKo}!\n눈이 내리기 시작했다! (5턴 지속)` : `❄️ ${actorName} used ${move.name.toUpperCase()}!\nSnow started to fall! (5 turns)`;
+      return isKo ? `${actorName}의 ${move.nameKo}!\n눈이 내리기 시작했다! (5턴 지속)` : `${actorName} used ${move.name.toUpperCase()}!\nSnow started to fall! (5 turns)`;
     }
     if (mName === "defog") {
       if (battle) { battle.weather = null; battle.weatherTurns = undefined; }
       target.stages.eva = Math.max(-6, target.stages.eva - 1);
-      return isKo ? `💨 ${actorName}의 안개제거!\n날씨가 맑아지고 ${targetName}의 회피율이 떨어졌다! (-1)` : `💨 ${actorName} used Defog!\nThe weather cleared and ${targetName}'s evasiveness fell!`;
+      return isKo ? `${actorName}의 안개제거!\n날씨가 맑아지고 ${targetName}의 회피율이 떨어졌다! (-1)` : `${actorName} used Defog!\nThe weather cleared and ${targetName}'s evasiveness fell!`;
     }
     if (mName === "synthesis" || mName === "morning-sun" || mName === "moonlight") {
       const healRatio = battle?.weather === "sun" ? 0.667 : (battle?.weather ? 0.25 : 0.5);
@@ -1309,7 +1309,7 @@ export class BattleService {
       if (!isImmune) {
         const sandDmg = Math.max(1, Math.floor(mon.maxHp / 16));
         mon.hp = Math.max(0, mon.hp - sandDmg);
-        logs.push(isKo ? `🌪️ 모래바람이 ${name}을(를) 덮쳤다! (-${sandDmg})` : `🌪️ The sandstorm buffeted ${name}! (-${sandDmg})`);
+        logs.push(isKo ? `모래바람이 ${name}을(를) 덮쳤다! (-${sandDmg})` : `The sandstorm buffeted ${name}! (-${sandDmg})`);
       }
     }
 
@@ -1317,20 +1317,20 @@ export class BattleService {
     if (mon.status === "brn") {
       const burnDmg = Math.max(1, Math.floor(mon.maxHp / 16));
       mon.hp = Math.max(0, mon.hp - burnDmg);
-      logs.push(isKo ? `🔥 ${name}(은)는 화상으로 ${burnDmg} 데미지를 입었다!` : `🔥 ${name} was hurt by its burn! (${burnDmg})`);
+      logs.push(isKo ? `${name}(은)는 화상으로 ${burnDmg} 데미지를 입었다!` : `${name} was hurt by its burn! (${burnDmg})`);
     }
 
     // Poison Damage (1/8 Max HP or Toxic Scaling)
     if (mon.status === "psn") {
       const psnDmg = Math.max(1, Math.floor(mon.maxHp / 8));
       mon.hp = Math.max(0, mon.hp - psnDmg);
-      logs.push(isKo ? `🟣 ${name}(은)는 독으로 ${psnDmg} 데미지를 입었다!` : `🟣 ${name} was hurt by poison! (${psnDmg})`);
+      logs.push(isKo ? `${name}(은)는 독으로 ${psnDmg} 데미지를 입었다!` : `${name} was hurt by poison! (${psnDmg})`);
     } else if (mon.status === "tox") {
       const counter = mon.toxicCounter || 1;
       const toxDmg = Math.max(1, Math.floor((mon.maxHp * counter) / 16));
       mon.hp = Math.max(0, mon.hp - toxDmg);
       mon.toxicCounter = counter + 1;
-      logs.push(isKo ? `🟣 ${name}(은)는 맹독으로 ${toxDmg} 데미지를 입었다!` : `🟣 ${name} was badly hurt by toxic! (${toxDmg})`);
+      logs.push(isKo ? `${name}(은)는 맹독으로 ${toxDmg} 데미지를 입었다!` : `${name} was badly hurt by toxic! (${toxDmg})`);
     }
 
     // Ability: Moody (변덕쟁이)
