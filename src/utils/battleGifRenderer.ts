@@ -26,10 +26,20 @@ export interface BattleAnimationOptions {
   dialogueLines?: string[];
 }
 
+export interface RenderGifResult {
+  buffer: Buffer;
+  motionDurationMs: number;
+}
+
 /**
- * 1. Standard Move Execution GIF (Attack lunge -> Effect strike -> Hit flash -> Settle)
+ * 1. Standard Move Execution GIF:
+ * Frame 1: Lunge / Windup (No effect)
+ * Frame 2: Single Move Effect Strike & Hit Flash (Effect ONCE!)
+ * Frame 3: Recoil & Damage Settling (Effect OFF)
+ * Frame 4: Neutral Return (Effect OFF)
+ * Frame 5: 10-Second Static Hold Buffer (Effect OFF)
  */
-export async function renderBattleMoveGif(options: BattleAnimationOptions): Promise<Buffer> {
+export async function renderBattleMoveGif(options: BattleAnimationOptions): Promise<RenderGifResult> {
   const width = 560;
   const height = 380;
   const isKo = options.lang === "ko";
@@ -73,36 +83,51 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   const playerHp = playerMon.hp;
 
   const framesConfig = [
+    // Frame 1: Attacker Windup & Lunge (180ms)
     {
-      delay: 120,
-      pOffset: isPlayer ? (isSpecial ? { x: 0, y: -6 } : { x: 12, y: -6 }) : { x: 0, y: 0 },
-      eOffset: !isPlayer ? (isSpecial ? { x: 0, y: -6 } : { x: -12, y: 6 }) : { x: 0, y: 0 },
+      delay: 180,
+      pOffset: isPlayer ? (isSpecial ? { x: 0, y: -6 } : { x: 16, y: -8 }) : { x: 0, y: 0 },
+      eOffset: !isPlayer ? (isSpecial ? { x: 0, y: -6 } : { x: -16, y: 8 }) : { x: 0, y: 0 },
       showEffect: false,
       hitFlash: false,
       enemyHp: enemyHp,
       playerHp: playerHp,
       textLineIdx: 1
     },
+    // Frame 2: Move Effect Strikes Target (240ms) - ONLY FRAME WITH EFFECT!
     {
-      delay: 140,
+      delay: 240,
       pOffset: isPlayer ? (isSpecial ? { x: 0, y: -4 } : { x: 18, y: -10 }) : { x: 0, y: 0 },
-      eOffset: !isPlayer ? (isSpecial ? { x: 0, y: -4 } : { x: -18, y: 10 }) : { x: 0, y: 0 },
-      showEffect: true,
-      hitFlash: false,
-      enemyHp: enemyHp,
-      playerHp: playerHp,
-      textLineIdx: 1
-    },
-    {
-      delay: 160,
-      pOffset: isPlayer ? { x: 8, y: -4 } : { x: 0, y: 0 },
-      eOffset: isPlayer ? { x: 8, y: -4 } : { x: -8, y: 4 },
+      eOffset: isPlayer ? { x: -6, y: 3 } : (isSpecial ? { x: 0, y: -4 } : { x: -18, y: 10 }),
       showEffect: true,
       hitFlash: true,
       enemyHp: enemyHp,
       playerHp: playerHp,
+      textLineIdx: 1
+    },
+    // Frame 3: Recoil & Damage Settling (220ms) - EFFECT OFF!
+    {
+      delay: 220,
+      pOffset: isPlayer ? { x: 6, y: -3 } : { x: 0, y: 0 },
+      eOffset: isPlayer ? { x: -8, y: 4 } : { x: 6, y: -3 },
+      showEffect: false,
+      hitFlash: false,
+      enemyHp: enemyHp,
+      playerHp: playerHp,
       textLineIdx: 2
     },
+    // Frame 4: Neutral Stance Return (200ms) - EFFECT OFF!
+    {
+      delay: 200,
+      pOffset: { x: 0, y: 0 },
+      eOffset: { x: 0, y: 0 },
+      showEffect: false,
+      hitFlash: false,
+      enemyHp: enemyHp,
+      playerHp: playerHp,
+      textLineIdx: 3
+    },
+    // Frame 5: 10-Second Static Hold Buffer (10,000ms)
     {
       delay: 10000,
       pOffset: { x: 0, y: 0 },
@@ -114,6 +139,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       textLineIdx: 3
     }
   ];
+
+  // Pure dynamic motion duration (Frames 1~4 = 180+240+220+200 = 840ms)
+  const motionDurationMs = framesConfig.slice(0, -1).reduce((sum, f) => sum + f.delay, 0);
 
   const ep = BATTLE_LAYOUT_CONFIG.enemyPlatform;
   const pp = BATTLE_LAYOUT_CONFIG.playerPlatform;
@@ -167,13 +195,18 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   }
 
   encoder.finish();
-  return encoder.out.getData();
+  return { buffer: encoder.out.getData(), motionDurationMs };
 }
 
 /**
- * 2. Knockout / Fainting GIF (Hit spark -> Sinking into ground with Fade Out -> Empty Platform)
+ * 2. Knockout / Fainting GIF:
+ * Frame 1: Hit Strike & KO Flash (Effect ONCE!)
+ * Frame 2: Sinking begins (Effect OFF)
+ * Frame 3: Deep sinking beneath ground (Effect OFF)
+ * Frame 4: Disappeared / Empty platform (Effect OFF)
+ * Frame 5: 10-Second Static Hold Buffer
  */
-export async function renderBattleFaintGif(options: BattleAnimationOptions): Promise<Buffer> {
+export async function renderBattleFaintGif(options: BattleAnimationOptions): Promise<RenderGifResult> {
   const width = 560;
   const height = 380;
   const isKo = options.lang === "ko";
@@ -212,17 +245,21 @@ export async function renderBattleFaintGif(options: BattleAnimationOptions): Pro
   const ctx = canvas.getContext("2d");
   ctx.imageSmoothingEnabled = false;
 
-  // Faint Animation Frames (Hit -> Sink 1 -> Sink 2 / Fade -> Gone / Empty)
   const faintFrames = [
-    // Frame 1: Hit Flash (130ms)
-    { delay: 130, showEffect: true, hitFlash: true, eOffsetY: -4, opacity: 1.0, enemyHp: 0, textLineIdx: 1 },
-    // Frame 2: Sinking Begins (140ms)
-    { delay: 140, showEffect: false, hitFlash: false, eOffsetY: 14, opacity: 0.75, enemyHp: 0, textLineIdx: 2 },
-    // Frame 3: Deep Sink & Fade Out (150ms)
-    { delay: 150, showEffect: false, hitFlash: false, eOffsetY: 38, opacity: 0.35, enemyHp: 0, textLineIdx: 2 },
-    // Frame 4: Completely Fainted / Empty Platform (Holds for 10000ms / 10초 정적 대기)
+    // Frame 1: Hit Flash (180ms) - ONLY FRAME WITH EFFECT!
+    { delay: 180, showEffect: true, hitFlash: true, eOffsetY: -4, opacity: 1.0, enemyHp: 0, textLineIdx: 1 },
+    // Frame 2: Sinking Begins (220ms) - EFFECT OFF!
+    { delay: 220, showEffect: false, hitFlash: false, eOffsetY: 18, opacity: 0.75, enemyHp: 0, textLineIdx: 2 },
+    // Frame 3: Deep Sink & Fade Out (220ms) - EFFECT OFF!
+    { delay: 220, showEffect: false, hitFlash: false, eOffsetY: 45, opacity: 0.35, enemyHp: 0, textLineIdx: 2 },
+    // Frame 4: Completely Gone (200ms) - EFFECT OFF!
+    { delay: 200, showEffect: false, hitFlash: false, eOffsetY: 70, opacity: 0.0, enemyHp: 0, textLineIdx: 3 },
+    // Frame 5: 10-Second Static Hold Buffer (10,000ms)
     { delay: 10000, showEffect: false, hitFlash: false, eOffsetY: 70, opacity: 0.0, enemyHp: 0, textLineIdx: 3 }
   ];
+
+  // Pure dynamic motion duration (Frames 1~4 = 180+220+220+200 = 820ms)
+  const motionDurationMs = faintFrames.slice(0, -1).reduce((sum, f) => sum + f.delay, 0);
 
   const ep = BATTLE_LAYOUT_CONFIG.enemyPlatform;
   const pp = BATTLE_LAYOUT_CONFIG.playerPlatform;
@@ -275,13 +312,18 @@ export async function renderBattleFaintGif(options: BattleAnimationOptions): Pro
   }
 
   encoder.finish();
-  return encoder.out.getData();
+  return { buffer: encoder.out.getData(), motionDurationMs };
 }
 
 /**
- * 3. Wild Encounter Entry GIF (Terrain slides left-to-right, Enemy slides right-to-left)
+ * 3. Wild Encounter Entry GIF:
+ * Frame 1: Far Slide-in (180ms)
+ * Frame 2: Mid-way Approach (200ms)
+ * Frame 3: Near Landing & HUD appears (200ms)
+ * Frame 4: Grounded on Platform (220ms)
+ * Frame 5: 10-Second Static Hold Buffer (10,000ms)
  */
-export async function renderBattleEntryGif(options: BattleAnimationOptions): Promise<Buffer> {
+export async function renderBattleEntryGif(options: BattleAnimationOptions): Promise<RenderGifResult> {
   const width = 560;
   const height = 380;
   const isKo = options.lang === "ko";
@@ -316,17 +358,21 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
   const ctx = canvas.getContext("2d");
   ctx.imageSmoothingEnabled = false;
 
-  // Entry Slide Frames:
-  // - Terrain (Left Platform): Slides in from left (-200 -> -90 -> -25 -> 0)
-  // - Enemy Platform: Slides in from right (+200 -> +90 -> +25 -> 0)
-  // - Enemy Pokemon: Slides in from outside-right (+240 -> +110 -> +30 -> 0)
-  // - Player Pokemon: Slides in from outside-left (-240 -> -110 -> -30 -> 0)
   const entryFrames = [
-    { delay: 110, pPlatX: -180, ePlatX: 180, pMonX: -220, eMonX: 220, showHud: false, textLineIdx: 0 },
-    { delay: 120, pPlatX: -80, ePlatX: 80, pMonX: -100, eMonX: 100, showHud: false, textLineIdx: 0 },
-    { delay: 130, pPlatX: -20, ePlatX: 20, pMonX: -25, eMonX: 25, showHud: true, textLineIdx: 1 },
+    // Frame 1: Far Slide (180ms)
+    { delay: 180, pPlatX: -180, ePlatX: 180, pMonX: -220, eMonX: 220, showHud: false, textLineIdx: 0 },
+    // Frame 2: Mid-way Slide (200ms)
+    { delay: 200, pPlatX: -80, ePlatX: 80, pMonX: -100, eMonX: 100, showHud: false, textLineIdx: 0 },
+    // Frame 3: Near Landing (200ms)
+    { delay: 200, pPlatX: -20, ePlatX: 20, pMonX: -25, eMonX: 25, showHud: true, textLineIdx: 1 },
+    // Frame 4: Aligned on Platform (220ms)
+    { delay: 220, pPlatX: 0, ePlatX: 0, pMonX: 0, eMonX: 0, showHud: true, textLineIdx: 2 },
+    // Frame 5: 10-Second Static Hold Buffer (10,000ms)
     { delay: 10000, pPlatX: 0, ePlatX: 0, pMonX: 0, eMonX: 0, showHud: true, textLineIdx: 2 }
   ];
+
+  // Pure dynamic motion duration (Frames 1~4 = 180+200+200+220 = 800ms)
+  const motionDurationMs = entryFrames.slice(0, -1).reduce((sum, f) => sum + f.delay, 0);
 
   const ep = BATTLE_LAYOUT_CONFIG.enemyPlatform;
   const pp = BATTLE_LAYOUT_CONFIG.playerPlatform;
@@ -346,9 +392,7 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
 
     // Sliding Platforms
     if (arena.b) {
-      // Enemy Platform sliding from right
       ctx.drawImage(arena.b, ep.x + f.ePlatX, ep.y, enemyPlatW, enemyPlatH);
-      // Player Platform sliding from left
       ctx.save();
       ctx.translate(width, 0);
       ctx.scale(-1, 1);
@@ -377,7 +421,7 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
   }
 
   encoder.finish();
-  return encoder.out.getData();
+  return { buffer: encoder.out.getData(), motionDurationMs };
 }
 
 /**
