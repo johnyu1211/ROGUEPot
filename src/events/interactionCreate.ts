@@ -3521,6 +3521,9 @@ export const interactionCreateEvent: BotEvent = {
 
       // 2-7. Battle Actions (⚔️ Fight, 🎒 Bag, 🔄 Party, 🏃 Run, Moves, Balls, Next Wave)
       if (customId.startsWith("battle_")) {
+        // Instantly acknowledge the button interaction to prevent Discord 3-second timeout!
+        await interaction.deferUpdate().catch(() => null);
+
         // 2-7-A. Fight Menu Selected
         if (customId.startsWith("battle_menu_fight_")) {
           const slotId = parseInt(parts[3], 10) || 1;
