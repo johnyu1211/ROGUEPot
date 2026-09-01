@@ -3605,12 +3605,12 @@ export const interactionCreateEvent: BotEvent = {
             ? `첫 파트너로 **${newRun.party[0].name}**을(를) 선택하셨습니다!\n\n` +
               `• **출발 바이옴**: ${newRun.biome}\n` +
               `• **시작 웨이브**: Wave 1\n` +
-              `• **초기 자금**: ₩${newRun.money}\n\n` +
+              `• **초기 자금**: P ${newRun.money}\n\n` +
               "지금 포켓로그의 여정을 시작하세요!"
             : `You chose **${newRun.party[0].name}** as your starter!\n\n` +
               `• **Current Biome**: ${newRun.biome}\n` +
               `• **Starting Wave**: Wave 1\n` +
-              `• **Starting Balance**: ₩${newRun.money}\n\n` +
+              `• **Starting Balance**: P ${newRun.money}\n\n` +
               "Your journey into PokéRogue starts now!"
         )
           .setColor(COLORS.SUCCESS)
