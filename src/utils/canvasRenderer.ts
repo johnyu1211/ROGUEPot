@@ -4793,11 +4793,6 @@ export async function renderSaveSlotsScreen(options: SaveSlotsScreenOptions): Pr
           ctx.drawImage(sprite, px, py, 34, 34);
         }
 
-        // Starter Heart Icon on 1st Pokemon
-        if (pIdx === 0) {
-          drawSmallHeart(ctx, px - 2, py + 14, 5.5, "#F472B6");
-        }
-
         // Level
         ctx.textAlign = "center";
         ctx.font = "bold 11px DungGeunMo";
