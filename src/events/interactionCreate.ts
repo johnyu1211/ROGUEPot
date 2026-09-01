@@ -3583,6 +3583,20 @@ export const interactionCreateEvent: BotEvent = {
           battleService.executePlayerMove(interaction.user.id, slotId, moveKey, profile.language);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId);
           await safeInteractionUpdate(interaction, battleData);
+
+          // 🎬 Auto-Transition: After attack GIF completes (~1.2s), convert message to true static PNG!
+          const battle = battleService.getOrCreateBattle(interaction.user.id, slotId);
+          if (battle.lastMoveEffect) {
+            setTimeout(async () => {
+              try {
+                battle.lastMoveEffect = null;
+                const staticData = await renderBattleMessageData(interaction.user.id, slotId);
+                await safeInteractionUpdate(interaction, staticData).catch(() => null);
+              } catch (e) {
+                // Ignore transient timeout errors
+              }
+            }, 1200);
+          }
           return;
         }
 
