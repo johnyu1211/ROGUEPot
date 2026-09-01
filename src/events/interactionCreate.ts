@@ -14,6 +14,7 @@ import {
 import { BotEvent, ExtendedClient } from "../types/index.js";
 import { createBaseEmbed, COLORS } from "../utils/embed.js";
 import { renderTitleScreen, renderBagScreen, renderMultiplayerScreen, renderPokedexScreen, renderStarterSelectScreen, renderGenSelectScreen, renderEggGachaScreen, renderSaveSlotsScreen, renderBattleScreen, StarterSelectPartyItem, PartyViewTab, InGameMessage, getPokemonSprite, isSpriteCached, TYPE_NAMES_KO } from "../utils/canvasRenderer.js";
+import { renderBattleMoveGif } from "../utils/battleGifRenderer.js";
 import { MOVES_DATA } from "../data/movesKo.js";
 import { MOVES_EN_DESC } from "../data/movesEn.js";
 import { saveService, PartyPokemon } from "../services/saveService.js";
@@ -181,12 +182,23 @@ export async function renderBattleMessageData(
     battle.phase = overridePhase;
   }
 
-  const imageBuffer = await renderBattleScreen({
-    battle,
-    lang: profile.language,
-  });
+  let imageBuffer: Buffer;
+  let fileName = "battle.png";
 
-  const attachment = new AttachmentBuilder(imageBuffer, { name: "battle.png" });
+  if (battle.lastMoveEffect && battle.phase === "MAIN") {
+    imageBuffer = await renderBattleMoveGif({
+      battle,
+      lang: profile.language,
+    });
+    fileName = "battle.gif";
+  } else {
+    imageBuffer = await renderBattleScreen({
+      battle,
+      lang: profile.language,
+    });
+  }
+
+  const attachment = new AttachmentBuilder(imageBuffer, { name: fileName });
   const components: ActionRowBuilder<ButtonBuilder>[] = [];
 
   const combatMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex] || battle.playerParty[0];
