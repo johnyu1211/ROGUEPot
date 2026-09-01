@@ -84,17 +84,18 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   const playerHp = playerMon.hp;
 
   const framesConfig = [
-    // Frame 0: Leading Static Buffer (1000ms / 1.0s) - Calm intro announcement, absorbs any Discord DOM reset!
+    // Frame 0: Leading Cinematic Soft-Blur Loading Frame (500ms) - Atmospheric focus transition without text!
     {
-      delay: 1000,
+      delay: 500,
       pOffset: { x: 0, y: 0 },
       eOffset: { x: 0, y: 0 },
       showEffect: false,
       hitFlash: false,
       enemyHp: enemyHp,
       playerHp: playerHp,
-      textLineIdx: 1,
+      textLineIdx: 0,
       statProgress: undefined,
+      isBlur: true,
     },
     // Frame 1: Attacker Windup & Lunge (180ms)
     {
@@ -107,6 +108,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       playerHp: playerHp,
       textLineIdx: 1,
       statProgress: undefined,
+      isBlur: false,
     },
     // Frame 2: Move Effect Strikes Target (240ms) - ONLY FRAME WITH EFFECT!
     {
@@ -119,6 +121,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       playerHp: playerHp,
       textLineIdx: 1,
       statProgress: 0.25,
+      isBlur: false,
     },
     // Frame 3: Recoil & Damage Settling + Stat Particles (220ms) - EFFECT OFF!
     {
@@ -131,6 +134,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       playerHp: playerHp,
       textLineIdx: 2,
       statProgress: 0.65,
+      isBlur: false,
     },
     // Frame 4: Neutral Stance Return + Stat Particles Peak (200ms) - EFFECT OFF!
     {
@@ -143,6 +147,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       playerHp: playerHp,
       textLineIdx: 3,
       statProgress: 0.95,
+      isBlur: false,
     },
     // Frame 5: 11-Minute Static Hold Frame (655,000ms - Maximum GIF89a unsigned 16-bit delay limit)
     {
@@ -155,6 +160,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       playerHp: playerHp,
       textLineIdx: 99,
       statProgress: undefined,
+      isBlur: false,
     }
   ];
 
@@ -172,6 +178,12 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
 
   for (const f of framesConfig) {
     ctx.clearRect(0, 0, width, height);
+
+    if (f.isBlur) {
+      ctx.filter = "blur(4px) brightness(0.90)";
+    } else {
+      ctx.filter = "none";
+    }
 
     if (arena.bg) ctx.drawImage(arena.bg, 0, 0, width, 275);
     else { ctx.fillStyle = "#487848"; ctx.fillRect(0, 0, width, 275); }
@@ -199,6 +211,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       ctx.restore();
     }
 
+    ctx.filter = "none";
+
     if (f.showEffect) {
       renderMoveEffect(ctx, { moveKey, type, isSpecial, isPlayerAttacking: isPlayer });
     }
@@ -217,9 +231,22 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       }
     }
 
-    renderBattleHeader(ctx, width, battle, isKo);
-    renderBattleHuds(ctx, battle, isKo, pbAssets, f.enemyHp, f.playerHp);
-    renderBattleDialogue(ctx, width, height, dialogueLines, f.textLineIdx);
+    if (!f.isBlur) {
+      renderBattleHeader(ctx, width, battle, isKo);
+      renderBattleHuds(ctx, battle, isKo, pbAssets, f.enemyHp, f.playerHp);
+      renderBattleDialogue(ctx, width, height, dialogueLines, f.textLineIdx);
+    } else {
+      // Clean text-free dialogue box for smooth loading transition
+      const boxY = 270;
+      ctx.fillStyle = "#131924";
+      ctx.fillRect(0, boxY, width, height - boxY);
+      ctx.strokeStyle = "#0D9488";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(0, boxY);
+      ctx.lineTo(width, boxY);
+      ctx.stroke();
+    }
 
     encoder.setDelay(f.delay);
     encoder.addFrame(ctx);
@@ -231,7 +258,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
 
 /**
  * 2. Knockout / Fainting GIF:
- * Frame 0: Leading Static Buffer (1000ms / 1.0s)
+ * Frame 0: Leading Cinematic Soft-Blur Loading Frame (500ms)
  * Frame 1: Hit Strike & KO Flash (Effect ONCE!)
  * Frame 2: Sinking begins (Effect OFF)
  * Frame 3: Deep sinking beneath ground (Effect OFF)
@@ -278,18 +305,18 @@ export async function renderBattleFaintGif(options: BattleAnimationOptions): Pro
   ctx.imageSmoothingEnabled = false;
 
   const faintFrames = [
-    // Frame 0: Leading Static Buffer (1000ms / 1.0s) - Calm pre-strike stance
-    { delay: 1000, showEffect: false, hitFlash: false, eOffsetY: 0, opacity: 1.0, enemyHp: enemy.hp, textLineIdx: 1 },
+    // Frame 0: Leading Cinematic Soft-Blur Loading Frame (500ms) - Calm pre-strike stance without text!
+    { delay: 500, showEffect: false, hitFlash: false, eOffsetY: 0, opacity: 1.0, enemyHp: enemy.hp, textLineIdx: 0, isBlur: true },
     // Frame 1: Hit Flash (180ms) - ONLY FRAME WITH EFFECT!
-    { delay: 180, showEffect: true, hitFlash: true, eOffsetY: -4, opacity: 1.0, enemyHp: 0, textLineIdx: 1 },
+    { delay: 180, showEffect: true, hitFlash: true, eOffsetY: -4, opacity: 1.0, enemyHp: 0, textLineIdx: 1, isBlur: false },
     // Frame 2: Sinking Begins (220ms) - EFFECT OFF!
-    { delay: 220, showEffect: false, hitFlash: false, eOffsetY: 18, opacity: 0.75, enemyHp: 0, textLineIdx: 2 },
+    { delay: 220, showEffect: false, hitFlash: false, eOffsetY: 18, opacity: 0.75, enemyHp: 0, textLineIdx: 2, isBlur: false },
     // Frame 3: Deep Sink & Fade Out (220ms) - EFFECT OFF!
-    { delay: 220, showEffect: false, hitFlash: false, eOffsetY: 45, opacity: 0.35, enemyHp: 0, textLineIdx: 2 },
+    { delay: 220, showEffect: false, hitFlash: false, eOffsetY: 45, opacity: 0.35, enemyHp: 0, textLineIdx: 2, isBlur: false },
     // Frame 4: Completely Gone (200ms) - EFFECT OFF!
-    { delay: 200, showEffect: false, hitFlash: false, eOffsetY: 70, opacity: 0.0, enemyHp: 0, textLineIdx: 3 },
+    { delay: 200, showEffect: false, hitFlash: false, eOffsetY: 70, opacity: 0.0, enemyHp: 0, textLineIdx: 3, isBlur: false },
     // Frame 5: 11-Minute Static Hold Frame (655,000ms - Maximum GIF89a unsigned 16-bit delay limit)
-    { delay: 655000, showEffect: false, hitFlash: false, eOffsetY: 70, opacity: 0.0, enemyHp: 0, textLineIdx: 99 }
+    { delay: 655000, showEffect: false, hitFlash: false, eOffsetY: 70, opacity: 0.0, enemyHp: 0, textLineIdx: 99, isBlur: false }
   ];
 
   const motionDurationMs = faintFrames.slice(0, -1).reduce((sum, f) => sum + f.delay, 0);
@@ -306,6 +333,12 @@ export async function renderBattleFaintGif(options: BattleAnimationOptions): Pro
 
   for (const f of faintFrames) {
     ctx.clearRect(0, 0, width, height);
+
+    if (f.isBlur) {
+      ctx.filter = "blur(4px) brightness(0.90)";
+    } else {
+      ctx.filter = "none";
+    }
 
     if (arena.bg) ctx.drawImage(arena.bg, 0, 0, width, 275);
     else { ctx.fillStyle = "#487848"; ctx.fillRect(0, 0, width, 275); }
@@ -332,13 +365,28 @@ export async function renderBattleFaintGif(options: BattleAnimationOptions): Pro
       drawFittedBattleSprite(ctx, playerSprite, pm.x, pm.y, pm.size);
     }
 
+    ctx.filter = "none";
+
     if (f.showEffect) {
       renderMoveEffect(ctx, { moveKey, type, isSpecial, isPlayerAttacking: true });
     }
 
-    renderBattleHeader(ctx, width, battle, isKo);
-    renderBattleHuds(ctx, battle, isKo, pbAssets, f.enemyHp, playerMon.hp);
-    renderBattleDialogue(ctx, width, height, dialogueLines, f.textLineIdx);
+    if (!f.isBlur) {
+      renderBattleHeader(ctx, width, battle, isKo);
+      renderBattleHuds(ctx, battle, isKo, pbAssets, f.enemyHp, playerMon.hp);
+      renderBattleDialogue(ctx, width, height, dialogueLines, f.textLineIdx);
+    } else {
+      // Clean text-free dialogue box for smooth loading transition
+      const boxY = 270;
+      ctx.fillStyle = "#131924";
+      ctx.fillRect(0, boxY, width, height - boxY);
+      ctx.strokeStyle = "#0D9488";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(0, boxY);
+      ctx.lineTo(width, boxY);
+      ctx.stroke();
+    }
 
     encoder.setDelay(f.delay);
     encoder.addFrame(ctx);
