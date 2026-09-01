@@ -5290,6 +5290,29 @@ export const BIOME_NAMES_KO: Record<string, string> = {
 };
 
 /**
+ * Formats money with compact units (k, M, B) for PokéRogue
+ */
+export function formatMoney(amount: number): string {
+  const num = Math.floor(amount || 0);
+  if (num < 1000) {
+    return `${num} P`;
+  }
+  if (num < 1_000_000) {
+    const kVal = num / 1000;
+    const formatted = kVal >= 100 ? Math.floor(kVal) : (kVal % 1 === 0 ? kVal.toFixed(0) : kVal.toFixed(1).replace(/\.0$/, ""));
+    return `${formatted}k P`;
+  }
+  if (num < 1_000_000_000) {
+    const mVal = num / 1_000_000;
+    const formatted = mVal >= 100 ? Math.floor(mVal) : (mVal % 1 === 0 ? mVal.toFixed(0) : mVal.toFixed(1).replace(/\.0$/, ""));
+    return `${formatted}M P`;
+  }
+  const bVal = num / 1_000_000_000;
+  const formatted = bVal >= 100 ? Math.floor(bVal) : (bVal % 1 === 0 ? bVal.toFixed(0) : bVal.toFixed(1).replace(/\.0$/, ""));
+  return `${formatted}B P`;
+}
+
+/**
  * Renders the Authentic PokéRogue Battle Screen (560x380) with 2x SuperSampling
  */
 export async function renderBattleScreen(options: BattleScreenOptions): Promise<Buffer> {
@@ -5387,7 +5410,7 @@ export async function renderBattleScreen(options: BattleScreenOptions): Promise<
   const rawBiome = battle.biome || "Town";
   const biomeDisplay = isKo ? (BIOME_NAMES_KO[rawBiome.toLowerCase()] || rawBiome) : rawBiome;
   const waveText = `${biomeDisplay} - ${battle.wave || 1}`;
-  const moneyText = `₩${(battle.money || 0).toLocaleString()}`;
+  const moneyText = formatMoney(battle.money || 0);
 
   ctx.textAlign = "right";
   ctx.textBaseline = "top";
