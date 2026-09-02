@@ -507,27 +507,6 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
       drawFittedBattleSprite(targetCtx, playerSprite, pm.x + (f.pMonX || 0), pm.y + (f.pMonY || 0), pm.size);
     }
 
-    // Authentic DS Soundwave Ripple Arcs around Enemy during Cry
-    if (f.cryWave && f.cryWave > 0) {
-      targetCtx.save();
-      targetCtx.strokeStyle = "rgba(255, 255, 255, 0.75)";
-      targetCtx.lineWidth = 2.0;
-      const headX = em.x + (f.eMonX || 0);
-      const headY = em.y - em.size * 0.55 + (f.eMonY || 0);
-      const r = 24 + f.cryWave * 12;
-
-      // Left sound wave arc
-      targetCtx.beginPath();
-      targetCtx.arc(headX - 12, headY, r, Math.PI * 0.75, Math.PI * 1.25);
-      targetCtx.stroke();
-
-      // Right sound wave arc
-      targetCtx.beginPath();
-      targetCtx.arc(headX + 12, headY, r, -Math.PI * 0.25, Math.PI * 0.25);
-      targetCtx.stroke();
-      targetCtx.restore();
-    }
-
     if (!f.isBlur) {
       renderBattleHeader(targetCtx, width, battle, isKo);
       if (f.showHud) {
