@@ -388,32 +388,18 @@ function drawHighSkyCutscene(
   // Large bounding size to cover entire screen seamlessly when rotated
   const bgSize = Math.max(width, height) * 1.8;
 
-  // 1. Clear Atmospheric Gradient (Distinct Top Space Navy vs Bottom Bright Horizon)
+  // 1. Clear Atmospheric Sky Gradient (Distinct Top Space Navy vs Bottom Horizon Cyan)
   const skyGrad = ctx.createLinearGradient(0, -bgSize / 2, 0, bgSize / 2);
   skyGrad.addColorStop(0, "#080E1E");    // Top: Deep Stratosphere (Space Navy)
   skyGrad.addColorStop(0.35, "#0369A1"); // Mid-Upper: High Azure Sky
   skyGrad.addColorStop(0.65, "#38BDF8"); // Horizon: Light Atmosphere Blue
-  skyGrad.addColorStop(0.85, "#BAE6FD"); // Cloud Base: Bright Cyan
-  skyGrad.addColorStop(1, "#FFFFFF");    // Bottom: Ground Horizon Cloud Layer (Pure White)
+  skyGrad.addColorStop(0.85, "#BAE6FD"); // Lower Atmosphere: Bright Cyan
+  skyGrad.addColorStop(1, "#E0F2FE");    // Bottom: Horizon Atmosphere Glow
 
   ctx.fillStyle = skyGrad;
   ctx.fillRect(-bgSize / 2, -bgSize / 2, bgSize, bgSize);
 
-  // 2. Horizon Cloud Sea at the Bottom (Clearly marking the Ground/Bottom Direction!)
-  ctx.save();
-  ctx.globalAlpha = 0.90;
-  ctx.fillStyle = "#FFFFFF";
-  const cloudBaseY = bgSize * 0.22;
-  for (let x = -bgSize / 2 - 50; x <= bgSize / 2 + 50; x += 65) {
-    ctx.beginPath();
-    ctx.arc(x, cloudBaseY, 48, 0, Math.PI * 2);
-    ctx.arc(x + 28, cloudBaseY - 18, 38, 0, Math.PI * 2);
-    ctx.arc(x + 52, cloudBaseY + 6, 42, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.restore();
-
-  // 3. Dynamic Speedlines (Streaming horizontally relative to flight direction)
+  // 2. Dynamic Speedlines (Streaming horizontally relative to flight direction)
   const stepSeed = (f.diveStep || 0) * 53;
   const numLines = isDiagonalBank ? 32 : 22;
   for (let i = 0; i < numLines; i++) {
