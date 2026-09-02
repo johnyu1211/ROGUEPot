@@ -2764,14 +2764,21 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const isPlayerFlyHold = (isFlyLaunch1 && isP1) || (isFlyLaunch2 && isP2);
     const isEnemyFlyHold = (isFlyLaunch1 && !isP1) || (isFlyLaunch2 && !isP2);
 
-    const isPlayerStartingInAir = (isFlyDive1 && isP1) || (isFlyDive2 && isP2) || (playerMon.chargingMove === "fly");
-    const isEnemyStartingInAir = (isFlyDive1 && !isP1) || (isFlyDive2 && !isP2) || (enemy.chargingMove === "fly");
+    const isPlayerStartingInAir = (isFlyDive1 && isP1) || (playerMon.chargingMove === "fly");
+    const isEnemyStartingInAir = (isFlyDive1 && !isP1) || (enemy.chargingMove === "fly");
+
+    let processedAct1Frames = act1Frames;
+    if (isEnemyStartingInAir && isP1) {
+      processedAct1Frames = act1Frames.map(f => ({ ...f, eOffset: { x: 0, y: -600 }, hideEShadow: true }));
+    } else if (isPlayerStartingInAir && !isP1) {
+      processedAct1Frames = act1Frames.map(f => ({ ...f, pOffset: { x: 0, y: -600 }, hidePShadow: true }));
+    }
 
     let processedAct2Frames = act2Frames;
     if (isFlyLaunch1 && isP1) {
-      processedAct2Frames = act2Frames.map(f => ({ ...f, pOffset: { x: 0, y: -600 } }));
+      processedAct2Frames = act2Frames.map(f => ({ ...f, pOffset: { x: 0, y: -600 }, hidePShadow: true }));
     } else if (isFlyLaunch1 && !isP1) {
-      processedAct2Frames = act2Frames.map(f => ({ ...f, eOffset: { x: 0, y: -600 } }));
+      processedAct2Frames = act2Frames.map(f => ({ ...f, eOffset: { x: 0, y: -600 }, hideEShadow: true }));
     }
 
     framesConfig = [
@@ -2789,7 +2796,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         isBlur: true,
       },
       // === ACT 1 ===
-      ...act1Frames,
+      ...processedAct1Frames,
       // Frame 3: Attacker 1 Recoil & Damage Settling (with Dynamic Effectiveness Blinking!)
       ...createEffectivenessFlickerFrames(a1, isP1, true, isP1GuillotineKill, isE1GuillotineKill),
       // Dedicated Post-Move Stat Change Phase for Action 1 (if stat changes exist!)
@@ -2875,6 +2882,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const isPlayerStartingInAir = (isFlyDive1 && isP1) || (playerMon.chargingMove === "fly");
     const isEnemyStartingInAir = (isFlyDive1 && !isP1) || (enemy.chargingMove === "fly");
 
+    let processedSingleActFrames = act1Frames;
+    if (isEnemyStartingInAir && isP1) {
+      processedSingleActFrames = act1Frames.map(f => ({ ...f, eOffset: { x: 0, y: -600 }, hideEShadow: true }));
+    } else if (isPlayerStartingInAir && !isP1) {
+      processedSingleActFrames = act1Frames.map(f => ({ ...f, pOffset: { x: 0, y: -600 }, hidePShadow: true }));
+    }
+
     framesConfig = [
       // Frame 0: Leading Cinematic Soft-Blur Loading Frame (800ms / 0.8s)
       {
@@ -2890,7 +2904,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         isBlur: true,
       },
       // Act 1 Move Animation (Fully executed with all sub-frames!)
-      ...act1Frames,
+      ...processedSingleActFrames,
       // Frame 3: Recoil & Damage Settling (with Dynamic Effectiveness Blinking!)
       ...createEffectivenessFlickerFrames(eff, isP1, true, playerFrontHold, enemyBackHold),
       // Dedicated Post-Move Stat Change Phase (if stat changes exist!)
@@ -2956,14 +2970,16 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const eAlpha = (f.targetAlpha !== undefined && eTarget) ? f.targetAlpha : 1.0;
     const pAlpha = (f.targetAlpha !== undefined && pTarget) ? f.targetAlpha : 1.0;
 
-    // Pokémon Silhouette Shadows (cast onto platform ground - suppressed during high-speed mid-air flight)
-    if (enemySprite && eAlpha > 0.02 && (enemy.hp > 0 || f.enemyHp > 0) && !f.hideEShadow && !f.eScale) {
+    // Pokémon Silhouette Shadows (cast onto platform ground - suppressed during high-speed mid-air flight or off-screen)
+    const isEnemyAirborne = (f.eOffset && f.eOffset.y <= -50) || f.hideEShadow || Boolean(f.eScale);
+    if (enemySprite && eAlpha > 0.02 && (enemy.hp > 0 || f.enemyHp > 0) && !isEnemyAirborne) {
       const eShadowX = em.x + f.eOffset.x;
       const eShadowY = em.y;
       drawPokemonSilhouetteShadow(targetCtx, enemySprite, eShadowX, eShadowY, em.size, false, 0.42 * eAlpha);
     }
 
-    if (playerSprite && pAlpha > 0.02 && (playerMon.hp > 0 || f.playerHp > 0) && !f.hidePShadow && !f.pScale) {
+    const isPlayerAirborne = (f.pOffset && f.pOffset.y <= -50) || f.hidePShadow || Boolean(f.pScale);
+    if (playerSprite && pAlpha > 0.02 && (playerMon.hp > 0 || f.playerHp > 0) && !isPlayerAirborne) {
       const pShadowX = pm.x + f.pOffset.x;
       const pShadowY = pm.y;
       drawPokemonSilhouetteShadow(targetCtx, playerSprite, pShadowX, pShadowY, pm.size, true, 0.42 * pAlpha);
