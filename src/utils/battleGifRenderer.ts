@@ -366,6 +366,77 @@ function isEvasionStrike(action?: TurnActionInfo | null): boolean {
   return !isEvasionLaunch(action);
 }
 
+function createAirGlideDescentFrames(
+  eff: any,
+  isAttackerPlayer: boolean,
+  textLineIdx: number = 1
+): any[] {
+  const isP = isAttackerPlayer;
+  return [
+    // 1. High Sky Glide (66ms) - Pokémon gliding smoothly across the high azure sky
+    {
+      delay: 66,
+      diveStep: 1,
+      skyCameraTilt: 0.0,
+      pOffset: { x: 0, y: -10 },
+      eOffset: { x: 0, y: -10 },
+      pScale: isP ? { x: 1.05, y: 0.95 } : undefined,
+      eScale: !isP ? { x: 1.05, y: 0.95 } : undefined,
+      pRot: 0,
+      eRot: 0,
+      isHighSkyCutscene: true,
+      isAttackerPlayer: isP,
+      showEffect: false,
+      hitFlash: false,
+      enemyHp: eff.enemyHpAfter,
+      playerHp: eff.playerHpAfter,
+      textLineIdx,
+      isBlur: false,
+      moveEffect: eff,
+    },
+    // 2. Diagonal Swoop Bank (66ms) - Smooth banking transition towards the battlefield
+    {
+      delay: 66,
+      diveStep: 2,
+      skyCameraTilt: isP ? 0.35 : -0.35,
+      pOffset: { x: 0, y: 15 },
+      eOffset: { x: 0, y: 15 },
+      pScale: isP ? { x: 0.95, y: 1.10 } : undefined,
+      eScale: !isP ? { x: 0.95, y: 1.10 } : undefined,
+      pRot: isP ? 0.20 : -0.20,
+      eRot: !isP ? 0.20 : -0.20,
+      isHighSkyCutscene: true,
+      isAttackerPlayer: isP,
+      showEffect: false,
+      hitFlash: false,
+      enemyHp: eff.enemyHpAfter,
+      playerHp: eff.playerHpAfter,
+      textLineIdx,
+      isBlur: false,
+      moveEffect: eff,
+    },
+    // 3. Smooth Air Swoop onto Battlefield Platform (66ms) - Swooping in gracefully before move start
+    {
+      delay: 66,
+      pOffset: isP ? { x: 0, y: -35 } : { x: 0, y: 0 },
+      eOffset: !isP ? { x: 0, y: -35 } : { x: 0, y: 0 },
+      pScale: isP ? { x: 1.05, y: 0.95 } : undefined,
+      eScale: !isP ? { x: 1.05, y: 0.95 } : undefined,
+      pRot: 0,
+      eRot: 0,
+      isHighSkyCutscene: false,
+      isAttackerPlayer: isP,
+      showEffect: false,
+      hitFlash: false,
+      enemyHp: eff.enemyHpAfter,
+      playerHp: eff.playerHpAfter,
+      textLineIdx,
+      isBlur: false,
+      moveEffect: eff,
+    },
+  ];
+}
+
 function drawHighSkyCutscene(
   ctx: any,
   width: number,
@@ -2291,6 +2362,14 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       ];
     }
 
+    const a1MoveKey = (a1.moveKey || moveKey || "").toLowerCase().replace(/[\s_]+/g, "-");
+    if (a1.wasDescentFromAir && a1MoveKey !== "fly") {
+      act1Frames = [
+        ...createAirGlideDescentFrames(a1, isP1, 1),
+        ...act1Frames
+      ];
+    }
+
   let framesConfig: any[] = [];
 
   if (hasMultipleActions) {
@@ -4085,6 +4164,14 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       ];
     }
 
+    const a2MoveKey = (a2.moveKey || "").toLowerCase().replace(/[\s_]+/g, "-");
+    if (a2.wasDescentFromAir && a2MoveKey !== "fly") {
+      act2Frames = [
+        ...createAirGlideDescentFrames(a2, isP2, 3),
+        ...act2Frames
+      ];
+    }
+
     const a1Fainted = a1.enemyHpAfter <= 0 || a1.playerHpAfter <= 0;
     const a2Fainted = a2 && (a2.enemyHpAfter <= 0 || a2.playerHpAfter <= 0);
 
@@ -4118,12 +4205,12 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const a2IsEvasionLaunch = isEvasionLaunch(a2);
     const a2IsEvasionStrike = isEvasionStrike(a2);
 
-    // Evasion state at START of turn (before Act 1 starts) - ONLY true if unleashing an evasion strike or opponent missed into empty air
+    // Evasion state at START of turn (before Act 1 starts) - ONLY true if unleashing an evasion strike, opponent missed into empty air, or gliding descent
     const isPlayerStartingEvading = !a1IsEvasionLaunch && !a2IsEvasionLaunch && (
-      (a1IsEvasionStrike && isP1) || (a2IsEvasionStrike && isP2) || (Boolean(a1 && a1.log?.includes("닿지 않았다") && !isP1))
+      (a1IsEvasionStrike && isP1) || (a2IsEvasionStrike && isP2) || (Boolean(a1 && a1.log?.includes("닿지 않았다") && !isP1)) || Boolean(a1?.wasDescentFromAir && isP1) || Boolean(a2?.wasDescentFromAir && isP2)
     );
     const isEnemyStartingEvading = !a1IsEvasionLaunch && !a2IsEvasionLaunch && (
-      (a1IsEvasionStrike && !isP1) || (a2IsEvasionStrike && !isP2) || (Boolean(a1 && a1.log?.includes("닿지 않았다") && isP1))
+      (a1IsEvasionStrike && !isP1) || (a2IsEvasionStrike && !isP2) || (Boolean(a1 && a1.log?.includes("닿지 않았다") && isP1)) || Boolean(a1?.wasDescentFromAir && !isP1) || Boolean(a2?.wasDescentFromAir && !isP2)
     );
 
     // Evasion state during Act 1 (for non-acting Pokemon)
@@ -4279,8 +4366,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const a1IsEvasionLaunch = isEvasionLaunch(a1);
     const a1IsEvasionStrike = isEvasionStrike(a1);
 
-    const isPlayerStartingEvading = !a1IsEvasionLaunch && ((a1IsEvasionStrike && isP1) || (Boolean(a1 && a1.log?.includes("닿지 않았다") && !isP1)));
-    const isEnemyStartingEvading = !a1IsEvasionLaunch && ((a1IsEvasionStrike && !isP1) || (Boolean(a1 && a1.log?.includes("닿지 않았다") && isP1)));
+    const isPlayerStartingEvading = !a1IsEvasionLaunch && ((a1IsEvasionStrike && isP1) || (Boolean(a1 && a1.log?.includes("닿지 않았다") && !isP1)) || Boolean(eff?.wasDescentFromAir && isP1));
+    const isEnemyStartingEvading = !a1IsEvasionLaunch && ((a1IsEvasionStrike && !isP1) || (Boolean(a1 && a1.log?.includes("닿지 않았다") && isP1)) || Boolean(eff?.wasDescentFromAir && !isP1));
 
     const isPlayerEndingEvading = (a1IsEvasionLaunch && isP1) || Boolean(playerMon.semiInvulnerableState || playerMon.chargingMove);
     const isEnemyEndingEvading = (a1IsEvasionLaunch && !isP1) || Boolean(enemy.semiInvulnerableState || enemy.chargingMove);
