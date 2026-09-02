@@ -1,7 +1,7 @@
 import { drawMiniRetroStar, drawStarburstImpact } from "../common/helpers.js";
 
 /**
- * 021 힘껏치기 (Slam): Explosive Forward Physical Slam with Punchy Directional Impact Sparks & Shockwave Burst
+ * 021 힘껏치기 (Slam): Explosive Forward Physical Slam with Clean Punchy Directional Impact & Shockwave Ring
  */
 export function drawSlamEffect(
   ctx: any,
@@ -14,7 +14,7 @@ export function drawSlamEffect(
   const ty = target.y - 8;
 
   if (step === 1) {
-    // Step 1: Calm / Tension building (No curves)
+    // Step 1: Calm / Tension building (Clean subtle focus streaks)
     ctx.save();
     ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
     ctx.lineWidth = 1.5;
@@ -27,7 +27,7 @@ export function drawSlamEffect(
     ctx.stroke();
     ctx.restore();
   } else if (step === 2) {
-    // Step 2: 팍! (BAM!) Explosive Heavy Physical Slam Impact
+    // Step 2: 팍! (BAM!) Pure Heavy Physical Slam Impact (No twinkle stars!)
     ctx.save();
     // 1. Sharp Linear Directional Impact Speedlines
     ctx.strokeStyle = "rgba(255, 255, 255, 0.95)";
@@ -35,32 +35,51 @@ export function drawSlamEffect(
     ctx.lineCap = "round";
     for (let i = -2; i <= 2; i++) {
       ctx.beginPath();
-      ctx.moveTo(tx - 35, ty + i * 14);
-      ctx.lineTo(tx + 35, ty + i * 10);
+      ctx.moveTo(tx - 40, ty + i * 14);
+      ctx.lineTo(tx + 40, ty + i * 10);
       ctx.stroke();
     }
 
-    // 2. Sharp Diagonal Slash Spikes
+    // 2. Heavy Cross Impact Slashes (X-shaped sharp physical strike cuts)
     ctx.strokeStyle = "#FEF08A";
-    ctx.lineWidth = 4.0;
+    ctx.lineWidth = 4.5;
     ctx.beginPath();
-    ctx.moveTo(tx - 28, ty - 35);
-    ctx.lineTo(tx + 28, ty + 35);
-    ctx.moveTo(tx - 28, ty + 35);
-    ctx.lineTo(tx + 28, ty - 35);
+    ctx.moveTo(tx - 32, ty - 32);
+    ctx.lineTo(tx + 32, ty + 32);
+    ctx.moveTo(tx - 32, ty + 32);
+    ctx.lineTo(tx + 32, ty - 32);
     ctx.stroke();
 
-    // 3. Central Explosive Hit Flash Starburst
-    drawStarburstImpact(ctx, tx, ty, "#F59E0B", "#FFFFFF", 42);
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 2.0;
+    ctx.beginPath();
+    ctx.moveTo(tx - 32, ty - 32);
+    ctx.lineTo(tx + 32, ty + 32);
+    ctx.moveTo(tx - 32, ty + 32);
+    ctx.lineTo(tx + 32, ty - 32);
+    ctx.stroke();
 
-    // 4. Kinetic Impact Stars
-    drawMiniRetroStar(ctx, tx - 25, ty - 25, 12, "#FFFFFF");
-    drawMiniRetroStar(ctx, tx + 28, ty - 18, 11, "#FEF08A");
-    drawMiniRetroStar(ctx, tx - 20, ty + 24, 10, "#F59E0B");
-    drawMiniRetroStar(ctx, tx + 24, ty + 22, 12, "#FFFFFF");
+    // 3. Crisp Core Physical Impact Flash
+    const hitGrad = ctx.createRadialGradient(tx, ty, 2, tx, ty, 36);
+    hitGrad.addColorStop(0, "#FFFFFF");
+    hitGrad.addColorStop(0.4, "rgba(251, 191, 36, 0.9)");
+    hitGrad.addColorStop(0.8, "rgba(245, 158, 11, 0.5)");
+    hitGrad.addColorStop(1, "rgba(245, 158, 11, 0.0)");
+    ctx.fillStyle = hitGrad;
+    ctx.beginPath();
+    ctx.arc(tx, ty, 36, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 4. Heavy Impact Ring
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 3.0;
+    ctx.beginPath();
+    ctx.arc(tx, ty, 24, 0, Math.PI * 2);
+    ctx.stroke();
+
     ctx.restore();
   } else if (step >= 3) {
-    // Step 3: Dissipating Kinetic Impact Sparks & Tremor Lines
+    // Step 3: Dissipating Kinetic Tremors & Shockwave Plumes (No stars!)
     ctx.save();
     // Horizontal Impact Shock Tremors
     ctx.strokeStyle = "rgba(254, 240, 138, 0.75)";
@@ -72,10 +91,12 @@ export function drawSlamEffect(
     ctx.lineTo(tx + 35, ty + 24);
     ctx.stroke();
 
-    // Dissipating Stars
-    drawMiniRetroStar(ctx, tx - 36, ty - 15, 8, "#FEF08A");
-    drawMiniRetroStar(ctx, tx + 38, ty - 10, 9, "#FFFFFF");
-    drawMiniRetroStar(ctx, tx + 12, ty - 32, 7, "#F59E0B");
+    // Expanding shock ring
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.arc(tx, ty, 42, 0, Math.PI * 2);
+    ctx.stroke();
     ctx.restore();
   }
 
