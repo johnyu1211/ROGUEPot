@@ -590,42 +590,100 @@ function applyGen5CinematicCamera(
     }
   }
 
-  // Apply steady trapezoidal envelope for each action segment
-  for (const seg of actionSegments) {
-    const len = seg.end - seg.start + 1;
-    if (len <= 0) continue;
-
+  // Process segments in reverse order so array splices do not corrupt subsequent segment indices
+  for (let s = actionSegments.length - 1; s >= 0; s--) {
+    const seg = actionSegments[s];
     const defender = seg.defender;
-    const focalTarget = {
+    const focalFull = {
       x: cx + (defender.x - cx) * 0.48,
       y: cy + (defender.y - cy) * 0.48,
     };
+    const focalHalf = {
+      x: cx + (defender.x - cx) * 0.24,
+      y: cy + (defender.y - cy) * 0.24,
+    };
 
+    // Find the first impact/strike frame
+    let strikeIdx = -1;
     for (let i = seg.start; i <= seg.end; i++) {
-      const f = frames[i];
-      let w = 1.0; // Rock-solid flat-top hold across all hits & effectiveness blinks!
-
-      if (i === seg.start && seg.strike > seg.start) {
-        w = 0.45; // Smooth entry glide
-      } else if (i === seg.end) {
-        w = 0.0; // Smooth return to neutral
-      } else if (i === seg.end - 1 && len >= 4) {
-        w = 0.50; // Smooth exit glide
-      } else {
-        w = 1.0; // Steady 1.38x hold!
+      if (frames[i].hitFlash || frames[i].showEffect) {
+        strikeIdx = i;
+        break;
       }
+    }
+    if (strikeIdx === -1) strikeIdx = seg.start;
 
-      if (w > 0.02) {
-        f.cameraZoom = 1.0 + (maxZoom - 1.0) * w;
-        f.cameraFocal = {
-          x: cx + (focalTarget.x - cx) * w,
-          y: cy + (focalTarget.y - cy) * w,
-        };
-        f._gen5Camera = true;
-      } else {
-        f.cameraZoom = 1.0;
-        f.cameraFocal = null;
+    // 1. 카메라 이동 먼저 (Camera Shift First):
+    // 타격이 시작되기 전에 카메라가 먼저 피격자 쪽으로 이동하여 자리를 잡도록 리드인 프레임 확보
+    const leadInCount = strikeIdx - seg.start;
+    if (leadInCount === 0) {
+      // 타격이 첫 프레임부터 시작하는 경우: 카메라가 먼저 이동할 2개 프레임을 앞에 삽입
+      const baseFrame = frames[strikeIdx];
+      const lead1 = {
+        ...baseFrame,
+        delay: 110,
+        showEffect: false,
+        hitFlash: false,
+        cameraZoom: 1.18,
+        cameraFocal: focalHalf,
+        _gen5Camera: true,
+      };
+      const lead2 = {
+        ...baseFrame,
+        delay: 110,
+        showEffect: false,
+        hitFlash: false,
+        cameraZoom: 1.35,
+        cameraFocal: focalFull,
+        _gen5Camera: true,
+      };
+      frames.splice(strikeIdx, 0, lead1, lead2);
+      seg.end += 2;
+      strikeIdx += 2;
+    } else if (leadInCount === 1) {
+      frames[seg.start].cameraZoom = 1.18;
+      frames[seg.start].cameraFocal = focalHalf;
+      frames[seg.start]._gen5Camera = true;
+      frames[seg.start].showEffect = false;
+      frames[seg.start].hitFlash = false;
+
+      const baseFrame = frames[strikeIdx];
+      const lead2 = {
+        ...baseFrame,
+        delay: 110,
+        showEffect: false,
+        hitFlash: false,
+        cameraZoom: 1.35,
+        cameraFocal: focalFull,
+        _gen5Camera: true,
+      };
+      frames.splice(strikeIdx, 0, lead2);
+      seg.end += 1;
+      strikeIdx += 1;
+    } else {
+      frames[seg.start].cameraZoom = 1.18;
+      frames[seg.start].cameraFocal = focalHalf;
+      frames[seg.start]._gen5Camera = true;
+      for (let i = seg.start + 1; i < strikeIdx; i++) {
+        frames[i].cameraZoom = 1.35;
+        frames[i].cameraFocal = focalFull;
+        frames[i]._gen5Camera = true;
       }
+    }
+
+    // 2. 공격 적용 (Attack Application under Locked Camera):
+    // 카메라가 이미 1.35배로 완전히 도착해 고정된 상태에서 모든 타격, 연타, 피격 깜빡임 실행 (카메라 미동 0)
+    for (let i = strikeIdx; i <= seg.end; i++) {
+      frames[i].cameraZoom = 1.35;
+      frames[i].cameraFocal = focalFull;
+      frames[i]._gen5Camera = true;
+    }
+
+    // 3. 공격 종료 후 카메라 복귀 (Camera Return after Attack completes)
+    if (seg.end < frames.length - 1) {
+      // 마지막 프레임이 복귀 프레임 역할
+      frames[seg.end].cameraZoom = 1.18;
+      frames[seg.end].cameraFocal = focalHalf;
     }
   }
 }
