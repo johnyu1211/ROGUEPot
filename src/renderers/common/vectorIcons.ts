@@ -390,89 +390,74 @@ export async function drawPartyRightPanel(
 
   // 1. Right Party Panel Background Card
   ctx.fillStyle = "#181C2B";
-  ctx.beginPath();
-  ctx.roundRect(boxX, boxY, boxW, boxH, 8);
-  ctx.fill();
-
-  ctx.strokeStyle = borderColor;
-  ctx.lineWidth = 2;
-  ctx.stroke();
+  ctx.fillRect(boxX, boxY, boxW, boxH);
 
   // 2. Trainer Profile Header inside the Right Panel
-  const profileH = 44;
+  const profileH = 46;
   ctx.fillStyle = "#10121C";
-  ctx.beginPath();
-  ctx.roundRect(boxX + 2, boxY + 2, boxW - 4, profileH, [6, 6, 0, 0]);
-  ctx.fill();
+  ctx.fillRect(boxX, boxY, boxW, profileH);
 
   // Username
-  ctx.font = "bold 13px DungGeunMo";
+  ctx.font = "bold 14px DungGeunMo";
   ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
   const userText = options?.username ? `${options.username}` : (isKo ? "트레이너 파티" : "Trainer Party");
-  ctx.fillText(userText, boxX + 12, boxY + 22);
+  ctx.fillText(userText, boxX + 16, boxY + profileH / 2);
 
   // 3. 2x3 Grid for 6 Pokémon Slots
-  const gridStartX = boxX + 8;
-  const gridStartY = boxY + profileH + 8;
-  const cardW = 110;
-  const cardH = 88;
+  const paddingX = 10;
+  const paddingY = 10;
   const gapX = 8;
   const gapY = 8;
+  const cardW = Math.floor((boxW - paddingX * 2 - gapX) / 2);
+  const cardH = Math.floor((boxH - profileH - paddingY * 2 - gapY * 2) / 3);
 
   for (let i = 0; i < 6; i++) {
     const col = i % 2;
     const row = Math.floor(i / 2);
-    const cX = gridStartX + col * (cardW + gapX);
-    const cY = gridStartY + row * (cardH + gapY);
+    const cX = boxX + paddingX + col * (cardW + gapX);
+    const cY = boxY + profileH + paddingY + row * (cardH + gapY);
     const mon = party[i];
 
     if (mon) {
       // Occupied Party Slot Card
       ctx.fillStyle = "#1E2438";
       ctx.beginPath();
-      ctx.roundRect(cX, cY, cardW, cardH, 4);
+      ctx.roundRect(cX, cY, cardW, cardH, 6);
       ctx.fill();
-
-      ctx.strokeStyle = mon.isShiny ? "#F59E0B" : "#2E3854";
-      ctx.lineWidth = mon.isShiny ? 1.5 : 1;
-      ctx.stroke();
 
       // Sprite
       const sprite = await getPokemonSprite(mon.speciesId, true, mon.shinyTier !== undefined ? mon.shinyTier : (mon.isShiny ? 1 : 0));
       if (sprite) {
-        ctx.drawImage(sprite, cX + cardW / 2 - 25, cY + 4, 50, 50);
+        ctx.drawImage(sprite, cX + cardW / 2 - 27, cY + 6, 54, 54);
       }
 
       // Name & Level
       ctx.textAlign = "center";
-      ctx.font = "bold 11px DungGeunMo";
+      ctx.textBaseline = "alphabetic";
+      ctx.font = "bold 12px DungGeunMo";
       ctx.fillStyle = "#FFFFFF";
-      ctx.fillText(mon.name, cX + cardW / 2, cY + 62);
+      ctx.fillText(mon.name, cX + cardW / 2, cY + 68);
 
-      ctx.font = "10px DungGeunMo";
+      ctx.font = "11px DungGeunMo";
       ctx.fillStyle = "#94A3B8";
-      ctx.fillText(`Lv.${mon.level}`, cX + cardW / 2, cY + 76);
+      ctx.fillText(`Lv.${mon.level}`, cX + cardW / 2, cY + 84);
 
       // Shiny Sparkle
       if (mon.isShiny) {
-        drawShinySparkle(ctx, cX + cardW - 10, cY + 10, 4, "#F59E0B");
+        drawShinySparkle(ctx, cX + cardW - 12, cY + 12, 4.5, "#F59E0B");
       }
     } else {
       // Empty Slot Card
       ctx.fillStyle = "#141724";
       ctx.beginPath();
-      ctx.roundRect(cX, cY, cardW, cardH, 4);
+      ctx.roundRect(cX, cY, cardW, cardH, 6);
       ctx.fill();
-
-      ctx.strokeStyle = "#252B42";
-      ctx.lineWidth = 1;
-      ctx.stroke();
 
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.font = "bold 11px DungGeunMo";
+      ctx.font = "bold 12px DungGeunMo";
       ctx.fillStyle = "#475569";
       ctx.fillText(options?.showSlotNumbers ? `Slot ${i + 1}` : (isKo ? "- 빈 슬롯 -" : "- Empty -"), cX + cardW / 2, cY + cardH / 2);
     }

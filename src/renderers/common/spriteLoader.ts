@@ -1,6 +1,12 @@
 import { createCanvas, loadImage, Image } from "@napi-rs/canvas";
 import { POKEMON_SPECIES_DATA } from "../../data/pokemonStats.js";
 import { STARTER_DATABASE } from "../../data/starterCosts.js";
+import { POKEMON_NAMES_KO } from "../../data/pokemonNamesKo.js";
+
+const KO_NAME_TO_DEX = new Map<string, number>();
+for (const [dex, nameKo] of Object.entries(POKEMON_NAMES_KO)) {
+  KO_NAME_TO_DEX.set(nameKo.trim(), parseInt(dex, 10));
+}
 
 const spriteCache = new Map<string, Image>();
 
@@ -84,37 +90,65 @@ export async function getPokemonSprite(
       dexNo = 132;
     } else if (/^\d+$/.test(clean)) {
       dexNo = parseInt(clean, 10);
+    } else if (KO_NAME_TO_DEX.has(pokemonName.trim())) {
+      dexNo = KO_NAME_TO_DEX.get(pokemonName.trim())!;
     } else {
-      const spec = POKEMON_SPECIES_DATA[clean] || POKEMON_SPECIES_DATA[clean.replace(/-/g, "")];
+      const spec = POKEMON_SPECIES_DATA[clean] || POKEMON_SPECIES_DATA[clean.replace(/[-_ ]/g, "")];
       if (spec && spec.num > 0) {
         dexNo = spec.num;
       } else {
-        const matchStarter = STARTER_DATABASE.find((s) => s.speciesId === clean);
+        const matchStarter = STARTER_DATABASE.find(
+          (s) => s.speciesId.toLowerCase() === clean || s.name.toLowerCase() === clean || s.nameKo === pokemonName.trim()
+        );
         if (matchStarter && matchStarter.dexNumber > 0) dexNo = matchStarter.dexNumber;
       }
     }
 
     let img: any | null = null;
 
-    // 2. Primary Source: Official PokéRogue Extracted Assets (Front & Back sprites)
-    if (dexNo && !clean.includes("gmax") && !clean.includes("mega")) {
+    // 2. Resolve Form Suffix for special variants (Mega, G-Max, Regional Forms)
+    let formSuffix = "";
+    if (clean.includes("mega-x") || clean.includes("megax")) formSuffix = "-mega-x";
+    else if (clean.includes("mega-y") || clean.includes("megay")) formSuffix = "-mega-y";
+    else if (clean.includes("mega")) formSuffix = "-mega";
+    else if (clean.includes("gmax") || clean.includes("gigantamax")) formSuffix = "-gmax";
+    else if (clean.includes("alola")) formSuffix = "-alola";
+    else if (clean.includes("galar")) formSuffix = "-galar";
+    else if (clean.includes("hisui")) formSuffix = "-hisui";
+    else if (clean.includes("paldea")) formSuffix = "-paldea";
+
+    // 3. Primary Source: Official PokéRogue Extracted Assets (Front & Back sprites with Tier 0~3)
+    if (dexNo) {
       const suffix = isBack ? "b" : "";
-      try {
-        const rogueUrl = `https://raw.githubusercontent.com/Sandstormer/PokeRogue-Dex/main/images/${dexNo}_${tier}${suffix}.png`;
-        img = await loadImage(rogueUrl);
-      } catch {
-        if (tier > 0) {
+      const candidateRogueUrls = [
+        `https://raw.githubusercontent.com/Sandstormer/PokeRogue-Dex/main/images/${dexNo}${formSuffix}_${tier}${suffix}.png`,
+        `https://raw.githubusercontent.com/Sandstormer/PokeRogue-Dex/main/images/${dexNo}_${tier}${suffix}.png`
+      ];
+
+      for (const rogueUrl of candidateRogueUrls) {
+        if (img) break;
+        try {
+          img = await loadImage(rogueUrl);
+        } catch {}
+      }
+
+      if (!img && tier > 0) {
+        const fallbackUrls = [
+          `https://raw.githubusercontent.com/Sandstormer/PokeRogue-Dex/main/images/${dexNo}${formSuffix}_1${suffix}.png`,
+          `https://raw.githubusercontent.com/Sandstormer/PokeRogue-Dex/main/images/${dexNo}_1${suffix}.png`,
+          `https://raw.githubusercontent.com/Sandstormer/PokeRogue-Dex/main/images/${dexNo}${formSuffix}_0${suffix}.png`,
+          `https://raw.githubusercontent.com/Sandstormer/PokeRogue-Dex/main/images/${dexNo}_0${suffix}.png`
+        ];
+        for (const fUrl of fallbackUrls) {
+          if (img) break;
           try {
-            img = await loadImage(`https://raw.githubusercontent.com/Sandstormer/PokeRogue-Dex/main/images/${dexNo}_1${suffix}.png`);
-            if (img && tier >= 2 && !isTestSubject) {
-              img = applyShinyTierVariant(img, tier);
-            }
+            img = await loadImage(fUrl);
           } catch {}
         }
       }
     }
 
-    // 3. Secondary Fallback Source: Showdown CDN + Hue Shift / White Shading engine
+    // 4. Secondary Fallback Source: Showdown CDN
     if (!img) {
       const folder = isBack
         ? (tier > 0 && !isTestSubject ? "gen5-back-shiny" : "gen5-back")
@@ -143,8 +177,6 @@ export async function getPokemonSprite(
     if (img) {
       if (isTestSubject) {
         img = applyWhiteDittoVariant(img, tier);
-      } else if (tier >= 2) {
-        img = applyShinyTierVariant(img, tier);
       }
 
       if (spriteCache.size >= 300) {
@@ -214,77 +246,7 @@ function applyWhiteDittoVariant(img: any, tier: number = 0): any {
   }
 }
 
-function applyShinyTierVariant(img: any, tier: number): any {
-  if (tier <= 1) return img;
 
-  try {
-    const canvas = createCanvas(img.width, img.height);
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(img, 0, 0);
-    const imgData = ctx.getImageData(0, 0, img.width, img.height);
-    const data = imgData.data;
-
-    const hueShiftDegrees = tier === 2 ? 140 : 260;
-    const satMult = tier === 2 ? 1.25 : 1.35;
-
-    for (let i = 0; i < data.length; i += 4) {
-      const a = data[i + 3];
-      if (a < 10) continue;
-
-      let r = data[i] / 255;
-      let g = data[i + 1] / 255;
-      let b = data[i] / 255;
-
-      const max = Math.max(r, g, b);
-      const min = Math.min(r, g, b);
-      let h = 0, s = 0, l = (max + min) / 2;
-
-      if (max !== min) {
-        const d = max - min;
-        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-        switch (max) {
-          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-          case g: h = (b - r) / d + 2; break;
-          case b: h = (r - g) / d + 4; break;
-        }
-        h /= 6;
-      }
-
-      h = (h + hueShiftDegrees / 360) % 1.0;
-      if (h < 0) h += 1.0;
-      s = Math.min(1.0, s * satMult);
-
-      let r1, g1, b1;
-      if (s === 0) {
-        r1 = g1 = b1 = l;
-      } else {
-        const hue2rgb = (p: number, q: number, t: number) => {
-          if (t < 0) t += 1;
-          if (t > 1) t -= 1;
-          if (t < 1/6) return p + (q - p) * 6 * t;
-          if (t < 1/2) return q;
-          if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-          return p;
-        };
-        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-        const p = 2 * l - q;
-        r1 = hue2rgb(p, q, h + 1/3);
-        g1 = hue2rgb(p, q, h);
-        b1 = hue2rgb(p, q, h - 1/3);
-      }
-
-      data[i] = Math.round(r1 * 255);
-      data[i + 1] = Math.round(g1 * 255);
-      data[i + 2] = Math.round(b1 * 255);
-    }
-
-    ctx.putImageData(imgData, 0, 0);
-    return canvas;
-  } catch (err) {
-    console.error(`[CANVAS] Failed to apply shiny variant for tier ${tier}:`, err);
-    return img;
-  }
-}
 
 export function isSpriteCached(pokemonName: string): boolean {
   let clean = pokemonName.toLowerCase().trim();
