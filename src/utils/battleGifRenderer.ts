@@ -14,6 +14,7 @@ import {
   getPokemonDisplayName,
   formatMoney,
   wrapDialogueText,
+  drawPokemonSilhouetteShadow,
   drawPokemonShadow,
   BIOME_NAMES_KO,
 } from "./canvasRenderer.js";
@@ -632,17 +633,17 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       targetCtx.restore();
     }
 
-    // Pokémon Shadows (under sprites on platform ground)
+    // Pokémon Silhouette Shadows (cast onto platform ground)
     if (enemySprite && (enemy.hp > 0 || f.enemyHp > 0)) {
       const eShadowX = em.x + f.eOffset.x;
-      const eShadowY = 159;
-      drawPokemonShadow(targetCtx, eShadowX, eShadowY, em.size * 0.36, em.size * 0.11, 0.36);
+      const eShadowY = em.y + f.eOffset.y;
+      drawPokemonSilhouetteShadow(targetCtx, enemySprite, eShadowX, eShadowY, em.size, false, 0.42);
     }
 
     if (playerSprite && (playerMon.hp > 0 || f.playerHp > 0)) {
-      const pShadowX = pm.x + f.pOffset.x + pm.size * 0.12;
-      const pShadowY = 310;
-      drawPokemonShadow(targetCtx, pShadowX, pShadowY, pm.size * 0.34, pm.size * 0.10, 0.36);
+      const pShadowX = pm.x + f.pOffset.x;
+      const pShadowY = pm.y + f.pOffset.y;
+      drawPokemonSilhouetteShadow(targetCtx, playerSprite, pShadowX, pShadowY, pm.size, true, 0.42);
     }
 
     if (enemySprite) {
