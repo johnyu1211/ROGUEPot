@@ -196,7 +196,7 @@ export async function renderBattleMessageData(
     imageBuffer = res.buffer;
     motionDurationMs = res.motionDurationMs;
     fileName = `battle_${uniqueId}.gif`;
-  } else if (battle.lastMoveEffect && (battle.phase === "VICTORY" || battle.phase === "DEFEAT" || battle.phase === "MAIN")) {
+  } else if (battle.lastMoveEffect) {
     const res = await renderBattleMoveGif({
       battle,
       lang: profile.language,
@@ -249,64 +249,75 @@ export async function renderBattleMessageData(
     );
     components.push(row);
   } else if (battle.phase === "FIGHT") {
-    const isPlayerCharging = Boolean(combatMon?.chargingMove);
-    if (isPlayerCharging && combatMon?.chargingMove) {
-      const chargeKey = combatMon.chargingMove;
-      const chargeData = getMoveData(chargeKey) || { nameKo: chargeKey, name: chargeKey, type: "flying" };
-      const chargeName = isKo ? chargeData.nameKo : chargeData.name;
-      const typeName = isKo ? (TYPE_NAMES_KO[chargeData.type.toLowerCase()] || chargeData.type) : chargeData.type.toUpperCase();
-      const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    const moves = (combatMon?.moves && combatMon.moves.length > 0)
+      ? combatMon.moves
+      : ["Tackle", "Scratch", "Growl", "Quick Attack"];
+
+    const isCharging = Boolean(combatMon?.chargingMove);
+    const chargeKey = combatMon?.chargingMove ? getMoveKey(combatMon.chargingMove) : null;
+
+    // Row 1: Moves 1, 2
+    const row1 = new ActionRowBuilder<ButtonBuilder>();
+    for (let i = 0; i < Math.min(2, moves.length); i++) {
+      const mKey = moves[i];
+      const cleanKey = getMoveKey(mKey);
+      const mData = getMoveData(mKey) || { nameKo: mKey, name: mKey, type: "normal", pp: 35 };
+      const mName = isKo ? mData.nameKo : mData.name;
+      const typeName = isKo ? (TYPE_NAMES_KO[mData.type.toLowerCase()] || mData.type) : mData.type.toUpperCase();
+
+      const isThisChargingMove = isCharging && (cleanKey === chargeKey);
+      const btnStyle = isCharging
+        ? (isThisChargingMove ? ButtonStyle.Primary : ButtonStyle.Secondary)
+        : ButtonStyle.Primary;
+
+      const btnLabel = isThisChargingMove
+        ? `${i + 1}. ⚔️ ${mName} 공격! [${typeName}]`
+        : `${i + 1}. ${mName} [${typeName}]`;
+
+      row1.addComponents(
         new ButtonBuilder()
-          .setCustomId(`battle_move_0_${encodeURIComponent(chargeKey)}_${slotId}_${userId}`)
-          .setLabel(`⚔️ ${chargeName} 공격! [${typeName}]`)
-          .setStyle(ButtonStyle.Danger)
+          .setCustomId(`battle_move_${i}_${encodeURIComponent(cleanKey)}_${slotId}_${userId}`)
+          .setLabel(btnLabel)
+          .setStyle(btnStyle)
       );
-      components.push(row1);
-    } else {
-      const moves = (combatMon?.moves && combatMon.moves.length > 0)
-        ? combatMon.moves
-        : ["Tackle", "Scratch", "Growl", "Quick Attack"];
+    }
+    components.push(row1);
 
-      // Row 1: Moves 1, 2
-      const row1 = new ActionRowBuilder<ButtonBuilder>();
-      for (let i = 0; i < Math.min(2, moves.length); i++) {
-        const mKey = moves[i];
-        const cleanKey = getMoveKey(mKey);
-        const mData = getMoveData(mKey) || { nameKo: mKey, name: mKey, type: "normal", pp: 35 };
-        const mName = isKo ? mData.nameKo : mData.name;
-        const typeName = isKo ? (TYPE_NAMES_KO[mData.type.toLowerCase()] || mData.type) : mData.type.toUpperCase();
-        row1.addComponents(
-          new ButtonBuilder()
-            .setCustomId(`battle_move_${i}_${encodeURIComponent(cleanKey)}_${slotId}_${userId}`)
-            .setLabel(`${i + 1}. ${mName} [${typeName}]`)
-            .setStyle(ButtonStyle.Primary)
-        );
-      }
-      components.push(row1);
+    // Row 2: Moves 3, 4 + Back
+    const row2 = new ActionRowBuilder<ButtonBuilder>();
+    for (let i = 2; i < Math.min(4, moves.length); i++) {
+      const mKey = moves[i];
+      const cleanKey = getMoveKey(mKey);
+      const mData = getMoveData(mKey) || { nameKo: mKey, name: mKey, type: "normal", pp: 35 };
+      const mName = isKo ? mData.nameKo : mData.name;
+      const typeName = isKo ? (TYPE_NAMES_KO[mData.type.toLowerCase()] || mData.type) : mData.type.toUpperCase();
 
-      // Row 2: Moves 3, 4 + Back
-      const row2 = new ActionRowBuilder<ButtonBuilder>();
-      for (let i = 2; i < Math.min(4, moves.length); i++) {
-        const mKey = moves[i];
-        const cleanKey = getMoveKey(mKey);
-        const mData = getMoveData(mKey) || { nameKo: mKey, name: mKey, type: "normal", pp: 35 };
-        const mName = isKo ? mData.nameKo : mData.name;
-        const typeName = isKo ? (TYPE_NAMES_KO[mData.type.toLowerCase()] || mData.type) : mData.type.toUpperCase();
-        row2.addComponents(
-          new ButtonBuilder()
-            .setCustomId(`battle_move_${i}_${encodeURIComponent(cleanKey)}_${slotId}_${userId}`)
-            .setLabel(`${i + 1}. ${mName} [${typeName}]`)
-            .setStyle(ButtonStyle.Primary)
-        );
-      }
+      const isThisChargingMove = isCharging && (cleanKey === chargeKey);
+      const btnStyle = isCharging
+        ? (isThisChargingMove ? ButtonStyle.Primary : ButtonStyle.Secondary)
+        : ButtonStyle.Primary;
+
+      const btnLabel = isThisChargingMove
+        ? `${i + 1}. ⚔️ ${mName} 공격! [${typeName}]`
+        : `${i + 1}. ${mName} [${typeName}]`;
+
+      row2.addComponents(
+        new ButtonBuilder()
+          .setCustomId(`battle_move_${i}_${encodeURIComponent(cleanKey)}_${slotId}_${userId}`)
+          .setLabel(btnLabel)
+          .setStyle(btnStyle)
+      );
+    }
+
+    if (!isCharging) {
       row2.addComponents(
         new ButtonBuilder()
           .setCustomId(`battle_cancel_${slotId}_${userId}`)
           .setLabel(isKo ? "↩️ 뒤로" : "↩️ Back")
           .setStyle(ButtonStyle.Secondary)
       );
-      components.push(row2);
     }
+    components.push(row2);
   } else if (battle.phase === "BAG") {
     const profile = saveService.getProfile(userId);
     const slot = profile.slots[slotId];
@@ -376,57 +387,29 @@ export async function renderBattleMessageData(
     components.push(partyRow);
   } else {
     // MAIN Action Row
-    const isPlayerCharging = Boolean(combatMon?.chargingMove);
-    if (isPlayerCharging && combatMon?.chargingMove) {
-      const chargeKey = combatMon.chargingMove;
-      const chargeData = getMoveData(chargeKey) || { nameKo: chargeKey, name: chargeKey, type: "flying" };
-      const chargeName = isKo ? chargeData.nameKo : chargeData.name;
-      const typeName = isKo ? (TYPE_NAMES_KO[chargeData.type.toLowerCase()] || chargeData.type) : chargeData.type.toUpperCase();
-
-      const mainRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder()
-          .setCustomId(`battle_move_0_${encodeURIComponent(chargeKey)}_${slotId}_${userId}`)
-          .setLabel(`⚔️ ${chargeName} 공격! [${typeName}]`)
-          .setStyle(ButtonStyle.Danger),
-        new ButtonBuilder()
-          .setCustomId(`battle_menu_bag_${slotId}_${userId}`)
-          .setLabel(isKo ? "⚪ 몬스터볼 (Ball)" : "⚪ PokéBall")
-          .setStyle(ButtonStyle.Secondary)
-          .setDisabled(true),
-        new ButtonBuilder()
-          .setCustomId(`battle_menu_party_${slotId}_${userId}`)
-          .setLabel(isKo ? "🔄 교체 (Party)" : "🔄 Party")
-          .setStyle(ButtonStyle.Secondary)
-          .setDisabled(true),
-        new ButtonBuilder()
-          .setCustomId(`battle_menu_run_${slotId}_${userId}`)
-          .setLabel(isKo ? "🏃 도망치기 (Run)" : "🏃 Run")
-          .setStyle(ButtonStyle.Secondary)
-          .setDisabled(true)
-      );
-      components.push(mainRow);
-    } else {
-      const mainRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder()
-          .setCustomId(`battle_menu_fight_${slotId}_${userId}`)
-          .setLabel(isKo ? "⚔️ 싸운다 (Fight)" : "⚔️ Fight")
-          .setStyle(ButtonStyle.Primary),
-        new ButtonBuilder()
-          .setCustomId(`battle_menu_bag_${slotId}_${userId}`)
-          .setLabel(isKo ? "⚪ 몬스터볼 (Ball)" : "⚪ PokéBall")
-          .setStyle(ButtonStyle.Success),
-        new ButtonBuilder()
-          .setCustomId(`battle_menu_party_${slotId}_${userId}`)
-          .setLabel(isKo ? "🔄 교체 (Party)" : "🔄 Party")
-          .setStyle(ButtonStyle.Primary)
-          .setDisabled(battle.playerParty.length <= 1),
-        new ButtonBuilder()
-          .setCustomId(`battle_menu_run_${slotId}_${userId}`)
-          .setLabel(isKo ? "🏃 도망치기 (Run)" : "🏃 Run")
-          .setStyle(ButtonStyle.Secondary)
-      );
-      components.push(mainRow);
-    }
+    const isCharging = Boolean(combatMon?.chargingMove);
+    const mainRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`battle_menu_fight_${slotId}_${userId}`)
+        .setLabel(isKo ? "⚔️ 싸운다 (Fight)" : "⚔️ Fight")
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setCustomId(`battle_menu_bag_${slotId}_${userId}`)
+        .setLabel(isKo ? "⚪ 몬스터볼 (Ball)" : "⚪ PokéBall")
+        .setStyle(ButtonStyle.Success)
+        .setDisabled(isCharging),
+      new ButtonBuilder()
+        .setCustomId(`battle_menu_party_${slotId}_${userId}`)
+        .setLabel(isKo ? "🔄 교체 (Party)" : "🔄 Party")
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(battle.playerParty.length <= 1 || isCharging),
+      new ButtonBuilder()
+        .setCustomId(`battle_menu_run_${slotId}_${userId}`)
+        .setLabel(isKo ? "🏃 도망치기 (Run)" : "🏃 Run")
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(isCharging)
+    );
+    components.push(mainRow);
   }
 
   return { embeds: [], files: [attachment], attachments: [], components, motionDurationMs };
@@ -3598,16 +3581,6 @@ export const interactionCreateEvent: BotEvent = {
         // 2-7-A. Fight Menu Selected
         if (customId.startsWith("battle_menu_fight_")) {
           const slotId = parseInt(parts[3], 10) || 1;
-          const battle = battleService.getOrCreateBattle(interaction.user.id, slotId);
-          const combatMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
-          if (combatMon?.chargingMove) {
-            await interaction.deferUpdate().catch(() => null);
-            const profile = saveService.getProfile(interaction.user.id);
-            battleService.executePlayerMove(interaction.user.id, slotId, combatMon.chargingMove, profile.language);
-            const battleData = await renderBattleMessageData(interaction.user.id, slotId);
-            await safeInteractionUpdate(interaction, battleData);
-            return;
-          }
           const battleData = await renderBattleMessageData(interaction.user.id, slotId, "FIGHT");
           await safeInteractionUpdate(interaction, battleData);
           return;
@@ -3616,6 +3589,14 @@ export const interactionCreateEvent: BotEvent = {
         // 2-7-B. Bag Menu Selected
         if (customId.startsWith("battle_menu_bag_")) {
           const slotId = parseInt(parts[3], 10) || 1;
+          const battle = battleService.getOrCreateBattle(interaction.user.id, slotId);
+          const combatMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
+          if (combatMon?.chargingMove) {
+            // Cannot use Bag while charging mid-air! Keep in FIGHT phase
+            const battleData = await renderBattleMessageData(interaction.user.id, slotId, "FIGHT");
+            await safeInteractionUpdate(interaction, battleData);
+            return;
+          }
           const battleData = await renderBattleMessageData(interaction.user.id, slotId, "BAG");
           await safeInteractionUpdate(interaction, battleData);
           return;
@@ -3624,6 +3605,14 @@ export const interactionCreateEvent: BotEvent = {
         // 2-7-C. Party Menu Selected
         if (customId.startsWith("battle_menu_party_")) {
           const slotId = parseInt(parts[3], 10) || 1;
+          const battle = battleService.getOrCreateBattle(interaction.user.id, slotId);
+          const combatMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
+          if (combatMon?.chargingMove) {
+            // Cannot switch party while charging mid-air! Keep in FIGHT phase
+            const battleData = await renderBattleMessageData(interaction.user.id, slotId, "FIGHT");
+            await safeInteractionUpdate(interaction, battleData);
+            return;
+          }
           const battleData = await renderBattleMessageData(interaction.user.id, slotId, "PARTY");
           await safeInteractionUpdate(interaction, battleData);
           return;
@@ -3631,6 +3620,15 @@ export const interactionCreateEvent: BotEvent = {
 
         // 2-7-D. Run Away (Back to Title)
         if (customId.startsWith("battle_menu_run_")) {
+          const slotId = parseInt(parts[3], 10) || 1;
+          const battle = battleService.getOrCreateBattle(interaction.user.id, slotId);
+          const combatMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
+          if (combatMon?.chargingMove) {
+            // Cannot run while charging mid-air! Keep in FIGHT phase
+            const battleData = await renderBattleMessageData(interaction.user.id, slotId, "FIGHT");
+            await safeInteractionUpdate(interaction, battleData);
+            return;
+          }
           const titleData = await renderTitleMessageData(client, interaction.user.id);
           await safeInteractionUpdate(interaction, titleData);
           return;
@@ -3639,6 +3637,14 @@ export const interactionCreateEvent: BotEvent = {
         // 2-7-E. Cancel / Back to Main Battle Menu
         if (customId.startsWith("battle_cancel_")) {
           const slotId = parseInt(parts[2], 10) || 1;
+          const battle = battleService.getOrCreateBattle(interaction.user.id, slotId);
+          const combatMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
+          if (combatMon?.chargingMove) {
+            // Cannot exit FIGHT while charging mid-air! Keep in FIGHT phase
+            const battleData = await renderBattleMessageData(interaction.user.id, slotId, "FIGHT");
+            await safeInteractionUpdate(interaction, battleData);
+            return;
+          }
           const battleData = await renderBattleMessageData(interaction.user.id, slotId, "MAIN");
           await safeInteractionUpdate(interaction, battleData);
           return;
