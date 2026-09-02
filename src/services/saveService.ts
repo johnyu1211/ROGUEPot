@@ -13,6 +13,8 @@ export interface PartyPokemon {
   hp: number;
   maxHp: number;
   moves?: string[];
+  movePps?: number[];
+  maxMovePps?: number[];
   ability?: string;
   passiveAbility?: string;
   useHiddenAbility?: boolean;
