@@ -4,6 +4,7 @@ import { createCanvas } from "@napi-rs/canvas";
 import { BattleState, TurnActionInfo } from "../services/battleService.js";
 import { renderMoveEffect, drawStatBoostEffect, drawStatDropEffect } from "./moveEffectRenderer.js";
 import { POKEMON_SPECIES_DATA } from "../data/pokemonStats.js";
+import { getMoveKey } from "../data/movesKo.js";
 import {
   BATTLE_LAYOUT_CONFIG,
   getArenaAssets,
@@ -278,7 +279,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     hitCount: (battle.lastMoveEffect as any)?.hitCount,
   };
   const isP1 = a1.actor === "player";
-  const mKey1 = a1.moveKey.toLowerCase().replace(/[\s_]+/g, "-");
+  const mKey1 = getMoveKey(a1.moveKey || a1.moveName);
   const isChop1 = (mKey1 === "karate-chop" || mKey1 === "karatechop");
   const isSlap1 = (mKey1 === "double-slap" || mKey1 === "doubleslap");
   const isPunch1 = (mKey1 === "comet-punch" || mKey1 === "cometpunch");
@@ -1067,7 +1068,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   if (hasMultipleActions) {
     const a2 = turnActions[1];
     const isP2 = a2.actor === "player";
-    const mKey2 = a2.moveKey.toLowerCase().replace(/[\s_]+/g, "-");
+    const mKey2 = getMoveKey(a2.moveKey || a2.moveName);
     const isChop2 = (mKey2 === "karate-chop" || mKey2 === "karatechop");
     const isSlap2 = (mKey2 === "double-slap" || mKey2 === "doubleslap");
     const isPunch2 = (mKey2 === "comet-punch" || mKey2 === "cometpunch");

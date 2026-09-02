@@ -1,5 +1,5 @@
 import { saveService, PartyPokemon, GameSlot } from "./saveService.js";
-import { MOVES_DATA, MoveData } from "../data/movesKo.js";
+import { MOVES_DATA, MoveData, getMoveData, getMoveKey } from "../data/movesKo.js";
 import { STARTER_DATABASE, StarterEntry } from "../data/starterCosts.js";
 import { POKEMON_SPECIES_DATA, SpeciesBaseData } from "../data/pokemonStats.js";
 import { POKEMON_NAMES_KO } from "../data/pokemonNamesKo.js";
@@ -531,10 +531,10 @@ export class BattleService {
     if (!playerMon || playerMon.hp <= 0 || enemyMon.hp <= 0) return battle;
 
     const isKo = lang === "ko";
-    const pMoveKey = moveKey.toLowerCase().replace(/[\s_]+/g, "-");
-    const pMove = MOVES_DATA[pMoveKey] || {
+    const pMoveKey = getMoveKey(moveKey);
+    const pMove = getMoveData(moveKey) || {
       id: 0,
-      name: moveKey,
+      name: pMoveKey,
       nameKo: moveKey,
       type: "normal",
       power: 40,
@@ -551,12 +551,12 @@ export class BattleService {
       : (enemyMon.moves[Math.floor(Math.random() * enemyMon.moves.length)] || "Tackle");
     const eMoveKey = isTestSandbox
       ? pMoveKey
-      : eMoveRaw.toLowerCase().replace(/[\s_]+/g, "-");
+      : getMoveKey(eMoveRaw);
     const eMove = isTestSandbox
       ? pMove
-      : (MOVES_DATA[eMoveKey] || {
+      : (getMoveData(eMoveRaw) || {
           id: 0,
-          name: eMoveRaw,
+          name: eMoveKey,
           nameKo: eMoveRaw,
           type: "normal",
           power: 40,
