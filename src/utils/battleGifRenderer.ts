@@ -1246,14 +1246,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             isAttackerPlayer: isP1,
             pWhite: false,
             eWhite: false,
-            showEffect: true,
+            showEffect: false,
             hitFlash: false,
             enemyHp: enemy.hp,
             playerHp: playerMon.hp,
             textLineIdx: 1,
             isBlur: false,
             moveEffect: a1,
-            moveStep: 1,
           },
           {
             delay: 66,
@@ -1266,14 +1265,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             isAttackerPlayer: isP1,
             pWhite: false,
             eWhite: false,
-            showEffect: true,
+            showEffect: false,
             hitFlash: false,
             enemyHp: enemy.hp,
             playerHp: playerMon.hp,
             textLineIdx: 1,
             isBlur: false,
             moveEffect: a1,
-            moveStep: 1,
           },
           {
             delay: 66,
@@ -1286,14 +1284,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             isAttackerPlayer: isP1,
             pWhite: false,
             eWhite: false,
-            showEffect: true,
+            showEffect: false,
             hitFlash: false,
             enemyHp: enemy.hp,
             playerHp: playerMon.hp,
             textLineIdx: 1,
             isBlur: false,
             moveEffect: a1,
-            moveStep: 1,
           },
           // 2. Rocket Sky Launch & Camera Dynamic Tracking Upward into Stratosphere! (66ms x 4 = 264ms)
           {
@@ -1307,14 +1304,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             isAttackerPlayer: isP1,
             pWhite: isP1,
             eWhite: !isP1,
-            showEffect: true,
+            showEffect: false,
             hitFlash: false,
             enemyHp: enemy.hp,
             playerHp: playerMon.hp,
             textLineIdx: 1,
             isBlur: false,
             moveEffect: a1,
-            moveStep: 1,
           },
           {
             delay: 66,
@@ -1327,14 +1323,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             isAttackerPlayer: isP1,
             pWhite: isP1,
             eWhite: !isP1,
-            showEffect: true,
+            showEffect: false,
             hitFlash: false,
             enemyHp: enemy.hp,
             playerHp: playerMon.hp,
             textLineIdx: 1,
             isBlur: false,
             moveEffect: a1,
-            moveStep: 1,
           },
           {
             delay: 66,
@@ -2741,14 +2736,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             isAttackerPlayer: isP2,
             pWhite: false,
             eWhite: false,
-            showEffect: true,
+            showEffect: false,
             hitFlash: false,
             enemyHp: a1.enemyHpAfter,
             playerHp: a1.playerHpAfter,
             textLineIdx: 3,
             isBlur: false,
             moveEffect: a2,
-            moveStep: 1,
           },
           {
             delay: 66,
@@ -2761,14 +2755,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             isAttackerPlayer: isP2,
             pWhite: false,
             eWhite: false,
-            showEffect: true,
+            showEffect: false,
             hitFlash: false,
             enemyHp: a1.enemyHpAfter,
             playerHp: a1.playerHpAfter,
             textLineIdx: 3,
             isBlur: false,
             moveEffect: a2,
-            moveStep: 1,
           },
           {
             delay: 66,
@@ -2781,14 +2774,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             isAttackerPlayer: isP2,
             pWhite: false,
             eWhite: false,
-            showEffect: true,
+            showEffect: false,
             hitFlash: false,
             enemyHp: a1.enemyHpAfter,
             playerHp: a1.playerHpAfter,
             textLineIdx: 3,
             isBlur: false,
             moveEffect: a2,
-            moveStep: 1,
           },
           // 2. Rocket Sky Launch & Camera Dynamic Tracking Upward into Stratosphere! (66ms x 4 = 264ms)
           {
@@ -2802,14 +2794,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             isAttackerPlayer: isP2,
             pWhite: isP2,
             eWhite: !isP2,
-            showEffect: true,
+            showEffect: false,
             hitFlash: false,
             enemyHp: a1.enemyHpAfter,
             playerHp: a1.playerHpAfter,
             textLineIdx: 3,
             isBlur: false,
             moveEffect: a2,
-            moveStep: 1,
           },
           {
             delay: 66,
@@ -2822,14 +2813,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             isAttackerPlayer: isP2,
             pWhite: isP2,
             eWhite: !isP2,
-            showEffect: true,
+            showEffect: false,
             hitFlash: false,
             enemyHp: a1.enemyHpAfter,
             playerHp: a1.playerHpAfter,
             textLineIdx: 3,
             isBlur: false,
             moveEffect: a2,
-            moveStep: 1,
           },
           {
             delay: 66,
@@ -3813,21 +3803,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       targetCtx.fillRect(-width * 4, 0, width * 4, height);
       targetCtx.fillRect(width, 0, width * 4, height);
 
-      // 4. Passing high altitude clouds during rocket launch
-      if (isTracking) {
-        targetCtx.save();
-        targetCtx.fillStyle = "rgba(255, 255, 255, 0.60)";
-        for (let cy = -200; cy >= -1200; cy -= 300) {
-          targetCtx.beginPath();
-          targetCtx.arc(pm.x - 120, cy, 60, 0, Math.PI * 2);
-          targetCtx.arc(pm.x - 60, cy - 20, 85, 0, Math.PI * 2);
-          targetCtx.arc(pm.x + 110, cy, 70, 0, Math.PI * 2);
-          targetCtx.fill();
-        }
-        targetCtx.restore();
-      }
-
-      // 5. Ground Arena Background Image
+      // 4. Ground Arena Background Image
       if (arena.bg) {
         targetCtx.drawImage(arena.bg, 0, 0, width, height);
       } else {

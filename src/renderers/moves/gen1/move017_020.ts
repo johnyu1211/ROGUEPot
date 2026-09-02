@@ -330,17 +330,7 @@ export function drawFlyEffect(ctx: any, start: { x: number; y: number }, target:
   const ty = target.y - 12;
 
   if (step === 1) {
-    // Step 1: Upward Launch Ground Wind Dust Cushion (Soft circular wind burst)
-    ctx.fillStyle = "rgba(224, 242, 254, 0.40)";
-    ctx.beginPath();
-    ctx.ellipse(start.x, start.y + 18, 42, 14, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.70)";
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.ellipse(start.x, start.y + 16, 52, 16, 0, 0, Math.PI * 2);
-    ctx.stroke();
+    // Step 1: Clean liftoff (no circular artifacts)
   } else if (step === 3) {
     // Step 3: Clean & Heavy Ground Impact Crater Shockwaves (No random lines/dots)
     ctx.strokeStyle = "#FFFFFF";
