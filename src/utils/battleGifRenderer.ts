@@ -57,9 +57,8 @@ function createEffectivenessFlickerFrames(
 ): any[] {
   const typeMod = action.typeMod !== undefined ? action.typeMod : (action.isSuperEffective ? 2.0 : 1.0);
   
-  let blinkCount = 1; // Default normal hit (1.0x) -> 1 blink
-  if (typeMod <= 0.5) blinkCount = 0; // Not very effective (<= 0.5x) or immune (0x) -> 0 blinks (steady)
-  else if (typeMod >= 4.0) blinkCount = 4; // Double super effective (>= 4.0x) -> 4 blinks
+  let blinkCount = 0; // Default: 0 blinks for normal hits (1.0x) and not very effective (<= 0.5x)
+  if (typeMod >= 4.0) blinkCount = 4; // Double super effective (>= 4.0x) -> 4 blinks
   else if (typeMod >= 2.0) blinkCount = 3; // Super effective (2.0x) -> 3 blinks
 
   const isP = isAttackerPlayer;
