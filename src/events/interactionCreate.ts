@@ -196,7 +196,7 @@ export async function renderBattleMessageData(
     });
     imageBuffer = res.buffer;
     motionDurationMs = res.motionDurationMs;
-    fileName = `battle_${uniqueId}.webp`;
+    fileName = `battle_${uniqueId}.gif`;
   } else if (battle.lastMoveEffect) {
     const res = await renderBattleMoveGif({
       battle,
@@ -204,7 +204,7 @@ export async function renderBattleMessageData(
     });
     imageBuffer = res.buffer;
     motionDurationMs = res.motionDurationMs;
-    fileName = `battle_${uniqueId}.webp`;
+    fileName = `battle_${uniqueId}.gif`;
     battle.lastMoveEffect = null;
   } else if (isFightTransition || (overridePhase === "FIGHT" && !isEntryTransition)) {
     const res = await renderBattleFightMenuGif({
@@ -213,7 +213,7 @@ export async function renderBattleMessageData(
     });
     imageBuffer = res.buffer;
     motionDurationMs = res.motionDurationMs;
-    fileName = `battle_${uniqueId}.webp`;
+    fileName = `battle_${uniqueId}.gif`;
   } else {
     imageBuffer = await renderBattleScreen({
       battle,
