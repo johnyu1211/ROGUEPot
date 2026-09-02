@@ -19,8 +19,8 @@ export function drawRazorWindEffect(ctx: any, target: { x: number; y: number }, 
     ctx.arc(0, 0, 38, -Math.PI * 0.45, Math.PI * 0.45);
     ctx.arc(10, 0, 32, Math.PI * 0.45, -Math.PI * 0.45, true);
     ctx.closePath();
-    ctx.fillStyle = "#E0F2FE";
-    ctx.strokeStyle = "#38BDF8";
+    ctx.fillStyle = "#F0F9FF";
+    ctx.strokeStyle = "#BAE6FD";
     ctx.lineWidth = 2.5;
     ctx.fill();
     ctx.stroke();
@@ -36,7 +36,7 @@ export function drawRazorWindEffect(ctx: any, target: { x: number; y: number }, 
 
   if (step === 1) {
     for (let i = 0; i < 3; i++) {
-      ctx.strokeStyle = "rgba(186, 230, 253, 0.55)";
+      ctx.strokeStyle = "rgba(224, 242, 254, 0.65)";
       ctx.lineWidth = 2.0;
       ctx.beginPath();
       ctx.ellipse(tx, ty + 15, 24 + i * 8, 8 + i * 3, 0, 0, Math.PI * 2);
@@ -48,7 +48,7 @@ export function drawRazorWindEffect(ctx: any, target: { x: number; y: number }, 
   } else if (step === 3) {
     drawSickle(tx, ty, -Math.PI * 0.35, 1.25, 1.0);
     drawSickle(tx, ty, Math.PI * 0.65, 1.25, 1.0);
-    drawMiniRetroStar(ctx, tx, ty, 18, "rgba(56, 189, 248, 0.85)");
+    drawMiniRetroStar(ctx, tx, ty, 18, "rgba(186, 230, 253, 0.85)");
     drawMiniRetroStar(ctx, tx, ty, 10, "#FFFFFF");
   } else if (step >= 4) {
     drawSickle(tx, ty, -Math.PI * 0.35, 1.45, 0.35);
@@ -244,7 +244,7 @@ export function drawGustEffect(ctx: any, start: { x: number; y: number }, target
   const drawWindStream = (sx: number, sy: number, ex: number, ey: number, curvature: number, alpha: number) => {
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.strokeStyle = "#BAE6FD";
+    ctx.strokeStyle = "#E0F2FE";
     ctx.lineWidth = 4.5;
     ctx.lineCap = "round";
     ctx.beginPath();
@@ -271,13 +271,13 @@ export function drawGustEffect(ctx: any, start: { x: number; y: number }, target
     drawWindStream(start.x + 30, start.y + 24, tx - 10, ty + 20, 26, 0.95);
   } else if (step === 3) {
     for (let i = 0; i < 4; i++) {
-      ctx.strokeStyle = i % 2 === 0 ? "#E0F2FE" : "#38BDF8";
+      ctx.strokeStyle = i % 2 === 0 ? "#F0F9FF" : "#BAE6FD";
       ctx.lineWidth = 3.0;
       ctx.beginPath();
       ctx.ellipse(tx, ty - 8 + i * 8, 36 - i * 4, 12, (i * Math.PI) / 4, 0, Math.PI * 2);
       ctx.stroke();
     }
-    drawMiniRetroStar(ctx, tx, ty, 14, "#BAE6FD");
+    drawMiniRetroStar(ctx, tx, ty, 14, "#E0F2FE");
     drawMiniRetroStar(ctx, tx, ty, 7, "#FFFFFF");
   } else if (step >= 4) {
     const sparkles = [
@@ -287,7 +287,7 @@ export function drawGustEffect(ctx: any, start: { x: number; y: number }, target
       { ox: 16, oy: 22, r: 2.8 },
     ];
     for (const sp of sparkles) {
-      ctx.fillStyle = "#E0F2FE";
+      ctx.fillStyle = "#F0F9FF";
       ctx.beginPath();
       ctx.arc(tx + sp.ox, ty + sp.oy, sp.r, 0, Math.PI * 2);
       ctx.fill();
