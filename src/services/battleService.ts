@@ -90,6 +90,14 @@ export interface BattlePokemon {
   semiInvulnerableState?: "air" | "underground" | "underwater" | "shadow" | null;
   mustRecharge?: boolean;
 
+  // Special Mechanic: Trapped / Bound Status (조이기, 김밥말이, 회오리불꽃, 모래지옥, 바다회오리, 껍질끼우기, 엉겨붙기, 마그마스톰, 썬더프리즌, 트랩셸)
+  trapState?: {
+    moveKey: string;
+    moveNameKo: string;
+    moveNameEn: string;
+    turnsLeft: number;
+  } | null;
+
   isShiny?: boolean;
   shinyTier?: number;
   isBoss?: boolean;
@@ -1355,6 +1363,25 @@ export class BattleService {
       }
     }
 
+    // Trapping / Binding Moves (조이기, 김밥말이, 회오리불꽃, 모래지옥, 바다회오리, 껍질끼우기, 엉겨붙기, 마그마스톰, 썬더프리즌, 트랩셸)
+    const isTrapMove = [
+      "bind", "wrap", "fire-spin", "sand-tomb", "whirlpool",
+      "clamp", "infestation", "magma-storm", "thunder-cage", "snap-trap"
+    ].includes(mName);
+
+    if (isTrapMove && target.hp > 0 && !target.trapState) {
+      const turns = Math.random() < 0.5 ? 4 : 5;
+      target.trapState = {
+        moveKey: mName,
+        moveNameKo: move.nameKo || move.name,
+        moveNameEn: move.name,
+        turnsLeft: turns,
+      };
+      log += isKo
+        ? `\n${target.name}(은)는 ${move.nameKo || move.name}에 묶여 빠져나올 수 없게 되었다!`
+        : `\n${target.name} was trapped by ${move.name}!`;
+    }
+
     return log;
   }
 
@@ -1721,6 +1748,30 @@ export class BattleService {
       mon.hp = Math.max(0, mon.hp - toxDmg);
       mon.toxicCounter = counter + 1;
       logs.push(isKo ? `${name}(은)는 맹독으로 ${toxDmg} 데미지를 입었다!` : `${name} was badly hurt by toxic! (${toxDmg})`);
+    }
+
+    // Trapping / Binding Turn-End Damage (1/8 Max HP per turn)
+    if (mon.trapState && mon.trapState.turnsLeft > 0 && mon.hp > 0) {
+      const trapDmg = Math.max(1, Math.floor(mon.maxHp / 8));
+      mon.hp = Math.max(0, mon.hp - trapDmg);
+      mon.trapState.turnsLeft -= 1;
+      const trapMoveName = isKo ? mon.trapState.moveNameKo : mon.trapState.moveNameEn;
+      logs.push(
+        isKo
+          ? `${name}(은)는 ${trapMoveName}의 조임으로 ${trapDmg} 데미지를 입었다!`
+          : `${name} is hurt by ${trapMoveName}! (${trapDmg})`
+      );
+
+      if (mon.trapState.turnsLeft <= 0) {
+        if (mon.hp > 0) {
+          logs.push(
+            isKo
+              ? `${name}(은)는 ${trapMoveName}의 구속에서 풀려났다!`
+              : `${name} was freed from ${trapMoveName}!`
+          );
+        }
+        mon.trapState = null;
+      }
     }
 
     // Ability: Moody (변덕쟁이)
