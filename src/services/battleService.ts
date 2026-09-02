@@ -112,6 +112,8 @@ export interface TurnActionInfo {
   typeMod?: number;
   hitCount?: number;
   isSuperEffective?: boolean;
+  damage?: number;
+  isHit?: boolean;
 }
 
 export interface BattleState {
@@ -612,6 +614,7 @@ export class BattleService {
     const res1 = this.executeSingleAction(firstActor, secondActor, firstMove, isFirstPlayer, isKo, battle);
     turnLogs.push(res1.log);
 
+    const isHit1 = (res1.damage ?? 0) > 0 || (res1.hitCount ?? 0) > 0 || (!res1.log.includes("빗나갔다") && !res1.log.includes("missed") && !res1.log.includes("효과가 없는") && !res1.log.includes("닿지 않았다"));
     turnActions.push({
       actor: isFirstPlayer ? "player" : "enemy",
       moveKey: isFirstPlayer ? pMoveKey : eMoveKey,
@@ -625,6 +628,8 @@ export class BattleService {
       typeMod: res1.typeMod,
       hitCount: res1.hitCount,
       isSuperEffective: res1.isSuperEffective,
+      damage: res1.damage,
+      isHit: isHit1,
     });
 
     // CHECK IF 2ND ACTOR CAN COUNTER-ATTACK
@@ -643,6 +648,7 @@ export class BattleService {
       const res2 = this.executeSingleAction(secondActor, firstActor, secondMove, !isFirstPlayer, isKo, battle);
       turnLogs.push(res2.log);
 
+      const isHit2 = (res2.damage ?? 0) > 0 || (res2.hitCount ?? 0) > 0 || (!res2.log.includes("빗나갔다") && !res2.log.includes("missed") && !res2.log.includes("효과가 없는") && !res2.log.includes("닿지 않았다"));
       turnActions.push({
         actor: !isFirstPlayer ? "player" : "enemy",
         moveKey: !isFirstPlayer ? pMoveKey : eMoveKey,
@@ -656,6 +662,8 @@ export class BattleService {
         typeMod: res2.typeMod,
         hitCount: res2.hitCount,
         isSuperEffective: res2.isSuperEffective,
+        damage: res2.damage,
+        isHit: isHit2,
       });
     } else if (secondActor.isFlinched && secondActor.hp > 0) {
       const monName = isFirstPlayer ? (isKo ? enemyMon.nameKo : enemyMon.name) : playerMon.name;
