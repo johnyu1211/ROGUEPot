@@ -1708,60 +1708,89 @@ export function drawFirePunchEffect(ctx: any, target: { x: number; y: number }, 
 }
 
 /**
- * 008 냉동펀치 (Ice Punch): Crystalline Glacial Frost Aura, Diamond Ice Shards & Snowflake Burst
+ * 008 냉동펀치 (Ice Punch):
+ * Step 1: Glacial Strike & 6-Point Diamond Ice Crystal Ring Formation
+ * Step 2: Ice Crystals Shatter & Expand Radially with Rotation (Distance x1.55, Alpha 0.65)
+ * Step 3: Crystal Shards Disperse Far & Dissipate into Frost Glints (Distance x2.25, Alpha 0.25)
  */
 export function drawIcePunchEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
   ctx.save();
 
-  const isFade = (step % 2 === 0);
-  const alpha = isFade ? 0.35 : 1.0;
   const targetX = target.x;
   const targetY = target.y - 12;
 
-  // 1. Frost Aura
-  const iceGrad = ctx.createRadialGradient(targetX, targetY - 14, 4, targetX, targetY - 14, isFade ? 50 : 42);
-  iceGrad.addColorStop(0, "#FFFFFF");
-  iceGrad.addColorStop(0.4, "#7DD3FC");
-  iceGrad.addColorStop(0.75, "#0284C7");
-  iceGrad.addColorStop(1, "rgba(2, 132, 199, 0)");
-  ctx.fillStyle = iceGrad;
-  ctx.globalAlpha = isFade ? 0.35 : 0.85;
-  ctx.beginPath();
-  ctx.arc(targetX, targetY - 14, isFade ? 50 : 42, 0, Math.PI * 2);
-  ctx.fill();
+  let spread = 0.85;
+  let alpha = 1.0;
+  let fistAlpha = 1.0;
+  let spinOffset = 0.0;
 
-  // 2. Punch Fist
-  ctx.save();
-  ctx.translate(targetX, targetY - 14);
-  ctx.scale(isFade ? 0.68 : 0.62, isFade ? 0.68 : 0.62);
-  ctx.globalAlpha = alpha;
-
-  const fistSprite = icePunchFistCanvas || cometPunchFistImg;
-  if (fistSprite) {
-    const fw = fistSprite.width;
-    const fh = fistSprite.height;
-    ctx.drawImage(fistSprite, -fw / 2, -fh / 2, fw, fh);
-  } else {
-    drawFrontStraightPunchFistSvg(ctx, 0, 0, 2.2, 1.0);
+  if (step === 2) {
+    spread = 1.55;
+    alpha = 0.65;
+    fistAlpha = 0.35;
+    spinOffset = Math.PI / 6;
+  } else if (step >= 3) {
+    spread = 2.25;
+    alpha = 0.25;
+    fistAlpha = 0.0;
+    spinOffset = Math.PI / 3;
   }
-  ctx.restore();
 
-  // 3. Ice Crystal Shards (6-point Diamond Shards)
+  // 1. Cryogenic Frost Glow Background Aura
+  if (step <= 2) {
+    const iceGrad = ctx.createRadialGradient(
+      targetX,
+      targetY - 14,
+      4,
+      targetX,
+      targetY - 14,
+      step === 1 ? 46 : 56
+    );
+    iceGrad.addColorStop(0, "rgba(255, 255, 255, 0.85)");
+    iceGrad.addColorStop(0.4, "rgba(125, 211, 252, 0.70)");
+    iceGrad.addColorStop(0.75, "rgba(2, 132, 199, 0.40)");
+    iceGrad.addColorStop(1, "rgba(2, 132, 199, 0)");
+    ctx.fillStyle = iceGrad;
+    ctx.globalAlpha = step === 1 ? 0.90 : 0.45;
+    ctx.beginPath();
+    ctx.arc(targetX, targetY - 14, step === 1 ? 46 : 56, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 2. Punch Fist with Cyan Frost Tint
+  if (fistAlpha > 0.02) {
+    ctx.save();
+    ctx.translate(targetX, targetY - 14);
+    ctx.scale(step === 1 ? 0.68 : 0.72, step === 1 ? 0.68 : 0.72);
+    ctx.globalAlpha = fistAlpha;
+
+    const fistSprite = icePunchFistCanvas || cometPunchFistImg;
+    if (fistSprite) {
+      const fw = fistSprite.width;
+      const fh = fistSprite.height;
+      ctx.drawImage(fistSprite, -fw / 2, -fh / 2, fw, fh);
+    } else {
+      drawFrontStraightPunchFistSvg(ctx, 0, 0, 2.2, 1.0);
+    }
+    ctx.restore();
+  }
+
+  // 3. 6-Point Diamond Ice Crystal Shards
   ctx.save();
-  ctx.globalAlpha = isFade ? 0.40 : 0.95;
-  const shards = [
-    { ox: 0, oy: -36, w: 7, h: 14, rot: 0 },
-    { ox: 28, oy: -22, w: 6, h: 12, rot: Math.PI / 3 },
-    { ox: 28, oy: 10, w: 6, h: 12, rot: (2 * Math.PI) / 3 },
-    { ox: 0, oy: 22, w: 7, h: 14, rot: Math.PI },
-    { ox: -28, oy: 10, w: 6, h: 12, rot: (4 * Math.PI) / 3 },
-    { ox: -28, oy: -22, w: 6, h: 12, rot: (5 * Math.PI) / 3 },
+  ctx.globalAlpha = alpha;
+  const baseShards = [
+    { vx: 0, vy: -34, w: 8, h: 16, rot: 0 },
+    { vx: 28, vy: -20, w: 7, h: 14, rot: Math.PI / 3 },
+    { vx: 28, vy: 16, w: 7, h: 14, rot: (2 * Math.PI) / 3 },
+    { vx: 0, vy: 30, w: 8, h: 16, rot: Math.PI },
+    { vx: -28, vy: 16, w: 7, h: 14, rot: (4 * Math.PI) / 3 },
+    { vx: -28, vy: -20, w: 7, h: 14, rot: (5 * Math.PI) / 3 },
   ];
 
-  for (const sh of shards) {
+  for (const sh of baseShards) {
     ctx.save();
-    ctx.translate(targetX + sh.ox, targetY + sh.oy);
-    ctx.rotate(sh.rot);
+    ctx.translate(targetX + sh.vx * spread, targetY - 14 + sh.vy * spread);
+    ctx.rotate(sh.rot + spinOffset);
     ctx.fillStyle = "#E0F2FE";
     ctx.strokeStyle = "#0284C7";
     ctx.lineWidth = 1.6;
@@ -1773,26 +1802,48 @@ export function drawIcePunchEffect(ctx: any, target: { x: number; y: number }, s
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
+
+    // Inner Crystal Diamond Ridge
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 1.0;
+    ctx.beginPath();
+    ctx.moveTo(0, -sh.h / 2);
+    ctx.lineTo(0, sh.h / 2);
+    ctx.stroke();
     ctx.restore();
   }
   ctx.restore();
 
-  // 4. Glacial Starburst
-  drawMiniRetroStar(ctx, targetX, targetY - 20, isFade ? 12 : 20, "#BAE6FD");
+  // 4. Glacial Impact Starburst
+  if (step <= 2) {
+    drawMiniRetroStar(ctx, targetX, targetY - 14, step === 1 ? 22 : 14, "#BAE6FD");
+  }
 
-  // Frost Glints
+  // 5. Frost Sparkle Glints
+  ctx.save();
+  ctx.globalAlpha = alpha;
   const glints = [
-    { ox: -16, oy: -28, r: 2.5, c: "#FFFFFF" },
-    { ox: 18, oy: -26, r: 2.8, c: "#E0F2FE" },
-    { ox: -14, oy: 16, r: 2.2, c: "#38BDF8" },
-    { ox: 16, oy: 18, r: 2.5, c: "#FFFFFF" },
+    { vx: -24, vy: -26, r: 2.8, c: "#FFFFFF" },
+    { vx: 26, vy: -24, r: 3.0, c: "#E0F2FE" },
+    { vx: -20, vy: 20, r: 2.4, c: "#38BDF8" },
+    { vx: 22, vy: 22, r: 2.8, c: "#FFFFFF" },
+    { vx: 0, vy: -40, r: 3.0, c: "#BAE6FD" },
+    { vx: 32, vy: 0, r: 2.6, c: "#38BDF8" },
+    { vx: -32, vy: 0, r: 2.6, c: "#E0F2FE" },
   ];
   for (const gl of glints) {
     ctx.fillStyle = gl.c;
     ctx.beginPath();
-    ctx.arc(targetX + gl.ox, targetY + gl.oy, gl.r, 0, Math.PI * 2);
+    ctx.arc(
+      targetX + gl.vx * spread,
+      targetY - 14 + gl.vy * spread,
+      step >= 3 ? gl.r * 0.7 : gl.r,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
   }
+  ctx.restore();
 
   ctx.restore();
 }

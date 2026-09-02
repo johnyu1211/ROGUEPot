@@ -266,9 +266,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   const isMegaPunch1 = (mKey1 === "mega-punch" || mKey1 === "megapunch");
   const isPayDay1 = (mKey1 === "pay-day" || mKey1 === "payday");
   const isFirePunch1 = (mKey1 === "fire-punch" || mKey1 === "firepunch");
-  const isSingleStrikeSpecial1 = (
-    mKey1 === "ice-punch" || mKey1 === "icepunch"
-  );
+  const isIcePunch1 = (mKey1 === "ice-punch" || mKey1 === "icepunch");
 
   let act1Frames: any[] = [];
   if (isChop1) {
@@ -639,11 +637,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveStep: 3,
         }
       ];
-    } else if (isSingleStrikeSpecial1) {
+    } else if (isIcePunch1) {
       act1Frames = [
-        // 1. Windup lunge (160ms)
+        // 1. Windup lunge (150ms)
         {
-          delay: 160,
+          delay: 150,
           pOffset: isP1 ? { x: 16, y: -8 } : { x: 0, y: 0 },
           eOffset: !isP1 ? { x: -16, y: 8 } : { x: 0, y: 0 },
           showEffect: false,
@@ -654,9 +652,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a1,
         },
-        // 2. Direct Hit Impact (Full Opacity + Bright Hit Flash) (220ms)
+        // 2. Step 1: Direct Glacial Strike + 6 Ice Crystals Form + Hit Flash (200ms)
         {
-          delay: 220,
+          delay: 200,
           pOffset: isP1 ? { x: 22, y: -9 } : { x: -6, y: 3 },
           eOffset: isP1 ? { x: 10, y: -3 } : { x: -22, y: 9 },
           showEffect: true,
@@ -669,11 +667,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 1,
         },
-        // 3. Follow-through Recoil & Particle Fade Out (140ms)
+        // 3. Step 2: Ice Crystals Shatter & Expand Radially (140ms)
         {
           delay: 140,
-          pOffset: isP1 ? { x: 14, y: -5 } : { x: -3, y: 1 },
-          eOffset: isP1 ? { x: 4, y: -1 } : { x: -14, y: 5 },
+          pOffset: isP1 ? { x: 16, y: -6 } : { x: -3, y: 1 },
+          eOffset: isP1 ? { x: 5, y: -1 } : { x: -16, y: 6 },
           showEffect: true,
           hitFlash: false,
           enemyHp: a1.enemyHpAfter,
@@ -683,6 +681,21 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a1,
           moveStep: 2,
+        },
+        // 4. Step 3: Crystals Disperse Far & Dissipate (130ms)
+        {
+          delay: 130,
+          pOffset: isP1 ? { x: 10, y: -3 } : { x: 0, y: 0 },
+          eOffset: isP1 ? { x: 2, y: 0 } : { x: -10, y: 3 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 3,
         }
       ];
     } else {
@@ -732,9 +745,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const isMegaPunch2 = (mKey2 === "mega-punch" || mKey2 === "megapunch");
     const isPayDay2 = (mKey2 === "pay-day" || mKey2 === "payday");
     const isFirePunch2 = (mKey2 === "fire-punch" || mKey2 === "firepunch");
-    const isSingleStrikeSpecial2 = (
-      mKey2 === "ice-punch" || mKey2 === "icepunch"
-    );
+    const isIcePunch2 = (mKey2 === "ice-punch" || mKey2 === "icepunch");
 
     let act2Frames: any[] = [];
     if (isChop2) {
@@ -1105,11 +1116,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveStep: 3,
         }
       ];
-    } else if (isSingleStrikeSpecial2) {
+    } else if (isIcePunch2) {
       act2Frames = [
-        // 1. Counter Windup lunge (160ms)
+        // 1. Counter Windup lunge (150ms)
         {
-          delay: 160,
+          delay: 150,
           pOffset: isP2 ? { x: 16, y: -8 } : { x: 0, y: 0 },
           eOffset: !isP2 ? { x: -16, y: 8 } : { x: 0, y: 0 },
           showEffect: false,
@@ -1120,9 +1131,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a2,
         },
-        // 2. Direct Hit Impact (Full Opacity + Bright Hit Flash) (220ms)
+        // 2. Step 1: Direct Glacial Strike + 6 Ice Crystals Form + Hit Flash (200ms)
         {
-          delay: 220,
+          delay: 200,
           pOffset: isP2 ? { x: 22, y: -9 } : { x: -6, y: 3 },
           eOffset: !isP2 ? { x: -22, y: 9 } : { x: 10, y: -3 },
           showEffect: true,
@@ -1135,11 +1146,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 1,
         },
-        // 3. Follow-through Recoil & Particle Fade Out (140ms)
+        // 3. Step 2: Ice Crystals Shatter & Expand Radially (140ms)
         {
           delay: 140,
-          pOffset: isP2 ? { x: 14, y: -5 } : { x: -3, y: 1 },
-          eOffset: !isP2 ? { x: -14, y: 5 } : { x: 4, y: -1 },
+          pOffset: isP2 ? { x: 16, y: -6 } : { x: -3, y: 1 },
+          eOffset: !isP2 ? { x: -16, y: 6 } : { x: 5, y: -1 },
           showEffect: true,
           hitFlash: false,
           enemyHp: a2.enemyHpAfter,
@@ -1149,6 +1160,21 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a2,
           moveStep: 2,
+        },
+        // 4. Step 3: Crystals Disperse Far & Dissipate (130ms)
+        {
+          delay: 130,
+          pOffset: isP2 ? { x: 10, y: -3 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -10, y: 3 } : { x: 2, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 3,
         }
       ];
     } else {
