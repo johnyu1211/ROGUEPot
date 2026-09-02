@@ -426,12 +426,5 @@ export function drawBindEffect(ctx: any, target: { x: number; y: number }, step:
     ctx.stroke();
   }
 
-  // 3. Impact Flash & Constriction Stars on Max Squeeze (Step 2)
-  if (step === 2) {
-    drawMiniRetroStar(ctx, tx, ty - 2, 20, "#F59E0B");
-    drawMiniRetroStar(ctx, tx - 22, ty - 14, 12, "#FEF08A");
-    drawMiniRetroStar(ctx, tx + 22, ty + 10, 12, "#FEF08A");
-  }
-
   ctx.restore();
 }
