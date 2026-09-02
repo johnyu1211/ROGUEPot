@@ -544,8 +544,8 @@ function applyGen5CinematicCamera(
 
     const defender = isAttackerP ? em : pm;
     targetPoints[i] = {
-      x: cx + (defender.x - cx) * 0.45,
-      y: cy + (defender.y - cy) * 0.45,
+      x: cx + (defender.x - cx) * 0.48,
+      y: cy + (defender.y - cy) * 0.48,
     };
 
     if (f.hitFlash) {
@@ -574,7 +574,7 @@ function applyGen5CinematicCamera(
     smoothed[i] = (prev + 2 * smoothed[i] + nextVal) / 4;
   }
 
-  const maxZoom = 1.25; // Authentic 25% cinematic zoom (deliberate, clear, impactful!)
+  const maxZoom = 1.38; // Enhanced 38% cinematic zoom (striking, dramatic, and clearly noticeable)
   for (let i = 0; i < frames.length; i++) {
     const f = frames[i];
     if (f.isBlur || f.delay >= 10000 || f.isHighSkyCutscene || f.cameraTrackAttacker || (f.cameraZoom && !f._gen5Camera)) {
