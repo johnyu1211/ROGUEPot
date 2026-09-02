@@ -1857,7 +1857,66 @@ export function drawIcePunchEffect(ctx: any, target: { x: number; y: number }, s
 }
 
 /**
- * 009 번개펀치 (Thunder Punch): Electric Golden Fist + Radiating Zigzag Lightning Arcs
+ * High-frequency Sharp Zigzag Lightning Bolt Helper
+ */
+function drawZigzagLightningBolt(
+  ctx: any,
+  originX: number,
+  originY: number,
+  angle: number,
+  len: number,
+  alpha: number = 1.0,
+  flipJitter: boolean = false
+) {
+  ctx.save();
+  ctx.translate(originX, originY);
+  ctx.rotate(angle);
+  ctx.globalAlpha = alpha;
+
+  const sign = flipJitter ? -1 : 1;
+  const pts = [
+    { x: 0, y: 0 },
+    { x: len * 0.28, y: 6 * sign },
+    { x: len * 0.55, y: -7 * sign },
+    { x: len * 0.82, y: 5 * sign },
+    { x: len, y: -2 * sign },
+  ];
+
+  // Outer Vibrant Yellow Glow
+  ctx.strokeStyle = "#FACC15";
+  ctx.lineWidth = 3.6;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "miter";
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) {
+    ctx.lineTo(pts[i].x, pts[i].y);
+  }
+  ctx.stroke();
+
+  // Branch micro-fork
+  ctx.beginPath();
+  ctx.moveTo(pts[2].x, pts[2].y);
+  ctx.lineTo(pts[2].x + len * 0.35, pts[2].y - 8 * sign);
+  ctx.stroke();
+
+  // Inner White Hot Lightning Core
+  ctx.strokeStyle = "#FFFFFF";
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) {
+    ctx.lineTo(pts[i].x, pts[i].y);
+  }
+  ctx.moveTo(pts[2].x, pts[2].y);
+  ctx.lineTo(pts[2].x + len * 0.35, pts[2].y - 8 * sign);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+/**
+ * 009 번개펀치 (Thunder Punch): Electric Golden Fist + 6-Direction High-Voltage Crackling Zigzag Lightning
  */
 export function drawThunderPunchEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
   ctx.save();
@@ -1866,15 +1925,18 @@ export function drawThunderPunchEffect(ctx: any, target: { x: number; y: number 
   const targetY = target.y - 12;
 
   let spread = 0.85;
+  let boltLen = 26;
   let alpha = 1.0;
   let fistAlpha = 1.0;
 
   if (step === 2) {
-    spread = 1.55;
-    alpha = 0.65;
+    spread = 1.30;
+    boltLen = 32;
+    alpha = 0.70;
     fistAlpha = 0.35;
   } else if (step >= 3) {
-    spread = 2.25;
+    spread = 1.70;
+    boltLen = 36;
     alpha = 0.25;
     fistAlpha = 0.0;
   }
@@ -1887,7 +1949,7 @@ export function drawThunderPunchEffect(ctx: any, target: { x: number; y: number 
       4,
       targetX,
       targetY - 14,
-      step === 1 ? 46 : 56
+      step === 1 ? 44 : 54
     );
     eleGrad.addColorStop(0, "rgba(255, 255, 255, 0.90)");
     eleGrad.addColorStop(0.35, "rgba(254, 240, 138, 0.80)");
@@ -1896,7 +1958,7 @@ export function drawThunderPunchEffect(ctx: any, target: { x: number; y: number 
     ctx.fillStyle = eleGrad;
     ctx.globalAlpha = step === 1 ? 0.90 : 0.45;
     ctx.beginPath();
-    ctx.arc(targetX, targetY - 14, step === 1 ? 46 : 56, 0, Math.PI * 2);
+    ctx.arc(targetX, targetY - 14, step === 1 ? 44 : 54, 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -1918,81 +1980,47 @@ export function drawThunderPunchEffect(ctx: any, target: { x: number; y: number 
     ctx.restore();
   }
 
-  // 3. Radiating Zigzag Lightning Arcs (4 Diagonal Thunderbolts)
-  ctx.save();
-  ctx.globalAlpha = alpha;
-  const lightningBolts = [
-    // Top-Left Bolt
-    [
-      { x: -10, y: -12 },
-      { x: -22, y: -26 },
-      { x: -18, y: -34 },
-      { x: -32, y: -48 },
-    ],
-    // Top-Right Bolt
-    [
-      { x: 10, y: -12 },
-      { x: 24, y: -24 },
-      { x: 18, y: -32 },
-      { x: 34, y: -46 },
-    ],
-    // Bottom-Left Bolt
-    [
-      { x: -12, y: 6 },
-      { x: -26, y: 16 },
-      { x: -20, y: 22 },
-      { x: -34, y: 34 },
-    ],
-    // Bottom-Right Bolt
-    [
-      { x: 12, y: 6 },
-      { x: 26, y: 14 },
-      { x: 20, y: 22 },
-      { x: 36, y: 32 },
-    ],
+  // 3. 6-Direction High-Voltage Crackling Zigzag Lightning Arcs
+  const boltAngles = [
+    0,                     // 0° (Right)
+    Math.PI / 3,           // 60° (Bottom-Right)
+    (2 * Math.PI) / 3,     // 120° (Bottom-Left)
+    Math.PI,               // 180° (Left)
+    (4 * Math.PI) / 3,     // 240° (Top-Left)
+    (5 * Math.PI) / 3,     // 300° (Top-Right)
   ];
 
-  for (const bolt of lightningBolts) {
-    // Outer Yellow Glow Line
-    ctx.strokeStyle = "#FACC15";
-    ctx.lineWidth = step >= 3 ? 2.5 : 4.0;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "bevel";
-    ctx.beginPath();
-    ctx.moveTo(targetX + bolt[0].x * spread, targetY - 14 + bolt[0].y * spread);
-    for (let i = 1; i < bolt.length; i++) {
-      ctx.lineTo(targetX + bolt[i].x * spread, targetY - 14 + bolt[i].y * spread);
-    }
-    ctx.stroke();
-
-    // Inner White Core Line
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = step >= 3 ? 1.2 : 2.0;
-    ctx.beginPath();
-    ctx.moveTo(targetX + bolt[0].x * spread, targetY - 14 + bolt[0].y * spread);
-    for (let i = 1; i < bolt.length; i++) {
-      ctx.lineTo(targetX + bolt[i].x * spread, targetY - 14 + bolt[i].y * spread);
-    }
-    ctx.stroke();
+  for (let i = 0; i < boltAngles.length; i++) {
+    const angle = boltAngles[i];
+    const originOx = Math.cos(angle) * (10 * spread);
+    const originOy = Math.sin(angle) * (10 * spread);
+    drawZigzagLightningBolt(
+      ctx,
+      targetX + originOx,
+      targetY - 14 + originOy,
+      angle,
+      boltLen,
+      alpha,
+      i % 2 === 1
+    );
   }
-  ctx.restore();
 
   // 4. Electric Impact Starburst
   if (step <= 2) {
     drawMiniRetroStar(ctx, targetX, targetY - 14, step === 1 ? 24 : 16, "#FEF08A");
   }
 
-  // 5. Electric Spark Dots
+  // 5. Crackling Electric Spark Dots
   ctx.save();
   ctx.globalAlpha = alpha;
   const sparks = [
-    { vx: -28, vy: -20, r: 3.0, c: "#FFFFFF" },
-    { vx: 30, vy: -18, r: 3.2, c: "#FEF08A" },
-    { vx: -24, vy: 24, r: 2.8, c: "#FACC15" },
-    { vx: 26, vy: 26, r: 3.0, c: "#FFFFFF" },
-    { vx: 0, vy: -42, r: 3.2, c: "#FEF08A" },
-    { vx: 36, vy: 0, r: 2.8, c: "#FACC15" },
-    { vx: -36, vy: 0, r: 2.8, c: "#FEF08A" },
+    { vx: -24, vy: -18, r: 2.8, c: "#FFFFFF" },
+    { vx: 26, vy: -16, r: 3.0, c: "#FEF08A" },
+    { vx: -20, vy: 20, r: 2.6, c: "#FACC15" },
+    { vx: 22, vy: 22, r: 2.8, c: "#FFFFFF" },
+    { vx: 0, vy: -34, r: 3.0, c: "#FEF08A" },
+    { vx: 28, vy: 0, r: 2.6, c: "#FACC15" },
+    { vx: -28, vy: 0, r: 2.6, c: "#FEF08A" },
   ];
   for (const sp of sparks) {
     ctx.fillStyle = sp.c;
