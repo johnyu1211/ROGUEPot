@@ -447,17 +447,21 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
 
   const entryFrames = [
     // Frame 0: Leading Cinematic Soft-Blur Loading Frame (800ms / 0.8s) - Unified full-screen blur without text!
-    { delay: 800, pPlatX: 0, ePlatX: 0, pMonX: 0, eMonX: 0, showHud: false, textLineIdx: 0, isBlur: true },
-    // Frame 1: Far Slide (180ms)
-    { delay: 180, pPlatX: -180, ePlatX: 180, pMonX: -220, eMonX: 220, showHud: false, textLineIdx: 0, isBlur: false },
-    // Frame 2: Mid-way Slide (200ms)
-    { delay: 200, pPlatX: -80, ePlatX: 80, pMonX: -100, eMonX: 100, showHud: false, textLineIdx: 0, isBlur: false },
-    // Frame 3: Near Landing (200ms)
-    { delay: 200, pPlatX: -20, ePlatX: 20, pMonX: -25, eMonX: 25, showHud: true, textLineIdx: 1, isBlur: false },
-    // Frame 4: Aligned on Platform (220ms)
-    { delay: 220, pPlatX: 0, ePlatX: 0, pMonX: 0, eMonX: 0, showHud: true, textLineIdx: 2, isBlur: false },
-    // Frame 5: 11-Minute Static Hold Frame (655,000ms - Maximum GIF89a unsigned 16-bit delay limit)
-    { delay: 655000, pPlatX: 0, ePlatX: 0, pMonX: 0, eMonX: 0, showHud: true, textLineIdx: 99, isBlur: false }
+    { delay: 800, pPlatX: 0, ePlatX: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, showHud: false, textLineIdx: 0, isBlur: true, cryWave: 0 },
+    // Frame 1: Far Slide-in (160ms)
+    { delay: 160, pPlatX: -160, ePlatX: 160, pMonX: -200, pMonY: 0, eMonX: 200, eMonY: 0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
+    // Frame 2: Touchdown Landing on Platform (150ms)
+    { delay: 150, pPlatX: 0, ePlatX: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
+    // Frame 3: DS Cry Vibration Phase 1 - Shake Left & Cry Soundwave (110ms)
+    { delay: 110, pPlatX: 0, ePlatX: 0, pMonX: 0, pMonY: 0, eMonX: -7, eMonY: -3, showHud: true, textLineIdx: 1, isBlur: false, cryWave: 1 },
+    // Frame 4: DS Cry Vibration Phase 2 - Shake Right & Expanding Ring (110ms)
+    { delay: 110, pPlatX: 0, ePlatX: 0, pMonX: 0, pMonY: 0, eMonX: 7, eMonY: -2, showHud: true, textLineIdx: 1, isBlur: false, cryWave: 2 },
+    // Frame 5: DS Cry Vibration Phase 3 - Settle & Micro-Bounce (120ms)
+    { delay: 120, pPlatX: 0, ePlatX: 0, pMonX: 0, pMonY: 0, eMonX: -2, eMonY: 0, showHud: true, textLineIdx: 2, isBlur: false, cryWave: 3 },
+    // Frame 6: Battle Ready Stance (160ms)
+    { delay: 160, pPlatX: 0, ePlatX: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, showHud: true, textLineIdx: 2, isBlur: false, cryWave: 0 },
+    // Frame 7: 11-Minute Static Hold Frame (655,000ms - Maximum GIF89a unsigned 16-bit delay limit)
+    { delay: 655000, pPlatX: 0, ePlatX: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, showHud: true, textLineIdx: 99, isBlur: false, cryWave: 0 }
   ];
 
   const motionDurationMs = entryFrames.slice(0, -1).reduce((sum, f) => sum + f.delay, 0);
@@ -495,12 +499,33 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
       targetCtx.restore();
     }
 
-    // Sliding Battler Sprites
+    // Battler Sprites (with DS Cry vibration offsets)
     if (enemySprite) {
-      drawFittedBattleSprite(targetCtx, enemySprite, em.x + f.eMonX, em.y, em.size);
+      drawFittedBattleSprite(targetCtx, enemySprite, em.x + (f.eMonX || 0), em.y + (f.eMonY || 0), em.size);
     }
     if (playerSprite) {
-      drawFittedBattleSprite(targetCtx, playerSprite, pm.x + f.pMonX, pm.y, pm.size);
+      drawFittedBattleSprite(targetCtx, playerSprite, pm.x + (f.pMonX || 0), pm.y + (f.pMonY || 0), pm.size);
+    }
+
+    // Authentic DS Soundwave Ripple Arcs around Enemy during Cry
+    if (f.cryWave && f.cryWave > 0) {
+      targetCtx.save();
+      targetCtx.strokeStyle = "rgba(255, 255, 255, 0.75)";
+      targetCtx.lineWidth = 2.0;
+      const headX = em.x + (f.eMonX || 0);
+      const headY = em.y - em.size * 0.55 + (f.eMonY || 0);
+      const r = 24 + f.cryWave * 12;
+
+      // Left sound wave arc
+      targetCtx.beginPath();
+      targetCtx.arc(headX - 12, headY, r, Math.PI * 0.75, Math.PI * 1.25);
+      targetCtx.stroke();
+
+      // Right sound wave arc
+      targetCtx.beginPath();
+      targetCtx.arc(headX + 12, headY, r, -Math.PI * 0.25, Math.PI * 0.25);
+      targetCtx.stroke();
+      targetCtx.restore();
     }
 
     if (!f.isBlur) {
