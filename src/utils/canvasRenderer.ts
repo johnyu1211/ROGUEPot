@@ -2542,6 +2542,25 @@ function drawEggIcon(ctx: any, cx: number, cy: number, rx: number = 10, ry: numb
   ctx.fill();
 }
 
+/**
+ * Draws an authentic 5th Gen / PokéRogue battle shadow under a Pokémon.
+ */
+export function drawPokemonShadow(
+  ctx: any,
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number,
+  opacity: number = 0.38
+) {
+  ctx.save();
+  ctx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
 interface PreviewAndPartyPanelArgs {
   panelX: number;
   panelW: number;
@@ -5437,9 +5456,17 @@ export async function renderBattleScreen(options: BattleScreenOptions): Promise<
     getPokemonSprite(playerActiveSpecies, true, playerShinyTier, true),
   ]);
 
-  // Draw Battler Sprites using BATTLE_LAYOUT_CONFIG
+  // Draw Battler Sprites & Shadows using BATTLE_LAYOUT_CONFIG
   const em = BATTLE_LAYOUT_CONFIG.enemyPokemon;
   const pm = BATTLE_LAYOUT_CONFIG.playerPokemon;
+
+  // 4. Draw Pokémon Shadows (under sprites on platform ground)
+  if (enemySprite && (battle.phase !== "VICTORY" || enemy.hp > 0)) {
+    drawPokemonShadow(ctx, em.x, 159, em.size * 0.36, em.size * 0.11, 0.36);
+  }
+  if (playerSprite) {
+    drawPokemonShadow(ctx, pm.x + pm.size * 0.12, 310, pm.size * 0.34, pm.size * 0.10, 0.36);
+  }
 
   // On VICTORY screen, fainted enemy is gone (empty platform)
   if (enemySprite && (battle.phase !== "VICTORY" || enemy.hp > 0)) {
