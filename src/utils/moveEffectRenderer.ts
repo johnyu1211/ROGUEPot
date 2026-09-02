@@ -1941,6 +1941,14 @@ export function drawThunderPunchEffect(ctx: any, target: { x: number; y: number 
     fistAlpha = 0.0;
   }
 
+  // 0. Darken the background arena during high-voltage lightning discharge (Steps 1 & 2)
+  if (step <= 2) {
+    ctx.save();
+    ctx.fillStyle = step === 1 ? "rgba(10, 15, 30, 0.42)" : "rgba(10, 15, 30, 0.22)";
+    ctx.fillRect(0, 0, 560, 380);
+    ctx.restore();
+  }
+
   // 1. Electric Glow Background Aura
   if (step <= 2) {
     const eleGrad = ctx.createRadialGradient(

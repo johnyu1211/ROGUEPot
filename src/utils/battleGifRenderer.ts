@@ -1565,7 +1565,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     if (enemySprite && eAlpha > 0.01 && (enemy.hp > 0 || f.enemyHp > 0 || f.targetAlpha !== 0.0)) {
       targetCtx.save();
       if (f.hitFlash && eTarget) {
-        targetCtx.filter = "brightness(1.8) contrast(1.2)";
+        targetCtx.filter = "brightness(1.35)";
       }
       if (eAlpha < 0.99) {
         targetCtx.globalAlpha = eAlpha;
@@ -1578,7 +1578,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     if (playerSprite && pAlpha > 0.01 && (playerMon.hp > 0 || f.playerHp > 0 || f.targetAlpha !== 0.0)) {
       targetCtx.save();
       if (f.hitFlash && pTarget) {
-        targetCtx.filter = "brightness(1.8) contrast(1.2)";
+        targetCtx.filter = "brightness(1.35)";
       }
       if (pAlpha < 0.99) {
         targetCtx.globalAlpha = pAlpha;
