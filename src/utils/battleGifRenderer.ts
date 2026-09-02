@@ -308,9 +308,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     } else if (isPunch1) {
       const hits = Math.min(5, Math.max(2, a1.hitCount || 3));
       act1Frames = [
-        // Rapid dash windup
+        // Windup dash lunge
         {
-          delay: 120,
+          delay: 150,
           pOffset: isP1 ? { x: 16, y: -8 } : { x: 0, y: 0 },
           eOffset: !isP1 ? { x: -16, y: 8 } : { x: 0, y: 0 },
           showEffect: false,
@@ -322,23 +322,43 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 1,
         },
-        // Rapid Alternating Comet Punches
-        ...Array.from({ length: hits }).map((_, idx) => ({
-          delay: 110,
-          pOffset: isP1 ? { x: 22 - (idx % 2) * 4, y: -10 + (idx % 2) * 3 } : { x: -6, y: 3 },
-          eOffset: isP1
-            ? { x: (idx % 2 === 0 ? 10 : -8), y: (idx % 2 === 0 ? -4 : 4) }
-            : { x: -22, y: 10 },
-          showEffect: true,
-          hitFlash: true,
-          enemyHp: a1.enemyHpAfter,
-          playerHp: a1.playerHpAfter,
-          textLineIdx: 1,
-          statProgress: (idx + 1) * 0.1,
-          isBlur: false,
-          moveEffect: a1,
-          moveStep: idx + 1,
-        }))
+        // 3-Punch Barrage (Strike Impact -> Follow-through Fade Out)
+        ...Array.from({ length: hits }).flatMap((_, idx) => [
+          // Sub-frame A: Strike Impact (Full Opacity + Hit Flash)
+          {
+            delay: 140,
+            pOffset: isP1 ? { x: 22, y: -8 } : { x: -6, y: 3 },
+            eOffset: isP1
+              ? { x: (idx % 2 === 0 ? 10 : -8), y: (idx % 2 === 0 ? -3 : 3) }
+              : { x: -22, y: 8 },
+            showEffect: true,
+            hitFlash: true,
+            enemyHp: a1.enemyHpAfter,
+            playerHp: a1.playerHpAfter,
+            textLineIdx: 1,
+            statProgress: (idx + 1) * 0.1,
+            isBlur: false,
+            moveEffect: a1,
+            moveStep: idx * 2 + 1,
+          },
+          // Sub-frame B: Follow-through Fade Out (Gradual Transparency)
+          {
+            delay: 130,
+            pOffset: isP1 ? { x: 16, y: -6 } : { x: -3, y: 1 },
+            eOffset: isP1
+              ? { x: (idx % 2 === 0 ? 4 : -4), y: 0 }
+              : { x: -16, y: 6 },
+            showEffect: true,
+            hitFlash: false,
+            enemyHp: a1.enemyHpAfter,
+            playerHp: a1.playerHpAfter,
+            textLineIdx: 1,
+            statProgress: (idx + 1) * 0.1,
+            isBlur: false,
+            moveEffect: a1,
+            moveStep: idx * 2 + 2,
+          }
+        ])
       ];
     } else {
       act1Frames = [
@@ -503,9 +523,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     } else if (isPunch2) {
       const hits2 = Math.min(5, Math.max(2, a2.hitCount || 3));
       act2Frames = [
-        // Rapid dash windup
+        // Windup dash lunge
         {
-          delay: 120,
+          delay: 150,
           pOffset: isP2 ? { x: 16, y: -8 } : { x: 0, y: 0 },
           eOffset: !isP2 ? { x: -16, y: 8 } : { x: 0, y: 0 },
           showEffect: false,
@@ -517,23 +537,43 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 1,
         },
-        // Rapid Alternating Comet Punches
-        ...Array.from({ length: hits2 }).map((_, idx) => ({
-          delay: 110,
-          pOffset: !isP2
-            ? { x: (idx % 2 === 0 ? 10 : -8), y: (idx % 2 === 0 ? -4 : 4) }
-            : { x: 22 - (idx % 2) * 4, y: -10 + (idx % 2) * 3 },
-          eOffset: !isP2 ? { x: -22, y: 10 } : { x: 6, y: -3 },
-          showEffect: true,
-          hitFlash: true,
-          enemyHp: a2.enemyHpAfter,
-          playerHp: a2.playerHpAfter,
-          textLineIdx: 3,
-          statProgress: (idx + 1) * 0.1,
-          isBlur: false,
-          moveEffect: a2,
-          moveStep: idx + 1,
-        }))
+        // 3-Punch Barrage (Strike Impact -> Follow-through Fade Out)
+        ...Array.from({ length: hits2 }).flatMap((_, idx) => [
+          // Sub-frame A: Strike Impact (Full Opacity + Hit Flash)
+          {
+            delay: 140,
+            pOffset: !isP2
+              ? { x: (idx % 2 === 0 ? 10 : -8), y: (idx % 2 === 0 ? -3 : 3) }
+              : { x: 22, y: -8 },
+            eOffset: !isP2 ? { x: -22, y: 8 } : { x: 6, y: -3 },
+            showEffect: true,
+            hitFlash: true,
+            enemyHp: a2.enemyHpAfter,
+            playerHp: a2.playerHpAfter,
+            textLineIdx: 3,
+            statProgress: (idx + 1) * 0.1,
+            isBlur: false,
+            moveEffect: a2,
+            moveStep: idx * 2 + 1,
+          },
+          // Sub-frame B: Follow-through Fade Out (Gradual Transparency)
+          {
+            delay: 130,
+            pOffset: !isP2
+              ? { x: (idx % 2 === 0 ? 4 : -4), y: 0 }
+              : { x: 16, y: -6 },
+            eOffset: !isP2 ? { x: -16, y: 6 } : { x: 3, y: -1 },
+            showEffect: true,
+            hitFlash: false,
+            enemyHp: a2.enemyHpAfter,
+            playerHp: a2.playerHpAfter,
+            textLineIdx: 3,
+            statProgress: (idx + 1) * 0.1,
+            isBlur: false,
+            moveEffect: a2,
+            moveStep: idx * 2 + 2,
+          }
+        ])
       ];
     } else {
       act2Frames = [
