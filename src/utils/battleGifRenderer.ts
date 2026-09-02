@@ -5038,16 +5038,16 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         : ((f.targetAlpha !== undefined && pTarget) ? f.targetAlpha : 1.0);
 
       // Pokémon Silhouette Shadows (cast onto platform ground - suppressed during high-speed mid-air flight, underground, or off-screen)
-      const isEnemyHidden = (f.eOffset && (f.eOffset.y <= -50 || f.eOffset.y >= 9000)) || f.hideEShadow || f.hideEnemy || (eAlpha <= 0.02) || Boolean(f.eScale);
+      const isEnemyHidden = (f.eOffset && (f.eOffset.y <= -50 || f.eOffset.y >= 9000)) || f.hideEShadow || f.hideEnemy || (eAlpha <= 0.02);
       if (enemySprite && !isEnemyHidden) {
-        const eShadowX = em.x + f.eOffset.x;
+        const eShadowX = em.x + (f.eOffset?.x || 0);
         const eShadowY = em.y;
         drawPokemonSilhouetteShadow(targetCtx, enemySprite, eShadowX, eShadowY, em.size, false, 0.42 * eAlpha);
       }
 
-      const isPlayerHidden = (f.pOffset && (f.pOffset.y <= -50 || f.pOffset.y >= 9000)) || f.hidePShadow || f.hidePlayer || (pAlpha <= 0.02) || Boolean(f.pScale);
+      const isPlayerHidden = (f.pOffset && (f.pOffset.y <= -50 || f.pOffset.y >= 9000)) || f.hidePShadow || f.hidePlayer || (pAlpha <= 0.02);
       if (playerSprite && !isPlayerHidden) {
-        const pShadowX = pm.x + f.pOffset.x;
+        const pShadowX = pm.x + (f.pOffset?.x || 0);
         const pShadowY = pm.y;
         drawPokemonSilhouetteShadow(targetCtx, playerSprite, pShadowX, pShadowY, pm.size, true, 0.42 * pAlpha);
       }
