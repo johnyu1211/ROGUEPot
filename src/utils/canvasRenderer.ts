@@ -30,7 +30,7 @@ export const BATTLE_LAYOUT_CONFIG = {
   playerPlatform: {
     scale: 2.0,
     x: -25,
-    y: 118,
+    y: 130,
   },
   // 3. 상대 포켓몬 (원경)
   enemyPokemon: {
@@ -42,7 +42,7 @@ export const BATTLE_LAYOUT_CONFIG = {
   playerPokemon: {
     size: 135,     // 실제 픽셀 몸체 크기 (px)
     x: 150,        // 발판 중심 X
-    y: 268,        // 발판 착지점 Y
+    y: 280,        // 발판 착지점 Y
   },
   // 5. HUD 박스 위치 & 크기 (포켓로그 공식 스프라이트 규격)
   enemyHud: {
@@ -5811,8 +5811,8 @@ function drawBattleFightMovesGrid(ctx: any, combatMon: any, isKo: boolean, categ
 
   // Authentic Gen 5 Translucent Glass Gradient
   const glassGrad = ctx.createLinearGradient(0, boxY, 0, height);
-  glassGrad.addColorStop(0, "rgba(12, 18, 28, 0.72)");
-  glassGrad.addColorStop(1, "rgba(8, 12, 20, 0.84)");
+  glassGrad.addColorStop(0, "rgba(10, 16, 26, 0.58)");
+  glassGrad.addColorStop(1, "rgba(6, 10, 18, 0.68)");
   ctx.fillStyle = glassGrad;
   ctx.fillRect(0, boxY, width, boxH);
 
