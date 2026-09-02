@@ -1024,150 +1024,110 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     } else if (isFly1) {
       const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
       const isMiss1 = !isHit1;
-      const isTurn1Launch = (a1.damage ?? 0) === 0 && (a1.log?.includes("날아올랐다") || a1.log?.includes("flew up"));
 
-      if (isTurn1Launch) {
-        // Turn 1: Crouch -> Rocket Launch (Thin vertically & turns pure white!) -> Stratosphere Ascent
-        act1Frames = [
-          // 1. Crouch Preparation (100ms)
-          {
-            delay: 100,
-            pOffset: isP1 ? { x: 0, y: 6 } : { x: 0, y: 0 },
-            eOffset: !isP1 ? { x: 0, y: 6 } : { x: 0, y: 0 },
-            pScale: isP1 ? { x: 1.25, y: 0.80 } : undefined,
-            eScale: !isP1 ? { x: 1.25, y: 0.80 } : undefined,
-            pWhite: false,
-            eWhite: false,
-            showEffect: true,
-            hitFlash: false,
-            enemyHp: enemy.hp,
-            playerHp: playerMon.hp,
-            textLineIdx: 1,
-            isBlur: false,
-            moveEffect: a1,
-            moveStep: 1,
-          },
-          // 2. Rocket Sky Launch: Stretched thin vertically & turns pure white! (100ms)
-          {
-            delay: 100,
-            pOffset: isP1 ? { x: 0, y: -90 } : { x: 0, y: 0 },
-            eOffset: !isP1 ? { x: 0, y: -90 } : { x: 0, y: 0 },
-            pScale: isP1 ? { x: 0.45, y: 1.80 } : undefined,
-            eScale: !isP1 ? { x: 0.45, y: 1.80 } : undefined,
-            pWhite: isP1,
-            eWhite: !isP1,
-            showEffect: true,
-            hitFlash: false,
-            enemyHp: enemy.hp,
-            playerHp: playerMon.hp,
-            textLineIdx: 1,
-            isBlur: false,
-            moveEffect: a1,
-            moveStep: 1,
-          },
-          // 3. Stratosphere Ascent: Shooting into clouds, thin white streak! (100ms)
-          {
-            delay: 100,
-            pOffset: isP1 ? { x: 0, y: -260 } : { x: 0, y: 0 },
-            eOffset: !isP1 ? { x: 0, y: -260 } : { x: 0, y: 0 },
-            pScale: isP1 ? { x: 0.30, y: 2.20 } : undefined,
-            eScale: !isP1 ? { x: 0.30, y: 2.20 } : undefined,
-            pWhite: isP1,
-            eWhite: !isP1,
-            showEffect: true,
-            hitFlash: false,
-            enemyHp: enemy.hp,
-            playerHp: playerMon.hp,
-            textLineIdx: 1,
-            isBlur: false,
-            moveEffect: a1,
-            moveStep: 1,
-          },
-          // 4. Disappeared high in sky / Untargetable (100ms)
-          {
-            delay: 100,
-            pOffset: isP1 ? { x: 0, y: -600 } : { x: 0, y: 0 },
-            eOffset: !isP1 ? { x: 0, y: -600 } : { x: 0, y: 0 },
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: enemy.hp,
-            playerHp: playerMon.hp,
-            textLineIdx: 1,
-            isBlur: false,
-            moveEffect: a1,
-            moveStep: 1,
-          }
-        ];
-      } else {
-        // Turn 2: Supersonic Dive-Bomb Slam right onto opponent's sprite!
-        act1Frames = [
-          // 1. High Sky Vertical Dive: Directly above opponent, thin & pure white! (100ms)
-          {
-            delay: 100,
-            pOffset: isP1 ? { x: 260, y: -260 } : { x: 0, y: 0 },
-            eOffset: !isP1 ? { x: -260, y: -140 } : { x: 0, y: 0 },
-            pScale: isP1 ? { x: 0.45, y: 1.90 } : undefined,
-            eScale: !isP1 ? { x: 0.45, y: 1.90 } : undefined,
-            pWhite: isP1,
-            eWhite: !isP1,
-            showEffect: true,
-            hitFlash: false,
-            enemyHp: enemy.hp,
-            playerHp: playerMon.hp,
-            textLineIdx: 1,
-            isBlur: false,
-            moveEffect: a1,
-            moveStep: 2,
-          },
-          // 2. Direct Impact Slam into Opponent's Sprite with Crater Blast! (100ms)
-          {
-            delay: 100,
-            pOffset: isP1 ? { x: 260, y: -120 } : (isMiss1 ? { x: 26, y: 4 } : { x: -12, y: 4 }),
-            eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 12, y: -4 }) : { x: -260, y: 120 },
-            pScale: isP1 ? { x: 1.45, y: 0.65 } : undefined,
-            eScale: !isP1 ? { x: 1.45, y: 0.65 } : undefined,
-            pWhite: false,
-            eWhite: false,
-            showEffect: true,
-            hitFlash: isHit1,
-            enemyHp: a1.enemyHpAfter,
-            playerHp: a1.playerHpAfter,
-            textLineIdx: 1,
-            isBlur: false,
-            moveEffect: a1,
-            moveStep: 3,
-          },
-          // 3. Rebound & Ground Shockwave Dissipation (100ms)
-          {
-            delay: 100,
-            pOffset: isP1 ? { x: 110, y: -40 } : { x: 0, y: 0 },
-            eOffset: !isP1 ? { x: -110, y: 40 } : { x: 0, y: 0 },
-            pScale: isP1 ? { x: 1.15, y: 0.85 } : undefined,
-            eScale: !isP1 ? { x: 1.15, y: 0.85 } : undefined,
-            showEffect: true,
-            hitFlash: false,
-            enemyHp: a1.enemyHpAfter,
-            playerHp: a1.playerHpAfter,
-            textLineIdx: 1,
-            isBlur: false,
-            moveEffect: a1,
-            moveStep: 4,
-          },
-          // 4. Clean Touchdown on Home Platform (100ms)
-          {
-            delay: 100,
-            pOffset: { x: 0, y: 0 },
-            eOffset: { x: 0, y: 0 },
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: a1.enemyHpAfter,
-            playerHp: a1.playerHpAfter,
-            textLineIdx: 1,
-            isBlur: false,
-            moveEffect: a1,
-          }
-        ];
-      }
+      act1Frames = [
+        // 1. Crouch Preparation (100ms)
+        {
+          delay: 100,
+          pOffset: isP1 ? { x: 0, y: 6 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: 0, y: 6 } : { x: 0, y: 0 },
+          pScale: isP1 ? { x: 1.25, y: 0.80 } : undefined,
+          eScale: !isP1 ? { x: 1.25, y: 0.80 } : undefined,
+          pWhite: false,
+          eWhite: false,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 1,
+        },
+        // 2. Rocket Sky Launch: Stretched thin vertically & turns pure white shooting to clouds! (100ms)
+        {
+          delay: 100,
+          pOffset: isP1 ? { x: 0, y: -180 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: 0, y: -180 } : { x: 0, y: 0 },
+          pScale: isP1 ? { x: 0.40, y: 2.00 } : undefined,
+          eScale: !isP1 ? { x: 0.40, y: 2.00 } : undefined,
+          pWhite: isP1,
+          eWhite: !isP1,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 1,
+        },
+        // 3. High Sky Supersonic Dive: Directly above opponent, thin & pure white! (100ms)
+        {
+          delay: 100,
+          pOffset: isP1 ? { x: 260, y: -260 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -260, y: -140 } : { x: 0, y: 0 },
+          pScale: isP1 ? { x: 0.45, y: 1.90 } : undefined,
+          eScale: !isP1 ? { x: 0.45, y: 1.90 } : undefined,
+          pWhite: isP1,
+          eWhite: !isP1,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 2,
+        },
+        // 4. Direct Impact Slam into Opponent's Sprite with Crater Blast & Damage Applied! (100ms)
+        {
+          delay: 100,
+          pOffset: isP1 ? { x: 260, y: -120 } : (isMiss1 ? { x: 26, y: 4 } : { x: -12, y: 4 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 12, y: -4 }) : { x: -260, y: 120 },
+          pScale: isP1 ? { x: 1.45, y: 0.65 } : undefined,
+          eScale: !isP1 ? { x: 1.45, y: 0.65 } : undefined,
+          pWhite: false,
+          eWhite: false,
+          showEffect: true,
+          hitFlash: isHit1,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 3,
+        },
+        // 5. Rebound & Shockwave Dissipation (100ms)
+        {
+          delay: 100,
+          pOffset: isP1 ? { x: 110, y: -40 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -110, y: 40 } : { x: 0, y: 0 },
+          pScale: isP1 ? { x: 1.15, y: 0.85 } : undefined,
+          eScale: !isP1 ? { x: 1.15, y: 0.85 } : undefined,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 4,
+        },
+        // 6. Clean Touchdown on Home Platform (100ms)
+        {
+          delay: 100,
+          pOffset: { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+        }
+      ];
     } else if (isRazorWind1) {
       const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
       const isMiss1 = !isHit1;
@@ -2207,150 +2167,110 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     } else if (isFly2) {
       const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
       const isMiss2 = !isHit2;
-      const isTurn1Launch = (a2.damage ?? 0) === 0 && (a2.log?.includes("날아올랐다") || a2.log?.includes("flew up"));
 
-      if (isTurn1Launch) {
-        // Turn 1: Crouch -> Rocket Launch (Thin vertically & turns pure white!) -> Stratosphere Ascent
-        act2Frames = [
-          // 1. Crouch Preparation (100ms)
-          {
-            delay: 100,
-            pOffset: isP2 ? { x: 0, y: 6 } : { x: 0, y: 0 },
-            eOffset: !isP2 ? { x: 0, y: 6 } : { x: 0, y: 0 },
-            pScale: isP2 ? { x: 1.25, y: 0.80 } : undefined,
-            eScale: !isP2 ? { x: 1.25, y: 0.80 } : undefined,
-            pWhite: false,
-            eWhite: false,
-            showEffect: true,
-            hitFlash: false,
-            enemyHp: a1.enemyHpAfter,
-            playerHp: a1.playerHpAfter,
-            textLineIdx: 3,
-            isBlur: false,
-            moveEffect: a2,
-            moveStep: 1,
-          },
-          // 2. Rocket Sky Launch: Stretched thin vertically & turns pure white! (100ms)
-          {
-            delay: 100,
-            pOffset: isP2 ? { x: 0, y: -90 } : { x: 0, y: 0 },
-            eOffset: !isP2 ? { x: 0, y: -90 } : { x: 0, y: 0 },
-            pScale: isP2 ? { x: 0.45, y: 1.80 } : undefined,
-            eScale: !isP2 ? { x: 0.45, y: 1.80 } : undefined,
-            pWhite: isP2,
-            eWhite: !isP2,
-            showEffect: true,
-            hitFlash: false,
-            enemyHp: a1.enemyHpAfter,
-            playerHp: a1.playerHpAfter,
-            textLineIdx: 3,
-            isBlur: false,
-            moveEffect: a2,
-            moveStep: 1,
-          },
-          // 3. Stratosphere Ascent: Shooting into clouds, thin white streak! (100ms)
-          {
-            delay: 100,
-            pOffset: isP2 ? { x: 0, y: -260 } : { x: 0, y: 0 },
-            eOffset: !isP2 ? { x: 0, y: -260 } : { x: 0, y: 0 },
-            pScale: isP2 ? { x: 0.30, y: 2.20 } : undefined,
-            eScale: !isP2 ? { x: 0.30, y: 2.20 } : undefined,
-            pWhite: isP2,
-            eWhite: !isP2,
-            showEffect: true,
-            hitFlash: false,
-            enemyHp: a1.enemyHpAfter,
-            playerHp: a1.playerHpAfter,
-            textLineIdx: 3,
-            isBlur: false,
-            moveEffect: a2,
-            moveStep: 1,
-          },
-          // 4. Disappeared high in sky / Untargetable (100ms)
-          {
-            delay: 100,
-            pOffset: isP2 ? { x: 0, y: -600 } : { x: 0, y: 0 },
-            eOffset: !isP2 ? { x: 0, y: -600 } : { x: 0, y: 0 },
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: a1.enemyHpAfter,
-            playerHp: a1.playerHpAfter,
-            textLineIdx: 3,
-            isBlur: false,
-            moveEffect: a2,
-            moveStep: 1,
-          }
-        ];
-      } else {
-        // Turn 2: Supersonic Dive-Bomb Slam right onto opponent's sprite!
-        act2Frames = [
-          // 1. High Sky Vertical Dive: Directly above opponent, thin & pure white! (100ms)
-          {
-            delay: 100,
-            pOffset: isP2 ? { x: 260, y: -260 } : { x: 0, y: 0 },
-            eOffset: !isP2 ? { x: -260, y: -140 } : { x: 0, y: 0 },
-            pScale: isP2 ? { x: 0.45, y: 1.90 } : undefined,
-            eScale: !isP2 ? { x: 0.45, y: 1.90 } : undefined,
-            pWhite: isP2,
-            eWhite: !isP2,
-            showEffect: true,
-            hitFlash: false,
-            enemyHp: a1.enemyHpAfter,
-            playerHp: a1.playerHpAfter,
-            textLineIdx: 3,
-            isBlur: false,
-            moveEffect: a2,
-            moveStep: 2,
-          },
-          // 2. Direct Impact Slam into Opponent's Sprite with Crater Blast! (100ms)
-          {
-            delay: 100,
-            pOffset: isP2 ? { x: 260, y: -120 } : (isMiss2 ? { x: 26, y: 4 } : { x: -12, y: 4 }),
-            eOffset: isP2 ? (isMiss2 ? { x: 26, y: -4 } : { x: 12, y: -4 }) : { x: -260, y: 120 },
-            pScale: isP2 ? { x: 1.45, y: 0.65 } : undefined,
-            eScale: !isP2 ? { x: 1.45, y: 0.65 } : undefined,
-            pWhite: false,
-            eWhite: false,
-            showEffect: true,
-            hitFlash: isHit2,
-            enemyHp: a2.enemyHpAfter,
-            playerHp: a2.playerHpAfter,
-            textLineIdx: 3,
-            isBlur: false,
-            moveEffect: a2,
-            moveStep: 3,
-          },
-          // 3. Rebound & Ground Shockwave Dissipation (100ms)
-          {
-            delay: 100,
-            pOffset: isP2 ? { x: 110, y: -40 } : { x: 0, y: 0 },
-            eOffset: !isP2 ? { x: -110, y: 40 } : { x: 0, y: 0 },
-            pScale: isP2 ? { x: 1.15, y: 0.85 } : undefined,
-            eScale: !isP2 ? { x: 1.15, y: 0.85 } : undefined,
-            showEffect: true,
-            hitFlash: false,
-            enemyHp: a2.enemyHpAfter,
-            playerHp: a2.playerHpAfter,
-            textLineIdx: 3,
-            isBlur: false,
-            moveEffect: a2,
-            moveStep: 4,
-          },
-          // 4. Clean Touchdown on Home Platform (100ms)
-          {
-            delay: 100,
-            pOffset: { x: 0, y: 0 },
-            eOffset: { x: 0, y: 0 },
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: a2.enemyHpAfter,
-            playerHp: a2.playerHpAfter,
-            textLineIdx: 3,
-            isBlur: false,
-            moveEffect: a2,
-          }
-        ];
-      }
+      act2Frames = [
+        // 1. Crouch Preparation (100ms)
+        {
+          delay: 100,
+          pOffset: isP2 ? { x: 0, y: 6 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: 0, y: 6 } : { x: 0, y: 0 },
+          pScale: isP2 ? { x: 1.25, y: 0.80 } : undefined,
+          eScale: !isP2 ? { x: 1.25, y: 0.80 } : undefined,
+          pWhite: false,
+          eWhite: false,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 1,
+        },
+        // 2. Rocket Sky Launch: Stretched thin vertically & turns pure white shooting to clouds! (100ms)
+        {
+          delay: 100,
+          pOffset: isP2 ? { x: 0, y: -180 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: 0, y: -180 } : { x: 0, y: 0 },
+          pScale: isP2 ? { x: 0.40, y: 2.00 } : undefined,
+          eScale: !isP2 ? { x: 0.40, y: 2.00 } : undefined,
+          pWhite: isP2,
+          eWhite: !isP2,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 1,
+        },
+        // 3. High Sky Supersonic Dive: Directly above opponent, thin & pure white! (100ms)
+        {
+          delay: 100,
+          pOffset: isP2 ? { x: 260, y: -260 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -260, y: -140 } : { x: 0, y: 0 },
+          pScale: isP2 ? { x: 0.45, y: 1.90 } : undefined,
+          eScale: !isP2 ? { x: 0.45, y: 1.90 } : undefined,
+          pWhite: isP2,
+          eWhite: !isP2,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 2,
+        },
+        // 4. Direct Impact Slam into Opponent's Sprite with Crater Blast & Damage Applied! (100ms)
+        {
+          delay: 100,
+          pOffset: isP2 ? { x: 260, y: -120 } : (isMiss2 ? { x: 26, y: 4 } : { x: -12, y: 4 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 26, y: -4 } : { x: 12, y: -4 }) : { x: -260, y: 120 },
+          pScale: isP2 ? { x: 1.45, y: 0.65 } : undefined,
+          eScale: !isP2 ? { x: 1.45, y: 0.65 } : undefined,
+          pWhite: false,
+          eWhite: false,
+          showEffect: true,
+          hitFlash: isHit2,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 3,
+        },
+        // 5. Rebound & Shockwave Dissipation (100ms)
+        {
+          delay: 100,
+          pOffset: isP2 ? { x: 110, y: -40 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -110, y: 40 } : { x: 0, y: 0 },
+          pScale: isP2 ? { x: 1.15, y: 0.85 } : undefined,
+          eScale: !isP2 ? { x: 1.15, y: 0.85 } : undefined,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 4,
+        },
+        // 6. Clean Touchdown on Home Platform (100ms)
+        {
+          delay: 100,
+          pOffset: { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+        }
+      ];
     } else if (isRazorWind2) {
       const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
       const isMiss2 = !isHit2;
