@@ -544,41 +544,37 @@ function applyGen5CinematicCamera(
 
     const defender = isAttackerP ? em : pm;
     targetPoints[i] = {
-      x: cx + (defender.x - cx) * 0.38,
-      y: cy + (defender.y - cy) * 0.38,
+      x: cx + (defender.x - cx) * 0.45,
+      y: cy + (defender.y - cy) * 0.45,
     };
 
     if (f.hitFlash) {
       rawWeights[i] = 1.0;
     } else if (f.showEffect) {
       if (f.moveStep === 1 || f.moveStep === 2) {
-        rawWeights[i] = 0.85;
+        rawWeights[i] = 0.95;
       } else {
-        rawWeights[i] = 0.60;
+        rawWeights[i] = 0.85;
       }
     } else if (f.targetAlpha !== undefined && f.targetAlpha < 1.0) {
-      rawWeights[i] = 0.40;
+      rawWeights[i] = 0.75; // Sustained focus during damage reaction / effectiveness flicker
     } else if (f.pOffset?.x !== 0 || f.eOffset?.x !== 0) {
-      rawWeights[i] = 0.25;
+      rawWeights[i] = 0.35; // Lunge / windup motion
     } else {
       rawWeights[i] = 0.0;
     }
   }
 
-  // 2-pass Gaussian smoothing filter across frame weights
+  // 1-pass Gaussian smoothing filter so the camera focus stays impactful and clearly noticeable
   let smoothed = [...rawWeights];
-  for (let pass = 0; pass < 2; pass++) {
-    const next = [...smoothed];
-    for (let i = 1; i < smoothed.length - 1; i++) {
-      if (frames[i].isBlur || frames[i].delay >= 10000 || frames[i].isHighSkyCutscene) continue;
-      const prev = (frames[i - 1].isBlur || frames[i - 1].delay >= 10000) ? 0 : smoothed[i - 1];
-      const nextVal = (frames[i + 1].isBlur || frames[i + 1].delay >= 10000) ? 0 : smoothed[i + 1];
-      next[i] = (prev + 2 * smoothed[i] + nextVal) / 4;
-    }
-    smoothed = next;
+  for (let i = 1; i < smoothed.length - 1; i++) {
+    if (frames[i].isBlur || frames[i].delay >= 10000 || frames[i].isHighSkyCutscene) continue;
+    const prev = (frames[i - 1].isBlur || frames[i - 1].delay >= 10000) ? 0 : smoothed[i - 1];
+    const nextVal = (frames[i + 1].isBlur || frames[i + 1].delay >= 10000) ? 0 : smoothed[i + 1];
+    smoothed[i] = (prev + 2 * smoothed[i] + nextVal) / 4;
   }
 
-  const maxZoom = 1.13;
+  const maxZoom = 1.25; // Authentic 25% cinematic zoom (deliberate, clear, impactful!)
   for (let i = 0; i < frames.length; i++) {
     const f = frames[i];
     if (f.isBlur || f.delay >= 10000 || f.isHighSkyCutscene || f.cameraTrackAttacker || (f.cameraZoom && !f._gen5Camera)) {
@@ -586,7 +582,7 @@ function applyGen5CinematicCamera(
     }
 
     const w = smoothed[i];
-    if (w > 0.01 && targetPoints[i]) {
+    if (w > 0.02 && targetPoints[i]) {
       f.cameraZoom = 1.0 + (maxZoom - 1.0) * w;
       f.cameraFocal = {
         x: cx + (targetPoints[i]!.x - cx) * w,
@@ -5689,6 +5685,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     } else if (f.isBlur) {
       // 600ms leading cinematic soft-blur loading transition
       effectiveDelay = 600;
+    } else if (f.hitFlash || f.showEffect) {
+      // Impact & effect frames: Deliberate 135ms+ holding time so the camera zoom & hit burst are clearly felt!
+      effectiveDelay = Math.max(135, Math.round(f.delay * 1.35));
     } else {
       // Fluid, smooth 8~10 FPS animation timing (1.25x) - crisp, dynamic, and free of stutter/lag
       effectiveDelay = Math.max(70, Math.round(f.delay * 1.25));
@@ -5702,6 +5701,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     .filter(f => f.delay < 10000)
     .reduce((sum, f) => {
       if (f.isBlur) return sum + 600;
+      if (f.hitFlash || f.showEffect) return sum + Math.max(135, Math.round(f.delay * 1.35));
       return sum + Math.max(70, Math.round(f.delay * 1.25));
     }, 0);
 
