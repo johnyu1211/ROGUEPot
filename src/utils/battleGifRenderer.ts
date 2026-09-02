@@ -2208,7 +2208,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       // Frame 3: Attacker 1 Recoil & Damage Settling (with Dynamic Effectiveness Blinking!)
       ...createEffectivenessFlickerFrames(a1, isP1, true, isP1GuillotineKill, isE1GuillotineKill),
       // Dedicated Post-Move Stat Change Phase for Action 1 (if stat changes exist!)
-      ...createStatChangeFrames(a1, isP1, 1, isP1GuillotineKill, isE1GuillotineKill),
+      ...createStatChangeFrames(a1, isP1, 2, isP1GuillotineKill, isE1GuillotineKill),
       // Frame 4: Natural Breathing Room Pause between Turns (320ms - comfortable reading pause!)
       {
         delay: 320,
@@ -2231,7 +2231,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       // Frame 7: Attacker 2 Recoil & Counter Damage (with Dynamic Effectiveness Blinking!)
       ...createEffectivenessFlickerFrames(a2, isP2, false, playerFrontHold, enemyBackHold),
       // Dedicated Post-Move Stat Change Phase for Action 2 (if stat changes exist!)
-      ...createStatChangeFrames(a2, isP2, 3, playerFrontHold, enemyBackHold),
+      ...createStatChangeFrames(a2, isP2, 4, playerFrontHold, enemyBackHold),
       // Sinking Faint Collapse Animation (if someone fainted)
       ...faintFrames,
       // Final 11-Minute Static Hold Frame (655,000ms) - completely neutral with NO statProgress
@@ -2300,7 +2300,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       // Frame 3: Recoil & Damage Settling (with Dynamic Effectiveness Blinking!)
       ...createEffectivenessFlickerFrames(eff, isP1, true, playerFrontHold, enemyBackHold),
       // Dedicated Post-Move Stat Change Phase (if stat changes exist!)
-      ...createStatChangeFrames(eff, isP1, 1, playerFrontHold, enemyBackHold),
+      ...createStatChangeFrames(eff, isP1, 2, playerFrontHold, enemyBackHold),
       // Sinking Faint Collapse Animation (if fainted)
       ...faintFrames,
       // Final 11-Minute Static Hold Frame (655,000ms) - completely neutral with NO statProgress
