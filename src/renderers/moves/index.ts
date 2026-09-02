@@ -69,7 +69,7 @@ import {
   drawBindEffect,
 } from "./gen1/move017_020.js";
 
-import { getMoveKey } from "../../data/movesKo.js";
+import { getMoveKey, MOVES_DATA } from "../../data/movesKo.js";
 
 // Re-export everything for modules and backward compatibility
 export * from "./types.js";
@@ -104,6 +104,14 @@ export function renderMoveEffect(
   const angle = Math.atan2(dy, dx);
 
   ctx.save();
+
+  // Check if move is a Status / Non-damaging move (Never draw physical impact onto opponent!)
+  const moveData = MOVES_DATA[moveKey];
+  const isStatus = moveData?.category === "status" || (info as any).category === "status";
+  if (isStatus && moveKey !== "swords-dance" && moveKey !== "swordsdance" && moveKey !== "whirlwind") {
+    ctx.restore();
+    return;
+  }
 
   // 1. SPECIFIC SIGNATURE MOVES (Gen 1: Moves 001 ~ 020)
   if (moveKey === "pound") {

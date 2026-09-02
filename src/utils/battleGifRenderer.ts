@@ -4,7 +4,7 @@ import { createCanvas } from "@napi-rs/canvas";
 import { BattleState, TurnActionInfo } from "../services/battleService.js";
 import { renderMoveEffect, drawStatBoostEffect, drawStatDropEffect } from "./moveEffectRenderer.js";
 import { POKEMON_SPECIES_DATA } from "../data/pokemonStats.js";
-import { getMoveKey } from "../data/movesKo.js";
+import { getMoveKey, getMoveData, MOVES_DATA } from "../data/movesKo.js";
 import {
   BATTLE_LAYOUT_CONFIG,
   getArenaAssets,
@@ -504,8 +504,73 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     mKey1 === "gust"
   );
 
+  const moveData1 = getMoveData(mKey1);
+  const isCharging1 = isEvasionLaunch(a1);
+  const isEvasionHit1 = isEvasionStrike(a1);
+  const isStatusMove1 = moveData1?.category === "status" || (a1 as any).category === "status" || ((a1.damage ?? 0) === 0 && !isCharging1 && !isEvasionHit1 && !isSwordsDance1 && !isWhirlwind1);
+
   let act1Frames: any[] = [];
-  if (isChop1) {
+  if (isStatusMove1) {
+    // Dedicated Status / Healing / Buff / Debuff Animation: Pulses on own platform without contacting opponent!
+    act1Frames = [
+      // 1. Caster gathers energy on home platform (66ms x 2 = 132ms)
+      {
+        delay: 66,
+        pOffset: isP1 ? { x: 0, y: -4 } : { x: 0, y: 0 },
+        eOffset: !isP1 ? { x: 0, y: -4 } : { x: 0, y: 0 },
+        pScale: isP1 ? { x: 1.06, y: 0.94 } : undefined,
+        eScale: !isP1 ? { x: 1.06, y: 0.94 } : undefined,
+        showEffect: false,
+        hitFlash: false,
+        enemyHp: enemy.hp,
+        playerHp: playerMon.hp,
+        textLineIdx: 1,
+        isBlur: false,
+        moveEffect: a1,
+      },
+      {
+        delay: 66,
+        pOffset: isP1 ? { x: 0, y: -8 } : { x: 0, y: 0 },
+        eOffset: !isP1 ? { x: 0, y: -8 } : { x: 0, y: 0 },
+        pScale: isP1 ? { x: 1.12, y: 0.90 } : undefined,
+        eScale: !isP1 ? { x: 1.12, y: 0.90 } : undefined,
+        showEffect: false,
+        hitFlash: false,
+        enemyHp: enemy.hp,
+        playerHp: playerMon.hp,
+        textLineIdx: 1,
+        isBlur: false,
+        moveEffect: a1,
+      },
+      // 2. Status pulse & settle on home platform (66ms x 2 = 132ms)
+      {
+        delay: 66,
+        pOffset: isP1 ? { x: 0, y: -4 } : { x: 0, y: 0 },
+        eOffset: !isP1 ? { x: 0, y: -4 } : { x: 0, y: 0 },
+        pScale: isP1 ? { x: 0.96, y: 1.06 } : undefined,
+        eScale: !isP1 ? { x: 0.96, y: 1.06 } : undefined,
+        showEffect: false,
+        hitFlash: false,
+        enemyHp: a1.enemyHpAfter,
+        playerHp: a1.playerHpAfter,
+        textLineIdx: 1,
+        isBlur: false,
+        moveEffect: a1,
+      },
+      {
+        delay: 66,
+        pOffset: { x: 0, y: 0 },
+        eOffset: { x: 0, y: 0 },
+        showEffect: false,
+        hitFlash: false,
+        enemyHp: a1.enemyHpAfter,
+        playerHp: a1.playerHpAfter,
+        textLineIdx: 1,
+        isBlur: false,
+        moveEffect: a1,
+      }
+    ];
+  } else if (isChop1) {
       act1Frames = [
         // 1A: Hand appears hovering above target head (130ms)
         {
@@ -1927,8 +1992,73 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       mKey2 === "gust"
     );
 
+    const moveData2 = getMoveData(mKey2);
+    const isCharging2 = isEvasionLaunch(a2);
+    const isEvasionHit2 = isEvasionStrike(a2);
+    const isStatusMove2 = moveData2?.category === "status" || (a2 as any).category === "status" || ((a2.damage ?? 0) === 0 && !isCharging2 && !isEvasionHit2 && !isSwordsDance2 && !isWhirlwind2);
+
     let act2Frames: any[] = [];
-    if (isChop2) {
+    if (isStatusMove2) {
+      // Dedicated Status / Healing / Buff / Debuff Animation: Pulses on own platform without contacting opponent!
+      act2Frames = [
+        // 1. Caster gathers energy on home platform (66ms x 2 = 132ms)
+        {
+          delay: 66,
+          pOffset: isP2 ? { x: 0, y: -4 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: 0, y: -4 } : { x: 0, y: 0 },
+          pScale: isP2 ? { x: 1.06, y: 0.94 } : undefined,
+          eScale: !isP2 ? { x: 1.06, y: 0.94 } : undefined,
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+        },
+        {
+          delay: 66,
+          pOffset: isP2 ? { x: 0, y: -8 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: 0, y: -8 } : { x: 0, y: 0 },
+          pScale: isP2 ? { x: 1.12, y: 0.90 } : undefined,
+          eScale: !isP2 ? { x: 1.12, y: 0.90 } : undefined,
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+        },
+        // 2. Status pulse & settle on home platform (66ms x 2 = 132ms)
+        {
+          delay: 66,
+          pOffset: isP2 ? { x: 0, y: -4 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: 0, y: -4 } : { x: 0, y: 0 },
+          pScale: isP2 ? { x: 0.96, y: 1.06 } : undefined,
+          eScale: !isP2 ? { x: 0.96, y: 1.06 } : undefined,
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+        },
+        {
+          delay: 66,
+          pOffset: { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+        }
+      ];
+    } else if (isChop2) {
       act2Frames = [
         // 2A: Hand appears hovering above player (130ms)
         {
