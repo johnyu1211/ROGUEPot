@@ -2049,11 +2049,11 @@ export function drawScratchEffect(ctx: any, target: { x: number; y: number }, st
   ctx.save();
   ctx.globalAlpha = alpha;
 
-  // 3 Diagonal Claw Marks (Top-Right to Bottom-Left)
+  // 3 Diagonal Claw Marks (Top-Right to Bottom-Left, with comfortable wide claw gap)
   const clawTracks = [
-    { ox: -16, oy: -8, length: 48 },
-    { ox: 0, oy: 0, length: 58 },
-    { ox: 16, oy: 8, length: 48 },
+    { ox: -20, oy: -14, length: 50 },
+    { ox: 0, oy: 0, length: 62 },
+    { ox: 20, oy: 14, length: 50 },
   ];
 
   for (const ct of clawTracks) {
