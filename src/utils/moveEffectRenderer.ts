@@ -1261,16 +1261,16 @@ export function drawMegaPunchEffect(ctx: any, target: { x: number; y: number }, 
     ctx.stroke();
     ctx.restore();
 
-    // 2. Transparent Spinning Fist (Phase 1 Spin)
+    // 2. Transparent Spinning Fist (Phase 1 Spin - Faint Transparent)
     ctx.save();
     ctx.translate(targetX, targetY - 18);
     ctx.rotate(-1.35);
-    ctx.scale(0.68, 0.68);
-    ctx.globalAlpha = 0.35;
+    ctx.scale(0.70, 0.70);
+    ctx.globalAlpha = 0.20;
     if (cometPunchFistImg) {
       const fw = cometPunchFistImg.width;
       const fh = cometPunchFistImg.height;
-      ctx.drawImage(cometPunchFistImg, -fw / 2, -fh / 2, fw, fh);
+      ctx.drawImage(cometPunchFistImg, -fw / 2, -fw / 2, fw, fh);
     } else {
       drawFrontStraightPunchFistSvg(ctx, 0, 0, 2.2, 1.0);
     }
@@ -1293,12 +1293,12 @@ export function drawMegaPunchEffect(ctx: any, target: { x: number; y: number }, 
     ctx.stroke();
     ctx.restore();
 
-    // 2. Transparent Spinning Fist (Phase 2 Spin)
+    // 2. Transparent Spinning Fist (Phase 2 Spin - Faint Transparent)
     ctx.save();
     ctx.translate(targetX, targetY - 18);
     ctx.rotate(-2.90);
-    ctx.scale(0.74, 0.74);
-    ctx.globalAlpha = 0.60;
+    ctx.scale(0.75, 0.75);
+    ctx.globalAlpha = 0.22;
     if (cometPunchFistImg) {
       const fw = cometPunchFistImg.width;
       const fh = cometPunchFistImg.height;
