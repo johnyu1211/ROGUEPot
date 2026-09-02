@@ -365,15 +365,17 @@ export function drawBindEffect(ctx: any, target: { x: number; y: number }, step:
   const tx = target.x;
   const ty = target.y - 12;
 
-  // Step 1: Bottom 1st loop (progress 0.35)
-  // Step 2: Middle 2nd loop (progress 0.70)
-  // Step 3: Upper 3rd loop (progress 1.00)
-  // Step 4: Max Constriction Squeeze Clamp (progress 1.0, squeeze 0.68)
-  // Step 5: Pulse Squeeze Lock (progress 1.0, squeeze 0.80)
-  // Step 6+: Dispersing Fade (progress 1.0, squeeze 0.90)
-  const progress = step === 1 ? 0.35 : (step === 2 ? 0.70 : 1.0);
-  const squeeze = step === 4 ? 0.68 : (step === 5 ? 0.80 : (step >= 6 ? 0.90 : 1.0));
-  const globalAlpha = step >= 6 ? 0.40 : (step === 5 ? 0.85 : 1.0);
+  // Smooth Micro-Step Rope Progression
+  let progress = 1.0;
+  if (step === 1) progress = 0.20;
+  else if (step === 2) progress = 0.38;
+  else if (step === 3) progress = 0.55;
+  else if (step === 4) progress = 0.72;
+  else if (step === 5) progress = 0.88;
+  else if (step >= 6) progress = 1.00;
+
+  const squeeze = step === 7 ? 0.66 : (step === 8 ? 0.80 : (step >= 9 ? 0.90 : 1.0));
+  const globalAlpha = step >= 9 ? 0.40 : (step === 8 ? 0.85 : 1.0);
   ctx.globalAlpha = globalAlpha;
 
   const totalPoints = Math.max(10, Math.floor(64 * progress));
