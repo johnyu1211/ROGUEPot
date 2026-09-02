@@ -290,11 +290,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   const isGuillotine1 = (mKey1 === "guillotine");
   const isSwordsDance1 = (mKey1 === "swords-dance" || mKey1 === "swordsdance");
   const isFly1 = (mKey1 === "fly");
+  const isRazorWind1 = (mKey1 === "razor-wind" || mKey1 === "razorwind");
   const isSingleStrikeSpecial1 = (
     mKey1 === "thunder-punch" || mKey1 === "thunderpunch" ||
     mKey1 === "scratch" ||
     mKey1 === "vice-grip" || mKey1 === "vicegrip" ||
-    mKey1 === "razor-wind" || mKey1 === "razorwind" ||
     mKey1 === "cut" ||
     mKey1 === "gust" ||
     mKey1 === "wing-attack" || mKey1 === "wingattack" ||
@@ -963,6 +963,81 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveStep: 4,
         }
       ];
+    } else if (isRazorWind1) {
+      const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
+      const isMiss1 = !isHit1;
+      act1Frames = [
+        // 1. Blade Generation & Orbit around Attacker (160ms)
+        {
+          delay: 160,
+          pOffset: isP1 ? { x: 4, y: -2 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -4, y: 2 } : { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 1,
+        },
+        // 2. Revolving Cyclone Ring of Blades on Attacker (160ms)
+        {
+          delay: 160,
+          pOffset: isP1 ? { x: 8, y: -4 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -8, y: 4 } : { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 2,
+        },
+        // 3. Revolving Blade Ring Flying toward Defender (170ms)
+        {
+          delay: 170,
+          pOffset: isP1 ? { x: 12, y: -6 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -12, y: 6 } : { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 3,
+        },
+        // 4. Cross Convergence Cleave "사사사사삿!" on Defender (240ms)
+        {
+          delay: 240,
+          pOffset: isP1 ? { x: 14, y: -7 } : (isMiss1 ? { x: 26, y: 4 } : { x: -6, y: 3 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 10, y: -3 }) : { x: -14, y: 7 },
+          showEffect: true,
+          hitFlash: isHit1,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 4,
+        },
+        // 5. Impact Star & Dispersing Shards (150ms)
+        {
+          delay: 150,
+          pOffset: isP1 ? { x: 4, y: -2 } : { x: 0, y: 0 },
+          eOffset: isP1 ? { x: 2, y: 0 } : { x: -4, y: 2 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 5,
+        }
+      ];
     } else if (isSingleStrikeSpecial1) {
       const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
       const isMiss1 = !isHit1;
@@ -1079,11 +1154,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const isGuillotine2 = (mKey2 === "guillotine");
     const isSwordsDance2 = (mKey2 === "swords-dance" || mKey2 === "swordsdance");
     const isFly2 = (mKey2 === "fly");
+    const isRazorWind2 = (mKey2 === "razor-wind" || mKey2 === "razorwind");
     const isSingleStrikeSpecial2 = (
       mKey2 === "thunder-punch" || mKey2 === "thunderpunch" ||
       mKey2 === "scratch" ||
       mKey2 === "vice-grip" || mKey2 === "vicegrip" ||
-      mKey2 === "razor-wind" || mKey2 === "razorwind" ||
       mKey2 === "cut" ||
       mKey2 === "gust" ||
       mKey2 === "wing-attack" || mKey2 === "wingattack" ||
@@ -1750,6 +1825,81 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a2,
           moveStep: 4,
+        }
+      ];
+    } else if (isRazorWind2) {
+      const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
+      const isMiss2 = !isHit2;
+      act2Frames = [
+        // 1. Counter Blade Generation & Orbit around Attacker (160ms)
+        {
+          delay: 160,
+          pOffset: isP2 ? { x: 4, y: -2 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -4, y: 2 } : { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 1,
+        },
+        // 2. Revolving Cyclone Ring of Blades on Attacker (160ms)
+        {
+          delay: 160,
+          pOffset: isP2 ? { x: 8, y: -4 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -8, y: 4 } : { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 2,
+        },
+        // 3. Revolving Blade Ring Flying toward Defender (170ms)
+        {
+          delay: 170,
+          pOffset: isP2 ? { x: 12, y: -6 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -12, y: 6 } : { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 3,
+        },
+        // 4. Cross Convergence Cleave "사사사사삿!" on Defender (240ms)
+        {
+          delay: 240,
+          pOffset: isP2 ? (isMiss2 ? { x: 26, y: -4 } : { x: 10, y: -3 }) : { x: -14, y: 7 },
+          eOffset: !isP2 ? (isMiss2 ? { x: 26, y: 4 } : { x: -6, y: 3 }) : { x: 14, y: -7 },
+          showEffect: true,
+          hitFlash: isHit2,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 4,
+        },
+        // 5. Impact Star & Dispersing Shards (150ms)
+        {
+          delay: 150,
+          pOffset: isP2 ? { x: 2, y: 0 } : { x: -4, y: 2 },
+          eOffset: !isP2 ? { x: 4, y: -2 } : { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 5,
         }
       ];
     } else if (isSingleStrikeSpecial2) {

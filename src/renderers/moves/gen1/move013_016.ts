@@ -1,12 +1,24 @@
 import { drawMiniRetroStar } from "../common/helpers.js";
 
 /**
- * 013 칼바람 (Razor Wind): Dual Aerodynamic Sickle Wind Blades
+ * 013 칼바람 (Razor Wind):
+ * Step 1: 3 Crescent wind sickles forming and starting to orbit around user (alpha 0.55)
+ * Step 2: 6 Dense crescent blades orbiting in a rapid cyclone ring around user (alpha 0.95)
+ * Step 3: Revolving wind blade ring flying through the air toward the opponent
+ * Step 4: Cross convergence cleave on target! 8 sharp crescent blades rushing in from all directions ("사사사사삿!")
+ * Step 5: Sharp center impact star & dispersing blade shards
  */
-export function drawRazorWindEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
+export function drawRazorWindEffect(
+  ctx: any,
+  startPos: { x: number; y: number },
+  targetPos: { x: number; y: number },
+  step: number = 1
+) {
   ctx.save();
-  const tx = target.x;
-  const ty = target.y - 10;
+  const sx = startPos.x;
+  const sy = startPos.y - 12;
+  const tx = targetPos.x;
+  const ty = targetPos.y - 12;
 
   const drawSickle = (cx: number, cy: number, rot: number, scale: number, alpha: number) => {
     ctx.save();
@@ -16,43 +28,104 @@ export function drawRazorWindEffect(ctx: any, target: { x: number; y: number }, 
     ctx.globalAlpha = alpha;
 
     ctx.beginPath();
-    ctx.arc(0, 0, 38, -Math.PI * 0.45, Math.PI * 0.45);
-    ctx.arc(10, 0, 32, Math.PI * 0.45, -Math.PI * 0.45, true);
+    ctx.arc(0, 0, 30, -Math.PI * 0.45, Math.PI * 0.45);
+    ctx.arc(8, 0, 25, Math.PI * 0.45, -Math.PI * 0.45, true);
     ctx.closePath();
     ctx.fillStyle = "#F0F9FF";
     ctx.strokeStyle = "#BAE6FD";
-    ctx.lineWidth = 2.5;
+    ctx.lineWidth = 2.2;
     ctx.fill();
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.arc(0, 0, 38, -Math.PI * 0.40, Math.PI * 0.40);
+    ctx.arc(0, 0, 30, -Math.PI * 0.40, Math.PI * 0.40);
     ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 1.8;
+    ctx.lineWidth = 1.6;
     ctx.stroke();
 
     ctx.restore();
   };
 
   if (step === 1) {
-    for (let i = 0; i < 3; i++) {
-      ctx.strokeStyle = "rgba(224, 242, 254, 0.65)";
-      ctx.lineWidth = 2.0;
-      ctx.beginPath();
-      ctx.ellipse(tx, ty + 15, 24 + i * 8, 8 + i * 3, 0, 0, Math.PI * 2);
-      ctx.stroke();
+    // Step 1: 3 Crescent wind blades orbiting around user with initial transparency
+    const radius = 30;
+    const count = 3;
+    for (let i = 0; i < count; i++) {
+      const angle = (i * 2 * Math.PI) / count + 0.2;
+      const bx = sx + Math.cos(angle) * radius;
+      const by = sy + Math.sin(angle) * (radius * 0.55);
+      drawSickle(bx, by, angle + Math.PI / 2, 0.75, 0.55);
     }
   } else if (step === 2) {
-    drawSickle(tx - 32, ty - 18, -Math.PI * 0.25, 0.95, 0.95);
-    drawSickle(tx + 32, ty + 12, Math.PI * 0.75, 0.95, 0.95);
+    // Step 2: 6 Dense crescent blades orbiting in a rapid cyclone ring around user
+    const radius = 36;
+    const count = 6;
+    for (let i = 0; i < count; i++) {
+      const angle = (i * 2 * Math.PI) / count + 0.9;
+      const bx = sx + Math.cos(angle) * radius;
+      const by = sy + Math.sin(angle) * (radius * 0.60);
+      drawSickle(bx, by, angle + Math.PI / 2, 0.85, 0.95);
+    }
   } else if (step === 3) {
-    drawSickle(tx, ty, -Math.PI * 0.35, 1.25, 1.0);
-    drawSickle(tx, ty, Math.PI * 0.65, 1.25, 1.0);
-    drawMiniRetroStar(ctx, tx, ty, 18, "rgba(186, 230, 253, 0.85)");
-    drawMiniRetroStar(ctx, tx, ty, 10, "#FFFFFF");
-  } else if (step >= 4) {
-    drawSickle(tx, ty, -Math.PI * 0.35, 1.45, 0.35);
-    drawSickle(tx, ty, Math.PI * 0.65, 1.45, 0.35);
+    // Step 3: Revolving wind blade ring flying through the air toward the opponent
+    const midX = sx + (tx - sx) * 0.65;
+    const midY = sy + (ty - sy) * 0.65;
+    const radius = 32;
+    const count = 6;
+
+    // Speed trails along flight path
+    for (let i = -1; i <= 1; i++) {
+      ctx.strokeStyle = "rgba(224, 242, 254, 0.55)";
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      ctx.moveTo(sx + i * 12, sy + i * 8);
+      ctx.lineTo(midX + i * 12, midY + i * 8);
+      ctx.stroke();
+    }
+
+    for (let i = 0; i < count; i++) {
+      const angle = (i * 2 * Math.PI) / count + 1.8;
+      const bx = midX + Math.cos(angle) * radius;
+      const by = midY + Math.sin(angle) * (radius * 0.60);
+      drawSickle(bx, by, angle + Math.PI / 2, 0.90, 1.0);
+    }
+  } else if (step === 4) {
+    // Step 4: Cross convergence cleave on target! 8 sharp crescent blades rushing in from all directions ("사사사사삿!")
+    const count = 8;
+    const dist = 30;
+    for (let i = 0; i < count; i++) {
+      const angle = (i * 2 * Math.PI) / count;
+      const bx = tx + Math.cos(angle) * dist;
+      const by = ty + Math.sin(angle) * dist;
+
+      // Inward slashing speed line
+      ctx.strokeStyle = i % 2 === 0 ? "#BAE6FD" : "#FFFFFF";
+      ctx.lineWidth = 3.0;
+      ctx.beginPath();
+      ctx.moveTo(tx + Math.cos(angle) * 55, ty + Math.sin(angle) * 55);
+      ctx.lineTo(tx, ty);
+      ctx.stroke();
+
+      drawSickle(bx, by, angle + Math.PI, 1.15, 1.0);
+    }
+    drawMiniRetroStar(ctx, tx, ty, 22, "#BAE6FD");
+    drawMiniRetroStar(ctx, tx, ty, 12, "#FFFFFF");
+  } else if (step >= 5) {
+    // Step 5: Center impact burst & dispersing shards
+    drawMiniRetroStar(ctx, tx, ty, 16, "#BAE6FD");
+    drawMiniRetroStar(ctx, tx, ty, 8, "#FFFFFF");
+
+    const shards = [
+      { ox: -36, oy: -28, rot: -0.6 },
+      { ox: 38, oy: -24, rot: 0.7 },
+      { ox: -32, oy: 26, rot: -1.2 },
+      { ox: 34, oy: 28, rot: 1.4 },
+      { ox: 0, oy: -42, rot: 0.1 },
+      { ox: 0, oy: 40, rot: Math.PI },
+    ];
+    for (const sh of shards) {
+      drawSickle(tx + sh.ox, ty + sh.oy, sh.rot, 0.75, 0.40);
+    }
   }
 
   ctx.restore();
