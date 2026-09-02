@@ -1,6 +1,5 @@
 import {
-  cometPunchFistImg,
-  thunderPunchFistCanvas,
+  getThunderPunchFistCanvas,
   drawMiniRetroStar,
 } from "../common/helpers.js";
 import { drawFrontStraightPunchFistSvg } from "./move001_004.js";
@@ -156,7 +155,7 @@ export function drawThunderPunchEffect(ctx: any, target: { x: number; y: number 
     ctx.scale(step === 1 ? 0.68 : 0.72, step === 1 ? 0.68 : 0.72);
     ctx.globalAlpha = fistAlpha;
 
-    const fistSprite = thunderPunchFistCanvas || cometPunchFistImg;
+    const fistSprite = getThunderPunchFistCanvas();
     if (fistSprite) {
       const fw = fistSprite.width;
       const fh = fistSprite.height;
