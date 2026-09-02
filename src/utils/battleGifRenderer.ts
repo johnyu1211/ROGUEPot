@@ -267,6 +267,12 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   const isPayDay1 = (mKey1 === "pay-day" || mKey1 === "payday");
   const isFirePunch1 = (mKey1 === "fire-punch" || mKey1 === "firepunch");
   const isIcePunch1 = (mKey1 === "ice-punch" || mKey1 === "icepunch");
+  const isSingleStrikeSpecial1 = (
+    mKey1 === "thunder-punch" || mKey1 === "thunderpunch" ||
+    mKey1 === "scratch" ||
+    mKey1 === "vice-grip" || mKey1 === "vicegrip" ||
+    mKey1 === "guillotine"
+  );
 
   let act1Frames: any[] = [];
   if (isChop1) {
@@ -698,6 +704,67 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveStep: 3,
         }
       ];
+    } else if (isSingleStrikeSpecial1) {
+      act1Frames = [
+        // 1. Windup lunge (150ms)
+        {
+          delay: 150,
+          pOffset: isP1 ? { x: 16, y: -8 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -16, y: 8 } : { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+        },
+        // 2. Step 1: Direct Impact Strike + Hit Flash (200ms)
+        {
+          delay: 200,
+          pOffset: isP1 ? { x: 22, y: -9 } : { x: -6, y: 3 },
+          eOffset: isP1 ? { x: 10, y: -3 } : { x: -22, y: 9 },
+          showEffect: true,
+          hitFlash: true,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 1,
+        },
+        // 3. Step 2: Special Effect Action / Slash / Clamp / Spark (140ms)
+        {
+          delay: 140,
+          pOffset: isP1 ? { x: 16, y: -6 } : { x: -3, y: 1 },
+          eOffset: isP1 ? { x: 5, y: -1 } : { x: -16, y: 6 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 2,
+        },
+        // 4. Step 3: Spark / Shockwave Dispersal & Dissipation (130ms)
+        {
+          delay: 130,
+          pOffset: isP1 ? { x: 10, y: -3 } : { x: 0, y: 0 },
+          eOffset: isP1 ? { x: 2, y: 0 } : { x: -10, y: 3 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 3,
+        }
+      ];
     } else {
       act1Frames = [
         // Standard Windup (180ms)
@@ -746,6 +813,12 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const isPayDay2 = (mKey2 === "pay-day" || mKey2 === "payday");
     const isFirePunch2 = (mKey2 === "fire-punch" || mKey2 === "firepunch");
     const isIcePunch2 = (mKey2 === "ice-punch" || mKey2 === "icepunch");
+    const isSingleStrikeSpecial2 = (
+      mKey2 === "thunder-punch" || mKey2 === "thunderpunch" ||
+      mKey2 === "scratch" ||
+      mKey2 === "vice-grip" || mKey2 === "vicegrip" ||
+      mKey2 === "guillotine"
+    );
 
     let act2Frames: any[] = [];
     if (isChop2) {
@@ -1162,6 +1235,67 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveStep: 2,
         },
         // 4. Step 3: Crystals Disperse Far & Dissipate (130ms)
+        {
+          delay: 130,
+          pOffset: isP2 ? { x: 10, y: -3 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -10, y: 3 } : { x: 2, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 3,
+        }
+      ];
+    } else if (isSingleStrikeSpecial2) {
+      act2Frames = [
+        // 1. Counter Windup lunge (150ms)
+        {
+          delay: 150,
+          pOffset: isP2 ? { x: 16, y: -8 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -16, y: 8 } : { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+        },
+        // 2. Step 1: Direct Impact Strike + Hit Flash (200ms)
+        {
+          delay: 200,
+          pOffset: isP2 ? { x: 22, y: -9 } : { x: -6, y: 3 },
+          eOffset: !isP2 ? { x: -22, y: 9 } : { x: 10, y: -3 },
+          showEffect: true,
+          hitFlash: true,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 1,
+        },
+        // 3. Step 2: Special Effect Action / Slash / Clamp / Spark (140ms)
+        {
+          delay: 140,
+          pOffset: isP2 ? { x: 16, y: -6 } : { x: -3, y: 1 },
+          eOffset: !isP2 ? { x: -16, y: 6 } : { x: 5, y: -1 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 2,
+        },
+        // 4. Step 3: Spark / Shockwave Dispersal & Dissipation (130ms)
         {
           delay: 130,
           pOffset: isP2 ? { x: 10, y: -3 } : { x: 0, y: 0 },

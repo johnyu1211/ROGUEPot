@@ -116,6 +116,14 @@ export function renderMoveEffect(
     drawFirePunchEffect(ctx, targetPos, info.step ?? 1);
   } else if (moveKey === "ice-punch" || moveKey === "icepunch") {
     drawIcePunchEffect(ctx, targetPos, info.step ?? 1);
+  } else if (moveKey === "thunder-punch" || moveKey === "thunderpunch") {
+    drawThunderPunchEffect(ctx, targetPos, info.step ?? 1);
+  } else if (moveKey === "scratch") {
+    drawScratchEffect(ctx, targetPos, info.step ?? 1);
+  } else if (moveKey === "vice-grip" || moveKey === "vicegrip") {
+    drawViceGripEffect(ctx, targetPos, info.step ?? 1);
+  } else if (moveKey === "guillotine") {
+    drawGuillotineEffect(ctx, targetPos, info.step ?? 1);
   } else if (moveKey === "solar-beam" || moveKey === "solar-blade") {
     drawSolarBeamEffect(ctx, startPos, targetPos, angle, dx, dy);
   } else if (moveKey === "mega-drain" || moveKey === "giga-drain" || moveKey === "absorb" || moveKey === "leech-life" || moveKey === "draining-kiss") {
@@ -1844,6 +1852,429 @@ export function drawIcePunchEffect(ctx: any, target: { x: number; y: number }, s
     ctx.fill();
   }
   ctx.restore();
+
+  ctx.restore();
+}
+
+/**
+ * 009 번개펀치 (Thunder Punch): Electric Golden Fist + Radiating Zigzag Lightning Arcs
+ */
+export function drawThunderPunchEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
+  ctx.save();
+
+  const targetX = target.x;
+  const targetY = target.y - 12;
+
+  let spread = 0.85;
+  let alpha = 1.0;
+  let fistAlpha = 1.0;
+
+  if (step === 2) {
+    spread = 1.55;
+    alpha = 0.65;
+    fistAlpha = 0.35;
+  } else if (step >= 3) {
+    spread = 2.25;
+    alpha = 0.25;
+    fistAlpha = 0.0;
+  }
+
+  // 1. Electric Glow Background Aura
+  if (step <= 2) {
+    const eleGrad = ctx.createRadialGradient(
+      targetX,
+      targetY - 14,
+      4,
+      targetX,
+      targetY - 14,
+      step === 1 ? 46 : 56
+    );
+    eleGrad.addColorStop(0, "rgba(255, 255, 255, 0.90)");
+    eleGrad.addColorStop(0.35, "rgba(254, 240, 138, 0.80)");
+    eleGrad.addColorStop(0.75, "rgba(234, 179, 8, 0.45)");
+    eleGrad.addColorStop(1, "rgba(234, 179, 8, 0)");
+    ctx.fillStyle = eleGrad;
+    ctx.globalAlpha = step === 1 ? 0.90 : 0.45;
+    ctx.beginPath();
+    ctx.arc(targetX, targetY - 14, step === 1 ? 46 : 56, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 2. Punch Fist with Golden Electric Tint
+  if (fistAlpha > 0.02) {
+    ctx.save();
+    ctx.translate(targetX, targetY - 14);
+    ctx.scale(step === 1 ? 0.68 : 0.72, step === 1 ? 0.68 : 0.72);
+    ctx.globalAlpha = fistAlpha;
+
+    const fistSprite = thunderPunchFistCanvas || cometPunchFistImg;
+    if (fistSprite) {
+      const fw = fistSprite.width;
+      const fh = fistSprite.height;
+      ctx.drawImage(fistSprite, -fw / 2, -fh / 2, fw, fh);
+    } else {
+      drawFrontStraightPunchFistSvg(ctx, 0, 0, 2.2, 1.0);
+    }
+    ctx.restore();
+  }
+
+  // 3. Radiating Zigzag Lightning Arcs (4 Diagonal Thunderbolts)
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  const lightningBolts = [
+    // Top-Left Bolt
+    [
+      { x: -10, y: -12 },
+      { x: -22, y: -26 },
+      { x: -18, y: -34 },
+      { x: -32, y: -48 },
+    ],
+    // Top-Right Bolt
+    [
+      { x: 10, y: -12 },
+      { x: 24, y: -24 },
+      { x: 18, y: -32 },
+      { x: 34, y: -46 },
+    ],
+    // Bottom-Left Bolt
+    [
+      { x: -12, y: 6 },
+      { x: -26, y: 16 },
+      { x: -20, y: 22 },
+      { x: -34, y: 34 },
+    ],
+    // Bottom-Right Bolt
+    [
+      { x: 12, y: 6 },
+      { x: 26, y: 14 },
+      { x: 20, y: 22 },
+      { x: 36, y: 32 },
+    ],
+  ];
+
+  for (const bolt of lightningBolts) {
+    // Outer Yellow Glow Line
+    ctx.strokeStyle = "#FACC15";
+    ctx.lineWidth = step >= 3 ? 2.5 : 4.0;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "bevel";
+    ctx.beginPath();
+    ctx.moveTo(targetX + bolt[0].x * spread, targetY - 14 + bolt[0].y * spread);
+    for (let i = 1; i < bolt.length; i++) {
+      ctx.lineTo(targetX + bolt[i].x * spread, targetY - 14 + bolt[i].y * spread);
+    }
+    ctx.stroke();
+
+    // Inner White Core Line
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = step >= 3 ? 1.2 : 2.0;
+    ctx.beginPath();
+    ctx.moveTo(targetX + bolt[0].x * spread, targetY - 14 + bolt[0].y * spread);
+    for (let i = 1; i < bolt.length; i++) {
+      ctx.lineTo(targetX + bolt[i].x * spread, targetY - 14 + bolt[i].y * spread);
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // 4. Electric Impact Starburst
+  if (step <= 2) {
+    drawMiniRetroStar(ctx, targetX, targetY - 14, step === 1 ? 24 : 16, "#FEF08A");
+  }
+
+  // 5. Electric Spark Dots
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  const sparks = [
+    { vx: -28, vy: -20, r: 3.0, c: "#FFFFFF" },
+    { vx: 30, vy: -18, r: 3.2, c: "#FEF08A" },
+    { vx: -24, vy: 24, r: 2.8, c: "#FACC15" },
+    { vx: 26, vy: 26, r: 3.0, c: "#FFFFFF" },
+    { vx: 0, vy: -42, r: 3.2, c: "#FEF08A" },
+    { vx: 36, vy: 0, r: 2.8, c: "#FACC15" },
+    { vx: -36, vy: 0, r: 2.8, c: "#FEF08A" },
+  ];
+  for (const sp of sparks) {
+    ctx.fillStyle = sp.c;
+    ctx.beginPath();
+    ctx.arc(
+      targetX + sp.vx * spread,
+      targetY - 14 + sp.vy * spread,
+      step >= 3 ? sp.r * 0.7 : sp.r,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+  }
+  ctx.restore();
+
+  ctx.restore();
+}
+
+/**
+ * 010 할퀴기 (Scratch): 3 Sharp Diagonal White/Silver Claw Slash Streaks
+ */
+export function drawScratchEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
+  ctx.save();
+
+  const targetX = target.x;
+  const targetY = target.y - 12;
+
+  let alpha = 1.0;
+  let spread = 1.0;
+  if (step === 2) {
+    alpha = 0.75;
+    spread = 1.25;
+  } else if (step >= 3) {
+    alpha = 0.30;
+    spread = 1.50;
+  }
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  // 3 Diagonal Claw Marks (Top-Right to Bottom-Left)
+  const clawTracks = [
+    { ox: -16, oy: -8, length: 48 },
+    { ox: 0, oy: 0, length: 58 },
+    { ox: 16, oy: 8, length: 48 },
+  ];
+
+  for (const ct of clawTracks) {
+    ctx.save();
+    ctx.translate(targetX + ct.ox, targetY - 14 + ct.oy);
+    ctx.rotate(Math.PI / 4 + 0.15); // Diagonal slash angle
+
+    const halfL = (ct.length * spread) / 2;
+
+    // Outer Silver Slash Streak
+    ctx.fillStyle = "#E2E8F0";
+    ctx.strokeStyle = "#94A3B8";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(-halfL, 0);
+    ctx.quadraticCurveTo(0, -5 * spread, halfL, 0);
+    ctx.quadraticCurveTo(0, 5 * spread, -halfL, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Inner White Sharp Blade Core
+    ctx.fillStyle = "#FFFFFF";
+    ctx.beginPath();
+    ctx.moveTo(-halfL * 0.85, 0);
+    ctx.quadraticCurveTo(0, -2.5 * spread, halfL * 0.85, 0);
+    ctx.quadraticCurveTo(0, 2.5 * spread, -halfL * 0.85, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  // Central Slash Gleam Star
+  if (step <= 2) {
+    drawMiniRetroStar(ctx, targetX, targetY - 14, step === 1 ? 22 : 14, "#FEF08A");
+  }
+
+  // Slash Spark Bits
+  const sparks = [
+    { ox: -20, oy: -20, r: 2.8, c: "#FFFFFF" },
+    { ox: 22, oy: 18, r: 2.8, c: "#FEF08A" },
+    { ox: 18, oy: -22, r: 2.2, c: "#E2E8F0" },
+    { ox: -18, oy: 22, r: 2.2, c: "#FFFFFF" },
+  ];
+  for (const s of sparks) {
+    ctx.fillStyle = s.c;
+    ctx.beginPath();
+    ctx.arc(targetX + s.ox * spread, targetY - 14 + s.oy * spread, s.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+  ctx.restore();
+}
+
+/**
+ * Pincer Claw Helper for Vice Grip & Guillotine
+ */
+function drawPincerClaw(ctx: any, x: number, y: number, isLeft: boolean, scale: number = 1.0, isGuillotine: boolean = false) {
+  ctx.save();
+  ctx.translate(x, y);
+  if (!isLeft) ctx.scale(-1, 1);
+  ctx.scale(scale, scale);
+
+  const mainColor = isGuillotine ? "#DC2626" : "#EA580C";
+  const edgeColor = isGuillotine ? "#F87171" : "#FDBA74";
+  const darkOutline = "#7F1D1D";
+
+  // Heavy Curved Pincer Blade
+  ctx.fillStyle = mainColor;
+  ctx.strokeStyle = darkOutline;
+  ctx.lineWidth = 2.4;
+
+  ctx.beginPath();
+  ctx.moveTo(-18, -24);
+  ctx.bezierCurveTo(8, -26, 22, -10, 24, 8);
+  ctx.bezierCurveTo(24, 20, 14, 26, 4, 24);
+  ctx.bezierCurveTo(12, 14, 12, -4, -6, -12);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Sharp Blade Inner Gleam
+  ctx.strokeStyle = edgeColor;
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(-14, -20);
+  ctx.bezierCurveTo(6, -22, 18, -8, 20, 6);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+/**
+ * 011 찝기 (Vice Grip): Dual Opposing Pincers Clamping & Squeezing Target
+ */
+export function drawViceGripEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
+  ctx.save();
+
+  const targetX = target.x;
+  const targetY = target.y - 12;
+
+  // Step 1: Pincers Wide Open (ox: 36px, alpha: 1.0)
+  // Step 2: Pincers SNAP Clamped Tight (ox: 8px, alpha: 1.0 + Hit Flash)
+  // Step 3: Clamp Release Shockwaves & Fade (ox: 14px, alpha: 0.30)
+  let pincerOx = 36;
+  let alpha = 1.0;
+
+  if (step === 2) {
+    pincerOx = 8;
+    alpha = 1.0;
+  } else if (step >= 3) {
+    pincerOx = 16;
+    alpha = 0.30;
+  }
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  // Left & Right Pincers
+  drawPincerClaw(ctx, targetX - pincerOx, targetY - 14, true, 1.15, false);
+  drawPincerClaw(ctx, targetX + pincerOx, targetY - 14, false, 1.15, false);
+
+  // Clamp Impact Starburst (Step 2)
+  if (step === 2) {
+    drawMiniRetroStar(ctx, targetX, targetY - 14, 24, "#FACC15");
+
+    // Metallic Clamp Shockwave Sparks
+    const sparks = [
+      { ox: 0, oy: -26, r: 3.2, c: "#FFFFFF" },
+      { ox: 0, oy: 22, r: 3.2, c: "#FEF08A" },
+      { ox: -24, oy: 0, r: 2.8, c: "#FB923C" },
+      { ox: 24, oy: 0, r: 2.8, c: "#FB923C" },
+    ];
+    for (const sp of sparks) {
+      ctx.fillStyle = sp.c;
+      ctx.beginPath();
+      ctx.arc(targetX + sp.ox, targetY - 14 + sp.oy, sp.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else if (step >= 3) {
+    drawMiniRetroStar(ctx, targetX, targetY - 14, 14, "rgba(250, 204, 21, 0.5)");
+  }
+
+  ctx.restore();
+  ctx.restore();
+}
+
+/**
+ * 012 가위자르기 (Guillotine): Lethal Giant Guillotine Shears + Screen-Splitting Fatal X-Slash Execution
+ */
+export function drawGuillotineEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
+  ctx.save();
+
+  const targetX = target.x;
+  const targetY = target.y - 12;
+
+  // Step 1: Giant Menacing Guillotine Blades Descend & Open Wide (alpha: 1.0)
+  // Step 2: LETHAL GUILLOTINE EXECUTION SNAP: Giant Cross Shear Slash + Dark Shock Aura (Hit Flash)
+  // Step 3: Massive Shockwave Cross Lines Fade & Heavy Sparks (alpha: 0.30)
+  if (step === 1) {
+    // 1. Dark Menacing Aura
+    const aura = ctx.createRadialGradient(targetX, targetY - 14, 6, targetX, targetY - 14, 65);
+    aura.addColorStop(0, "rgba(220, 38, 38, 0.75)");
+    aura.addColorStop(0.5, "rgba(127, 29, 29, 0.55)");
+    aura.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.fillStyle = aura;
+    ctx.beginPath();
+    ctx.arc(targetX, targetY - 14, 65, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 2. Giant Guillotine Pincers Opening Wide
+    drawPincerClaw(ctx, targetX - 32, targetY - 22, true, 1.55, true);
+    drawPincerClaw(ctx, targetX + 32, targetY - 22, false, 1.55, true);
+  } else if (step === 2) {
+    // Step 2: FATAL EXECUTION CROSS CUT
+    // 1. Giant Lethal Diagonal Cross Lines
+    ctx.save();
+    ctx.strokeStyle = "#DC2626";
+    ctx.lineWidth = 8.0;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    // Slash 1 (\)
+    ctx.moveTo(targetX - 55, targetY - 14 - 55);
+    ctx.lineTo(targetX + 55, targetY - 14 + 55);
+    // Slash 2 (/)
+    ctx.moveTo(targetX + 55, targetY - 14 - 55);
+    ctx.lineTo(targetX - 55, targetY - 14 + 55);
+    ctx.stroke();
+
+    // Inner White Hot Blade Core
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.moveTo(targetX - 55, targetY - 14 - 55);
+    ctx.lineTo(targetX + 55, targetY - 14 + 55);
+    ctx.moveTo(targetX + 55, targetY - 14 - 55);
+    ctx.lineTo(targetX - 55, targetY - 14 + 55);
+    ctx.stroke();
+    ctx.restore();
+
+    // 2. Massive Execution Starburst
+    drawMiniRetroStar(ctx, targetX, targetY - 14, 34, "#FFFFFF");
+    drawMiniRetroStar(ctx, targetX, targetY - 14, 26, "#EF4444");
+
+    // 3. Heavy Lethal Sparks
+    const sparks = [
+      { ox: -35, oy: -35, r: 4.0, c: "#FFFFFF" },
+      { ox: 35, oy: -35, r: 4.0, c: "#FEF08A" },
+      { ox: -35, oy: 35, r: 4.0, c: "#DC2626" },
+      { ox: 35, oy: 35, r: 4.0, c: "#FFFFFF" },
+      { ox: 0, oy: -48, r: 3.5, c: "#EF4444" },
+      { ox: 0, oy: 48, r: 3.5, c: "#FEF08A" },
+    ];
+    for (const sp of sparks) {
+      ctx.fillStyle = sp.c;
+      ctx.beginPath();
+      ctx.arc(targetX + sp.ox, targetY - 14 + sp.oy, sp.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else if (step >= 3) {
+    // Step 3: Fading Cross Lines
+    ctx.save();
+    ctx.globalAlpha = 0.30;
+    ctx.strokeStyle = "#EF4444";
+    ctx.lineWidth = 4.0;
+    ctx.beginPath();
+    ctx.moveTo(targetX - 65, targetY - 14 - 65);
+    ctx.lineTo(targetX + 65, targetY - 14 + 65);
+    ctx.moveTo(targetX + 65, targetY - 14 - 65);
+    ctx.lineTo(targetX - 65, targetY - 14 + 65);
+    ctx.stroke();
+
+    drawMiniRetroStar(ctx, targetX, targetY - 14, 18, "rgba(239, 68, 68, 0.4)");
+    ctx.restore();
+  }
 
   ctx.restore();
 }
