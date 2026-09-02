@@ -1,7 +1,41 @@
 import { drawMiniRetroStar, drawStarburstImpact } from "../common/helpers.js";
 
 /**
- * 021 힘껏치기 (Slam): Explosive Forward Physical Slam with Clean Punchy Directional Impact & Shockwave Ring
+ * Helper: Comic/Manga Sharp Physical Hit Burst Polygon
+ */
+function drawComicHitBurst(
+  ctx: any,
+  cx: number,
+  cy: number,
+  outerRadius: number,
+  innerRadius: number,
+  points: number = 8,
+  color: string = "#FFFFFF",
+  strokeColor: string = "#D97706"
+) {
+  ctx.save();
+  ctx.beginPath();
+  for (let i = 0; i < points * 2; i++) {
+    const r = i % 2 === 0 ? outerRadius : innerRadius;
+    const angle = (i * Math.PI) / points - Math.PI / 2;
+    const x = cx + Math.cos(angle) * r;
+    const y = cy + Math.sin(angle) * r;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+  if (strokeColor) {
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = 3.0;
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/**
+ * 021 힘껏치기 (Slam): Explosive Forward Physical Slam with Pure Comic Hit Burst (Zero weird lines)
  */
 export function drawSlamEffect(
   ctx: any,
@@ -14,89 +48,32 @@ export function drawSlamEffect(
   const ty = target.y - 8;
 
   if (step === 1) {
-    // Step 1: Calm / Tension building (Clean subtle focus streaks)
-    ctx.save();
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([6, 8]);
-    ctx.beginPath();
-    ctx.moveTo(tx - 40, ty - 20);
-    ctx.lineTo(tx + 20, ty - 20);
-    ctx.moveTo(tx - 30, ty + 10);
-    ctx.lineTo(tx + 30, ty + 10);
-    ctx.stroke();
-    ctx.restore();
+    // Step 1: Still / Tension windup (No visual overlay on defender)
   } else if (step === 2) {
-    // Step 2: 팍! (BAM!) Pure Heavy Physical Slam Impact (No twinkle stars!)
+    // Step 2: 팍! (BAM!) Pure Comic Physical Hit Burst
     ctx.save();
-    // 1. Sharp Linear Directional Impact Speedlines
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.95)";
-    ctx.lineWidth = 3.5;
-    ctx.lineCap = "round";
-    for (let i = -2; i <= 2; i++) {
-      ctx.beginPath();
-      ctx.moveTo(tx - 40, ty + i * 14);
-      ctx.lineTo(tx + 40, ty + i * 10);
-      ctx.stroke();
-    }
-
-    // 2. Heavy Cross Impact Slashes (X-shaped sharp physical strike cuts)
-    ctx.strokeStyle = "#FEF08A";
-    ctx.lineWidth = 4.5;
-    ctx.beginPath();
-    ctx.moveTo(tx - 32, ty - 32);
-    ctx.lineTo(tx + 32, ty + 32);
-    ctx.moveTo(tx - 32, ty + 32);
-    ctx.lineTo(tx + 32, ty - 32);
-    ctx.stroke();
-
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 2.0;
-    ctx.beginPath();
-    ctx.moveTo(tx - 32, ty - 32);
-    ctx.lineTo(tx + 32, ty + 32);
-    ctx.moveTo(tx - 32, ty + 32);
-    ctx.lineTo(tx + 32, ty - 32);
-    ctx.stroke();
-
-    // 3. Crisp Core Physical Impact Flash
-    const hitGrad = ctx.createRadialGradient(tx, ty, 2, tx, ty, 36);
-    hitGrad.addColorStop(0, "#FFFFFF");
-    hitGrad.addColorStop(0.4, "rgba(251, 191, 36, 0.9)");
-    hitGrad.addColorStop(0.8, "rgba(245, 158, 11, 0.5)");
+    // 1. Soft glowing aura
+    const hitGrad = ctx.createRadialGradient(tx, ty, 5, tx, ty, 48);
+    hitGrad.addColorStop(0, "rgba(255, 255, 255, 0.9)");
+    hitGrad.addColorStop(0.4, "rgba(251, 191, 36, 0.7)");
+    hitGrad.addColorStop(0.8, "rgba(245, 158, 11, 0.3)");
     hitGrad.addColorStop(1, "rgba(245, 158, 11, 0.0)");
     ctx.fillStyle = hitGrad;
     ctx.beginPath();
-    ctx.arc(tx, ty, 36, 0, Math.PI * 2);
+    ctx.arc(tx, ty, 48, 0, Math.PI * 2);
     ctx.fill();
 
-    // 4. Heavy Impact Ring
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 3.0;
-    ctx.beginPath();
-    ctx.arc(tx, ty, 24, 0, Math.PI * 2);
-    ctx.stroke();
+    // 2. Outer sharp jagged physical impact burst
+    drawComicHitBurst(ctx, tx, ty, 44, 22, 8, "#FDE047", "#D97706");
 
+    // 3. Inner hot white core flash
+    drawComicHitBurst(ctx, tx, ty, 26, 12, 8, "#FFFFFF", "#F59E0B");
     ctx.restore();
   } else if (step >= 3) {
-    // Step 3: Dissipating Kinetic Tremors & Shockwave Plumes (No stars!)
+    // Step 3: Dissipating impact afterglow (softly fading)
     ctx.save();
-    // Horizontal Impact Shock Tremors
-    ctx.strokeStyle = "rgba(254, 240, 138, 0.75)";
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.moveTo(tx - 50, ty + 18);
-    ctx.lineTo(tx + 50, ty + 18);
-    ctx.moveTo(tx - 35, ty + 24);
-    ctx.lineTo(tx + 35, ty + 24);
-    ctx.stroke();
-
-    // Expanding shock ring
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
-    ctx.lineWidth = 1.8;
-    ctx.beginPath();
-    ctx.arc(tx, ty, 42, 0, Math.PI * 2);
-    ctx.stroke();
+    ctx.globalAlpha = 0.55;
+    drawComicHitBurst(ctx, tx, ty, 32, 16, 8, "#FEF08A", "#F59E0B");
     ctx.restore();
   }
 
