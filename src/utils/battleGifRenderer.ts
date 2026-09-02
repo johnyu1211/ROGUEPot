@@ -123,6 +123,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         statProgress: undefined,
         isBlur: false,
         moveEffect: a1,
+        moveStep: 1,
       },
       // Frame 2: Attacker 1 Strike Impact & Move Effect (240ms)
       {
@@ -137,6 +138,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         statProgress: 0.25,
         isBlur: false,
         moveEffect: a1,
+        moveStep: 3,
       },
       // Frame 3: Attacker 1 Recoil & Damage Settling (420ms - allows reading action 1 outcome!)
       {
@@ -180,6 +182,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         statProgress: undefined,
         isBlur: false,
         moveEffect: a2,
+        moveStep: 1,
       },
       // Frame 6: Attacker 2 Counter Strike Impact & Move Effect (240ms)
       {
@@ -194,6 +197,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         statProgress: 0.25,
         isBlur: false,
         moveEffect: a2,
+        moveStep: 3,
       },
       // Frame 7: Attacker 2 Recoil & Stat Changes Start (450ms - allows reading counter attack log!)
       {
@@ -388,20 +392,24 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       targetCtx.restore();
     }
 
-    // Move Effect Rendering
-    if (f.showEffect) {
+    // Move Effect Rendering (including Karate Chop multi-step hand animation)
+    if (f.showEffect || f.moveStep) {
       const activeEffect = f.moveEffect || battle.lastMoveEffect || {
         moveKey,
         type,
         isSpecial,
         isPlayerAttacking: isPlayer,
       };
-      renderMoveEffect(targetCtx, {
-        moveKey: activeEffect.moveKey || moveKey,
-        type: activeEffect.type || type,
-        isSpecial: activeEffect.isSpecial !== undefined ? activeEffect.isSpecial : isSpecial,
-        isPlayerAttacking: activeEffect.actor ? (activeEffect.actor === "player") : (activeEffect.isPlayerAttacking ?? isPlayer),
-      });
+      const activeKey = (activeEffect.moveKey || moveKey).toLowerCase().replace(/[\s_]+/g, "-");
+      if (f.showEffect || activeKey === "karate-chop" || activeKey === "karatechop") {
+        renderMoveEffect(targetCtx, {
+          moveKey: activeEffect.moveKey || moveKey,
+          type: activeEffect.type || type,
+          isSpecial: activeEffect.isSpecial !== undefined ? activeEffect.isSpecial : isSpecial,
+          isPlayerAttacking: activeEffect.actor ? (activeEffect.actor === "player") : (activeEffect.isPlayerAttacking ?? isPlayer),
+          step: f.moveStep ?? (f.showEffect ? 3 : 1),
+        });
+      }
     }
 
     // Stat Boost / Drop Arrow Particles

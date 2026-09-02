@@ -9,6 +9,7 @@ export interface MoveEffectInfo {
   type: string;
   isSpecial: boolean;
   isPlayerAttacking: boolean;
+  step?: number;
 }
 
 export function renderMoveEffect(
@@ -33,7 +34,9 @@ export function renderMoveEffect(
   ctx.save();
 
   // 1. SPECIFIC SIGNATURE MOVES FIRST
-  if (moveKey === "solar-beam" || moveKey === "solar-blade") {
+  if (moveKey === "karate-chop" || moveKey === "karatechop") {
+    drawKarateChopEffect(ctx, targetPos, info.step ?? 3);
+  } else if (moveKey === "solar-beam" || moveKey === "solar-blade") {
     drawSolarBeamEffect(ctx, startPos, targetPos, angle, dx, dy);
   } else if (moveKey === "mega-drain" || moveKey === "giga-drain" || moveKey === "absorb" || moveKey === "leech-life" || moveKey === "draining-kiss") {
     drawDrainEffect(ctx, startPos, targetPos, type);
@@ -782,6 +785,121 @@ export function drawStatDropEffect(ctx: any, pos: { x: number; y: number }, prog
     ctx.beginPath();
     ctx.arc(px, py, dp.r, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+/**
+ * Karate Chop (태권당수):
+ * A distinct black Karate Hand silhouette with fingertips pointing right appears above the target's head.
+ * Motion:
+ * Step 1: Dips / shakes slightly downward
+ * Step 2: Rises upward and tilts back
+ * Step 3: SLAMS down forcefully with sharp impact slash lines!
+ */
+export function drawKarateChopEffect(ctx: any, target: { x: number; y: number }, step: number = 3) {
+  ctx.save();
+
+  // Hand anchor: directly above target head
+  const baseX = target.x;
+  const baseY = target.y - 45;
+
+  let handX = baseX;
+  let handY = baseY;
+  let rot = 0; // in radians
+  let showImpact = false;
+
+  if (step === 1) {
+    // Step 1: 살짝 아래로 흔들 (Pre-windup micro-dip & shake)
+    handY = baseY + 6;
+    rot = -10 * (Math.PI / 180);
+  } else if (step === 2) {
+    // Step 2: 위로 살짝 올라갔다가 (Rising windup preparation)
+    handY = baseY - 24;
+    rot = -38 * (Math.PI / 180);
+  } else {
+    // Step 3: 팍 하고 내려침! (Forceful slam chop impact!)
+    handY = baseY + 18;
+    rot = 22 * (Math.PI / 180);
+    showImpact = true;
+  }
+
+  ctx.translate(handX, handY);
+  ctx.rotate(rot);
+
+  // 1. Draw Karate Chop Hand Vector Shape (Solid black silhouette with crisp outline)
+  ctx.save();
+  ctx.fillStyle = "#111827"; // Deep black
+  ctx.strokeStyle = "#F3F4F6"; // Crisp white outline for high contrast against all biomes
+  ctx.lineWidth = 2.0;
+
+  // Hand Path: Wrist on left, 4 extended fingers pointing right, thumb tucked
+  ctx.beginPath();
+  // Wrist base (left)
+  ctx.moveTo(-24, -8);
+  ctx.lineTo(-24, 10);
+  // Lower Chop Edge (손날 - Bottom straight edge)
+  ctx.lineTo(16, 12);
+  // Pinky tip
+  ctx.quadraticCurveTo(28, 11, 32, 7);
+  // Extended finger tips pointing right
+  ctx.lineTo(36, 2);
+  ctx.lineTo(35, -3);
+  ctx.lineTo(31, -8);
+  // Tucked thumb knuckle (top)
+  ctx.lineTo(12, -10);
+  ctx.quadraticCurveTo(2, -15, -6, -11);
+  ctx.lineTo(-24, -8);
+  ctx.closePath();
+
+  ctx.fill();
+  ctx.stroke();
+
+  // Internal finger division crease lines
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.45)";
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(10, 5); ctx.lineTo(26, 4);
+  ctx.moveTo(8, -1); ctx.lineTo(28, -2);
+  ctx.moveTo(6, -6); ctx.lineTo(24, -6);
+  ctx.stroke();
+
+  ctx.restore();
+
+  // 2. Dynamic Slash / Chop Impact Shockwaves when slamming down (Step 3)
+  if (showImpact) {
+    ctx.save();
+    // High-speed motion slash streak
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.moveTo(-15, -40);
+    ctx.lineTo(25, 20);
+    ctx.stroke();
+
+    // Critical / Fighting Impact Starburst
+    ctx.fillStyle = "#EF4444";
+    ctx.beginPath();
+    ctx.arc(20, 15, 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#FFFFFF";
+    ctx.beginPath();
+    ctx.arc(20, 15, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Sharp kinetic impact sparks
+    ctx.strokeStyle = "#FDE047";
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 4; i++) {
+      const a = (i * Math.PI) / 2 + Math.PI / 4;
+      ctx.beginPath();
+      ctx.moveTo(20 + Math.cos(a) * 6, 15 + Math.sin(a) * 6);
+      ctx.lineTo(20 + Math.cos(a) * 22, 15 + Math.sin(a) * 22);
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 
   ctx.restore();
