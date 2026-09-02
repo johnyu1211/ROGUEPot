@@ -5771,9 +5771,8 @@ export async function renderBattleFightMenuGif(options: BattleAnimationOptions):
     getPokemonSprite(playerActiveSpecies, true, playerShinyTier, true)
   ]);
 
-  const encoder = new GIFEncoder(width, height);
+  const encoder = new GIFEncoder(width, height, "octree", true);
   encoder.setRepeat(0);
-  encoder.setQuality(10);
   encoder.start();
 
   const canvas = createCanvas(width, height);
