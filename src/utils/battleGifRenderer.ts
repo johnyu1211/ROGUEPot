@@ -511,6 +511,95 @@ function drawHighSkyCutscene(
   ctx.restore();
 }
 
+/**
+ * 5th Generation (Black/White) style smooth continuous camera tracking
+ * Glides smoothly across frames towards the defending Pokémon during attack impacts
+ * using a multi-pass Gaussian smoothing filter, completely eliminating any sudden frame jumps or stuttering.
+ */
+function applyGen5CinematicCamera(
+  frames: any[],
+  isPlayerDefault: boolean,
+  em: { x: number; y: number },
+  pm: { x: number; y: number },
+  width: number,
+  height: number
+) {
+  if (!frames || frames.length === 0) return;
+
+  const rawWeights: number[] = new Array(frames.length).fill(0);
+  const targetPoints: Array<{ x: number; y: number } | null> = new Array(frames.length).fill(null);
+
+  const cx = width / 2; // 280
+  const cy = height / 2; // 190
+
+  for (let i = 0; i < frames.length; i++) {
+    const f = frames[i];
+    if (f.isBlur || f.delay >= 10000 || f.isHighSkyCutscene || f.cameraTrackAttacker || (f.cameraZoom && !f._gen5Camera)) {
+      continue;
+    }
+
+    const isAttackerP = f.moveEffect
+      ? (f.moveEffect.actor ? f.moveEffect.actor === "player" : (f.moveEffect.isPlayerAttacking !== false))
+      : (f.isAttackerPlayer !== undefined ? f.isAttackerPlayer : isPlayerDefault);
+
+    const defender = isAttackerP ? em : pm;
+    targetPoints[i] = {
+      x: cx + (defender.x - cx) * 0.38,
+      y: cy + (defender.y - cy) * 0.38,
+    };
+
+    if (f.hitFlash) {
+      rawWeights[i] = 1.0;
+    } else if (f.showEffect) {
+      if (f.moveStep === 1 || f.moveStep === 2) {
+        rawWeights[i] = 0.85;
+      } else {
+        rawWeights[i] = 0.60;
+      }
+    } else if (f.targetAlpha !== undefined && f.targetAlpha < 1.0) {
+      rawWeights[i] = 0.40;
+    } else if (f.pOffset?.x !== 0 || f.eOffset?.x !== 0) {
+      rawWeights[i] = 0.25;
+    } else {
+      rawWeights[i] = 0.0;
+    }
+  }
+
+  // 2-pass Gaussian smoothing filter across frame weights
+  let smoothed = [...rawWeights];
+  for (let pass = 0; pass < 2; pass++) {
+    const next = [...smoothed];
+    for (let i = 1; i < smoothed.length - 1; i++) {
+      if (frames[i].isBlur || frames[i].delay >= 10000 || frames[i].isHighSkyCutscene) continue;
+      const prev = (frames[i - 1].isBlur || frames[i - 1].delay >= 10000) ? 0 : smoothed[i - 1];
+      const nextVal = (frames[i + 1].isBlur || frames[i + 1].delay >= 10000) ? 0 : smoothed[i + 1];
+      next[i] = (prev + 2 * smoothed[i] + nextVal) / 4;
+    }
+    smoothed = next;
+  }
+
+  const maxZoom = 1.13;
+  for (let i = 0; i < frames.length; i++) {
+    const f = frames[i];
+    if (f.isBlur || f.delay >= 10000 || f.isHighSkyCutscene || f.cameraTrackAttacker || (f.cameraZoom && !f._gen5Camera)) {
+      continue;
+    }
+
+    const w = smoothed[i];
+    if (w > 0.01 && targetPoints[i]) {
+      f.cameraZoom = 1.0 + (maxZoom - 1.0) * w;
+      f.cameraFocal = {
+        x: cx + (targetPoints[i]!.x - cx) * w,
+        y: cy + (targetPoints[i]!.y - cy) * w,
+      };
+      f._gen5Camera = true;
+    } else {
+      f.cameraZoom = 1.0;
+      f.cameraFocal = null;
+    }
+  }
+}
+
 export async function renderBattleMoveGif(options: BattleAnimationOptions): Promise<RenderGifResult> {
   const width = 560;
   const height = 380;
@@ -5296,6 +5385,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   const em = BATTLE_LAYOUT_CONFIG.enemyPokemon;
   const pm = BATTLE_LAYOUT_CONFIG.playerPokemon;
 
+  // Apply 5th Generation (Black/White) style smooth continuous camera tracking towards defending Pokémon
+  applyGen5CinematicCamera(framesConfig, isPlayer, em, pm, width, height);
+
   const offCanvas = createCanvas(width, height);
   const offCtx = offCanvas.getContext("2d");
   offCtx.imageSmoothingEnabled = false;
@@ -5311,7 +5403,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       drawHighSkyCutscene(targetCtx, width, height, f, attackerSprite);
     } else {
       const isTracking = Boolean(f.cameraTrackAttacker);
-      const hasCamera = Boolean(f.cameraZoom || f.cameraPan || isTracking);
+      const hasCamera = Boolean(f.cameraZoom || f.cameraPan || isTracking || f.cameraFocal);
       if (hasCamera) {
         targetCtx.save();
         const zoom = f.cameraZoom || 1.0;
@@ -5325,6 +5417,22 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           targetCtx.translate(width / 2, screenY);
           targetCtx.scale(zoom, zoom);
           targetCtx.translate(-width / 2, -liveY);
+        } else if (f.cameraFocal) {
+          // Smooth Gen 5 style camera glide focused towards defending Pokémon getting hit
+          // Clamped within arena bounds so 100% of the arena background stays visible with zero edge artifacts
+          const halfW = width / (2 * zoom);
+          const halfH = height / (2 * zoom);
+          const minX = halfW;
+          const maxX = width - halfW;
+          const minY = halfH;
+          const maxY = height - halfH;
+
+          const clampedX = Math.max(minX, Math.min(maxX, f.cameraFocal.x));
+          const clampedY = Math.max(minY, Math.min(maxY, f.cameraFocal.y));
+
+          targetCtx.translate(width / 2, height / 2);
+          targetCtx.scale(zoom, zoom);
+          targetCtx.translate(-clampedX, -clampedY);
         } else {
           const focalY = isAttackerP ? pm.y : em.y;
           const panY = f.cameraPan?.y || 0;
