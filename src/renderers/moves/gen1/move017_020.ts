@@ -92,44 +92,46 @@ export function drawWingAttackEffect(ctx: any, target: { x: number; y: number },
 
   if (step === 1) {
     // Step 1: Initial rush - Slipstream wake feathers floating in the air
-    drawAuthenticFeather(tx - 40, ty + 15, -0.35, 22, 0.12, 0.75);
-    drawAuthenticFeather(tx - 20, ty - 12, 0.28, 25, -0.15, 0.80);
+    drawAuthenticFeather(tx - 42, ty + 16, -0.38, 22, 0.14, 0.75);
+    drawAuthenticFeather(tx - 18, ty - 14, 0.25, 26, -0.16, 0.80);
   } else if (step === 2) {
-    // Step 2: Impact Burst - Feathers forcefully dislodged and launched UPWARD in a bursting fountain arc
-    drawAuthenticFeather(tx - 45, ty - 25, -0.65, 28, 0.18, 0.95);
-    drawAuthenticFeather(tx - 22, ty - 50, -0.25, 30, -0.12, 0.95);
-    drawAuthenticFeather(tx + 8, ty - 58, 0.15, 32, 0.15, 0.95);
-    drawAuthenticFeather(tx + 36, ty - 42, 0.48, 29, -0.16, 0.95);
-    drawAuthenticFeather(tx + 54, ty - 18, 0.78, 26, 0.14, 0.90);
-    drawAuthenticFeather(tx - 12, ty + 18, -0.45, 24, 0.10, 0.85);
-    drawAuthenticFeather(tx + 24, ty + 22, 0.40, 25, -0.12, 0.85);
+    // Step 2: Impact Burst - Distinct individual feathers dislodged and launched UPWARD with unique angles & arcs
+    drawAuthenticFeather(tx - 48, ty - 22, -0.72, 27, 0.22, 0.95);  // A: Far Left
+    drawAuthenticFeather(tx - 24, ty - 52, -0.28, 31, -0.18, 0.95); // B: High Left
+    drawAuthenticFeather(tx + 6, ty - 60, 0.10, 33, 0.14, 0.95);    // C: High Center
+    drawAuthenticFeather(tx + 38, ty - 45, 0.45, 29, -0.24, 0.95);  // D: High Right
+    drawAuthenticFeather(tx + 56, ty - 16, 0.82, 25, 0.16, 0.90);   // E: Far Right
+    drawAuthenticFeather(tx - 15, ty + 16, -0.40, 23, 0.10, 0.85);  // F: Lower Left
+    drawAuthenticFeather(tx + 26, ty + 20, 0.35, 24, -0.14, 0.85);  // G: Lower Right
 
     // Center sharp impact star & bright flash
     drawMiniRetroStar(ctx, tx, ty, 20, "#BAE6FD");
     drawMiniRetroStar(ctx, tx, ty, 10, "#FFFFFF");
   } else if (step === 3) {
-    // Step 3: Peak Float & Horizontal Flattening - Feathers tilt flat horizontally (Math.PI / 2) as air resistance cushions them
-    drawAuthenticFeather(tx - 55, ty - 60, -1.54, 27, 0.18, 0.85);
-    drawAuthenticFeather(tx - 20, ty - 75, 1.60, 30, -0.14, 0.90);
-    drawAuthenticFeather(tx + 18, ty - 72, -1.52, 31, 0.16, 0.90);
-    drawAuthenticFeather(tx + 50, ty - 55, 1.58, 28, -0.15, 0.85);
-    drawAuthenticFeather(tx + 70, ty - 30, -1.50, 24, 0.12, 0.75);
-    drawAuthenticFeather(tx - 35, ty + 5, -1.55, 22, 0.10, 0.65);
-    drawAuthenticFeather(tx + 35, ty + 8, 1.54, 23, -0.10, 0.65);
+    // Step 3: Peak Float & Asynchronous Horizontal Flattening - Each feather tilts at a unique horizontal angle & curvature
+    drawAuthenticFeather(tx - 62, ty - 58, -1.42, 27, 0.20, 0.85); // A: tilted slightly up-left
+    drawAuthenticFeather(tx - 18, ty - 78, 1.66, 31, -0.15, 0.90);  // B: floated high, right-tilt
+    drawAuthenticFeather(tx + 14, ty - 84, -1.58, 33, 0.12, 0.92); // C: highest apex, nearly flat
+    drawAuthenticFeather(tx + 48, ty - 65, 1.48, 29, -0.20, 0.88);  // D: rightward hang
+    drawAuthenticFeather(tx + 72, ty - 32, -1.64, 25, 0.14, 0.78); // E: wide drift
+    drawAuthenticFeather(tx - 32, ty + 8, 1.52, 23, 0.08, 0.68);   // F: low hover
+    drawAuthenticFeather(tx + 36, ty + 10, -1.48, 24, -0.12, 0.68); // G: low hover
   } else if (step === 4) {
-    // Step 4: Gentle Horizontal Flutter & Slow Descent (거의 수평을 유지한 채로 살랑거리며 하강)
-    // Feathers stay almost completely horizontal with very subtle wobbles as they drift down
-    drawAuthenticFeather(tx - 48, ty - 25, -1.62, 26, -0.12, 0.65);
-    drawAuthenticFeather(tx - 15, ty - 35, 1.52, 28, 0.15, 0.70);
-    drawAuthenticFeather(tx + 20, ty - 30, -1.55, 29, -0.12, 0.70);
-    drawAuthenticFeather(tx + 52, ty - 18, 1.60, 27, 0.14, 0.65);
-    drawAuthenticFeather(tx - 22, ty + 10, -1.50, 22, 0.10, 0.50);
-    drawAuthenticFeather(tx + 30, ty + 12, 1.54, 23, -0.10, 0.50);
+    // Step 4: Asynchronous Gentle Flutter & Swaying Descent - Every feather sways independently
+    drawAuthenticFeather(tx - 52, ty - 20, -1.72, 27, 0.16, 0.65); // A: swayed down-left
+    drawAuthenticFeather(tx - 28, ty - 38, 1.46, 31, -0.12, 0.70);  // B: fluttered leftward
+    drawAuthenticFeather(tx + 4, ty - 44, -1.48, 33, 0.10, 0.72);   // C: rocked counter-direction
+    drawAuthenticFeather(tx + 58, ty - 26, 1.68, 29, -0.16, 0.68);  // D: swayed rightward
+    drawAuthenticFeather(tx + 64, ty - 8, -1.44, 25, 0.10, 0.58);   // E: fluttered inward
+    drawAuthenticFeather(tx - 24, ty + 16, 1.64, 23, 0.06, 0.52);   // F: gently sinking
+    drawAuthenticFeather(tx + 30, ty + 18, -1.62, 24, -0.10, 0.52); // G: gently sinking
   } else if (step >= 5) {
-    // Step 5: Soft Horizontal Ground Settling & Fade Out (완전한 수평 안착 및 은은한 소멸)
-    drawAuthenticFeather(tx - 38, ty + 16, -Math.PI * 0.5, 24, 0.08, 0.28);
-    drawAuthenticFeather(tx + 6, ty + 24, Math.PI * 0.5, 26, -0.08, 0.30);
-    drawAuthenticFeather(tx + 40, ty + 18, -Math.PI * 0.5, 23, 0.10, 0.25);
+    // Step 5: Soft Ground Settling & Staggered Fadeout
+    drawAuthenticFeather(tx - 45, ty + 18, -1.52, 27, 0.10, 0.28);
+    drawAuthenticFeather(tx - 20, ty + 24, 1.60, 31, -0.08, 0.30);
+    drawAuthenticFeather(tx + 8, ty + 20, -1.55, 33, 0.06, 0.32);
+    drawAuthenticFeather(tx + 48, ty + 16, 1.50, 29, -0.10, 0.28);
+    drawAuthenticFeather(tx + 58, ty + 26, -1.58, 25, 0.06, 0.22);
   }
 
   ctx.restore();
