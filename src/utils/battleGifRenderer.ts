@@ -5099,7 +5099,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isPlayerAttacking: isPlayer,
         };
         const activeKey = (activeEffect.moveKey || moveKey).toLowerCase().replace(/[\s_]+/g, "-");
-        if (activeKey === "vine-whip" || activeKey === "vinewhip") {
+        if (activeKey === "vine-whip" || activeKey === "vinewhip" || activeKey === "stomp") {
           renderMoveEffect(targetCtx, {
             moveKey: activeEffect.moveKey || moveKey,
             type: activeEffect.type || type,
@@ -5135,7 +5135,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             isSpecial: activeEffect.isSpecial !== undefined ? activeEffect.isSpecial : isSpecial,
             isPlayerAttacking: activeEffect.actor ? (activeEffect.actor === "player") : (activeEffect.isPlayerAttacking ?? isPlayer),
             step: f.moveStep ?? (f.showEffect ? 3 : 1),
-            layer: (activeKey === "vine-whip" || activeKey === "vinewhip") ? "front" : "all",
+            layer: (activeKey === "vine-whip" || activeKey === "vinewhip" || activeKey === "stomp") ? "front" : "all",
           });
         }
       }
