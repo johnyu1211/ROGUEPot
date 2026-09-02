@@ -579,19 +579,19 @@ export async function renderBattleScreen(options: BattleScreenOptions): Promise<
   const isEnemyEvading = Boolean((enemy as any).semiInvulnerableState || enemy.chargingMove === "fly" || enemy.chargingMove === "dig" || enemy.chargingMove === "dive" || enemy.chargingMove === "bounce" || enemy.chargingMove === "shadow-force" || enemy.chargingMove === "phantom-force" || enemy.isSemiInvulnerable);
 
   // 4. Draw Pokémon Silhouette Shadows (cast onto platform ground)
-  if (enemySprite && (battle.phase !== "VICTORY" || enemy.hp > 0) && !isEnemyEvading) {
+  if (enemySprite && enemy.hp > 0 && battle.phase !== "VICTORY" && !isEnemyEvading) {
     drawPokemonSilhouetteShadow(ctx, enemySprite, em.x, em.y, em.size, false, 0.42);
   }
-  if (playerSprite && !isPlayerEvading) {
+  if (playerSprite && playerMon.hp > 0 && battle.phase !== "DEFEAT" && !isPlayerEvading) {
     drawPokemonSilhouetteShadow(ctx, playerSprite, pm.x, pm.y, pm.size, true, 0.42);
   }
 
-  // On VICTORY screen, fainted enemy is gone (empty platform)
-  if (enemySprite && (battle.phase !== "VICTORY" || enemy.hp > 0) && !isEnemyEvading) {
+  // On VICTORY screen or 0 HP, fainted enemy is gone (empty platform)
+  if (enemySprite && enemy.hp > 0 && battle.phase !== "VICTORY" && !isEnemyEvading) {
     drawFittedBattleSprite(ctx, enemySprite, em.x, em.y, em.size);
   }
 
-  if (playerSprite && !isPlayerEvading) {
+  if (playerSprite && playerMon.hp > 0 && battle.phase !== "DEFEAT" && !isPlayerEvading) {
     drawFittedBattleSprite(ctx, playerSprite, pm.x, pm.y, pm.size);
   }
 

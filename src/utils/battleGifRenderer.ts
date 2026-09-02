@@ -3513,15 +3513,16 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const playerFrontHold = isP1GuillotineKill || isP2GuillotineKill;
     const enemyBackHold = isE1GuillotineKill || isE2GuillotineKill;
 
-    const finalEnemyHp = a2 ? a2.enemyHpAfter : a1.enemyHpAfter;
-    const finalPlayerHp = a2 ? a2.playerHpAfter : a1.playerHpAfter;
-    const isEnemyFainted = finalEnemyHp <= 0;
-    const isPlayerFainted = finalPlayerHp <= 0;
-    const isAnyFainted = a1Fainted || a2Fainted;
+    const finalEnemyHp = Math.min(enemy.hp, a2 ? a2.enemyHpAfter : a1.enemyHpAfter);
+    const finalPlayerHp = Math.min(playerMon.hp, a2 ? a2.playerHpAfter : a1.playerHpAfter);
+    const isEnemyFainted = finalEnemyHp <= 0 || enemy.hp <= 0 || battle.phase === "VICTORY";
+    const isPlayerFainted = finalPlayerHp <= 0 || playerMon.hp <= 0 || battle.phase === "DEFEAT";
+    const isAnyFainted = a1Fainted || a2Fainted || isEnemyFainted || isPlayerFainted;
 
-    const faintFrames = a2Fainted
-      ? createFaintingFrames(a2, isPlayerFainted, 99, playerFrontHold, enemyBackHold)
-      : (a1Fainted ? createFaintingFrames(a1, isPlayerFainted, 99, playerFrontHold, enemyBackHold) : []);
+    const faintAction = a2 || a1;
+    const faintFrames = (isEnemyFainted || isPlayerFainted)
+      ? createFaintingFrames(faintAction, isPlayerFainted, 99, playerFrontHold, enemyBackHold)
+      : [];
 
     const a1IsEvasionLaunch = isEvasionLaunch(a1);
     const a1IsEvasionStrike = isEvasionStrike(a1);
@@ -3670,10 +3671,10 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     };
 
     const isGuillotineSingle = (eff.moveKey || moveKey).toLowerCase().replace(/[\s_]+/g, "-") === "guillotine";
-    const finalEnemyHp = eff.enemyHpAfter !== undefined ? eff.enemyHpAfter : enemyHp;
-    const finalPlayerHp = eff.playerHpAfter !== undefined ? eff.playerHpAfter : playerHp;
-    const isEnemyFainted = finalEnemyHp <= 0;
-    const isPlayerFainted = finalPlayerHp <= 0;
+    const finalEnemyHp = Math.min(enemy.hp, eff.enemyHpAfter !== undefined ? eff.enemyHpAfter : enemyHp);
+    const finalPlayerHp = Math.min(playerMon.hp, eff.playerHpAfter !== undefined ? eff.playerHpAfter : playerHp);
+    const isEnemyFainted = finalEnemyHp <= 0 || enemy.hp <= 0 || battle.phase === "VICTORY";
+    const isPlayerFainted = finalPlayerHp <= 0 || playerMon.hp <= 0 || battle.phase === "DEFEAT";
     const isFainted = isEnemyFainted || isPlayerFainted;
 
     const playerFrontHold = isP1 && isGuillotineSingle && isEnemyFainted;
