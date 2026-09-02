@@ -1857,7 +1857,7 @@ export function drawIcePunchEffect(ctx: any, target: { x: number; y: number }, s
 }
 
 /**
- * High-frequency Sharp Zigzag Lightning Bolt Helper
+ * High-frequency Sharp Jagged Crackling Lightning Bolt Helper
  */
 function drawZigzagLightningBolt(
   ctx: any,
@@ -1876,15 +1876,17 @@ function drawZigzagLightningBolt(
   const sign = flipJitter ? -1 : 1;
   const pts = [
     { x: 0, y: 0 },
-    { x: len * 0.28, y: 6 * sign },
-    { x: len * 0.55, y: -7 * sign },
-    { x: len * 0.82, y: 5 * sign },
-    { x: len, y: -2 * sign },
+    { x: len * 0.18, y: 8 * sign },
+    { x: len * 0.35, y: -11 * sign },
+    { x: len * 0.52, y: 12 * sign },
+    { x: len * 0.70, y: -9 * sign },
+    { x: len * 0.86, y: 7 * sign },
+    { x: len, y: -3 * sign },
   ];
 
-  // Outer Vibrant Yellow Glow
+  // 1. Outer Vibrant High-Voltage Yellow Glow
   ctx.strokeStyle = "#FACC15";
-  ctx.lineWidth = 3.6;
+  ctx.lineWidth = 4.0;
   ctx.lineCap = "round";
   ctx.lineJoin = "miter";
   ctx.beginPath();
@@ -1894,22 +1896,30 @@ function drawZigzagLightningBolt(
   }
   ctx.stroke();
 
-  // Branch micro-fork
+  // Branch micro-fork 1
   ctx.beginPath();
   ctx.moveTo(pts[2].x, pts[2].y);
-  ctx.lineTo(pts[2].x + len * 0.35, pts[2].y - 8 * sign);
+  ctx.lineTo(pts[2].x + len * 0.25, pts[2].y - 12 * sign);
   ctx.stroke();
 
-  // Inner White Hot Lightning Core
+  // Branch micro-fork 2
+  ctx.beginPath();
+  ctx.moveTo(pts[4].x, pts[4].y);
+  ctx.lineTo(pts[4].x + len * 0.22, pts[4].y + 11 * sign);
+  ctx.stroke();
+
+  // 2. Inner White Hot Lightning Core
   ctx.strokeStyle = "#FFFFFF";
-  ctx.lineWidth = 1.6;
+  ctx.lineWidth = 1.8;
   ctx.beginPath();
   ctx.moveTo(pts[0].x, pts[0].y);
   for (let i = 1; i < pts.length; i++) {
     ctx.lineTo(pts[i].x, pts[i].y);
   }
   ctx.moveTo(pts[2].x, pts[2].y);
-  ctx.lineTo(pts[2].x + len * 0.35, pts[2].y - 8 * sign);
+  ctx.lineTo(pts[2].x + len * 0.25, pts[2].y - 12 * sign);
+  ctx.moveTo(pts[4].x, pts[4].y);
+  ctx.lineTo(pts[4].x + len * 0.22, pts[4].y + 11 * sign);
   ctx.stroke();
 
   ctx.restore();
@@ -1925,18 +1935,18 @@ export function drawThunderPunchEffect(ctx: any, target: { x: number; y: number 
   const targetY = target.y - 12;
 
   let spread = 0.85;
-  let boltLen = 26;
+  let boltLen = 46;
   let alpha = 1.0;
   let fistAlpha = 1.0;
 
   if (step === 2) {
-    spread = 1.30;
-    boltLen = 32;
+    spread = 1.25;
+    boltLen = 54;
     alpha = 0.70;
     fistAlpha = 0.35;
   } else if (step >= 3) {
-    spread = 1.70;
-    boltLen = 36;
+    spread = 1.60;
+    boltLen = 60;
     alpha = 0.25;
     fistAlpha = 0.0;
   }
@@ -1957,7 +1967,7 @@ export function drawThunderPunchEffect(ctx: any, target: { x: number; y: number 
       4,
       targetX,
       targetY - 14,
-      step === 1 ? 44 : 54
+      step === 1 ? 48 : 60
     );
     eleGrad.addColorStop(0, "rgba(255, 255, 255, 0.90)");
     eleGrad.addColorStop(0.35, "rgba(254, 240, 138, 0.80)");
@@ -1966,7 +1976,7 @@ export function drawThunderPunchEffect(ctx: any, target: { x: number; y: number 
     ctx.fillStyle = eleGrad;
     ctx.globalAlpha = step === 1 ? 0.90 : 0.45;
     ctx.beginPath();
-    ctx.arc(targetX, targetY - 14, step === 1 ? 44 : 54, 0, Math.PI * 2);
+    ctx.arc(targetX, targetY - 14, step === 1 ? 48 : 60, 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -2015,34 +2025,8 @@ export function drawThunderPunchEffect(ctx: any, target: { x: number; y: number 
 
   // 4. Electric Impact Starburst
   if (step <= 2) {
-    drawMiniRetroStar(ctx, targetX, targetY - 14, step === 1 ? 24 : 16, "#FEF08A");
+    drawMiniRetroStar(ctx, targetX, targetY - 14, step === 1 ? 26 : 16, "#FEF08A");
   }
-
-  // 5. Crackling Electric Spark Dots
-  ctx.save();
-  ctx.globalAlpha = alpha;
-  const sparks = [
-    { vx: -24, vy: -18, r: 2.8, c: "#FFFFFF" },
-    { vx: 26, vy: -16, r: 3.0, c: "#FEF08A" },
-    { vx: -20, vy: 20, r: 2.6, c: "#FACC15" },
-    { vx: 22, vy: 22, r: 2.8, c: "#FFFFFF" },
-    { vx: 0, vy: -34, r: 3.0, c: "#FEF08A" },
-    { vx: 28, vy: 0, r: 2.6, c: "#FACC15" },
-    { vx: -28, vy: 0, r: 2.6, c: "#FEF08A" },
-  ];
-  for (const sp of sparks) {
-    ctx.fillStyle = sp.c;
-    ctx.beginPath();
-    ctx.arc(
-      targetX + sp.vx * spread,
-      targetY - 14 + sp.vy * spread,
-      step >= 3 ? sp.r * 0.7 : sp.r,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
-  }
-  ctx.restore();
 
   ctx.restore();
 }
