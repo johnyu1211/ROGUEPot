@@ -526,10 +526,10 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
 
   const dialogueLines = options.dialogueLines || (battle.dialogueText || "").replace(/\\n/g, "\n").split("\n");
 
-  const enemyActiveSpecies = (enemy as any).isTransformed ? ((enemy as any).transformedSpeciesId || enemy.speciesId) : enemy.speciesId;
-  const playerActiveSpecies = (playerMon as any).isTransformed
+  const enemyActiveSpecies = battle.debugEnemySpecies || ((enemy as any).isTransformed ? ((enemy as any).transformedSpeciesId || enemy.speciesId) : enemy.speciesId);
+  const playerActiveSpecies = battle.debugPlayerSpecies || ((playerMon as any).isTransformed
     ? ((playerMon as any).transformedSpeciesId || playerMon.speciesId)
-    : ((playerMon as any).hasIllusion && (playerMon as any).illusionTarget ? (playerMon as any).illusionTarget.speciesId : playerMon.speciesId);
+    : ((playerMon as any).hasIllusion && (playerMon as any).illusionTarget ? (playerMon as any).illusionTarget.speciesId : playerMon.speciesId));
 
   const enemyShinyTier = (enemy as any).shinyTier !== undefined ? (enemy as any).shinyTier : (enemy.isShiny ? 1 : 0);
   const playerShinyTier = ((playerMon as any).hasIllusion && (playerMon as any).illusionTarget)

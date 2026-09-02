@@ -158,6 +158,8 @@ export interface BattleState {
     }[];
     wasDescentFromAir?: boolean;
   } | null;
+  debugPlayerSpecies?: string;
+  debugEnemySpecies?: string;
 }
 
 const BIOME_ENCOUNTERS: Record<string, string[]> = {
@@ -588,6 +590,20 @@ export class BattleService {
     }
 
     if (!playerMon || playerMon.hp <= 0 || (!isTestSandbox && enemyMon.hp <= 0)) return battle;
+
+    // TEMPORARY VISUAL TESTING: Change Pokémon sprite every turn to test animations across diverse Pokémon!
+    const ROTATING_TEST_SPECIES = [
+      "bulbasaur", "charizard", "blastoise", "pikachu", "snorlax",
+      "machamp", "gengar", "onix", "gyarados", "eevee",
+      "arcanine", "lucario", "mewtwo", "pidgeot", "venusaur",
+      "lapras", "diglett", "gardevoir", "garchomp", "tyranitar",
+      "scyther", "dragonite", "wobbuffet", "rayquaza", "slowpoke"
+    ];
+    const pIdx = Math.floor(Math.random() * ROTATING_TEST_SPECIES.length);
+    let eIdx = Math.floor(Math.random() * ROTATING_TEST_SPECIES.length);
+    if (eIdx === pIdx) eIdx = (eIdx + 1) % ROTATING_TEST_SPECIES.length;
+    battle.debugPlayerSpecies = ROTATING_TEST_SPECIES[pIdx];
+    battle.debugEnemySpecies = ROTATING_TEST_SPECIES[eIdx];
 
     const isKo = lang === "ko";
     const pMoveKey = getMoveKey(moveKey);

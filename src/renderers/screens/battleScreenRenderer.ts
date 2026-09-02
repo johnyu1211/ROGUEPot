@@ -550,10 +550,10 @@ export async function renderBattleScreen(options: BattleScreenOptions): Promise<
   }
 
   // 3. Preload & Draw Pokémon Sprites (Transform, Illusion, and Accurate Shiny Tier Front & Back support)
-  const enemyActiveSpecies = (enemy as any).isTransformed ? ((enemy as any).transformedSpeciesId || enemy.speciesId) : enemy.speciesId;
-  const playerActiveSpecies = (playerMon as any).isTransformed
+  const enemyActiveSpecies = battle.debugEnemySpecies || ((enemy as any).isTransformed ? ((enemy as any).transformedSpeciesId || enemy.speciesId) : enemy.speciesId);
+  const playerActiveSpecies = battle.debugPlayerSpecies || ((playerMon as any).isTransformed
     ? ((playerMon as any).transformedSpeciesId || playerMon.speciesId)
-    : ((playerMon as any).hasIllusion && (playerMon as any).illusionTarget ? (playerMon as any).illusionTarget.speciesId : playerMon.speciesId);
+    : ((playerMon as any).hasIllusion && (playerMon as any).illusionTarget ? (playerMon as any).illusionTarget.speciesId : playerMon.speciesId));
 
   const enemyShinyTier = (enemy as any).shinyTier !== undefined
     ? (enemy as any).shinyTier
