@@ -96,6 +96,21 @@ export interface BattlePokemon {
   bossMaxShields?: number;
 }
 
+export interface TurnActionInfo {
+  actor: "player" | "enemy";
+  moveKey: string;
+  moveName: string;
+  type: string;
+  isSpecial: boolean;
+  log: string;
+  enemyHpAfter: number;
+  playerHpAfter: number;
+  statChanges?: {
+    target: "player" | "enemy";
+    direction: "up" | "down";
+  }[];
+}
+
 export interface BattleState {
   userId: string;
   slotId: number;
@@ -115,6 +130,7 @@ export interface BattleState {
   playerMaxExp: number;
   weather?: "sun" | "rain" | "sand" | "snow" | null;
   weatherTurns?: number;
+  turnActions?: TurnActionInfo[];
   lastMoveEffect?: {
     moveKey: string;
     moveName?: string;
@@ -565,16 +581,7 @@ export class BattleService {
     playerMon.isFlinched = false;
     enemyMon.isFlinched = false;
 
-    // Set Move Effect info for canvas rendering
-    const statChanges: { target: "player" | "enemy"; direction: "up" | "down" }[] = [];
-    battle.lastMoveEffect = {
-      moveKey: pMoveKey,
-      moveName: pMove.name,
-      type: pMove.type || "normal",
-      isSpecial: pMove.category === "special",
-      isPlayerAttacking: true,
-      statChanges,
-    };
+    const turnActions: TurnActionInfo[] = [];
 
     // First Actor & Second Actor
     const firstActor = playerGoesFirst ? playerMon : enemyMon;
@@ -583,19 +590,66 @@ export class BattleService {
     const secondMove = playerGoesFirst ? eMove : pMove;
     const isFirstPlayer = playerGoesFirst;
 
+    // Set Move Effect info for 1st action
+    const statChanges1: { target: "player" | "enemy"; direction: "up" | "down" }[] = [];
+    battle.lastMoveEffect = {
+      moveKey: isFirstPlayer ? pMoveKey : eMoveKey,
+      moveName: firstMove.name,
+      type: firstMove.type || "normal",
+      isSpecial: firstMove.category === "special",
+      isPlayerAttacking: isFirstPlayer,
+      statChanges: statChanges1,
+    };
+
     // EXECUTE 1ST ACTION
     const res1 = this.executeSingleAction(firstActor, secondActor, firstMove, isFirstPlayer, isKo, battle);
     turnLogs.push(res1.log);
 
-    // CHECK IF 2ND ACTOR FAINTED
+    turnActions.push({
+      actor: isFirstPlayer ? "player" : "enemy",
+      moveKey: isFirstPlayer ? pMoveKey : eMoveKey,
+      moveName: firstMove.name,
+      type: firstMove.type || "normal",
+      isSpecial: firstMove.category === "special",
+      log: res1.log,
+      enemyHpAfter: enemyMon.hp,
+      playerHpAfter: playerMon.hp,
+      statChanges: [...statChanges1],
+    });
+
+    // CHECK IF 2ND ACTOR CAN COUNTER-ATTACK
     if (secondActor.hp > 0 && !secondActor.isFlinched) {
+      const statChanges2: { target: "player" | "enemy"; direction: "up" | "down" }[] = [];
+      battle.lastMoveEffect = {
+        moveKey: !isFirstPlayer ? pMoveKey : eMoveKey,
+        moveName: secondMove.name,
+        type: secondMove.type || "normal",
+        isSpecial: secondMove.category === "special",
+        isPlayerAttacking: !isFirstPlayer,
+        statChanges: statChanges2,
+      };
+
       // EXECUTE 2ND ACTION
       const res2 = this.executeSingleAction(secondActor, firstActor, secondMove, !isFirstPlayer, isKo, battle);
       turnLogs.push(res2.log);
+
+      turnActions.push({
+        actor: !isFirstPlayer ? "player" : "enemy",
+        moveKey: !isFirstPlayer ? pMoveKey : eMoveKey,
+        moveName: secondMove.name,
+        type: secondMove.type || "normal",
+        isSpecial: secondMove.category === "special",
+        log: res2.log,
+        enemyHpAfter: enemyMon.hp,
+        playerHpAfter: playerMon.hp,
+        statChanges: [...statChanges2],
+      });
     } else if (secondActor.isFlinched && secondActor.hp > 0) {
       const monName = isFirstPlayer ? (isKo ? enemyMon.nameKo : enemyMon.name) : playerMon.name;
       turnLogs.push(isKo ? `${monName}(은)는 풀이 죽어 기술을 쓸 수 없었다!` : `${monName} flinched and couldn't move!`);
     }
+
+    battle.turnActions = turnActions;
 
     // 2. Turn-End Effects (Status Damage, Sandstorm, Moody, Speed Boost)
     this.processTurnEndEffects(playerMon, isKo, turnLogs, battle.weather, battle);
