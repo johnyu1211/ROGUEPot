@@ -3590,6 +3590,7 @@ export const interactionCreateEvent: BotEvent = {
 
         // 2-7-F. Move Selected (Attack)
         if (customId.startsWith("battle_move_")) {
+          await interaction.deferUpdate().catch(() => null);
           const moveKey = decodeURIComponent(parts[3] || "tackle");
           const slotId = parseInt(parts[4], 10) || 1;
           const profile = saveService.getProfile(interaction.user.id);
@@ -3601,6 +3602,7 @@ export const interactionCreateEvent: BotEvent = {
 
         // 2-7-G. Throw Ball
         if (customId.startsWith("battle_throwball_")) {
+          await interaction.deferUpdate().catch(() => null);
           const ballType = parts[2] || "poke-ball";
           const slotId = parseInt(parts[3], 10) || 1;
           const profile = saveService.getProfile(interaction.user.id);
@@ -3612,6 +3614,7 @@ export const interactionCreateEvent: BotEvent = {
 
         // 2-7-H. Switch Active Pokémon
         if (customId.startsWith("battle_switch_")) {
+          await interaction.deferUpdate().catch(() => null);
           const targetIdx = parseInt(parts[2], 10) || 0;
           const slotId = parseInt(parts[3], 10) || 1;
           const profile = saveService.getProfile(interaction.user.id);
@@ -3623,6 +3626,7 @@ export const interactionCreateEvent: BotEvent = {
 
         // 2-7-I. Next Wave
         if (customId.startsWith("battle_nextwave_")) {
+          await interaction.deferUpdate().catch(() => null);
           const slotId = parseInt(parts[2], 10) || 1;
           battleService.advanceToNextWave(interaction.user.id, slotId);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId, undefined, true);
@@ -3632,6 +3636,7 @@ export const interactionCreateEvent: BotEvent = {
 
         // 2-7-J. Retry / Continue After Defeat
         if (customId.startsWith("battle_retry_")) {
+          await interaction.deferUpdate().catch(() => null);
           const slotId = parseInt(parts[2], 10) || 1;
           const profile = saveService.getProfile(interaction.user.id);
           battleService.restartRunFromDefeat(interaction.user.id, slotId, profile.language);
