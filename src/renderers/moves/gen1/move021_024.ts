@@ -386,41 +386,15 @@ export function drawStompEffect(
   };
 
   const drawFrontEffects = () => {
-    if (step === 2) {
-      // Step 2: Ground shockwave ring below flattened opponent + Ground Flash
+    if (step >= 3) {
+      // Step 3: 좌우 은은한 흙먼지 연기 (Subtle Dust Clouds on Press Hold)
       ctx.save();
-      ctx.strokeStyle = "#FFFFFF";
-      ctx.lineWidth = 3.5;
+      ctx.fillStyle = "rgba(226, 232, 240, 0.70)";
       ctx.beginPath();
-      ctx.ellipse(tx, ty + 20, 52, 16, 0, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // Compact Ground Impact Flash
-      const hg = ctx.createRadialGradient(tx, ty + 6, 2, tx, ty + 6, 22);
-      hg.addColorStop(0, "#FFFFFF");
-      hg.addColorStop(0.4, "rgba(254, 202, 202, 0.85)");
-      hg.addColorStop(1, "rgba(239, 68, 68, 0)");
-      ctx.fillStyle = hg;
-      ctx.beginPath();
-      ctx.arc(tx, ty + 6, 22, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    } else if (step >= 3) {
-      // Step 3: Expanding Ground Ripple & Billowing Lateral Dust Clouds
-      ctx.save();
-      ctx.strokeStyle = "rgba(148, 163, 184, 0.65)";
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.ellipse(tx, ty + 20, 68, 20, 0, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // Left & Right Billowing Dust Clouds
-      ctx.fillStyle = "rgba(226, 232, 240, 0.75)";
-      ctx.beginPath();
-      ctx.arc(tx - 38, ty + 18, 14, 0, Math.PI * 2);
-      ctx.arc(tx - 56, ty + 20, 10, 0, Math.PI * 2);
-      ctx.arc(tx + 38, ty + 18, 14, 0, Math.PI * 2);
-      ctx.arc(tx + 56, ty + 20, 10, 0, Math.PI * 2);
+      ctx.arc(tx - 36, ty + 18, 12, 0, Math.PI * 2);
+      ctx.arc(tx - 52, ty + 20, 8, 0, Math.PI * 2);
+      ctx.arc(tx + 36, ty + 18, 12, 0, Math.PI * 2);
+      ctx.arc(tx + 52, ty + 20, 8, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
