@@ -378,13 +378,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   const isSwordsDance1 = (mKey1 === "swords-dance" || mKey1 === "swordsdance");
   const isFly1 = (mKey1 === "fly");
   const isRazorWind1 = (mKey1 === "razor-wind" || mKey1 === "razorwind");
+  const isWingAttack1 = (mKey1 === "wing-attack" || mKey1 === "wingattack");
   const isSingleStrikeSpecial1 = (
     mKey1 === "thunder-punch" || mKey1 === "thunderpunch" ||
     mKey1 === "scratch" ||
     mKey1 === "vice-grip" || mKey1 === "vicegrip" ||
     mKey1 === "cut" ||
     mKey1 === "gust" ||
-    mKey1 === "wing-attack" || mKey1 === "wingattack" ||
     mKey1 === "whirlwind"
   );
 
@@ -1165,6 +1165,82 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveStep: 6,
         }
       ];
+    } else if (isWingAttack1) {
+      const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
+      const isMiss1 = !isHit1;
+      act1Frames = [
+        // 1. High-speed diagonal forward dive-lunge (stretches thin along dash vector) (140ms)
+        {
+          delay: 140,
+          pOffset: isP1 ? { x: 120, y: -65 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -120, y: 65 } : { x: 0, y: 0 },
+          pScale: isP1 ? { x: 0.65, y: 1.25 } : undefined,
+          eScale: !isP1 ? { x: 0.65, y: 1.25 } : undefined,
+          pRot: isP1 ? -0.22 : undefined,
+          eRot: !isP1 ? 0.22 : undefined,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 1,
+        },
+        // 2. Direct contact wing strike impact at enemy platform! + Feather burst explosion (220ms)
+        {
+          delay: 220,
+          pOffset: isP1 ? { x: 235, y: -125 } : (isMiss1 ? { x: 26, y: 4 } : { x: -8, y: 4 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 12, y: -4 }) : { x: -235, y: 125 },
+          pScale: isP1 ? { x: 0.75, y: 1.20 } : undefined,
+          eScale: !isP1 ? { x: 0.75, y: 1.20 } : undefined,
+          pRot: isP1 ? -0.15 : undefined,
+          eRot: !isP1 ? 0.15 : undefined,
+          showEffect: true,
+          hitFlash: isHit1,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          statProgress: undefined,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 2,
+        },
+        // 3. Rebounding back dash while feathers float and scatter (140ms)
+        {
+          delay: 140,
+          pOffset: isP1 ? { x: 90, y: -45 } : (isMiss1 ? { x: 16, y: 2 } : { x: -4, y: 2 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 16, y: -2 } : { x: 5, y: -1 }) : { x: -90, y: 45 },
+          pScale: isP1 ? { x: 0.85, y: 1.10 } : undefined,
+          eScale: !isP1 ? { x: 0.85, y: 1.10 } : undefined,
+          pRot: isP1 ? 0.12 : undefined,
+          eRot: !isP1 ? -0.12 : undefined,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          statProgress: undefined,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 3,
+        },
+        // 4. Smooth landing back on home platform (120ms)
+        {
+          delay: 120,
+          pOffset: { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          statProgress: undefined,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 4,
+        }
+      ];
     } else if (isSingleStrikeSpecial1) {
       const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
       const isMiss1 = !isHit1;
@@ -1282,13 +1358,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const isSwordsDance2 = (mKey2 === "swords-dance" || mKey2 === "swordsdance");
     const isFly2 = (mKey2 === "fly");
     const isRazorWind2 = (mKey2 === "razor-wind" || mKey2 === "razorwind");
+    const isWingAttack2 = (mKey2 === "wing-attack" || mKey2 === "wingattack");
     const isSingleStrikeSpecial2 = (
       mKey2 === "thunder-punch" || mKey2 === "thunderpunch" ||
       mKey2 === "scratch" ||
       mKey2 === "vice-grip" || mKey2 === "vicegrip" ||
       mKey2 === "cut" ||
       mKey2 === "gust" ||
-      mKey2 === "wing-attack" || mKey2 === "wingattack" ||
       mKey2 === "whirlwind"
     );
 
@@ -2069,6 +2145,82 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveStep: 6,
         }
       ];
+    } else if (isWingAttack2) {
+      const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
+      const isMiss2 = !isHit2;
+      act2Frames = [
+        // 1. Counter forward dive-lunge (140ms)
+        {
+          delay: 140,
+          pOffset: isP2 ? { x: 120, y: -65 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -120, y: 65 } : { x: 0, y: 0 },
+          pScale: isP2 ? { x: 0.65, y: 1.25 } : undefined,
+          eScale: !isP2 ? { x: 0.65, y: 1.25 } : undefined,
+          pRot: isP2 ? -0.22 : undefined,
+          eRot: !isP2 ? 0.22 : undefined,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 1,
+        },
+        // 2. Direct contact wing strike impact at defender! + Feather burst (220ms)
+        {
+          delay: 220,
+          pOffset: isP2 ? { x: 235, y: -125 } : (isMiss2 ? { x: -26, y: 4 } : { x: -12, y: 4 }),
+          eOffset: !isP2 ? { x: -235, y: 125 } : (isMiss2 ? { x: 26, y: -4 } : { x: 12, y: -4 }),
+          pScale: isP2 ? { x: 0.75, y: 1.20 } : undefined,
+          eScale: !isP2 ? { x: 0.75, y: 1.20 } : undefined,
+          pRot: isP2 ? -0.15 : undefined,
+          eRot: !isP2 ? 0.15 : undefined,
+          showEffect: true,
+          hitFlash: isHit2,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          statProgress: undefined,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 2,
+        },
+        // 3. Rebounding back dash while feathers float (140ms)
+        {
+          delay: 140,
+          pOffset: isP2 ? { x: 90, y: -45 } : (isMiss2 ? { x: -16, y: 2 } : { x: -5, y: 1 }),
+          eOffset: !isP2 ? { x: -90, y: 45 } : (isMiss2 ? { x: 16, y: -2 } : { x: 5, y: -1 }),
+          pScale: isP2 ? { x: 0.85, y: 1.10 } : undefined,
+          eScale: !isP2 ? { x: 0.85, y: 1.10 } : undefined,
+          pRot: isP2 ? 0.12 : undefined,
+          eRot: !isP2 ? -0.12 : undefined,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          statProgress: undefined,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 3,
+        },
+        // 4. Smooth landing back home (120ms)
+        {
+          delay: 120,
+          pOffset: { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          statProgress: undefined,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 4,
+        }
+      ];
     } else if (isSingleStrikeSpecial2) {
       const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
       const isMiss2 = !isHit2;
@@ -2385,7 +2537,16 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       if (eAlpha < 0.99) {
         targetCtx.globalAlpha = eAlpha;
       }
-      drawFittedBattleSprite(targetCtx, eSpriteToDraw, em.x + f.eOffset.x, em.y + f.eOffset.y, em.size);
+      const ex = em.x + f.eOffset.x;
+      const ey = em.y + f.eOffset.y;
+      if (f.eScale || f.eRot) {
+        targetCtx.translate(ex, ey);
+        if (f.eRot) targetCtx.rotate(f.eRot);
+        if (f.eScale) targetCtx.scale(f.eScale.x, f.eScale.y);
+        drawFittedBattleSprite(targetCtx, eSpriteToDraw, 0, 0, em.size);
+      } else {
+        drawFittedBattleSprite(targetCtx, eSpriteToDraw, ex, ey, em.size);
+      }
       targetCtx.restore();
     }
 
@@ -2399,7 +2560,16 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       if (pAlpha < 0.99) {
         targetCtx.globalAlpha = pAlpha;
       }
-      drawFittedBattleSprite(targetCtx, pSpriteToDraw, pm.x + f.pOffset.x, pm.y + f.pOffset.y, pm.size);
+      const px = pm.x + f.pOffset.x;
+      const py = pm.y + f.pOffset.y;
+      if (f.pScale || f.pRot) {
+        targetCtx.translate(px, py);
+        if (f.pRot) targetCtx.rotate(f.pRot);
+        if (f.pScale) targetCtx.scale(f.pScale.x, f.pScale.y);
+        drawFittedBattleSprite(targetCtx, pSpriteToDraw, 0, 0, pm.size);
+      } else {
+        drawFittedBattleSprite(targetCtx, pSpriteToDraw, px, py, pm.size);
+      }
       targetCtx.restore();
     }
 

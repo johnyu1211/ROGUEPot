@@ -1,7 +1,7 @@
 import { drawMiniRetroStar } from "../common/helpers.js";
 
 /**
- * 017 날개치기 (Wing Attack): Upward Ascending Wing Blade Strike with Fluttering Translucent White Feathers
+ * 017 날개치기 (Wing Attack): Rapid Dash Strike with Bursting Fluttering Translucent White Feathers
  */
 export function drawWingAttackEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
   ctx.save();
@@ -13,8 +13,8 @@ export function drawWingAttackEffect(ctx: any, target: { x: number; y: number },
     fx: number,
     fy: number,
     rot: number,
-    length: number = 22,
-    width: number = 8.0,
+    length: number = 24,
+    width: number = 8.5,
     alpha: number = 0.8
   ) => {
     ctx.save();
@@ -26,8 +26,8 @@ export function drawWingAttackEffect(ctx: any, target: { x: number; y: number },
     const halfW = width / 2;
 
     // 1. Soft Translucent White Feather Vane
-    ctx.fillStyle = "rgba(255, 255, 255, 0.70)";
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.90)";
+    ctx.fillStyle = "rgba(255, 255, 255, 0.72)";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.92)";
     ctx.lineWidth = 1.0;
     ctx.beginPath();
     ctx.moveTo(0, -halfL); // tip top
@@ -50,115 +50,40 @@ export function drawWingAttackEffect(ctx: any, target: { x: number; y: number },
     ctx.restore();
   };
 
-  // Helper: Draw ascending wing blade slash line (Bottom-Left -> Upper-Right)
-  const drawAscendingWingBlade = (
-    x1: number,
-    y1: number,
-    x2: number,
-    y2: number,
-    outerWidth: number,
-    innerWidth: number,
-    alpha: number
-  ) => {
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.lineCap = "round";
-
-    // 1. Outer Luminous Sky-Blue Rim
-    ctx.strokeStyle = "#BAE6FD";
-    ctx.lineWidth = outerWidth;
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.stroke();
-
-    // 2. Inner Brilliant Pure White Wing Core
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = innerWidth;
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.stroke();
-
-    ctx.restore();
-  };
-
-  // Helper: Draw stylized spectral wing silhouette
-  const drawSpectralWing = (cx: number, cy: number, rot: number, scale: number, alpha: number) => {
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(rot);
-    ctx.scale(scale, scale);
-    ctx.globalAlpha = alpha;
-
-    ctx.fillStyle = "rgba(224, 242, 254, 0.45)";
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.95)";
-    ctx.lineWidth = 1.8;
-    ctx.beginPath();
-    ctx.moveTo(-45, 12);
-    ctx.quadraticCurveTo(-15, -42, 50, -28);
-    ctx.quadraticCurveTo(18, -6, -45, 12);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    // Feather primary points
-    const primaries = [
-      { ox: 45, oy: -25, l: 30, r: 0.12 },
-      { ox: 30, oy: -32, l: 36, r: 0.04 },
-      { ox: 12, oy: -34, l: 40, r: -0.08 },
-      { ox: -8, oy: -30, l: 34, r: -0.20 },
-      { ox: -26, oy: -20, l: 26, r: -0.32 },
-    ];
-
-    for (const f of primaries) {
-      drawTranslucentFeather(f.ox, f.oy, f.r, f.l, 7.5, 0.85);
-    }
-
-    ctx.restore();
-  };
-
   if (step === 1) {
-    // Step 1: Upward strike inception (Starts below target, rising upwards)
-    drawAscendingWingBlade(tx - 45, ty + 40, tx + 10, ty - 5, 8.5, 4.5, 0.85);
-    drawSpectralWing(tx - 25, ty + 20, -Math.PI * 0.18, 0.9, 0.80);
-
-    // Initial fluttering feathers rising from the bottom
-    drawTranslucentFeather(tx - 35, ty + 30, -0.4, 20, 7.0, 0.75);
-    drawTranslucentFeather(tx - 15, ty + 15, 0.3, 24, 8.5, 0.80);
-    drawTranslucentFeather(tx + 20, ty + 25, -0.2, 18, 6.5, 0.70);
-    drawTranslucentFeather(tx + 5, ty + 38, 0.5, 22, 7.5, 0.65);
+    // Step 1: Initial dash rush - trailing feathers entering towards target
+    drawTranslucentFeather(tx - 45, ty + 20, -0.4, 20, 7.0, 0.75);
+    drawTranslucentFeather(tx - 25, ty - 10, 0.3, 24, 8.5, 0.80);
+    drawTranslucentFeather(tx - 10, ty + 15, -0.2, 18, 6.5, 0.70);
   } else if (step === 2) {
-    // Step 2: Climax powerful ascending wing strike slicing up through defender + bursting feathers
-    drawAscendingWingBlade(tx - 55, ty + 45, tx + 55, ty - 45, 12.0, 6.5, 1.0);
-    drawAscendingWingBlade(tx - 35, ty + 35, tx + 65, ty - 35, 6.5, 3.2, 0.75);
-    drawSpectralWing(tx + 5, ty - 12, Math.PI * 0.12, 1.25, 0.95);
+    // Step 2: Climax Impact - Explosion of fluttering translucent white feathers bursting in 360 degrees
+    drawTranslucentFeather(tx - 55, ty - 22, -0.7, 26, 9.0, 0.95);
+    drawTranslucentFeather(tx - 32, ty - 45, -0.3, 28, 9.5, 0.95);
+    drawTranslucentFeather(tx + 6, ty - 52, 0.1, 30, 10.0, 0.95);
+    drawTranslucentFeather(tx + 42, ty - 38, 0.4, 27, 9.0, 0.95);
+    drawTranslucentFeather(tx + 60, ty - 14, 0.8, 24, 8.0, 0.90);
 
-    // Dynamic upward fan of fluttering translucent white feathers
-    drawTranslucentFeather(tx - 50, ty - 10, -0.7, 24, 8.5, 0.90);
-    drawTranslucentFeather(tx - 28, ty - 38, -0.3, 26, 9.0, 0.95);
-    drawTranslucentFeather(tx + 8, ty - 50, 0.1, 28, 9.5, 0.95);
-    drawTranslucentFeather(tx + 38, ty - 35, 0.4, 25, 8.5, 0.90);
-    drawTranslucentFeather(tx + 55, ty - 12, 0.8, 22, 7.5, 0.85);
+    drawTranslucentFeather(tx - 48, ty + 18, -0.6, 22, 7.5, 0.85);
+    drawTranslucentFeather(tx - 18, ty + 38, -0.2, 25, 8.5, 0.85);
+    drawTranslucentFeather(tx + 28, ty + 32, 0.3, 26, 9.0, 0.85);
+    drawTranslucentFeather(tx + 52, ty + 12, 0.6, 22, 7.5, 0.80);
 
-    drawTranslucentFeather(tx - 35, ty + 18, -0.5, 20, 7.0, 0.75);
-    drawTranslucentFeather(tx + 25, ty + 22, 0.3, 22, 7.5, 0.75);
-    drawTranslucentFeather(tx + 45, ty + 8, 0.6, 18, 6.5, 0.70);
-
-    // Center sharp impact star
-    drawMiniRetroStar(ctx, tx, ty, 18, "#BAE6FD");
-    drawMiniRetroStar(ctx, tx, ty, 9, "#FFFFFF");
+    // Center sharp impact star & bright flash
+    drawMiniRetroStar(ctx, tx, ty, 20, "#BAE6FD");
+    drawMiniRetroStar(ctx, tx, ty, 10, "#FFFFFF");
   } else if (step === 3) {
-    // Step 3: Wing ascends past the top and fades into the sky, feathers floating high up
-    drawAscendingWingBlade(tx - 20, ty + 15, tx + 65, ty - 55, 6.5, 3.5, 0.45);
-    drawSpectralWing(tx + 18, ty - 35, Math.PI * 0.20, 1.1, 0.40);
-
-    // Feathers floating high up and dispersing
-    drawTranslucentFeather(tx - 45, ty - 35, -0.8, 22, 7.5, 0.50);
-    drawTranslucentFeather(tx - 15, ty - 55, -0.2, 26, 8.5, 0.55);
-    drawTranslucentFeather(tx + 20, ty - 60, 0.2, 24, 8.0, 0.55);
-    drawTranslucentFeather(tx + 48, ty - 45, 0.6, 20, 7.0, 0.45);
-    drawTranslucentFeather(tx + 65, ty - 25, 0.9, 18, 6.5, 0.40);
+    // Step 3: Rebound & dispersion - Feathers floating outward into the air
+    drawTranslucentFeather(tx - 65, ty - 35, -0.9, 22, 7.5, 0.55);
+    drawTranslucentFeather(tx - 20, ty - 60, -0.2, 26, 8.5, 0.60);
+    drawTranslucentFeather(tx + 25, ty - 65, 0.2, 24, 8.0, 0.60);
+    drawTranslucentFeather(tx + 58, ty - 45, 0.6, 20, 7.0, 0.50);
+    drawTranslucentFeather(tx + 72, ty - 20, 0.9, 18, 6.5, 0.45);
+    drawTranslucentFeather(tx - 35, ty + 28, -0.4, 18, 6.5, 0.40);
+    drawTranslucentFeather(tx + 35, ty + 35, 0.4, 19, 6.5, 0.40);
+  } else if (step >= 4) {
+    // Step 4: Final lingering feathers settling softly
+    drawTranslucentFeather(tx - 30, ty - 50, -0.5, 18, 6.5, 0.25);
+    drawTranslucentFeather(tx + 35, ty - 55, 0.5, 18, 6.5, 0.25);
   }
 
   ctx.restore();
