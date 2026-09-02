@@ -268,8 +268,8 @@ export class BattleService {
       nameKo = "인텔리온 (거다이맥스)";
       name = "Inteleon [G-Max]";
     } else if (speciesId.startsWith("testsubject")) {
-      nameKo = "TESTSUBJECT12";
-      name = "TESTSUBJECT12";
+      nameKo = "TST12";
+      name = "TST12";
     }
 
     const level = forcedLevel !== undefined

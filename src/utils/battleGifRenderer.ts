@@ -80,9 +80,9 @@ function createEffectivenessFlickerFrames(
   if (blinkCount === 0) {
     return [
       {
-        delay: 200,
-        pOffset: (usePlayerFront && isP) ? { x: 0, y: 0 } : (isP ? { x: 6, y: -3 } : { x: 0, y: 0 }),
-        eOffset: (useEnemyBack && !isP) ? { x: 0, y: 0 } : (!isP ? { x: -6, y: 3 } : { x: 0, y: 0 }),
+        delay: 140,
+        pOffset: { x: 0, y: 0 },
+        eOffset: { x: 0, y: 0 },
         showEffect: false,
         hitFlash: false,
         usePlayerFront: usePlayerFront,
@@ -102,16 +102,16 @@ function createEffectivenessFlickerFrames(
   const frames: any[] = [];
   for (let i = 0; i < blinkCount; i++) {
     const isLast = (i === blinkCount - 1);
-    // 1. Semi-transparent blink
+    // 1. Semi-transparent blink & subtle defender flinch
     frames.push({
       delay: durationPerHalf,
-      pOffset: (usePlayerFront && isP) ? { x: 0, y: 0 } : (isP ? { x: Math.max(0, 6 - i * 2), y: Math.min(0, -3 + i) } : { x: 4 - (i % 2) * 8, y: -2 }),
-      eOffset: (useEnemyBack && !isP) ? { x: 0, y: 0 } : (!isP ? { x: Math.min(0, -6 + i * 2), y: Math.max(0, 3 - i) } : { x: 4 - (i % 2) * 8, y: -2 }),
+      pOffset: (usePlayerFront && isP) ? { x: 0, y: 0 } : (isP ? { x: 0, y: 0 } : { x: 4 - (i % 2) * 8, y: -2 }),
+      eOffset: (useEnemyBack && !isP) ? { x: 0, y: 0 } : (!isP ? { x: 0, y: 0 } : { x: 4 - (i % 2) * 8, y: -2 }),
       showEffect: false,
       hitFlash: false,
       usePlayerFront: usePlayerFront,
       useEnemyBack: useEnemyBack,
-      targetAlpha: 0.1,
+      targetAlpha: 0.15,
       enemyHp: action.enemyHpAfter,
       playerHp: action.playerHpAfter,
       textLineIdx: textIdx,
@@ -122,8 +122,8 @@ function createEffectivenessFlickerFrames(
     // 2. Visible normal half-blink
     frames.push({
       delay: isLast ? durationPerHalf + 80 : durationPerHalf,
-      pOffset: (usePlayerFront && isP) ? { x: 0, y: 0 } : (isP ? { x: Math.max(0, 4 - i * 2), y: Math.min(0, -2 + i) } : { x: 0, y: 0 }),
-      eOffset: (useEnemyBack && !isP) ? { x: 0, y: 0 } : (!isP ? { x: Math.min(0, -4 + i * 2), y: Math.max(0, 2 - i) } : { x: 0, y: 0 }),
+      pOffset: { x: 0, y: 0 },
+      eOffset: { x: 0, y: 0 },
       showEffect: false,
       hitFlash: false,
       usePlayerFront: usePlayerFront,
