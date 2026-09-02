@@ -322,85 +322,141 @@ export function drawWhirlwindEffect(ctx: any, target: { x: number; y: number }, 
 }
 
 /**
- * 019 공중날기 (Fly): High-Speed Sky Launch & Supersonic Dive-Bomb Crater Impact
+ * 019 공중날기 (Fly): High-Speed Sky Launch & Supersonic Diagonal Dive-Bomb Crater Impact
  */
 export function drawFlyEffect(ctx: any, start: { x: number; y: number }, target: { x: number; y: number }, step: number = 1) {
   ctx.save();
   const tx = target.x;
   const ty = target.y - 12;
+  const isTargetEnemy = tx > start.x; // true if player attacking enemy (dive angled from upper-left to bottom-right)
+  const dirSign = isTargetEnemy ? 1 : -1;
 
   if (step === 1) {
     // Step 1: Upward Rocket Launch Speed Lines & Ground Wind Burst
     ctx.fillStyle = "rgba(224, 242, 254, 0.35)";
     ctx.beginPath();
-    ctx.ellipse(start.x, start.y + 20, 36, 12, 0, 0, Math.PI * 2);
+    ctx.ellipse(start.x, start.y + 20, 38, 12, 0, 0, Math.PI * 2);
     ctx.fill();
 
+    // Rocket ascension trails
     for (let i = -3; i <= 3; i++) {
-      ctx.strokeStyle = i === 0 ? "rgba(255, 255, 255, 0.90)" : "rgba(186, 230, 253, 0.70)";
+      ctx.strokeStyle = i === 0 ? "rgba(255, 255, 255, 0.95)" : "rgba(186, 230, 253, 0.70)";
       ctx.lineWidth = i === 0 ? 3.5 : 2.0;
       ctx.beginPath();
       ctx.moveTo(start.x + i * 12, start.y + 24);
-      ctx.lineTo(start.x + i * 12, start.y - 120);
+      ctx.lineTo(start.x + i * 12, start.y - 140);
       ctx.stroke();
     }
-  } else if (step === 2) {
-    // Step 2: Target Lock Shadow & High-Altitude Supersonic Downward Trail
-    ctx.fillStyle = "rgba(15, 23, 42, 0.50)";
+
+    // Expanding vapor cone at liftoff
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.65)";
+    ctx.lineWidth = 2.0;
     ctx.beginPath();
-    ctx.ellipse(tx, ty + 24, 36, 12, 0, 0, Math.PI * 2);
+    ctx.ellipse(start.x, start.y - 40, 24, 8, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  } else if (step === 2) {
+    // Step 2: High Sky Diagonal Dive-Bomb Sonic Trails & Target Lock
+    // Target Lock Reticle on Ground Platform
+    ctx.fillStyle = "rgba(15, 23, 42, 0.45)";
+    ctx.beginPath();
+    ctx.ellipse(tx, ty + 24, 38, 12, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    for (let i = -2; i <= 2; i++) {
+    // High-Altitude Cloud Breakthrough Sonic Rings
+    const cloudApexX = tx - dirSign * 90;
+    const cloudApexY = -40;
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.ellipse(cloudApexX, cloudApexY + 20, 32, 10, dirSign * 0.45, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(186, 230, 253, 0.60)";
+    ctx.lineWidth = 2.0;
+    ctx.beginPath();
+    ctx.ellipse(cloudApexX, cloudApexY + 20, 48, 14, dirSign * 0.45, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Stream of Diagonal Supersonic Speedlines cutting down from high sky!
+    for (let i = -3; i <= 3; i++) {
+      const offset = i * 14;
+      const startX = tx - dirSign * (110 + offset * 0.6);
+      const startY = -60 + offset * 0.3;
+      const endX = tx + offset * 0.8;
+      const endY = ty - 10 + offset * 0.4;
+
       ctx.strokeStyle = i === 0 ? "rgba(255, 255, 255, 0.95)" : "rgba(186, 230, 253, 0.75)";
-      ctx.lineWidth = i === 0 ? 4.0 : 2.5;
+      ctx.lineWidth = i === 0 ? 4.5 : 2.5;
       ctx.beginPath();
-      ctx.moveTo(tx + i * 14, -60);
-      ctx.lineTo(tx + i * 14, ty - 10);
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(endX, endY);
       ctx.stroke();
     }
   } else if (step === 3) {
-    // Step 3: Supersonic Dive-Bomb Vertical Sonic Blast & Ground Shockwave Crater
-    ctx.strokeStyle = "rgba(186, 230, 253, 0.60)";
-    ctx.lineWidth = 22;
+    // Step 3: Massive Supersonic Dive-Bomb Crater Slam & Multi-layer Blast Rings
+    // 1. Diagonal Sonic Blast Column
+    const blastStartX = tx - dirSign * 80;
+    const blastStartY = -50;
+
+    // Outer luminous blast sheath
+    ctx.strokeStyle = "rgba(186, 230, 253, 0.55)";
+    ctx.lineWidth = 26;
     ctx.lineCap = "round";
     ctx.beginPath();
-    ctx.moveTo(tx, -40);
-    ctx.lineTo(tx, ty + 12);
+    ctx.moveTo(blastStartX, blastStartY);
+    ctx.lineTo(tx, ty + 14);
     ctx.stroke();
 
+    // Inner bright core
     ctx.strokeStyle = "#BAE6FD";
-    ctx.lineWidth = 12;
+    ctx.lineWidth = 14;
     ctx.beginPath();
-    ctx.moveTo(tx, -40);
-    ctx.lineTo(tx, ty + 12);
+    ctx.moveTo(blastStartX, blastStartY);
+    ctx.lineTo(tx, ty + 14);
     ctx.stroke();
 
+    // Pure white center laser streak
     ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 5;
+    ctx.lineWidth = 6;
     ctx.beginPath();
-    ctx.moveTo(tx, -40);
-    ctx.lineTo(tx, ty + 12);
+    ctx.moveTo(blastStartX, blastStartY);
+    ctx.lineTo(tx, ty + 14);
     ctx.stroke();
 
-    // Explosive Ground Crater Shockwave
+    // 2. Explosive Ground Crater Shockwaves
     ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 5;
+    ctx.lineWidth = 5.5;
     ctx.beginPath();
-    ctx.ellipse(tx, ty + 20, 46, 14, 0, 0, Math.PI * 2);
+    ctx.ellipse(tx, ty + 20, 52, 16, 0, 0, Math.PI * 2);
     ctx.stroke();
 
     ctx.strokeStyle = "rgba(186, 230, 253, 0.85)";
-    ctx.lineWidth = 3.5;
+    ctx.lineWidth = 4.0;
     ctx.beginPath();
-    ctx.ellipse(tx, ty + 20, 68, 22, 0, 0, Math.PI * 2);
+    ctx.ellipse(tx, ty + 20, 78, 24, 0, 0, Math.PI * 2);
     ctx.stroke();
+
+    // 3. Flying Impact Earth Debris Particles
+    const debris = [
+      { dx: -38, dy: -24, r: 3.5 },
+      { dx: -22, dy: -46, r: 4.2 },
+      { dx: 18, dy: -52, r: 4.0 },
+      { dx: 36, dy: -28, r: 3.8 },
+      { dx: -54, dy: 6, r: 3.0 },
+      { dx: 52, dy: 8, r: 3.2 },
+    ];
+    ctx.fillStyle = "#FFFFFF";
+    for (const d of debris) {
+      ctx.beginPath();
+      ctx.arc(tx + d.dx, ty + 16 + d.dy, d.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
   } else if (step >= 4) {
-    // Step 4: Radial impact dispersal
-    ctx.strokeStyle = "rgba(224, 242, 254, 0.50)";
+    // Step 4: Radial shockwave dispersal & dissipating ground dust
+    ctx.strokeStyle = "rgba(224, 242, 254, 0.45)";
     ctx.lineWidth = 3.0;
     ctx.beginPath();
-    ctx.ellipse(tx, ty + 20, 75, 24, 0, 0, Math.PI * 2);
+    ctx.ellipse(tx, ty + 20, 88, 28, 0, 0, Math.PI * 2);
     ctx.stroke();
   }
 
