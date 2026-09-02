@@ -838,9 +838,23 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       ];
     } else if (isSwordsDance1) {
       act1Frames = [
-        // 1. Swords appear orbiting user (150ms)
+        // 1. Low 3D Orbit around Waist (120ms)
         {
-          delay: 150,
+          delay: 120,
+          pOffset: isP1 ? { x: 0, y: -2 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: 0, y: -2 } : { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 1,
+        },
+        // 2. Ascending 3D Orbit - 1st Spin (120ms)
+        {
+          delay: 120,
           pOffset: isP1 ? { x: 0, y: -4 } : { x: 0, y: 0 },
           eOffset: !isP1 ? { x: 0, y: -4 } : { x: 0, y: 0 },
           showEffect: true,
@@ -848,16 +862,29 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           enemyHp: enemy.hp,
           playerHp: playerMon.hp,
           textLineIdx: 1,
-          statProgress: undefined,
           isBlur: false,
           moveEffect: a1,
-          moveStep: 1,
+          moveStep: 2,
         },
-        // 2. Fast upward spin with red aura (170ms)
+        // 3. Mid-High 3D Orbit - 2nd Spin (120ms)
         {
-          delay: 170,
+          delay: 120,
           pOffset: isP1 ? { x: 0, y: -6 } : { x: 0, y: 0 },
           eOffset: !isP1 ? { x: 0, y: -6 } : { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 3,
+        },
+        // 4. High 3D Orbit & Inward Tilt toward Apex (130ms)
+        {
+          delay: 130,
+          pOffset: isP1 ? { x: 0, y: -7 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: 0, y: -7 } : { x: 0, y: 0 },
           showEffect: true,
           hitFlash: false,
           enemyHp: enemy.hp,
@@ -866,9 +893,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           statProgress: 0.35,
           isBlur: false,
           moveEffect: a1,
-          moveStep: 2,
+          moveStep: 4,
         },
-        // 3. Swords clash above head with brilliant ATK UP burst! (240ms)
+        // 5. Swords Clash & Tips Touch at ONE Point above Head (240ms)
         {
           delay: 240,
           pOffset: isP1 ? { x: 0, y: -8 } : { x: 0, y: 0 },
@@ -881,9 +908,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           statProgress: 0.85,
           isBlur: false,
           moveEffect: a1,
-          moveStep: 3,
+          moveStep: 5,
         },
-        // 4. Power dispersal (140ms)
+        // 6. Power Dispersal & Aura Rise (140ms)
         {
           delay: 140,
           pOffset: { x: 0, y: 0 },
@@ -896,7 +923,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           statProgress: 1.0,
           isBlur: false,
           moveEffect: a1,
-          moveStep: 4,
+          moveStep: 6,
         }
       ];
     } else if (isFly1) {
@@ -1716,9 +1743,23 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       ];
     } else if (isSwordsDance2) {
       act2Frames = [
-        // 1. Swords appear orbiting user (150ms)
+        // 1. Low 3D Orbit around Waist (120ms)
         {
-          delay: 150,
+          delay: 120,
+          pOffset: isP2 ? { x: 0, y: -2 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: 0, y: -2 } : { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 1,
+        },
+        // 2. Ascending 3D Orbit - 1st Spin (120ms)
+        {
+          delay: 120,
           pOffset: isP2 ? { x: 0, y: -4 } : { x: 0, y: 0 },
           eOffset: !isP2 ? { x: 0, y: -4 } : { x: 0, y: 0 },
           showEffect: true,
@@ -1726,16 +1767,29 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           enemyHp: a1.enemyHpAfter,
           playerHp: a1.playerHpAfter,
           textLineIdx: 3,
-          statProgress: undefined,
           isBlur: false,
           moveEffect: a2,
-          moveStep: 1,
+          moveStep: 2,
         },
-        // 2. Fast upward spin with red aura (170ms)
+        // 3. Mid-High 3D Orbit - 2nd Spin (120ms)
         {
-          delay: 170,
+          delay: 120,
           pOffset: isP2 ? { x: 0, y: -6 } : { x: 0, y: 0 },
           eOffset: !isP2 ? { x: 0, y: -6 } : { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 3,
+        },
+        // 4. High 3D Orbit & Inward Tilt toward Apex (130ms)
+        {
+          delay: 130,
+          pOffset: isP2 ? { x: 0, y: -7 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: 0, y: -7 } : { x: 0, y: 0 },
           showEffect: true,
           hitFlash: false,
           enemyHp: a1.enemyHpAfter,
@@ -1744,9 +1798,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           statProgress: 0.35,
           isBlur: false,
           moveEffect: a2,
-          moveStep: 2,
+          moveStep: 4,
         },
-        // 3. Swords clash above head with brilliant ATK UP burst! (240ms)
+        // 5. Swords Clash & Tips Touch at ONE Point above Head (240ms)
         {
           delay: 240,
           pOffset: isP2 ? { x: 0, y: -8 } : { x: 0, y: 0 },
@@ -1759,9 +1813,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           statProgress: 0.85,
           isBlur: false,
           moveEffect: a2,
-          moveStep: 3,
+          moveStep: 5,
         },
-        // 4. Power dispersal (140ms)
+        // 6. Power Dispersal & Aura Rise (140ms)
         {
           delay: 140,
           pOffset: { x: 0, y: 0 },
@@ -1774,7 +1828,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           statProgress: 1.0,
           isBlur: false,
           moveEffect: a2,
-          moveStep: 4,
+          moveStep: 6,
         }
       ];
     } else if (isFly2) {

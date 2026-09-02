@@ -341,16 +341,18 @@ export function drawSwordsDanceEffect(ctx: any, userPos: { x: number; y: number 
     rot: number;
     scale: number;
     alpha: number;
+    angle: number;
   }
 
-  if (step === 1) {
-    // Step 1: 4 Swords in 3D Elliptical Orbit around Waist (z = +14)
-    const count = 4;
-    const rx = 44;
-    const ry = 15;
-    const zOffset = 14;
-    const basePhase = 0.25;
+  const render3DOrbit = (rx: number, ry: number, zOffset: number, basePhase: number, tiltFactor: number) => {
+    // 1. Glowing 3D Orbital Path Ring
+    ctx.strokeStyle = "rgba(239, 68, 68, 0.30)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.ellipse(ux, uy + zOffset, rx, ry, 0, 0, Math.PI * 2);
+    ctx.stroke();
 
+    const count = 3;
     const swords: Sword3D[] = [];
     for (let i = 0; i < count; i++) {
       const angle = basePhase + (i * 2 * Math.PI) / count;
@@ -359,57 +361,43 @@ export function drawSwordsDanceEffect(ctx: any, userPos: { x: number; y: number 
       const x = ux + cosA * rx;
       const y = uy + zOffset + sinA * ry;
       const depth = sinA; // -1 (back) to +1 (front)
-      const scale = 0.80 + 0.30 * (depth + 1) * 0.5;
+      const scale = 0.80 + 0.35 * (depth + 1) * 0.5;
       const alpha = 0.55 + 0.45 * (depth + 1) * 0.5;
-      const rot = cosA * 0.20; // Subtle inward tilt
-      swords.push({ x, y, depth, rot, scale, alpha });
+      const rot = cosA * tiltFactor;
+      swords.push({ x, y, depth, rot, scale, alpha, angle });
     }
 
+    // Sort: Back swords first, front swords on top
     swords.sort((a, b) => a.depth - b.depth);
+
     for (const s of swords) {
+      // 3D Motion Trail Arc behind each sword
+      ctx.strokeStyle = `rgba(254, 202, 202, ${s.alpha * 0.45})`;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.ellipse(ux, uy + zOffset, rx, ry, 0, s.angle - 0.55, s.angle);
+      ctx.stroke();
+
       drawThinSolidSword(s.x, s.y, s.rot, s.scale, s.alpha);
     }
+  };
+
+  if (step === 1) {
+    // Step 1: Low 3D Orbit around Waist (z = +16, phase 0.0)
+    render3DOrbit(44, 15, 16, 0.0, 0.15);
   } else if (step === 2) {
-    // Step 2: 4 Swords Ascending in 3D Helical Orbit toward Head (z = -12, Fast Spin)
-    const count = 4;
-    const rx = 36;
-    const ry = 12;
-    const zOffset = -12;
-    const basePhase = 1.65;
-
-    const swords: Sword3D[] = [];
-    for (let i = 0; i < count; i++) {
-      const angle = basePhase + (i * 2 * Math.PI) / count;
-      const cosA = Math.cos(angle);
-      const sinA = Math.sin(angle);
-      const x = ux + cosA * rx;
-      const y = uy + zOffset + sinA * ry;
-      const depth = sinA;
-      const scale = 0.85 + 0.35 * (depth + 1) * 0.5;
-      const alpha = 0.65 + 0.35 * (depth + 1) * 0.5;
-      const rot = cosA * 0.45; // Inward angle pointing up toward apex
-      swords.push({ x, y, depth, rot, scale, alpha });
-    }
-
-    // Soft ascending red aura
-    ctx.fillStyle = "rgba(239, 68, 68, 0.15)";
-    ctx.beginPath();
-    ctx.ellipse(ux, uy - 15, 42, 18, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    swords.sort((a, b) => a.depth - b.depth);
-    for (const s of swords) {
-      drawThinSolidSword(s.x, s.y, s.rot, s.scale, s.alpha);
-    }
+    // Step 2: Ascending 3D Orbit (z = +5, phase +1.15)
+    render3DOrbit(40, 14, 5, 1.15, 0.25);
   } else if (step === 3) {
-    // Step 3: Apex Convergence - All 4 Sword Tips touch together at ONE Point above the head!
+    // Step 3: Mid-High 3D Orbit (z = -8, phase +2.30)
+    render3DOrbit(36, 13, -8, 2.30, 0.38);
+  } else if (step === 4) {
+    // Step 4: High 3D Orbit & Inward Tilt toward Apex (z = -20, phase +3.45)
+    render3DOrbit(32, 11, -20, 3.45, 0.55);
+  } else if (step === 5) {
+    // Step 5: Apex Convergence - All Sword Tips touch together at ONE Point above head!
     const apexX = ux;
     const apexY = uy - 48; // Apex point where all tips meet
-
-    // When sword is drawn at (cx, cy) rotated by rot with scale:
-    // Its tip is at cx + sin(rot)*34*scale, cy - cos(rot)*34*scale
-    // So to make tip meet exactly at (apexX, apexY):
-    // cx = apexX - sin(rot)*34*scale, cy = apexY + cos(rot)*34*scale
 
     // Left Sword (Tilted right ~38 deg)
     const rotL = Math.PI * 0.21;
@@ -425,12 +413,12 @@ export function drawSwordsDanceEffect(ctx: any, userPos: { x: number; y: number 
     const cyR = apexY + Math.cos(rotR) * 34 * scaleR;
     drawThinSolidSword(cxR, cyR, rotR, scaleR, 1.0);
 
-    // Back Depth Sword (Slightly smaller, pointing straight up)
+    // Back Depth Sword (Pointing straight up to apex)
     const scaleB = 0.90;
     const cyB = apexY + 34 * scaleB;
     drawThinSolidSword(apexX, cyB + 4, 0, scaleB, 0.85);
 
-    // Front Depth Sword (Larger, pointing straight up)
+    // Front Depth Sword (Larger, pointing straight up to apex)
     const scaleF = 1.25;
     const cyF = apexY + 34 * scaleF;
     drawThinSolidSword(apexX, cyF - 2, 0, scaleF, 1.0);
@@ -444,8 +432,8 @@ export function drawSwordsDanceEffect(ctx: any, userPos: { x: number; y: number 
     ctx.font = "bold 16px DungGeunMo";
     ctx.textAlign = "center";
     ctx.fillText("▲ ATK UP", ux, uy - 68);
-  } else if (step >= 4) {
-    // Step 4: Swords Burst Outwards & Power Aura Sparks Rise
+  } else if (step >= 6) {
+    // Step 6: Power Dispersal
     const offsets = [
       { ox: -36, oy: -52, rot: -0.45 },
       { ox: 36, oy: -52, rot: 0.45 },
