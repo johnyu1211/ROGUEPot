@@ -123,128 +123,191 @@ export function drawWingAttackEffect(ctx: any, target: { x: number; y: number },
 }
 
 /**
- * 018 날려버리기 (Whirlwind): Rising Towering Cyclone Funnel & Sky Vortex
+ * 018 날려버리기 (Whirlwind): Volumetric 3D Cylindrical Spiral Cyclone Funnel
  */
 export function drawWhirlwindEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
   ctx.save();
   const tx = target.x;
   const ty = target.y - 12;
-  const baseY = ty + 38; // ground platform base
+  const baseY = ty + 38; // Ground platform baseline
 
-  // Helper: Draw spiral wind ribbon funnel ring
-  const drawFunnelRing = (
-    cy: number,
-    radiusX: number,
-    radiusY: number,
-    rot: number,
-    alpha: number,
-    lineWidth: number = 3.0
-  ) => {
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.translate(tx, cy);
-    ctx.rotate(rot);
-
-    // Outer luminous air glow
-    ctx.strokeStyle = "rgba(224, 242, 254, 0.75)";
-    ctx.lineWidth = lineWidth + 2.0;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, radiusX, radiusY, 0, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Inner brilliant white core
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = lineWidth;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, radiusX * 0.95, radiusY * 0.9, 0, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.restore();
-  };
-
-  // Helper: Draw vertical spiral helix streamers wrapping around the cone
-  const drawAscendingStreamer = (
-    startY: number,
-    endY: number,
-    startW: number,
-    endW: number,
-    phaseOffset: number,
-    alpha: number
-  ) => {
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
-    ctx.lineWidth = 2.2;
-    ctx.beginPath();
-
-    const segments = 16;
-    for (let i = 0; i <= segments; i++) {
-      const t = i / segments;
-      const curY = startY + (endY - startY) * t;
-      const curW = startW + (endW - startW) * t;
-      const curX = tx + Math.sin(t * Math.PI * 3 + phaseOffset) * curW;
-      if (i === 0) ctx.moveTo(curX, curY);
-      else ctx.lineTo(curX, curY);
-    }
-    ctx.stroke();
-    ctx.restore();
-  };
+  // Config per step:
+  let topY = baseY - 60;
+  let rBase = 18;
+  let rTop = 38;
+  let turns = 2.5;
+  let globalAlpha = 0.85;
+  let spinPhase = (step * Math.PI) / 3;
 
   if (step === 1) {
-    // Step 1: Whirlwind begins spinning and rising from ground to waist
-    const numRings = 5;
-    for (let i = 0; i < numRings; i++) {
-      const t = i / (numRings - 1);
-      const ringY = baseY - t * 45;
-      const rx = 16 + t * 14;
-      const ry = 6 + t * 3;
-      const rot = i * 0.4 - 0.2;
-      drawFunnelRing(ringY, rx, ry, rot, 0.65 + t * 0.25, 2.5);
-    }
-    drawAscendingStreamer(baseY, baseY - 45, 16, 30, 0, 0.7);
-    drawAscendingStreamer(baseY, baseY - 45, 16, 30, Math.PI, 0.7);
+    topY = baseY - 70;
+    rBase = 16;
+    rTop = 42;
+    turns = 2.8;
+    globalAlpha = 0.80;
+    spinPhase = 0.6;
   } else if (step === 2) {
-    // Step 2: Towering cyclone funnel surges violently upward through defender into the sky
-    const numRings = 10;
-    for (let i = 0; i < numRings; i++) {
-      const t = i / (numRings - 1);
-      const ringY = baseY - t * 150;
-      const rx = 18 + t * 42; // expanding funnel: 18px at base to 60px at top
-      const ry = 6 + t * 10;
-      const rot = Math.sin(i * 0.8 + 1) * 0.25;
-      drawFunnelRing(ringY, rx, ry, rot, 0.85, 3.2);
-    }
-    drawAscendingStreamer(baseY, baseY - 150, 18, 60, 0.5, 0.9);
-    drawAscendingStreamer(baseY, baseY - 150, 18, 60, 0.5 + Math.PI * 0.66, 0.9);
-    drawAscendingStreamer(baseY, baseY - 150, 18, 60, 0.5 + Math.PI * 1.33, 0.9);
-
-    // Starburst flash
-    drawMiniRetroStar(ctx, tx, ty - 40, 18, "#BAE6FD");
+    topY = baseY - 170; // surges way past top of defender
+    rBase = 20;
+    rTop = 72;
+    turns = 4.2;
+    globalAlpha = 0.95;
+    spinPhase = 2.4;
   } else if (step === 3) {
-    // Step 3: Roaring Sky Vortex - Tornado engulfs everything and surges high past the top of the screen
-    const numRings = 11;
-    for (let i = 0; i < numRings; i++) {
-      const t = i / (numRings - 1);
-      const ringY = baseY + 10 - t * 210; // surges all the way past y < 0
-      const rx = 22 + t * 55;
-      const ry = 7 + t * 12;
-      const rot = Math.sin(i * 0.8 + 2.5) * 0.3;
-      drawFunnelRing(ringY, rx, ry, rot, 0.9, 3.5);
-    }
-    drawAscendingStreamer(baseY, baseY - 210, 22, 75, 1.2, 0.95);
-    drawAscendingStreamer(baseY, baseY - 210, 22, 75, 1.2 + Math.PI * 0.66, 0.95);
-    drawAscendingStreamer(baseY, baseY - 210, 22, 75, 1.2 + Math.PI * 1.33, 0.95);
+    topY = baseY - 230; // massive sky funnel roaring past screen top (y < 0)
+    rBase = 24;
+    rTop = 95;
+    turns = 4.8;
+    globalAlpha = 0.95;
+    spinPhase = 4.2;
   } else if (step >= 4) {
-    // Step 4: Sky Vortex Dispersal - Wide fading wind rings in the high sky
-    const numRings = 5;
-    for (let i = 0; i < numRings; i++) {
-      const t = i / (numRings - 1);
-      const ringY = ty - 40 - t * 100;
-      const rx = 45 + t * 35;
-      const ry = 10 + t * 8;
-      const rot = i * 0.3;
-      drawFunnelRing(ringY, rx, ry, rot, 0.35 * (1 - t * 0.5), 2.0);
+    topY = baseY - 240;
+    rBase = 35;
+    rTop = 110;
+    turns = 3.5;
+    globalAlpha = 0.35;
+    spinPhase = 5.8;
+  }
+
+  // 1. Rotating 3D Ground Cyclone Disc on Platform Floor
+  if (step <= 3) {
+    ctx.save();
+    ctx.globalAlpha = step === 1 ? 0.65 : 0.85;
+    ctx.translate(tx, baseY);
+    ctx.scale(1.0, 0.28); // 3D flat perspective
+
+    // Ground suction disc
+    const discGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, rBase * 1.8);
+    discGrad.addColorStop(0, "rgba(255, 255, 255, 0.90)");
+    discGrad.addColorStop(0.5, "rgba(224, 242, 254, 0.70)");
+    discGrad.addColorStop(1, "rgba(186, 230, 253, 0.0)");
+    ctx.fillStyle = discGrad;
+    ctx.beginPath();
+    ctx.arc(0, 0, rBase * 1.8, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 3 Spiral arms sucking in
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 2.5;
+    for (let a = 0; a < 3; a++) {
+      const startAngle = (a * (Math.PI * 2)) / 3 + spinPhase * 2;
+      ctx.beginPath();
+      for (let i = 0; i <= 20; i++) {
+        const rad = (i / 20) * rBase * 1.6;
+        const ang = startAngle + (i / 20) * 1.8;
+        const x = Math.cos(ang) * rad;
+        const y = Math.sin(ang) * rad;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
     }
+    ctx.restore();
+  }
+
+  // 2. 3D Parametric Spiral Helix Ribbons Generator
+  const numStreamers = 3;
+  const samples = 60;
+  const streams: Array<Array<{ x: number; y: number; z: number; t: number }>> = [];
+
+  for (let s = 0; s < numStreamers; s++) {
+    const streamPhase = spinPhase + (s * (Math.PI * 2)) / numStreamers;
+    const pts: Array<{ x: number; y: number; z: number; t: number }> = [];
+
+    for (let i = 0; i <= samples; i++) {
+      const t = i / samples; // 0 (bottom) to 1 (top)
+      const curY = baseY - (baseY - topY) * t;
+      const curR = rBase + (rTop - rBase) * Math.pow(t, 1.15);
+      const angle = streamPhase + turns * Math.PI * 2 * t;
+
+      const cosA = Math.cos(angle);
+      const sinA = Math.sin(angle);
+
+      const x = tx + cosA * curR;
+      const y = curY + sinA * curR * 0.28; // 3D perspective vertical tilt
+      const z = sinA; // z > 0: front facing, z <= 0: back facing
+
+      pts.push({ x, y, z, t });
+    }
+    streams.push(pts);
+  }
+
+  // PASS A: Render Back-side of 3D Helices (z <= 0)
+  for (const pts of streams) {
+    ctx.save();
+    ctx.lineCap = "round";
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      if (p1.z <= 0.1 || p2.z <= 0.1) {
+        const segAlpha = globalAlpha * (0.35 + (1 - p1.t) * 0.35);
+        ctx.globalAlpha = segAlpha;
+        ctx.strokeStyle = "rgba(186, 230, 253, 0.60)";
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
+  // PASS B: Volumetric 3D Translucent Funnel Body (Conical Air Core Shading)
+  ctx.save();
+  ctx.globalAlpha = globalAlpha * 0.40;
+  const coneGrad = ctx.createLinearGradient(tx - rTop, 0, tx + rTop, 0);
+  coneGrad.addColorStop(0, "rgba(255, 255, 255, 0.60)");
+  coneGrad.addColorStop(0.25, "rgba(224, 242, 254, 0.45)");
+  coneGrad.addColorStop(0.5, "rgba(186, 230, 253, 0.18)"); // transparent core reveals interior 3D depth!
+  coneGrad.addColorStop(0.75, "rgba(224, 242, 254, 0.45)");
+  coneGrad.addColorStop(1, "rgba(255, 255, 255, 0.60)");
+
+  ctx.fillStyle = coneGrad;
+  ctx.beginPath();
+  ctx.moveTo(tx - rBase, baseY);
+  ctx.lineTo(tx - rTop, topY);
+  ctx.lineTo(tx + rTop, topY);
+  ctx.lineTo(tx + rBase, baseY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  // PASS C: Render Front-side of 3D Helices (z > 0) with Brilliant Glowing White Rim
+  for (const pts of streams) {
+    ctx.save();
+    ctx.lineCap = "round";
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      if (p1.z > -0.1 && p2.z > -0.1) {
+        const segAlpha = globalAlpha * (0.65 + p1.z * 0.35);
+        ctx.globalAlpha = segAlpha;
+
+        // Outer sky-blue ribbon glow
+        ctx.strokeStyle = "rgba(224, 242, 254, 0.85)";
+        ctx.lineWidth = 4.2;
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+
+        // Inner brilliant pure white cutting core
+        ctx.strokeStyle = "#FFFFFF";
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
+  // 3. Volumetric Floating Air Orbits & Top Starburst
+  if (step === 2 || step === 3) {
+    drawMiniRetroStar(ctx, tx, ty - 35, step === 2 ? 18 : 24, "#BAE6FD");
+    drawMiniRetroStar(ctx, tx, ty - 35, step === 2 ? 10 : 14, "#FFFFFF");
   }
 
   ctx.restore();
