@@ -593,7 +593,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     mKey1 === "scratch" ||
     mKey1 === "vice-grip" || mKey1 === "vicegrip" ||
     mKey1 === "cut" ||
-    mKey1 === "gust"
+    mKey1 === "gust" ||
+    mKey1 === "slam" ||
+    mKey1 === "vine-whip" || mKey1 === "vinewhip" ||
+    mKey1 === "stomp" ||
+    mKey1 === "double-kick" || mKey1 === "doublekick"
   );
 
   const moveData1 = getMoveData(mKey1);
@@ -2395,7 +2399,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       mKey2 === "scratch" ||
       mKey2 === "vice-grip" || mKey2 === "vicegrip" ||
       mKey2 === "cut" ||
-      mKey2 === "gust"
+      mKey2 === "gust" ||
+      mKey2 === "slam" ||
+      mKey2 === "vine-whip" || mKey2 === "vinewhip" ||
+      mKey2 === "stomp" ||
+      mKey2 === "double-kick" || mKey2 === "doublekick"
     );
 
     const moveData2 = getMoveData(mKey2);
