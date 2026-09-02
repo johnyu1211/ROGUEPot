@@ -2313,11 +2313,11 @@ export function drawGuillotineEffect(ctx: any, target: { x: number; y: number },
   const targetX = target.x;
   const targetY = target.y - 12;
 
-  // Dark Crimson Execution Backdrop Aura
+  // Dark Execution Backdrop Shadow (prevents red-on-green grass color blending into yellow!)
   if (step <= 3) {
     const aura = ctx.createRadialGradient(targetX, targetY - 14, 6, targetX, targetY - 14, 65);
-    aura.addColorStop(0, "rgba(220, 38, 38, 0.70)");
-    aura.addColorStop(0.5, "rgba(127, 29, 29, 0.45)");
+    aura.addColorStop(0, "rgba(20, 5, 10, 0.55)");
+    aura.addColorStop(0.6, "rgba(15, 0, 5, 0.35)");
     aura.addColorStop(1, "rgba(0, 0, 0, 0)");
     ctx.fillStyle = aura;
     ctx.beginPath();
