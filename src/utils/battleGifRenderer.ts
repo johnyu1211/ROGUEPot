@@ -1970,9 +1970,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           textLineIdx: 1,
           isBlur: false,
           moveEffect: a1,
-          moveStep: 2,
+          moveStep: 3, // Top Loop 3 Completes
         },
-        // 5. Arc 5 [FULL LOCK CLAMP] - Top Strand 3 Completes Full 3-Tier Squeeze Clamp (160ms)
+        // 5. Arc 5 [FULL LOCK CLAMP] - Full Rope Squeeze Clamp & Impact Flash (160ms)
         {
           delay: 160,
           pOffset: isP1 ? { x: 245, y: -88 } : (isMiss1 ? { x: 26, y: 4 } : { x: -10, y: 4 }),
@@ -1991,7 +1991,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           textLineIdx: 1,
           isBlur: false,
           moveEffect: a1,
-          moveStep: 3, // All 3 Tiers Clamping Squeeze
+          moveStep: 4, // Full Tight Rope Squeeze Clamp
         },
         // 6. Pulse Squeeze Lock (90ms)
         {
@@ -2010,7 +2010,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           textLineIdx: 1,
           isBlur: false,
           moveEffect: a1,
-          moveStep: 4,
+          moveStep: 5, // Pulse Squeeze
         },
         // 7. Spring Back Return (80ms)
         {
@@ -2027,7 +2027,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           textLineIdx: 1,
           isBlur: false,
           moveEffect: a1,
-          moveStep: 5,
+          moveStep: 6, // Fade
         },
         // 8. Touchdown Landing (70ms)
         {
@@ -3628,9 +3628,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           textLineIdx: 3,
           isBlur: false,
           moveEffect: a2,
-          moveStep: 2,
+          moveStep: 3, // Top Loop 3 Completes
         },
-        // 5. Arc 5 [FULL LOCK CLAMP] - Top Strand 3 Completes Full 3-Tier Squeeze Clamp (160ms)
+        // 5. Arc 5 [FULL LOCK CLAMP] - Full Rope Squeeze Clamp & Impact Flash (160ms)
         {
           delay: 160,
           pOffset: isP2 ? { x: 245, y: -88 } : (isMiss2 ? { x: 26, y: 4 } : { x: -10, y: 4 }),
@@ -3649,7 +3649,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           textLineIdx: 3,
           isBlur: false,
           moveEffect: a2,
-          moveStep: 3, // All 3 Tiers Clamping Squeeze
+          moveStep: 4, // Full Tight Rope Squeeze Clamp
         },
         // 6. Pulse Squeeze Lock (90ms)
         {
@@ -3668,7 +3668,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           textLineIdx: 3,
           isBlur: false,
           moveEffect: a2,
-          moveStep: 4,
+          moveStep: 5, // Pulse Squeeze
         },
         // 7. Spring Back Return (80ms)
         {
@@ -3685,7 +3685,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           textLineIdx: 3,
           isBlur: false,
           moveEffect: a2,
-          moveStep: 5,
+          moveStep: 6, // Fade
         },
         // 8. Touchdown Landing (70ms)
         {

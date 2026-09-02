@@ -358,59 +358,96 @@ export function drawFlyEffect(ctx: any, start: { x: number; y: number }, target:
 }
 
 /**
- * 020 조이기 (Bind): Heavy Physical Constriction Grapple & High-Tension Squeeze Coils (Ascending Bottom-to-Top)
+ * 020 조이기 (Bind): Continuous 3D Twisted Spiral Cord / Rope Weaving Around Defender
  */
 export function drawBindEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
   ctx.save();
   const tx = target.x;
   const ty = target.y - 12;
 
-  // Step 1: Bottom Coil 1 (squeeze 1.0)
-  // Step 2: Bottom + Middle Coils (squeeze 0.95)
-  // Step 3: Full 3 Tiers Max Squeeze Impact & Pressure Burst (squeeze 0.72)
-  // Step 4: Full 3 Tiers Pulsing Residual Tightness (squeeze 0.84)
-  // Step 5: Full 3 Tiers Dispersing Fade (squeeze 0.92)
-  const squeeze = step === 3 ? 0.72 : (step === 4 ? 0.84 : (step >= 5 ? 0.92 : 1.0));
-  const globalAlpha = step >= 5 ? 0.40 : (step === 4 ? 0.85 : 1.0);
+  // Step 1: Bottom 1st loop (progress 0.35)
+  // Step 2: Middle 2nd loop (progress 0.70)
+  // Step 3: Upper 3rd loop (progress 1.00)
+  // Step 4: Max Constriction Squeeze Clamp (progress 1.0, squeeze 0.68)
+  // Step 5: Pulse Squeeze Lock (progress 1.0, squeeze 0.80)
+  // Step 6+: Dispersing Fade (progress 1.0, squeeze 0.90)
+  const progress = step === 1 ? 0.35 : (step === 2 ? 0.70 : 1.0);
+  const squeeze = step === 4 ? 0.68 : (step === 5 ? 0.80 : (step >= 6 ? 0.90 : 1.0));
+  const globalAlpha = step >= 6 ? 0.40 : (step === 5 ? 0.85 : 1.0);
   ctx.globalAlpha = globalAlpha;
 
-  // Dynamic 3D Wrapping Coils (Bottom: +16, Middle: 0, Top: -16)
-  let activeOffsets: number[] = [];
-  if (step === 1) {
-    activeOffsets = [16]; // Bottom only
-  } else if (step === 2) {
-    activeOffsets = [16, 0]; // Bottom + Middle
-  } else {
-    activeOffsets = [16, 0, -16]; // Full 3 Tiers
+  const totalPoints = Math.max(10, Math.floor(64 * progress));
+  const points: { x: number; y: number; z: number }[] = [];
+
+  // Generate continuous ascending 3D helical points from bottom to top
+  const totalTurns = 2.65 * Math.PI * 2; // ~2.65 full spiral revolutions
+  const startAngle = -0.35 * Math.PI; // Starts at bottom-front-left
+
+  for (let i = 0; i <= totalPoints; i++) {
+    const u = (i / 64);
+    if (u > progress) break;
+
+    const angle = startAngle + u * totalTurns;
+    const rx = 33 * squeeze;
+    const ry = 10 * squeeze;
+    const yCenter = (ty + 18) - u * 36; // Ascending from feet (+18) to chest (-18)
+
+    const px = tx + rx * Math.cos(angle);
+    const py = yCenter + ry * Math.sin(angle);
+    const pz = Math.sin(angle); // Depth factor (Z > 0 is front, Z < 0 is back)
+
+    points.push({ x: px, y: py, z: pz });
   }
 
-  for (let i = 0; i < activeOffsets.length; i++) {
-    const offset = activeOffsets[i];
-    const cy = ty + offset;
-    const coilAngle = -0.22 + (i % 2) * 0.08;
-    const rx = 34 * squeeze;
-    const ry = 11 * squeeze;
+  if (points.length < 2) {
+    ctx.restore();
+    return;
+  }
 
-    // A. Outer Thick Deep Amber Band
-    ctx.strokeStyle = "#B45309";
-    ctx.lineWidth = 7.0;
-    ctx.beginPath();
-    ctx.ellipse(tx, cy, rx, ry, coilAngle, 0, Math.PI * 2);
-    ctx.stroke();
+  // Draw Continuous Twisted Spiral Rope Curve
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
 
-    // B. Middle Vivid Golden Body
-    ctx.strokeStyle = "#F59E0B";
-    ctx.lineWidth = 4.0;
-    ctx.beginPath();
-    ctx.ellipse(tx, cy, rx, ry, coilAngle, 0, Math.PI * 2);
-    ctx.stroke();
+  // Layer 1: Heavy Deep Amber Cord Foundation
+  ctx.strokeStyle = "#78350F";
+  ctx.lineWidth = 6.5;
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  for (let i = 1; i < points.length; i++) {
+    ctx.lineTo(points[i].x, points[i].y);
+  }
+  ctx.stroke();
 
-    // C. Bright Center Tension Filament
-    ctx.strokeStyle = "#FEF9C3";
-    ctx.lineWidth = 1.6;
+  // Layer 2: Vivid Golden Twisted Body
+  ctx.strokeStyle = "#F59E0B";
+  ctx.lineWidth = 4.0;
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  for (let i = 1; i < points.length; i++) {
+    ctx.lineTo(points[i].x, points[i].y);
+  }
+  ctx.stroke();
+
+  // Layer 3: Braided Rope Twist Texture (Dashed Highlight Core)
+  ctx.save();
+  ctx.strokeStyle = "#FEF08A";
+  ctx.lineWidth = 1.8;
+  ctx.setLineDash([7, 4]); // Creates realistic twisted rope strand texture
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  for (let i = 1; i < points.length; i++) {
+    ctx.lineTo(points[i].x, points[i].y);
+  }
+  ctx.stroke();
+  ctx.restore();
+
+  // Layer 4: Leading Thread Glow Tip (following the Pokémon's head/path)
+  if (progress < 1.0 && points.length > 0) {
+    const tip = points[points.length - 1];
+    ctx.fillStyle = "#FEF08A";
     ctx.beginPath();
-    ctx.ellipse(tx, cy, rx, ry, coilAngle, 0, Math.PI * 2);
-    ctx.stroke();
+    ctx.arc(tip.x, tip.y, 3.5, 0, Math.PI * 2);
+    ctx.fill();
   }
 
   ctx.restore();
