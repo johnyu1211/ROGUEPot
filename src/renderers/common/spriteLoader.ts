@@ -138,17 +138,15 @@ export async function getPokemonSprite(
           }
         }
       }
-
-      if (img) {
-        if (isTestSubject) {
-          img = applyWhiteDittoVariant(img, tier);
-        } else if (tier >= 2) {
-          img = applyShinyTierVariant(img, tier);
-        }
-      }
     }
 
     if (img) {
+      if (isTestSubject) {
+        img = applyWhiteDittoVariant(img, tier);
+      } else if (tier >= 2) {
+        img = applyShinyTierVariant(img, tier);
+      }
+
       if (spriteCache.size >= 300) {
         const firstKey = spriteCache.keys().next().value;
         if (firstKey) spriteCache.delete(firstKey);
