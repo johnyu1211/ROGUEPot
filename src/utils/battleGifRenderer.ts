@@ -1121,13 +1121,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       } else {
         // Turn 2: Supersonic Dive-Bomb Slam right onto opponent's sprite!
         act1Frames = [
-          // 1. High Sky Vertical Dive: Directly above opponent, thin & pure white! (100ms)
+          // 1. High Sky Diagonal Dive Entry: Angled diagonally downward from high sky, streamlined pure white! (100ms)
           {
             delay: 100,
-            pOffset: isP1 ? { x: 260, y: -260 } : { x: 0, y: 0 },
-            eOffset: !isP1 ? { x: -260, y: -140 } : { x: 0, y: 0 },
-            pScale: isP1 ? { x: 0.45, y: 1.90 } : undefined,
-            eScale: !isP1 ? { x: 0.45, y: 1.90 } : undefined,
+            pOffset: isP1 ? { x: 200, y: -260 } : { x: 0, y: 0 },
+            eOffset: !isP1 ? { x: -200, y: -160 } : { x: 0, y: 0 },
+            pScale: isP1 ? { x: 0.38, y: 2.10 } : undefined,
+            eScale: !isP1 ? { x: 0.38, y: 2.10 } : undefined,
+            pRot: isP1 ? 0.45 : undefined,
+            eRot: !isP1 ? -0.45 : undefined,
             pWhite: isP1,
             eWhite: !isP1,
             showEffect: true,
@@ -1139,13 +1141,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a1,
             moveStep: 2,
           },
-          // 2. Direct Impact Slam into Opponent's Sprite with Crater Blast! (100ms)
+          // 2. Direct Impact Slam into Opponent's Sprite with Massive Crater Blast! (100ms)
           {
             delay: 100,
             pOffset: isP1 ? { x: 260, y: -120 } : (isMiss1 ? { x: 26, y: 4 } : { x: -12, y: 4 }),
             eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 12, y: -4 }) : { x: -260, y: 120 },
-            pScale: isP1 ? { x: 1.45, y: 0.65 } : undefined,
-            eScale: !isP1 ? { x: 1.45, y: 0.65 } : undefined,
+            pScale: isP1 ? { x: 1.50, y: 0.60 } : undefined,
+            eScale: !isP1 ? { x: 1.50, y: 0.60 } : undefined,
+            pRot: 0,
+            eRot: 0,
             pWhite: false,
             eWhite: false,
             showEffect: true,
@@ -1160,8 +1164,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           // 3. Rebound & Ground Shockwave Dissipation (100ms)
           {
             delay: 100,
-            pOffset: isP1 ? { x: 110, y: -40 } : { x: 0, y: 0 },
-            eOffset: !isP1 ? { x: -110, y: 40 } : { x: 0, y: 0 },
+            pOffset: isP1 ? { x: 120, y: -40 } : { x: 0, y: 0 },
+            eOffset: !isP1 ? { x: -120, y: 40 } : { x: 0, y: 0 },
             pScale: isP1 ? { x: 1.15, y: 0.85 } : undefined,
             eScale: !isP1 ? { x: 1.15, y: 0.85 } : undefined,
             showEffect: true,
@@ -2304,13 +2308,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       } else {
         // Turn 2: Supersonic Dive-Bomb Slam right onto opponent's sprite!
         act2Frames = [
-          // 1. High Sky Vertical Dive: Directly above opponent, thin & pure white! (100ms)
+          // 1. High Sky Diagonal Dive Entry: Angled diagonally downward from high sky, streamlined pure white! (100ms)
           {
             delay: 100,
-            pOffset: isP2 ? { x: 260, y: -260 } : { x: 0, y: 0 },
-            eOffset: !isP2 ? { x: -260, y: -140 } : { x: 0, y: 0 },
-            pScale: isP2 ? { x: 0.45, y: 1.90 } : undefined,
-            eScale: !isP2 ? { x: 0.45, y: 1.90 } : undefined,
+            pOffset: isP2 ? { x: 200, y: -260 } : { x: 0, y: 0 },
+            eOffset: !isP2 ? { x: -200, y: -160 } : { x: 0, y: 0 },
+            pScale: isP2 ? { x: 0.38, y: 2.10 } : undefined,
+            eScale: !isP2 ? { x: 0.38, y: 2.10 } : undefined,
+            pRot: isP2 ? 0.45 : undefined,
+            eRot: !isP2 ? -0.45 : undefined,
             pWhite: isP2,
             eWhite: !isP2,
             showEffect: true,
@@ -2322,13 +2328,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a2,
             moveStep: 2,
           },
-          // 2. Direct Impact Slam into Opponent's Sprite with Crater Blast! (100ms)
+          // 2. Direct Impact Slam into Opponent's Sprite with Massive Crater Blast! (100ms)
           {
             delay: 100,
             pOffset: isP2 ? { x: 260, y: -120 } : (isMiss2 ? { x: 26, y: 4 } : { x: -12, y: 4 }),
             eOffset: isP2 ? (isMiss2 ? { x: 26, y: -4 } : { x: 12, y: -4 }) : { x: -260, y: 120 },
-            pScale: isP2 ? { x: 1.45, y: 0.65 } : undefined,
-            eScale: !isP2 ? { x: 1.45, y: 0.65 } : undefined,
+            pScale: isP2 ? { x: 1.50, y: 0.60 } : undefined,
+            eScale: !isP2 ? { x: 1.50, y: 0.60 } : undefined,
+            pRot: 0,
+            eRot: 0,
             pWhite: false,
             eWhite: false,
             showEffect: true,
@@ -2343,8 +2351,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           // 3. Rebound & Ground Shockwave Dissipation (100ms)
           {
             delay: 100,
-            pOffset: isP2 ? { x: 110, y: -40 } : { x: 0, y: 0 },
-            eOffset: !isP2 ? { x: -110, y: 40 } : { x: 0, y: 0 },
+            pOffset: isP2 ? { x: 120, y: -40 } : { x: 0, y: 0 },
+            eOffset: !isP2 ? { x: -120, y: 40 } : { x: 0, y: 0 },
             pScale: isP2 ? { x: 1.15, y: 0.85 } : undefined,
             eScale: !isP2 ? { x: 1.15, y: 0.85 } : undefined,
             showEffect: true,
