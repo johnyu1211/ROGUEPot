@@ -391,6 +391,10 @@ export class BattleService {
     const isTestSandbox = userId === "1411661077611020429" && slotId === 1;
 
     if (existing && existing.wave === slot.wave) {
+      if (isTestSandbox) {
+        existing.enemy.ability = undefined;
+        existing.enemy.passiveAbility = undefined;
+      }
       const currentLeader = slot.party[existing.playerActiveIndex || 0] || slot.party[0];
       if (currentLeader) {
         const movesChanged = JSON.stringify(existing.playerBattleMon.moves) !== JSON.stringify(currentLeader.moves);
@@ -408,7 +412,7 @@ export class BattleService {
     }
 
     const wildPokemon = isTestSandbox
-      ? this.spawnWildPokemon(1, "Town", "testsubject12", 1, "Sturdy")
+      ? this.spawnWildPokemon(1, "Town", "testsubject12", 1, undefined)
       : this.spawnWildPokemon(slot.wave, slot.biome || "Town");
     const isKo = profile.language === "ko";
 
