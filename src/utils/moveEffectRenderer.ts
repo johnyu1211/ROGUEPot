@@ -2087,25 +2087,6 @@ export function drawScratchEffect(ctx: any, target: { x: number; y: number }, st
     ctx.restore();
   }
 
-  // Central Slash Gleam Star
-  if (step <= 2) {
-    drawMiniRetroStar(ctx, targetX, targetY - 14, step === 1 ? 22 : 14, "#FEF08A");
-  }
-
-  // Slash Spark Bits
-  const sparks = [
-    { ox: -20, oy: -20, r: 2.8, c: "#FFFFFF" },
-    { ox: 22, oy: 18, r: 2.8, c: "#FEF08A" },
-    { ox: 18, oy: -22, r: 2.2, c: "#E2E8F0" },
-    { ox: -18, oy: 22, r: 2.2, c: "#FFFFFF" },
-  ];
-  for (const s of sparks) {
-    ctx.fillStyle = s.c;
-    ctx.beginPath();
-    ctx.arc(targetX + s.ox * spread, targetY - 14 + s.oy * spread, s.r, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
   ctx.restore();
   ctx.restore();
 }
