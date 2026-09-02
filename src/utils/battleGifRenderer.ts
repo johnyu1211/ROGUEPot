@@ -5311,42 +5311,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       drawHighSkyCutscene(targetCtx, width, height, f, attackerSprite);
     } else {
       const isTracking = Boolean(f.cameraTrackAttacker);
-      const isAttackerP = f.moveEffect
-        ? (f.moveEffect.actor ? f.moveEffect.actor === "player" : (f.moveEffect.isPlayerAttacking !== false))
-        : (f.isAttackerPlayer !== false);
-
-      // Dynamic cinematic camera zoom towards the target Pokémon getting attacked!
-      let dynamicZoom = f.cameraZoom;
-      let targetFocal: { x: number; y: number } | null = null;
-
-      if (!dynamicZoom && !f.isBlur && f.delay < 10000 && !isTracking) {
-        if (f.hitFlash || (f.showEffect && (f.moveStep === 1 || f.moveStep === 2))) {
-          // Peak strike & impact burst on target!
-          dynamicZoom = f.hitFlash ? 1.25 : 1.18;
-          const targetPos = isAttackerP ? em : pm;
-          const cx = width / 2;
-          const cy = height / 2;
-          targetFocal = {
-            x: targetPos.x + (cx - targetPos.x) * 0.40,
-            y: targetPos.y + (cy - targetPos.y) * 0.40,
-          };
-        } else if (f.showEffect && f.moveStep === 3) {
-          // Recoil / impact afterglow
-          dynamicZoom = 1.08;
-          const targetPos = isAttackerP ? em : pm;
-          const cx = width / 2;
-          const cy = height / 2;
-          targetFocal = {
-            x: targetPos.x + (cx - targetPos.x) * 0.25,
-            y: targetPos.y + (cy - targetPos.y) * 0.25,
-          };
-        }
-      }
-
-      const hasCamera = Boolean(dynamicZoom || f.cameraPan || isTracking);
+      const hasCamera = Boolean(f.cameraZoom || f.cameraPan || isTracking);
       if (hasCamera) {
         targetCtx.save();
-        const zoom = dynamicZoom || 1.0;
+        const zoom = f.cameraZoom || 1.0;
+        const isAttackerP = f.isAttackerPlayer !== false;
 
         if (isTracking) {
           // Pure 100% vertical tracking: X is strictly centered at width / 2 (280) so left and right margins never expose!
@@ -5356,22 +5325,6 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           targetCtx.translate(width / 2, screenY);
           targetCtx.scale(zoom, zoom);
           targetCtx.translate(-width / 2, -liveY);
-        } else if (targetFocal) {
-          // Smooth, dynamic camera zoom focused on the defending Pokémon getting hit!
-          // Clamp focal point strictly within arena bounds to ensure 100% full background coverage with zero edge bleed
-          const halfW = width / (2 * zoom);
-          const halfH = height / (2 * zoom);
-          const minX = halfW;
-          const maxX = width - halfW;
-          const minY = halfH;
-          const maxY = height - halfH;
-
-          const clampedX = Math.max(minX, Math.min(maxX, targetFocal.x));
-          const clampedY = Math.max(minY, Math.min(maxY, targetFocal.y));
-
-          targetCtx.translate(width / 2, height / 2);
-          targetCtx.scale(zoom, zoom);
-          targetCtx.translate(-clampedX, -clampedY);
         } else {
           const focalY = isAttackerP ? pm.y : em.y;
           const panY = f.cameraPan?.y || 0;
