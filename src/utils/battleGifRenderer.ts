@@ -890,7 +890,6 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           enemyHp: enemy.hp,
           playerHp: playerMon.hp,
           textLineIdx: 1,
-          statProgress: 0.35,
           isBlur: false,
           moveEffect: a1,
           moveStep: 4,
@@ -905,7 +904,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           enemyHp: a1.enemyHpAfter,
           playerHp: a1.playerHpAfter,
           textLineIdx: 1,
-          statProgress: 0.85,
+          statProgress: 0.35,
           isBlur: false,
           moveEffect: a1,
           moveStep: 5,
@@ -920,7 +919,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           enemyHp: a1.enemyHpAfter,
           playerHp: a1.playerHpAfter,
           textLineIdx: 1,
-          statProgress: 1.0,
+          statProgress: 0.85,
           isBlur: false,
           moveEffect: a1,
           moveStep: 6,
@@ -1795,7 +1794,6 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           enemyHp: a1.enemyHpAfter,
           playerHp: a1.playerHpAfter,
           textLineIdx: 3,
-          statProgress: 0.35,
           isBlur: false,
           moveEffect: a2,
           moveStep: 4,
@@ -1810,7 +1808,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           enemyHp: a2.enemyHpAfter,
           playerHp: a2.playerHpAfter,
           textLineIdx: 3,
-          statProgress: 0.85,
+          statProgress: 0.35,
           isBlur: false,
           moveEffect: a2,
           moveStep: 5,
@@ -1825,7 +1823,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           enemyHp: a2.enemyHpAfter,
           playerHp: a2.playerHpAfter,
           textLineIdx: 3,
-          statProgress: 1.0,
+          statProgress: 0.85,
           isBlur: false,
           moveEffect: a2,
           moveStep: 6,
@@ -2377,8 +2375,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       if (statChanges && statChanges.length > 0) {
         for (const change of statChanges) {
           const targetPos = change.target === "player"
-            ? { x: pm.x + f.pOffset.x, y: pm.y + f.pOffset.y - pm.size * 0.45 }
-            : { x: em.x + f.eOffset.x, y: em.y + f.eOffset.y - em.size * 0.45 };
+            ? { x: pm.x + f.pOffset.x, y: pm.y + f.pOffset.y }
+            : { x: em.x + f.eOffset.x, y: em.y + f.eOffset.y };
 
           if (change.direction === "up") {
             drawStatBoostEffect(targetCtx, targetPos, f.statProgress);
