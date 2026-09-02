@@ -162,26 +162,20 @@ export function drawStatBoostEffect(ctx: any, pos: { x: number; y: number }, pro
   ctx.save();
   const clampedProgress = Math.min(1.0, Math.max(0.0, progress));
 
-  const auraGrad = ctx.createRadialGradient(pos.x, pos.y, 10, pos.x, pos.y - 20, 65);
-  auraGrad.addColorStop(0, "rgba(239, 68, 68, 0.35)");
-  auraGrad.addColorStop(0.5, "rgba(245, 158, 11, 0.20)");
-  auraGrad.addColorStop(1, "rgba(239, 68, 68, 0)");
-  ctx.fillStyle = auraGrad;
-  ctx.beginPath();
-  ctx.arc(pos.x, pos.y - 15, 65, 0, Math.PI * 2);
-  ctx.fill();
-
+  // Pure rising arrow particles spanning across the sprite horizontal bottom baseline
   const arrowConfigs = [
-    { offsetX: -32, baseY: 25, speed: 65, size: 11, delay: 0.0, color: "#EF4444" },
-    { offsetX: -14, baseY: 35, speed: 75, size: 14, delay: 0.15, color: "#F59E0B" },
-    { offsetX: 0,   baseY: 45, speed: 85, size: 16, delay: 0.05, color: "#FDE047" },
-    { offsetX: 16,  baseY: 35, speed: 75, size: 13, delay: 0.2, color: "#F59E0B" },
-    { offsetX: 34,  baseY: 25, speed: 65, size: 10, delay: 0.1, color: "#EF4444" },
+    { offsetX: -36, delay: 0.00, speed: 75, size: 10, color: "#EF4444" },
+    { offsetX: -22, delay: 0.20, speed: 85, size: 12, color: "#F59E0B" },
+    { offsetX: -8,  delay: 0.08, speed: 90, size: 14, color: "#FDE047" },
+    { offsetX: 8,   delay: 0.16, speed: 90, size: 14, color: "#FDE047" },
+    { offsetX: 22,  delay: 0.04, speed: 85, size: 12, color: "#F59E0B" },
+    { offsetX: 36,  delay: 0.24, speed: 75, size: 10, color: "#EF4444" },
   ];
 
   for (const cfg of arrowConfigs) {
     const localProgress = (clampedProgress + cfg.delay) % 1.0;
-    const arrowY = pos.y + cfg.baseY - (localProgress * cfg.speed);
+    // Starts at sprite bottom baseline (pos.y) and rises upward
+    const arrowY = pos.y - (localProgress * cfg.speed);
     const arrowX = pos.x + cfg.offsetX;
     const alpha = Math.sin(localProgress * Math.PI);
 
@@ -190,9 +184,9 @@ export function drawStatBoostEffect(ctx: any, pos: { x: number; y: number }, pro
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.shadowColor = cfg.color;
-    ctx.shadowBlur = 10;
+    ctx.shadowBlur = 8;
     ctx.strokeStyle = cfg.color;
-    ctx.lineWidth = 3.5;
+    ctx.lineWidth = 3.0;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
 
@@ -204,7 +198,7 @@ export function drawStatBoostEffect(ctx: any, pos: { x: number; y: number }, pro
     ctx.stroke();
 
     ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1.4;
     ctx.beginPath();
     ctx.moveTo(arrowX - s * 0.7, arrowY + s * 0.45);
     ctx.lineTo(arrowX, arrowY - s * 0.35);
@@ -213,25 +207,10 @@ export function drawStatBoostEffect(ctx: any, pos: { x: number; y: number }, pro
 
     ctx.fillStyle = cfg.color;
     ctx.beginPath();
-    ctx.arc(arrowX, arrowY + s * 1.1, 2.5, 0, Math.PI * 2);
+    ctx.arc(arrowX, arrowY + s * 1.0, 2.2, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.restore();
-  }
-
-  const sparkles = [
-    { ox: -20, oy: -10, r: 2.5, color: "#FDE047" },
-    { ox: 15, oy: -25, r: 3.0, color: "#F59E0B" },
-    { ox: -5, oy: -40, r: 2.0, color: "#EF4444" },
-    { ox: 25, oy: -5, r: 2.2, color: "#FDE047" },
-  ];
-  for (const sp of sparkles) {
-    const py = pos.y + sp.oy - clampedProgress * 30;
-    const px = pos.x + sp.ox;
-    ctx.fillStyle = sp.color;
-    ctx.beginPath();
-    ctx.arc(px, py, sp.r, 0, Math.PI * 2);
-    ctx.fill();
   }
 
   ctx.restore();
@@ -244,26 +223,20 @@ export function drawStatDropEffect(ctx: any, pos: { x: number; y: number }, prog
   ctx.save();
   const clampedProgress = Math.min(1.0, Math.max(0.0, progress));
 
-  const auraGrad = ctx.createRadialGradient(pos.x, pos.y, 10, pos.x, pos.y + 15, 65);
-  auraGrad.addColorStop(0, "rgba(59, 130, 246, 0.35)");
-  auraGrad.addColorStop(0.5, "rgba(99, 102, 241, 0.20)");
-  auraGrad.addColorStop(1, "rgba(59, 130, 246, 0)");
-  ctx.fillStyle = auraGrad;
-  ctx.beginPath();
-  ctx.arc(pos.x, pos.y + 10, 65, 0, Math.PI * 2);
-  ctx.fill();
-
+  // Pure blue descending arrow particles spanning across the sprite horizontal width down to bottom baseline
   const arrowConfigs = [
-    { offsetX: -32, baseY: -35, speed: 65, size: 11, delay: 0.0, color: "#3B82F6" },
-    { offsetX: -14, baseY: -45, speed: 75, size: 14, delay: 0.15, color: "#60A5FA" },
-    { offsetX: 0,   baseY: -55, speed: 85, size: 16, delay: 0.05, color: "#818CF8" },
-    { offsetX: 16,  baseY: -45, speed: 75, size: 13, delay: 0.2, color: "#60A5FA" },
-    { offsetX: 34,  baseY: -35, speed: 65, size: 10, delay: 0.1, color: "#3B82F6" },
+    { offsetX: -36, delay: 0.00, speed: 75, size: 10, color: "#3B82F6" },
+    { offsetX: -22, delay: 0.20, speed: 85, size: 12, color: "#60A5FA" },
+    { offsetX: -8,  delay: 0.08, speed: 90, size: 14, color: "#93C5FD" },
+    { offsetX: 8,   delay: 0.16, speed: 90, size: 14, color: "#93C5FD" },
+    { offsetX: 22,  delay: 0.04, speed: 85, size: 12, color: "#60A5FA" },
+    { offsetX: 36,  delay: 0.24, speed: 75, size: 10, color: "#3B82F6" },
   ];
 
   for (const cfg of arrowConfigs) {
     const localProgress = (clampedProgress + cfg.delay) % 1.0;
-    const arrowY = pos.y + cfg.baseY + (localProgress * cfg.speed);
+    // Descends from top of sprite down to bottom baseline (pos.y)
+    const arrowY = (pos.y - 75) + (localProgress * cfg.speed);
     const arrowX = pos.x + cfg.offsetX;
     const alpha = Math.sin(localProgress * Math.PI);
 
@@ -272,9 +245,9 @@ export function drawStatDropEffect(ctx: any, pos: { x: number; y: number }, prog
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.shadowColor = cfg.color;
-    ctx.shadowBlur = 10;
+    ctx.shadowBlur = 8;
     ctx.strokeStyle = cfg.color;
-    ctx.lineWidth = 3.5;
+    ctx.lineWidth = 3.0;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
 
@@ -286,7 +259,7 @@ export function drawStatDropEffect(ctx: any, pos: { x: number; y: number }, prog
     ctx.stroke();
 
     ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1.4;
     ctx.beginPath();
     ctx.moveTo(arrowX - s * 0.7, arrowY - s * 0.45);
     ctx.lineTo(arrowX, arrowY + s * 0.35);
@@ -295,25 +268,10 @@ export function drawStatDropEffect(ctx: any, pos: { x: number; y: number }, prog
 
     ctx.fillStyle = cfg.color;
     ctx.beginPath();
-    ctx.arc(arrowX, arrowY - s * 1.1, 2.5, 0, Math.PI * 2);
+    ctx.arc(arrowX, arrowY - s * 1.0, 2.2, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.restore();
-  }
-
-  const droplets = [
-    { ox: -20, oy: 5, r: 2.5, color: "#60A5FA" },
-    { ox: 15, oy: 20, r: 3.0, color: "#3B82F6" },
-    { ox: -5, oy: 35, r: 2.0, color: "#818CF8" },
-    { ox: 25, oy: -2, r: 2.2, color: "#60A5FA" },
-  ];
-  for (const dp of droplets) {
-    const py = pos.y + dp.oy + clampedProgress * 30;
-    const px = pos.x + dp.ox;
-    ctx.fillStyle = dp.color;
-    ctx.beginPath();
-    ctx.arc(px, py, dp.r, 0, Math.PI * 2);
-    ctx.fill();
   }
 
   ctx.restore();
