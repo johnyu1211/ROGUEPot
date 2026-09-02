@@ -1857,36 +1857,47 @@ export function drawIcePunchEffect(ctx: any, target: { x: number; y: number }, s
 }
 
 /**
- * High-frequency Sharp Jagged Crackling Lightning Bolt Helper
+ * Dynamic Writhing Sharp Zigzag Lightning Bolt (No branch clutter, pure pulsing high-voltage kinks)
  */
-function drawZigzagLightningBolt(
+function drawWrithingLightningBolt(
   ctx: any,
   originX: number,
   originY: number,
   angle: number,
   len: number,
-  alpha: number = 1.0,
-  flipJitter: boolean = false
+  step: number = 1,
+  boltIdx: number = 0,
+  alpha: number = 1.0
 ) {
   ctx.save();
   ctx.translate(originX, originY);
   ctx.rotate(angle);
   ctx.globalAlpha = alpha;
 
-  const sign = flipJitter ? -1 : 1;
-  const pts = [
-    { x: 0, y: 0 },
-    { x: len * 0.18, y: 8 * sign },
-    { x: len * 0.35, y: -11 * sign },
-    { x: len * 0.52, y: 12 * sign },
-    { x: len * 0.70, y: -9 * sign },
-    { x: len * 0.86, y: 7 * sign },
-    { x: len, y: -3 * sign },
-  ];
+  // Phase shifts per step and per bolt index for dynamic writhing/wriggling motion!
+  const phase = (step * 2 + boltIdx) % 3;
+  let jitters: number[] = [];
 
-  // 1. Outer Vibrant High-Voltage Yellow Glow
+  if (phase === 0) {
+    jitters = [0, 9, -13, 12, -10, 8, -2];
+  } else if (phase === 1) {
+    jitters = [0, -11, 14, -9, 13, -9, 3];
+  } else {
+    jitters = [0, 13, -8, 14, -12, 10, -1];
+  }
+
+  const numSegments = jitters.length - 1;
+  const pts: { x: number; y: number }[] = [];
+  for (let i = 0; i <= numSegments; i++) {
+    pts.push({
+      x: (len * i) / numSegments,
+      y: jitters[i],
+    });
+  }
+
+  // 1. Outer High-Voltage Electric Glow Line
   ctx.strokeStyle = "#FACC15";
-  ctx.lineWidth = 4.0;
+  ctx.lineWidth = step >= 3 ? 3.0 : 4.5;
   ctx.lineCap = "round";
   ctx.lineJoin = "miter";
   ctx.beginPath();
@@ -1896,30 +1907,14 @@ function drawZigzagLightningBolt(
   }
   ctx.stroke();
 
-  // Branch micro-fork 1
-  ctx.beginPath();
-  ctx.moveTo(pts[2].x, pts[2].y);
-  ctx.lineTo(pts[2].x + len * 0.25, pts[2].y - 12 * sign);
-  ctx.stroke();
-
-  // Branch micro-fork 2
-  ctx.beginPath();
-  ctx.moveTo(pts[4].x, pts[4].y);
-  ctx.lineTo(pts[4].x + len * 0.22, pts[4].y + 11 * sign);
-  ctx.stroke();
-
-  // 2. Inner White Hot Lightning Core
+  // 2. Inner Pure White Lightning Core Line
   ctx.strokeStyle = "#FFFFFF";
-  ctx.lineWidth = 1.8;
+  ctx.lineWidth = step >= 3 ? 1.4 : 2.0;
   ctx.beginPath();
   ctx.moveTo(pts[0].x, pts[0].y);
   for (let i = 1; i < pts.length; i++) {
     ctx.lineTo(pts[i].x, pts[i].y);
   }
-  ctx.moveTo(pts[2].x, pts[2].y);
-  ctx.lineTo(pts[2].x + len * 0.25, pts[2].y - 12 * sign);
-  ctx.moveTo(pts[4].x, pts[4].y);
-  ctx.lineTo(pts[4].x + len * 0.22, pts[4].y + 11 * sign);
   ctx.stroke();
 
   ctx.restore();
@@ -1941,12 +1936,12 @@ export function drawThunderPunchEffect(ctx: any, target: { x: number; y: number 
 
   if (step === 2) {
     spread = 1.25;
-    boltLen = 54;
+    boltLen = 56;
     alpha = 0.70;
     fistAlpha = 0.35;
   } else if (step >= 3) {
     spread = 1.60;
-    boltLen = 60;
+    boltLen = 64;
     alpha = 0.25;
     fistAlpha = 0.0;
   }
@@ -1998,7 +1993,7 @@ export function drawThunderPunchEffect(ctx: any, target: { x: number; y: number 
     ctx.restore();
   }
 
-  // 3. 6-Direction High-Voltage Crackling Zigzag Lightning Arcs
+  // 3. 6-Direction Writhing Jagged Lightning Bolts
   const boltAngles = [
     0,                     // 0° (Right)
     Math.PI / 3,           // 60° (Bottom-Right)
@@ -2012,14 +2007,15 @@ export function drawThunderPunchEffect(ctx: any, target: { x: number; y: number 
     const angle = boltAngles[i];
     const originOx = Math.cos(angle) * (10 * spread);
     const originOy = Math.sin(angle) * (10 * spread);
-    drawZigzagLightningBolt(
+    drawWrithingLightningBolt(
       ctx,
       targetX + originOx,
       targetY - 14 + originOy,
       angle,
       boltLen,
-      alpha,
-      i % 2 === 1
+      step,
+      i,
+      alpha
     );
   }
 
