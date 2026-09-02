@@ -791,114 +791,144 @@ export function drawStatDropEffect(ctx: any, pos: { x: number; y: number }, prog
 }
 
 /**
- * Karate Chop (태권당수):
- * A distinct black Karate Hand silhouette with fingertips pointing right appears above the target's head.
+ * Authentic Gen 5 Karate Chop (태권당수):
+ * A distinct, iconic Karate Hand sprite appears floating above the target's head.
  * Motion:
- * Step 1: Dips / shakes slightly downward
- * Step 2: Rises upward and tilts back
- * Step 3: SLAMS down forcefully with sharp impact slash lines!
+ * Step 1: Hover & iconic rhythmic pre-chop twitch/dip
+ * Step 2: High windup tension pull-back
+ * Step 3: Fast diagonal SLAM CHOP across target + razor blade cut streak + Gen 5 4-pointed hit stars!
  */
 export function drawKarateChopEffect(ctx: any, target: { x: number; y: number }, step: number = 3) {
   ctx.save();
 
-  // Hand anchor: directly above target head
-  const baseX = target.x;
-  const baseY = target.y - 45;
+  const cx = target.x;
+  const cy = target.y - 45;
 
-  let handX = baseX;
-  let handY = baseY;
-  let rot = 0; // in radians
+  let handOy = -65;
+  let rotDeg = -20;
   let showImpact = false;
 
   if (step === 1) {
-    // Step 1: 살짝 아래로 흔들 (Pre-windup micro-dip & shake)
-    handY = baseY + 6;
-    rot = -10 * (Math.PI / 180);
+    // Step 1: Hover & Pre-chop twitch/dip
+    handOy = -55;
+    rotDeg = -12;
   } else if (step === 2) {
-    // Step 2: 위로 살짝 올라갔다가 (Rising windup preparation)
-    handY = baseY - 24;
-    rot = -38 * (Math.PI / 180);
+    // Step 2: High windup tension
+    handOy = -80;
+    rotDeg = -42;
   } else {
-    // Step 3: 팍 하고 내려침! (Forceful slam chop impact!)
-    handY = baseY + 18;
-    rot = 22 * (Math.PI / 180);
+    // Step 3: DEVASTATING SLAM CHOP
+    handOy = 12;
+    rotDeg = 32;
     showImpact = true;
   }
 
-  ctx.translate(handX, handY);
-  ctx.rotate(rot);
-
-  // 1. Draw Karate Chop Hand Vector Shape (Solid black silhouette with crisp outline)
+  // 1. Draw Karate Hand Sprite
   ctx.save();
-  ctx.fillStyle = "#111827"; // Deep black
-  ctx.strokeStyle = "#F3F4F6"; // Crisp white outline for high contrast against all biomes
-  ctx.lineWidth = 2.0;
+  ctx.translate(cx, cy + handOy);
+  ctx.rotate((rotDeg * Math.PI) / 180);
+  ctx.scale(1.25, 1.25);
 
-  // Hand Path: Wrist on left, 4 extended fingers pointing right, thumb tucked
+  ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
+  ctx.shadowBlur = 6;
+
+  // Outer Hand Body (Solid Jet Black + Crisp Pure White Outline)
+  ctx.fillStyle = "#0F172A";
+  ctx.strokeStyle = "#FFFFFF";
+  ctx.lineWidth = 2.0;
+  ctx.lineJoin = "round";
+
   ctx.beginPath();
-  // Wrist base (left)
-  ctx.moveTo(-24, -8);
-  ctx.lineTo(-24, 10);
-  // Lower Chop Edge (손날 - Bottom straight edge)
-  ctx.lineTo(16, 12);
-  // Pinky tip
-  ctx.quadraticCurveTo(28, 11, 32, 7);
-  // Extended finger tips pointing right
-  ctx.lineTo(36, 2);
-  ctx.lineTo(35, -3);
-  ctx.lineTo(31, -8);
-  // Tucked thumb knuckle (top)
-  ctx.lineTo(12, -10);
-  ctx.quadraticCurveTo(2, -15, -6, -11);
-  ctx.lineTo(-24, -8);
+  // Wrist on bottom-left
+  ctx.moveTo(-22, 14);
+  ctx.lineTo(-24, 0);
+  // Thumb knuckle
+  ctx.lineTo(-12, -12);
+  ctx.quadraticCurveTo(0, -18, 8, -14);
+  ctx.lineTo(14, -8);
+  // 4 extended fingers pointing up-right (손끝)
+  ctx.lineTo(28, -6);  // Index
+  ctx.lineTo(34, 0);   // Middle
+  ctx.lineTo(32, 6);   // Ring
+  ctx.lineTo(26, 12);  // Pinky
+  // Straight Hand Blade (손날 - Bottom cutting edge)
+  ctx.lineTo(10, 16);
+  ctx.lineTo(-16, 18);
   ctx.closePath();
 
   ctx.fill();
   ctx.stroke();
 
-  // Internal finger division crease lines
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.45)";
-  ctx.lineWidth = 1.2;
+  // Hand Palm / Glove Highlight (Gen 5 Stylized)
+  ctx.fillStyle = "rgba(255, 255, 255, 0.16)";
   ctx.beginPath();
-  ctx.moveTo(10, 5); ctx.lineTo(26, 4);
-  ctx.moveTo(8, -1); ctx.lineTo(28, -2);
-  ctx.moveTo(6, -6); ctx.lineTo(24, -6);
+  ctx.moveTo(-10, -10);
+  ctx.lineTo(6, -12);
+  ctx.lineTo(24, -4);
+  ctx.lineTo(10, 8);
+  ctx.closePath();
+  ctx.fill();
+
+  // Crisp Finger Separation Creases
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.75)";
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(12, -2); ctx.lineTo(28, -1);
+  ctx.moveTo(10, 4);  ctx.lineTo(26, 4);
+  ctx.moveTo(8, 10);  ctx.lineTo(20, 10);
   ctx.stroke();
 
   ctx.restore();
 
-  // 2. Dynamic Slash / Chop Impact Shockwaves when slamming down (Step 3)
+  // 2. Gen 5 Impact Slash & 4-Point Hit Stars (Step 3)
   if (showImpact) {
     ctx.save();
-    // High-speed motion slash streak
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
-    ctx.lineWidth = 3.5;
+    // Diagonal White Blade Cut Streak
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 4.5;
+    ctx.lineCap = "round";
     ctx.beginPath();
-    ctx.moveTo(-15, -40);
-    ctx.lineTo(25, 20);
+    ctx.moveTo(cx - 35, cy - 45);
+    ctx.lineTo(cx + 35, cy + 35);
     ctx.stroke();
 
-    // Critical / Fighting Impact Starburst
-    ctx.fillStyle = "#EF4444";
+    // Gold energy edge
+    ctx.strokeStyle = "rgba(251, 191, 36, 0.85)";
+    ctx.lineWidth = 2.0;
     ctx.beginPath();
-    ctx.arc(20, 15, 8, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.moveTo(cx - 38, cy - 42);
+    ctx.lineTo(cx + 32, cy + 38);
+    ctx.stroke();
 
-    ctx.fillStyle = "#FFFFFF";
-    ctx.beginPath();
-    ctx.arc(20, 15, 4, 0, Math.PI * 2);
-    ctx.fill();
+    // Gen 5 4-Point Hit Stars
+    const stars = [
+      { x: cx, y: cy, size: 14, color: "#FFFFFF" },
+      { x: cx + 18, y: cy - 12, size: 9, color: "#FBBF24" },
+      { x: cx - 18, y: cy + 15, size: 10, color: "#EF4444" },
+    ];
 
-    // Sharp kinetic impact sparks
-    ctx.strokeStyle = "#FDE047";
-    ctx.lineWidth = 2;
-    for (let i = 0; i < 4; i++) {
-      const a = (i * Math.PI) / 2 + Math.PI / 4;
+    for (const st of stars) {
+      ctx.save();
+      ctx.translate(st.x, st.y);
+      ctx.fillStyle = st.color;
       ctx.beginPath();
-      ctx.moveTo(20 + Math.cos(a) * 6, 15 + Math.sin(a) * 6);
-      ctx.lineTo(20 + Math.cos(a) * 22, 15 + Math.sin(a) * 22);
-      ctx.stroke();
+      ctx.moveTo(0, -st.size);
+      ctx.quadraticCurveTo(0, 0, st.size, 0);
+      ctx.quadraticCurveTo(0, 0, 0, st.size);
+      ctx.quadraticCurveTo(0, 0, -st.size, 0);
+      ctx.quadraticCurveTo(0, 0, 0, -st.size);
+      ctx.fill();
+      ctx.restore();
     }
+
+    // Kinetic impact speed streaks
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(cx - 15, cy - 20); ctx.lineTo(cx + 45, cy - 25);
+    ctx.moveTo(cx - 35, cy + 10); ctx.lineTo(cx + 25, cy + 5);
+    ctx.stroke();
+
     ctx.restore();
   }
 
