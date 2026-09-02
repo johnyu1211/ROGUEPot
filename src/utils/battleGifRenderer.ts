@@ -528,6 +528,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   const isRazorWind1 = (mKey1 === "razor-wind" || mKey1 === "razorwind");
   const isWingAttack1 = (mKey1 === "wing-attack" || mKey1 === "wingattack");
   const isWhirlwind1 = (mKey1 === "whirlwind");
+  const isBind1 = (mKey1 === "bind" || mKey1 === "wrap" || mKey1 === "clamp" || mKey1 === "sand-tomb" || mKey1 === "whirlpool" || mKey1 === "fire-spin" || mKey1 === "infestation" || mKey1 === "snap-trap");
   const isSingleStrikeSpecial1 = (
     mKey1 === "thunder-punch" || mKey1 === "thunderpunch" ||
     mKey1 === "scratch" ||
@@ -1883,6 +1884,104 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveStep: 4,
         }
       ];
+    } else if (isBind1) {
+      const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
+      const isMiss1 = !isHit1;
+      act1Frames = [
+        // 1. Rapid Dash In & Forward Grapple Reach (100ms)
+        {
+          delay: 100,
+          pOffset: isP1 ? { x: 180, y: -90 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -180, y: 90 } : { x: 0, y: 0 },
+          pScale: isP1 ? { x: 1.25, y: 0.80 } : undefined,
+          eScale: !isP1 ? { x: 1.25, y: 0.80 } : undefined,
+          drawEnemyOnTop: !isP1,
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+        },
+        // 2. Grapple Clasp & Overlap on Z-Axis (120ms)
+        {
+          delay: 120,
+          pOffset: isP1 ? { x: 260, y: -138 } : (isMiss1 ? { x: 20, y: 4 } : { x: -6, y: 4 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 20, y: -4 } : { x: 6, y: -4 }) : { x: -260, y: 138 },
+          pScale: isP1 ? { x: 1.10, y: 0.92 } : undefined,
+          eScale: !isP1 ? { x: 1.10, y: 0.92 } : undefined,
+          drawEnemyOnTop: !isP1,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 1,
+        },
+        // 3. Maximum Tight Constriction Squeeze & Impact Shockwave (160ms)
+        {
+          delay: 160,
+          pOffset: isP1 ? { x: 260, y: -138 } : (isMiss1 ? { x: 20, y: 4 } : { x: -8, y: 4 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 20, y: -4 } : { x: 8, y: -4 }) : { x: -260, y: 138 },
+          pScale: isP1 ? { x: 1.15, y: 1.15 } : undefined,
+          eScale: !isP1 ? { x: 1.15, y: 1.15 } : undefined,
+          drawEnemyOnTop: !isP1,
+          showEffect: true,
+          hitFlash: isHit1,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 2,
+        },
+        // 4. Pulsing Squeeze Shockwave (120ms)
+        {
+          delay: 120,
+          pOffset: isP1 ? { x: 250, y: -130 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -250, y: 130 } : { x: 0, y: 0 },
+          drawEnemyOnTop: !isP1,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 3,
+        },
+        // 5. Spring Back Return (100ms)
+        {
+          delay: 100,
+          pOffset: isP1 ? { x: 90, y: -45 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -90, y: 45 } : { x: 0, y: 0 },
+          drawEnemyOnTop: !isP1,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 4,
+        },
+        // 6. Touchdown Landing (100ms)
+        {
+          delay: 100,
+          pOffset: { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+        }
+      ];
     } else if (isSingleStrikeSpecial1) {
       const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
       const isMiss1 = !isHit1;
@@ -2024,6 +2123,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const isRazorWind2 = (mKey2 === "razor-wind" || mKey2 === "razorwind");
     const isWingAttack2 = (mKey2 === "wing-attack" || mKey2 === "wingattack");
     const isWhirlwind2 = (mKey2 === "whirlwind");
+    const isBind2 = (mKey2 === "bind" || mKey2 === "wrap" || mKey2 === "clamp" || mKey2 === "sand-tomb" || mKey2 === "whirlpool" || mKey2 === "fire-spin" || mKey2 === "infestation" || mKey2 === "snap-trap");
     const isSingleStrikeSpecial2 = (
       mKey2 === "thunder-punch" || mKey2 === "thunderpunch" ||
       mKey2 === "scratch" ||
@@ -3379,6 +3479,104 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveStep: 4,
         }
       ];
+    } else if (isBind2) {
+      const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
+      const isMiss2 = !isHit2;
+      act2Frames = [
+        // 1. Rapid Dash In & Forward Grapple Reach (100ms)
+        {
+          delay: 100,
+          pOffset: isP2 ? { x: 180, y: -90 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -180, y: 90 } : { x: 0, y: 0 },
+          pScale: isP2 ? { x: 1.25, y: 0.80 } : undefined,
+          eScale: !isP2 ? { x: 1.25, y: 0.80 } : undefined,
+          drawEnemyOnTop: !isP2,
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+        },
+        // 2. Grapple Clasp & Overlap on Z-Axis (120ms)
+        {
+          delay: 120,
+          pOffset: isP2 ? { x: 260, y: -138 } : (isMiss2 ? { x: 20, y: 4 } : { x: -6, y: 4 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 20, y: -4 } : { x: 6, y: -4 }) : { x: -260, y: 138 },
+          pScale: isP2 ? { x: 1.10, y: 0.92 } : undefined,
+          eScale: !isP2 ? { x: 1.10, y: 0.92 } : undefined,
+          drawEnemyOnTop: !isP2,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 1,
+        },
+        // 3. Maximum Tight Constriction Squeeze & Impact Shockwave (160ms)
+        {
+          delay: 160,
+          pOffset: isP2 ? { x: 260, y: -138 } : (isMiss2 ? { x: 20, y: 4 } : { x: -8, y: 4 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 20, y: -4 } : { x: 8, y: -4 }) : { x: -260, y: 138 },
+          pScale: isP2 ? { x: 1.15, y: 1.15 } : undefined,
+          eScale: !isP2 ? { x: 1.15, y: 1.15 } : undefined,
+          drawEnemyOnTop: !isP2,
+          showEffect: true,
+          hitFlash: isHit2,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 2,
+        },
+        // 4. Pulsing Squeeze Shockwave (120ms)
+        {
+          delay: 120,
+          pOffset: isP2 ? { x: 250, y: -130 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -250, y: 130 } : { x: 0, y: 0 },
+          drawEnemyOnTop: !isP2,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 3,
+        },
+        // 5. Spring Back Return (100ms)
+        {
+          delay: 100,
+          pOffset: isP2 ? { x: 90, y: -45 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -90, y: 45 } : { x: 0, y: 0 },
+          drawEnemyOnTop: !isP2,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 4,
+        },
+        // 6. Touchdown Landing (100ms)
+        {
+          delay: 100,
+          pOffset: { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+        }
+      ];
     } else if (isSingleStrikeSpecial2) {
       const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
       const isMiss2 = !isHit2;
@@ -3902,56 +4100,66 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         drawPokemonSilhouetteShadow(targetCtx, playerSprite, pShadowX, pShadowY, pm.size, true, 0.42 * pAlpha);
       }
 
-      // Enemy Sprite
-      const eSpriteToDraw = f.useEnemyBack ? (enemyBackSprite || enemySprite) : enemySprite;
-      const isEnemySpriteHidden = (f.eOffset && (f.eOffset.y <= -500 || f.eOffset.y >= 9000)) || f.hideEnemy || (eAlpha <= 0.01);
-      if (eSpriteToDraw && !isEnemySpriteHidden) {
-        targetCtx.save();
-        if (f.eWhite) {
-          targetCtx.filter = "brightness(0) invert(1)";
-        } else if (f.hitFlash && eTarget) {
-          targetCtx.filter = "brightness(1.35)";
+      const drawEnemySprite = () => {
+        const eSpriteToDraw = f.useEnemyBack ? (enemyBackSprite || enemySprite) : enemySprite;
+        const isEnemySpriteHidden = (f.eOffset && (f.eOffset.y <= -500 || f.eOffset.y >= 9000)) || f.hideEnemy || (eAlpha <= 0.01);
+        if (eSpriteToDraw && !isEnemySpriteHidden) {
+          targetCtx.save();
+          if (f.eWhite) {
+            targetCtx.filter = "brightness(0) invert(1)";
+          } else if (f.hitFlash && eTarget) {
+            targetCtx.filter = "brightness(1.35)";
+          }
+          if (eAlpha < 0.99) {
+            targetCtx.globalAlpha = eAlpha;
+          }
+          const ex = em.x + f.eOffset.x;
+          const ey = em.y + f.eOffset.y;
+          if (f.eScale || f.eRot) {
+            targetCtx.translate(ex, ey);
+            if (f.eRot) targetCtx.rotate(f.eRot);
+            if (f.eScale) targetCtx.scale(f.eScale.x, f.eScale.y);
+            drawFittedBattleSprite(targetCtx, eSpriteToDraw, 0, 0, em.size);
+          } else {
+            drawFittedBattleSprite(targetCtx, eSpriteToDraw, ex, ey, em.size);
+          }
+          targetCtx.restore();
         }
-        if (eAlpha < 0.99) {
-          targetCtx.globalAlpha = eAlpha;
-        }
-        const ex = em.x + f.eOffset.x;
-        const ey = em.y + f.eOffset.y;
-        if (f.eScale || f.eRot) {
-          targetCtx.translate(ex, ey);
-          if (f.eRot) targetCtx.rotate(f.eRot);
-          if (f.eScale) targetCtx.scale(f.eScale.x, f.eScale.y);
-          drawFittedBattleSprite(targetCtx, eSpriteToDraw, 0, 0, em.size);
-        } else {
-          drawFittedBattleSprite(targetCtx, eSpriteToDraw, ex, ey, em.size);
-        }
-        targetCtx.restore();
-      }
+      };
 
-      // Player Sprite
-      const pSpriteToDraw = f.usePlayerFront ? (playerFrontSprite || playerSprite) : playerSprite;
-      const isPlayerSpriteHidden = (f.pOffset && (f.pOffset.y <= -500 || f.pOffset.y >= 9000)) || f.hidePlayer || (pAlpha <= 0.01);
-      if (pSpriteToDraw && !isPlayerSpriteHidden && (playerMon.hp > 0 || f.playerHp > 0 || pAlpha > 0.01)) {
-        targetCtx.save();
-        if (f.pWhite) {
-          targetCtx.filter = "brightness(0) invert(1)";
-        } else if (f.hitFlash && pTarget) {
-          targetCtx.filter = "brightness(1.35)";
+      const drawPlayerSprite = () => {
+        const pSpriteToDraw = f.usePlayerFront ? (playerFrontSprite || playerSprite) : playerSprite;
+        const isPlayerSpriteHidden = (f.pOffset && (f.pOffset.y <= -500 || f.pOffset.y >= 9000)) || f.hidePlayer || (pAlpha <= 0.01);
+        if (pSpriteToDraw && !isPlayerSpriteHidden && (playerMon.hp > 0 || f.playerHp > 0 || pAlpha > 0.01)) {
+          targetCtx.save();
+          if (f.pWhite) {
+            targetCtx.filter = "brightness(0) invert(1)";
+          } else if (f.hitFlash && pTarget) {
+            targetCtx.filter = "brightness(1.35)";
+          }
+          if (pAlpha < 0.99) {
+            targetCtx.globalAlpha = pAlpha;
+          }
+          const px = pm.x + f.pOffset.x;
+          const py = pm.y + f.pOffset.y;
+          if (f.pScale || f.pRot) {
+            targetCtx.translate(px, py);
+            if (f.pRot) targetCtx.rotate(f.pRot);
+            if (f.pScale) targetCtx.scale(f.pScale.x, f.pScale.y);
+            drawFittedBattleSprite(targetCtx, pSpriteToDraw, 0, 0, pm.size);
+          } else {
+            drawFittedBattleSprite(targetCtx, pSpriteToDraw, px, py, pm.size);
+          }
+          targetCtx.restore();
         }
-        if (pAlpha < 0.99) {
-          targetCtx.globalAlpha = pAlpha;
-        }
-        const px = pm.x + f.pOffset.x;
-        const py = pm.y + f.pOffset.y;
-        if (f.pScale || f.pRot) {
-          targetCtx.translate(px, py);
-          if (f.pRot) targetCtx.rotate(f.pRot);
-          if (f.pScale) targetCtx.scale(f.pScale.x, f.pScale.y);
-          drawFittedBattleSprite(targetCtx, pSpriteToDraw, 0, 0, pm.size);
-        } else {
-          drawFittedBattleSprite(targetCtx, pSpriteToDraw, px, py, pm.size);
-        }
-        targetCtx.restore();
+      };
+
+      if (f.drawEnemyOnTop) {
+        drawPlayerSprite();
+        drawEnemySprite();
+      } else {
+        drawEnemySprite();
+        drawPlayerSprite();
       }
 
       // Move Effect Rendering (including Karate Chop multi-step hand animation)
