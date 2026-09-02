@@ -5579,8 +5579,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     if (f.delay >= 10000) {
       effectiveDelay = f.delay;
     } else if (f.isBlur) {
-      // Quick, seamless 350ms leading loading transition
-      effectiveDelay = 350;
+      // 600ms leading cinematic soft-blur loading transition
+      effectiveDelay = 600;
     } else {
       // Fluid, smooth 8~10 FPS animation timing (1.25x) - crisp, dynamic, and free of stutter/lag
       effectiveDelay = Math.max(70, Math.round(f.delay * 1.25));
@@ -5593,7 +5593,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   const totalMotionMs = framesConfig
     .filter(f => f.delay < 10000)
     .reduce((sum, f) => {
-      if (f.isBlur) return sum + 350;
+      if (f.isBlur) return sum + 600;
       return sum + Math.max(70, Math.round(f.delay * 1.25));
     }, 0);
 
