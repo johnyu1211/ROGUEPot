@@ -1231,94 +1231,170 @@ function drawKobanCoin(ctx: any, x: number, y: number, scale: number = 1.0, angl
 }
 
 /**
- * 005 메가톤펀치 (Mega Punch): Heavyweight Giant Power Fist Smash with Radial Blast Rings
+ * 005 메가톤펀치 (Mega Punch):
+ * Step 1: Big yellow ring appears around target
+ * Step 2: Yellow ring rapidly contracts/shrinks down towards target center
+ * Step 3: Ring reaches minimum size -> Heavy punch strikes + Large impact starburst + Hit flash
+ * Step 4: Yellow ring expands outward like a shockwave ripple
+ * Step 5: Shockwave ripple expands further and dissipates
  */
-export function drawMegaPunchEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
+export function drawMegaPunchEffect(ctx: any, target: { x: number; y: number }, step: number = 3) {
   ctx.save();
 
-  const isFade = (step % 2 === 0);
-  const alpha = isFade ? 0.35 : 1.0;
   const targetX = target.x;
   const targetY = target.y - 12;
 
-  // 1. Concentric Blast Rings
-  ctx.save();
-  ctx.globalAlpha = isFade ? 0.25 : 0.75;
-  ctx.strokeStyle = "#FACC15";
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.arc(targetX, targetY - 14, isFade ? 48 : 38, 0, Math.PI * 2);
-  ctx.stroke();
-
-  ctx.strokeStyle = "#FFFFFF";
-  ctx.lineWidth = 2.5;
-  ctx.beginPath();
-  ctx.arc(targetX, targetY - 14, isFade ? 32 : 24, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.restore();
-
-  // 2. Giant Power Fist (Scaled Reference Fist)
-  ctx.save();
-  ctx.translate(targetX, targetY - 18);
-  ctx.scale(isFade ? 0.82 : 0.75, isFade ? 0.82 : 0.75);
-  ctx.globalAlpha = alpha;
-
-  if (cometPunchFistImg) {
-    const fw = cometPunchFistImg.width;
-    const fh = cometPunchFistImg.height;
-    ctx.drawImage(cometPunchFistImg, -fw / 2, -fh / 2, fw, fh);
-  } else {
-    drawFrontStraightPunchFistSvg(ctx, 0, 0, 2.5, 1.0);
-  }
-  ctx.restore();
-
-  // 3. Mega Impact Starburst
-  ctx.save();
-  const sparkX = targetX;
-  const sparkY = targetY - 24;
-  const starRadius = isFade ? 18 : 28;
-  ctx.globalAlpha = isFade ? 0.40 : 1.0;
-
-  ctx.fillStyle = "#FACC15";
-  ctx.strokeStyle = "#FFFFFF";
-  ctx.lineWidth = 2.2;
-  ctx.beginPath();
-  ctx.moveTo(sparkX, sparkY - starRadius);
-  ctx.quadraticCurveTo(sparkX, sparkY, sparkX + starRadius, sparkY);
-  ctx.quadraticCurveTo(sparkX, sparkY, sparkX, sparkY + starRadius);
-  ctx.quadraticCurveTo(sparkX, sparkY, sparkX - starRadius, sparkY);
-  ctx.quadraticCurveTo(sparkX, sparkY, sparkX - starRadius, sparkY);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.fillStyle = "#FFFFFF";
-  const innerR = starRadius * 0.5;
-  ctx.beginPath();
-  ctx.moveTo(sparkX, sparkY - innerR);
-  ctx.quadraticCurveTo(sparkX, sparkY, sparkX + innerR, sparkY);
-  ctx.quadraticCurveTo(sparkX, sparkY, sparkX, sparkY + innerR);
-  ctx.quadraticCurveTo(sparkX, sparkY, sparkX - innerR, sparkY);
-  ctx.quadraticCurveTo(sparkX, sparkY, sparkX - innerR, sparkY);
-  ctx.closePath();
-  ctx.fill();
-
-  // Heavy blast sparks
-  const sparks = [
-    { ox: -22, oy: -20, r: 3.5, c: "#FFFFFF" },
-    { ox: 24, oy: -18, r: 3.2, c: "#FACC15" },
-    { ox: -20, oy: 20, r: 3.2, c: "#F59E0B" },
-    { ox: 22, oy: 22, r: 3.5, c: "#FFFFFF" },
-    { ox: 0, oy: -34, r: 3.0, c: "#FEF08A" },
-    { ox: 0, oy: 28, r: 3.0, c: "#FACC15" },
-  ];
-  for (const s of sparks) {
-    ctx.fillStyle = s.c;
+  // Step 1: Large Yellow Ring (Radius: 56px)
+  if (step === 1) {
+    ctx.save();
+    ctx.strokeStyle = "#FACC15";
+    ctx.lineWidth = 4.0;
     ctx.beginPath();
-    ctx.arc(sparkX + s.ox, sparkY + s.oy, s.r, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.arc(targetX, targetY - 14, 56, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 2.0;
+    ctx.beginPath();
+    ctx.arc(targetX, targetY - 14, 56, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
   }
-  ctx.restore();
+  // Step 2: Yellow Ring Rapidly Contracting (Radius: 28px)
+  else if (step === 2) {
+    ctx.save();
+    ctx.strokeStyle = "#FACC15";
+    ctx.lineWidth = 4.5;
+    ctx.beginPath();
+    ctx.arc(targetX, targetY - 14, 28, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = "#FEF08A";
+    ctx.lineWidth = 2.0;
+    ctx.beginPath();
+    ctx.arc(targetX, targetY - 14, 28, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+  // Step 3: Ring has shrunk small (Radius: 14px) -> Fist strikes with Mega Starburst!
+  else if (step === 3) {
+    // 1. Shrunk Yellow Core Ring
+    ctx.save();
+    ctx.strokeStyle = "#FEF08A";
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.arc(targetX, targetY - 14, 14, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // 2. Heavy Punch Fist
+    ctx.save();
+    ctx.translate(targetX, targetY - 18);
+    ctx.scale(0.80, 0.80);
+    if (cometPunchFistImg) {
+      const fw = cometPunchFistImg.width;
+      const fh = cometPunchFistImg.height;
+      ctx.drawImage(cometPunchFistImg, -fw / 2, -fh / 2, fw, fh);
+    } else {
+      drawFrontStraightPunchFistSvg(ctx, 0, 0, 2.5, 1.0);
+    }
+    ctx.restore();
+
+    // 3. Mega Impact Starburst
+    const sparkX = targetX;
+    const sparkY = targetY - 24;
+    const starRadius = 28;
+
+    ctx.fillStyle = "#FACC15";
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.moveTo(sparkX, sparkY - starRadius);
+    ctx.quadraticCurveTo(sparkX, sparkY, sparkX + starRadius, sparkY);
+    ctx.quadraticCurveTo(sparkX, sparkY, sparkX, sparkY + starRadius);
+    ctx.quadraticCurveTo(sparkX, sparkY, sparkX - starRadius, sparkY);
+    ctx.quadraticCurveTo(sparkX, sparkY, sparkX - starRadius, sparkY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = "#FFFFFF";
+    const innerR = starRadius * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(sparkX, sparkY - innerR);
+    ctx.quadraticCurveTo(sparkX, sparkY, sparkX + innerR, sparkY);
+    ctx.quadraticCurveTo(sparkX, sparkY, sparkX, sparkY + innerR);
+    ctx.quadraticCurveTo(sparkX, sparkY, sparkX - innerR, sparkY);
+    ctx.quadraticCurveTo(sparkX, sparkY, sparkX - innerR, sparkY);
+    ctx.closePath();
+    ctx.fill();
+
+    // Heavy blast sparks
+    const sparks = [
+      { ox: -22, oy: -20, r: 3.5, c: "#FFFFFF" },
+      { ox: 24, oy: -18, r: 3.2, c: "#FACC15" },
+      { ox: -20, oy: 20, r: 3.2, c: "#F59E0B" },
+      { ox: 22, oy: 22, r: 3.5, c: "#FFFFFF" },
+      { ox: 0, oy: -34, r: 3.0, c: "#FEF08A" },
+      { ox: 0, oy: 28, r: 3.0, c: "#FACC15" },
+    ];
+    for (const s of sparks) {
+      ctx.fillStyle = s.c;
+      ctx.beginPath();
+      ctx.arc(sparkX + s.ox, sparkY + s.oy, s.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  // Step 4: Ring expands outward like a ripple wave (Radius: 48px)
+  else if (step === 4) {
+    // 1. Expanding Shockwave Ripple
+    ctx.save();
+    ctx.globalAlpha = 0.75;
+    ctx.strokeStyle = "#FACC15";
+    ctx.lineWidth = 4.0;
+    ctx.beginPath();
+    ctx.arc(targetX, targetY - 14, 48, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.arc(targetX, targetY - 14, 48, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // 2. Fading Fist
+    ctx.save();
+    ctx.translate(targetX, targetY - 18);
+    ctx.scale(0.85, 0.85);
+    ctx.globalAlpha = 0.45;
+    if (cometPunchFistImg) {
+      const fw = cometPunchFistImg.width;
+      const fh = cometPunchFistImg.height;
+      ctx.drawImage(cometPunchFistImg, -fw / 2, -fh / 2, fw, fh);
+    }
+    ctx.restore();
+
+    // 3. Fading Star
+    drawMiniRetroStar(ctx, targetX, targetY - 24, 18, "rgba(250, 204, 21, 0.5)");
+  }
+  // Step 5: Wave expands further and dissipates (Radius: 70px)
+  else if (step === 5) {
+    ctx.save();
+    ctx.globalAlpha = 0.28;
+    ctx.strokeStyle = "#FACC15";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(targetX, targetY - 14, 70, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = "#FEF08A";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.arc(targetX, targetY - 14, 70, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
 
   ctx.restore();
 }
