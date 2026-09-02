@@ -392,8 +392,8 @@ export function drawPokemonSilhouetteShadow(
 
     ctx.save();
     ctx.translate(targetX, targetY);
-    const skewX = isPlayer ? -0.38 : -0.42;
-    const scaleY = isPlayer ? 0.30 : 0.32;
+    const skewX = isPlayer ? -0.62 : -0.65;
+    const scaleY = isPlayer ? 0.36 : 0.38;
     ctx.transform(1, 0, skewX, scaleY, 0, 0);
     ctx.drawImage(silCanvas, -drawW / 2, -drawH, drawW, drawH);
     ctx.restore();
