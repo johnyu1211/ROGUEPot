@@ -1169,13 +1169,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
       const isMiss1 = !isHit1;
       act1Frames = [
-        // 1. High-speed diagonal forward dive-lunge (stretches thin along dash vector) (140ms)
+        // 1. High-speed diagonal forward dive-lunge (thinned out lean along dash vector) (140ms)
         {
           delay: 140,
           pOffset: isP1 ? { x: 120, y: -65 } : { x: 0, y: 0 },
           eOffset: !isP1 ? { x: -120, y: 65 } : { x: 0, y: 0 },
-          pScale: isP1 ? { x: 0.65, y: 1.25 } : undefined,
-          eScale: !isP1 ? { x: 0.65, y: 1.25 } : undefined,
+          pScale: isP1 ? { x: 0.40, y: 1.35 } : undefined,
+          eScale: !isP1 ? { x: 0.40, y: 1.35 } : undefined,
           pRot: isP1 ? -0.22 : undefined,
           eRot: !isP1 ? 0.22 : undefined,
           showEffect: true,
@@ -1192,8 +1192,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           delay: 220,
           pOffset: isP1 ? { x: 235, y: -125 } : (isMiss1 ? { x: 26, y: 4 } : { x: -8, y: 4 }),
           eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 12, y: -4 }) : { x: -235, y: 125 },
-          pScale: isP1 ? { x: 0.75, y: 1.20 } : undefined,
-          eScale: !isP1 ? { x: 0.75, y: 1.20 } : undefined,
+          pScale: isP1 ? { x: 0.55, y: 1.25 } : undefined,
+          eScale: !isP1 ? { x: 0.55, y: 1.25 } : undefined,
           pRot: isP1 ? -0.15 : undefined,
           eRot: !isP1 ? 0.15 : undefined,
           showEffect: true,
@@ -1211,8 +1211,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           delay: 140,
           pOffset: isP1 ? { x: 90, y: -45 } : (isMiss1 ? { x: 16, y: 2 } : { x: -4, y: 2 }),
           eOffset: isP1 ? (isMiss1 ? { x: 16, y: -2 } : { x: 5, y: -1 }) : { x: -90, y: 45 },
-          pScale: isP1 ? { x: 0.85, y: 1.10 } : undefined,
-          eScale: !isP1 ? { x: 0.85, y: 1.10 } : undefined,
+          pScale: isP1 ? { x: 0.70, y: 1.15 } : undefined,
+          eScale: !isP1 ? { x: 0.70, y: 1.15 } : undefined,
           pRot: isP1 ? 0.12 : undefined,
           eRot: !isP1 ? -0.12 : undefined,
           showEffect: true,
@@ -2149,13 +2149,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
       const isMiss2 = !isHit2;
       act2Frames = [
-        // 1. Counter forward dive-lunge (140ms)
+        // 1. Counter forward dive-lunge (thinned out lean along dash vector) (140ms)
         {
           delay: 140,
           pOffset: isP2 ? { x: 120, y: -65 } : { x: 0, y: 0 },
           eOffset: !isP2 ? { x: -120, y: 65 } : { x: 0, y: 0 },
-          pScale: isP2 ? { x: 0.65, y: 1.25 } : undefined,
-          eScale: !isP2 ? { x: 0.65, y: 1.25 } : undefined,
+          pScale: isP2 ? { x: 0.40, y: 1.35 } : undefined,
+          eScale: !isP2 ? { x: 0.40, y: 1.35 } : undefined,
           pRot: isP2 ? -0.22 : undefined,
           eRot: !isP2 ? 0.22 : undefined,
           showEffect: true,
@@ -2172,8 +2172,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           delay: 220,
           pOffset: isP2 ? { x: 235, y: -125 } : (isMiss2 ? { x: -26, y: 4 } : { x: -12, y: 4 }),
           eOffset: !isP2 ? { x: -235, y: 125 } : (isMiss2 ? { x: 26, y: -4 } : { x: 12, y: -4 }),
-          pScale: isP2 ? { x: 0.75, y: 1.20 } : undefined,
-          eScale: !isP2 ? { x: 0.75, y: 1.20 } : undefined,
+          pScale: isP2 ? { x: 0.55, y: 1.25 } : undefined,
+          eScale: !isP2 ? { x: 0.55, y: 1.25 } : undefined,
           pRot: isP2 ? -0.15 : undefined,
           eRot: !isP2 ? 0.15 : undefined,
           showEffect: true,
@@ -2191,8 +2191,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           delay: 140,
           pOffset: isP2 ? { x: 90, y: -45 } : (isMiss2 ? { x: -16, y: 2 } : { x: -5, y: 1 }),
           eOffset: !isP2 ? { x: -90, y: 45 } : (isMiss2 ? { x: 16, y: -2 } : { x: 5, y: -1 }),
-          pScale: isP2 ? { x: 0.85, y: 1.10 } : undefined,
-          eScale: !isP2 ? { x: 0.85, y: 1.10 } : undefined,
+          pScale: isP2 ? { x: 0.70, y: 1.15 } : undefined,
+          eScale: !isP2 ? { x: 0.70, y: 1.15 } : undefined,
           pRot: isP2 ? 0.12 : undefined,
           eRot: !isP2 ? -0.12 : undefined,
           showEffect: true,
@@ -2514,14 +2514,14 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const eAlpha = (f.targetAlpha !== undefined && eTarget) ? f.targetAlpha : 1.0;
     const pAlpha = (f.targetAlpha !== undefined && pTarget) ? f.targetAlpha : 1.0;
 
-    // Pokémon Silhouette Shadows (cast onto platform ground)
-    if (enemySprite && eAlpha > 0.02 && (enemy.hp > 0 || f.enemyHp > 0)) {
+    // Pokémon Silhouette Shadows (cast onto platform ground - suppressed during high-speed mid-air flight)
+    if (enemySprite && eAlpha > 0.02 && (enemy.hp > 0 || f.enemyHp > 0) && !f.hideEShadow && !f.eScale) {
       const eShadowX = em.x + f.eOffset.x;
       const eShadowY = em.y;
       drawPokemonSilhouetteShadow(targetCtx, enemySprite, eShadowX, eShadowY, em.size, false, 0.42 * eAlpha);
     }
 
-    if (playerSprite && pAlpha > 0.02 && (playerMon.hp > 0 || f.playerHp > 0)) {
+    if (playerSprite && pAlpha > 0.02 && (playerMon.hp > 0 || f.playerHp > 0) && !f.hidePShadow && !f.pScale) {
       const pShadowX = pm.x + f.pOffset.x;
       const pShadowY = pm.y;
       drawPokemonSilhouetteShadow(targetCtx, playerSprite, pShadowX, pShadowY, pm.size, true, 0.42 * pAlpha);
