@@ -145,77 +145,81 @@ export function drawRazorWindEffect(
   };
 
   if (step === 1) {
-    // Step 1: Initial 3D Tapered Helical Spiral Wrapping around User (No ground glow)
-    // 4 Tapered Helical Spiral Wind Ribbon Layers ascending up the body
+    // Step 1: Initial 3D Tapered Helical Spiral Wrapping around User (Full Opacity)
     const ribbonLayers = [
-      { y: 25, rx: 52, ry: 16, rot: -0.15, sA: -Math.PI * 0.85, eA: Math.PI * 0.85, maxW: 6.5, col: "#E0F2FE", a: 0.85 },
-      { y: 6, rx: 46, ry: 14, rot: 0.20, sA: -Math.PI * 0.90, eA: Math.PI * 0.90, maxW: 6.0, col: "#BAE6FD", a: 0.80 },
-      { y: -14, rx: 42, ry: 13, rot: -0.25, sA: -Math.PI * 0.85, eA: Math.PI * 0.85, maxW: 5.5, col: "#E0F2FE", a: 0.75 },
-      { y: -34, rx: 36, ry: 11, rot: 0.15, sA: -Math.PI * 0.80, eA: Math.PI * 0.80, maxW: 5.0, col: "#FFFFFF", a: 0.70 },
+      { y: 25, rx: 52, ry: 16, rot: -0.15, sA: -Math.PI * 0.85, eA: Math.PI * 0.85, maxW: 6.5, col: "#E0F2FE", a: 0.90 },
+      { y: 6, rx: 46, ry: 14, rot: 0.20, sA: -Math.PI * 0.90, eA: Math.PI * 0.90, maxW: 6.0, col: "#BAE6FD", a: 0.85 },
+      { y: -14, rx: 42, ry: 13, rot: -0.25, sA: -Math.PI * 0.85, eA: Math.PI * 0.85, maxW: 5.5, col: "#E0F2FE", a: 0.80 },
+      { y: -34, rx: 36, ry: 11, rot: 0.15, sA: -Math.PI * 0.80, eA: Math.PI * 0.80, maxW: 5.0, col: "#FFFFFF", a: 0.75 },
     ];
     for (const r of ribbonLayers) {
       drawTaperedHelicalRibbon(sx, sy, r.y, r.rx, r.ry, r.rot, r.sA, r.eA, r.maxW, r.col, r.a);
     }
   } else if (step === 2) {
-    // Step 2: Dense Towering 3D Helical Tornado Whirl around User (Full Enveloping Cyclone, No ground glow)
-    // 6 Dense Tapered Helical Spiral Ribbon Rings enveloping the Pokémon
+    // Step 2: High-Speed Swirl at User Dissolving & Fading Out into the Air (Fade-out Alpha)
     const ribbonLayers = [
-      { y: 30, rx: 58, ry: 18, rot: 0.10, sA: -Math.PI * 0.90, eA: Math.PI * 0.90, maxW: 8.0, col: "#BAE6FD", a: 0.95 },
-      { y: 14, rx: 52, ry: 16, rot: -0.20, sA: -Math.PI * 0.92, eA: Math.PI * 0.92, maxW: 7.5, col: "#E0F2FE", a: 0.90 },
-      { y: -2, rx: 48, ry: 15, rot: 0.25, sA: -Math.PI * 0.90, eA: Math.PI * 0.90, maxW: 7.0, col: "#BAE6FD", a: 0.90 },
-      { y: -18, rx: 44, ry: 14, rot: -0.15, sA: -Math.PI * 0.88, eA: Math.PI * 0.88, maxW: 6.5, col: "#FFFFFF", a: 0.95 },
-      { y: -36, rx: 40, ry: 12, rot: 0.20, sA: -Math.PI * 0.85, eA: Math.PI * 0.85, maxW: 6.0, col: "#E0F2FE", a: 0.85 },
-      { y: -54, rx: 34, ry: 10, rot: -0.10, sA: -Math.PI * 0.80, eA: Math.PI * 0.80, maxW: 5.5, col: "#FFFFFF", a: 0.80 },
+      { y: 30, rx: 58, ry: 18, rot: 0.35, sA: -Math.PI * 0.90, eA: Math.PI * 0.90, maxW: 7.0, col: "#BAE6FD", a: 0.45 },
+      { y: 14, rx: 52, ry: 16, rot: -0.40, sA: -Math.PI * 0.92, eA: Math.PI * 0.92, maxW: 6.5, col: "#E0F2FE", a: 0.40 },
+      { y: -2, rx: 48, ry: 15, rot: 0.45, sA: -Math.PI * 0.90, eA: Math.PI * 0.90, maxW: 6.0, col: "#BAE6FD", a: 0.40 },
+      { y: -18, rx: 44, ry: 14, rot: -0.35, sA: -Math.PI * 0.88, eA: Math.PI * 0.88, maxW: 5.5, col: "#FFFFFF", a: 0.35 },
+      { y: -36, rx: 40, ry: 12, rot: 0.40, sA: -Math.PI * 0.85, eA: Math.PI * 0.85, maxW: 5.0, col: "#E0F2FE", a: 0.30 },
+      { y: -54, rx: 34, ry: 10, rot: -0.30, sA: -Math.PI * 0.80, eA: Math.PI * 0.80, maxW: 4.5, col: "#FFFFFF", a: 0.25 },
     ];
     for (const r of ribbonLayers) {
       drawTaperedHelicalRibbon(sx, sy, r.y, r.rx, r.ry, r.rot, r.sA, r.eA, r.maxW, r.col, r.a);
     }
   } else if (step === 3) {
-    // Step 3: High-Speed Razor Crescent Blades Rushing toward Defender
-    const midX = sx + (tx - sx) * 0.70;
-    const midY = sy + (ty - sy) * 0.70 - 10;
-
-    const flyingBlades = [
-      { cx: midX - 25, cy: midY - 22, ang: -0.40, len: 66, curve: 18, thick: 8.5 },
-      { cx: midX + 25, cy: midY - 18, ang: 0.45, len: 68, curve: -18, thick: 8.5 },
-      { cx: midX - 18, cy: midY + 18, ang: 2.15, len: 62, curve: 16, thick: 8.0 },
-      { cx: midX + 20, cy: midY + 16, ang: -2.25, len: 64, curve: -16, thick: 8.0 },
+    // Step 3: At Defender - Opposing Outer Pairs Form with Faint Translucency (Transparent -> Starting to appear)
+    const earlyBlades = [
+      { cx: tx - 52, cy: ty - 40, ang: -0.42, len: 62, curve: 16, thick: 7.5, a: 0.38 },
+      { cx: tx + 52, cy: ty + 40, ang: -2.35, len: 62, curve: -16, thick: 7.5, a: 0.38 },
+      { cx: tx + 50, cy: ty - 38, ang: 0.48, len: 60, curve: -16, thick: 7.5, a: 0.38 },
+      { cx: tx - 50, cy: ty + 38, ang: 2.25, len: 60, curve: 16, thick: 7.5, a: 0.38 },
     ];
-    for (const b of flyingBlades) {
-      drawTaperedRazorBlade(b.cx, b.cy, b.ang, b.len, b.curve, b.thick, 1.0, 0.95);
+    for (const b of earlyBlades) {
+      drawTaperedRazorBlade(b.cx, b.cy, b.ang, b.len, b.curve, b.thick, 0.95, b.a);
     }
   } else if (step === 4) {
-    // Step 4: Full Multi-Angle "사사사사삿!" Tapered Razor Cleave Storm on Target (Reference Image 2!)
+    // Step 4: Closing In from All Opposing Directions - Becoming Denser / Semi-Opaque (사사사삭 쇄도!)
+    const midBlades = [
+      // Diagonal Opposing Pairs (Closer to center, darker alpha)
+      { cx: tx - 32, cy: ty - 26, ang: -0.40, len: 68, curve: 18, thick: 8.5, a: 0.78 },
+      { cx: tx + 32, cy: ty + 26, ang: -2.40, len: 68, curve: -18, thick: 8.5, a: 0.78 },
+      { cx: tx + 34, cy: ty - 24, ang: 0.45, len: 70, curve: -18, thick: 8.5, a: 0.78 },
+      { cx: tx - 34, cy: ty + 24, ang: 2.35, len: 70, curve: 18, thick: 8.5, a: 0.78 },
+      // Horizontal / Vertical Opposing Pairs joining in
+      { cx: tx - 44, cy: ty - 4, ang: 0.10, len: 64, curve: 16, thick: 8.0, a: 0.68 },
+      { cx: tx + 44, cy: ty + 4, ang: -0.15, len: 64, curve: -16, thick: 8.0, a: 0.68 },
+      { cx: tx - 4, cy: ty - 46, ang: 1.50, len: 60, curve: 15, thick: 7.5, a: 0.65 },
+      { cx: tx + 4, cy: ty + 46, ang: -1.55, len: 60, curve: -15, thick: 7.5, a: 0.65 },
+    ];
+    for (const b of midBlades) {
+      drawTaperedRazorBlade(b.cx, b.cy, b.ang, b.len, b.curve, b.thick, 1.0, b.a);
+    }
+  } else if (step === 5) {
+    // Step 5: Full Omnidirectional Solid Cleave Impact (100% Solid Alpha, 사사사사삿!) + Double Star Flash
     const stormBlades = [
-      // Top-Left to Center-Right
-      { cx: tx - 22, cy: ty - 26, ang: -0.40, len: 74, curve: 20, thick: 9.5, s: 1.1 },
-      // Top-Right to Center-Left
-      { cx: tx + 24, cy: ty - 24, ang: 0.45, len: 76, curve: -20, thick: 9.5, s: 1.15 },
-      // Horizontal Left Slash
-      { cx: tx - 34, cy: ty - 4, ang: 0.10, len: 70, curve: 18, thick: 9.0, s: 1.05 },
-      // Horizontal Right Slash
-      { cx: tx + 32, cy: ty + 4, ang: -0.15, len: 72, curve: -18, thick: 9.0, s: 1.1 },
-      // Bottom-Left to Upper-Right
-      { cx: tx - 26, cy: ty + 24, ang: 2.35, len: 68, curve: 18, thick: 8.5, s: 1.05 },
-      // Bottom-Right to Upper-Left
-      { cx: tx + 28, cy: ty + 22, ang: -2.40, len: 70, curve: -18, thick: 8.5, s: 1.05 },
-      // Vertical Plunge Slash
-      { cx: tx - 4, cy: ty - 36, ang: 1.50, len: 64, curve: 16, thick: 8.0, s: 1.0 },
-      // Upward Riser Slash
-      { cx: tx + 4, cy: ty + 34, ang: -1.55, len: 64, curve: -16, thick: 8.0, s: 1.0 },
+      { cx: tx - 18, cy: ty - 20, ang: -0.40, len: 74, curve: 20, thick: 9.5, s: 1.1 },
+      { cx: tx + 20, cy: ty - 18, ang: 0.45, len: 76, curve: -20, thick: 9.5, s: 1.15 },
+      { cx: tx - 28, cy: ty - 2, ang: 0.10, len: 70, curve: 18, thick: 9.0, s: 1.05 },
+      { cx: tx + 26, cy: ty + 2, ang: -0.15, len: 72, curve: -18, thick: 9.0, s: 1.1 },
+      { cx: tx - 20, cy: ty + 20, ang: 2.35, len: 68, curve: 18, thick: 8.5, s: 1.05 },
+      { cx: tx + 22, cy: ty + 18, ang: -2.40, len: 70, curve: -18, thick: 8.5, s: 1.05 },
+      { cx: tx - 4, cy: ty - 30, ang: 1.50, len: 64, curve: 16, thick: 8.0, s: 1.0 },
+      { cx: tx + 4, cy: ty + 28, ang: -1.55, len: 64, curve: -16, thick: 8.0, s: 1.0 },
     ];
 
     for (const b of stormBlades) {
       drawTaperedRazorBlade(b.cx, b.cy, b.ang, b.len, b.curve, b.thick, b.s, 1.0);
     }
 
-    // Double Center Impact Stars (Yellow & White from Reference Image 2!)
+    // Double Center Impact Stars (Yellow & White)
     drawMiniRetroStar(ctx, tx - 6, ty - 8, 28, "#FACC15");
     drawMiniRetroStar(ctx, tx - 6, ty - 8, 14, "#FFFFFF");
     drawMiniRetroStar(ctx, tx + 8, ty + 6, 22, "#FDE047");
     drawMiniRetroStar(ctx, tx + 8, ty + 6, 11, "#FFFFFF");
 
-    // Piercing Tapered Light Streaks radiating from center (Needle tapered lines)
+    // Piercing Tapered Light Streaks radiating from center
     const streaks = [
       { ox: -30, oy: -24, ex: -65, ey: -50 },
       { ox: 28, oy: -22, ex: 62, ey: -46 },
@@ -234,21 +238,21 @@ export function drawRazorWindEffect(
       ctx.fillStyle = "#FFFFFF";
       ctx.beginPath();
       ctx.moveTo(tx + st.ox + nx * 2, ty + st.oy + ny * 2);
-      ctx.lineTo(tx + st.ex, ty + st.ey); // needle tip
+      ctx.lineTo(tx + st.ex, ty + st.ey);
       ctx.lineTo(tx + st.ox - nx * 2, ty + st.oy - ny * 2);
       ctx.closePath();
       ctx.fill();
     }
-  } else if (step >= 5) {
-    // Step 5: Star Impact Burst & Dispersing Razor Blade Shards with Smooth Fade-Out Alpha
+  } else if (step >= 6) {
+    // Step 6: Star Impact Burst & Dispersing Razor Blade Shards with Smooth Fade-Out Alpha
     drawMiniRetroStar(ctx, tx, ty, 16, "rgba(250, 204, 21, 0.45)");
     drawMiniRetroStar(ctx, tx, ty, 8, "rgba(255, 255, 255, 0.55)");
 
     const shards = [
-      { cx: tx - 52, cy: ty - 38, ang: -0.5, len: 44, curve: 14, thick: 5.5, a: 0.22 },
-      { cx: tx + 54, cy: ty - 34, ang: 0.6, len: 46, curve: -14, thick: 5.5, a: 0.22 },
-      { cx: tx - 44, cy: ty + 38, ang: 2.2, len: 42, curve: 12, thick: 5.0, a: 0.18 },
-      { cx: tx + 46, cy: ty + 36, ang: -2.2, len: 44, curve: -12, thick: 5.0, a: 0.18 },
+      { cx: tx - 52, cy: ty - 38, ang: -0.5, len: 44, curve: 14, thick: 5.5, a: 0.20 },
+      { cx: tx + 54, cy: ty - 34, ang: 0.6, len: 46, curve: -14, thick: 5.5, a: 0.20 },
+      { cx: tx - 44, cy: ty + 38, ang: 2.2, len: 42, curve: 12, thick: 5.0, a: 0.16 },
+      { cx: tx + 46, cy: ty + 36, ang: -2.2, len: 44, curve: -12, thick: 5.0, a: 0.16 },
     ];
     for (const sh of shards) {
       drawTaperedRazorBlade(sh.cx, sh.cy, sh.ang, sh.len, sh.curve, sh.thick, 0.85, sh.a);
