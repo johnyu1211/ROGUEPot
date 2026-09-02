@@ -3765,25 +3765,20 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         const isAttackerP = f.isAttackerPlayer !== false;
 
         if (isTracking) {
-          // Lock to pure vertical tracking on attacker's base X axis (Zero horizontal shift & zero side edge clipping!)
-          const liveX = isAttackerP ? pm.x : em.x;
+          // Pure 100% vertical tracking: X is strictly centered at width / 2 (280) so left and right margins never expose!
           const liveY = isAttackerP ? (pm.y + f.pOffset.y) : (em.y + f.eOffset.y);
-          // Target position on screen: keep pokemon centered in middle of viewport
-          const screenX = width / 2;
-          const screenY = height / 2 + 20;
+          const screenY = isAttackerP ? pm.y : em.y;
 
-          targetCtx.translate(screenX, screenY);
+          targetCtx.translate(width / 2, screenY);
           targetCtx.scale(zoom, zoom);
-          targetCtx.translate(-liveX, -liveY);
+          targetCtx.translate(-width / 2, -liveY);
         } else {
-          const focalX = isAttackerP ? pm.x : em.x;
           const focalY = isAttackerP ? pm.y : em.y;
-          const panX = f.cameraPan?.x || 0;
           const panY = f.cameraPan?.y || 0;
 
-          targetCtx.translate(focalX, focalY);
+          targetCtx.translate(width / 2, focalY + panY);
           targetCtx.scale(zoom, zoom);
-          targetCtx.translate(-focalX + panX, -focalY + panY);
+          targetCtx.translate(-width / 2, -focalY);
         }
       }
 
