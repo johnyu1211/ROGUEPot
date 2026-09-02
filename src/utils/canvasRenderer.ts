@@ -5816,22 +5816,12 @@ function drawBattleFightMovesGrid(ctx: any, combatMon: any, isKo: boolean, categ
   ctx.fillStyle = glassGrad;
   ctx.fillRect(0, boxY, width, boxH);
 
-  if (battle.phase !== "FIGHT") {
-    // Top Accent Border Line (Gen 5 amber/gold or victory/defeat tint)
-    const topBorderColor = battle.phase === "VICTORY" ? "#22C55E" : battle.phase === "DEFEAT" ? "#EF4444" : "#F59E0B";
-    ctx.strokeStyle = topBorderColor;
+  if (battle.phase === "VICTORY" || battle.phase === "DEFEAT") {
+    ctx.strokeStyle = battle.phase === "VICTORY" ? "#22C55E" : "#EF4444";
     ctx.lineWidth = 2.5;
     ctx.beginPath();
     ctx.moveTo(0, boxY);
     ctx.lineTo(width, boxY);
-    ctx.stroke();
-
-    // Subtle Inner Highlight Line
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(0, boxY + 2);
-    ctx.lineTo(width, boxY + 2);
     ctx.stroke();
   }
 
