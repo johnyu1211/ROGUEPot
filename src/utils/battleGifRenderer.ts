@@ -2782,8 +2782,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const a2IsEvasionStrike = isEvasionStrike(a2);
 
     // Evasion state at START of turn (before Act 1 starts)
-    const isPlayerStartingEvading = (a1IsEvasionStrike && isP1) || (a2IsEvasionStrike && isP2) || (Boolean(a1 && a1.log?.includes("닿지 않았다") && !isP1));
-    const isEnemyStartingEvading = (a1IsEvasionStrike && !isP1) || (a2IsEvasionStrike && !isP2) || (Boolean(a1 && a1.log?.includes("닿지 않았다") && isP1));
+    const isPlayerStartingEvading = (a1IsEvasionStrike && isP1) || (a2IsEvasionStrike && isP2) || (Boolean(a1 && a1.log?.includes("닿지 않았다") && !isP1)) || Boolean(playerMon.semiInvulnerableState || playerMon.chargingMove);
+    const isEnemyStartingEvading = (a1IsEvasionStrike && !isP1) || (a2IsEvasionStrike && !isP2) || (Boolean(a1 && a1.log?.includes("닿지 않았다") && isP1)) || Boolean(enemy.semiInvulnerableState || enemy.chargingMove);
 
     // Evasion state during Act 1 (for non-acting Pokemon)
     const isPlayerEvadingDuringAct1 = isPlayerStartingEvading && !isP1;
