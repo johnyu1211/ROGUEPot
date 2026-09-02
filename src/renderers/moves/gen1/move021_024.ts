@@ -183,34 +183,34 @@ export function drawVineWhipEffect(
   };
 
   const drawBehindVines = () => {
-    // Vine 1 definition (Left-to-Right Lash)
+    // Vine 1 definition (상단 호를 그리며 적을 넘어 우하단으로 내려치는 옆면 후려치기)
     const v1_x0 = start.x - 12;
-    const v1_y0 = start.y - 18;
-    const v1_cx1 = start.x + dx * 0.15 - 35;
-    const v1_cy1 = start.y + dy * 0.15 - 75;
-    const v1_cx2 = start.x + dx * 0.65 - 10;
-    const v1_cy2 = start.y + dy * 0.65 - 55;
-    const v1_tx = target.x + 22;
-    const v1_ty = target.y - 4;
+    const v1_y0 = start.y - 20;
+    const v1_cx1 = start.x + dx * 0.25;
+    const v1_cy1 = start.y + dy * 0.25 - 110;
+    const v1_cx2 = target.x - 30;
+    const v1_cy2 = target.y - 75;
+    const v1_tx = target.x + 55;
+    const v1_ty = target.y + 40;
     const v1_ang = Math.atan2(v1_ty - v1_cy2, v1_tx - v1_cx2);
 
-    // Vine 2 definition (Right-to-Left Lash)
+    // Vine 2 definition (하단 호를 그리며 적을 넘어 좌상단으로 쓸어올리는 옆면 후려치기)
     const v2_x0 = start.x + 14;
     const v2_y0 = start.y - 8;
-    const v2_cx1 = start.x + dx * 0.35 + 45;
-    const v2_cy1 = start.y + dy * 0.35 + 45;
-    const v2_cx2 = start.x + dx * 0.75 + 30;
-    const v2_cy2 = start.y + dy * 0.75 + 25;
-    const v2_tx = target.x - 20;
-    const v2_ty = target.y + 12;
+    const v2_cx1 = start.x + dx * 0.45 + 40;
+    const v2_cy1 = start.y + dy * 0.45 + 50;
+    const v2_cx2 = target.x + 65;
+    const v2_cy2 = target.y + 60;
+    const v2_tx = target.x - 50;
+    const v2_ty = target.y - 45;
     const v2_ang = Math.atan2(v2_ty - v2_cy2, v2_tx - v2_cx2);
 
     if (step === 1) {
-      // 1타: 왼쪽에서 오른쪽으로 찰싹! (1st Strike from Left to Right)
+      // 1타: 상단에서 내려치며 옆면으로 찰싹! (1st Side-Slap from Top-Left across Defender)
       drawSingleVine(ctx, v1_x0, v1_y0, v1_cx1, v1_cy1, v1_cx2, v1_cy2, v1_tx, v1_ty, v1_ang, 1.2);
     } else if (step === 2) {
-      // 2타: 오른쪽에서 왼쪽으로 찰싹! (2nd Strike from Right to Left, 1st vine fading)
-      drawSingleVine(ctx, v1_x0, v1_y0, v1_cx1, v1_cy1, v1_cx2, v1_cy2, v1_tx, v1_ty, v1_ang, 1.0, 0.35);
+      // 2타: 하단에서 올려치며 옆면으로 찰싹! (2nd Side-Slap from Bottom-Right across Defender, 1st vine fading)
+      drawSingleVine(ctx, v1_x0, v1_y0, v1_cx1, v1_cy1, v1_cx2, v1_cy2, v1_tx, v1_ty, v1_ang, 1.0, 0.3);
       drawSingleVine(ctx, v2_x0, v2_y0, v2_cx1, v2_cy1, v2_cx2, v2_cy2, v2_tx, v2_ty, v2_ang, 1.25);
     } else if (step >= 3) {
       // 3단계: 두 채찍 부드럽게 회수 (Retracting)
@@ -221,32 +221,32 @@ export function drawVineWhipEffect(
 
   const drawFrontImpact = () => {
     if (step === 1) {
-      // 1타 타격 플래시 (좌 -> 우 타격점)
+      // 1타 타격 플래시 (옆면 타격 중심부)
       ctx.save();
-      const hitGrad1 = ctx.createRadialGradient(target.x + 12, target.y - 6, 2, target.x + 12, target.y - 6, 28);
+      const hitGrad1 = ctx.createRadialGradient(target.x + 6, target.y - 2, 2, target.x + 6, target.y - 2, 34);
       hitGrad1.addColorStop(0, "#FFFFFF");
       hitGrad1.addColorStop(0.35, "rgba(74, 222, 128, 0.95)");
-      hitGrad1.addColorStop(0.8, "rgba(34, 197, 94, 0.4)");
+      hitGrad1.addColorStop(0.8, "rgba(34, 197, 94, 0.3)");
       hitGrad1.addColorStop(1, "rgba(34, 197, 94, 0.0)");
       ctx.fillStyle = hitGrad1;
       ctx.beginPath();
-      ctx.arc(target.x + 12, target.y - 6, 28, 0, Math.PI * 2);
+      ctx.arc(target.x + 6, target.y - 2, 34, 0, Math.PI * 2);
       ctx.fill();
 
       drawLeaf(tx + 24, ty - 18, 0.6, 7);
       drawLeaf(tx + 12, ty + 10, 1.1, 6);
       ctx.restore();
     } else if (step === 2) {
-      // 2타 타격 플래시 (우 -> 좌 타격점 & 대형 잎사귀 폭발)
+      // 2타 타격 플래시 (옆면 타격 중심부 & 대형 잎사귀 폭발)
       ctx.save();
-      const hitGrad2 = ctx.createRadialGradient(target.x - 10, target.y + 8, 2, target.x - 10, target.y + 8, 34);
+      const hitGrad2 = ctx.createRadialGradient(target.x - 4, target.y + 4, 2, target.x - 4, target.y + 4, 38);
       hitGrad2.addColorStop(0, "#FFFFFF");
       hitGrad2.addColorStop(0.35, "rgba(74, 222, 128, 0.95)");
-      hitGrad2.addColorStop(0.8, "rgba(34, 197, 94, 0.4)");
+      hitGrad2.addColorStop(0.8, "rgba(34, 197, 94, 0.3)");
       hitGrad2.addColorStop(1, "rgba(34, 197, 94, 0.0)");
       ctx.fillStyle = hitGrad2;
       ctx.beginPath();
-      ctx.arc(target.x - 10, target.y + 8, 34, 0, Math.PI * 2);
+      ctx.arc(target.x - 4, target.y + 4, 38, 0, Math.PI * 2);
       ctx.fill();
 
       // Bursting foliage leaves
