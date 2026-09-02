@@ -5328,13 +5328,34 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       ctx.filter = "none";
     }
 
-    const effectiveDelay = f.delay >= 10000 ? f.delay : Math.round(f.delay * 2);
+    let effectiveDelay = f.delay;
+    if (f.delay >= 10000) {
+      effectiveDelay = f.delay;
+    } else if (f.isBlur) {
+      // Snappy leading loading frame (500ms instead of 1600ms)
+      effectiveDelay = 500;
+    } else if (f.showEffect || f.moveStep || f.hitFlash) {
+      // Core combat attack & impact frames: comfortable, weighty, and readable (3.4x)
+      effectiveDelay = Math.round(f.delay * 3.4);
+    } else {
+      // Windup, pause between turns, recoil recovery: natural pacing (2.4x)
+      effectiveDelay = Math.round(f.delay * 2.4);
+    }
+
     encoder.setDelay(effectiveDelay);
     encoder.addFrame(ctx);
   }
 
+  const totalMotionMs = framesConfig
+    .filter(f => f.delay < 10000)
+    .reduce((sum, f) => {
+      if (f.isBlur) return sum + 500;
+      if (f.showEffect || f.moveStep || f.hitFlash) return sum + Math.round(f.delay * 3.4);
+      return sum + Math.round(f.delay * 2.4);
+    }, 0);
+
   encoder.finish();
-  return { buffer: encoder.out.getData(), motionDurationMs: motionDurationMs * 2 };
+  return { buffer: encoder.out.getData(), motionDurationMs: totalMotionMs };
 }
 
 /**
