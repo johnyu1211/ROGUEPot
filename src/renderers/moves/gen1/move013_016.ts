@@ -206,7 +206,7 @@ export function drawRazorWindEffect(
       drawTaperedRazorBladeInward(b.cx, b.cy, b.len, b.curve, b.thick, 1.0, b.a);
     }
   } else if (step === 5) {
-    // Step 5: Climax Crisp Symmetrical X-Cross Cleave (100% Solid, All Blades Facing Inward) + Center Impact Star
+    // Step 5: Climax Crisp Symmetrical X-Cross Cleave (100% Solid, All Blades Facing Inward)
     const climaxCross = [
       { cx: tx - 14, cy: ty - 10, len: 78, curve: 20, thick: 9.5, s: 1.1 },
       { cx: tx + 14, cy: ty + 10, len: 78, curve: 20, thick: 9.5, s: 1.1 },
@@ -217,10 +217,6 @@ export function drawRazorWindEffect(
     for (const b of climaxCross) {
       drawTaperedRazorBladeInward(b.cx, b.cy, b.len, b.curve, b.thick, b.s, 1.0);
     }
-
-    // Single Crisp Center Impact Star (Clean & Sharp)
-    drawMiniRetroStar(ctx, tx, ty, 26, "#FACC15");
-    drawMiniRetroStar(ctx, tx, ty, 13, "#FFFFFF");
 
     // 4 Clean Diagonal Tapered Needle Glints
     const glints = [
@@ -246,9 +242,6 @@ export function drawRazorWindEffect(
     }
   } else if (step >= 6) {
     // Step 6: Symmetrical Fade-Out Dispersal
-    drawMiniRetroStar(ctx, tx, ty, 14, "rgba(250, 204, 21, 0.40)");
-    drawMiniRetroStar(ctx, tx, ty, 7, "rgba(255, 255, 255, 0.50)");
-
     const shards = [
       { cx: tx - 44, cy: ty - 32, len: 48, curve: 14, thick: 5.5, a: 0.20 },
       { cx: tx + 44, cy: ty + 32, len: 48, curve: 14, thick: 5.5, a: 0.20 },
