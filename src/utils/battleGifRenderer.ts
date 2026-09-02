@@ -263,8 +263,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   const isChop1 = (mKey1 === "karate-chop" || mKey1 === "karatechop");
   const isSlap1 = (mKey1 === "double-slap" || mKey1 === "doubleslap");
   const isPunch1 = (mKey1 === "comet-punch" || mKey1 === "cometpunch");
+  const isMegaPunch1 = (mKey1 === "mega-punch" || mKey1 === "megapunch");
   const isSingleStrikeSpecial1 = (
-    mKey1 === "mega-punch" || mKey1 === "megapunch" ||
     mKey1 === "pay-day" || mKey1 === "payday" ||
     mKey1 === "fire-punch" || mKey1 === "firepunch" ||
     mKey1 === "ice-punch" || mKey1 === "icepunch"
@@ -441,6 +441,82 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           }
         ])
       ];
+    } else if (isMegaPunch1) {
+      act1Frames = [
+        // Step 1: Big Yellow Ring appears around target (130ms)
+        {
+          delay: 130,
+          pOffset: isP1 ? { x: 12, y: -5 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -12, y: 5 } : { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 1,
+        },
+        // Step 2: Yellow Ring rapidly contracts/shrinks towards target (130ms)
+        {
+          delay: 130,
+          pOffset: isP1 ? { x: 16, y: -7 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -16, y: 7 } : { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 2,
+        },
+        // Step 3: Ring shrunk tiny + Heavy Punch Strikes + Hit Flash (220ms)
+        {
+          delay: 220,
+          pOffset: isP1 ? { x: 22, y: -9 } : { x: -6, y: 3 },
+          eOffset: isP1 ? { x: 10, y: -3 } : { x: -22, y: 9 },
+          showEffect: true,
+          hitFlash: true,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 3,
+        },
+        // Step 4: Ring expands outward like a ripple wave (130ms)
+        {
+          delay: 130,
+          pOffset: isP1 ? { x: 16, y: -6 } : { x: -3, y: 1 },
+          eOffset: isP1 ? { x: 5, y: -1 } : { x: -16, y: 6 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 4,
+        },
+        // Step 5: Wave expands further and dissipates (120ms)
+        {
+          delay: 120,
+          pOffset: isP1 ? { x: 10, y: -3 } : { x: 0, y: 0 },
+          eOffset: isP1 ? { x: 2, y: 0 } : { x: -10, y: 3 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 5,
+        }
+      ];
     } else if (isSingleStrikeSpecial1) {
       act1Frames = [
         // 1. Windup lunge (160ms)
@@ -531,8 +607,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const isChop2 = (mKey2 === "karate-chop" || mKey2 === "karatechop");
     const isSlap2 = (mKey2 === "double-slap" || mKey2 === "doubleslap");
     const isPunch2 = (mKey2 === "comet-punch" || mKey2 === "cometpunch");
+    const isMegaPunch2 = (mKey2 === "mega-punch" || mKey2 === "megapunch");
     const isSingleStrikeSpecial2 = (
-      mKey2 === "mega-punch" || mKey2 === "megapunch" ||
       mKey2 === "pay-day" || mKey2 === "payday" ||
       mKey2 === "fire-punch" || mKey2 === "firepunch" ||
       mKey2 === "ice-punch" || mKey2 === "icepunch"
@@ -708,6 +784,82 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveStep: idx * 2 + 2,
           }
         ])
+      ];
+    } else if (isMegaPunch2) {
+      act2Frames = [
+        // Step 1: Big Yellow Ring appears around target (130ms)
+        {
+          delay: 130,
+          pOffset: isP2 ? { x: 12, y: -5 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -12, y: 5 } : { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 1,
+        },
+        // Step 2: Yellow Ring rapidly contracts/shrinks towards target (130ms)
+        {
+          delay: 130,
+          pOffset: isP2 ? { x: 16, y: -7 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -16, y: 7 } : { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 2,
+        },
+        // Step 3: Ring shrunk tiny + Heavy Punch Strikes + Hit Flash (220ms)
+        {
+          delay: 220,
+          pOffset: isP2 ? { x: 22, y: -9 } : { x: -6, y: 3 },
+          eOffset: !isP2 ? { x: -22, y: 9 } : { x: 10, y: -3 },
+          showEffect: true,
+          hitFlash: true,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 3,
+        },
+        // Step 4: Ring expands outward like a ripple wave (130ms)
+        {
+          delay: 130,
+          pOffset: isP2 ? { x: 16, y: -6 } : { x: -3, y: 1 },
+          eOffset: !isP2 ? { x: -16, y: 6 } : { x: 5, y: -1 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 4,
+        },
+        // Step 5: Wave expands further and dissipates (120ms)
+        {
+          delay: 120,
+          pOffset: isP2 ? { x: 10, y: -3 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -10, y: 3 } : { x: 2, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 5,
+        }
       ];
     } else if (isSingleStrikeSpecial2) {
       act2Frames = [
