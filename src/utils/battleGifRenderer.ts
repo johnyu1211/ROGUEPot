@@ -115,6 +115,9 @@ function createEffectivenessFlickerFrames(
       targetAlpha: 1.0,
       enemyHp: action.enemyHpAfter,
       playerHp: action.playerHpAfter,
+      textLineIdx: textIdx,
+      statProgress: isLast ? statProgress : undefined,
+      isBlur: false,
       moveEffect: action,
     });
   }

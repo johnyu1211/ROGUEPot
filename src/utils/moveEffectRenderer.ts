@@ -982,19 +982,19 @@ export function drawDoubleSlapEffect(ctx: any, target: { x: number; y: number },
 }
 
 /**
- * Clean White Boxing / Punch Fist SVG (Upright Vertical Angle 0 deg)
+ * Authentic Front-Facing Straight Punch Fist SVG (정면 정권 - Seiken)
+ * Symmetrical front-facing fist punching straight forward into the target!
  */
-export function drawWhitePunchFistSvg(
+export function drawFrontStraightPunchFistSvg(
   ctx: any,
   x: number,
   y: number,
-  scale: number = 1.3,
-  isFlipped: boolean = false,
+  scale: number = 1.35,
   alpha: number = 1.0
 ) {
   ctx.save();
   ctx.translate(x, y);
-  ctx.scale(isFlipped ? -scale : scale, scale);
+  ctx.scale(scale, scale);
   ctx.globalAlpha = alpha;
 
   ctx.fillStyle = "#FFFFFF";
@@ -1003,78 +1003,94 @@ export function drawWhitePunchFistSvg(
   ctx.lineJoin = "round";
   ctx.lineCap = "round";
 
-  // Rounded Boxing Punch Fist Outline (0-deg Upright Horizontal Punch)
+  // 1. Front-Facing Clenched Fist Contour (Seiken)
   ctx.beginPath();
-  // Wrist at back
-  ctx.moveTo(-16, -10);
-  ctx.lineTo(-6, -11);
-  // Knuckles along top-right to bottom-right
-  ctx.lineTo(8, -12);
-  ctx.arc(14, -7, 4.5, -Math.PI / 2, 0); // Index
-  ctx.arc(15, -1, 4.5, -Math.PI / 3, Math.PI / 6); // Middle
-  ctx.arc(14, 5, 4.5, -Math.PI / 6, Math.PI / 3); // Ring
-  ctx.arc(10, 10, 4.2, 0, Math.PI / 2); // Pinky
-  // Palm bottom
-  ctx.lineTo(-6, 12);
-  ctx.lineTo(-16, 10);
+  // Wrist / Forearm base
+  ctx.moveTo(-14, 18);
+  ctx.lineTo(14, 18);
+  ctx.lineTo(18, 10);
+  // Pinky outer edge
+  ctx.lineTo(20, -2);
+  ctx.arc(15, -9, 5.0, 0, Math.PI, true); // Pinky knuckle
+  // Ring knuckle
+  ctx.arc(5, -12, 5.2, 0, Math.PI, true);
+  // Middle knuckle (peak)
+  ctx.arc(-5, -12, 5.2, 0, Math.PI, true);
+  // Index knuckle
+  ctx.arc(-15, -9, 5.0, 0, Math.PI, true);
+  // Thumb outer curve
+  ctx.lineTo(-20, -2);
+  ctx.lineTo(-18, 10);
+  ctx.lineTo(-14, 18);
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
 
-  // Thumb folded across front
+  // 2. Curled Finger Division Creases
+  ctx.lineWidth = 2.4;
   ctx.beginPath();
-  ctx.moveTo(-4, 9);
-  ctx.lineTo(6, 8);
-  ctx.arc(8, 4, 4.0, Math.PI / 2, -Math.PI / 2, true);
-  ctx.lineTo(-2, 0);
-  ctx.quadraticCurveTo(-6, 2, -4, 9);
+  // Vertical finger lines
+  ctx.moveTo(-10, -9); ctx.lineTo(-10, 3);
+  ctx.moveTo(0, -12); ctx.lineTo(0, 3);
+  ctx.moveTo(10, -9); ctx.lineTo(10, 3);
+  // Horizontal joint line
+  ctx.moveTo(-15, -2); ctx.lineTo(15, -2);
+  ctx.stroke();
+
+  // 3. Thumb folded across lower front
+  ctx.lineWidth = 3.0;
+  ctx.beginPath();
+  ctx.moveTo(-16, 10);
+  ctx.quadraticCurveTo(-6, 13, 6, 9);
+  ctx.quadraticCurveTo(9, 6, 7, 3);
+  ctx.lineTo(-14, 3);
   ctx.closePath();
   ctx.fillStyle = "#FFFFFF";
   ctx.fill();
   ctx.stroke();
 
-  // Knuckle division creases
+  // Thumb knuckle crease
+  ctx.lineWidth = 2.0;
   ctx.beginPath();
-  ctx.moveTo(10, -5);
-  ctx.lineTo(4, -3);
-  ctx.moveTo(11, 0);
-  ctx.lineTo(5, 1);
+  ctx.moveTo(-5, 3);
+  ctx.lineTo(-5, 9);
   ctx.stroke();
 
   ctx.restore();
 }
 
 /**
- * 004 연속펀치 (Comet Punch): 3-hit White Fist Barrage (Vertical Upright Angle 0 deg)
- * Alternating Left / Right / Center white fist strikes with impact stars and gradual fade!
+ * 004 연속펀치 (Comet Punch): 3-hit Front Straight Punch (정면 정권) Barrage
+ * Direct forward Seiken straight punches impacting the center of the target with impact stars & gradual fade!
  */
 export function drawCometPunchEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
   ctx.save();
 
-  // step: 1 (Hit 1 Left Impact), 2 (Hit 1 Left Fade), 3 (Hit 2 Right Impact), 4 (Hit 2 Right Fade), 5 (Hit 3 Center Impact), 6 (Hit 3 Center Fade)
+  // step: 1 (Hit 1 Center-Left Impact), 2 (Hit 1 Center-Left Fade), 3 (Hit 2 Center-Right Impact), 4 (Hit 2 Center-Right Fade), 5 (Hit 3 Dead-Center Impact), 6 (Hit 3 Dead-Center Fade)
   const isFade = (step % 2 === 0);
-  const hitIndex = Math.floor((step - 1) / 2) % 3; // 0 (Left), 1 (Right), 2 (Center)
+  const hitIndex = Math.floor((step - 1) / 2) % 3; // 0 (Hit 1), 1 (Hit 2), 2 (Hit 3)
 
+  // Direct Straight Frontal Punches (No side slaps! Straight into target center)
   const configs = [
-    { ox: -24, oy: -25, isFlipped: false }, // Hit 1: Left Upper
-    { ox: 24, oy: -12, isFlipped: true },   // Hit 2: Right Lower
-    { ox: -2, oy: -20, isFlipped: false },  // Hit 3: Center Direct
+    { ox: -10, oy: -20, scale: 1.30 }, // Hit 1: Straight Left Jab
+    { ox: 10, oy: -28, scale: 1.35 },  // Hit 2: Straight Right Cross
+    { ox: 0, oy: -24, scale: 1.45 },   // Hit 3: Heavy Straight Direct Smash
   ];
   const cfg = configs[hitIndex];
 
-  const followOffset = isFade ? (cfg.isFlipped ? -6 : 6) : 0;
-  const fistX = target.x + cfg.ox + followOffset;
-  const fistY = target.y + cfg.oy;
+  const fistX = target.x + cfg.ox;
+  const fistY = target.y + cfg.oy + (isFade ? -4 : 0);
   const alpha = isFade ? 0.32 : 1.0;
+  const currentScale = isFade ? cfg.scale * 1.08 : cfg.scale;
 
-  // 1. White Punch Fist SVG (Purely vertical upright angle)
-  drawWhitePunchFistSvg(ctx, fistX, fistY, 1.25, cfg.isFlipped, alpha);
+  // 1. Front-Facing Straight Fist (정면 정권)
+  drawFrontStraightPunchFistSvg(ctx, fistX, fistY, currentScale, alpha);
 
-  // 2. Impact Star / Sparks at Knuckle Contact Point
+  // 2. Impact Star / Sparks at Central Knuckle Contact Point
   ctx.save();
-  const sparkX = fistX + (cfg.isFlipped ? -16 : 16);
-  const sparkY = fistY - 2;
-  const starRadius = isFade ? 11 : 18;
+  const sparkX = fistX;
+  const sparkY = fistY - 10;
+  const starRadius = isFade ? 12 : 20;
   const starAlpha = isFade ? 0.38 : 1.0;
 
   ctx.globalAlpha = starAlpha;
@@ -1099,11 +1115,12 @@ export function drawCometPunchEffect(ctx: any, target: { x: number; y: number },
   ctx.beginPath();
   ctx.moveTo(sparkX, sparkY - innerR);
   ctx.quadraticCurveTo(sparkX, sparkY, sparkX + innerR, sparkY);
-  ctx.quadraticCurveTo(sparkX, sparkY, sparkX, sparkY + innerR);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX + innerR, sparkY);
   ctx.quadraticCurveTo(sparkX, sparkY, sparkX - innerR, sparkY);
   ctx.quadraticCurveTo(sparkX, sparkY, sparkX - innerR, sparkY);
   ctx.closePath();
   ctx.fill();
+  ctx.stroke();
 
   // Spark dots
   const sparkScale = isFade ? 1.4 : 1.0;
