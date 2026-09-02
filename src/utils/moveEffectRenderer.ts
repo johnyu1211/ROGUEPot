@@ -1183,7 +1183,7 @@ function drawMiniRetroStar(ctx: any, x: number, y: number, radius: number, color
 }
 
 /**
- * Japanese Koban (금화 / 엽전 코인) Helper for Pay Day
+ * Japanese Koban (금화 / 엽전 코인) Helper for Pay Day (Clean Compact Size)
  */
 function drawKobanCoin(ctx: any, x: number, y: number, scale: number = 1.0, angle: number = 0) {
   ctx.save();
@@ -1191,40 +1191,40 @@ function drawKobanCoin(ctx: any, x: number, y: number, scale: number = 1.0, angl
   ctx.rotate(angle);
   ctx.scale(scale, scale);
 
-  // Outer Koban Oval
+  // Outer Koban Oval (Compact ~70% size: 7x11.5)
   ctx.fillStyle = "#FACC15";
   ctx.strokeStyle = "#B45309";
-  ctx.lineWidth = 2.4;
+  ctx.lineWidth = 1.8;
 
   ctx.beginPath();
-  ctx.ellipse(0, 0, 10, 16, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 0, 7, 11.5, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
 
   // Inner Border Rim
   ctx.strokeStyle = "#F59E0B";
-  ctx.lineWidth = 1.2;
+  ctx.lineWidth = 1.0;
   ctx.beginPath();
-  ctx.ellipse(0, 0, 7.5, 13.5, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 0, 5.2, 9.5, 0, 0, Math.PI * 2);
   ctx.stroke();
 
   // Koban horizontal groove ridges
   ctx.strokeStyle = "#92400E";
-  ctx.lineWidth = 1.5;
+  ctx.lineWidth = 1.2;
   ctx.beginPath();
-  ctx.moveTo(-5, -6); ctx.lineTo(5, -6);
-  ctx.moveTo(-6, 0); ctx.lineTo(6, 0);
-  ctx.moveTo(-5, 6); ctx.lineTo(5, 6);
+  ctx.moveTo(-3.5, -4.5); ctx.lineTo(3.5, -4.5);
+  ctx.moveTo(-4.5, 0); ctx.lineTo(4.5, 0);
+  ctx.moveTo(-3.5, 4.5); ctx.lineTo(3.5, 4.5);
   ctx.stroke();
 
   // Center Kanji / seal mark (Square / Cross)
   ctx.fillStyle = "#78350F";
-  ctx.fillRect(-2, -2, 4, 4);
+  ctx.fillRect(-1.5, -1.5, 3, 3);
 
   // Glimmer highlight
   ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
   ctx.beginPath();
-  ctx.ellipse(-3, -8, 2.5, 4, -Math.PI / 4, 0, Math.PI * 2);
+  ctx.ellipse(-2, -5.5, 1.8, 3, -Math.PI / 4, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.restore();
@@ -1232,11 +1232,11 @@ function drawKobanCoin(ctx: any, x: number, y: number, scale: number = 1.0, angl
 
 /**
  * 005 메가톤펀치 (Mega Punch):
- * Step 1: Big yellow ring appears around target
- * Step 2: Yellow ring rapidly contracts/shrinks down towards target center
- * Step 3: Ring reaches minimum size -> Heavy punch strikes + Large impact starburst + Hit flash
- * Step 4: Yellow ring expands outward like a shockwave ripple
- * Step 5: Shockwave ripple expands further and dissipates
+ * Step 1: Big yellow ring (56px) + Semi-transparent fist spinning (-1.35 rad)
+ * Step 2: Yellow ring contracting (28px) + Semi-transparent fist spinning further (-2.90 rad)
+ * Step 3: Yellow ring shrinks tiny (14px) + Fist STOPS and LOCKS into 100% opaque front straight Seiken (0 rad) + Mega Starburst
+ * Step 4: Yellow shockwave ripple expands outward (48px) + Locked fist fading
+ * Step 5: Shockwave ripple expands further and dissipates (70px)
  */
 export function drawMegaPunchEffect(ctx: any, target: { x: number; y: number }, step: number = 3) {
   ctx.save();
@@ -1244,8 +1244,9 @@ export function drawMegaPunchEffect(ctx: any, target: { x: number; y: number }, 
   const targetX = target.x;
   const targetY = target.y - 12;
 
-  // Step 1: Large Yellow Ring (Radius: 56px)
+  // Step 1: Large Yellow Ring (Radius: 56px) + Transparent Spinning Fist (-1.35 rad)
   if (step === 1) {
+    // 1. Big Yellow Ring
     ctx.save();
     ctx.strokeStyle = "#FACC15";
     ctx.lineWidth = 4.0;
@@ -1259,9 +1260,25 @@ export function drawMegaPunchEffect(ctx: any, target: { x: number; y: number }, 
     ctx.arc(targetX, targetY - 14, 56, 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
+
+    // 2. Transparent Spinning Fist (Phase 1 Spin)
+    ctx.save();
+    ctx.translate(targetX, targetY - 18);
+    ctx.rotate(-1.35);
+    ctx.scale(0.68, 0.68);
+    ctx.globalAlpha = 0.35;
+    if (cometPunchFistImg) {
+      const fw = cometPunchFistImg.width;
+      const fh = cometPunchFistImg.height;
+      ctx.drawImage(cometPunchFistImg, -fw / 2, -fh / 2, fw, fh);
+    } else {
+      drawFrontStraightPunchFistSvg(ctx, 0, 0, 2.2, 1.0);
+    }
+    ctx.restore();
   }
-  // Step 2: Yellow Ring Rapidly Contracting (Radius: 28px)
+  // Step 2: Yellow Ring Contracting (Radius: 28px) + Transparent Spinning Fist (-2.90 rad)
   else if (step === 2) {
+    // 1. Contracting Yellow Ring
     ctx.save();
     ctx.strokeStyle = "#FACC15";
     ctx.lineWidth = 4.5;
@@ -1275,8 +1292,23 @@ export function drawMegaPunchEffect(ctx: any, target: { x: number; y: number }, 
     ctx.arc(targetX, targetY - 14, 28, 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
+
+    // 2. Transparent Spinning Fist (Phase 2 Spin)
+    ctx.save();
+    ctx.translate(targetX, targetY - 18);
+    ctx.rotate(-2.90);
+    ctx.scale(0.74, 0.74);
+    ctx.globalAlpha = 0.60;
+    if (cometPunchFistImg) {
+      const fw = cometPunchFistImg.width;
+      const fh = cometPunchFistImg.height;
+      ctx.drawImage(cometPunchFistImg, -fw / 2, -fh / 2, fw, fh);
+    } else {
+      drawFrontStraightPunchFistSvg(ctx, 0, 0, 2.3, 1.0);
+    }
+    ctx.restore();
   }
-  // Step 3: Ring has shrunk small (Radius: 14px) -> Fist strikes with Mega Starburst!
+  // Step 3: Shrunk Ring (Radius: 14px) + LOCKED OPAQUE FRONT STRAIGHT FIST (0 rad) + Mega Starburst!
   else if (step === 3) {
     // 1. Shrunk Yellow Core Ring
     ctx.save();
@@ -1287,10 +1319,11 @@ export function drawMegaPunchEffect(ctx: any, target: { x: number; y: number }, 
     ctx.stroke();
     ctx.restore();
 
-    // 2. Heavy Punch Fist
+    // 2. Heavy Punch Fist LOCKED in Opaque Upright Straight Position (0 deg rotation)
     ctx.save();
     ctx.translate(targetX, targetY - 18);
-    ctx.scale(0.80, 0.80);
+    ctx.scale(0.82, 0.82);
+    ctx.globalAlpha = 1.0;
     if (cometPunchFistImg) {
       const fw = cometPunchFistImg.width;
       const fh = cometPunchFistImg.height;
@@ -1345,7 +1378,7 @@ export function drawMegaPunchEffect(ctx: any, target: { x: number; y: number }, 
       ctx.fill();
     }
   }
-  // Step 4: Ring expands outward like a ripple wave (Radius: 48px)
+  // Step 4: Ring expands outward like a ripple shockwave (Radius: 48px) + Locked Fist Fading
   else if (step === 4) {
     // 1. Expanding Shockwave Ripple
     ctx.save();
@@ -1363,11 +1396,11 @@ export function drawMegaPunchEffect(ctx: any, target: { x: number; y: number }, 
     ctx.stroke();
     ctx.restore();
 
-    // 2. Fading Fist
+    // 2. Fading Upright Fist
     ctx.save();
     ctx.translate(targetX, targetY - 18);
     ctx.scale(0.85, 0.85);
-    ctx.globalAlpha = 0.45;
+    ctx.globalAlpha = 0.40;
     if (cometPunchFistImg) {
       const fw = cometPunchFistImg.width;
       const fh = cometPunchFistImg.height;
