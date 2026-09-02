@@ -2396,13 +2396,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
       const isMiss1 = !isHit1;
       act1Frames = [
-        // 1. 적의 좌상단으로 접근 & 앞쪽으로 살짝 기울임 (Approach Left-Elevated & Tilt Forward - 100ms)
+        // 1. 적의 좌상단으로 접근 & 앞쪽으로 살짝 기울임 (원근법 축소/확대 적용 - 100ms)
         {
           delay: 100,
-          pOffset: isP1 ? { x: 208, y: -107 } : { x: 0, y: 0 },
-          eOffset: !isP1 ? { x: -208, y: 63 } : { x: 0, y: 0 },
+          pOffset: isP1 ? { x: 217, y: -103 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -217, y: 67 } : { x: 0, y: 0 },
           pRot: isP1 ? 0.18 : undefined,
           eRot: !isP1 ? -0.18 : undefined,
+          pScale: isP1 ? { x: 0.82, y: 0.82 } : undefined,
+          eScale: !isP1 ? { x: 1.25, y: 1.25 } : undefined,
           hidePShadow: isP1,
           hideEShadow: !isP1,
           drawEnemyOnTop: !isP1,
@@ -2415,15 +2417,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 1,
         },
-        // 2. 검은 타원 쿵! 누름 + 상대 가로로 넓어지며 납작해짐 (Black Oval Press Down & Opponent Squash - 130ms)
+        // 2. 검은 타원 쿵! 누름 + 상대 가로로 넓어지며 납작해짐 (원근감 비례 짓누르기 - 130ms)
         {
           delay: 130,
-          pOffset: isP1 ? { x: 211, y: -97 } : (isMiss1 ? { x: 20, y: 0 } : { x: 0, y: 10 }),
-          eOffset: isP1 ? (isMiss1 ? { x: 20, y: 0 } : { x: 0, y: 10 }) : { x: -211, y: 73 },
+          pOffset: isP1 ? { x: 219, y: -95 } : (isMiss1 ? { x: 20, y: 0 } : { x: 0, y: 8 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 20, y: 0 } : { x: 0, y: 8 }) : { x: -219, y: 75 },
           pRot: isP1 ? 0.22 : undefined,
           eRot: !isP1 ? -0.22 : undefined,
-          pScale: isP1 ? { x: 1.1, y: 0.9 } : (isMiss1 ? undefined : { x: 1.28, y: 0.68 }),
-          eScale: isP1 ? (isMiss1 ? undefined : { x: 1.28, y: 0.68 }) : { x: 1.1, y: 0.9 },
+          pScale: isP1 ? { x: 0.92, y: 0.70 } : (isMiss1 ? undefined : { x: 1.25, y: 0.70 }),
+          eScale: isP1 ? (isMiss1 ? undefined : { x: 1.25, y: 0.70 }) : { x: 1.40, y: 1.05 },
           hidePShadow: isP1,
           hideEShadow: !isP1,
           drawEnemyOnTop: !isP1,
@@ -2436,15 +2438,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 2,
         },
-        // 3. 꾹 누르고 버티기 & 지면 먼지 (Hold Firm Press & Tremor - 110ms)
+        // 3. 꾹 누르고 버티기 & 지면 먼지 (원근감 비례 유지 - 110ms)
         {
           delay: 110,
-          pOffset: isP1 ? { x: 211, y: -97 } : (isMiss1 ? { x: 20, y: 0 } : { x: 0, y: 8 }),
-          eOffset: isP1 ? (isMiss1 ? { x: 20, y: 0 } : { x: 0, y: 8 }) : { x: -211, y: 73 },
+          pOffset: isP1 ? { x: 219, y: -95 } : (isMiss1 ? { x: 20, y: 0 } : { x: 0, y: 6 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 20, y: 0 } : { x: 0, y: 6 }) : { x: -219, y: 75 },
           pRot: isP1 ? 0.20 : undefined,
           eRot: !isP1 ? -0.20 : undefined,
-          pScale: isP1 ? undefined : (isMiss1 ? undefined : { x: 1.24, y: 0.74 }),
-          eScale: isP1 ? (isMiss1 ? undefined : { x: 1.24, y: 0.74 }) : undefined,
+          pScale: isP1 ? { x: 0.86, y: 0.74 } : (isMiss1 ? undefined : { x: 1.20, y: 0.75 }),
+          eScale: isP1 ? (isMiss1 ? undefined : { x: 1.20, y: 0.75 }) : { x: 1.32, y: 1.12 },
           hidePShadow: isP1,
           hideEShadow: !isP1,
           drawEnemyOnTop: !isP1,
@@ -2462,8 +2464,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           delay: 90,
           pOffset: { x: 0, y: 0 },
           eOffset: { x: 0, y: 0 },
-          pScale: isP1 ? undefined : (isMiss1 ? undefined : { x: 0.96, y: 1.06 }),
-          eScale: isP1 ? (isMiss1 ? undefined : { x: 0.96, y: 1.06 }) : undefined,
+          pScale: isP1 ? undefined : (isMiss1 ? undefined : { x: 0.97, y: 1.05 }),
+          eScale: isP1 ? (isMiss1 ? undefined : { x: 0.97, y: 1.05 }) : undefined,
           showEffect: false,
           hitFlash: false,
           enemyHp: a1.enemyHpAfter,
@@ -4432,13 +4434,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
       const isMiss2 = !isHit2;
       act2Frames = [
-        // 1. 적의 좌상단으로 접근 & 앞쪽으로 살짝 기울임 (Approach Left-Elevated & Tilt Forward - 100ms)
+        // 1. 적의 좌상단으로 접근 & 앞쪽으로 살짝 기울임 (원근법 축소/확대 적용 - 100ms)
         {
           delay: 100,
-          pOffset: isP2 ? { x: 208, y: -107 } : { x: 0, y: 0 },
-          eOffset: !isP2 ? { x: -208, y: 63 } : { x: 0, y: 0 },
+          pOffset: isP2 ? { x: 217, y: -103 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -217, y: 67 } : { x: 0, y: 0 },
           pRot: isP2 ? 0.18 : undefined,
           eRot: !isP2 ? -0.18 : undefined,
+          pScale: isP2 ? { x: 0.82, y: 0.82 } : undefined,
+          eScale: !isP2 ? { x: 1.25, y: 1.25 } : undefined,
           hidePShadow: isP2,
           hideEShadow: !isP2,
           drawEnemyOnTop: !isP2,
@@ -4451,15 +4455,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 1,
         },
-        // 2. 검은 타원 쿵! 누름 + 상대 가로로 넓어지며 납작해짐 (Black Oval Press Down & Opponent Squash - 130ms)
+        // 2. 검은 타원 쿵! 누름 + 상대 가로로 넓어지며 납작해짐 (원근감 비례 짓누르기 - 130ms)
         {
           delay: 130,
-          pOffset: isP2 ? { x: 211, y: -97 } : (isMiss2 ? { x: 20, y: 0 } : { x: 0, y: 10 }),
-          eOffset: isP2 ? (isMiss2 ? { x: 20, y: 0 } : { x: 0, y: 10 }) : { x: -211, y: 73 },
+          pOffset: isP2 ? { x: 219, y: -95 } : (isMiss2 ? { x: 20, y: 0 } : { x: 0, y: 8 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 20, y: 0 } : { x: 0, y: 8 }) : { x: -219, y: 75 },
           pRot: isP2 ? 0.22 : undefined,
           eRot: !isP2 ? -0.22 : undefined,
-          pScale: isP2 ? { x: 1.1, y: 0.9 } : (isMiss2 ? undefined : { x: 1.28, y: 0.68 }),
-          eScale: isP2 ? (isMiss2 ? undefined : { x: 1.28, y: 0.68 }) : { x: 1.1, y: 0.9 },
+          pScale: isP2 ? { x: 0.92, y: 0.70 } : (isMiss2 ? undefined : { x: 1.25, y: 0.70 }),
+          eScale: isP2 ? (isMiss2 ? undefined : { x: 1.25, y: 0.70 }) : { x: 1.40, y: 1.05 },
           hidePShadow: isP2,
           hideEShadow: !isP2,
           drawEnemyOnTop: !isP2,
@@ -4472,15 +4476,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 2,
         },
-        // 3. 꾹 누르고 버티기 & 지면 먼지 (Hold Firm Press & Tremor - 110ms)
+        // 3. 꾹 누르고 버티기 & 지면 먼지 (원근감 비례 유지 - 110ms)
         {
           delay: 110,
-          pOffset: isP2 ? { x: 211, y: -97 } : (isMiss2 ? { x: 20, y: 0 } : { x: 0, y: 8 }),
-          eOffset: isP2 ? (isMiss2 ? { x: 20, y: 0 } : { x: 0, y: 8 }) : { x: -211, y: 73 },
+          pOffset: isP2 ? { x: 219, y: -95 } : (isMiss2 ? { x: 20, y: 0 } : { x: 0, y: 6 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 20, y: 0 } : { x: 0, y: 6 }) : { x: -219, y: 75 },
           pRot: isP2 ? 0.20 : undefined,
           eRot: !isP2 ? -0.20 : undefined,
-          pScale: isP2 ? undefined : (isMiss2 ? undefined : { x: 1.24, y: 0.74 }),
-          eScale: isP2 ? (isMiss2 ? undefined : { x: 1.24, y: 0.74 }) : undefined,
+          pScale: isP2 ? { x: 0.86, y: 0.74 } : (isMiss2 ? undefined : { x: 1.20, y: 0.75 }),
+          eScale: isP2 ? (isMiss2 ? undefined : { x: 1.20, y: 0.75 }) : { x: 1.32, y: 1.12 },
           hidePShadow: isP2,
           hideEShadow: !isP2,
           drawEnemyOnTop: !isP2,
@@ -4498,8 +4502,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           delay: 90,
           pOffset: { x: 0, y: 0 },
           eOffset: { x: 0, y: 0 },
-          pScale: isP2 ? undefined : (isMiss2 ? undefined : { x: 0.96, y: 1.06 }),
-          eScale: isP2 ? (isMiss2 ? undefined : { x: 0.96, y: 1.06 }) : undefined,
+          pScale: isP2 ? undefined : (isMiss2 ? undefined : { x: 0.97, y: 1.05 }),
+          eScale: isP2 ? (isMiss2 ? undefined : { x: 0.97, y: 1.05 }) : undefined,
           showEffect: false,
           hitFlash: false,
           enemyHp: a2.enemyHpAfter,
