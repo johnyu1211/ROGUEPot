@@ -152,6 +152,27 @@ export async function renderSlotsScreenData(
   return { embeds: [], files: [attachment], attachments: [], components };
 }
 
+/**
+ * Concurrency guard: Prevents race conditions, spam-clicking, and double-action execution
+ * while an existing battle action (attack, switch, item, menu) is currently processing.
+ */
+const activeBattleLocks = new Map<string, number>();
+
+function acquireBattleLock(userId: string): boolean {
+  const now = Date.now();
+  const existing = activeBattleLocks.get(userId);
+  // Auto-expire lock after 15 seconds to prevent any permanent deadlocks
+  if (existing && now - existing < 15000) {
+    return false; // Already locked by an ongoing action!
+  }
+  activeBattleLocks.set(userId, now);
+  return true;
+}
+
+function releaseBattleLock(userId: string) {
+  activeBattleLocks.delete(userId);
+}
+
 export async function safeInteractionUpdate(interaction: any, data: any) {
   try {
     if (interaction.replied || interaction.deferred) {
@@ -3597,6 +3618,13 @@ export const interactionCreateEvent: BotEvent = {
 
       // 2-7. Battle Actions (⚔️ Fight, 🎒 Bag, 🔄 Party, 🏃 Run, Moves, Balls, Next Wave)
       if (customId.startsWith("battle_")) {
+        // Concurrency guard: Drop rapid/spam clicks while an action is already in flight!
+        if (!acquireBattleLock(interaction.user.id)) {
+          await interaction.deferUpdate().catch(() => null);
+          return;
+        }
+
+        try {
         // 2-7-A. Fight Menu Selected
         if (customId.startsWith("battle_menu_fight_")) {
           const slotId = parseInt(parts[3], 10) || 1;
@@ -3725,7 +3753,10 @@ export const interactionCreateEvent: BotEvent = {
           await safeInteractionUpdate(interaction, battleData);
           return;
         }
+      } finally {
+        releaseBattleLock(interaction.user.id);
       }
+    }
 
       // 2-8. Overwrite Slot (Back destination: SLOTS)
       if (customId.startsWith("slot_overwrite_")) {
