@@ -2221,7 +2221,7 @@ export function drawViceGripEffect(ctx: any, target: { x: number; y: number }, s
 
 /**
  * 012 가위자르기 (Guillotine) Scissor Blade Helper:
- * Draws a sharp, heavy, faceted blood-red scissor shear (Thick Center, Razor Needle Tips)
+ * Draws a sharp, sleek, faceted blood-red scissor shear (Sleek Razor Needle Edge)
  */
 function drawSingleScissorBlade(
   ctx: any,
@@ -2245,13 +2245,13 @@ function drawSingleScissorBlade(
   // Blade Upper Half (0 to +halfL)
   ctx.fillStyle = "#DC2626";
   ctx.strokeStyle = "#7F1D1D";
-  ctx.lineWidth = 2.2;
+  ctx.lineWidth = 1.4;
   ctx.lineJoin = "miter";
   ctx.beginPath();
   ctx.moveTo(0, -halfR);
-  ctx.lineTo(halfL * 0.85, -halfT * 1.5);
+  ctx.lineTo(halfL * 0.85, -halfT);
   ctx.lineTo(halfL, 0); // Razor sharp tip
-  ctx.lineTo(halfL * 0.85, halfT * 1.5);
+  ctx.lineTo(halfL * 0.85, halfT);
   ctx.lineTo(0, halfR);
   ctx.closePath();
   ctx.fill();
@@ -2260,9 +2260,9 @@ function drawSingleScissorBlade(
   // Blade Lower Half (0 to -halfL)
   ctx.beginPath();
   ctx.moveTo(0, halfR);
-  ctx.lineTo(-halfL * 0.85, halfT * 1.5);
+  ctx.lineTo(-halfL * 0.85, halfT);
   ctx.lineTo(-halfL, 0); // Razor sharp tip
-  ctx.lineTo(-halfL * 0.85, -halfT * 1.5);
+  ctx.lineTo(-halfL * 0.85, -halfT);
   ctx.lineTo(0, -halfR);
   ctx.closePath();
   ctx.fill();
@@ -2270,10 +2270,10 @@ function drawSingleScissorBlade(
 
   // Sharp Scarlet Cutting Edge Line
   ctx.strokeStyle = "#EF4444";
-  ctx.lineWidth = Math.max(1.6, rootWidth * 0.25);
+  ctx.lineWidth = Math.max(1.0, rootWidth * 0.22);
   ctx.beginPath();
-  ctx.moveTo(-halfL * 0.92, 0);
-  ctx.lineTo(halfL * 0.92, 0);
+  ctx.moveTo(-halfL * 0.94, 0);
+  ctx.lineTo(halfL * 0.94, 0);
   ctx.stroke();
 
   ctx.restore();
@@ -2283,7 +2283,7 @@ function drawSingleScissorBlade(
  * 012 가위자르기 (Guillotine): Remade Pure Scissor Blade Execution Engine
  * Step 1: Diagonal Scissor Slash [/]
  * Step 2: Opposing Diagonal Scissor Slash [\]
- * Step 3: FATAL FULL [X] SCISSOR EXECUTION CRASH (Thick Center, Sharp Outer Needle)
+ * Step 3: FATAL FULL [X] SCISSOR EXECUTION CRASH (Sleek Sharp Center, Needle Tips)
  * Step 4: Red [X] Dissipation
  */
 export function drawGuillotineEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
@@ -2307,19 +2307,19 @@ export function drawGuillotineEffect(ctx: any, target: { x: number; y: number },
   ctx.restore();
 
   if (step === 1) {
-    // Step 1: First Diagonal Scissor Slash [/]
-    drawSingleScissorBlade(ctx, targetX, targetY - 14, -Math.PI / 4, 136, 18, 2.5, 1.0);
+    // Step 1: Sleek First Diagonal Scissor Slash [/] (8.5px sleek root)
+    drawSingleScissorBlade(ctx, targetX, targetY - 14, -Math.PI / 4, 145, 8.5, 1.0, 1.0);
   } else if (step === 2) {
-    // Step 2: Second Diagonal Scissor Slash [\]
-    drawSingleScissorBlade(ctx, targetX, targetY - 14, Math.PI / 4, 136, 18, 2.5, 1.0);
+    // Step 2: Sleek Second Diagonal Scissor Slash [\] (8.5px sleek root)
+    drawSingleScissorBlade(ctx, targetX, targetY - 14, Math.PI / 4, 145, 8.5, 1.0, 1.0);
   } else if (step === 3) {
-    // Step 3: FATAL FULL [X] SCISSOR EXECUTION CRASH
-    drawSingleScissorBlade(ctx, targetX, targetY - 14, -Math.PI / 4, 156, 24, 2.0, 1.0);
-    drawSingleScissorBlade(ctx, targetX, targetY - 14, Math.PI / 4, 156, 24, 2.0, 1.0);
+    // Step 3: FATAL FULL [X] SCISSOR EXECUTION CRASH (12px sharp center)
+    drawSingleScissorBlade(ctx, targetX, targetY - 14, -Math.PI / 4, 160, 12.0, 1.0, 1.0);
+    drawSingleScissorBlade(ctx, targetX, targetY - 14, Math.PI / 4, 160, 12.0, 1.0, 1.0);
   } else if (step >= 4) {
     // Step 4: Fading Red Shockwave [X] Afterimage
-    drawSingleScissorBlade(ctx, targetX, targetY - 14, -Math.PI / 4, 172, 12, 1.0, 0.25);
-    drawSingleScissorBlade(ctx, targetX, targetY - 14, Math.PI / 4, 172, 12, 1.0, 0.25);
+    drawSingleScissorBlade(ctx, targetX, targetY - 14, -Math.PI / 4, 172, 6.0, 0.8, 0.25);
+    drawSingleScissorBlade(ctx, targetX, targetY - 14, Math.PI / 4, 172, 6.0, 0.8, 0.25);
   }
 
   ctx.restore();

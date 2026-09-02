@@ -224,11 +224,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     ? ((playerMon as any).illusionTarget.shinyTier !== undefined ? (playerMon as any).illusionTarget.shinyTier : ((playerMon as any).illusionTarget.isShiny ? 1 : 0))
     : ((playerMon as any).shinyTier !== undefined ? (playerMon as any).shinyTier : ((playerMon as any).isShiny ? 1 : 0));
 
-  const [arena, pbAssets, enemySprite, playerSprite] = await Promise.all([
+  const [arena, pbAssets, enemySprite, playerSprite, playerFrontSprite, enemyBackSprite] = await Promise.all([
     getArenaAssets(battle.biome || "Town"),
     getPbInfoAssets(),
     getPokemonSprite(enemyActiveSpecies, true, enemyShinyTier, false),
     getPokemonSprite(playerActiveSpecies, true, playerShinyTier, true),
+    getPokemonSprite(playerActiveSpecies, true, playerShinyTier, false),
+    getPokemonSprite(enemyActiveSpecies, true, enemyShinyTier, true),
   ]);
 
   const encoder = new GIFEncoder(width, height, "octree", true);
@@ -707,9 +709,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     } else if (isGuillotine1) {
       const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed")));
       act1Frames = [
-        // 1. Windup lunge (140ms)
+        // 1. Windup lunge (130ms)
         {
-          delay: 140,
+          delay: 130,
           pOffset: isP1 ? { x: 16, y: -8 } : { x: 0, y: 0 },
           eOffset: !isP1 ? { x: -16, y: 8 } : { x: 0, y: 0 },
           showEffect: false,
@@ -720,11 +722,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a1,
         },
-        // 2. Step 1: First Diagonal Slash [/] (160ms)
+        // 2. Step 1: First Diagonal Slash [/] (150ms)
         {
-          delay: 160,
-          pOffset: isP1 ? { x: 22, y: -9 } : { x: -4, y: 2 },
-          eOffset: isP1 ? { x: 6, y: -2 } : { x: -22, y: 9 },
+          delay: 150,
+          pOffset: isP1 ? { x: 26, y: -10 } : { x: -4, y: 2 },
+          eOffset: isP1 ? { x: 6, y: -2 } : { x: -26, y: 10 },
           showEffect: true,
           hitFlash: false,
           enemyHp: enemy.hp,
@@ -735,11 +737,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 1,
         },
-        // 3. Step 2: Second Diagonal Slash [\] (160ms)
+        // 3. Step 2: Second Diagonal Slash [\] (150ms) - Slashes past target
         {
-          delay: 160,
-          pOffset: isP1 ? { x: 22, y: -9 } : { x: -6, y: 3 },
-          eOffset: isP1 ? { x: 8, y: -3 } : { x: -22, y: 9 },
+          delay: 150,
+          pOffset: isP1 ? { x: 36, y: -14 } : { x: -6, y: 3 },
+          eOffset: isP1 ? { x: 8, y: -3 } : { x: -36, y: 14 },
           showEffect: true,
           hitFlash: false,
           enemyHp: isHit1 ? enemy.hp : a1.enemyHpAfter,
@@ -751,13 +753,31 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveStep: 2,
         },
         ...(isHit1 ? [
-          // 4. Step 3: FATAL FULL [X] SCISSOR EXECUTION CRASH + Hit Flash (240ms) - ONLY ON HIT!
+          // 4. Turn Around to Front Sprite (180ms) - Ally dashes past and turns to face camera!
           {
-            delay: 240,
-            pOffset: isP1 ? { x: 24, y: -10 } : { x: -8, y: 4 },
-            eOffset: isP1 ? { x: 12, y: -4 } : { x: -24, y: 10 },
+            delay: 180,
+            pOffset: isP1 ? { x: 20, y: -6 } : { x: -8, y: 4 },
+            eOffset: isP1 ? { x: 0, y: 0 } : { x: -20, y: 6 },
+            showEffect: false,
+            hitFlash: false,
+            usePlayerFront: isP1,
+            useEnemyBack: !isP1,
+            enemyHp: enemy.hp,
+            playerHp: playerMon.hp,
+            textLineIdx: 1,
+            statProgress: 0.25,
+            isBlur: false,
+            moveEffect: a1,
+          },
+          // 5. Step 3: FATAL FULL [X] SCISSOR EXECUTION CRASH behind the turned ally! (260ms)
+          {
+            delay: 260,
+            pOffset: isP1 ? { x: 20, y: -6 } : { x: -8, y: 4 },
+            eOffset: isP1 ? { x: 12, y: -4 } : { x: -20, y: 6 },
             showEffect: true,
             hitFlash: true,
+            usePlayerFront: isP1,
+            useEnemyBack: !isP1,
             enemyHp: a1.enemyHpAfter,
             playerHp: a1.playerHpAfter,
             textLineIdx: 1,
@@ -766,13 +786,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a1,
             moveStep: 3,
           },
-          // 5. Step 4: Red [X] Dissipation (140ms)
+          // 6. Step 4: Red [X] Dissipation (140ms)
           {
             delay: 140,
-            pOffset: isP1 ? { x: 12, y: -4 } : { x: 0, y: 0 },
-            eOffset: isP1 ? { x: 4, y: 0 } : { x: -12, y: 4 },
+            pOffset: isP1 ? { x: 10, y: -3 } : { x: 0, y: 0 },
+            eOffset: isP1 ? { x: 4, y: 0 } : { x: -10, y: 3 },
             showEffect: true,
             hitFlash: false,
+            usePlayerFront: isP1,
+            useEnemyBack: !isP1,
             enemyHp: a1.enemyHpAfter,
             playerHp: a1.playerHpAfter,
             textLineIdx: 1,
@@ -1391,13 +1413,31 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveStep: 2,
         },
         ...(isHit2 ? [
-          // 4. Step 3: FATAL FULL [X] SCISSOR EXECUTION CRASH + Hit Flash (240ms) - ONLY ON HIT!
+          // 4. Turn Around to Front Sprite (180ms)
           {
-            delay: 240,
-            pOffset: isP2 ? { x: 24, y: -10 } : { x: -8, y: 4 },
-            eOffset: !isP2 ? { x: -24, y: 10 } : { x: 12, y: -4 },
+            delay: 180,
+            pOffset: isP2 ? { x: 20, y: -6 } : { x: -8, y: 4 },
+            eOffset: !isP2 ? { x: -20, y: 6 } : { x: 0, y: 0 },
+            showEffect: false,
+            hitFlash: false,
+            usePlayerFront: isP2,
+            useEnemyBack: !isP2,
+            enemyHp: enemy.hp,
+            playerHp: playerMon.hp,
+            textLineIdx: 3,
+            statProgress: 0.25,
+            isBlur: false,
+            moveEffect: a2,
+          },
+          // 5. Step 3: FATAL FULL [X] SCISSOR EXECUTION CRASH + Hit Flash (260ms) - ONLY ON HIT!
+          {
+            delay: 260,
+            pOffset: isP2 ? { x: 20, y: -6 } : { x: -8, y: 4 },
+            eOffset: !isP2 ? { x: -20, y: 6 } : { x: 12, y: -4 },
             showEffect: true,
             hitFlash: true,
+            usePlayerFront: isP2,
+            useEnemyBack: !isP2,
             enemyHp: a2.enemyHpAfter,
             playerHp: a2.playerHpAfter,
             textLineIdx: 3,
@@ -1406,13 +1446,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a2,
             moveStep: 3,
           },
-          // 5. Step 4: Red [X] Dissipation (140ms)
+          // 6. Step 4: Red [X] Dissipation (140ms)
           {
             delay: 140,
-            pOffset: isP2 ? { x: 12, y: -4 } : { x: 0, y: 0 },
-            eOffset: !isP2 ? { x: -12, y: 4 } : { x: 4, y: 0 },
+            pOffset: isP2 ? { x: 10, y: -3 } : { x: 0, y: 0 },
+            eOffset: !isP2 ? { x: -10, y: 3 } : { x: 4, y: 0 },
             showEffect: true,
             hitFlash: false,
+            usePlayerFront: isP2,
+            useEnemyBack: !isP2,
             enemyHp: a2.enemyHpAfter,
             playerHp: a2.playerHpAfter,
             textLineIdx: 3,
@@ -1750,7 +1792,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     }
 
     // Enemy Sprite
-    if (enemySprite && eAlpha > 0.01 && (enemy.hp > 0 || f.enemyHp > 0 || f.targetAlpha !== 0.0)) {
+    const eSpriteToDraw = f.useEnemyBack ? (enemyBackSprite || enemySprite) : enemySprite;
+    if (eSpriteToDraw && eAlpha > 0.01 && (enemy.hp > 0 || f.enemyHp > 0 || f.targetAlpha !== 0.0)) {
       targetCtx.save();
       if (f.hitFlash && eTarget) {
         targetCtx.filter = "brightness(1.35)";
@@ -1758,12 +1801,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       if (eAlpha < 0.99) {
         targetCtx.globalAlpha = eAlpha;
       }
-      drawFittedBattleSprite(targetCtx, enemySprite, em.x + f.eOffset.x, em.y + f.eOffset.y, em.size);
+      drawFittedBattleSprite(targetCtx, eSpriteToDraw, em.x + f.eOffset.x, em.y + f.eOffset.y, em.size);
       targetCtx.restore();
     }
 
     // Player Sprite
-    if (playerSprite && pAlpha > 0.01 && (playerMon.hp > 0 || f.playerHp > 0 || f.targetAlpha !== 0.0)) {
+    const pSpriteToDraw = f.usePlayerFront ? (playerFrontSprite || playerSprite) : playerSprite;
+    if (pSpriteToDraw && pAlpha > 0.01 && (playerMon.hp > 0 || f.playerHp > 0 || f.targetAlpha !== 0.0)) {
       targetCtx.save();
       if (f.hitFlash && pTarget) {
         targetCtx.filter = "brightness(1.35)";
@@ -1771,7 +1815,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       if (pAlpha < 0.99) {
         targetCtx.globalAlpha = pAlpha;
       }
-      drawFittedBattleSprite(targetCtx, playerSprite, pm.x + f.pOffset.x, pm.y + f.pOffset.y, pm.size);
+      drawFittedBattleSprite(targetCtx, pSpriteToDraw, pm.x + f.pOffset.x, pm.y + f.pOffset.y, pm.size);
       targetCtx.restore();
     }
 
