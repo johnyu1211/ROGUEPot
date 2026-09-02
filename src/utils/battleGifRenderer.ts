@@ -715,7 +715,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         }
       ];
     } else if (isGuillotine1) {
-      const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed")));
+      const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
+      const isMiss1 = !isHit1;
       act1Frames = [
         // 1. Windup stance - In place (120ms)
         {
@@ -730,11 +731,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a1,
         },
-        // 2. Step 1: First Diagonal Slash [/] - Turn around in place! (160ms)
+        // 2. Step 1: First Diagonal Slash [/] - Defender shifts right if miss! (160ms)
         {
           delay: 160,
-          pOffset: { x: 0, y: 0 },
-          eOffset: isP1 ? { x: 6, y: -2 } : { x: 0, y: 0 },
+          pOffset: !isP1 && isMiss1 ? { x: 26, y: 4 } : { x: 0, y: 0 },
+          eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 6, y: -2 }) : { x: 0, y: 0 },
           showEffect: true,
           hitFlash: false,
           usePlayerFront: isP1,
@@ -747,11 +748,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 1,
         },
-        // 3. Step 2: Second Diagonal Slash [\] - In place (160ms)
+        // 3. Step 2: Second Diagonal Slash [\] - Defender holds rightward dodge! (160ms)
         {
           delay: 160,
-          pOffset: { x: 0, y: 0 },
-          eOffset: isP1 ? { x: 8, y: -3 } : { x: 0, y: 0 },
+          pOffset: !isP1 && isMiss1 ? { x: 24, y: 3 } : { x: 0, y: 0 },
+          eOffset: isP1 ? (isMiss1 ? { x: 24, y: -3 } : { x: 8, y: -3 }) : { x: 0, y: 0 },
           showEffect: true,
           hitFlash: false,
           usePlayerFront: isP1,
@@ -800,11 +801,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveStep: 4,
           }
         ] : [
-          // On Miss: Slashes swing by without forming the lethal X (140ms)
+          // On Miss: Defender slides smoothly back to center (180ms)
           {
-            delay: 140,
-            pOffset: { x: 0, y: 0 },
-            eOffset: { x: 0, y: 0 },
+            delay: 180,
+            pOffset: !isP1 ? { x: 8, y: 1 } : { x: 0, y: 0 },
+            eOffset: isP1 ? { x: 8, y: -1 } : { x: 0, y: 0 },
             showEffect: false,
             hitFlash: false,
             usePlayerFront: isP1,
@@ -819,6 +820,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         ])
       ];
     } else if (isSingleStrikeSpecial1) {
+      const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
+      const isMiss1 = !isHit1;
       act1Frames = [
         // 1. Windup lunge (150ms)
         {
@@ -833,13 +836,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a1,
         },
-        // 2. Step 1: Direct Impact Strike + Hit Flash (200ms)
+        // 2. Step 1: Direct Impact Strike (Defender shifts right on miss!) (200ms)
         {
           delay: 200,
-          pOffset: isP1 ? { x: 22, y: -9 } : { x: -6, y: 3 },
-          eOffset: isP1 ? { x: 10, y: -3 } : { x: -22, y: 9 },
+          pOffset: isP1 ? { x: 22, y: -9 } : (isMiss1 ? { x: 26, y: 4 } : { x: -6, y: 3 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 10, y: -3 }) : { x: -22, y: 9 },
           showEffect: true,
-          hitFlash: true,
+          hitFlash: isHit1,
           enemyHp: a1.enemyHpAfter,
           playerHp: a1.playerHpAfter,
           textLineIdx: 1,
@@ -851,8 +854,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         // 3. Step 2: Special Effect Action / Slash / Clamp / Spark (140ms)
         {
           delay: 140,
-          pOffset: isP1 ? { x: 16, y: -6 } : { x: -3, y: 1 },
-          eOffset: isP1 ? { x: 5, y: -1 } : { x: -16, y: 6 },
+          pOffset: isP1 ? { x: 16, y: -6 } : (isMiss1 ? { x: 22, y: 3 } : { x: -3, y: 1 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 22, y: -3 } : { x: 5, y: -1 }) : { x: -16, y: 6 },
           showEffect: true,
           hitFlash: false,
           enemyHp: a1.enemyHpAfter,
@@ -866,8 +869,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         // 4. Step 3: Spark / Shockwave Dispersal & Dissipation (130ms)
         {
           delay: 130,
-          pOffset: isP1 ? { x: 10, y: -3 } : { x: 0, y: 0 },
-          eOffset: isP1 ? { x: 2, y: 0 } : { x: -10, y: 3 },
+          pOffset: isP1 ? { x: 10, y: -3 } : (isMiss1 ? { x: 8, y: 1 } : { x: 0, y: 0 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 8, y: -1 } : { x: 2, y: 0 }) : { x: -10, y: 3 },
           showEffect: true,
           hitFlash: false,
           enemyHp: a1.enemyHpAfter,
@@ -880,6 +883,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         }
       ];
     } else {
+      const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
+      const isMiss1 = !isHit1;
       act1Frames = [
         // Standard Windup (180ms)
         {
@@ -896,13 +901,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 1,
         },
-        // Standard Strike Impact (240ms)
+        // Standard Strike Impact (Defender shifts right on miss!) (240ms)
         {
           delay: 240,
-          pOffset: isP1 ? { x: 20, y: -10 } : { x: -8, y: 4 },
-          eOffset: isP1 ? { x: 8, y: -2 } : { x: -20, y: 10 },
+          pOffset: isP1 ? { x: 20, y: -10 } : (isMiss1 ? { x: 26, y: 4 } : { x: -8, y: 4 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 8, y: -2 }) : { x: -20, y: 10 },
           showEffect: true,
-          hitFlash: true,
+          hitFlash: isHit1,
           enemyHp: a1.enemyHpAfter,
           playerHp: a1.playerHpAfter,
           textLineIdx: 1,
@@ -1365,7 +1370,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         }
       ];
     } else if (isGuillotine2) {
-      const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed")));
+      const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
+      const isMiss2 = !isHit2;
       act2Frames = [
         // 1. Counter Windup stance - In place (120ms)
         {
@@ -1380,11 +1386,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a2,
         },
-        // 2. Step 1: First Diagonal Slash [/] - Turn around in place! (160ms)
+        // 2. Step 1: First Diagonal Slash [/] - Defender shifts right if miss! (160ms)
         {
           delay: 160,
-          pOffset: !isP2 ? { x: -6, y: 2 } : { x: 0, y: 0 },
-          eOffset: { x: 0, y: 0 },
+          pOffset: isP2 ? (isMiss2 ? { x: 26, y: -4 } : { x: 6, y: -2 }) : { x: 0, y: 0 },
+          eOffset: !isP2 && isMiss2 ? { x: 26, y: 4 } : { x: 0, y: 0 },
           showEffect: true,
           hitFlash: false,
           usePlayerFront: isP2,
@@ -1397,11 +1403,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 1,
         },
-        // 3. Step 2: Second Diagonal Slash [\] - In place (160ms)
+        // 3. Step 2: Second Diagonal Slash [\] - Defender holds rightward dodge! (160ms)
         {
           delay: 160,
-          pOffset: !isP2 ? { x: -8, y: 3 } : { x: 0, y: 0 },
-          eOffset: { x: 0, y: 0 },
+          pOffset: isP2 ? (isMiss2 ? { x: 24, y: -3 } : { x: 8, y: -3 }) : { x: 0, y: 0 },
+          eOffset: !isP2 && isMiss2 ? { x: 24, y: 3 } : { x: 0, y: 0 },
           showEffect: true,
           hitFlash: false,
           usePlayerFront: isP2,
@@ -1418,7 +1424,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           // 4. Step 3: FATAL FULL [X] SCISSOR EXECUTION CRASH behind in place! (260ms)
           {
             delay: 260,
-            pOffset: !isP2 ? { x: -12, y: 4 } : { x: 0, y: 0 },
+            pOffset: isP2 ? { x: 12, y: -4 } : { x: 0, y: 0 },
             eOffset: { x: 0, y: 0 },
             showEffect: true,
             hitFlash: true,
@@ -1435,7 +1441,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           // 5. Step 4: Red [X] Dissipation in place (140ms)
           {
             delay: 140,
-            pOffset: !isP2 ? { x: -4, y: 0 } : { x: 0, y: 0 },
+            pOffset: isP2 ? { x: 4, y: 0 } : { x: 0, y: 0 },
             eOffset: { x: 0, y: 0 },
             showEffect: true,
             hitFlash: false,
@@ -1450,11 +1456,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveStep: 4,
           }
         ] : [
-          // On Miss: Slashes swing by without forming the lethal X (140ms)
+          // On Miss: Defender slides smoothly back to center (180ms)
           {
-            delay: 140,
-            pOffset: { x: 0, y: 0 },
-            eOffset: { x: 0, y: 0 },
+            delay: 180,
+            pOffset: isP2 ? { x: 8, y: -1 } : { x: 0, y: 0 },
+            eOffset: !isP2 ? { x: 8, y: 1 } : { x: 0, y: 0 },
             showEffect: false,
             hitFlash: false,
             usePlayerFront: isP2,
@@ -1469,6 +1475,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         ])
       ];
     } else if (isSingleStrikeSpecial2) {
+      const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
+      const isMiss2 = !isHit2;
       act2Frames = [
         // 1. Counter Windup lunge (150ms)
         {
@@ -1483,13 +1491,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a2,
         },
-        // 2. Step 1: Direct Impact Strike + Hit Flash (200ms)
+        // 2. Step 1: Direct Impact Strike (Defender shifts right on miss!) (200ms)
         {
           delay: 200,
-          pOffset: isP2 ? { x: 22, y: -9 } : { x: -6, y: 3 },
-          eOffset: !isP2 ? { x: -22, y: 9 } : { x: 10, y: -3 },
+          pOffset: isP2 ? { x: 22, y: -9 } : (isMiss2 ? { x: 26, y: 4 } : { x: -6, y: 3 }),
+          eOffset: !isP2 ? { x: -22, y: 9 } : (isMiss2 ? { x: 26, y: -4 } : { x: 10, y: -3 }),
           showEffect: true,
-          hitFlash: true,
+          hitFlash: isHit2,
           enemyHp: a2.enemyHpAfter,
           playerHp: a2.playerHpAfter,
           textLineIdx: 3,
@@ -1501,8 +1509,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         // 3. Step 2: Special Effect Action / Slash / Clamp / Spark (140ms)
         {
           delay: 140,
-          pOffset: isP2 ? { x: 16, y: -6 } : { x: -3, y: 1 },
-          eOffset: !isP2 ? { x: -16, y: 6 } : { x: 5, y: -1 },
+          pOffset: isP2 ? { x: 16, y: -6 } : (isMiss2 ? { x: 22, y: 3 } : { x: -3, y: 1 }),
+          eOffset: !isP2 ? { x: -16, y: 6 } : (isMiss2 ? { x: 22, y: -3 } : { x: 5, y: -1 }),
           showEffect: true,
           hitFlash: false,
           enemyHp: a2.enemyHpAfter,
@@ -1516,8 +1524,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         // 4. Step 3: Spark / Shockwave Dispersal & Dissipation (130ms)
         {
           delay: 130,
-          pOffset: isP2 ? { x: 10, y: -3 } : { x: 0, y: 0 },
-          eOffset: !isP2 ? { x: -10, y: 3 } : { x: 2, y: 0 },
+          pOffset: isP2 ? { x: 10, y: -3 } : (isMiss2 ? { x: 8, y: 1 } : { x: 0, y: 0 }),
+          eOffset: !isP2 ? { x: -10, y: 3 } : (isMiss2 ? { x: 8, y: -1 } : { x: 2, y: 0 }),
           showEffect: true,
           hitFlash: false,
           enemyHp: a2.enemyHpAfter,
@@ -1530,6 +1538,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         }
       ];
     } else {
+      const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
+      const isMiss2 = !isHit2;
       act2Frames = [
         // Standard Counter Windup (180ms)
         {
@@ -1546,13 +1556,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 1,
         },
-        // Standard Counter Strike (240ms)
+        // Standard Counter Strike (Defender shifts right on miss!) (240ms)
         {
           delay: 240,
-          pOffset: isP2 ? { x: 20, y: -10 } : { x: -8, y: 4 },
-          eOffset: !isP2 ? { x: -20, y: 10 } : { x: 8, y: -2 },
+          pOffset: isP2 ? { x: 20, y: -10 } : (isMiss2 ? { x: 26, y: 4 } : { x: -8, y: 4 }),
+          eOffset: !isP2 ? { x: -20, y: 10 } : (isMiss2 ? { x: 26, y: -4 } : { x: 8, y: -2 }),
           showEffect: true,
-          hitFlash: true,
+          hitFlash: isHit2,
           enemyHp: a2.enemyHpAfter,
           playerHp: a2.playerHpAfter,
           textLineIdx: 3,
