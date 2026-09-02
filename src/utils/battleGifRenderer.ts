@@ -540,7 +540,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   const moveData1 = getMoveData(mKey1);
   const isCharging1 = isEvasionLaunch(a1);
   const isEvasionHit1 = isEvasionStrike(a1);
-  const isStatusMove1 = moveData1?.category === "status" || (a1 as any).category === "status" || ((a1.damage ?? 0) === 0 && !isCharging1 && !isEvasionHit1 && !isSwordsDance1 && !isWhirlwind1);
+  const isStatusMove1 = (moveData1?.category === "status" || (a1 as any).category === "status" || ((a1.damage ?? 0) === 0 && !isCharging1 && !isEvasionHit1)) && !isSwordsDance1 && !isWhirlwind1;
 
   let act1Frames: any[] = [];
   if (isStatusMove1) {
@@ -2278,7 +2278,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const moveData2 = getMoveData(mKey2);
     const isCharging2 = isEvasionLaunch(a2);
     const isEvasionHit2 = isEvasionStrike(a2);
-    const isStatusMove2 = moveData2?.category === "status" || (a2 as any).category === "status" || ((a2.damage ?? 0) === 0 && !isCharging2 && !isEvasionHit2 && !isSwordsDance2 && !isWhirlwind2);
+    const isStatusMove2 = (moveData2?.category === "status" || (a2 as any).category === "status" || ((a2.damage ?? 0) === 0 && !isCharging2 && !isEvasionHit2)) && !isSwordsDance2 && !isWhirlwind2;
 
     let act2Frames: any[] = [];
     if (isStatusMove2) {
