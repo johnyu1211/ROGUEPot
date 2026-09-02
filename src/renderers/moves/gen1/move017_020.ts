@@ -358,34 +358,79 @@ export function drawFlyEffect(ctx: any, start: { x: number; y: number }, target:
 }
 
 /**
- * 020 조이기 (Bind): Constricting Coiled Bands with Pressure Squeeze
+ * 020 조이기 (Bind): Heavy Physical Constriction Grapple & High-Tension Squeeze Coils
  */
 export function drawBindEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
   ctx.save();
   const tx = target.x;
-  const ty = target.y - 10;
+  const ty = target.y - 12;
 
-  const squeeze = step === 2 ? 0.75 : (step >= 3 ? 0.90 : 1.0);
-  const alpha = step >= 3 ? 0.35 : 1.0;
+  // Step 1: Grapple Clasp & Initial Wrap (squeeze 1.0)
+  // Step 2: Max Squeeze Impact & Pressure Burst (squeeze 0.72)
+  // Step 3: Pulsing Residual Tightness (squeeze 0.84)
+  // Step 4: Dispersing Fade (squeeze 0.92)
+  const squeeze = step === 2 ? 0.72 : (step === 3 ? 0.84 : (step === 4 ? 0.92 : 1.0));
+  const globalAlpha = step === 4 ? 0.40 : (step === 3 ? 0.85 : 1.0);
+  ctx.globalAlpha = globalAlpha;
 
-  ctx.globalAlpha = alpha;
-  for (let i = 0; i < 3; i++) {
-    const cy = ty - 12 + i * 12;
-    ctx.strokeStyle = "#D97706";
-    ctx.lineWidth = 6.0;
+  // 1. Inward Contracting Pressure Brackets / Tension Lines (Steps 2 & 3)
+  if (step === 2 || step === 3) {
+    ctx.save();
+    ctx.strokeStyle = "rgba(254, 240, 138, 0.75)";
+    ctx.lineWidth = 2.0;
+    const bracketDist = step === 2 ? 44 : 48;
+    
+    // Left pressure chevron
     ctx.beginPath();
-    ctx.ellipse(tx, cy, 32 * squeeze, 10 * squeeze, -0.15, 0, Math.PI * 2);
+    ctx.moveTo(tx - bracketDist, ty - 20);
+    ctx.lineTo(tx - bracketDist + 8, ty);
+    ctx.lineTo(tx - bracketDist, ty + 20);
     ctx.stroke();
 
-    ctx.strokeStyle = "#FEF3C7";
-    ctx.lineWidth = 2.2;
+    // Right pressure chevron
     ctx.beginPath();
-    ctx.ellipse(tx, cy, 32 * squeeze, 10 * squeeze, -0.15, 0, Math.PI * 2);
+    ctx.moveTo(tx + bracketDist, ty - 20);
+    ctx.lineTo(tx + bracketDist - 8, ty);
+    ctx.lineTo(tx + bracketDist, ty + 20);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // 2. 3-Tier Dynamic 3D Wrapping Constriction Coils
+  const coilOffsets = [-16, 0, 16];
+  for (let i = 0; i < coilOffsets.length; i++) {
+    const cy = ty + coilOffsets[i];
+    const coilAngle = -0.22 + (i % 2) * 0.08;
+    const rx = 34 * squeeze;
+    const ry = 11 * squeeze;
+
+    // A. Outer Thick Deep Amber Band
+    ctx.strokeStyle = "#B45309";
+    ctx.lineWidth = 7.0;
+    ctx.beginPath();
+    ctx.ellipse(tx, cy, rx, ry, coilAngle, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // B. Middle Vivid Golden Body
+    ctx.strokeStyle = "#F59E0B";
+    ctx.lineWidth = 4.0;
+    ctx.beginPath();
+    ctx.ellipse(tx, cy, rx, ry, coilAngle, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // C. Bright Center Tension Filament
+    ctx.strokeStyle = "#FEF9C3";
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.ellipse(tx, cy, rx, ry, coilAngle, 0, Math.PI * 2);
     ctx.stroke();
   }
 
+  // 3. Impact Flash & Constriction Stars on Max Squeeze (Step 2)
   if (step === 2) {
-    drawMiniRetroStar(ctx, tx, ty, 16, "#F59E0B");
+    drawMiniRetroStar(ctx, tx, ty - 2, 20, "#F59E0B");
+    drawMiniRetroStar(ctx, tx - 22, ty - 14, 12, "#FEF08A");
+    drawMiniRetroStar(ctx, tx + 22, ty + 10, 12, "#FEF08A");
   }
 
   ctx.restore();
