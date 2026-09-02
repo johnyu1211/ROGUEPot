@@ -55,7 +55,8 @@ function createEffectivenessFlickerFrames(
   action: TurnActionInfo,
   isAttackerPlayer: boolean,
   isAct1: boolean,
-  statProgress?: number
+  statProgress?: number,
+  usePlayerFront: boolean = false
 ): any[] {
   const typeMod = action.typeMod !== undefined ? action.typeMod : (action.isSuperEffective ? 2.0 : 1.0);
   
@@ -74,6 +75,7 @@ function createEffectivenessFlickerFrames(
         eOffset: !isP ? { x: -6, y: 3 } : { x: 0, y: 0 },
         showEffect: false,
         hitFlash: false,
+        usePlayerFront: usePlayerFront,
         targetAlpha: 1.0,
         enemyHp: action.enemyHpAfter,
         playerHp: action.playerHpAfter,
@@ -85,18 +87,18 @@ function createEffectivenessFlickerFrames(
     ];
   }
 
-  const frames: any[] = [];
   const durationPerHalf = blinkCount >= 4 ? 55 : (blinkCount === 3 ? 65 : 100);
-
+  const frames: any[] = [];
   for (let i = 0; i < blinkCount; i++) {
     const isLast = (i === blinkCount - 1);
-    // 1. Transparent half-blink
+    // 1. Semi-transparent blink
     frames.push({
       delay: durationPerHalf,
       pOffset: isP ? { x: Math.max(0, 6 - i * 2), y: Math.min(0, -3 + i) } : { x: 4 - (i % 2) * 8, y: -2 },
       eOffset: !isP ? { x: Math.min(0, -6 + i * 2), y: Math.max(0, 3 - i) } : { x: 4 - (i % 2) * 8, y: -2 },
       showEffect: false,
       hitFlash: false,
+      usePlayerFront: usePlayerFront,
       targetAlpha: 0.1,
       enemyHp: action.enemyHpAfter,
       playerHp: action.playerHpAfter,
@@ -112,6 +114,7 @@ function createEffectivenessFlickerFrames(
       eOffset: !isP ? { x: Math.min(0, -4 + i * 2), y: Math.max(0, 2 - i) } : { x: 0, y: 0 },
       showEffect: false,
       hitFlash: false,
+      usePlayerFront: usePlayerFront,
       targetAlpha: 1.0,
       enemyHp: action.enemyHpAfter,
       playerHp: action.playerHpAfter,
@@ -131,7 +134,8 @@ function createEffectivenessFlickerFrames(
 function createFaintingFrames(
   action: TurnActionInfo,
   isTargetPlayer: boolean,
-  dialogueTextIdx: number = 99
+  dialogueTextIdx: number = 99,
+  usePlayerFront: boolean = false
 ): any[] {
   const isEnemy = !isTargetPlayer;
 
@@ -143,6 +147,7 @@ function createFaintingFrames(
       eOffset: isEnemy ? { x: 0, y: 18 } : { x: 0, y: 0 },
       showEffect: false,
       hitFlash: false,
+      usePlayerFront: usePlayerFront,
       targetAlpha: 0.85,
       enemyHp: action.enemyHpAfter,
       playerHp: action.playerHpAfter,
@@ -158,6 +163,7 @@ function createFaintingFrames(
       eOffset: isEnemy ? { x: 0, y: 46 } : { x: 0, y: 0 },
       showEffect: false,
       hitFlash: false,
+      usePlayerFront: usePlayerFront,
       targetAlpha: 0.55,
       enemyHp: action.enemyHpAfter,
       playerHp: action.playerHpAfter,
@@ -173,6 +179,7 @@ function createFaintingFrames(
       eOffset: isEnemy ? { x: 0, y: 80 } : { x: 0, y: 0 },
       showEffect: false,
       hitFlash: false,
+      usePlayerFront: usePlayerFront,
       targetAlpha: 0.20,
       enemyHp: action.enemyHpAfter,
       playerHp: action.playerHpAfter,
@@ -188,6 +195,7 @@ function createFaintingFrames(
       eOffset: { x: 0, y: 0 },
       showEffect: false,
       hitFlash: false,
+      usePlayerFront: usePlayerFront,
       targetAlpha: 0.0,
       enemyHp: action.enemyHpAfter,
       playerHp: action.playerHpAfter,
@@ -1579,9 +1587,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const a1Fainted = a1.enemyHpAfter <= 0 || a1.playerHpAfter <= 0;
     const a2Fainted = a2 && (a2.enemyHpAfter <= 0 || a2.playerHpAfter <= 0);
 
+    const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed")));
+    const isHit2 = a2 ? (a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed")))) : false;
+    const playerFrontHold = (isP1 && isGuillotine1 && isHit1) || (isP2 && isGuillotine2 && isHit2);
+
     const faintFrames = a2Fainted
-      ? createFaintingFrames(a2, a2.playerHpAfter <= 0, 99)
-      : (a1Fainted ? createFaintingFrames(a1, a1.playerHpAfter <= 0, 99) : []);
+      ? createFaintingFrames(a2, a2.playerHpAfter <= 0, 99, playerFrontHold)
+      : (a1Fainted ? createFaintingFrames(a1, a1.playerHpAfter <= 0, 99, playerFrontHold) : []);
 
     const finalEnemyHp = a2 ? a2.enemyHpAfter : a1.enemyHpAfter;
     const finalPlayerHp = a2 ? a2.playerHpAfter : a1.playerHpAfter;
@@ -1604,7 +1616,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       // === ACT 1 ===
       ...act1Frames,
       // Frame 3: Attacker 1 Recoil & Damage Settling (with Dynamic Effectiveness Blinking!)
-      ...createEffectivenessFlickerFrames(a1, isP1, true),
+      ...createEffectivenessFlickerFrames(a1, isP1, true, undefined, playerFrontHold),
       // Frame 4: Natural Breathing Room Pause between Turns (380ms - comfortable reading pause!)
       {
         delay: 380,
@@ -1612,6 +1624,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         eOffset: { x: 0, y: 0 },
         showEffect: false,
         hitFlash: false,
+        usePlayerFront: playerFrontHold,
         targetAlpha: 1.0,
         enemyHp: a1.enemyHpAfter,
         playerHp: a1.playerHpAfter,
@@ -1623,7 +1636,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       // === ACT 2 ===
       ...act2Frames,
       // Frame 7: Attacker 2 Recoil & Counter Damage (with Dynamic Effectiveness Blinking!)
-      ...createEffectivenessFlickerFrames(a2, isP2, false, 0.75),
+      ...createEffectivenessFlickerFrames(a2, isP2, false, 0.75, playerFrontHold),
       // Sinking Faint Collapse Animation (if someone fainted)
       ...faintFrames,
       // Frame 8: Neutral Return & Stat Changes Peak (if nobody fainted)
@@ -1634,6 +1647,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           eOffset: { x: 0, y: 0 },
           showEffect: false,
           hitFlash: false,
+          usePlayerFront: playerFrontHold,
           targetAlpha: 1.0,
           enemyHp: finalEnemyHp,
           playerHp: finalPlayerHp,
@@ -1650,6 +1664,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         eOffset: { x: 0, y: 0 },
         showEffect: false,
         hitFlash: false,
+        usePlayerFront: playerFrontHold,
         targetAlpha: isAnyFainted ? 0.0 : 1.0,
         enemyHp: finalEnemyHp,
         playerHp: finalPlayerHp,
@@ -1674,6 +1689,10 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       playerHpAfter: playerHp,
     };
 
+    const isGuillotineSingle = (eff.moveKey || moveKey).toLowerCase().replace(/[\s_]+/g, "-") === "guillotine";
+    const isHitSingle = eff.isHit !== undefined ? eff.isHit : ((eff.damage ?? 0) > 0 || !eff.log?.includes("빗나갔다"));
+    const playerFrontHold = isP1 && isGuillotineSingle && isHitSingle;
+
     const finalEnemyHp = eff.enemyHpAfter !== undefined ? eff.enemyHpAfter : enemyHp;
     const finalPlayerHp = eff.playerHpAfter !== undefined ? eff.playerHpAfter : playerHp;
     const isEnemyFainted = finalEnemyHp <= 0;
@@ -1681,7 +1700,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const isFainted = isEnemyFainted || isPlayerFainted;
 
     const faintFrames = isFainted
-      ? createFaintingFrames(eff, isPlayerFainted, 99)
+      ? createFaintingFrames(eff, isPlayerFainted, 99, playerFrontHold)
       : [];
 
     framesConfig = [
@@ -1701,7 +1720,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       // Act 1 Move Animation (Fully executed with all sub-frames!)
       ...act1Frames,
       // Frame 3: Recoil & Damage Settling (with Dynamic Effectiveness Blinking!)
-      ...createEffectivenessFlickerFrames(eff, isP1, true, 0.65),
+      ...createEffectivenessFlickerFrames(eff, isP1, true, 0.65, playerFrontHold),
       // Sinking Faint Collapse Animation (if fainted)
       ...faintFrames,
       // Frame 4: Neutral Return & Stat Particles Peak (if not fainted)
@@ -1712,6 +1731,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           eOffset: { x: 0, y: 0 },
           showEffect: false,
           hitFlash: false,
+          usePlayerFront: playerFrontHold,
           targetAlpha: 1.0,
           enemyHp: finalEnemyHp,
           playerHp: finalPlayerHp,
@@ -1728,6 +1748,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         eOffset: { x: 0, y: 0 },
         showEffect: false,
         hitFlash: false,
+        usePlayerFront: playerFrontHold,
         targetAlpha: isFainted ? 0.0 : 1.0,
         enemyHp: finalEnemyHp,
         playerHp: finalPlayerHp,
