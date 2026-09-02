@@ -1,89 +1,135 @@
 import { drawMiniRetroStar } from "../common/helpers.js";
 
 /**
- * 017 날개치기 (Wing Attack): Rapid Dash Strike with Bursting Fluttering Translucent White Feathers
+ * 017 날개치기 (Wing Attack): Rapid Dash Strike with Physics-Accurate Feather Burst & Fluttering Leaf Descent
  */
 export function drawWingAttackEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
   ctx.save();
   const tx = target.x;
   const ty = target.y - 12;
 
-  // Helper: Draw beautifully shaped translucent white feather
-  const drawTranslucentFeather = (
+  /**
+   * Draws an authentic, delicate feather with curved rachis (shaft), asymmetric vanes, and fine barb details.
+   */
+  const drawAuthenticFeather = (
     fx: number,
     fy: number,
-    rot: number,
-    length: number = 24,
-    width: number = 8.5,
-    alpha: number = 0.8
+    angle: number,
+    length: number = 26,
+    curvature: number = 0.15,
+    alpha: number = 0.85
   ) => {
     ctx.save();
     ctx.translate(fx, fy);
-    ctx.rotate(rot);
+    ctx.rotate(angle);
     ctx.globalAlpha = alpha;
 
-    const halfL = length / 2;
-    const halfW = width / 2;
+    const wWide = length * 0.24; // trailing vane (wider & softer)
+    const wNarrow = length * 0.14; // leading vane (narrower & aerodynamic)
+    const stemCurve = length * curvature * 0.25;
 
-    // 1. Soft Translucent White Feather Vane
-    ctx.fillStyle = "rgba(255, 255, 255, 0.72)";
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.92)";
-    ctx.lineWidth = 1.0;
+    // 1. Soft Asymmetrical Translucent Vanes (Feather Body)
+    // Wider trailing vane (left side)
+    ctx.fillStyle = "rgba(255, 255, 255, 0.78)";
     ctx.beginPath();
-    ctx.moveTo(0, -halfL); // tip top
-    ctx.quadraticCurveTo(halfW * 1.15, -halfL * 0.15, halfW * 0.65, halfL * 0.55);
-    ctx.quadraticCurveTo(halfW * 0.35, halfL, 0, halfL); // quill base
-    ctx.quadraticCurveTo(-halfW * 0.35, halfL, -halfW * 0.65, halfL * 0.55);
-    ctx.quadraticCurveTo(-halfW * 1.15, -halfL * 0.15, 0, -halfL);
+    ctx.moveTo(0, length * 0.5); // Quill base
+    ctx.quadraticCurveTo(-wWide * 1.25 + stemCurve * 0.5, length * 0.15, -wWide * 0.95 + stemCurve, -length * 0.18);
+    ctx.quadraticCurveTo(-wWide * 0.5 + stemCurve, -length * 0.45, stemCurve, -length * 0.5); // Tip
+    ctx.quadraticCurveTo(stemCurve * 0.6, 0, 0, length * 0.5);
     ctx.closePath();
     ctx.fill();
+
+    // Narrower leading vane (right side)
+    ctx.fillStyle = "rgba(235, 245, 255, 0.68)";
+    ctx.beginPath();
+    ctx.moveTo(0, length * 0.5);
+    ctx.quadraticCurveTo(wNarrow * 1.15 + stemCurve * 0.5, length * 0.18, wNarrow * 0.88 + stemCurve, -length * 0.15);
+    ctx.quadraticCurveTo(wNarrow * 0.4 + stemCurve, -length * 0.45, stemCurve, -length * 0.5);
+    ctx.quadraticCurveTo(stemCurve * 0.6, 0, 0, length * 0.5);
+    ctx.closePath();
+    ctx.fill();
+
+    // 2. Subtle Barb Striations (깃가지 결)
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.45)";
+    ctx.lineWidth = 0.8;
+    const numBarbs = 5;
+    for (let i = 1; i <= numBarbs; i++) {
+      const t = i / (numBarbs + 1);
+      const py = length * 0.5 - length * t;
+      const px = stemCurve * t;
+      const barbFade = 1 - Math.abs(t - 0.5) * 1.2;
+
+      // Left barb line
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      ctx.lineTo(px - wWide * barbFade, py - length * 0.08);
+      ctx.stroke();
+
+      // Right barb line
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      ctx.lineTo(px + wNarrow * barbFade, py - length * 0.08);
+      ctx.stroke();
+    }
+
+    // 3. Delicate Arched Center Shaft / Rachis (깃대)
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.moveTo(0, length * 0.56); // Quill extending at bottom
+    ctx.quadraticCurveTo(stemCurve * 0.5, 0, stemCurve, -length * 0.5);
     ctx.stroke();
 
-    // 2. Center Spine / Rachis Line
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 1.2;
+    // 4. Soft Fluffy Downy Tuft at Base (솜깃)
+    ctx.fillStyle = "rgba(255, 255, 255, 0.90)";
     ctx.beginPath();
-    ctx.moveTo(0, -halfL + 2);
-    ctx.lineTo(0, halfL + 2.5);
-    ctx.stroke();
+    ctx.arc(-1.5, length * 0.43, 2.2, 0, Math.PI * 2);
+    ctx.arc(1.5, length * 0.45, 2.0, 0, Math.PI * 2);
+    ctx.fill();
 
     ctx.restore();
   };
 
   if (step === 1) {
-    // Step 1: Initial dash rush - trailing feathers entering towards target
-    drawTranslucentFeather(tx - 45, ty + 20, -0.4, 20, 7.0, 0.75);
-    drawTranslucentFeather(tx - 25, ty - 10, 0.3, 24, 8.5, 0.80);
-    drawTranslucentFeather(tx - 10, ty + 15, -0.2, 18, 6.5, 0.70);
+    // Step 1: Initial rush - Slipstream wake feathers floating in the air
+    drawAuthenticFeather(tx - 40, ty + 15, -0.35, 22, 0.12, 0.75);
+    drawAuthenticFeather(tx - 20, ty - 12, 0.28, 25, -0.15, 0.80);
   } else if (step === 2) {
-    // Step 2: Climax Impact - Explosion of fluttering translucent white feathers bursting in 360 degrees
-    drawTranslucentFeather(tx - 55, ty - 22, -0.7, 26, 9.0, 0.95);
-    drawTranslucentFeather(tx - 32, ty - 45, -0.3, 28, 9.5, 0.95);
-    drawTranslucentFeather(tx + 6, ty - 52, 0.1, 30, 10.0, 0.95);
-    drawTranslucentFeather(tx + 42, ty - 38, 0.4, 27, 9.0, 0.95);
-    drawTranslucentFeather(tx + 60, ty - 14, 0.8, 24, 8.0, 0.90);
-
-    drawTranslucentFeather(tx - 48, ty + 18, -0.6, 22, 7.5, 0.85);
-    drawTranslucentFeather(tx - 18, ty + 38, -0.2, 25, 8.5, 0.85);
-    drawTranslucentFeather(tx + 28, ty + 32, 0.3, 26, 9.0, 0.85);
-    drawTranslucentFeather(tx + 52, ty + 12, 0.6, 22, 7.5, 0.80);
+    // Step 2: Impact Burst - Feathers forcefully dislodged and launched UPWARD in a bursting fountain arc
+    drawAuthenticFeather(tx - 45, ty - 25, -0.65, 28, 0.18, 0.95);
+    drawAuthenticFeather(tx - 22, ty - 50, -0.25, 30, -0.12, 0.95);
+    drawAuthenticFeather(tx + 8, ty - 58, 0.15, 32, 0.15, 0.95);
+    drawAuthenticFeather(tx + 36, ty - 42, 0.48, 29, -0.16, 0.95);
+    drawAuthenticFeather(tx + 54, ty - 18, 0.78, 26, 0.14, 0.90);
+    drawAuthenticFeather(tx - 12, ty + 18, -0.45, 24, 0.10, 0.85);
+    drawAuthenticFeather(tx + 24, ty + 22, 0.40, 25, -0.12, 0.85);
 
     // Center sharp impact star & bright flash
     drawMiniRetroStar(ctx, tx, ty, 20, "#BAE6FD");
     drawMiniRetroStar(ctx, tx, ty, 10, "#FFFFFF");
   } else if (step === 3) {
-    // Step 3: Rebound & dispersion - Feathers floating outward into the air
-    drawTranslucentFeather(tx - 65, ty - 35, -0.9, 22, 7.5, 0.55);
-    drawTranslucentFeather(tx - 20, ty - 60, -0.2, 26, 8.5, 0.60);
-    drawTranslucentFeather(tx + 25, ty - 65, 0.2, 24, 8.0, 0.60);
-    drawTranslucentFeather(tx + 58, ty - 45, 0.6, 20, 7.0, 0.50);
-    drawTranslucentFeather(tx + 72, ty - 20, 0.9, 18, 6.5, 0.45);
-    drawTranslucentFeather(tx - 35, ty + 28, -0.4, 18, 6.5, 0.40);
-    drawTranslucentFeather(tx + 35, ty + 35, 0.4, 19, 6.5, 0.40);
-  } else if (step >= 4) {
-    // Step 4: Final lingering feathers settling softly
-    drawTranslucentFeather(tx - 30, ty - 50, -0.5, 18, 6.5, 0.25);
-    drawTranslucentFeather(tx + 35, ty - 55, 0.5, 18, 6.5, 0.25);
+    // Step 3: Peak Float & Horizontal Tilt - Feathers reach zenith, air resistance halts vertical rise and tilts them flat
+    drawAuthenticFeather(tx - 58, ty - 55, -1.35, 27, 0.20, 0.85);
+    drawAuthenticFeather(tx - 25, ty - 75, -1.55, 30, -0.15, 0.90);
+    drawAuthenticFeather(tx + 15, ty - 80, 1.45, 31, 0.18, 0.90);
+    drawAuthenticFeather(tx + 48, ty - 60, 1.30, 28, -0.18, 0.85);
+    drawAuthenticFeather(tx + 70, ty - 35, 1.15, 24, 0.12, 0.75);
+    drawAuthenticFeather(tx - 35, ty + 5, -1.10, 22, 0.14, 0.65);
+    drawAuthenticFeather(tx + 35, ty + 10, 1.20, 23, -0.12, 0.65);
+  } else if (step === 4) {
+    // Step 4: Fluttering Zig-Zag Descent (하늘하늘 팔랑이며 천천히 흔들리며 하강)
+    // Feathers oscillate left and right while gently falling towards the platform
+    drawAuthenticFeather(tx - 50, ty - 15, -0.65, 26, -0.15, 0.70); // drifted left with left-tilt
+    drawAuthenticFeather(tx - 18, ty - 30, 0.55, 28, 0.18, 0.75);  // drifted right with right-tilt
+    drawAuthenticFeather(tx + 16, ty - 35, -0.50, 29, -0.14, 0.75); // counter-swaying
+    drawAuthenticFeather(tx + 45, ty - 18, 0.70, 27, 0.16, 0.70);  // drifted right with right-tilt
+    drawAuthenticFeather(tx - 28, ty + 20, 0.40, 22, 0.12, 0.55);
+    drawAuthenticFeather(tx + 32, ty + 25, -0.45, 23, -0.12, 0.55);
+  } else if (step >= 5) {
+    // Step 5: Soft Ground Settling - Feathers resting gently near ground platform
+    drawAuthenticFeather(tx - 42, ty + 18, -0.20, 24, 0.10, 0.35);
+    drawAuthenticFeather(tx + 8, ty + 28, 0.15, 26, -0.12, 0.35);
+    drawAuthenticFeather(tx + 38, ty + 22, 0.25, 23, 0.14, 0.30);
   }
 
   ctx.restore();
