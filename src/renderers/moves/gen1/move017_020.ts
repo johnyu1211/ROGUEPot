@@ -150,19 +150,26 @@ export function drawWhirlwindEffect(ctx: any, target: { x: number; y: number }, 
     globalAlpha = 0.65;
     spinPhase = 2.4;
   } else if (step === 3) {
-    topY = baseY - 230; // massive sky funnel roaring past screen top (y < 0)
+    topY = baseY - 240; // massive sky funnel roaring past screen top (y < 0)
     rBase = 24;
     rTop = 95;
     turns = 4.8;
-    globalAlpha = 0.68;
+    globalAlpha = 0.70;
     spinPhase = 4.2;
-  } else if (step >= 4) {
-    topY = baseY - 240;
-    rBase = 35;
+  } else if (step === 4) {
+    topY = baseY - 260;
+    rBase = 28;
     rTop = 110;
     turns = 3.5;
-    globalAlpha = 0.22;
+    globalAlpha = 0.45;
     spinPhase = 5.8;
+  } else if (step >= 5) {
+    topY = baseY - 260;
+    rBase = 32;
+    rTop = 110;
+    turns = 3.0;
+    globalAlpha = 0.18;
+    spinPhase = 6.4;
   }
 
   // 1. Rotating 3D Ground Cyclone Disc on Platform Floor
@@ -260,24 +267,26 @@ export function drawWhirlwindEffect(ctx: any, target: { x: number; y: number }, 
   }
 
   // PASS B: Volumetric 3D Translucent Funnel Body (Conical Air Core Shading)
-  ctx.save();
-  ctx.globalAlpha = globalAlpha * 0.22;
-  const coneGrad = ctx.createLinearGradient(tx - rTop, 0, tx + rTop, 0);
-  coneGrad.addColorStop(0, "rgba(255, 255, 255, 0.45)");
-  coneGrad.addColorStop(0.25, "rgba(224, 242, 254, 0.28)");
-  coneGrad.addColorStop(0.5, "rgba(186, 230, 253, 0.08)"); // hollow transparent core gives true 3D cylinder depth
-  coneGrad.addColorStop(0.75, "rgba(224, 242, 254, 0.28)");
-  coneGrad.addColorStop(1, "rgba(255, 255, 255, 0.45)");
+  if (step <= 4) {
+    ctx.save();
+    ctx.globalAlpha = globalAlpha * 0.22;
+    const coneGrad = ctx.createLinearGradient(tx - rTop, 0, tx + rTop, 0);
+    coneGrad.addColorStop(0, "rgba(255, 255, 255, 0.45)");
+    coneGrad.addColorStop(0.25, "rgba(224, 242, 254, 0.28)");
+    coneGrad.addColorStop(0.5, "rgba(186, 230, 253, 0.08)"); // hollow transparent core gives true 3D cylinder depth
+    coneGrad.addColorStop(0.75, "rgba(224, 242, 254, 0.28)");
+    coneGrad.addColorStop(1, "rgba(255, 255, 255, 0.45)");
 
-  ctx.fillStyle = coneGrad;
-  ctx.beginPath();
-  ctx.moveTo(tx - rBase, baseY);
-  ctx.lineTo(tx - rTop, topY);
-  ctx.lineTo(tx + rTop, topY);
-  ctx.lineTo(tx + rBase, baseY);
-  ctx.closePath();
-  ctx.fill();
-  ctx.restore();
+    ctx.fillStyle = coneGrad;
+    ctx.beginPath();
+    ctx.moveTo(tx - rBase, baseY);
+    ctx.lineTo(tx - rTop, topY);
+    ctx.lineTo(tx + rTop, topY);
+    ctx.lineTo(tx + rBase, baseY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
 
   // PASS C: Render Front-side of 3D Helices (z > 0) with Sheer Luminous Wind Bands
   for (const pts of streams) {
@@ -315,6 +324,67 @@ export function drawWhirlwindEffect(ctx: any, target: { x: number; y: number }, 
         ctx.stroke();
       }
     }
+    ctx.restore();
+  }
+
+  // PASS D: Step 4 Supersonic Ejection Speedlines Trajectory
+  if (step === 4) {
+    ctx.save();
+    ctx.strokeStyle = "rgba(224, 242, 254, 0.80)";
+    ctx.lineWidth = 3.0;
+    ctx.lineCap = "round";
+    const trajAngle = -Math.PI / 3.2; // ~60 deg towards top right
+    for (let l = 0; l < 4; l++) {
+      const offsetX = (l - 1.5) * 16;
+      const startX = tx + offsetX + 10;
+      const startY = ty - 120;
+      const endX = startX + Math.cos(trajAngle) * 160;
+      const endY = startY + Math.sin(trajAngle) * 160;
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // PASS E: Step 5 Cartoon Twinkle Sparkle (✦) in the Far Sky Horizon
+  if (step === 5) {
+    ctx.save();
+    const starX = tx + 140;
+    const starY = ty - 340;
+
+    // Outer luminous halo
+    const haloGrad = ctx.createRadialGradient(starX, starY, 0, starX, starY, 36);
+    haloGrad.addColorStop(0, "rgba(255, 255, 255, 0.95)");
+    haloGrad.addColorStop(0.35, "rgba(186, 230, 253, 0.85)");
+    haloGrad.addColorStop(0.7, "rgba(56, 189, 248, 0.40)");
+    haloGrad.addColorStop(1, "rgba(56, 189, 248, 0.0)");
+    ctx.fillStyle = haloGrad;
+    ctx.beginPath();
+    ctx.arc(starX, starY, 36, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Sharp 4-pointed major sparkle
+    ctx.fillStyle = "#FFFFFF";
+    ctx.beginPath();
+    ctx.moveTo(starX, starY - 26);
+    ctx.quadraticCurveTo(starX, starY, starX + 26, starY);
+    ctx.quadraticCurveTo(starX, starY, starX, starY + 26);
+    ctx.quadraticCurveTo(starX, starY, starX - 26, starY);
+    ctx.quadraticCurveTo(starX, starY, starX, starY - 26);
+    ctx.fill();
+
+    // Diagonal sub-sparkle
+    ctx.fillStyle = "rgba(224, 242, 254, 0.95)";
+    ctx.beginPath();
+    ctx.moveTo(starX, starY - 14);
+    ctx.quadraticCurveTo(starX, starY, starX + 14, starY);
+    ctx.quadraticCurveTo(starX, starY, starX, starY + 14);
+    ctx.quadraticCurveTo(starX, starY, starX - 14, starY);
+    ctx.quadraticCurveTo(starX, starY, starX, starY - 14);
+    ctx.fill();
+
     ctx.restore();
   }
 
