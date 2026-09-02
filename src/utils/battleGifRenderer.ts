@@ -417,31 +417,35 @@ function drawHighSkyCutscene(
     ctx.restore();
   }
 
-  // 4. Gliding / Banking Pokémon Sprite
+  // 3. Gliding / Banking Pokémon Sprite
   if (attackerSprite) {
     ctx.save();
     const isP = f.isAttackerPlayer !== false;
-    const ox = (isP ? f.pOffset?.x : f.eOffset?.x) || 0;
-    const oy = (isP ? f.pOffset?.y : f.eOffset?.y) || 0;
+    let ox = f.skyOffset?.x ?? (isP ? f.pOffset?.x : f.eOffset?.x) ?? 0;
+    let oy = f.skyOffset?.y ?? (isP ? f.pOffset?.y : f.eOffset?.y) ?? 0;
+    if (Math.abs(oy) > 400) oy = 0; // Guard against -9999 evasion offset
+    if (Math.abs(ox) > 400) ox = 0;
+
     const scale = isP ? f.pScale : f.eScale;
     const rot = (isP ? f.pRot : f.eRot) || 0;
 
-    // Supersonic Wind Trails behind wings
+    ctx.translate(ox, oy);
+    if (rot) ctx.rotate(rot);
+
+    // Supersonic Wind Trails behind wings in local space
     ctx.save();
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.60)";
-    ctx.lineWidth = 2.0;
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.65)";
+    ctx.lineWidth = 2.2;
     ctx.beginPath();
-    ctx.moveTo(ox - 30, oy - 15);
-    ctx.lineTo(ox - 120, oy - 15);
-    ctx.moveTo(ox - 30, oy + 15);
-    ctx.lineTo(ox - 120, oy + 15);
+    ctx.moveTo(-25, -15);
+    ctx.lineTo(-115, -15);
+    ctx.moveTo(-25, 15);
+    ctx.lineTo(-115, 15);
     ctx.stroke();
     ctx.restore();
 
-    ctx.translate(ox, oy);
-    if (rot) ctx.rotate(rot);
     if (scale) ctx.scale(scale.x, scale.y);
-    drawFittedBattleSprite(ctx, attackerSprite, 0, 0, 120);
+    drawFittedBattleSprite(ctx, attackerSprite, 0, 65, 130);
     ctx.restore();
   }
 
@@ -3537,8 +3541,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const isEnemyEvadingDuringAct1 = isEnemyStartingEvading && isP1;
 
     // Evasion state during Act 2 (for non-acting Pokemon)
-    const isPlayerEvadingDuringAct2 = (a1IsEvasionLaunch && isP1) || (isPlayerStartingEvading && !isP1 && !a1IsEvasionStrike);
-    const isEnemyEvadingDuringAct2 = (a1IsEvasionLaunch && !isP1) || (isEnemyStartingEvading && isP1 && !a1IsEvasionStrike);
+    const isPlayerEvadingDuringAct2 = !isP2 && ((a1IsEvasionLaunch && isP1) || (isPlayerStartingEvading && !isP1 && !a1IsEvasionStrike));
+    const isEnemyEvadingDuringAct2 = isP2 && ((a1IsEvasionLaunch && !isP1) || (isEnemyStartingEvading && isP1 && !a1IsEvasionStrike));
 
     // Evasion state at END of turn (final hold frame)
     const isPlayerEndingEvading = (a1IsEvasionLaunch && isP1 && !a2) || (a2IsEvasionLaunch && isP2) || (Boolean(playerMon.semiInvulnerableState || playerMon.chargingMove));
@@ -3546,16 +3550,16 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
 
     let processedAct1Frames = act1Frames;
     if (isEnemyEvadingDuringAct1) {
-      processedAct1Frames = act1Frames.map(f => ({ ...f, eOffset: { x: 0, y: -9999 }, hideEShadow: true, hideEnemy: true, eAlpha: 0.0 }));
+      processedAct1Frames = act1Frames.map(f => f.isHighSkyCutscene ? f : ({ ...f, eOffset: { x: 0, y: -9999 }, hideEShadow: true, hideEnemy: true, eAlpha: 0.0 }));
     } else if (isPlayerEvadingDuringAct1) {
-      processedAct1Frames = act1Frames.map(f => ({ ...f, pOffset: { x: 0, y: -9999 }, hidePShadow: true, hidePlayer: true, pAlpha: 0.0 }));
+      processedAct1Frames = act1Frames.map(f => f.isHighSkyCutscene ? f : ({ ...f, pOffset: { x: 0, y: -9999 }, hidePShadow: true, hidePlayer: true, pAlpha: 0.0 }));
     }
 
     let processedAct2Frames = act2Frames;
     if (isPlayerEvadingDuringAct2) {
-      processedAct2Frames = act2Frames.map(f => ({ ...f, pOffset: { x: 0, y: -9999 }, hidePShadow: true, hidePlayer: true, pAlpha: 0.0 }));
+      processedAct2Frames = act2Frames.map(f => f.isHighSkyCutscene ? f : ({ ...f, pOffset: { x: 0, y: -9999 }, hidePShadow: true, hidePlayer: true, pAlpha: 0.0 }));
     } else if (isEnemyEvadingDuringAct2) {
-      processedAct2Frames = act2Frames.map(f => ({ ...f, eOffset: { x: 0, y: -9999 }, hideEShadow: true, hideEnemy: true, eAlpha: 0.0 }));
+      processedAct2Frames = act2Frames.map(f => f.isHighSkyCutscene ? f : ({ ...f, eOffset: { x: 0, y: -9999 }, hideEShadow: true, hideEnemy: true, eAlpha: 0.0 }));
     }
 
     framesConfig = [
@@ -3690,9 +3694,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
 
     let processedSingleActFrames = act1Frames;
     if (isEnemyStartingEvading && isP1) {
-      processedSingleActFrames = act1Frames.map(f => ({ ...f, eOffset: { x: 0, y: -9999 }, hideEShadow: true, hideEnemy: true, eAlpha: 0.0 }));
+      processedSingleActFrames = act1Frames.map(f => f.isHighSkyCutscene ? f : ({ ...f, eOffset: { x: 0, y: -9999 }, hideEShadow: true, hideEnemy: true, eAlpha: 0.0 }));
     } else if (isPlayerStartingEvading && !isP1) {
-      processedSingleActFrames = act1Frames.map(f => ({ ...f, pOffset: { x: 0, y: -9999 }, hidePShadow: true, hidePlayer: true, pAlpha: 0.0 }));
+      processedSingleActFrames = act1Frames.map(f => f.isHighSkyCutscene ? f : ({ ...f, pOffset: { x: 0, y: -9999 }, hidePShadow: true, hidePlayer: true, pAlpha: 0.0 }));
     }
 
     framesConfig = [
@@ -3775,7 +3779,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     targetCtx.clearRect(0, 0, width, height);
 
     if (f.isHighSkyCutscene) {
-      const attackerSprite = f.isAttackerPlayer ? playerSprite : enemySprite;
+      const attackerSprite = (f.isAttackerPlayer !== false)
+        ? (playerSprite || playerFrontSprite)
+        : (enemySprite || enemyBackSprite);
       drawHighSkyCutscene(targetCtx, width, height, f, attackerSprite);
     } else {
       const isTracking = Boolean(f.cameraTrackAttacker);
