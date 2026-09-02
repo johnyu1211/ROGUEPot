@@ -513,8 +513,10 @@ function drawHighSkyCutscene(
 
 /**
  * 5th Generation (Black/White) style smooth continuous camera tracking
- * Glides smoothly across frames towards the defending Pokémon during attack impacts
- * using a multi-pass Gaussian smoothing filter, completely eliminating any sudden frame jumps or stuttering.
+ * Automatically detects attack action phases and establishes a rock-solid
+ * trapezoidal camera envelope: zooms in once smoothly upon lunge, stays locked at peak 1.38x
+ * across all multi-hits and effectiveness blinks without ANY oscillation ("확축확축" 방지),
+ * and glides smoothly back out when the turn ends.
  */
 function applyGen5CinematicCamera(
   frames: any[],
@@ -526,72 +528,104 @@ function applyGen5CinematicCamera(
 ) {
   if (!frames || frames.length === 0) return;
 
-  const rawWeights: number[] = new Array(frames.length).fill(0);
-  const targetPoints: Array<{ x: number; y: number } | null> = new Array(frames.length).fill(null);
-
   const cx = width / 2; // 280
   const cy = height / 2; // 190
+  const maxZoom = 1.38; // Enhanced 38% cinematic zoom
+
+  // Find continuous action segments (excluding Frame 0 blur and 11-minute hold frames)
+  const actionSegments: Array<{ start: number; end: number; strike: number; defender: { x: number; y: number } }> = [];
+  let currentSegment: { start: number; end: number; strike: number; defender: { x: number; y: number } } | null = null;
 
   for (let i = 0; i < frames.length; i++) {
     const f = frames[i];
-    if (f.isBlur || f.delay >= 10000 || f.isHighSkyCutscene || f.cameraTrackAttacker || (f.cameraZoom && !f._gen5Camera)) {
+    if (f.isBlur || f.delay >= 10000 || f.isHighSkyCutscene || f.cameraTrackAttacker) {
+      if (currentSegment) {
+        actionSegments.push(currentSegment);
+        currentSegment = null;
+      }
       continue;
     }
 
     const isAttackerP = f.moveEffect
       ? (f.moveEffect.actor ? f.moveEffect.actor === "player" : (f.moveEffect.isPlayerAttacking !== false))
       : (f.isAttackerPlayer !== undefined ? f.isAttackerPlayer : isPlayerDefault);
-
     const defender = isAttackerP ? em : pm;
-    targetPoints[i] = {
+
+    const isActionFrame = Boolean(
+      f.hitFlash ||
+      f.showEffect ||
+      f.moveStep ||
+      (f.targetAlpha !== undefined) ||
+      (f.pOffset && (f.pOffset.x !== 0 || f.pOffset.y !== 0)) ||
+      (f.eOffset && (f.eOffset.x !== 0 || f.eOffset.y !== 0))
+    );
+
+    if (isActionFrame) {
+      if (!currentSegment) {
+        currentSegment = { start: i, end: i, strike: i, defender };
+      } else {
+        currentSegment.end = i;
+      }
+      if (f.hitFlash || f.showEffect) {
+        if (currentSegment.strike === currentSegment.start) {
+          currentSegment.strike = i;
+        }
+      }
+    } else {
+      if (currentSegment) {
+        actionSegments.push(currentSegment);
+        currentSegment = null;
+      }
+    }
+  }
+  if (currentSegment) {
+    actionSegments.push(currentSegment);
+  }
+
+  // Reset default
+  for (let i = 0; i < frames.length; i++) {
+    if (!frames[i].isHighSkyCutscene && !frames[i].cameraTrackAttacker && (!frames[i].cameraZoom || frames[i]._gen5Camera)) {
+      frames[i].cameraZoom = 1.0;
+      frames[i].cameraFocal = null;
+    }
+  }
+
+  // Apply steady trapezoidal envelope for each action segment
+  for (const seg of actionSegments) {
+    const len = seg.end - seg.start + 1;
+    if (len <= 0) continue;
+
+    const defender = seg.defender;
+    const focalTarget = {
       x: cx + (defender.x - cx) * 0.48,
       y: cy + (defender.y - cy) * 0.48,
     };
 
-    if (f.hitFlash) {
-      rawWeights[i] = 1.0;
-    } else if (f.showEffect) {
-      if (f.moveStep === 1 || f.moveStep === 2) {
-        rawWeights[i] = 0.95;
+    for (let i = seg.start; i <= seg.end; i++) {
+      const f = frames[i];
+      let w = 1.0; // Rock-solid flat-top hold across all hits & effectiveness blinks!
+
+      if (i === seg.start && seg.strike > seg.start) {
+        w = 0.45; // Smooth entry glide
+      } else if (i === seg.end) {
+        w = 0.0; // Smooth return to neutral
+      } else if (i === seg.end - 1 && len >= 4) {
+        w = 0.50; // Smooth exit glide
       } else {
-        rawWeights[i] = 0.85;
+        w = 1.0; // Steady 1.38x hold!
       }
-    } else if (f.targetAlpha !== undefined && f.targetAlpha < 1.0) {
-      rawWeights[i] = 0.75; // Sustained focus during damage reaction / effectiveness flicker
-    } else if (f.pOffset?.x !== 0 || f.eOffset?.x !== 0) {
-      rawWeights[i] = 0.35; // Lunge / windup motion
-    } else {
-      rawWeights[i] = 0.0;
-    }
-  }
 
-  // 1-pass Gaussian smoothing filter so the camera focus stays impactful and clearly noticeable
-  let smoothed = [...rawWeights];
-  for (let i = 1; i < smoothed.length - 1; i++) {
-    if (frames[i].isBlur || frames[i].delay >= 10000 || frames[i].isHighSkyCutscene) continue;
-    const prev = (frames[i - 1].isBlur || frames[i - 1].delay >= 10000) ? 0 : smoothed[i - 1];
-    const nextVal = (frames[i + 1].isBlur || frames[i + 1].delay >= 10000) ? 0 : smoothed[i + 1];
-    smoothed[i] = (prev + 2 * smoothed[i] + nextVal) / 4;
-  }
-
-  const maxZoom = 1.38; // Enhanced 38% cinematic zoom (striking, dramatic, and clearly noticeable)
-  for (let i = 0; i < frames.length; i++) {
-    const f = frames[i];
-    if (f.isBlur || f.delay >= 10000 || f.isHighSkyCutscene || f.cameraTrackAttacker || (f.cameraZoom && !f._gen5Camera)) {
-      continue;
-    }
-
-    const w = smoothed[i];
-    if (w > 0.02 && targetPoints[i]) {
-      f.cameraZoom = 1.0 + (maxZoom - 1.0) * w;
-      f.cameraFocal = {
-        x: cx + (targetPoints[i]!.x - cx) * w,
-        y: cy + (targetPoints[i]!.y - cy) * w,
-      };
-      f._gen5Camera = true;
-    } else {
-      f.cameraZoom = 1.0;
-      f.cameraFocal = null;
+      if (w > 0.02) {
+        f.cameraZoom = 1.0 + (maxZoom - 1.0) * w;
+        f.cameraFocal = {
+          x: cx + (focalTarget.x - cx) * w,
+          y: cy + (focalTarget.y - cy) * w,
+        };
+        f._gen5Camera = true;
+      } else {
+        f.cameraZoom = 1.0;
+        f.cameraFocal = null;
+      }
     }
   }
 }
