@@ -4017,12 +4017,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       ctx.filter = "none";
     }
 
-    encoder.setDelay(f.delay);
+    const effectiveDelay = f.delay >= 10000 ? f.delay : Math.round(f.delay * 2);
+    encoder.setDelay(effectiveDelay);
     encoder.addFrame(ctx);
   }
 
   encoder.finish();
-  return { buffer: encoder.out.getData(), motionDurationMs };
+  return { buffer: encoder.out.getData(), motionDurationMs: motionDurationMs * 2 };
 }
 
 /**
