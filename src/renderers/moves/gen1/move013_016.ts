@@ -257,102 +257,209 @@ export function drawRazorWindEffect(
 }
 
 /**
- * 014 칼춤 (Swords Dance): 4 Orbiting & Clashing Spectral Swords with Attack Up Aura
+ * 014 칼춤 (Swords Dance): 3D Ascending Monochromatic Sword Orbit & Apex Tip-Touching Clash
+ * 
+ * Step 1: 4 Thin monochromatic swords in a 3D elliptical orbit around Pokémon waist
+ * Step 2: 4 Swords ascending in a fast 3D helical orbit while tilting inward
+ * Step 3: Apex Convergence: All 4 sword tips touch together at ONE point above the head + ATK UP clash
+ * Step 4: Swords burst outwards with ascending power aura sparks
  */
 export function drawSwordsDanceEffect(ctx: any, userPos: { x: number; y: number }, step: number = 1) {
   ctx.save();
   const ux = userPos.x;
-  const uy = userPos.y - 14;
+  const uy = userPos.y - 10;
 
-  const drawSword = (cx: number, cy: number, rot: number, scale: number = 1.0, alpha: number = 1.0) => {
+  // Sleek Thin Monochromatic Solid Sword Helper
+  const drawThinSolidSword = (
+    cx: number,
+    cy: number,
+    rot: number,
+    scale: number = 1.0,
+    alpha: number = 1.0,
+    color: string = "#FFFFFF",
+    strokeColor: string = "#EF4444"
+  ) => {
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(rot);
     ctx.scale(scale, scale);
     ctx.globalAlpha = alpha;
 
-    ctx.fillStyle = "#FEE2E2";
-    ctx.strokeStyle = "#DC2626";
-    ctx.lineWidth = 1.5;
+    // 1. Sleek Thin Blade (Needle-sharp tip at (0, -34))
+    ctx.fillStyle = color;
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.moveTo(0, -32);
-    ctx.lineTo(4.5, -24);
-    ctx.lineTo(4.5, 6);
-    ctx.lineTo(0, 8);
-    ctx.lineTo(-4.5, 6);
-    ctx.lineTo(-4.5, -24);
+    ctx.moveTo(0, -34); // Needle point
+    ctx.lineTo(2.4, -26);
+    ctx.lineTo(2.2, 4);
+    ctx.lineTo(-2.2, 4);
+    ctx.lineTo(-2.4, -26);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 1.2;
+    // 2. Center Spine
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
+    ctx.lineWidth = 0.9;
     ctx.beginPath();
-    ctx.moveTo(0, -28);
-    ctx.lineTo(0, 6);
+    ctx.moveTo(0, -32);
+    ctx.lineTo(0, 4);
     ctx.stroke();
 
-    ctx.fillStyle = "#FBBF24";
-    ctx.strokeStyle = "#B45309";
-    ctx.lineWidth = 1.2;
-    ctx.fillRect(-9, 6, 18, 3.5);
-    ctx.strokeRect(-9, 6, 18, 3.5);
-
-    ctx.fillStyle = "#78350F";
-    ctx.fillRect(-2, 9.5, 4, 7);
-    ctx.fillStyle = "#FBBF24";
+    // 3. Slim Monochromatic Crossguard
+    ctx.fillStyle = color;
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = 1.0;
     ctx.beginPath();
-    ctx.arc(0, 18, 3.2, 0, Math.PI * 2);
+    ctx.rect(-6, 4, 12, 2.2);
+    ctx.fill();
+    ctx.stroke();
+
+    // 4. Slim Handle & Diamond Pommel
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.rect(-1.2, 6.2, 2.4, 5.5);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(0, 11.7);
+    ctx.lineTo(2.2, 13.5);
+    ctx.lineTo(0, 15.3);
+    ctx.lineTo(-2.2, 13.5);
+    ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
     ctx.restore();
   };
 
+  interface Sword3D {
+    x: number;
+    y: number;
+    depth: number;
+    rot: number;
+    scale: number;
+    alpha: number;
+  }
+
   if (step === 1) {
-    const offsets = [
-      { ox: -36, oy: -8, rot: -0.2 },
-      { ox: 36, oy: -8, rot: 0.2 },
-      { ox: -18, oy: 16, rot: -0.4 },
-      { ox: 18, oy: 16, rot: 0.4 },
-    ];
-    for (const o of offsets) {
-      drawSword(ux + o.ox, uy + o.oy, o.rot, 0.9, 0.85);
+    // Step 1: 4 Swords in 3D Elliptical Orbit around Waist (z = +14)
+    const count = 4;
+    const rx = 44;
+    const ry = 15;
+    const zOffset = 14;
+    const basePhase = 0.25;
+
+    const swords: Sword3D[] = [];
+    for (let i = 0; i < count; i++) {
+      const angle = basePhase + (i * 2 * Math.PI) / count;
+      const cosA = Math.cos(angle);
+      const sinA = Math.sin(angle);
+      const x = ux + cosA * rx;
+      const y = uy + zOffset + sinA * ry;
+      const depth = sinA; // -1 (back) to +1 (front)
+      const scale = 0.80 + 0.30 * (depth + 1) * 0.5;
+      const alpha = 0.55 + 0.45 * (depth + 1) * 0.5;
+      const rot = cosA * 0.20; // Subtle inward tilt
+      swords.push({ x, y, depth, rot, scale, alpha });
+    }
+
+    swords.sort((a, b) => a.depth - b.depth);
+    for (const s of swords) {
+      drawThinSolidSword(s.x, s.y, s.rot, s.scale, s.alpha);
     }
   } else if (step === 2) {
-    ctx.fillStyle = "rgba(239, 68, 68, 0.18)";
+    // Step 2: 4 Swords Ascending in 3D Helical Orbit toward Head (z = -12, Fast Spin)
+    const count = 4;
+    const rx = 36;
+    const ry = 12;
+    const zOffset = -12;
+    const basePhase = 1.65;
+
+    const swords: Sword3D[] = [];
+    for (let i = 0; i < count; i++) {
+      const angle = basePhase + (i * 2 * Math.PI) / count;
+      const cosA = Math.cos(angle);
+      const sinA = Math.sin(angle);
+      const x = ux + cosA * rx;
+      const y = uy + zOffset + sinA * ry;
+      const depth = sinA;
+      const scale = 0.85 + 0.35 * (depth + 1) * 0.5;
+      const alpha = 0.65 + 0.35 * (depth + 1) * 0.5;
+      const rot = cosA * 0.45; // Inward angle pointing up toward apex
+      swords.push({ x, y, depth, rot, scale, alpha });
+    }
+
+    // Soft ascending red aura
+    ctx.fillStyle = "rgba(239, 68, 68, 0.15)";
     ctx.beginPath();
-    ctx.arc(ux, uy, 48, 0, Math.PI * 2);
+    ctx.ellipse(ux, uy - 15, 42, 18, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    const offsets = [
-      { ox: -28, oy: -26, rot: -0.5 },
-      { ox: 28, oy: -26, rot: 0.5 },
-      { ox: -36, oy: 4, rot: -0.1 },
-      { ox: 36, oy: 4, rot: 0.1 },
-    ];
-    for (const o of offsets) {
-      drawSword(ux + o.ox, uy + o.oy, o.rot, 1.05, 0.95);
+    swords.sort((a, b) => a.depth - b.depth);
+    for (const s of swords) {
+      drawThinSolidSword(s.x, s.y, s.rot, s.scale, s.alpha);
     }
   } else if (step === 3) {
-    ctx.fillStyle = "rgba(245, 158, 11, 0.25)";
-    ctx.beginPath();
-    ctx.arc(ux, uy - 32, 54, 0, Math.PI * 2);
-    ctx.fill();
+    // Step 3: Apex Convergence - All 4 Sword Tips touch together at ONE Point above the head!
+    const apexX = ux;
+    const apexY = uy - 48; // Apex point where all tips meet
 
-    drawSword(ux - 12, uy - 36, Math.PI * 0.25, 1.25, 1.0);
-    drawSword(ux + 12, uy - 36, -Math.PI * 0.25, 1.25, 1.0);
-    drawMiniRetroStar(ctx, ux, uy - 36, 18, "#F59E0B");
-    drawMiniRetroStar(ctx, ux, uy - 36, 10, "#FFFFFF");
+    // When sword is drawn at (cx, cy) rotated by rot with scale:
+    // Its tip is at cx + sin(rot)*34*scale, cy - cos(rot)*34*scale
+    // So to make tip meet exactly at (apexX, apexY):
+    // cx = apexX - sin(rot)*34*scale, cy = apexY + cos(rot)*34*scale
 
+    // Left Sword (Tilted right ~38 deg)
+    const rotL = Math.PI * 0.21;
+    const scaleL = 1.15;
+    const cxL = apexX - Math.sin(rotL) * 34 * scaleL;
+    const cyL = apexY + Math.cos(rotL) * 34 * scaleL;
+    drawThinSolidSword(cxL, cyL, rotL, scaleL, 1.0);
+
+    // Right Sword (Tilted left ~38 deg)
+    const rotR = -Math.PI * 0.21;
+    const scaleR = 1.15;
+    const cxR = apexX - Math.sin(rotR) * 34 * scaleR;
+    const cyR = apexY + Math.cos(rotR) * 34 * scaleR;
+    drawThinSolidSword(cxR, cyR, rotR, scaleR, 1.0);
+
+    // Back Depth Sword (Slightly smaller, pointing straight up)
+    const scaleB = 0.90;
+    const cyB = apexY + 34 * scaleB;
+    drawThinSolidSword(apexX, cyB + 4, 0, scaleB, 0.85);
+
+    // Front Depth Sword (Larger, pointing straight up)
+    const scaleF = 1.25;
+    const cyF = apexY + 34 * scaleF;
+    drawThinSolidSword(apexX, cyF - 2, 0, scaleF, 1.0);
+
+    // Clash flash & impact spark at the touching tip apex
+    drawMiniRetroStar(ctx, apexX, apexY, 22, "#FACC15");
+    drawMiniRetroStar(ctx, apexX, apexY, 12, "#FFFFFF");
+
+    // Attack Up Text
     ctx.fillStyle = "#EF4444";
     ctx.font = "bold 16px DungGeunMo";
-    ctx.fillText("▲ ATK UP", ux - 30, uy - 64);
+    ctx.textAlign = "center";
+    ctx.fillText("▲ ATK UP", ux, uy - 68);
   } else if (step >= 4) {
+    // Step 4: Swords Burst Outwards & Power Aura Sparks Rise
+    const offsets = [
+      { ox: -36, oy: -52, rot: -0.45 },
+      { ox: 36, oy: -52, rot: 0.45 },
+      { ox: -48, oy: -20, rot: -0.80 },
+      { ox: 48, oy: -20, rot: 0.80 },
+    ];
+    for (const o of offsets) {
+      drawThinSolidSword(ux + o.ox, uy + o.oy, o.rot, 1.0, 0.35);
+    }
+
     const sparks = [
       { ox: -20, oy: -45, r: 3.5, c: "#EF4444" },
       { ox: 20, oy: -48, r: 3.5, c: "#F59E0B" },
-      { ox: 0, oy: -55, r: 4.2, c: "#FFFFFF" },
+      { ox: 0, oy: -58, r: 4.2, c: "#FFFFFF" },
     ];
     for (const sp of sparks) {
       ctx.fillStyle = sp.c;
