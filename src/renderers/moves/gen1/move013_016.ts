@@ -144,6 +144,21 @@ export function drawRazorWindEffect(
     ctx.restore();
   };
 
+  // Helper: Draw tapered razor blade with convex cutting belly facing 100% directly inward toward target center
+  const drawTaperedRazorBladeInward = (
+    cx: number,
+    cy: number,
+    length: number = 70,
+    curve: number = 18,
+    thickness: number = 8.5,
+    scale: number = 1.0,
+    alpha: number = 1.0
+  ) => {
+    const targetAngle = Math.atan2(ty - cy, tx - cx);
+    const angle = targetAngle - Math.PI / 2;
+    drawTaperedRazorBlade(cx, cy, angle, length, Math.abs(curve), thickness, scale, alpha);
+  };
+
   if (step === 1) {
     // Step 1: Initial 3D Tapered Helical Spiral Wrapping around User (Full Opacity)
     const ribbonLayers = [
@@ -169,38 +184,38 @@ export function drawRazorWindEffect(
       drawTaperedHelicalRibbon(sx, sy, r.y, r.rx, r.ry, r.rot, r.sA, r.eA, r.maxW, r.col, r.a);
     }
   } else if (step === 3) {
-    // Step 3: First Symmetrical Diagonal Pair Inception (Upper-Left <-> Lower-Right, Faint Alpha)
+    // Step 3: First Symmetrical Diagonal Pair Inception (Upper-Left <-> Lower-Right, Faint Alpha, Facing Inward)
     const earlyPair = [
-      { cx: tx - 46, cy: ty - 32, ang: -0.42, len: 64, curve: 16, thick: 7.5, a: 0.45 },
-      { cx: tx + 46, cy: ty + 32, ang: -2.35, len: 64, curve: -16, thick: 7.5, a: 0.45 },
+      { cx: tx - 46, cy: ty - 32, len: 64, curve: 16, thick: 7.5, a: 0.45 },
+      { cx: tx + 46, cy: ty + 32, len: 64, curve: 16, thick: 7.5, a: 0.45 },
     ];
     for (const b of earlyPair) {
-      drawTaperedRazorBlade(b.cx, b.cy, b.ang, b.len, b.curve, b.thick, 1.0, b.a);
+      drawTaperedRazorBladeInward(b.cx, b.cy, b.len, b.curve, b.thick, 1.0, b.a);
     }
   } else if (step === 4) {
-    // Step 4: Clean Symmetrical X-Cross Convergence (4 Blades, Semi-Opaque)
+    // Step 4: Clean Symmetrical X-Cross Convergence (4 Blades Facing Inward, Semi-Opaque)
     const crossBlades = [
       // Diagonal Pair 1: Upper-Left <-> Lower-Right (Slicing Inward)
-      { cx: tx - 24, cy: ty - 18, ang: -0.42, len: 70, curve: 18, thick: 8.5, a: 0.85 },
-      { cx: tx + 24, cy: ty + 18, ang: -2.35, len: 70, curve: -18, thick: 8.5, a: 0.85 },
-      // Diagonal Pair 2: Upper-Right <-> Lower-Left (Joining the Cross)
-      { cx: tx + 38, cy: ty - 26, ang: 0.48, len: 68, curve: -18, thick: 8.0, a: 0.70 },
-      { cx: tx - 38, cy: ty + 26, ang: 2.25, len: 68, curve: 18, thick: 8.0, a: 0.70 },
+      { cx: tx - 24, cy: ty - 18, len: 70, curve: 18, thick: 8.5, a: 0.85 },
+      { cx: tx + 24, cy: ty + 18, len: 70, curve: 18, thick: 8.5, a: 0.85 },
+      // Diagonal Pair 2: Upper-Right <-> Lower-Left (Joining the Cross, Facing Inward)
+      { cx: tx + 38, cy: ty - 26, len: 68, curve: 18, thick: 8.0, a: 0.70 },
+      { cx: tx - 38, cy: ty + 26, len: 68, curve: 18, thick: 8.0, a: 0.70 },
     ];
     for (const b of crossBlades) {
-      drawTaperedRazorBlade(b.cx, b.cy, b.ang, b.len, b.curve, b.thick, 1.0, b.a);
+      drawTaperedRazorBladeInward(b.cx, b.cy, b.len, b.curve, b.thick, 1.0, b.a);
     }
   } else if (step === 5) {
-    // Step 5: Climax Crisp Symmetrical X-Cross Cleave (100% Solid) + Center Impact Star
+    // Step 5: Climax Crisp Symmetrical X-Cross Cleave (100% Solid, All Blades Facing Inward) + Center Impact Star
     const climaxCross = [
-      { cx: tx - 14, cy: ty - 10, ang: -0.42, len: 78, curve: 20, thick: 9.5, s: 1.1 },
-      { cx: tx + 14, cy: ty + 10, ang: -2.35, len: 78, curve: -20, thick: 9.5, s: 1.1 },
-      { cx: tx + 14, cy: ty - 10, ang: 0.48, len: 78, curve: -20, thick: 9.5, s: 1.1 },
-      { cx: tx - 14, cy: ty + 10, ang: 2.25, len: 78, curve: 20, thick: 9.5, s: 1.1 },
+      { cx: tx - 14, cy: ty - 10, len: 78, curve: 20, thick: 9.5, s: 1.1 },
+      { cx: tx + 14, cy: ty + 10, len: 78, curve: 20, thick: 9.5, s: 1.1 },
+      { cx: tx + 14, cy: ty - 10, len: 78, curve: 20, thick: 9.5, s: 1.1 },
+      { cx: tx - 14, cy: ty + 10, len: 78, curve: 20, thick: 9.5, s: 1.1 },
     ];
 
     for (const b of climaxCross) {
-      drawTaperedRazorBlade(b.cx, b.cy, b.ang, b.len, b.curve, b.thick, b.s, 1.0);
+      drawTaperedRazorBladeInward(b.cx, b.cy, b.len, b.curve, b.thick, b.s, 1.0);
     }
 
     // Single Crisp Center Impact Star (Clean & Sharp)
@@ -235,13 +250,13 @@ export function drawRazorWindEffect(
     drawMiniRetroStar(ctx, tx, ty, 7, "rgba(255, 255, 255, 0.50)");
 
     const shards = [
-      { cx: tx - 44, cy: ty - 32, ang: -0.42, len: 48, curve: 14, thick: 5.5, a: 0.20 },
-      { cx: tx + 44, cy: ty + 32, ang: -2.35, len: 48, curve: -14, thick: 5.5, a: 0.20 },
-      { cx: tx + 44, cy: ty - 32, ang: 0.48, len: 48, curve: -14, thick: 5.5, a: 0.20 },
-      { cx: tx - 44, cy: ty + 32, ang: 2.25, len: 48, curve: 14, thick: 5.5, a: 0.20 },
+      { cx: tx - 44, cy: ty - 32, len: 48, curve: 14, thick: 5.5, a: 0.20 },
+      { cx: tx + 44, cy: ty + 32, len: 48, curve: 14, thick: 5.5, a: 0.20 },
+      { cx: tx + 44, cy: ty - 32, len: 48, curve: 14, thick: 5.5, a: 0.20 },
+      { cx: tx - 44, cy: ty + 32, len: 48, curve: 14, thick: 5.5, a: 0.20 },
     ];
     for (const sh of shards) {
-      drawTaperedRazorBlade(sh.cx, sh.cy, sh.ang, sh.len, sh.curve, sh.thick, 0.85, sh.a);
+      drawTaperedRazorBladeInward(sh.cx, sh.cy, sh.len, sh.curve, sh.thick, 0.85, sh.a);
     }
   }
 
