@@ -2332,11 +2332,27 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
       const isMiss1 = !isHit1;
       act1Frames = [
-        // 1. 1타: 왼쪽에서 오른쪽으로 채찍 강타! (Left-to-Right Lash - 100ms)
+        // 1A. 1차 덩굴 발사 진입 (Vine 1 Shoots - 75ms)
         {
-          delay: 100,
-          pOffset: isP1 ? { x: 12, y: -4 } : { x: 0, y: 0 },
-          eOffset: isP1 ? (isMiss1 ? { x: 14, y: -2 } : { x: 14, y: -4 }) : { x: -12, y: 4 },
+          delay: 75,
+          pOffset: isP1 ? { x: 6, y: -2 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -6, y: 2 } : { x: 0, y: 0 },
+          pRot: isP1 ? 0.03 : undefined,
+          eRot: !isP1 ? -0.03 : undefined,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 1,
+        },
+        // 1B. 1타: 왼쪽에서 오른쪽으로 채찍 강타! (Left-to-Right Lash - 95ms)
+        {
+          delay: 95,
+          pOffset: isP1 ? { x: 14, y: -4 } : { x: 0, y: 0 },
+          eOffset: isP1 ? (isMiss1 ? { x: 14, y: -2 } : { x: 14, y: -4 }) : { x: -14, y: 4 },
           pRot: isP1 ? 0.05 : undefined,
           eRot: !isP1 ? -0.05 : undefined,
           showEffect: true,
@@ -2348,13 +2364,29 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 1,
         },
-        // 2. 2타: 오른쪽에서 왼쪽으로 채찍 강타! (Right-to-Left Lash - 110ms)
+        // 1C. 1차 채찍 잔상 지속 & 2차 덩굴 준비 (Trail Holds & 2nd Vine Ready - 80ms)
         {
-          delay: 110,
-          pOffset: isP1 ? { x: 16, y: -6 } : (isMiss1 ? { x: 20, y: 4 } : { x: -12, y: 4 }),
-          eOffset: isP1 ? (isMiss1 ? { x: 20, y: -4 } : { x: 22, y: -8 }) : { x: -16, y: 6 },
-          pRot: isP1 ? -0.05 : undefined,
-          eRot: !isP1 ? 0.05 : undefined,
+          delay: 80,
+          pOffset: isP1 ? { x: 10, y: -3 } : { x: 0, y: 0 },
+          eOffset: isP1 ? (isMiss1 ? { x: 10, y: -2 } : { x: 10, y: -3 }) : { x: -10, y: 3 },
+          pRot: isP1 ? -0.01 : undefined,
+          eRot: !isP1 ? 0.01 : undefined,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 1,
+        },
+        // 2A. 2차 덩굴 진입 휘두르기 (Vine 2 Swings - 75ms)
+        {
+          delay: 75,
+          pOffset: isP1 ? { x: 12, y: -5 } : (isMiss1 ? { x: 16, y: 2 } : { x: -8, y: 2 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 16, y: -2 } : { x: 16, y: -5 }) : { x: -12, y: 5 },
+          pRot: isP1 ? -0.03 : undefined,
+          eRot: !isP1 ? 0.03 : undefined,
           showEffect: true,
           hitFlash: false,
           enemyHp: a1.enemyHpAfter,
@@ -2364,11 +2396,27 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 2,
         },
-        // 3. Vines Retracting & Leaf Flutter (100ms)
+        // 2B. 2타: 오른쪽에서 왼쪽으로 교차 참격 강타! ('X' Cross Strike - 105ms)
         {
-          delay: 100,
-          pOffset: isP1 ? { x: 6, y: -2 } : (isMiss1 ? { x: 10, y: 2 } : { x: -6, y: 2 }),
-          eOffset: isP1 ? (isMiss1 ? { x: 10, y: -2 } : { x: 8, y: -2 }) : { x: -6, y: 2 },
+          delay: 105,
+          pOffset: isP1 ? { x: 18, y: -6 } : (isMiss1 ? { x: 20, y: 4 } : { x: -12, y: 4 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 20, y: -4 } : { x: 22, y: -8 }) : { x: -18, y: 6 },
+          pRot: isP1 ? -0.06 : undefined,
+          eRot: !isP1 ? 0.06 : undefined,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 2,
+        },
+        // 3A. 채찍 듀얼 잔상 및 흩날리는 잎새 (Trails Fade & Leaves Scatter - 85ms)
+        {
+          delay: 85,
+          pOffset: isP1 ? { x: 10, y: -3 } : (isMiss1 ? { x: 12, y: 2 } : { x: -6, y: 2 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 12, y: -2 } : { x: 12, y: -4 }) : { x: -10, y: 3 },
           showEffect: true,
           hitFlash: false,
           enemyHp: a1.enemyHpAfter,
@@ -2378,9 +2426,23 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 3,
         },
-        // 4. Recovery (80ms)
+        // 3B. 덩굴 회수 (Vines Retract - 80ms)
         {
           delay: 80,
+          pOffset: isP1 ? { x: 4, y: -1 } : { x: 0, y: 0 },
+          eOffset: isP1 ? (isMiss1 ? { x: 4, y: 0 } : { x: 4, y: -1 }) : { x: -4, y: 1 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 3,
+        },
+        // 4. 완전 복귀 (Neutral - 75ms)
+        {
+          delay: 75,
           pOffset: { x: 0, y: 0 },
           eOffset: { x: 0, y: 0 },
           showEffect: false,
@@ -2479,13 +2541,28 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
       const isMiss1 = !isHit1;
       act1Frames = [
-        // 1. 1타: 좌상단 대각선 강타 (Top-Left Strike - 110ms) -> 피격자 우하단으로 살짝 밀림
+        // 1A. 도약 전진 (Windup Leap - 75ms)
         {
-          delay: 110,
-          pOffset: isP1 ? { x: 20, y: -12 } : (isMiss1 ? { x: 24, y: 4 } : { x: -14, y: 6 }),
-          eOffset: isP1 ? (isMiss1 ? { x: 24, y: -4 } : { x: 14, y: 6 }) : { x: -20, y: 12 },
-          pRot: isP1 ? -0.06 : undefined,
-          eRot: !isP1 ? 0.06 : undefined,
+          delay: 75,
+          pOffset: isP1 ? { x: 12, y: -6 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -12, y: 6 } : { x: 0, y: 0 },
+          pRot: isP1 ? -0.04 : undefined,
+          eRot: !isP1 ? 0.04 : undefined,
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+        },
+        // 1B. 1타: 좌상단 대각선 강타 (Top-Left Strike - 95ms)
+        {
+          delay: 95,
+          pOffset: isP1 ? { x: 22, y: -14 } : (isMiss1 ? { x: 24, y: 4 } : { x: -14, y: 6 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 24, y: -4 } : { x: 14, y: 8 }) : { x: -22, y: 14 },
+          pRot: isP1 ? -0.07 : undefined,
+          eRot: !isP1 ? 0.07 : undefined,
           showEffect: true,
           hitFlash: isHit1,
           enemyHp: enemy.hp,
@@ -2495,13 +2572,45 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 1,
         },
-        // 2. 2타: 우하단 대각선 강타 (Bottom-Right Strike - 120ms) -> 피격자 좌상단으로 반동
+        // 1C. 1타 반동 및 공중 회전 피벗 (Recoil & Aerial Pivot - 80ms)
         {
-          delay: 120,
-          pOffset: isP1 ? { x: 26, y: -4 } : (isMiss1 ? { x: 28, y: 4 } : { x: -18, y: -4 }),
-          eOffset: isP1 ? (isMiss1 ? { x: 28, y: -4 } : { x: 18, y: -6 }) : { x: -26, y: 4 },
-          pRot: isP1 ? 0.08 : undefined,
-          eRot: !isP1 ? -0.08 : undefined,
+          delay: 80,
+          pOffset: isP1 ? { x: 16, y: -10 } : (isMiss1 ? { x: 20, y: 3 } : { x: -10, y: 4 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 20, y: -3 } : { x: 9, y: 5 }) : { x: -16, y: 10 },
+          pRot: isP1 ? 0.01 : undefined,
+          eRot: !isP1 ? -0.01 : undefined,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 1,
+        },
+        // 2A. 2타 하향 다이브 준비 (Dive Approach - 75ms)
+        {
+          delay: 75,
+          pOffset: isP1 ? { x: 22, y: -3 } : (isMiss1 ? { x: 24, y: 3 } : { x: -14, y: -2 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 24, y: -3 } : { x: 12, y: -2 }) : { x: -22, y: 3 },
+          pRot: isP1 ? 0.05 : undefined,
+          eRot: !isP1 ? -0.05 : undefined,
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 2,
+        },
+        // 2B. 2타: 우하단 대각선 강타 (Bottom-Right Strike - 105ms)
+        {
+          delay: 105,
+          pOffset: isP1 ? { x: 28, y: -3 } : (isMiss1 ? { x: 28, y: 4 } : { x: -18, y: -4 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 28, y: -4 } : { x: 18, y: -6 }) : { x: -28, y: 3 },
+          pRot: isP1 ? 0.09 : undefined,
+          eRot: !isP1 ? -0.09 : undefined,
           showEffect: true,
           hitFlash: isHit1,
           enemyHp: a1.enemyHpAfter,
@@ -2511,11 +2620,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 2,
         },
-        // 3. 듀얼 잔상 및 타격 여운 (100ms)
+        // 3A. 듀얼 잔상 및 공중 반동 (Dual Afterglow - 85ms)
         {
-          delay: 100,
-          pOffset: isP1 ? { x: 12, y: -3 } : (isMiss1 ? { x: 14, y: 2 } : { x: -8, y: 2 }),
-          eOffset: isP1 ? (isMiss1 ? { x: 14, y: -2 } : { x: 8, y: -2 }) : { x: -12, y: 3 },
+          delay: 85,
+          pOffset: isP1 ? { x: 14, y: -6 } : (isMiss1 ? { x: 14, y: 2 } : { x: -8, y: 2 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 14, y: -2 } : { x: 8, y: -2 }) : { x: -14, y: 6 },
+          pRot: isP1 ? 0.04 : undefined,
+          eRot: !isP1 ? -0.04 : undefined,
           showEffect: true,
           hitFlash: false,
           enemyHp: a1.enemyHpAfter,
@@ -2525,9 +2636,22 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 3,
         },
-        // 4. 복귀 (90ms)
+        // 3B. 착지 복귀 (Landing - 80ms)
         {
-          delay: 90,
+          delay: 80,
+          pOffset: isP1 ? { x: 5, y: -1 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -5, y: 1 } : { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+        },
+        // 4. 완전 원위치 (Neutral - 75ms)
+        {
+          delay: 75,
           pOffset: { x: 0, y: 0 },
           eOffset: { x: 0, y: 0 },
           showEffect: false,
@@ -4433,12 +4557,27 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
       const isMiss2 = !isHit2;
       act2Frames = [
-        // 1. Vine Shoot / Tension Extension (100ms)
-        // 1. 1타: 왼쪽에서 오른쪽으로 채찍 강타! (Left-to-Right Lash - 100ms)
+        // 1A. 1차 덩굴 발사 진입 (Vine 1 Shoots - 75ms)
         {
-          delay: 100,
-          pOffset: isP2 ? { x: 12, y: -4 } : { x: 0, y: 0 },
-          eOffset: isP2 ? (isMiss2 ? { x: 14, y: -2 } : { x: 14, y: -4 }) : { x: -12, y: 4 },
+          delay: 75,
+          pOffset: isP2 ? { x: 6, y: -2 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -6, y: 2 } : { x: 0, y: 0 },
+          pRot: isP2 ? 0.03 : undefined,
+          eRot: !isP2 ? -0.03 : undefined,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 1,
+        },
+        // 1B. 1타: 왼쪽에서 오른쪽으로 채찍 강타! (Left-to-Right Lash - 95ms)
+        {
+          delay: 95,
+          pOffset: isP2 ? { x: 14, y: -4 } : { x: 0, y: 0 },
+          eOffset: isP2 ? (isMiss2 ? { x: 14, y: -2 } : { x: 14, y: -4 }) : { x: -14, y: 4 },
           pRot: isP2 ? 0.05 : undefined,
           eRot: !isP2 ? -0.05 : undefined,
           showEffect: true,
@@ -4450,13 +4589,29 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 1,
         },
-        // 2. 2타: 오른쪽에서 왼쪽으로 채찍 강타! (Right-to-Left Lash - 110ms)
+        // 1C. 1차 채찍 잔상 지속 & 2차 덩굴 준비 (Trail Holds & 2nd Vine Ready - 80ms)
         {
-          delay: 110,
-          pOffset: isP2 ? { x: 16, y: -6 } : (isMiss2 ? { x: 20, y: 4 } : { x: -12, y: 4 }),
-          eOffset: isP2 ? (isMiss2 ? { x: 20, y: -4 } : { x: 22, y: -8 }) : { x: -16, y: 6 },
-          pRot: isP2 ? -0.05 : undefined,
-          eRot: !isP2 ? 0.05 : undefined,
+          delay: 80,
+          pOffset: isP2 ? { x: 10, y: -3 } : { x: 0, y: 0 },
+          eOffset: isP2 ? (isMiss2 ? { x: 10, y: -2 } : { x: 10, y: -3 }) : { x: -10, y: 3 },
+          pRot: isP2 ? -0.01 : undefined,
+          eRot: !isP2 ? 0.01 : undefined,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 1,
+        },
+        // 2A. 2차 덩굴 진입 휘두르기 (Vine 2 Swings - 75ms)
+        {
+          delay: 75,
+          pOffset: isP2 ? { x: 12, y: -5 } : (isMiss2 ? { x: 16, y: 2 } : { x: -8, y: 2 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 16, y: -2 } : { x: 16, y: -5 }) : { x: -12, y: 5 },
+          pRot: isP2 ? -0.03 : undefined,
+          eRot: !isP2 ? 0.03 : undefined,
           showEffect: true,
           hitFlash: false,
           enemyHp: a2.enemyHpAfter,
@@ -4466,11 +4621,27 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 2,
         },
-        // 3. Vines Retracting & Leaf Flutter (100ms)
+        // 2B. 2타: 오른쪽에서 왼쪽으로 교차 참격 강타! ('X' Cross Strike - 105ms)
         {
-          delay: 100,
-          pOffset: isP2 ? { x: 6, y: -2 } : (isMiss2 ? { x: 10, y: 2 } : { x: -6, y: 2 }),
-          eOffset: isP2 ? (isMiss2 ? { x: 10, y: -2 } : { x: 8, y: -2 }) : { x: -6, y: 2 },
+          delay: 105,
+          pOffset: isP2 ? { x: 18, y: -6 } : (isMiss2 ? { x: 20, y: 4 } : { x: -12, y: 4 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 20, y: -4 } : { x: 22, y: -8 }) : { x: -18, y: 6 },
+          pRot: isP2 ? -0.06 : undefined,
+          eRot: !isP2 ? 0.06 : undefined,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 2,
+        },
+        // 3A. 채찍 듀얼 잔상 및 흩날리는 잎새 (Trails Fade & Leaves Scatter - 85ms)
+        {
+          delay: 85,
+          pOffset: isP2 ? { x: 10, y: -3 } : (isMiss2 ? { x: 12, y: 2 } : { x: -6, y: 2 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 12, y: -2 } : { x: 12, y: -4 }) : { x: -10, y: 3 },
           showEffect: true,
           hitFlash: false,
           enemyHp: a2.enemyHpAfter,
@@ -4480,9 +4651,23 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 3,
         },
-        // 4. Recovery (80ms)
+        // 3B. 덩굴 회수 (Vines Retract - 80ms)
         {
           delay: 80,
+          pOffset: isP2 ? { x: 4, y: -1 } : { x: 0, y: 0 },
+          eOffset: isP2 ? (isMiss2 ? { x: 4, y: 0 } : { x: 4, y: -1 }) : { x: -4, y: 1 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 3,
+        },
+        // 4. 완전 복귀 (Neutral - 75ms)
+        {
+          delay: 75,
           pOffset: { x: 0, y: 0 },
           eOffset: { x: 0, y: 0 },
           showEffect: false,
@@ -4581,13 +4766,28 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
       const isMiss2 = !isHit2;
       act2Frames = [
-        // 1. 1타: 좌상단 대각선 강타 (Top-Left Strike - 110ms) -> 피격자 우하단으로 살짝 밀림
+        // 1A. 도약 전진 (Windup Leap - 75ms)
         {
-          delay: 110,
-          pOffset: isP2 ? { x: 20, y: -12 } : (isMiss2 ? { x: 24, y: 4 } : { x: -14, y: 6 }),
-          eOffset: isP2 ? (isMiss2 ? { x: 24, y: -4 } : { x: 14, y: 6 }) : { x: -20, y: 12 },
-          pRot: isP2 ? -0.06 : undefined,
-          eRot: !isP2 ? 0.06 : undefined,
+          delay: 75,
+          pOffset: isP2 ? { x: 12, y: -6 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -12, y: 6 } : { x: 0, y: 0 },
+          pRot: isP2 ? -0.04 : undefined,
+          eRot: !isP2 ? 0.04 : undefined,
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+        },
+        // 1B. 1타: 좌상단 대각선 강타 (Top-Left Strike - 95ms)
+        {
+          delay: 95,
+          pOffset: isP2 ? { x: 22, y: -14 } : (isMiss2 ? { x: 24, y: 4 } : { x: -14, y: 6 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 24, y: -4 } : { x: 14, y: 8 }) : { x: -22, y: 14 },
+          pRot: isP2 ? -0.07 : undefined,
+          eRot: !isP2 ? 0.07 : undefined,
           showEffect: true,
           hitFlash: isHit2,
           enemyHp: a1.enemyHpAfter,
@@ -4597,13 +4797,45 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 1,
         },
-        // 2. 2타: 우하단 대각선 강타 (Bottom-Right Strike - 120ms) -> 피격자 좌상단으로 반동
+        // 1C. 1타 반동 및 공중 회전 피벗 (Recoil & Aerial Pivot - 80ms)
         {
-          delay: 120,
-          pOffset: isP2 ? { x: 26, y: -4 } : (isMiss2 ? { x: 28, y: 4 } : { x: -18, y: -4 }),
-          eOffset: isP2 ? (isMiss2 ? { x: 28, y: -4 } : { x: 18, y: -6 }) : { x: -26, y: 4 },
-          pRot: isP2 ? 0.08 : undefined,
-          eRot: !isP2 ? -0.08 : undefined,
+          delay: 80,
+          pOffset: isP2 ? { x: 16, y: -10 } : (isMiss2 ? { x: 20, y: 3 } : { x: -10, y: 4 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 20, y: -3 } : { x: 9, y: 5 }) : { x: -16, y: 10 },
+          pRot: isP2 ? 0.01 : undefined,
+          eRot: !isP2 ? -0.01 : undefined,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 1,
+        },
+        // 2A. 2타 하향 다이브 준비 (Dive Approach - 75ms)
+        {
+          delay: 75,
+          pOffset: isP2 ? { x: 22, y: -3 } : (isMiss2 ? { x: 24, y: 3 } : { x: -14, y: -2 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 24, y: -3 } : { x: 12, y: -2 }) : { x: -22, y: 3 },
+          pRot: isP2 ? 0.05 : undefined,
+          eRot: !isP2 ? -0.05 : undefined,
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 2,
+        },
+        // 2B. 2타: 우하단 대각선 강타 (Bottom-Right Strike - 105ms)
+        {
+          delay: 105,
+          pOffset: isP2 ? { x: 28, y: -3 } : (isMiss2 ? { x: 28, y: 4 } : { x: -18, y: -4 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 28, y: -4 } : { x: 18, y: -6 }) : { x: -28, y: 3 },
+          pRot: isP2 ? 0.09 : undefined,
+          eRot: !isP2 ? -0.09 : undefined,
           showEffect: true,
           hitFlash: isHit2,
           enemyHp: a2.enemyHpAfter,
@@ -4613,11 +4845,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 2,
         },
-        // 3. 듀얼 잔상 및 타격 여운 (100ms)
+        // 3A. 듀얼 잔상 및 공중 반동 (Dual Afterglow - 85ms)
         {
-          delay: 100,
-          pOffset: isP2 ? { x: 12, y: -3 } : (isMiss2 ? { x: 14, y: 2 } : { x: -8, y: 2 }),
-          eOffset: isP2 ? (isMiss2 ? { x: 14, y: -2 } : { x: 8, y: -2 }) : { x: -12, y: 3 },
+          delay: 85,
+          pOffset: isP2 ? { x: 14, y: -6 } : (isMiss2 ? { x: 14, y: 2 } : { x: -8, y: 2 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 14, y: -2 } : { x: 8, y: -2 }) : { x: -14, y: 6 },
+          pRot: isP2 ? 0.04 : undefined,
+          eRot: !isP2 ? -0.04 : undefined,
           showEffect: true,
           hitFlash: false,
           enemyHp: a2.enemyHpAfter,
@@ -4627,9 +4861,22 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 3,
         },
-        // 4. 복귀 (90ms)
+        // 3B. 착지 복귀 (Landing - 80ms)
         {
-          delay: 90,
+          delay: 80,
+          pOffset: isP2 ? { x: 5, y: -1 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -5, y: 1 } : { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+        },
+        // 4. 완전 원위치 (Neutral - 75ms)
+        {
+          delay: 75,
           pOffset: { x: 0, y: 0 },
           eOffset: { x: 0, y: 0 },
           showEffect: false,
