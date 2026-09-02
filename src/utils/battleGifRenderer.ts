@@ -333,6 +333,94 @@ function isEvasionStrike(action?: TurnActionInfo | null): boolean {
   return !isEvasionLaunch(action);
 }
 
+function drawHighSkyCutscene(
+  ctx: any,
+  width: number,
+  height: number,
+  f: any,
+  attackerSprite: any
+) {
+  // 1. High Sky Atmospheric Stratosphere Gradient
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, height);
+  skyGrad.addColorStop(0, "#0F172A"); // Deep Stratosphere Navy
+  skyGrad.addColorStop(0.35, "#0284C7"); // Sky Blue
+  skyGrad.addColorStop(0.75, "#38BDF8"); // Light Cyan Atmosphere
+  skyGrad.addColorStop(1, "#BAE6FD"); // Cloud Base White
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, width, height);
+
+  // 2. Layered Volumetric Horizon Cloud Banks
+  const drawCloudBank = (cy: number, alpha: number, scale: number) => {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = "#FFFFFF";
+    for (let x = -40; x <= width + 60; x += 75 * scale) {
+      ctx.beginPath();
+      ctx.arc(x, cy, 46 * scale, 0, Math.PI * 2);
+      ctx.arc(x + 32 * scale, cy - 16 * scale, 36 * scale, 0, Math.PI * 2);
+      ctx.arc(x + 58 * scale, cy + 6 * scale, 42 * scale, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  };
+
+  drawCloudBank(height - 15, 0.45, 1.4);
+  drawCloudBank(height + 15, 0.75, 1.1);
+  drawCloudBank(height + 45, 0.95, 0.9);
+
+  if (f.skyCameraTilt !== undefined) {
+    // Cinematic Dutch Angle Camera Tilt & Supersonic Plunge!
+    ctx.save();
+    ctx.translate(width / 2, height / 2);
+    ctx.rotate(f.skyCameraTilt);
+    ctx.scale(1.25, 1.25);
+
+    // Rapid Streaming Diagonal Sonic Speedlines
+    for (let i = -12; i <= 12; i++) {
+      const sx = i * 28;
+      const len = 340 + Math.abs(i) * 20;
+      ctx.strokeStyle = Math.abs(i) % 2 === 0 ? "rgba(255, 255, 255, 0.92)" : "rgba(186, 230, 253, 0.65)";
+      ctx.lineWidth = Math.abs(i) % 3 === 0 ? 3.5 : 1.8;
+      ctx.beginPath();
+      ctx.moveTo(sx, -260);
+      ctx.lineTo(sx, -260 + len);
+      ctx.stroke();
+    }
+
+    // Distorted/Squashed Aerodynamic Plunging Attacker Sprite
+    if (attackerSprite) {
+      ctx.save();
+      ctx.filter = "brightness(0) invert(1)"; // Pure white hyper-velocity silhouette
+      if (f.pScale) ctx.scale(f.pScale.x, f.pScale.y);
+      drawFittedBattleSprite(ctx, attackerSprite, 0, 0, 110);
+      ctx.restore();
+    }
+
+    ctx.restore();
+  } else {
+    // Elegant High-Altitude Gliding State
+    // Soft wind trails under wings
+    ctx.save();
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.55)";
+    ctx.lineWidth = 2.0;
+    for (let i = -2; i <= 2; i++) {
+      ctx.beginPath();
+      ctx.moveTo(width / 2 + i * 40 - 60, height / 2 + 30);
+      ctx.lineTo(width / 2 + i * 40 + 60, height / 2 + 30);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Gliding Pokémon in Center Sky
+    if (attackerSprite) {
+      ctx.save();
+      if (f.pScale) ctx.scale(f.pScale.x, f.pScale.y);
+      drawFittedBattleSprite(ctx, attackerSprite, width / 2, height / 2 + 10, 120);
+      ctx.restore();
+    }
+  }
+}
+
 export async function renderBattleMoveGif(options: BattleAnimationOptions): Promise<RenderGifResult> {
   const width = 560;
   const height = 380;
@@ -1121,18 +1209,35 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       } else {
         // Turn 2: Supersonic Dive-Bomb Slam right onto opponent's sprite!
         act1Frames = [
-          // 1. High Sky Diagonal Dive Entry: Angled diagonally downward from high sky, streamlined pure white! (100ms)
+          // 1. High Sky Gliding Cutscene: Pokémon gliding peacefully in stratosphere sky! (140ms)
           {
-            delay: 100,
-            pOffset: isP1 ? { x: 200, y: -260 } : { x: 0, y: 0 },
-            eOffset: !isP1 ? { x: -200, y: -160 } : { x: 0, y: 0 },
-            pScale: isP1 ? { x: 0.38, y: 2.10 } : undefined,
-            eScale: !isP1 ? { x: 0.38, y: 2.10 } : undefined,
-            pRot: isP1 ? 0.45 : undefined,
-            eRot: !isP1 ? -0.45 : undefined,
-            pWhite: isP1,
-            eWhite: !isP1,
-            showEffect: true,
+            delay: 140,
+            pOffset: { x: 0, y: 0 },
+            eOffset: { x: 0, y: 0 },
+            pScale: isP1 ? { x: 1.06, y: 0.94 } : undefined,
+            eScale: !isP1 ? { x: 1.06, y: 0.94 } : undefined,
+            isHighSkyCutscene: true,
+            isAttackerPlayer: isP1,
+            showEffect: false,
+            hitFlash: false,
+            enemyHp: enemy.hp,
+            playerHp: playerMon.hp,
+            textLineIdx: 1,
+            isBlur: false,
+            moveEffect: a1,
+            moveStep: 1,
+          },
+          // 2. Camera Dutch Angle Tilt & Supersonic Plunge: Speedlines & Squashed Aerodynamic Bullet Sprite! (120ms)
+          {
+            delay: 120,
+            pOffset: { x: 0, y: 0 },
+            eOffset: { x: 0, y: 0 },
+            pScale: isP1 ? { x: 0.32, y: 2.30 } : undefined,
+            eScale: !isP1 ? { x: 0.32, y: 2.30 } : undefined,
+            isHighSkyCutscene: true,
+            skyCameraTilt: isP1 ? 0.48 : -0.48,
+            isAttackerPlayer: isP1,
+            showEffect: false,
             hitFlash: false,
             enemyHp: enemy.hp,
             playerHp: playerMon.hp,
@@ -1141,17 +1246,18 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a1,
             moveStep: 2,
           },
-          // 2. Direct Impact Slam into Opponent's Sprite with Massive Crater Blast! (100ms)
+          // 3. Ground Arena Breakthrough & Massive Crater Impact Slam! (110ms)
           {
-            delay: 100,
+            delay: 110,
             pOffset: isP1 ? { x: 260, y: -120 } : (isMiss1 ? { x: 26, y: 4 } : { x: -12, y: 4 }),
             eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 12, y: -4 }) : { x: -260, y: 120 },
-            pScale: isP1 ? { x: 1.50, y: 0.60 } : undefined,
-            eScale: !isP1 ? { x: 1.50, y: 0.60 } : undefined,
+            pScale: isP1 ? { x: 1.55, y: 0.55 } : undefined,
+            eScale: !isP1 ? { x: 1.55, y: 0.55 } : undefined,
             pRot: 0,
             eRot: 0,
             pWhite: false,
             eWhite: false,
+            isHighSkyCutscene: false,
             showEffect: true,
             hitFlash: isHit1,
             enemyHp: a1.enemyHpAfter,
@@ -1161,13 +1267,14 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a1,
             moveStep: 3,
           },
-          // 3. Rebound & Ground Shockwave Dissipation (100ms)
+          // 4. Rebound & Ground Shockwave Dissipation (100ms)
           {
             delay: 100,
             pOffset: isP1 ? { x: 120, y: -40 } : { x: 0, y: 0 },
             eOffset: !isP1 ? { x: -120, y: 40 } : { x: 0, y: 0 },
             pScale: isP1 ? { x: 1.15, y: 0.85 } : undefined,
             eScale: !isP1 ? { x: 1.15, y: 0.85 } : undefined,
+            isHighSkyCutscene: false,
             showEffect: true,
             hitFlash: false,
             enemyHp: a1.enemyHpAfter,
@@ -1177,11 +1284,12 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a1,
             moveStep: 4,
           },
-          // 4. Clean Touchdown on Home Platform (100ms)
+          // 5. Clean Touchdown on Home Platform (100ms)
           {
             delay: 100,
             pOffset: { x: 0, y: 0 },
             eOffset: { x: 0, y: 0 },
+            isHighSkyCutscene: false,
             showEffect: false,
             hitFlash: false,
             enemyHp: a1.enemyHpAfter,
@@ -2308,18 +2416,35 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       } else {
         // Turn 2: Supersonic Dive-Bomb Slam right onto opponent's sprite!
         act2Frames = [
-          // 1. High Sky Diagonal Dive Entry: Angled diagonally downward from high sky, streamlined pure white! (100ms)
+          // 1. High Sky Gliding Cutscene: Pokémon gliding peacefully in stratosphere sky! (140ms)
           {
-            delay: 100,
-            pOffset: isP2 ? { x: 200, y: -260 } : { x: 0, y: 0 },
-            eOffset: !isP2 ? { x: -200, y: -160 } : { x: 0, y: 0 },
-            pScale: isP2 ? { x: 0.38, y: 2.10 } : undefined,
-            eScale: !isP2 ? { x: 0.38, y: 2.10 } : undefined,
-            pRot: isP2 ? 0.45 : undefined,
-            eRot: !isP2 ? -0.45 : undefined,
-            pWhite: isP2,
-            eWhite: !isP2,
-            showEffect: true,
+            delay: 140,
+            pOffset: { x: 0, y: 0 },
+            eOffset: { x: 0, y: 0 },
+            pScale: isP2 ? { x: 1.06, y: 0.94 } : undefined,
+            eScale: !isP2 ? { x: 1.06, y: 0.94 } : undefined,
+            isHighSkyCutscene: true,
+            isAttackerPlayer: isP2,
+            showEffect: false,
+            hitFlash: false,
+            enemyHp: a1.enemyHpAfter,
+            playerHp: a1.playerHpAfter,
+            textLineIdx: 3,
+            isBlur: false,
+            moveEffect: a2,
+            moveStep: 1,
+          },
+          // 2. Camera Dutch Angle Tilt & Supersonic Plunge: Speedlines & Squashed Aerodynamic Bullet Sprite! (120ms)
+          {
+            delay: 120,
+            pOffset: { x: 0, y: 0 },
+            eOffset: { x: 0, y: 0 },
+            pScale: isP2 ? { x: 0.32, y: 2.30 } : undefined,
+            eScale: !isP2 ? { x: 0.32, y: 2.30 } : undefined,
+            isHighSkyCutscene: true,
+            skyCameraTilt: isP2 ? 0.48 : -0.48,
+            isAttackerPlayer: isP2,
+            showEffect: false,
             hitFlash: false,
             enemyHp: a1.enemyHpAfter,
             playerHp: a1.playerHpAfter,
@@ -2328,17 +2453,18 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a2,
             moveStep: 2,
           },
-          // 2. Direct Impact Slam into Opponent's Sprite with Massive Crater Blast! (100ms)
+          // 3. Ground Arena Breakthrough & Massive Crater Impact Slam! (110ms)
           {
-            delay: 100,
+            delay: 110,
             pOffset: isP2 ? { x: 260, y: -120 } : (isMiss2 ? { x: 26, y: 4 } : { x: -12, y: 4 }),
             eOffset: isP2 ? (isMiss2 ? { x: 26, y: -4 } : { x: 12, y: -4 }) : { x: -260, y: 120 },
-            pScale: isP2 ? { x: 1.50, y: 0.60 } : undefined,
-            eScale: !isP2 ? { x: 1.50, y: 0.60 } : undefined,
+            pScale: isP2 ? { x: 1.55, y: 0.55 } : undefined,
+            eScale: !isP2 ? { x: 1.55, y: 0.55 } : undefined,
             pRot: 0,
             eRot: 0,
             pWhite: false,
             eWhite: false,
+            isHighSkyCutscene: false,
             showEffect: true,
             hitFlash: isHit2,
             enemyHp: a2.enemyHpAfter,
@@ -2348,13 +2474,14 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a2,
             moveStep: 3,
           },
-          // 3. Rebound & Ground Shockwave Dissipation (100ms)
+          // 4. Rebound & Ground Shockwave Dissipation (100ms)
           {
             delay: 100,
             pOffset: isP2 ? { x: 120, y: -40 } : { x: 0, y: 0 },
             eOffset: !isP2 ? { x: -120, y: 40 } : { x: 0, y: 0 },
             pScale: isP2 ? { x: 1.15, y: 0.85 } : undefined,
             eScale: !isP2 ? { x: 1.15, y: 0.85 } : undefined,
+            isHighSkyCutscene: false,
             showEffect: true,
             hitFlash: false,
             enemyHp: a2.enemyHpAfter,
@@ -2364,11 +2491,12 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a2,
             moveStep: 4,
           },
-          // 4. Clean Touchdown on Home Platform (100ms)
+          // 5. Clean Touchdown on Home Platform (100ms)
           {
             delay: 100,
             pOffset: { x: 0, y: 0 },
             eOffset: { x: 0, y: 0 },
+            isHighSkyCutscene: false,
             showEffect: false,
             hitFlash: false,
             enemyHp: a2.enemyHpAfter,
@@ -3009,90 +3137,95 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const targetCtx = f.isBlur ? offCtx : ctx;
     targetCtx.clearRect(0, 0, width, height);
 
-    if (arena.bg) targetCtx.drawImage(arena.bg, 0, 0, width, height);
-    else { targetCtx.fillStyle = "#487848"; targetCtx.fillRect(0, 0, width, height); }
+    if (f.isHighSkyCutscene) {
+      const attackerSprite = f.isAttackerPlayer ? playerSprite : enemySprite;
+      drawHighSkyCutscene(targetCtx, width, height, f, attackerSprite);
+    } else {
+      if (arena.bg) targetCtx.drawImage(arena.bg, 0, 0, width, height);
+      else { targetCtx.fillStyle = "#487848"; targetCtx.fillRect(0, 0, width, height); }
 
-    if (arena.b) {
-      targetCtx.drawImage(arena.b, ep.x, ep.y, enemyPlatW, enemyPlatH);
-      targetCtx.save();
-      targetCtx.translate(width, 0);
-      targetCtx.scale(-1, 1);
-      targetCtx.drawImage(arena.b, pp.x, pp.y, playerPlatW, playerPlatH);
-      targetCtx.restore();
-    }
-
-    // Determine target entity for alpha & filter styling
-    const eTarget = (f.moveEffect ? f.moveEffect.actor === "player" : isPlayer);
-    const pTarget = (f.moveEffect ? f.moveEffect.actor === "enemy" : !isPlayer);
-
-    const eAlpha = (f.targetAlpha !== undefined && eTarget) ? f.targetAlpha : 1.0;
-    const pAlpha = (f.targetAlpha !== undefined && pTarget) ? f.targetAlpha : 1.0;
-
-    // Pokémon Silhouette Shadows (cast onto platform ground - suppressed during high-speed mid-air flight, underground, or off-screen)
-    const isEnemyHidden = (f.eOffset && (f.eOffset.y <= -50 || f.eOffset.y >= 9000)) || f.hideEShadow || f.hideEnemy || (eAlpha <= 0.02) || Boolean(f.eScale);
-    if (enemySprite && (enemy.hp > 0 || f.enemyHp > 0) && !isEnemyHidden) {
-      const eShadowX = em.x + f.eOffset.x;
-      const eShadowY = em.y;
-      drawPokemonSilhouetteShadow(targetCtx, enemySprite, eShadowX, eShadowY, em.size, false, 0.42 * eAlpha);
-    }
-
-    const isPlayerHidden = (f.pOffset && (f.pOffset.y <= -50 || f.pOffset.y >= 9000)) || f.hidePShadow || f.hidePlayer || (pAlpha <= 0.02) || Boolean(f.pScale);
-    if (playerSprite && (playerMon.hp > 0 || f.playerHp > 0) && !isPlayerHidden) {
-      const pShadowX = pm.x + f.pOffset.x;
-      const pShadowY = pm.y;
-      drawPokemonSilhouetteShadow(targetCtx, playerSprite, pShadowX, pShadowY, pm.size, true, 0.42 * pAlpha);
-    }
-
-    // Enemy Sprite
-    const eSpriteToDraw = f.useEnemyBack ? (enemyBackSprite || enemySprite) : enemySprite;
-    const isEnemySpriteHidden = (f.eOffset && (f.eOffset.y <= -500 || f.eOffset.y >= 9000)) || f.hideEnemy || (eAlpha <= 0.01);
-    if (eSpriteToDraw && !isEnemySpriteHidden && (enemy.hp > 0 || f.enemyHp > 0 || f.targetAlpha !== 0.0)) {
-      targetCtx.save();
-      if (f.eWhite) {
-        targetCtx.filter = "brightness(0) invert(1)";
-      } else if (f.hitFlash && eTarget) {
-        targetCtx.filter = "brightness(1.35)";
+      if (arena.b) {
+        targetCtx.drawImage(arena.b, ep.x, ep.y, enemyPlatW, enemyPlatH);
+        targetCtx.save();
+        targetCtx.translate(width, 0);
+        targetCtx.scale(-1, 1);
+        targetCtx.drawImage(arena.b, pp.x, pp.y, playerPlatW, playerPlatH);
+        targetCtx.restore();
       }
-      if (eAlpha < 0.99) {
-        targetCtx.globalAlpha = eAlpha;
-      }
-      const ex = em.x + f.eOffset.x;
-      const ey = em.y + f.eOffset.y;
-      if (f.eScale || f.eRot) {
-        targetCtx.translate(ex, ey);
-        if (f.eRot) targetCtx.rotate(f.eRot);
-        if (f.eScale) targetCtx.scale(f.eScale.x, f.eScale.y);
-        drawFittedBattleSprite(targetCtx, eSpriteToDraw, 0, 0, em.size);
-      } else {
-        drawFittedBattleSprite(targetCtx, eSpriteToDraw, ex, ey, em.size);
-      }
-      targetCtx.restore();
-    }
 
-    // Player Sprite
-    const pSpriteToDraw = f.usePlayerFront ? (playerFrontSprite || playerSprite) : playerSprite;
-    const isPlayerSpriteHidden = (f.pOffset && (f.pOffset.y <= -500 || f.pOffset.y >= 9000)) || f.hidePlayer || (pAlpha <= 0.01);
-    if (pSpriteToDraw && !isPlayerSpriteHidden && (playerMon.hp > 0 || f.playerHp > 0 || f.targetAlpha !== 0.0)) {
-      targetCtx.save();
-      if (f.pWhite) {
-        targetCtx.filter = "brightness(0) invert(1)";
-      } else if (f.hitFlash && pTarget) {
-        targetCtx.filter = "brightness(1.35)";
+      // Determine target entity for alpha & filter styling
+      const eTarget = (f.moveEffect ? f.moveEffect.actor === "player" : isPlayer);
+      const pTarget = (f.moveEffect ? f.moveEffect.actor === "enemy" : !isPlayer);
+
+      const eAlpha = (f.targetAlpha !== undefined && eTarget) ? f.targetAlpha : 1.0;
+      const pAlpha = (f.targetAlpha !== undefined && pTarget) ? f.targetAlpha : 1.0;
+
+      // Pokémon Silhouette Shadows (cast onto platform ground - suppressed during high-speed mid-air flight, underground, or off-screen)
+      const isEnemyHidden = (f.eOffset && (f.eOffset.y <= -50 || f.eOffset.y >= 9000)) || f.hideEShadow || f.hideEnemy || (eAlpha <= 0.02) || Boolean(f.eScale);
+      if (enemySprite && (enemy.hp > 0 || f.enemyHp > 0) && !isEnemyHidden) {
+        const eShadowX = em.x + f.eOffset.x;
+        const eShadowY = em.y;
+        drawPokemonSilhouetteShadow(targetCtx, enemySprite, eShadowX, eShadowY, em.size, false, 0.42 * eAlpha);
       }
-      if (pAlpha < 0.99) {
-        targetCtx.globalAlpha = pAlpha;
+
+      const isPlayerHidden = (f.pOffset && (f.pOffset.y <= -50 || f.pOffset.y >= 9000)) || f.hidePShadow || f.hidePlayer || (pAlpha <= 0.02) || Boolean(f.pScale);
+      if (playerSprite && (playerMon.hp > 0 || f.playerHp > 0) && !isPlayerHidden) {
+        const pShadowX = pm.x + f.pOffset.x;
+        const pShadowY = pm.y;
+        drawPokemonSilhouetteShadow(targetCtx, playerSprite, pShadowX, pShadowY, pm.size, true, 0.42 * pAlpha);
       }
-      const px = pm.x + f.pOffset.x;
-      const py = pm.y + f.pOffset.y;
-      if (f.pScale || f.pRot) {
-        targetCtx.translate(px, py);
-        if (f.pRot) targetCtx.rotate(f.pRot);
-        if (f.pScale) targetCtx.scale(f.pScale.x, f.pScale.y);
-        drawFittedBattleSprite(targetCtx, pSpriteToDraw, 0, 0, pm.size);
-      } else {
-        drawFittedBattleSprite(targetCtx, pSpriteToDraw, px, py, pm.size);
+
+      // Enemy Sprite
+      const eSpriteToDraw = f.useEnemyBack ? (enemyBackSprite || enemySprite) : enemySprite;
+      const isEnemySpriteHidden = (f.eOffset && (f.eOffset.y <= -500 || f.eOffset.y >= 9000)) || f.hideEnemy || (eAlpha <= 0.01);
+      if (eSpriteToDraw && !isEnemySpriteHidden && (enemy.hp > 0 || f.enemyHp > 0 || f.targetAlpha !== 0.0)) {
+        targetCtx.save();
+        if (f.eWhite) {
+          targetCtx.filter = "brightness(0) invert(1)";
+        } else if (f.hitFlash && eTarget) {
+          targetCtx.filter = "brightness(1.35)";
+        }
+        if (eAlpha < 0.99) {
+          targetCtx.globalAlpha = eAlpha;
+        }
+        const ex = em.x + f.eOffset.x;
+        const ey = em.y + f.eOffset.y;
+        if (f.eScale || f.eRot) {
+          targetCtx.translate(ex, ey);
+          if (f.eRot) targetCtx.rotate(f.eRot);
+          if (f.eScale) targetCtx.scale(f.eScale.x, f.eScale.y);
+          drawFittedBattleSprite(targetCtx, eSpriteToDraw, 0, 0, em.size);
+        } else {
+          drawFittedBattleSprite(targetCtx, eSpriteToDraw, ex, ey, em.size);
+        }
+        targetCtx.restore();
       }
-      targetCtx.restore();
+
+      // Player Sprite
+      const pSpriteToDraw = f.usePlayerFront ? (playerFrontSprite || playerSprite) : playerSprite;
+      const isPlayerSpriteHidden = (f.pOffset && (f.pOffset.y <= -500 || f.pOffset.y >= 9000)) || f.hidePlayer || (pAlpha <= 0.01);
+      if (pSpriteToDraw && !isPlayerSpriteHidden && (playerMon.hp > 0 || f.playerHp > 0 || f.targetAlpha !== 0.0)) {
+        targetCtx.save();
+        if (f.pWhite) {
+          targetCtx.filter = "brightness(0) invert(1)";
+        } else if (f.hitFlash && pTarget) {
+          targetCtx.filter = "brightness(1.35)";
+        }
+        if (pAlpha < 0.99) {
+          targetCtx.globalAlpha = pAlpha;
+        }
+        const px = pm.x + f.pOffset.x;
+        const py = pm.y + f.pOffset.y;
+        if (f.pScale || f.pRot) {
+          targetCtx.translate(px, py);
+          if (f.pRot) targetCtx.rotate(f.pRot);
+          if (f.pScale) targetCtx.scale(f.pScale.x, f.pScale.y);
+          drawFittedBattleSprite(targetCtx, pSpriteToDraw, 0, 0, pm.size);
+        } else {
+          drawFittedBattleSprite(targetCtx, pSpriteToDraw, px, py, pm.size);
+        }
+        targetCtx.restore();
+      }
     }
 
     // Move Effect Rendering (including Karate Chop multi-step hand animation)
