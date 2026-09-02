@@ -588,13 +588,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   const isWingAttack1 = (mKey1 === "wing-attack" || mKey1 === "wingattack");
   const isWhirlwind1 = (mKey1 === "whirlwind");
   const isBind1 = (mKey1 === "bind" || mKey1 === "wrap" || mKey1 === "clamp" || mKey1 === "sand-tomb" || mKey1 === "whirlpool" || mKey1 === "fire-spin" || mKey1 === "infestation" || mKey1 === "snap-trap");
+  const isSlam1 = (mKey1 === "slam");
   const isSingleStrikeSpecial1 = (
     mKey1 === "thunder-punch" || mKey1 === "thunderpunch" ||
     mKey1 === "scratch" ||
     mKey1 === "vice-grip" || mKey1 === "vicegrip" ||
     mKey1 === "cut" ||
     mKey1 === "gust" ||
-    mKey1 === "slam" ||
     mKey1 === "vine-whip" || mKey1 === "vinewhip" ||
     mKey1 === "stomp" ||
     mKey1 === "double-kick" || mKey1 === "doublekick"
@@ -2244,6 +2244,90 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
         }
       ];
+    } else if (isSlam1) {
+      const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
+      const isMiss1 = !isHit1;
+      act1Frames = [
+        // 1. 가만히 정지 (Still pause - 80ms)
+        {
+          delay: 80,
+          pOffset: { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 1,
+        },
+        // 2. 스프라이트 살짝 뒤로 빠지며 힘 모으기 (Pull back / coil windup - 90ms)
+        {
+          delay: 90,
+          pOffset: isP1 ? { x: -22, y: 4 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: 22, y: -4 } : { x: 0, y: 0 },
+          pScale: isP1 ? { x: 0.92, y: 1.08 } : undefined,
+          eScale: !isP1 ? { x: 0.92, y: 1.08 } : undefined,
+          pRot: isP1 ? -0.08 : undefined,
+          eRot: !isP1 ? 0.08 : undefined,
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 1,
+        },
+        // 3. 팍! 전방 급발진 돌진 강타 & 이펙트 폭발! (BAM! Explosive Forward Slam - 100ms)
+        {
+          delay: 100,
+          pOffset: isP1 ? { x: 38, y: -12 } : (isMiss1 ? { x: 26, y: 4 } : { x: -14, y: 4 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 22, y: -8 }) : { x: -38, y: 12 },
+          pScale: isP1 ? { x: 1.25, y: 0.82 } : undefined,
+          eScale: isP1 ? { x: 0.85, y: 1.15 } : { x: 1.25, y: 0.82 },
+          pRot: isP1 ? 0.12 : undefined,
+          eRot: !isP1 ? -0.12 : undefined,
+          showEffect: true,
+          hitFlash: isHit1,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 2,
+        },
+        // 4. 강타 반동 & 충격파 여파 (Recoil shake - 90ms)
+        {
+          delay: 90,
+          pOffset: isP1 ? { x: 16, y: -4 } : (isMiss1 ? { x: 12, y: 2 } : { x: -6, y: 2 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 12, y: -2 } : { x: 12, y: -2 }) : { x: -16, y: 4 },
+          pScale: isP1 ? { x: 1.05, y: 0.95 } : undefined,
+          eScale: !isP1 ? { x: 1.05, y: 0.95 } : undefined,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 3,
+        },
+        // 5. 복귀 원위치 (Recovery - 80ms)
+        {
+          delay: 80,
+          pOffset: { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+        }
+      ];
     } else if (isSingleStrikeSpecial1) {
       const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
       const isMiss1 = !isHit1;
@@ -2394,13 +2478,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const isWingAttack2 = (mKey2 === "wing-attack" || mKey2 === "wingattack");
     const isWhirlwind2 = (mKey2 === "whirlwind");
     const isBind2 = (mKey2 === "bind" || mKey2 === "wrap" || mKey2 === "clamp" || mKey2 === "sand-tomb" || mKey2 === "whirlpool" || mKey2 === "fire-spin" || mKey2 === "infestation" || mKey2 === "snap-trap");
+    const isSlam2 = (mKey2 === "slam");
     const isSingleStrikeSpecial2 = (
       mKey2 === "thunder-punch" || mKey2 === "thunderpunch" ||
       mKey2 === "scratch" ||
       mKey2 === "vice-grip" || mKey2 === "vicegrip" ||
       mKey2 === "cut" ||
       mKey2 === "gust" ||
-      mKey2 === "slam" ||
       mKey2 === "vine-whip" || mKey2 === "vinewhip" ||
       mKey2 === "stomp" ||
       mKey2 === "double-kick" || mKey2 === "doublekick"
@@ -4041,6 +4125,90 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           eOffset: { x: 0, y: 0 },
           pScale: undefined,
           eScale: undefined,
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+        }
+      ];
+    } else if (isSlam2) {
+      const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
+      const isMiss2 = !isHit2;
+      act2Frames = [
+        // 1. 가만히 정지 (Still pause - 80ms)
+        {
+          delay: 80,
+          pOffset: { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 1,
+        },
+        // 2. 스프라이트 살짝 뒤로 빠지며 힘 모으기 (Pull back / coil windup - 90ms)
+        {
+          delay: 90,
+          pOffset: isP2 ? { x: -22, y: 4 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: 22, y: -4 } : { x: 0, y: 0 },
+          pScale: isP2 ? { x: 0.92, y: 1.08 } : undefined,
+          eScale: !isP2 ? { x: 0.92, y: 1.08 } : undefined,
+          pRot: isP2 ? -0.08 : undefined,
+          eRot: !isP2 ? 0.08 : undefined,
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 1,
+        },
+        // 3. 팍! 전방 급발진 돌진 강타 & 이펙트 폭발! (BAM! Explosive Forward Slam - 100ms)
+        {
+          delay: 100,
+          pOffset: isP2 ? { x: 38, y: -12 } : (isMiss2 ? { x: 26, y: 4 } : { x: -14, y: 4 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 26, y: -4 } : { x: 22, y: -8 }) : { x: -38, y: 12 },
+          pScale: isP2 ? { x: 1.25, y: 0.82 } : undefined,
+          eScale: isP2 ? { x: 0.85, y: 1.15 } : { x: 1.25, y: 0.82 },
+          pRot: isP2 ? 0.12 : undefined,
+          eRot: !isP2 ? -0.12 : undefined,
+          showEffect: true,
+          hitFlash: isHit2,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 2,
+        },
+        // 4. 강타 반동 & 충격파 여파 (Recoil shake - 90ms)
+        {
+          delay: 90,
+          pOffset: isP2 ? { x: 16, y: -4 } : (isMiss2 ? { x: 12, y: 2 } : { x: -6, y: 2 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 12, y: -2 } : { x: 12, y: -2 }) : { x: -16, y: 4 },
+          pScale: isP2 ? { x: 1.05, y: 0.95 } : undefined,
+          eScale: !isP2 ? { x: 1.05, y: 0.95 } : undefined,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 3,
+        },
+        // 5. 복귀 원위치 (Recovery - 80ms)
+        {
+          delay: 80,
+          pOffset: { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
           showEffect: false,
           hitFlash: false,
           enemyHp: a2.enemyHpAfter,

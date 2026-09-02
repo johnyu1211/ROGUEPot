@@ -1,7 +1,7 @@
 import { drawMiniRetroStar, drawStarburstImpact } from "../common/helpers.js";
 
 /**
- * 021 힘껏치기 (Slam): Heavy Bludgeoning Tail/Body Whipping Slam with Massive Crushing Arcs & Shockwaves
+ * 021 힘껏치기 (Slam): Explosive Forward Physical Slam with Punchy Directional Impact Sparks & Shockwave Burst
  */
 export function drawSlamEffect(
   ctx: any,
@@ -14,71 +14,68 @@ export function drawSlamEffect(
   const ty = target.y - 8;
 
   if (step === 1) {
-    // Step 1: Upward Whipping Windup Arc (High-tension golden inertia curve)
+    // Step 1: Calm / Tension building (No curves)
     ctx.save();
-    ctx.strokeStyle = "rgba(254, 240, 138, 0.75)";
-    ctx.lineWidth = 6;
-    ctx.lineCap = "round";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 8]);
     ctx.beginPath();
-    ctx.arc(tx - 30, ty - 20, 55, -Math.PI * 0.75, Math.PI * 0.15, false);
-    ctx.stroke();
-
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.arc(tx - 30, ty - 20, 55, -Math.PI * 0.65, Math.PI * 0.05, false);
+    ctx.moveTo(tx - 40, ty - 20);
+    ctx.lineTo(tx + 20, ty - 20);
+    ctx.moveTo(tx - 30, ty + 10);
+    ctx.lineTo(tx + 30, ty + 10);
     ctx.stroke();
     ctx.restore();
   } else if (step === 2) {
-    // Step 2: Crushing Downward Slam Impact & Heavy Energy Cleave
+    // Step 2: 팍! (BAM!) Explosive Heavy Physical Slam Impact
     ctx.save();
-    // 1. Massive Downward Slam Speedlines
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
-    ctx.lineWidth = 4;
+    // 1. Sharp Linear Directional Impact Speedlines
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.95)";
+    ctx.lineWidth = 3.5;
     ctx.lineCap = "round";
     for (let i = -2; i <= 2; i++) {
       ctx.beginPath();
-      ctx.moveTo(tx + i * 14, ty - 75);
-      ctx.lineTo(tx + i * 10, ty + 25);
+      ctx.moveTo(tx - 35, ty + i * 14);
+      ctx.lineTo(tx + 35, ty + i * 10);
       ctx.stroke();
     }
 
-    // 2. Heavy Golden Energy Crescent Cleave
-    const cleaveGrad = ctx.createLinearGradient(tx - 40, ty - 60, tx + 40, ty + 30);
-    cleaveGrad.addColorStop(0, "rgba(255, 255, 255, 0.95)");
-    cleaveGrad.addColorStop(0.4, "rgba(250, 204, 21, 0.85)");
-    cleaveGrad.addColorStop(0.8, "rgba(234, 88, 12, 0.65)");
-    cleaveGrad.addColorStop(1, "rgba(234, 88, 12, 0.0)");
-
-    ctx.strokeStyle = cleaveGrad;
-    ctx.lineWidth = 12;
+    // 2. Sharp Diagonal Slash Spikes
+    ctx.strokeStyle = "#FEF08A";
+    ctx.lineWidth = 4.0;
     ctx.beginPath();
-    ctx.ellipse(tx, ty - 10, 48, 65, Math.PI / 6, -Math.PI * 0.8, Math.PI * 0.3);
+    ctx.moveTo(tx - 28, ty - 35);
+    ctx.lineTo(tx + 28, ty + 35);
+    ctx.moveTo(tx - 28, ty + 35);
+    ctx.lineTo(tx + 28, ty - 35);
     ctx.stroke();
 
-    // 3. Central Heavy Hit Flash Core
-    drawStarburstImpact(ctx, tx, ty, "#FDE047", "#FFFFFF", 38);
+    // 3. Central Explosive Hit Flash Starburst
+    drawStarburstImpact(ctx, tx, ty, "#F59E0B", "#FFFFFF", 42);
+
+    // 4. Kinetic Impact Stars
+    drawMiniRetroStar(ctx, tx - 25, ty - 25, 12, "#FFFFFF");
+    drawMiniRetroStar(ctx, tx + 28, ty - 18, 11, "#FEF08A");
+    drawMiniRetroStar(ctx, tx - 20, ty + 24, 10, "#F59E0B");
+    drawMiniRetroStar(ctx, tx + 24, ty + 22, 12, "#FFFFFF");
     ctx.restore();
   } else if (step >= 3) {
-    // Step 3: Heavy Ground Impact Shockwaves & Radial Debris
+    // Step 3: Dissipating Kinetic Impact Sparks & Tremor Lines
     ctx.save();
-    // Concentric Ground Shockwaves
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
-    ctx.lineWidth = 3.5;
+    // Horizontal Impact Shock Tremors
+    ctx.strokeStyle = "rgba(254, 240, 138, 0.75)";
+    ctx.lineWidth = 2.5;
     ctx.beginPath();
-    ctx.ellipse(tx, ty + 22, 54, 16, 0, 0, Math.PI * 2);
+    ctx.moveTo(tx - 50, ty + 18);
+    ctx.lineTo(tx + 50, ty + 18);
+    ctx.moveTo(tx - 35, ty + 24);
+    ctx.lineTo(tx + 35, ty + 24);
     ctx.stroke();
 
-    ctx.strokeStyle = "rgba(250, 204, 21, 0.55)";
-    ctx.lineWidth = 2.2;
-    ctx.beginPath();
-    ctx.ellipse(tx, ty + 22, 78, 22, 0, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Impact Stars
-    drawMiniRetroStar(ctx, tx - 32, ty - 18, 9, "#FEF08A");
-    drawMiniRetroStar(ctx, tx + 34, ty - 12, 11, "#FFFFFF");
-    drawMiniRetroStar(ctx, tx + 8, ty - 38, 8, "#F59E0B");
+    // Dissipating Stars
+    drawMiniRetroStar(ctx, tx - 36, ty - 15, 8, "#FEF08A");
+    drawMiniRetroStar(ctx, tx + 38, ty - 10, 9, "#FFFFFF");
+    drawMiniRetroStar(ctx, tx + 12, ty - 32, 7, "#F59E0B");
     ctx.restore();
   }
 
