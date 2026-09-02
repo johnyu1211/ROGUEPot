@@ -379,7 +379,12 @@ export class BattleService {
   /**
    * Initializes or gets the active battle state
    */
-  public getOrCreateBattle(userId: string, slotId: number): BattleState {
+  public getOrCreateBattle(
+    userId: string,
+    slotId: number,
+    preservedStages?: StatStages,
+    preservedActiveIndex?: number
+  ): BattleState {
     const key = this.getBattleKey(userId, slotId);
     let existing = this.activeBattles.get(key);
 
@@ -418,7 +423,11 @@ export class BattleService {
       : this.spawnWildPokemon(slot.wave, slot.biome || "Town");
     const isKo = profile.language === "ko";
 
-    const activeLeader = slot.party[0] || {
+    const activeIndex = (preservedActiveIndex !== undefined && slot.party[preservedActiveIndex])
+      ? preservedActiveIndex
+      : 0;
+
+    const activeLeader = slot.party[activeIndex] || slot.party[0] || {
       speciesId: "bulbasaur",
       name: "이상해씨",
       level: 5,
@@ -428,6 +437,9 @@ export class BattleService {
     };
 
     const playerBattleMon = this.createPlayerBattleMon(activeLeader, slot.party);
+    if (preservedStages) {
+      playerBattleMon.stages = { ...preservedStages };
+    }
     if (isTestSandbox) {
       playerBattleMon.hp = 9999;
       playerBattleMon.maxHp = 9999;
@@ -449,8 +461,8 @@ export class BattleService {
     if (playerBattleMon.ability === "Intimidate" || playerBattleMon.passiveAbility === "Intimidate") {
       wildPokemon.stages.atk = Math.max(-6, wildPokemon.stages.atk - 1);
       dialogueText += isKo
-        ? `\n[특성 위협 발동!] 상대 ${wildPokemon.nameKo}의 공격이 떨어졌다! (-1)`
-        : `\n[Intimidate!] Foe ${wildPokemon.name}'s Attack fell! (-1)`;
+        ? `\n[특성 위협 발동!] ${wildPokemon.nameKo}의 공격이 떨어졌다! (-1)`
+        : `\n[Intimidate!] ${wildPokemon.name}'s Attack fell! (-1)`;
     }
     if (wildPokemon.ability === "Intimidate") {
       playerBattleMon.stages.atk = Math.max(-6, playerBattleMon.stages.atk - 1);
@@ -466,7 +478,7 @@ export class BattleService {
       biome: slot.biome || "Town",
       gameMode: slot.gameMode || "Classic",
       enemy: wildPokemon,
-      playerActiveIndex: 0,
+      playerActiveIndex: activeIndex,
       playerParty: slot.party,
       playerBattleMon,
       dialogueText,
@@ -1891,9 +1903,23 @@ export class BattleService {
    * Advances to next wave
    */
   public advanceToNextWave(userId: string, slotId: number): BattleState {
+    const key = this.getBattleKey(userId, slotId);
+    const existingBattle = this.activeBattles.get(key);
+
     const profile = saveService.getProfile(userId);
     const slot = profile.slots[slotId];
-    const newWave = (slot?.wave || 1) + 1;
+    const prevWave = slot?.wave || 1;
+    const newWave = prevWave + 1;
+
+    // In PokéRogue, stat stages reset after every 5 waves (wave 5, 10, 15, 20... -> newWave % 5 === 1)
+    // Between regular wild waves (1->2, 2->3, 3->4, 4->5, etc.), active Pokémon stages and index are preserved!
+    const shouldResetStages = (prevWave % 5 === 0);
+    const preservedStages = (existingBattle && !shouldResetStages && existingBattle.playerBattleMon.hp > 0)
+      ? { ...existingBattle.playerBattleMon.stages }
+      : undefined;
+    const preservedActiveIndex = (existingBattle && !shouldResetStages)
+      ? existingBattle.playerActiveIndex
+      : 0;
 
     const biomes = Object.keys(BIOME_ENCOUNTERS);
     const currentBiomeIdx = biomes.indexOf(slot?.biome || "Town");
@@ -1906,10 +1932,9 @@ export class BattleService {
       biome: nextBiome,
     });
 
-    const key = this.getBattleKey(userId, slotId);
     this.activeBattles.delete(key);
 
-    return this.getOrCreateBattle(userId, slotId);
+    return this.getOrCreateBattle(userId, slotId, preservedStages, preservedActiveIndex);
   }
 
   /**
