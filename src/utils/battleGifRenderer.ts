@@ -431,23 +431,18 @@ function drawHighSkyCutscene(
     ctx.restore();
   } else {
     // Elegant High-Altitude Gliding State
-    // Soft wind trails under wings
-    ctx.save();
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.55)";
-    ctx.lineWidth = 2.0;
-    for (let i = -2; i <= 2; i++) {
-      ctx.beginPath();
-      ctx.moveTo(width / 2 + i * 40 - 60, height / 2 + 30);
-      ctx.lineTo(width / 2 + i * 40 + 60, height / 2 + 30);
-      ctx.stroke();
-    }
-    ctx.restore();
-
-    // Gliding Pokémon in Center Sky
+    // Gliding Pokémon in Center Sky (with subtle wing flap and oscillation)
     if (attackerSprite) {
       ctx.save();
-      if (f.pScale) ctx.scale(f.pScale.x, f.pScale.y);
-      drawFittedBattleSprite(ctx, attackerSprite, width / 2, height / 2 + 10, 120);
+      const ox = (f.isAttackerPlayer ? f.pOffset?.x : f.eOffset?.x) || 0;
+      const oy = (f.isAttackerPlayer ? f.pOffset?.y : f.eOffset?.y) || 0;
+      const rot = (f.isAttackerPlayer ? f.pRot : f.eRot) || 0;
+      const scale = f.isAttackerPlayer ? f.pScale : f.eScale;
+
+      ctx.translate(width / 2 + ox, height / 2 + oy);
+      if (rot) ctx.rotate(rot);
+      if (scale) ctx.scale(scale.x, scale.y);
+      drawFittedBattleSprite(ctx, attackerSprite, 0, 0, 120);
       ctx.restore();
     }
   }
