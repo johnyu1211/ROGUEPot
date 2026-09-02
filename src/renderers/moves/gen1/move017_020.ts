@@ -144,42 +144,42 @@ export function drawWhirlwindEffect(ctx: any, target: { x: number; y: number }, 
     rBase = 16;
     rTop = 42;
     turns = 2.8;
-    globalAlpha = 0.80;
+    globalAlpha = 0.55;
     spinPhase = 0.6;
   } else if (step === 2) {
     topY = baseY - 170; // surges way past top of defender
     rBase = 20;
     rTop = 72;
     turns = 4.2;
-    globalAlpha = 0.95;
+    globalAlpha = 0.65;
     spinPhase = 2.4;
   } else if (step === 3) {
     topY = baseY - 230; // massive sky funnel roaring past screen top (y < 0)
     rBase = 24;
     rTop = 95;
     turns = 4.8;
-    globalAlpha = 0.95;
+    globalAlpha = 0.68;
     spinPhase = 4.2;
   } else if (step >= 4) {
     topY = baseY - 240;
     rBase = 35;
     rTop = 110;
     turns = 3.5;
-    globalAlpha = 0.35;
+    globalAlpha = 0.22;
     spinPhase = 5.8;
   }
 
   // 1. Rotating 3D Ground Cyclone Disc on Platform Floor
   if (step <= 3) {
     ctx.save();
-    ctx.globalAlpha = step === 1 ? 0.65 : 0.85;
+    ctx.globalAlpha = step === 1 ? 0.45 : 0.60;
     ctx.translate(tx, baseY);
     ctx.scale(1.0, 0.28); // 3D flat perspective
 
     // Ground suction disc
     const discGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, rBase * 1.8);
-    discGrad.addColorStop(0, "rgba(255, 255, 255, 0.90)");
-    discGrad.addColorStop(0.5, "rgba(224, 242, 254, 0.70)");
+    discGrad.addColorStop(0, "rgba(255, 255, 255, 0.75)");
+    discGrad.addColorStop(0.5, "rgba(224, 242, 254, 0.50)");
     discGrad.addColorStop(1, "rgba(186, 230, 253, 0.0)");
     ctx.fillStyle = discGrad;
     ctx.beginPath();
@@ -187,8 +187,8 @@ export function drawWhirlwindEffect(ctx: any, target: { x: number; y: number }, 
     ctx.fill();
 
     // 3 Spiral arms sucking in
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.80)";
+    ctx.lineWidth = 2.2;
     for (let a = 0; a < 3; a++) {
       const startAngle = (a * (Math.PI * 2)) / 3 + spinPhase * 2;
       ctx.beginPath();
@@ -232,7 +232,7 @@ export function drawWhirlwindEffect(ctx: any, target: { x: number; y: number }, 
     streams.push(pts);
   }
 
-  // PASS A: Render Back-side of 3D Helices (z <= 0) - Thick translucent air ribbons wrapping behind
+  // PASS A: Render Back-side of 3D Helices (z <= 0) - Soft sheer air ribbons wrapping behind
   for (const pts of streams) {
     ctx.save();
     ctx.lineCap = "round";
@@ -240,11 +240,11 @@ export function drawWhirlwindEffect(ctx: any, target: { x: number; y: number }, 
       const p1 = pts[i];
       const p2 = pts[i + 1];
       if (p1.z <= 0.15 || p2.z <= 0.15) {
-        const segAlpha = globalAlpha * (0.28 + (1 - p1.t) * 0.28);
+        const segAlpha = globalAlpha * (0.20 + (1 - p1.t) * 0.20);
         ctx.globalAlpha = segAlpha;
 
         // Wide soft back-swath
-        ctx.strokeStyle = "rgba(186, 230, 253, 0.35)";
+        ctx.strokeStyle = "rgba(186, 230, 253, 0.25)";
         ctx.lineWidth = 9.0 + p1.t * 7.0; // 9px at base to 16px at top
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
@@ -252,7 +252,7 @@ export function drawWhirlwindEffect(ctx: any, target: { x: number; y: number }, 
         ctx.stroke();
 
         // Inner soft highlight
-        ctx.strokeStyle = "rgba(224, 242, 254, 0.45)";
+        ctx.strokeStyle = "rgba(224, 242, 254, 0.35)";
         ctx.lineWidth = 3.5 + p1.t * 2.5;
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
@@ -265,13 +265,13 @@ export function drawWhirlwindEffect(ctx: any, target: { x: number; y: number }, 
 
   // PASS B: Volumetric 3D Translucent Funnel Body (Conical Air Core Shading)
   ctx.save();
-  ctx.globalAlpha = globalAlpha * 0.35;
+  ctx.globalAlpha = globalAlpha * 0.22;
   const coneGrad = ctx.createLinearGradient(tx - rTop, 0, tx + rTop, 0);
-  coneGrad.addColorStop(0, "rgba(255, 255, 255, 0.55)");
-  coneGrad.addColorStop(0.25, "rgba(224, 242, 254, 0.38)");
-  coneGrad.addColorStop(0.5, "rgba(186, 230, 253, 0.12)"); // hollow transparent core gives true 3D cylinder depth
-  coneGrad.addColorStop(0.75, "rgba(224, 242, 254, 0.38)");
-  coneGrad.addColorStop(1, "rgba(255, 255, 255, 0.55)");
+  coneGrad.addColorStop(0, "rgba(255, 255, 255, 0.45)");
+  coneGrad.addColorStop(0.25, "rgba(224, 242, 254, 0.28)");
+  coneGrad.addColorStop(0.5, "rgba(186, 230, 253, 0.08)"); // hollow transparent core gives true 3D cylinder depth
+  coneGrad.addColorStop(0.75, "rgba(224, 242, 254, 0.28)");
+  coneGrad.addColorStop(1, "rgba(255, 255, 255, 0.45)");
 
   ctx.fillStyle = coneGrad;
   ctx.beginPath();
@@ -283,7 +283,7 @@ export function drawWhirlwindEffect(ctx: any, target: { x: number; y: number }, 
   ctx.fill();
   ctx.restore();
 
-  // PASS C: Render Front-side of 3D Helices (z > 0) with Thick Translucent Luminous Wind Bands
+  // PASS C: Render Front-side of 3D Helices (z > 0) with Sheer Luminous Wind Bands
   for (const pts of streams) {
     ctx.save();
     ctx.lineCap = "round";
@@ -291,11 +291,11 @@ export function drawWhirlwindEffect(ctx: any, target: { x: number; y: number }, 
       const p1 = pts[i];
       const p2 = pts[i + 1];
       if (p1.z > -0.15 && p2.z > -0.15) {
-        const segAlpha = globalAlpha * (0.55 + p1.z * 0.40);
+        const segAlpha = globalAlpha * (0.42 + p1.z * 0.30);
         ctx.globalAlpha = segAlpha;
 
-        // 1. Broad outer translucent wind swath (14px to 22px wide!)
-        ctx.strokeStyle = "rgba(224, 242, 254, 0.48)";
+        // 1. Broad outer sheer wind swath (14px to 22px wide)
+        ctx.strokeStyle = "rgba(224, 242, 254, 0.35)";
         ctx.lineWidth = 14.0 + p1.t * 8.0;
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
@@ -303,15 +303,15 @@ export function drawWhirlwindEffect(ctx: any, target: { x: number; y: number }, 
         ctx.stroke();
 
         // 2. Medium bright translucent body (7px to 11px wide)
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.65)";
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.50)";
         ctx.lineWidth = 7.0 + p1.t * 4.0;
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
         ctx.lineTo(p2.x, p2.y);
         ctx.stroke();
 
-        // 3. Crisp white center filament (2.5px to 3.5px wide)
-        ctx.strokeStyle = "#FFFFFF";
+        // 3. Center highlight filament (2.5px to 3.5px wide)
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
         ctx.lineWidth = 2.5 + p1.t * 1.0;
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
@@ -320,12 +320,6 @@ export function drawWhirlwindEffect(ctx: any, target: { x: number; y: number }, 
       }
     }
     ctx.restore();
-  }
-
-  // 3. Volumetric Floating Air Orbits & Top Starburst
-  if (step === 2 || step === 3) {
-    drawMiniRetroStar(ctx, tx, ty - 35, step === 2 ? 18 : 24, "#BAE6FD");
-    drawMiniRetroStar(ctx, tx, ty - 35, step === 2 ? 10 : 14, "#FFFFFF");
   }
 
   ctx.restore();
