@@ -1899,7 +1899,7 @@ function drawWrithingLightningBolt(
     });
   }
 
-  // 1. Outer High-Voltage Electric Glow Line (Tapering from root to tip)
+  // 1. Outer High-Voltage Electric Glow Line (Tapering & Distance Alpha Fade)
   ctx.strokeStyle = "#FACC15";
   ctx.lineCap = "round";
   ctx.lineJoin = "miter";
@@ -1914,6 +1914,10 @@ function drawWrithingLightningBolt(
       taper = Math.max(0.15, (1.0 - t * 0.75) * (0.5 + 0.5 * Math.sin(t * Math.PI)));
     }
 
+    const segMidDist = (pts[i].x + pts[i + 1].x) / 2;
+    const distFade = Math.max(0.10, 1.0 - (segMidDist / 72) * 0.75);
+    ctx.globalAlpha = alpha * distFade;
+
     ctx.lineWidth = baseGlowW * taper;
     ctx.beginPath();
     ctx.moveTo(pts[i].x, pts[i].y);
@@ -1921,7 +1925,7 @@ function drawWrithingLightningBolt(
     ctx.stroke();
   }
 
-  // 2. Inner Pure White Lightning Core Line (Tapering from root to tip)
+  // 2. Inner Pure White Lightning Core Line (Tapering & Distance Alpha Fade)
   ctx.strokeStyle = "#FFFFFF";
   const baseCoreW = step === 1 ? 2.4 : (step === 2 ? 1.8 : 1.2);
 
@@ -1933,6 +1937,10 @@ function drawWrithingLightningBolt(
     } else {
       taper = Math.max(0.15, (1.0 - t * 0.75) * (0.5 + 0.5 * Math.sin(t * Math.PI)));
     }
+
+    const segMidDist = (pts[i].x + pts[i + 1].x) / 2;
+    const distFade = Math.max(0.10, 1.0 - (segMidDist / 72) * 0.75);
+    ctx.globalAlpha = alpha * distFade;
 
     ctx.lineWidth = baseCoreW * taper;
     ctx.beginPath();
