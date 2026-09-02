@@ -54,7 +54,9 @@ export function renderMoveEffect(
 
   // 1. SPECIFIC SIGNATURE MOVES FIRST
   if (moveKey === "karate-chop" || moveKey === "karatechop") {
-    drawKarateChopEffect(ctx, targetPos, info.step ?? 3);
+    drawKarateChopEffect(ctx, targetPos, info.step ?? 4);
+  } else if (moveKey === "double-slap" || moveKey === "doubleslap") {
+    drawDoubleSlapEffect(ctx, targetPos, info.step ?? 1);
   } else if (moveKey === "solar-beam" || moveKey === "solar-blade") {
     drawSolarBeamEffect(ctx, startPos, targetPos, angle, dx, dy);
   } else if (moveKey === "mega-drain" || moveKey === "giga-drain" || moveKey === "absorb" || moveKey === "leech-life" || moveKey === "draining-kiss") {
@@ -880,6 +882,146 @@ export function drawKarateChopEffect(ctx: any, target: { x: number; y: number },
     }
     ctx.restore();
   }
+
+  ctx.restore();
+}
+
+/**
+ * Authentic Gen 5 Double Slap (연속뺨치기):
+ * Rhythmic alternating Left & Right open palm slaps across the target's face
+ * with slap wind arcs and star impact sparks!
+ */
+export function drawDoubleSlapEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
+  ctx.save();
+
+  // step: 1 (Slap Left), 2 (Slap Right), 3 (Slap Left), 4 (Slap Right), 5 (Slap Left)
+  const isLeft = (step % 2 !== 0);
+  const handX = target.x + (isLeft ? -36 : 36);
+  const handY = target.y - 25;
+  const rotAngle = isLeft ? (25 * Math.PI) / 180 : (-25 * Math.PI) / 180;
+  const scaleX = isLeft ? 1 : -1;
+
+  // 1. Slap Motion Arc / Wind Streaks
+  ctx.save();
+  ctx.strokeStyle = "rgba(254, 240, 138, 0.9)";
+  ctx.lineWidth = 4.5;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  if (isLeft) {
+    ctx.arc(target.x - 10, target.y - 20, 36, Math.PI * 0.85, Math.PI * 1.6);
+  } else {
+    ctx.arc(target.x + 10, target.y - 20, 36, Math.PI * 1.4, Math.PI * 2.15);
+  }
+  ctx.stroke();
+
+  // Outer white speed trail
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  if (isLeft) {
+    ctx.arc(target.x - 10, target.y - 20, 44, Math.PI * 0.9, Math.PI * 1.55);
+  } else {
+    ctx.arc(target.x + 10, target.y - 20, 44, Math.PI * 1.45, Math.PI * 2.1);
+  }
+  ctx.stroke();
+  ctx.restore();
+
+  // 2. Open Palm Hand (Glove silhouette with 5 fingers)
+  ctx.save();
+  ctx.translate(handX, handY);
+  ctx.scale(scaleX * 1.25, 1.25);
+  ctx.rotate(rotAngle);
+
+  ctx.fillStyle = "#FFFFFF";
+  ctx.strokeStyle = "#0F172A";
+  ctx.lineWidth = 3.2;
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+
+  ctx.beginPath();
+  // Wrist
+  ctx.moveTo(-10, 22);
+  ctx.lineTo(10, 22);
+  ctx.lineTo(12, 6);
+  // Pinky
+  ctx.lineTo(18, -4);
+  ctx.arc(16, -7, 3.2, 0, Math.PI, true);
+  ctx.lineTo(11, 2);
+  // Ring
+  ctx.lineTo(11, -12);
+  ctx.arc(9, -15, 3.2, 0, Math.PI, true);
+  ctx.lineTo(6, 0);
+  // Middle
+  ctx.lineTo(4, -18);
+  ctx.arc(2, -21, 3.5, 0, Math.PI, true);
+  ctx.lineTo(0, -2);
+  // Index
+  ctx.lineTo(-3, -15);
+  ctx.arc(-5, -18, 3.2, 0, Math.PI, true);
+  ctx.lineTo(-6, 2);
+  // Thumb
+  ctx.lineTo(-16, -6);
+  ctx.arc(-18, -4, 3.8, 0, Math.PI, true);
+  ctx.lineTo(-12, 12);
+  ctx.closePath();
+
+  ctx.fill();
+  ctx.stroke();
+
+  // Palm crease / inner shading
+  ctx.strokeStyle = "#CBD5E1";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(0, 8, 6, 0.2 * Math.PI, 0.8 * Math.PI);
+  ctx.stroke();
+
+  ctx.restore();
+
+  // 3. Impact Star / Sparks at Point of Cheek Contact
+  ctx.save();
+  const sparkX = target.x + (isLeft ? -10 : 10);
+  const sparkY = target.y - 25;
+
+  // Yellow 4-point Impact Star
+  ctx.fillStyle = "#FACC15";
+  ctx.strokeStyle = "#FFFFFF";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(sparkX, sparkY - 18);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX + 18, sparkY);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX, sparkY + 18);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX - 18, sparkY);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX, sparkY - 18);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // White inner star
+  ctx.fillStyle = "#FFFFFF";
+  ctx.beginPath();
+  ctx.moveTo(sparkX, sparkY - 9);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX + 9, sparkY);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX, sparkY + 9);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX - 9, sparkY);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX, sparkY - 9);
+  ctx.closePath();
+  ctx.fill();
+
+  // Spark dots
+  const sparkDots = [
+    { ox: -15, oy: -14, r: 2.5, c: "#FEF08A" },
+    { ox: 16, oy: -13, r: 2.2, c: "#FACC15" },
+    { ox: -13, oy: 16, r: 2.2, c: "#FACC15" },
+    { ox: 15, oy: 15, r: 2.5, c: "#FEF08A" },
+  ];
+  for (const sd of sparkDots) {
+    ctx.fillStyle = sd.c;
+    ctx.beginPath();
+    ctx.arc(sparkX + sd.ox, sparkY + sd.oy, sd.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
 
   ctx.restore();
 }
