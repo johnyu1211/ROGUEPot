@@ -1,4 +1,4 @@
-import { loadImage } from "@napi-rs/canvas";
+import { createCanvas, loadImage } from "@napi-rs/canvas";
 import path from "path";
 import fs from "fs";
 
@@ -6,6 +6,40 @@ let karateBlackImg: any = null;
 let karateRedImg: any = null;
 let doubleSlapWhiteImg: any = null;
 let cometPunchFistImg: any = null;
+let firePunchFistCanvas: any = null;
+let icePunchFistCanvas: any = null;
+let thunderPunchFistCanvas: any = null;
+
+function createTintedFistCanvas(img: any, fillHex: string) {
+  if (!img) return null;
+  const canvas = createCanvas(img.width, img.height);
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0);
+
+  const imgData = ctx.getImageData(0, 0, img.width, img.height);
+  const data = imgData.data;
+
+  const r = parseInt(fillHex.slice(1, 3), 16);
+  const g = parseInt(fillHex.slice(3, 5), 16);
+  const b = parseInt(fillHex.slice(5, 7), 16);
+
+  for (let i = 0; i < data.length; i += 4) {
+    const alpha = data[i + 3];
+    if (alpha > 30) {
+      const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
+      if (brightness > 50) {
+        // Glove interior: replace with vibrant flame orange / ice cyan / thunder yellow
+        const factor = brightness / 255;
+        data[i] = Math.min(255, Math.round(r * factor * 1.15));
+        data[i + 1] = Math.min(255, Math.round(g * factor * 1.15));
+        data[i + 2] = Math.min(255, Math.round(b * factor * 1.15));
+      }
+      // Outlines remain dark
+    }
+  }
+  ctx.putImageData(imgData, 0, 0);
+  return canvas;
+}
 
 export async function preloadMoveAssets() {
   try {
@@ -23,7 +57,12 @@ export async function preloadMoveAssets() {
     }
     if (!cometPunchFistImg) {
       const pPath = path.resolve(process.cwd(), "assets/effects/comet_punch_fist.png");
-      if (fs.existsSync(pPath)) cometPunchFistImg = await loadImage(pPath);
+      if (fs.existsSync(pPath)) {
+        cometPunchFistImg = await loadImage(pPath);
+        firePunchFistCanvas = createTintedFistCanvas(cometPunchFistImg, "#FF6B00");
+        icePunchFistCanvas = createTintedFistCanvas(cometPunchFistImg, "#00D2FF");
+        thunderPunchFistCanvas = createTintedFistCanvas(cometPunchFistImg, "#FFD700");
+      }
     }
   } catch (err) {
     // Ignore asset load errors
@@ -1591,20 +1630,18 @@ export function drawFirePunchEffect(ctx: any, target: { x: number; y: number }, 
     ctx.fill();
   }
 
-  // 2. Punch Fist with Orange Filter
+  // 2. Punch Fist with Vibrant ORANGE Tinted Pixel Sprite
   if (step <= 2) {
     ctx.save();
     ctx.translate(targetX, targetY - 14);
     ctx.scale(step === 1 ? 0.68 : 0.72, step === 1 ? 0.68 : 0.72);
     ctx.globalAlpha = step === 1 ? 1.0 : 0.35;
 
-    // Rich saturated orange fire filter applied to the fist
-    ctx.filter = "sepia(1) saturate(7) hue-rotate(-25deg) brightness(1.05)";
-
-    if (cometPunchFistImg) {
-      const fw = cometPunchFistImg.width;
-      const fh = cometPunchFistImg.height;
-      ctx.drawImage(cometPunchFistImg, -fw / 2, -fh / 2, fw, fh);
+    const fistSprite = firePunchFistCanvas || cometPunchFistImg;
+    if (fistSprite) {
+      const fw = fistSprite.width;
+      const fh = fistSprite.height;
+      ctx.drawImage(fistSprite, -fw / 2, -fh / 2, fw, fh);
     } else {
       drawFrontStraightPunchFistSvg(ctx, 0, 0, 2.2, 1.0);
     }
@@ -1697,10 +1734,11 @@ export function drawIcePunchEffect(ctx: any, target: { x: number; y: number }, s
   ctx.scale(isFade ? 0.68 : 0.62, isFade ? 0.68 : 0.62);
   ctx.globalAlpha = alpha;
 
-  if (cometPunchFistImg) {
-    const fw = cometPunchFistImg.width;
-    const fh = cometPunchFistImg.height;
-    ctx.drawImage(cometPunchFistImg, -fw / 2, -fh / 2, fw, fh);
+  const fistSprite = icePunchFistCanvas || cometPunchFistImg;
+  if (fistSprite) {
+    const fw = fistSprite.width;
+    const fh = fistSprite.height;
+    ctx.drawImage(fistSprite, -fw / 2, -fh / 2, fw, fh);
   } else {
     drawFrontStraightPunchFistSvg(ctx, 0, 0, 2.2, 1.0);
   }
