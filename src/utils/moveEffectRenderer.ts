@@ -1505,78 +1505,139 @@ export function drawPayDayEffect(ctx: any, target: { x: number; y: number }, ste
 }
 
 /**
- * 007 불꽃펀치 (Fire Punch): Blazing Flame Aura, Fire Petals & Burning Embers
+ * 007 불꽃펀치 (Fire Punch):
+ * Step 1: Direct Fire Punch Impact (Orange Filter Fist + Clustered Flame Burst)
+ * Step 2: Fire bursts & scatters outward in all 8 directions (Distance x1.5, Alpha 0.65)
+ * Step 3: Flames disperse far outward and dissipate with flying embers (Distance x2.3, Alpha 0.25)
  */
 export function drawFirePunchEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
   ctx.save();
 
-  const isFade = (step % 2 === 0);
-  const alpha = isFade ? 0.35 : 1.0;
   const targetX = target.x;
   const targetY = target.y - 12;
 
-  // 1. Fiery Flame Aura
-  const fireGrad = ctx.createRadialGradient(targetX, targetY - 14, 4, targetX, targetY - 14, isFade ? 52 : 44);
-  fireGrad.addColorStop(0, "#FEF08A");
-  fireGrad.addColorStop(0.35, "#F97316");
-  fireGrad.addColorStop(0.7, "#DC2626");
-  fireGrad.addColorStop(1, "rgba(220, 38, 38, 0)");
-  ctx.fillStyle = fireGrad;
-  ctx.globalAlpha = isFade ? 0.35 : 0.85;
-  ctx.beginPath();
-  ctx.arc(targetX, targetY - 14, isFade ? 52 : 44, 0, Math.PI * 2);
-  ctx.fill();
+  // Spread and Alpha by step
+  let spread = 0.85;
+  let alpha = 1.0;
+  let fistAlpha = 1.0;
 
-  // 2. Punch Fist
+  if (step === 2) {
+    spread = 1.55;
+    alpha = 0.65;
+    fistAlpha = 0.35;
+  } else if (step >= 3) {
+    spread = 2.30;
+    alpha = 0.25;
+    fistAlpha = 0.0;
+  }
+
+  // 1. Fiery Flame Radial Background Aura
+  if (step <= 2) {
+    const fireGrad = ctx.createRadialGradient(
+      targetX,
+      targetY - 14,
+      4,
+      targetX,
+      targetY - 14,
+      step === 1 ? 46 : 58
+    );
+    fireGrad.addColorStop(0, "#FEF08A");
+    fireGrad.addColorStop(0.35, "#F97316");
+    fireGrad.addColorStop(0.7, "#DC2626");
+    fireGrad.addColorStop(1, "rgba(220, 38, 38, 0)");
+    ctx.fillStyle = fireGrad;
+    ctx.globalAlpha = step === 1 ? 0.85 : 0.45;
+    ctx.beginPath();
+    ctx.arc(targetX, targetY - 14, step === 1 ? 46 : 58, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 2. Punch Fist with Vibrant ORANGE Filter Tint
+  if (fistAlpha > 0.02) {
+    ctx.save();
+    ctx.translate(targetX, targetY - 14);
+    ctx.scale(step === 1 ? 0.68 : 0.72, step === 1 ? 0.68 : 0.72);
+    ctx.globalAlpha = fistAlpha;
+
+    // Rich saturated orange fire filter applied to the fist
+    ctx.filter = "sepia(1) saturate(7) hue-rotate(-25deg) brightness(1.05)";
+
+    if (cometPunchFistImg) {
+      const fw = cometPunchFistImg.width;
+      const fh = cometPunchFistImg.height;
+      ctx.drawImage(cometPunchFistImg, -fw / 2, -fh / 2, fw, fh);
+    } else {
+      drawFrontStraightPunchFistSvg(ctx, 0, 0, 2.2, 1.0);
+    }
+    ctx.restore();
+  }
+
+  // 3. Flame Burst Petals Scattering in All 8 Directions
   ctx.save();
-  ctx.translate(targetX, targetY - 14);
-  ctx.scale(isFade ? 0.68 : 0.62, isFade ? 0.68 : 0.62);
   ctx.globalAlpha = alpha;
 
-  if (cometPunchFistImg) {
-    const fw = cometPunchFistImg.width;
-    const fh = cometPunchFistImg.height;
-    ctx.drawImage(cometPunchFistImg, -fw / 2, -fh / 2, fw, fh);
-  } else {
-    drawFrontStraightPunchFistSvg(ctx, 0, 0, 2.2, 1.0);
-  }
-  ctx.restore();
-
-  // 3. Flame Petals / Tongues leaping from knuckles
-  ctx.save();
-  ctx.globalAlpha = isFade ? 0.40 : 0.90;
-  const flames = [
-    { ox: -22, oy: -30, r: 12, c: "#F97316" },
-    { ox: 0, oy: -40, r: 14, c: "#EF4444" },
-    { ox: 22, oy: -30, r: 12, c: "#F97316" },
-    { ox: -26, oy: -10, r: 10, c: "#FDE047" },
-    { ox: 26, oy: -10, r: 10, c: "#FDE047" },
+  const flamePetals = [
+    { vx: 0, vy: -32, r: 14, c: "#EF4444" },     // North
+    { vx: 24, vy: -24, r: 13, c: "#F97316" },   // North-East
+    { vx: 32, vy: 0, r: 12, c: "#FDE047" },     // East
+    { vx: 22, vy: 24, r: 13, c: "#F97316" },    // South-East
+    { vx: 0, vy: 30, r: 14, c: "#EF4444" },     // South
+    { vx: -22, vy: 24, r: 13, c: "#F97316" },   // South-West
+    { vx: -32, vy: 0, r: 12, c: "#FDE047" },    // West
+    { vx: -24, vy: -24, r: 13, c: "#F97316" },  // North-West
   ];
-  for (const f of flames) {
-    ctx.fillStyle = f.c;
+
+  for (const f of flamePetals) {
+    const fx = targetX + f.vx * spread;
+    const fy = targetY - 14 + f.vy * spread;
+    const fr = step >= 3 ? f.r * 0.75 : f.r;
+
+    // Glowing core flame gradient
+    const pGrad = ctx.createRadialGradient(fx, fy, 1, fx, fy, fr);
+    pGrad.addColorStop(0, "#FFFFFF");
+    pGrad.addColorStop(0.4, f.c);
+    pGrad.addColorStop(1, "rgba(239, 68, 68, 0)");
+
+    ctx.fillStyle = pGrad;
     ctx.beginPath();
-    ctx.arc(targetX + f.ox, targetY + f.oy, f.r, 0, Math.PI * 2);
+    ctx.arc(fx, fy, fr, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();
 
-  // 4. Fire Impact Star & Flying Embers
-  const sparkX = targetX;
-  const sparkY = targetY - 22;
-  drawMiniRetroStar(ctx, sparkX, sparkY, isFade ? 14 : 22, "#FDE047");
+  // 4. Central Fire Impact Star (Step 1 & 2)
+  if (step <= 2) {
+    const sparkX = targetX;
+    const sparkY = targetY - 22;
+    drawMiniRetroStar(ctx, sparkX, sparkY, step === 1 ? 24 : 16, "#FDE047");
+  }
 
+  // 5. Flying Embers Scattering Outward
+  ctx.save();
+  ctx.globalAlpha = alpha;
   const embers = [
-    { ox: -28, oy: -26, r: 2.8, c: "#FEF08A" },
-    { ox: 30, oy: -24, r: 3.0, c: "#F97316" },
-    { ox: -22, oy: 14, r: 2.5, c: "#EF4444" },
-    { ox: 25, oy: 16, r: 2.8, c: "#FDE047" },
+    { vx: -30, vy: -30, r: 3.2, c: "#FEF08A" },
+    { vx: 32, vy: -28, r: 3.0, c: "#F97316" },
+    { vx: -26, vy: 20, r: 2.8, c: "#EF4444" },
+    { vx: 28, vy: 22, r: 3.0, c: "#FDE047" },
+    { vx: 0, vy: -38, r: 3.0, c: "#FEF08A" },
+    { vx: 36, vy: 4, r: 2.8, c: "#F97316" },
+    { vx: -36, vy: 4, r: 2.8, c: "#FDE047" },
   ];
+
   for (const eb of embers) {
     ctx.fillStyle = eb.c;
     ctx.beginPath();
-    ctx.arc(sparkX + eb.ox, sparkY + eb.oy, eb.r, 0, Math.PI * 2);
+    ctx.arc(
+      targetX + eb.vx * spread,
+      targetY - 14 + eb.vy * spread,
+      step >= 3 ? eb.r * 0.7 : eb.r,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
   }
+  ctx.restore();
 
   ctx.restore();
 }
