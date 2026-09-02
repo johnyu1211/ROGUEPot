@@ -901,44 +901,51 @@ export function drawKarateChopEffect(ctx: any, target: { x: number; y: number },
 export function drawDoubleSlapEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
   ctx.save();
 
-  // step: 1 (Slap Left), 2 (Slap Right), 3 (Slap Left), 4 (Slap Right), 5 (Slap Left)
-  const isLeft = (step % 2 !== 0);
-  const handX = target.x + (isLeft ? -34 : 34);
+  // step: 1 (Hit 1 Left Impact), 2 (Hit 1 Left Fade), 3 (Hit 2 Right Impact), 4 (Hit 2 Right Fade), ...
+  const isFade = (step % 2 === 0);
+  const hitIndex = Math.floor((step - 1) / 2);
+  const isLeft = (hitIndex % 2 === 0);
+
+  // During fade phase: hand moves slightly inward into follow-through and alpha decreases to 0.32
+  const followOffset = isFade ? (isLeft ? 8 : -8) : 0;
+  const handX = target.x + (isLeft ? -34 : 34) + followOffset;
   const handY = target.y - 25;
-  const rotAngle = 0; // Purely vertical / upright angle (각도 수직)
+  const rotAngle = 0; // Purely vertical / upright angle
   const scaleX = isLeft ? 1 : -1;
+  const alpha = isFade ? 0.32 : 1.0;
 
   // 1. Slap Motion Arc / Wind Streaks
   ctx.save();
-  ctx.strokeStyle = "rgba(254, 240, 138, 0.9)";
-  ctx.lineWidth = 4.5;
+  ctx.strokeStyle = isFade ? "rgba(254, 240, 138, 0.4)" : "rgba(254, 240, 138, 0.9)";
+  ctx.lineWidth = isFade ? 3.5 : 4.5;
   ctx.lineCap = "round";
   ctx.beginPath();
   if (isLeft) {
-    ctx.arc(target.x - 10, target.y - 20, 36, Math.PI * 0.85, Math.PI * 1.6);
+    ctx.arc(target.x - 10, target.y - 20, isFade ? 40 : 36, Math.PI * 0.85, Math.PI * 1.6);
   } else {
-    ctx.arc(target.x + 10, target.y - 20, 36, Math.PI * 1.4, Math.PI * 2.15);
+    ctx.arc(target.x + 10, target.y - 20, isFade ? 40 : 36, Math.PI * 1.4, Math.PI * 2.15);
   }
   ctx.stroke();
 
   // Outer white speed trail
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
-  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = isFade ? "rgba(255, 255, 255, 0.3)" : "rgba(255, 255, 255, 0.8)";
+  ctx.lineWidth = isFade ? 1.8 : 2.5;
   ctx.beginPath();
   if (isLeft) {
-    ctx.arc(target.x - 10, target.y - 20, 44, Math.PI * 0.9, Math.PI * 1.55);
+    ctx.arc(target.x - 10, target.y - 20, isFade ? 48 : 44, Math.PI * 0.9, Math.PI * 1.55);
   } else {
-    ctx.arc(target.x + 10, target.y - 20, 44, Math.PI * 1.45, Math.PI * 2.1);
+    ctx.arc(target.x + 10, target.y - 20, isFade ? 48 : 44, Math.PI * 1.45, Math.PI * 2.1);
   }
   ctx.stroke();
   ctx.restore();
 
-  // 2. Inverted Karate Chop Hand Sprite (Authentic White Hand Sprite)
+  // 2. Inverted Karate Chop Hand Sprite (with dynamic fade transparency)
   if (doubleSlapWhiteImg) {
     ctx.save();
     ctx.translate(handX, handY);
     ctx.scale(scaleX * 1.15, 1.15);
     ctx.rotate(rotAngle);
+    ctx.globalAlpha = alpha;
     const sw = 80 * 1.15;
     const sh = 60 * 1.15;
     ctx.drawImage(doubleSlapWhiteImg, -sw / 2, -sh / 2, sw, sh);
@@ -947,48 +954,53 @@ export function drawDoubleSlapEffect(ctx: any, target: { x: number; y: number },
 
   // 3. Impact Star / Sparks at Point of Cheek Contact
   ctx.save();
-  const sparkX = target.x + (isLeft ? -10 : 10);
+  const sparkX = target.x + (isLeft ? -10 : 10) + (isFade ? (isLeft ? 6 : -6) : 0);
   const sparkY = target.y - 25;
+  const starRadius = isFade ? 11 : 18;
+  const starAlpha = isFade ? 0.38 : 1.0;
+
+  ctx.globalAlpha = starAlpha;
 
   // Yellow 4-point Impact Star
   ctx.fillStyle = "#FACC15";
   ctx.strokeStyle = "#FFFFFF";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(sparkX, sparkY - 18);
-  ctx.quadraticCurveTo(sparkX, sparkY, sparkX + 18, sparkY);
-  ctx.quadraticCurveTo(sparkX, sparkY, sparkX, sparkY + 18);
-  ctx.quadraticCurveTo(sparkX, sparkY, sparkX - 18, sparkY);
-  ctx.quadraticCurveTo(sparkX, sparkY, sparkX, sparkY - 18);
+  ctx.moveTo(sparkX, sparkY - starRadius);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX + starRadius, sparkY);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX, sparkY + starRadius);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX - starRadius, sparkY);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX, sparkY - starRadius);
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
 
   // White inner star
   ctx.fillStyle = "#FFFFFF";
+  const innerR = starRadius * 0.5;
   ctx.beginPath();
-  ctx.moveTo(sparkX, sparkY - 9);
-  ctx.quadraticCurveTo(sparkX, sparkY, sparkX + 9, sparkY);
-  ctx.quadraticCurveTo(sparkX, sparkY, sparkX, sparkY + 9);
-  ctx.quadraticCurveTo(sparkX, sparkY, sparkX - 9, sparkY);
-  ctx.quadraticCurveTo(sparkX, sparkY, sparkX, sparkY - 9);
+  ctx.moveTo(sparkX, sparkY - innerR);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX + innerR, sparkY);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX, sparkY + innerR);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX - innerR, sparkY);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX, sparkY - innerR);
   ctx.closePath();
   ctx.fill();
 
   // Spark dots
+  const sparkScale = isFade ? 1.4 : 1.0;
   const sparkDots = [
-    { ox: -15, oy: -14, r: 2.5, c: "#FEF08A" },
-    { ox: 16, oy: -13, r: 2.2, c: "#FACC15" },
-    { ox: -13, oy: 16, r: 2.2, c: "#FACC15" },
-    { ox: 15, oy: 15, r: 2.5, c: "#FEF08A" },
+    { ox: -15 * sparkScale, oy: -14 * sparkScale, r: 2.5, c: "#FEF08A" },
+    { ox: 16 * sparkScale, oy: -13 * sparkScale, r: 2.2, c: "#FACC15" },
+    { ox: -13 * sparkScale, oy: 16 * sparkScale, r: 2.2, c: "#FACC15" },
+    { ox: 15 * sparkScale, oy: 15 * sparkScale, r: 2.5, c: "#FEF08A" },
   ];
   for (const sd of sparkDots) {
     ctx.fillStyle = sd.c;
     ctx.beginPath();
-    ctx.arc(sparkX + sd.ox, sparkY + sd.oy, sd.r, 0, Math.PI * 2);
+    ctx.arc(sparkX + sd.ox, sparkY + sd.oy, isFade ? sd.r * 0.8 : sd.r, 0, Math.PI * 2);
     ctx.fill();
   }
-
   ctx.restore();
 
   ctx.restore();
