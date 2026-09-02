@@ -249,51 +249,93 @@ export function drawVineWhipEffect(
 
   const drawFrontImpact = () => {
     if (step === 1) {
-      // 1타 타격: 적 몸체에 좌상단 -> 우하단 사선 딥그린 덩굴 채찍 참격선 찰싹! + 절제된 타격 플래시
+      // 1타 타격: 적 몸체에 좌상단 -> 우하단 사선 딥그린 덩굴 채찍 참격선 (끝쪽으로 갈수록 투명하게 페이드)
       ctx.save();
-      ctx.strokeStyle = "#064E3B";
-      ctx.lineWidth = 4.0;
+      const sx1 = tx - 45 * dirSign, sy1 = ty - 32;
+      const ex1 = tx + 32 * dirSign, ey1 = ty + 14;
+
+      const gOuter1 = ctx.createLinearGradient(sx1, sy1, ex1, ey1);
+      gOuter1.addColorStop(0.0, "rgba(6, 78, 59, 0.4)");
+      gOuter1.addColorStop(0.2, "#064E3B");
+      gOuter1.addColorStop(0.55, "#15803D");
+      gOuter1.addColorStop(0.82, "rgba(21, 128, 61, 0.45)");
+      gOuter1.addColorStop(1.0, "rgba(21, 128, 61, 0.0)");
+
+      ctx.strokeStyle = gOuter1;
+      ctx.lineWidth = 4.2;
       ctx.lineCap = "round";
       ctx.beginPath();
-      ctx.moveTo(tx - 45 * dirSign, ty - 32);
-      ctx.bezierCurveTo(tx - 14 * dirSign, ty - 25, tx - 16 * dirSign, ty - 5, tx + 30 * dirSign, ty + 12);
+      ctx.moveTo(sx1, sy1);
+      ctx.bezierCurveTo(tx - 14 * dirSign, ty - 25, tx - 16 * dirSign, ty - 5, ex1, ey1);
       ctx.stroke();
 
-      ctx.strokeStyle = "#15803D";
+      const gInner1 = ctx.createLinearGradient(sx1, sy1, ex1, ey1);
+      gInner1.addColorStop(0.0, "rgba(34, 197, 94, 0.3)");
+      gInner1.addColorStop(0.25, "#22C55E");
+      gInner1.addColorStop(0.55, "#4ADE80");
+      gInner1.addColorStop(0.8, "rgba(74, 222, 128, 0.35)");
+      gInner1.addColorStop(1.0, "rgba(74, 222, 128, 0.0)");
+
+      ctx.strokeStyle = gInner1;
       ctx.lineWidth = 2.0;
       ctx.beginPath();
-      ctx.moveTo(tx - 45 * dirSign, ty - 32);
-      ctx.bezierCurveTo(tx - 14 * dirSign, ty - 25, tx - 16 * dirSign, ty - 5, tx + 30 * dirSign, ty + 12);
+      ctx.moveTo(sx1, sy1);
+      ctx.bezierCurveTo(tx - 14 * dirSign, ty - 25, tx - 16 * dirSign, ty - 5, ex1, ey1);
       ctx.stroke();
 
       drawLeaf(tx - 20 * dirSign, ty - 20, -0.6 * dirSign, 5);
       drawLeaf(tx + 10 * dirSign, ty + 6, 0.8 * dirSign, 4);
       ctx.restore();
     } else if (step === 2) {
-      // 2타 타격: 우상단 -> 좌하단 교차 사선 덩굴 채찍 참격 ('X'자 완성)
+      // 2타 타격: 우상단 -> 좌하단 교차 사선 덩굴 채찍 참격 ('X'자 완성, 끝쪽으로 갈수록 투명하게 페이드)
       ctx.save();
       // 1타 참격선 잔상
-      ctx.strokeStyle = "rgba(6, 78, 59, 0.35)";
+      const sx1 = tx - 45 * dirSign, sy1 = ty - 32;
+      const ex1 = tx + 32 * dirSign, ey1 = ty + 14;
+      const gGhost = ctx.createLinearGradient(sx1, sy1, ex1, ey1);
+      gGhost.addColorStop(0.0, "rgba(6, 78, 59, 0.15)");
+      gGhost.addColorStop(0.3, "rgba(6, 78, 59, 0.35)");
+      gGhost.addColorStop(0.7, "rgba(6, 78, 59, 0.15)");
+      gGhost.addColorStop(1.0, "rgba(6, 78, 59, 0.0)");
+
+      ctx.strokeStyle = gGhost;
       ctx.lineWidth = 2.5;
       ctx.beginPath();
-      ctx.moveTo(tx - 45 * dirSign, ty - 32);
-      ctx.bezierCurveTo(tx - 14 * dirSign, ty - 25, tx - 16 * dirSign, ty - 5, tx + 30 * dirSign, ty + 12);
+      ctx.moveTo(sx1, sy1);
+      ctx.bezierCurveTo(tx - 14 * dirSign, ty - 25, tx - 16 * dirSign, ty - 5, ex1, ey1);
       ctx.stroke();
 
       // 2타 역방향 교차 참격선
-      ctx.strokeStyle = "#064E3B";
-      ctx.lineWidth = 4.2;
+      const sx2 = tx + 45 * dirSign, sy2 = ty - 32;
+      const ex2 = tx - 28 * dirSign, ey2 = ty + 18;
+
+      const gOuter2 = ctx.createLinearGradient(sx2, sy2, ex2, ey2);
+      gOuter2.addColorStop(0.0, "rgba(6, 78, 59, 0.4)");
+      gOuter2.addColorStop(0.2, "#064E3B");
+      gOuter2.addColorStop(0.55, "#15803D");
+      gOuter2.addColorStop(0.82, "rgba(21, 128, 61, 0.45)");
+      gOuter2.addColorStop(1.0, "rgba(21, 128, 61, 0.0)");
+
+      ctx.strokeStyle = gOuter2;
+      ctx.lineWidth = 4.4;
       ctx.lineCap = "round";
       ctx.beginPath();
-      ctx.moveTo(tx + 45 * dirSign, ty - 32);
-      ctx.bezierCurveTo(tx + 14 * dirSign, ty - 22, tx + 18 * dirSign, ty + 6, tx - 25 * dirSign, ty + 16);
+      ctx.moveTo(sx2, sy2);
+      ctx.bezierCurveTo(tx + 14 * dirSign, ty - 22, tx + 18 * dirSign, ty + 6, ex2, ey2);
       ctx.stroke();
 
-      ctx.strokeStyle = "#15803D";
+      const gInner2 = ctx.createLinearGradient(sx2, sy2, ex2, ey2);
+      gInner2.addColorStop(0.0, "rgba(34, 197, 94, 0.3)");
+      gInner2.addColorStop(0.25, "#22C55E");
+      gInner2.addColorStop(0.55, "#4ADE80");
+      gInner2.addColorStop(0.8, "rgba(74, 222, 128, 0.35)");
+      gInner2.addColorStop(1.0, "rgba(74, 222, 128, 0.0)");
+
+      ctx.strokeStyle = gInner2;
       ctx.lineWidth = 2.0;
       ctx.beginPath();
-      ctx.moveTo(tx + 45 * dirSign, ty - 32);
-      ctx.bezierCurveTo(tx + 14 * dirSign, ty - 22, tx + 18 * dirSign, ty + 6, tx - 25 * dirSign, ty + 16);
+      ctx.moveTo(sx2, sy2);
+      ctx.bezierCurveTo(tx + 14 * dirSign, ty - 22, tx + 18 * dirSign, ty + 6, ex2, ey2);
       ctx.stroke();
 
       // 흩날리는 나뭇잎 파티클
