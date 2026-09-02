@@ -35,6 +35,33 @@ export interface RenderGifResult {
   motionDurationMs: number;
 }
 
+const edgeColorCache = new WeakMap<any, { top: string; bottom: string }>();
+
+function getArenaEdgeColors(bg: any): { top: string; bottom: string } {
+  if (!bg) return { top: "#38BDF8", bottom: "#2E5C2E" };
+  if (edgeColorCache.has(bg)) return edgeColorCache.get(bg)!;
+
+  try {
+    const tempCanvas = createCanvas(bg.width || 560, bg.height || 380);
+    const tempCtx = tempCanvas.getContext("2d");
+    tempCtx.drawImage(bg, 0, 0);
+
+    // Sample top edge pixel (middle of top line)
+    const topData = tempCtx.getImageData(Math.floor((bg.width || 560) / 2), 2, 1, 1).data;
+    const topHex = `rgb(${topData[0]}, ${topData[1]}, ${topData[2]})`;
+
+    // Sample bottom edge pixel (middle of bottom line)
+    const botData = tempCtx.getImageData(Math.floor((bg.width || 560) / 2), (bg.height || 380) - 2, 1, 1).data;
+    const botHex = `rgb(${botData[0]}, ${botData[1]}, ${botData[2]})`;
+
+    const colors = { top: topHex, bottom: botHex };
+    edgeColorCache.set(bg, colors);
+    return colors;
+  } catch (e) {
+    return { top: "#38BDF8", bottom: "#2E5C2E" };
+  }
+}
+
 /**
  * 1. Standard Move Execution GIF:
  * Frame 0: Leading Static Buffer (1000ms) - Calm intro announcement
@@ -3728,7 +3755,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         const isAttackerP = f.isAttackerPlayer !== false;
 
         if (isTracking) {
-          const liveX = isAttackerP ? (pm.x + f.pOffset.x) : (em.x + f.eOffset.x);
+          // Lock to pure vertical tracking on attacker's base X axis (Zero horizontal shift & zero side edge clipping!)
+          const liveX = isAttackerP ? pm.x : em.x;
           const liveY = isAttackerP ? (pm.y + f.pOffset.y) : (em.y + f.eOffset.y);
           // Target position on screen: keep pokemon centered in middle of viewport
           const screenX = width / 2;
@@ -3749,16 +3777,38 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         }
       }
 
-      // 1. Towering Sky Atmosphere behind everything (Prevents black borders and provides continuous stratosphere sky)
-      const toweringSkyGrad = targetCtx.createLinearGradient(0, -2500, 0, height);
-      toweringSkyGrad.addColorStop(0, "#0B1120"); // Stratosphere space navy
-      toweringSkyGrad.addColorStop(0.35, "#0284C7"); // Sky Blue
-      toweringSkyGrad.addColorStop(0.70, "#38BDF8"); // Atmosphere cyan
-      toweringSkyGrad.addColorStop(1, "#BAE6FD"); // Cloud white base
-      targetCtx.fillStyle = toweringSkyGrad;
-      targetCtx.fillRect(-width * 4, -3000, width * 9, 4500);
+      // Sample exact top and bottom edge colors from the arena background image
+      const edgeColors = getArenaEdgeColors(arena.bg);
 
-      // 2. High altitude passing cloud puffs during upward tracking
+      // 1. Top Sky Fill (for y <= 0 extending upwards to -3000px):
+      if (isTracking) {
+        // Stratosphere space navy gradient transitioning into biome's top edge color at y = 0
+        const skyAscentGrad = targetCtx.createLinearGradient(0, -2500, 0, 0);
+        skyAscentGrad.addColorStop(0, "#0B1120"); // Deep Stratosphere space navy
+        skyAscentGrad.addColorStop(0.35, "#0284C7"); // Sky Blue
+        skyAscentGrad.addColorStop(0.70, "#38BDF8"); // Atmosphere cyan
+        skyAscentGrad.addColorStop(1, edgeColors.top); // Seamless connection to top of arena background!
+        targetCtx.fillStyle = skyAscentGrad;
+        targetCtx.fillRect(-width * 4, -3000, width * 9, 3000);
+      } else {
+        targetCtx.fillStyle = edgeColors.top;
+        targetCtx.fillRect(-width * 4, -3000, width * 9, 3000);
+      }
+
+      // 2. Bottom Ground Fill (for y >= height extending downwards to +3000px):
+      // Guaranteed seamless ground color matching the biome floor (grass, soil, sand, rock)
+      targetCtx.fillStyle = edgeColors.bottom;
+      targetCtx.fillRect(-width * 4, height, width * 9, 3000);
+
+      // 3. Side Margins (for x < 0 and x > width):
+      const sideGrad = targetCtx.createLinearGradient(0, 0, 0, height);
+      sideGrad.addColorStop(0, edgeColors.top);
+      sideGrad.addColorStop(1, edgeColors.bottom);
+      targetCtx.fillStyle = sideGrad;
+      targetCtx.fillRect(-width * 4, 0, width * 4, height);
+      targetCtx.fillRect(width, 0, width * 4, height);
+
+      // 4. Passing high altitude clouds during rocket launch
       if (isTracking) {
         targetCtx.save();
         targetCtx.fillStyle = "rgba(255, 255, 255, 0.60)";
@@ -3772,12 +3822,12 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         targetCtx.restore();
       }
 
-      // 3. Ground Arena Background
+      // 5. Ground Arena Background Image
       if (arena.bg) {
         targetCtx.drawImage(arena.bg, 0, 0, width, height);
       } else {
         targetCtx.fillStyle = "#487848";
-        targetCtx.fillRect(-width, -height, width * 3, height * 3);
+        targetCtx.fillRect(0, 0, width, height);
       }
 
       if (arena.b) {
