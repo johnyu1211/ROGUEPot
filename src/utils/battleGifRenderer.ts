@@ -723,12 +723,6 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       glassGrad.addColorStop(1, "rgba(6, 10, 18, 0.68)");
       targetCtx.fillStyle = glassGrad;
       targetCtx.fillRect(0, boxY, width, height - boxY);
-      targetCtx.strokeStyle = "#F59E0B";
-      targetCtx.lineWidth = 2.5;
-      targetCtx.beginPath();
-      targetCtx.moveTo(0, boxY);
-      targetCtx.lineTo(width, boxY);
-      targetCtx.stroke();
 
       // Apply UNIFIED 100% Full-Screen Blur to the main canvas
       ctx.clearRect(0, 0, width, height);
@@ -869,12 +863,6 @@ export async function renderBattleFaintGif(options: BattleAnimationOptions): Pro
       glassGrad.addColorStop(1, "rgba(6, 10, 18, 0.68)");
       targetCtx.fillStyle = glassGrad;
       targetCtx.fillRect(0, boxY, width, height - boxY);
-      targetCtx.strokeStyle = "#F59E0B";
-      targetCtx.lineWidth = 2.5;
-      targetCtx.beginPath();
-      targetCtx.moveTo(0, boxY);
-      targetCtx.lineTo(width, boxY);
-      targetCtx.stroke();
 
       // Apply UNIFIED 100% Full-Screen Blur to the main canvas
       ctx.clearRect(0, 0, width, height);
@@ -1010,12 +998,6 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
       glassGrad.addColorStop(1, "rgba(6, 10, 18, 0.68)");
       targetCtx.fillStyle = glassGrad;
       targetCtx.fillRect(0, boxY, width, height - boxY);
-      targetCtx.strokeStyle = "#F59E0B";
-      targetCtx.lineWidth = 2.5;
-      targetCtx.beginPath();
-      targetCtx.moveTo(0, boxY);
-      targetCtx.lineTo(width, boxY);
-      targetCtx.stroke();
 
       // Apply UNIFIED 100% Full-Screen Blur to main canvas
       ctx.clearRect(0, 0, width, height);
@@ -1129,22 +1111,6 @@ function renderBattleDialogue(ctx: any, width: number, height: number, dialogueL
   glassGrad.addColorStop(1, "rgba(6, 10, 18, 0.68)");
   ctx.fillStyle = glassGrad;
   ctx.fillRect(0, boxY, width, height - boxY);
-
-  // Top Accent Amber Line
-  ctx.strokeStyle = "#F59E0B";
-  ctx.lineWidth = 2.5;
-  ctx.beginPath();
-  ctx.moveTo(0, boxY);
-  ctx.lineTo(width, boxY);
-  ctx.stroke();
-
-  // Subtle Inner Highlight Line
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(0, boxY + 2);
-  ctx.lineTo(width, boxY + 2);
-  ctx.stroke();
 
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
