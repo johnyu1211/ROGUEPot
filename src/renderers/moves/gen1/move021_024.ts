@@ -414,66 +414,44 @@ export function drawDoubleKickEffect(
     ctx.restore();
   };
 
-  // Pure Physical Hit Mark (No fire, clean white & silver-gray impact)
-  const drawPhysicalHitBurst = (cx: number, cy: number, radius: number = 18) => {
+  // Clean Fighting-Orange Impact Burst (Direct solid burst without flying particles/grains)
+  const drawCleanOrangeBurst = (cx: number, cy: number, radius: number) => {
     ctx.save();
-    // 1. Instant white flash burst at impact point
-    const g = ctx.createRadialGradient(cx, cy, 1, cx, cy, radius);
-    g.addColorStop(0, "#FFFFFF");
-    g.addColorStop(0.5, "rgba(255, 255, 255, 0.7)");
-    g.addColorStop(1, "rgba(255, 255, 255, 0)");
+    const g = ctx.createRadialGradient(cx, cy, 2, cx, cy, radius);
+    g.addColorStop(0, "#FFF7ED");
+    g.addColorStop(0.35, "rgba(234, 88, 12, 0.92)");
+    g.addColorStop(0.7, "rgba(194, 65, 12, 0.45)");
+    g.addColorStop(1, "rgba(194, 65, 12, 0)");
     ctx.fillStyle = g;
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0, Math.PI * 2);
     ctx.fill();
-
-    // 2. Crisp pure white comic hit stars (Clean physical impact)
-    drawMiniRetroStar(ctx, cx - 12, cy - 10, 7, "#FFFFFF");
-    drawMiniRetroStar(ctx, cx + 10, cy + 8, 6, "#FFFFFF");
-    drawMiniRetroStar(ctx, cx + 12, cy - 8, 5, "rgba(255, 255, 255, 0.85)");
-
-    // 3. Subtle physical impact dust puffs (light gray-white, NOT fire!)
-    ctx.fillStyle = "rgba(241, 245, 249, 0.6)";
-    ctx.beginPath();
-    ctx.arc(cx - 8, cy + 10, 5, 0, Math.PI * 2);
-    ctx.arc(cx + 8, cy - 10, 4, 0, Math.PI * 2);
-    ctx.fill();
-
     ctx.restore();
   };
 
-  if (step === 1) {
-    // Step 1: 1타 - 명확한 좌 상단 (Top-Left) 물리 타격 (불꽃 완전 제거)
-    ctx.save();
-    const hitX = tx - 28;
-    const hitY = ty - 26;
+  const hitX1 = tx - 28;
+  const hitY1 = ty - 26;
+  const hitX2 = tx + 26;
+  const hitY2 = ty + 18;
 
-    drawKickBoot(hitX - 8, hitY - 6, -0.55, 1.15);
-    drawPhysicalHitBurst(hitX, hitY, 18);
+  if (step === 1) {
+    // Step 1: 1타 - 명확한 좌 상단 (Top-Left) 주황 타격 버스트 (추가 파티클/알갱이 없음)
+    ctx.save();
+    drawKickBoot(hitX1 - 8, hitY1 - 6, -0.55, 1.15);
+    drawCleanOrangeBurst(hitX1, hitY1, 26);
     ctx.restore();
   } else if (step === 2) {
-    // Step 2: 2타 - 명확한 우 하단 (Bottom-Right) 물리 타격 (불꽃 완전 제거)
+    // Step 2: 2타 - 명확한 우 하단 (Bottom-Right) 주황 타격 버스트 (추가 파티클/알갱이 없음)
     ctx.save();
-    const hitX = tx + 26;
-    const hitY = ty + 18;
-
-    drawKickBoot(hitX + 8, hitY + 6, 0.60, -1.2);
-    drawPhysicalHitBurst(hitX, hitY, 20);
+    drawKickBoot(hitX2 + 8, hitY2 + 6, 0.60, -1.2);
+    drawCleanOrangeBurst(hitX2, hitY2, 30);
     ctx.restore();
   } else if (step >= 3) {
-    // Step 3: 좌상단 + 우하단 타격 지점의 부드러운 물리 타격 먼지 & 옅은 흰색 별 잔상
+    // Step 3: 좌상단 + 우하단 두 타격점의 깔끔한 페이드아웃 잔상
     ctx.save();
-    const hitX1 = tx - 28, hitY1 = ty - 26;
-    const hitX2 = tx + 26, hitY2 = ty + 18;
-
-    drawMiniRetroStar(ctx, hitX1 - 10, hitY1 - 8, 6, "rgba(255, 255, 255, 0.7)");
-    drawMiniRetroStar(ctx, hitX2 + 10, hitY2 + 8, 6, "rgba(255, 255, 255, 0.7)");
-
-    ctx.fillStyle = "rgba(241, 245, 249, 0.45)";
-    ctx.beginPath();
-    ctx.arc(hitX1 - 6, hitY1 + 6, 4, 0, Math.PI * 2);
-    ctx.arc(hitX2 + 6, hitY2 - 6, 4, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.globalAlpha = 0.45;
+    drawCleanOrangeBurst(hitX1, hitY1, 16);
+    drawCleanOrangeBurst(hitX2, hitY2, 18);
     ctx.restore();
   }
 
