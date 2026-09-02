@@ -2,10 +2,11 @@ import { drawMiniRetroStar } from "../common/helpers.js";
 
 /**
  * 013 칼바람 (Razor Wind): Official Gen 7/8 Authentic 3D Spiral Whirlwind & Razor Cleave Storm
+ * All elements rendered with true razor-sharp tapered polygons (tips taper to needle-point 0px).
  * 
- * Step 1: Cyan ground aura + 3D ascending helical spiral wind ribbons wrapping around attacker
- * Step 2: Dense 6-layer helical tornado swirl around attacker + high sweeping wind arc launching to target
- * Step 3: Sweeping wind arc descends into target + initial razor blades intercept
+ * Step 1: Cyan ground aura + 3D ascending tapered helical wind ribbons wrapping around attacker
+ * Step 2: Dense 6-layer tapered helical tornado swirl around attacker + high tapered launch arc to target
+ * Step 3: High sweeping arc descends into target + initial razor crescent blades intercept
  * Step 4: Omnidirectional "사사사사삿!" Razor Cleave Storm on defender + double yellow/white center flash stars
  * Step 5: Center impact star & dispersing blade shards
  */
@@ -21,13 +22,14 @@ export function drawRazorWindEffect(
   const tx = targetPos.x;
   const ty = targetPos.y - 12;
 
-  // Helper: Draw authentic curved razor blade slash (from reference image 2)
-  const drawRazorBlade = (
+  // 1. Tapered Needle-Sharp Crescent Razor Blade Helper (Both ends meet at 0-width sharp points)
+  const drawTaperedRazorBlade = (
     cx: number,
     cy: number,
     angle: number,
-    length: number = 55,
+    length: number = 65,
     curve: number = 18,
+    thickness: number = 8.5,
     scale: number = 1.0,
     alpha: number = 1.0
   ) => {
@@ -37,44 +39,49 @@ export function drawRazorWindEffect(
     ctx.scale(scale, scale);
     ctx.globalAlpha = alpha;
 
-    // Outer cyan/sky glow
-    ctx.strokeStyle = "#BAE6FD";
-    ctx.lineWidth = 4.5;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(-length / 2, -curve);
-    ctx.quadraticCurveTo(0, curve, length / 2, -curve * 0.4);
-    ctx.stroke();
+    const halfL = length / 2;
 
-    // Sharp luminous white core blade
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 2.0;
+    // 1A. Outer Glowing Air Wake (Translucent soft sky-blue)
+    ctx.fillStyle = "rgba(186, 230, 253, 0.40)";
     ctx.beginPath();
-    ctx.moveTo(-length / 2 + 3, -curve + 1);
-    ctx.quadraticCurveTo(0, curve - 1, length / 2 - 3, -curve * 0.4 + 1);
-    ctx.stroke();
+    ctx.moveTo(-halfL, 0);
+    ctx.quadraticCurveTo(0, curve * 1.35, halfL, 0);
+    ctx.quadraticCurveTo(0, curve * 0.15, -halfL, 0);
+    ctx.closePath();
+    ctx.fill();
 
-    // Tapered back fin blade edge
-    ctx.fillStyle = "rgba(240, 249, 255, 0.45)";
+    // 1B. Main Tapered Crescent Blade Body (#BAE6FD / #E0F2FE)
+    ctx.fillStyle = "#BAE6FD";
     ctx.beginPath();
-    ctx.moveTo(-length / 2, -curve);
-    ctx.quadraticCurveTo(0, curve, length / 2, -curve * 0.4);
-    ctx.quadraticCurveTo(0, curve - 6, -length / 2, -curve);
+    ctx.moveTo(-halfL, 0); // Sharp needle tip left
+    ctx.quadraticCurveTo(0, curve, halfL, 0); // Sharp needle tip right
+    ctx.quadraticCurveTo(0, curve - thickness, -halfL, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    // 1C. Razor-Sharp Luminous White Core Crescent (#FFFFFF)
+    ctx.fillStyle = "#FFFFFF";
+    ctx.beginPath();
+    ctx.moveTo(-halfL + 4, 0);
+    ctx.quadraticCurveTo(0, curve - 1.5, halfL - 4, 0);
+    ctx.quadraticCurveTo(0, curve - thickness * 0.55, -halfL + 4, 0);
     ctx.closePath();
     ctx.fill();
 
     ctx.restore();
   };
 
-  // Helper: Draw 3D Helical Tornado Ribbon Arc wrapping around user (from reference image 1)
-  const drawHelicalWindRibbon = (
+  // 2. Tapered 3D Helical Wind Ribbon Helper (Tip starts at 0px, swells in center, tapers to 0px at tail)
+  const drawTaperedHelicalRibbon = (
     centerX: number,
     centerY: number,
     yOffset: number,
     radiusX: number,
     radiusY: number,
     rotAngle: number,
-    width: number,
+    startAngle: number,
+    endAngle: number,
+    maxWidth: number,
     color: string,
     alpha: number
   ) => {
@@ -83,25 +90,62 @@ export function drawRazorWindEffect(
     ctx.translate(centerX, centerY + yOffset);
     ctx.rotate(rotAngle);
 
-    ctx.strokeStyle = color;
-    ctx.lineWidth = width;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.ellipse(0, 0, radiusX, radiusY, 0, -Math.PI * 0.9, Math.PI * 0.9);
-    ctx.stroke();
+    const steps = 24;
+    const outerPts: { x: number; y: number }[] = [];
+    const innerPts: { x: number; y: number }[] = [];
 
-    // Inner bright core
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = Math.max(1.2, width * 0.45);
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const ang = startAngle + (endAngle - startAngle) * t;
+      // Smooth aerodynamic taper: 0 at ends -> maxWidth at center
+      const w = maxWidth * Math.pow(Math.sin(t * Math.PI), 0.75);
+
+      const cosA = Math.cos(ang);
+      const sinA = Math.sin(ang);
+
+      outerPts.push({
+        x: (radiusX + w * 0.5) * cosA,
+        y: (radiusY + w * 0.5) * sinA,
+      });
+      innerPts.push({
+        x: (radiusX - w * 0.5) * cosA,
+        y: (radiusY - w * 0.5) * sinA,
+      });
+    }
+
+    // Outer sky-blue tapered ribbon
+    ctx.fillStyle = color;
     ctx.beginPath();
-    ctx.ellipse(0, 0, radiusX * 0.95, radiusY * 0.95, 0, -Math.PI * 0.8, Math.PI * 0.8);
-    ctx.stroke();
+    ctx.moveTo(outerPts[0].x, outerPts[0].y);
+    for (let i = 1; i <= steps; i++) ctx.lineTo(outerPts[i].x, outerPts[i].y);
+    for (let i = steps; i >= 0; i--) ctx.lineTo(innerPts[i].x, innerPts[i].y);
+    ctx.closePath();
+    ctx.fill();
+
+    // Pure white sharp tapered core
+    ctx.fillStyle = "#FFFFFF";
+    ctx.beginPath();
+    const coreMaxW = maxWidth * 0.45;
+    const cOuterPts: { x: number; y: number }[] = [];
+    const cInnerPts: { x: number; y: number }[] = [];
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const ang = startAngle + (endAngle - startAngle) * t;
+      const w = coreMaxW * Math.pow(Math.sin(t * Math.PI), 0.75);
+      cOuterPts.push({ x: (radiusX + w * 0.5) * Math.cos(ang), y: (radiusY + w * 0.5) * Math.sin(ang) });
+      cInnerPts.push({ x: (radiusX - w * 0.5) * Math.cos(ang), y: (radiusY - w * 0.5) * Math.sin(ang) });
+    }
+    ctx.moveTo(cOuterPts[0].x, cOuterPts[0].y);
+    for (let i = 1; i <= steps; i++) ctx.lineTo(cOuterPts[i].x, cOuterPts[i].y);
+    for (let i = steps; i >= 0; i--) ctx.lineTo(cInnerPts[i].x, cInnerPts[i].y);
+    ctx.closePath();
+    ctx.fill();
 
     ctx.restore();
   };
 
   if (step === 1) {
-    // Step 1: Glowing Cyan Ground Aura + Initial 3D Helical Spiral Wrapping around User
+    // Step 1: Glowing Cyan Ground Aura + Initial 3D Tapered Helical Spiral Wrapping around User
     const groundGrad = ctx.createRadialGradient(sx, sy + 30, 8, sx, sy + 30, 58);
     groundGrad.addColorStop(0, "rgba(56, 189, 248, 0.85)");
     groundGrad.addColorStop(0.5, "rgba(56, 189, 248, 0.45)");
@@ -111,18 +155,18 @@ export function drawRazorWindEffect(
     ctx.ellipse(sx, sy + 30, 58, 20, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // 4 Helical Spiral Wind Ribbon Layers ascending up the body
+    // 4 Tapered Helical Spiral Wind Ribbon Layers ascending up the body
     const ribbonLayers = [
-      { y: 25, rx: 52, ry: 16, rot: -0.15, w: 5.5, col: "#E0F2FE", a: 0.85 },
-      { y: 6, rx: 46, ry: 14, rot: 0.20, w: 5.0, col: "#BAE6FD", a: 0.80 },
-      { y: -14, rx: 42, ry: 13, rot: -0.25, w: 4.5, col: "#E0F2FE", a: 0.75 },
-      { y: -34, rx: 36, ry: 11, rot: 0.15, w: 4.0, col: "#FFFFFF", a: 0.70 },
+      { y: 25, rx: 52, ry: 16, rot: -0.15, sA: -Math.PI * 0.85, eA: Math.PI * 0.85, maxW: 6.5, col: "#E0F2FE", a: 0.85 },
+      { y: 6, rx: 46, ry: 14, rot: 0.20, sA: -Math.PI * 0.90, eA: Math.PI * 0.90, maxW: 6.0, col: "#BAE6FD", a: 0.80 },
+      { y: -14, rx: 42, ry: 13, rot: -0.25, sA: -Math.PI * 0.85, eA: Math.PI * 0.85, maxW: 5.5, col: "#E0F2FE", a: 0.75 },
+      { y: -34, rx: 36, ry: 11, rot: 0.15, sA: -Math.PI * 0.80, eA: Math.PI * 0.80, maxW: 5.0, col: "#FFFFFF", a: 0.70 },
     ];
     for (const r of ribbonLayers) {
-      drawHelicalWindRibbon(sx, sy, r.y, r.rx, r.ry, r.rot, r.w, r.col, r.a);
+      drawTaperedHelicalRibbon(sx, sy, r.y, r.rx, r.ry, r.rot, r.sA, r.eA, r.maxW, r.col, r.a);
     }
   } else if (step === 2) {
-    // Step 2: Dense Towering 3D Helical Tornado Whirl around User + High Sweeping Wind Arc toward Enemy!
+    // Step 2: Dense Towering 3D Helical Tornado Whirl around User (Full Enveloping Cyclone)
     const groundGrad = ctx.createRadialGradient(sx, sy + 30, 10, sx, sy + 30, 68);
     groundGrad.addColorStop(0, "rgba(56, 189, 248, 0.95)");
     groundGrad.addColorStop(0.6, "rgba(56, 189, 248, 0.50)");
@@ -132,105 +176,86 @@ export function drawRazorWindEffect(
     ctx.ellipse(sx, sy + 30, 68, 22, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // 6 Dense Helical Spiral Ribbon Rings enveloping the Pokémon
+    // 6 Dense Tapered Helical Spiral Ribbon Rings enveloping the Pokémon
     const ribbonLayers = [
-      { y: 30, rx: 58, ry: 18, rot: 0.1, w: 6.5, col: "#BAE6FD", a: 0.95 },
-      { y: 14, rx: 52, ry: 16, rot: -0.2, w: 6.0, col: "#E0F2FE", a: 0.90 },
-      { y: -2, rx: 48, ry: 15, rot: 0.25, w: 5.5, col: "#BAE6FD", a: 0.90 },
-      { y: -18, rx: 44, ry: 14, rot: -0.15, w: 5.0, col: "#FFFFFF", a: 0.95 },
-      { y: -36, rx: 40, ry: 12, rot: 0.2, w: 4.5, col: "#E0F2FE", a: 0.85 },
-      { y: -54, rx: 34, ry: 10, rot: -0.1, w: 4.0, col: "#FFFFFF", a: 0.80 },
+      { y: 30, rx: 58, ry: 18, rot: 0.10, sA: -Math.PI * 0.90, eA: Math.PI * 0.90, maxW: 8.0, col: "#BAE6FD", a: 0.95 },
+      { y: 14, rx: 52, ry: 16, rot: -0.20, sA: -Math.PI * 0.92, eA: Math.PI * 0.92, maxW: 7.5, col: "#E0F2FE", a: 0.90 },
+      { y: -2, rx: 48, ry: 15, rot: 0.25, sA: -Math.PI * 0.90, eA: Math.PI * 0.90, maxW: 7.0, col: "#BAE6FD", a: 0.90 },
+      { y: -18, rx: 44, ry: 14, rot: -0.15, sA: -Math.PI * 0.88, eA: Math.PI * 0.88, maxW: 6.5, col: "#FFFFFF", a: 0.95 },
+      { y: -36, rx: 40, ry: 12, rot: 0.20, sA: -Math.PI * 0.85, eA: Math.PI * 0.85, maxW: 6.0, col: "#E0F2FE", a: 0.85 },
+      { y: -54, rx: 34, ry: 10, rot: -0.10, sA: -Math.PI * 0.80, eA: Math.PI * 0.80, maxW: 5.5, col: "#FFFFFF", a: 0.80 },
     ];
     for (const r of ribbonLayers) {
-      drawHelicalWindRibbon(sx, sy, r.y, r.rx, r.ry, r.rot, r.w, r.col, r.a);
+      drawTaperedHelicalRibbon(sx, sy, r.y, r.rx, r.ry, r.rot, r.sA, r.eA, r.maxW, r.col, r.a);
     }
-
-    // High Sweeping Wind Arc Launching from Top of Swirl toward Target! (From Reference Image 1)
-    ctx.save();
-    ctx.strokeStyle = "#BAE6FD";
-    ctx.lineWidth = 6.0;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(sx - 10, sy - 55);
-    ctx.quadraticCurveTo((sx + tx) / 2 - 20, sy - 110, (sx + tx) * 0.65, (sy + ty) * 0.65 - 30);
-    ctx.stroke();
-
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 2.8;
-    ctx.beginPath();
-    ctx.moveTo(sx - 10, sy - 55);
-    ctx.quadraticCurveTo((sx + tx) / 2 - 20, sy - 110, (sx + tx) * 0.65, (sy + ty) * 0.65 - 30);
-    ctx.stroke();
-    ctx.restore();
   } else if (step === 3) {
-    // Step 3: Sweeping Arc Completes & First Wave of Razor Blades Intercepts Target
-    ctx.save();
-    ctx.strokeStyle = "rgba(186, 230, 253, 0.75)";
-    ctx.lineWidth = 5.0;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(sx + 20, sy - 60);
-    ctx.quadraticCurveTo((sx + tx) / 2, sy - 100, tx, ty - 10);
-    ctx.stroke();
-    ctx.restore();
+    // Step 3: High-Speed Razor Crescent Blades Rushing toward Defender
+    const midX = sx + (tx - sx) * 0.70;
+    const midY = sy + (ty - sy) * 0.70 - 10;
 
-    // Initial 4 Razor Blades converging on Target
-    const initialBlades = [
-      { cx: tx - 38, cy: ty - 28, ang: -0.45, len: 55, curve: 16 },
-      { cx: tx + 36, cy: ty - 24, ang: 0.55, len: 58, curve: -16 },
-      { cx: tx - 28, cy: ty + 24, ang: 2.10, len: 52, curve: 14 },
-      { cx: tx + 30, cy: ty + 22, ang: -2.30, len: 54, curve: -14 },
+    const flyingBlades = [
+      { cx: midX - 25, cy: midY - 22, ang: -0.40, len: 66, curve: 18, thick: 8.5 },
+      { cx: midX + 25, cy: midY - 18, ang: 0.45, len: 68, curve: -18, thick: 8.5 },
+      { cx: midX - 18, cy: midY + 18, ang: 2.15, len: 62, curve: 16, thick: 8.0 },
+      { cx: midX + 20, cy: midY + 16, ang: -2.25, len: 64, curve: -16, thick: 8.0 },
     ];
-    for (const b of initialBlades) {
-      drawRazorBlade(b.cx, b.cy, b.ang, b.len, b.curve, 0.95, 0.90);
+    for (const b of flyingBlades) {
+      drawTaperedRazorBlade(b.cx, b.cy, b.ang, b.len, b.curve, b.thick, 1.0, 0.95);
     }
   } else if (step === 4) {
-    // Step 4: Full Multi-Angle "사사사사삿!" Razor Cleave Storm on Target (Reference Image 2!)
+    // Step 4: Full Multi-Angle "사사사사삿!" Tapered Razor Cleave Storm on Target (Reference Image 2!)
     const stormBlades = [
       // Top-Left to Center-Right
-      { cx: tx - 22, cy: ty - 26, ang: -0.40, len: 68, curve: 18, s: 1.1 },
+      { cx: tx - 22, cy: ty - 26, ang: -0.40, len: 74, curve: 20, thick: 9.5, s: 1.1 },
       // Top-Right to Center-Left
-      { cx: tx + 24, cy: ty - 24, ang: 0.45, len: 70, curve: -18, s: 1.15 },
+      { cx: tx + 24, cy: ty - 24, ang: 0.45, len: 76, curve: -20, thick: 9.5, s: 1.15 },
       // Horizontal Left Slash
-      { cx: tx - 32, cy: ty - 4, ang: 0.10, len: 64, curve: 16, s: 1.05 },
+      { cx: tx - 34, cy: ty - 4, ang: 0.10, len: 70, curve: 18, thick: 9.0, s: 1.05 },
       // Horizontal Right Slash
-      { cx: tx + 30, cy: ty + 4, ang: -0.15, len: 66, curve: -16, s: 1.1 },
+      { cx: tx + 32, cy: ty + 4, ang: -0.15, len: 72, curve: -18, thick: 9.0, s: 1.1 },
       // Bottom-Left to Upper-Right
-      { cx: tx - 24, cy: ty + 24, ang: 2.35, len: 62, curve: 16, s: 1.05 },
+      { cx: tx - 26, cy: ty + 24, ang: 2.35, len: 68, curve: 18, thick: 8.5, s: 1.05 },
       // Bottom-Right to Upper-Left
-      { cx: tx + 26, cy: ty + 22, ang: -2.40, len: 64, curve: -16, s: 1.05 },
+      { cx: tx + 28, cy: ty + 22, ang: -2.40, len: 70, curve: -18, thick: 8.5, s: 1.05 },
       // Vertical Plunge Slash
-      { cx: tx - 4, cy: ty - 34, ang: 1.50, len: 58, curve: 14, s: 1.0 },
+      { cx: tx - 4, cy: ty - 36, ang: 1.50, len: 64, curve: 16, thick: 8.0, s: 1.0 },
       // Upward Riser Slash
-      { cx: tx + 4, cy: ty + 32, ang: -1.55, len: 58, curve: -14, s: 1.0 },
+      { cx: tx + 4, cy: ty + 34, ang: -1.55, len: 64, curve: -16, thick: 8.0, s: 1.0 },
     ];
 
     for (const b of stormBlades) {
-      drawRazorBlade(b.cx, b.cy, b.ang, b.len, b.curve, b.s, 1.0);
+      drawTaperedRazorBlade(b.cx, b.cy, b.ang, b.len, b.curve, b.thick, b.s, 1.0);
     }
 
     // Double Center Impact Stars (Yellow & White from Reference Image 2!)
-    drawMiniRetroStar(ctx, tx - 6, ty - 8, 26, "#FACC15");
+    drawMiniRetroStar(ctx, tx - 6, ty - 8, 28, "#FACC15");
     drawMiniRetroStar(ctx, tx - 6, ty - 8, 14, "#FFFFFF");
-    drawMiniRetroStar(ctx, tx + 8, ty + 6, 20, "#FDE047");
-    drawMiniRetroStar(ctx, tx + 8, ty + 6, 10, "#FFFFFF");
+    drawMiniRetroStar(ctx, tx + 8, ty + 6, 22, "#FDE047");
+    drawMiniRetroStar(ctx, tx + 8, ty + 6, 11, "#FFFFFF");
 
-    // Piercing Light Streaks radiating from center
+    // Piercing Tapered Light Streaks radiating from center (Needle tapered lines)
     const streaks = [
-      { ox: -40, oy: -32, ex: -55, ey: -44 },
-      { ox: 38, oy: -28, ex: 54, ey: -40 },
-      { ox: -36, oy: 30, ex: 50, ey: 42 },
-      { ox: 34, oy: 28, ex: 48, ey: 38 },
-      { ox: 0, oy: -42, ex: 0, ey: -58 },
-      { ox: 0, oy: 40, ex: 0, ey: 56 },
+      { ox: -30, oy: -24, ex: -65, ey: -50 },
+      { ox: 28, oy: -22, ex: 62, ey: -46 },
+      { ox: -28, oy: 24, ex: 58, ey: 48 },
+      { ox: 26, oy: 22, ex: 54, ey: 44 },
+      { ox: 0, oy: -32, ex: 0, ey: -68 },
+      { ox: 0, oy: 30, ex: 0, ey: 64 },
     ];
     for (const st of streaks) {
-      ctx.strokeStyle = "#FFFFFF";
-      ctx.lineWidth = 2.0;
+      const dx = st.ex - st.ox;
+      const dy = st.ey - st.oy;
+      const len = Math.hypot(dx, dy) || 1;
+      const nx = -dy / len;
+      const ny = dx / len;
+
+      ctx.fillStyle = "#FFFFFF";
       ctx.beginPath();
-      ctx.moveTo(tx + st.ox, ty + st.oy);
-      ctx.lineTo(tx + st.ex, ty + st.ey);
-      ctx.stroke();
+      ctx.moveTo(tx + st.ox + nx * 2, ty + st.oy + ny * 2);
+      ctx.lineTo(tx + st.ex, ty + st.ey); // needle tip
+      ctx.lineTo(tx + st.ox - nx * 2, ty + st.oy - ny * 2);
+      ctx.closePath();
+      ctx.fill();
     }
   } else if (step >= 5) {
     // Step 5: Star Impact Burst & Dispersing Razor Blade Shards
@@ -238,13 +263,13 @@ export function drawRazorWindEffect(
     drawMiniRetroStar(ctx, tx, ty, 10, "#FFFFFF");
 
     const shards = [
-      { cx: tx - 44, cy: ty - 32, ang: -0.5, len: 42, curve: 12, a: 0.40 },
-      { cx: tx + 46, cy: ty - 28, ang: 0.6, len: 44, curve: -12, a: 0.40 },
-      { cx: tx - 38, cy: ty + 32, ang: 2.2, len: 40, curve: 10, a: 0.35 },
-      { cx: tx + 40, cy: ty + 30, ang: -2.2, len: 42, curve: -10, a: 0.35 },
+      { cx: tx - 46, cy: ty - 34, ang: -0.5, len: 46, curve: 14, thick: 6.5, a: 0.40 },
+      { cx: tx + 48, cy: ty - 30, ang: 0.6, len: 48, curve: -14, thick: 6.5, a: 0.40 },
+      { cx: tx - 40, cy: ty + 34, ang: 2.2, len: 44, curve: 12, thick: 6.0, a: 0.35 },
+      { cx: tx + 42, cy: ty + 32, ang: -2.2, len: 46, curve: -12, thick: 6.0, a: 0.35 },
     ];
     for (const sh of shards) {
-      drawRazorBlade(sh.cx, sh.cy, sh.ang, sh.len, sh.curve, 0.85, sh.a);
+      drawTaperedRazorBlade(sh.cx, sh.cy, sh.ang, sh.len, sh.curve, sh.thick, 0.85, sh.a);
     }
   }
 
