@@ -2332,15 +2332,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
       const isMiss1 = !isHit1;
       act1Frames = [
-        // 1. Vine Shoot / Tension Extension (100ms)
+        // 1. 1타: 왼쪽에서 오른쪽으로 채찍 강타! (Left-to-Right Lash - 100ms)
         {
           delay: 100,
-          pOffset: isP1 ? { x: 10, y: -4 } : { x: 0, y: 0 },
-          eOffset: !isP1 ? { x: -10, y: 4 } : { x: 0, y: 0 },
+          pOffset: isP1 ? { x: 12, y: -4 } : { x: 0, y: 0 },
+          eOffset: isP1 ? (isMiss1 ? { x: 14, y: -2 } : { x: 14, y: -4 }) : { x: -12, y: 4 },
           pRot: isP1 ? 0.05 : undefined,
           eRot: !isP1 ? -0.05 : undefined,
           showEffect: true,
-          hitFlash: false,
+          hitFlash: isHit1,
           enemyHp: enemy.hp,
           playerHp: playerMon.hp,
           textLineIdx: 1,
@@ -2348,13 +2348,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 1,
         },
-        // 2. Double Lash Crack & Oval Tip Strike (110ms)
+        // 2. 2타: 오른쪽에서 왼쪽으로 채찍 강타! (Right-to-Left Lash - 110ms)
         {
           delay: 110,
           pOffset: isP1 ? { x: 16, y: -6 } : (isMiss1 ? { x: 20, y: 4 } : { x: -12, y: 4 }),
-          eOffset: isP1 ? (isMiss1 ? { x: 20, y: -4 } : { x: 18, y: -6 }) : { x: -16, y: 6 },
-          pRot: isP1 ? 0.08 : undefined,
-          eRot: !isP1 ? -0.08 : undefined,
+          eOffset: isP1 ? (isMiss1 ? { x: 20, y: -4 } : { x: 22, y: -8 }) : { x: -16, y: 6 },
+          pRot: isP1 ? -0.05 : undefined,
+          eRot: !isP1 ? 0.05 : undefined,
           showEffect: true,
           hitFlash: isHit1,
           enemyHp: a1.enemyHpAfter,
@@ -4287,14 +4287,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       const isMiss2 = !isHit2;
       act2Frames = [
         // 1. Vine Shoot / Tension Extension (100ms)
+        // 1. 1타: 왼쪽에서 오른쪽으로 채찍 강타! (Left-to-Right Lash - 100ms)
         {
           delay: 100,
-          pOffset: isP2 ? { x: 10, y: -4 } : { x: 0, y: 0 },
-          eOffset: !isP2 ? { x: -10, y: 4 } : { x: 0, y: 0 },
+          pOffset: isP2 ? { x: 12, y: -4 } : { x: 0, y: 0 },
+          eOffset: isP2 ? (isMiss2 ? { x: 14, y: -2 } : { x: 14, y: -4 }) : { x: -12, y: 4 },
           pRot: isP2 ? 0.05 : undefined,
           eRot: !isP2 ? -0.05 : undefined,
           showEffect: true,
-          hitFlash: false,
+          hitFlash: isHit2,
           enemyHp: a1.enemyHpAfter,
           playerHp: a1.playerHpAfter,
           textLineIdx: 3,
@@ -4302,13 +4303,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 1,
         },
-        // 2. Double Lash Crack & Oval Tip Strike (110ms)
+        // 2. 2타: 오른쪽에서 왼쪽으로 채찍 강타! (Right-to-Left Lash - 110ms)
         {
           delay: 110,
           pOffset: isP2 ? { x: 16, y: -6 } : (isMiss2 ? { x: 20, y: 4 } : { x: -12, y: 4 }),
-          eOffset: isP2 ? (isMiss2 ? { x: 20, y: -4 } : { x: 18, y: -6 }) : { x: -16, y: 6 },
-          pRot: isP2 ? 0.08 : undefined,
-          eRot: !isP2 ? -0.08 : undefined,
+          eOffset: isP2 ? (isMiss2 ? { x: 20, y: -4 } : { x: 22, y: -8 }) : { x: -16, y: 6 },
+          pRot: isP2 ? -0.05 : undefined,
+          eRot: !isP2 ? 0.05 : undefined,
           showEffect: true,
           hitFlash: isHit2,
           enemyHp: a2.enemyHpAfter,

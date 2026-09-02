@@ -183,103 +183,80 @@ export function drawVineWhipEffect(
   };
 
   const drawBehindVines = () => {
+    // Vine 1 definition (Left-to-Right Lash)
+    const v1_x0 = start.x - 12;
+    const v1_y0 = start.y - 18;
+    const v1_cx1 = start.x + dx * 0.15 - 35;
+    const v1_cy1 = start.y + dy * 0.15 - 75;
+    const v1_cx2 = start.x + dx * 0.65 - 10;
+    const v1_cy2 = start.y + dy * 0.65 - 55;
+    const v1_tx = target.x + 22;
+    const v1_ty = target.y - 4;
+    const v1_ang = Math.atan2(v1_ty - v1_cy2, v1_tx - v1_cx2);
+
+    // Vine 2 definition (Right-to-Left Lash)
+    const v2_x0 = start.x + 14;
+    const v2_y0 = start.y - 8;
+    const v2_cx1 = start.x + dx * 0.35 + 45;
+    const v2_cy1 = start.y + dy * 0.35 + 45;
+    const v2_cx2 = start.x + dx * 0.75 + 30;
+    const v2_cy2 = start.y + dy * 0.75 + 25;
+    const v2_tx = target.x - 20;
+    const v2_ty = target.y + 12;
+    const v2_ang = Math.atan2(v2_ty - v2_cy2, v2_tx - v2_cx2);
+
     if (step === 1) {
-      // Step 1: Rapidly shooting out vines (75% extension)
-      const v1_x0 = start.x - 8;
-      const v1_y0 = start.y - 18;
-      const v1_cx1 = start.x + dx * 0.20 - 25;
-      const v1_cy1 = start.y + dy * 0.20 - 60;
-      const v1_cx2 = start.x + dx * 0.55 - 15;
-      const v1_cy2 = start.y + dy * 0.55 - 40;
-      const v1_tx = start.x + dx * 0.75 - 15;
-      const v1_ty = start.y + dy * 0.75 - 20;
-      const v1_ang = Math.atan2(v1_ty - v1_cy2, v1_tx - v1_cx2);
-
-      const v2_x0 = start.x + 12;
-      const v2_y0 = start.y - 10;
-      const v2_cx1 = start.x + dx * 0.30 + 30;
-      const v2_cy1 = start.y + dy * 0.30 + 30;
-      const v2_cx2 = start.x + dx * 0.60 + 20;
-      const v2_cy2 = start.y + dy * 0.60 + 15;
-      const v2_tx = start.x + dx * 0.72 + 10;
-      const v2_ty = start.y + dy * 0.72 + 10;
-      const v2_ang = Math.atan2(v2_ty - v2_cy2, v2_tx - v2_cx2);
-
-      drawSingleVine(ctx, v1_x0, v1_y0, v1_cx1, v1_cy1, v1_cx2, v1_cy2, v1_tx, v1_ty, v1_ang, 0.95);
-      drawSingleVine(ctx, v2_x0, v2_y0, v2_cx1, v2_cy1, v2_cx2, v2_cy2, v2_tx, v2_ty, v2_ang, 0.95);
+      // 1타: 왼쪽에서 오른쪽으로 찰싹! (1st Strike from Left to Right)
+      drawSingleVine(ctx, v1_x0, v1_y0, v1_cx1, v1_cy1, v1_cx2, v1_cy2, v1_tx, v1_ty, v1_ang, 1.2);
     } else if (step === 2) {
-      // Step 2: Full Double Vine Lash Strike with Oval Tips across Target
-      const v1_x0 = start.x - 8;
-      const v1_y0 = start.y - 18;
-      const v1_cx1 = start.x + dx * 0.20 - 25;
-      const v1_cy1 = start.y + dy * 0.20 - 70;
-      const v1_cx2 = start.x + dx * 0.70 - 15;
-      const v1_cy2 = start.y + dy * 0.70 - 45;
-      const v1_tx = target.x - 12;
-      const v1_ty = target.y - 14;
-      const v1_ang = Math.atan2(v1_ty - v1_cy2, v1_tx - v1_cx2);
-
-      const v2_x0 = start.x + 12;
-      const v2_y0 = start.y - 10;
-      const v2_cx1 = start.x + dx * 0.35 + 30;
-      const v2_cy1 = start.y + dy * 0.35 + 35;
-      const v2_cx2 = start.x + dx * 0.75 + 20;
-      const v2_cy2 = start.y + dy * 0.75 + 15;
-      const v2_tx = target.x + 14;
-      const v2_ty = target.y + 10;
-      const v2_ang = Math.atan2(v2_ty - v2_cy2, v2_tx - v2_cx2);
-
-      drawSingleVine(ctx, v1_x0, v1_y0, v1_cx1, v1_cy1, v1_cx2, v1_cy2, v1_tx, v1_ty, v1_ang, 1.15);
-      drawSingleVine(ctx, v2_x0, v2_y0, v2_cx1, v2_cy1, v2_cx2, v2_cy2, v2_tx, v2_ty, v2_ang, 1.15);
+      // 2타: 오른쪽에서 왼쪽으로 찰싹! (2nd Strike from Right to Left, 1st vine fading)
+      drawSingleVine(ctx, v1_x0, v1_y0, v1_cx1, v1_cy1, v1_cx2, v1_cy2, v1_tx, v1_ty, v1_ang, 1.0, 0.35);
+      drawSingleVine(ctx, v2_x0, v2_y0, v2_cx1, v2_cy1, v2_cx2, v2_cy2, v2_tx, v2_ty, v2_ang, 1.25);
     } else if (step >= 3) {
-      // Step 3: Retracting Vines
-      const v1_x0 = start.x - 8;
-      const v1_y0 = start.y - 18;
-      const v1_cx1 = start.x + dx * 0.15 - 20;
-      const v1_cy1 = start.y + dy * 0.15 - 50;
-      const v1_cx2 = start.x + dx * 0.45 - 10;
-      const v1_cy2 = start.y + dy * 0.45 - 30;
-      const v1_tx = start.x + dx * 0.50 - 10;
-      const v1_ty = start.y + dy * 0.50 - 15;
-      const v1_ang = Math.atan2(v1_ty - v1_cy2, v1_tx - v1_cx2);
-
-      const v2_x0 = start.x + 12;
-      const v2_y0 = start.y - 10;
-      const v2_cx1 = start.x + dx * 0.20 + 20;
-      const v2_cy1 = start.y + dy * 0.20 + 20;
-      const v2_cx2 = start.x + dx * 0.45 + 15;
-      const v2_cy2 = start.y + dy * 0.45 + 10;
-      const v2_tx = start.x + dx * 0.48 + 8;
-      const v2_ty = start.y + dy * 0.48 + 5;
-      const v2_ang = Math.atan2(v2_ty - v2_cy2, v2_tx - v2_cx2);
-
-      drawSingleVine(ctx, v1_x0, v1_y0, v1_cx1, v1_cy1, v1_cx2, v1_cy2, v1_tx, v1_ty, v1_ang, 0.8, 0.5);
-      drawSingleVine(ctx, v2_x0, v2_y0, v2_cx1, v2_cy1, v2_cx2, v2_cy2, v2_tx, v2_ty, v2_ang, 0.8, 0.5);
+      // 3단계: 두 채찍 부드럽게 회수 (Retracting)
+      drawSingleVine(ctx, v1_x0, v1_y0, v1_cx1, v1_cy1, start.x + dx * 0.45 - 10, start.y + dy * 0.45 - 30, start.x + dx * 0.50 - 10, start.y + dy * 0.50 - 15, v1_ang, 0.8, 0.5);
+      drawSingleVine(ctx, v2_x0, v2_y0, v2_cx1, v2_cy1, start.x + dx * 0.45 + 15, start.y + dy * 0.45 + 10, start.x + dx * 0.48 + 8, start.y + dy * 0.48 + 5, v2_ang, 0.8, 0.5);
     }
   };
 
   const drawFrontImpact = () => {
-    if (step === 2) {
-      // Step 2: Target Strike Flash & Bursting Foliage Leaves
+    if (step === 1) {
+      // 1타 타격 플래시 (좌 -> 우 타격점)
       ctx.save();
-      const hitGrad = ctx.createRadialGradient(tx, ty, 2, tx, ty, 32);
-      hitGrad.addColorStop(0, "#FFFFFF");
-      hitGrad.addColorStop(0.35, "rgba(74, 222, 128, 0.95)");
-      hitGrad.addColorStop(0.8, "rgba(34, 197, 94, 0.4)");
-      hitGrad.addColorStop(1, "rgba(34, 197, 94, 0.0)");
-      ctx.fillStyle = hitGrad;
+      const hitGrad1 = ctx.createRadialGradient(target.x + 12, target.y - 6, 2, target.x + 12, target.y - 6, 28);
+      hitGrad1.addColorStop(0, "#FFFFFF");
+      hitGrad1.addColorStop(0.35, "rgba(74, 222, 128, 0.95)");
+      hitGrad1.addColorStop(0.8, "rgba(34, 197, 94, 0.4)");
+      hitGrad1.addColorStop(1, "rgba(34, 197, 94, 0.0)");
+      ctx.fillStyle = hitGrad1;
       ctx.beginPath();
-      ctx.arc(tx, ty, 32, 0, Math.PI * 2);
+      ctx.arc(target.x + 12, target.y - 6, 28, 0, Math.PI * 2);
+      ctx.fill();
+
+      drawLeaf(tx + 24, ty - 18, 0.6, 7);
+      drawLeaf(tx + 12, ty + 10, 1.1, 6);
+      ctx.restore();
+    } else if (step === 2) {
+      // 2타 타격 플래시 (우 -> 좌 타격점 & 대형 잎사귀 폭발)
+      ctx.save();
+      const hitGrad2 = ctx.createRadialGradient(target.x - 10, target.y + 8, 2, target.x - 10, target.y + 8, 34);
+      hitGrad2.addColorStop(0, "#FFFFFF");
+      hitGrad2.addColorStop(0.35, "rgba(74, 222, 128, 0.95)");
+      hitGrad2.addColorStop(0.8, "rgba(34, 197, 94, 0.4)");
+      hitGrad2.addColorStop(1, "rgba(34, 197, 94, 0.0)");
+      ctx.fillStyle = hitGrad2;
+      ctx.beginPath();
+      ctx.arc(target.x - 10, target.y + 8, 34, 0, Math.PI * 2);
       ctx.fill();
 
       // Bursting foliage leaves
-      drawLeaf(tx + 28, ty - 22, 0.7, 8);
-      drawLeaf(tx - 22, ty - 18, -0.5, 7);
-      drawLeaf(tx + 18, ty + 14, 1.2, 7);
-      drawLeaf(tx - 28, ty + 12, -1.0, 7);
+      drawLeaf(tx - 24, ty + 16, -0.8, 8);
+      drawLeaf(tx + 22, ty - 20, 0.7, 8);
+      drawLeaf(tx - 18, ty - 14, -0.4, 7);
+      drawLeaf(tx + 16, ty + 18, 1.3, 7);
       ctx.restore();
     } else if (step >= 3) {
-      // Step 3: Lingering Emerald Leaves
+      // 3단계: 흩날리는 나뭇잎
       ctx.save();
       drawLeaf(tx - 36, ty - 25, -0.4, 6);
       drawLeaf(tx + 32, ty - 28, 0.9, 7);
