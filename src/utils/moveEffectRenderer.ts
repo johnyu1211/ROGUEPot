@@ -1857,14 +1857,15 @@ export function drawIcePunchEffect(ctx: any, target: { x: number; y: number }, s
 }
 
 /**
- * Dynamic Writhing Sharp Zigzag Lightning Bolt with Root-to-Tip Tapering
+ * Dynamic Writhing Sharp Zigzag Lightning Bolt with Decelerating Tip & Catching-Up Tail
  */
 function drawWrithingLightningBolt(
   ctx: any,
   originX: number,
   originY: number,
   angle: number,
-  len: number,
+  startDist: number,
+  endDist: number,
   step: number = 1,
   boltIdx: number = 0,
   alpha: number = 1.0
@@ -1873,6 +1874,8 @@ function drawWrithingLightningBolt(
   ctx.translate(originX, originY);
   ctx.rotate(angle);
   ctx.globalAlpha = alpha;
+
+  const len = Math.max(4, endDist - startDist);
 
   // Phase shifts per step and per bolt index for dynamic writhing/wriggling motion!
   const phase = (step * 2 + boltIdx) % 3;
@@ -1889,9 +1892,10 @@ function drawWrithingLightningBolt(
   const numSegments = jitters.length - 1;
   const pts: { x: number; y: number }[] = [];
   for (let i = 0; i <= numSegments; i++) {
+    const t = i / numSegments;
     pts.push({
-      x: (len * i) / numSegments,
-      y: jitters[i],
+      x: startDist + len * t,
+      y: jitters[i] * (step === 1 ? 1.0 : (step === 2 ? 0.85 : 0.65)),
     });
   }
 
@@ -1899,11 +1903,17 @@ function drawWrithingLightningBolt(
   ctx.strokeStyle = "#FACC15";
   ctx.lineCap = "round";
   ctx.lineJoin = "miter";
-  const baseGlowW = step >= 3 ? 3.6 : 5.4;
+  const baseGlowW = step === 1 ? 5.4 : (step === 2 ? 4.2 : 3.0);
 
   for (let i = 0; i < numSegments; i++) {
     const t = i / numSegments;
-    const taper = Math.max(0.20, 1.0 - t * 0.80);
+    let taper = 1.0;
+    if (step === 1) {
+      taper = Math.max(0.20, 1.0 - t * 0.80);
+    } else {
+      taper = Math.max(0.15, (1.0 - t * 0.75) * (0.5 + 0.5 * Math.sin(t * Math.PI)));
+    }
+
     ctx.lineWidth = baseGlowW * taper;
     ctx.beginPath();
     ctx.moveTo(pts[i].x, pts[i].y);
@@ -1913,11 +1923,17 @@ function drawWrithingLightningBolt(
 
   // 2. Inner Pure White Lightning Core Line (Tapering from root to tip)
   ctx.strokeStyle = "#FFFFFF";
-  const baseCoreW = step >= 3 ? 1.6 : 2.4;
+  const baseCoreW = step === 1 ? 2.4 : (step === 2 ? 1.8 : 1.2);
 
   for (let i = 0; i < numSegments; i++) {
     const t = i / numSegments;
-    const taper = Math.max(0.20, 1.0 - t * 0.80);
+    let taper = 1.0;
+    if (step === 1) {
+      taper = Math.max(0.20, 1.0 - t * 0.80);
+    } else {
+      taper = Math.max(0.15, (1.0 - t * 0.75) * (0.5 + 0.5 * Math.sin(t * Math.PI)));
+    }
+
     ctx.lineWidth = baseCoreW * taper;
     ctx.beginPath();
     ctx.moveTo(pts[i].x, pts[i].y);
@@ -1929,7 +1945,7 @@ function drawWrithingLightningBolt(
 }
 
 /**
- * 009 번개펀치 (Thunder Punch): Electric Golden Fist + 6-Direction High-Voltage Crackling Zigzag Lightning
+ * 009 번개펀치 (Thunder Punch): Electric Golden Fist + Decelerating Leading Tip & Catching-Up Tail Lightning
  */
 export function drawThunderPunchEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
   ctx.save();
@@ -1937,20 +1953,24 @@ export function drawThunderPunchEffect(ctx: any, target: { x: number; y: number 
   const targetX = target.x;
   const targetY = target.y - 12;
 
-  let spread = 0.85;
-  let boltLen = 46;
+  // Kinematic Deceleration & Tail Catch-Up parameters:
+  // Step 1: Rapid Eruption [2px -> 46px] (Attached to fist, high energy)
+  // Step 2: Head Decelerates + Tail Detaches & Rushes [24px -> 60px] (Speeding airborne bolt)
+  // Step 3: Tail Catches Up to Head & Naturally Dissolves [54px -> 68px] (Tiny vanishing spark tip)
+  let startDist = 2;
+  let endDist = 46;
   let alpha = 1.0;
   let fistAlpha = 1.0;
 
   if (step === 2) {
-    spread = 1.25;
-    boltLen = 56;
+    startDist = 24;
+    endDist = 60;
     alpha = 0.70;
     fistAlpha = 0.35;
   } else if (step >= 3) {
-    spread = 1.60;
-    boltLen = 64;
-    alpha = 0.25;
+    startDist = 54;
+    endDist = 68;
+    alpha = 0.22;
     fistAlpha = 0.0;
   }
 
@@ -2013,14 +2033,13 @@ export function drawThunderPunchEffect(ctx: any, target: { x: number; y: number 
 
   for (let i = 0; i < boltAngles.length; i++) {
     const angle = boltAngles[i];
-    const originOx = Math.cos(angle) * (10 * spread);
-    const originOy = Math.sin(angle) * (10 * spread);
     drawWrithingLightningBolt(
       ctx,
-      targetX + originOx,
-      targetY - 14 + originOy,
+      targetX,
+      targetY - 14,
       angle,
-      boltLen,
+      startDist,
+      endDist,
       step,
       i,
       alpha
