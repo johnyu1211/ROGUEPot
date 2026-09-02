@@ -704,7 +704,7 @@ export class BattleService {
     });
 
     // CHECK IF 2ND ACTOR CAN COUNTER-ATTACK
-    if (secondActor.hp > 0 && !secondActor.isFlinched) {
+    if (secondActor.hp > 0 && !secondActor.isFlinched && battle.phase !== "VICTORY" && battle.phase !== "DEFEAT") {
       const statChanges2: { target: "player" | "enemy"; direction: "up" | "down" }[] = [];
       battle.lastMoveEffect = {
         moveKey: !isFirstPlayer ? pMoveKey : eMoveKey,
@@ -1429,6 +1429,57 @@ export class BattleService {
       const heal = Math.floor(actor.maxHp * 0.5);
       actor.hp = Math.min(actor.maxHp, actor.hp + heal);
       return isKo ? `${actorName}의 HP가 ${heal} 회복되었다!` : `${actorName} restored ${heal} HP!`;
+    }
+
+    // 4.5. WHIRLWIND / ROAR (날려버리기 / 울부짖기)
+    if (mName === "whirlwind" || mName === "roar" || move.nameKo === "날려버리기" || move.nameKo === "울부짖기") {
+      // Immunity: Suction Cups (흡반)
+      if (target.ability === "Suction Cups" || target.passiveAbility === "Suction Cups") {
+        return isKo
+          ? `[특성 흡반!] ${targetName}(은)는 바닥에 단단히 고정되어 날아가지 않았다!`
+          : `[Suction Cups!] ${targetName} anchored itself firmly and was not blown away!`;
+      }
+
+      const isPlayerActor = actor === battle?.playerBattleMon || actor === battle?.playerParty?.[battle?.playerActiveIndex || 0];
+
+      if (isPlayerActor) {
+        // Player cast Whirlwind against Enemy
+        if (target.isBoss) {
+          return isKo
+            ? `하지만 거대한 보스 포켓몬에게는 통하지 않았다!`
+            : `But it had no effect on the massive Boss Pokémon!`;
+        }
+        // Wild Pokémon blown away -> Instant Victory / Next Wave
+        if (battle) {
+          battle.phase = "VICTORY";
+          battle.score += target.level * 5;
+        }
+        return isKo
+          ? `야생 ${targetName}(은)는 거센 돌풍에 날아가버렸다!\n배틀이 종료되었습니다!`
+          : `Wild ${targetName} was blown away by the whirlwind!\nThe battle ended!`;
+      } else {
+        // Enemy cast Whirlwind against Player -> Force random switch
+        if (battle && battle.playerParty && battle.playerParty.length > 0) {
+          const aliveIndices = battle.playerParty
+            .map((p, idx) => ({ p, idx }))
+            .filter((item) => item.idx !== battle.playerActiveIndex && item.p.hp > 0);
+
+          if (aliveIndices.length > 0) {
+            const randomPick = aliveIndices[Math.floor(Math.random() * aliveIndices.length)];
+            battle.playerParty[battle.playerActiveIndex].hp = target.hp; // sync current HP
+            battle.playerActiveIndex = randomPick.idx;
+            battle.playerBattleMon = this.createPlayerBattleMon(randomPick.p, battle.playerParty);
+            return isKo
+              ? `${targetName}(은)는 돌풍에 날아가 볼로 돌아갔다!\n가랏, ${battle.playerBattleMon.name}!`
+              : `${targetName} was blown away and forced to switch!\nGo, ${battle.playerBattleMon.name}!`;
+          } else {
+            return isKo
+              ? `하지만 교체할 다른 포켓몬이 없어 통하지 않았다!`
+              : `But there was no other Pokémon to switch in!`;
+          }
+        }
+        return isKo ? `하지만 기술은 실패했다!` : `But it failed!`;
+      }
     }
 
     const recordStatChange = (targetWho: "actor" | "target", dir: "up" | "down") => {
