@@ -719,8 +719,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       // Base empty dialogue box drawn on offCanvas before full-frame blur
       const boxY = 270;
       const glassGrad = targetCtx.createLinearGradient(0, boxY, 0, height);
-      glassGrad.addColorStop(0, "rgba(12, 18, 28, 0.72)");
-      glassGrad.addColorStop(1, "rgba(8, 12, 20, 0.84)");
+      glassGrad.addColorStop(0, "rgba(10, 16, 26, 0.58)");
+      glassGrad.addColorStop(1, "rgba(6, 10, 18, 0.68)");
       targetCtx.fillStyle = glassGrad;
       targetCtx.fillRect(0, boxY, width, height - boxY);
       targetCtx.strokeStyle = "#F59E0B";
@@ -865,8 +865,8 @@ export async function renderBattleFaintGif(options: BattleAnimationOptions): Pro
       // Base empty dialogue box drawn on offCanvas before full-frame blur
       const boxY = 270;
       const glassGrad = targetCtx.createLinearGradient(0, boxY, 0, height);
-      glassGrad.addColorStop(0, "rgba(12, 18, 28, 0.72)");
-      glassGrad.addColorStop(1, "rgba(8, 12, 20, 0.84)");
+      glassGrad.addColorStop(0, "rgba(10, 16, 26, 0.58)");
+      glassGrad.addColorStop(1, "rgba(6, 10, 18, 0.68)");
       targetCtx.fillStyle = glassGrad;
       targetCtx.fillRect(0, boxY, width, height - boxY);
       targetCtx.strokeStyle = "#F59E0B";
@@ -1006,8 +1006,8 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
       // Base empty dialogue box drawn on offEntryCanvas before full-frame blur
       const boxY = 270;
       const glassGrad = targetCtx.createLinearGradient(0, boxY, 0, height);
-      glassGrad.addColorStop(0, "rgba(12, 18, 28, 0.72)");
-      glassGrad.addColorStop(1, "rgba(8, 12, 20, 0.84)");
+      glassGrad.addColorStop(0, "rgba(10, 16, 26, 0.58)");
+      glassGrad.addColorStop(1, "rgba(6, 10, 18, 0.68)");
       targetCtx.fillStyle = glassGrad;
       targetCtx.fillRect(0, boxY, width, height - boxY);
       targetCtx.strokeStyle = "#F59E0B";
@@ -1125,8 +1125,8 @@ function renderBattleHuds(ctx: any, battle: BattleState, isKo: boolean, pbAssets
 function renderBattleDialogue(ctx: any, width: number, height: number, dialogueLines: string[], textLineIdx: number) {
   const boxY = 270;
   const glassGrad = ctx.createLinearGradient(0, boxY, 0, height);
-  glassGrad.addColorStop(0, "rgba(12, 18, 28, 0.72)");
-  glassGrad.addColorStop(1, "rgba(8, 12, 20, 0.84)");
+  glassGrad.addColorStop(0, "rgba(10, 16, 26, 0.58)");
+  glassGrad.addColorStop(1, "rgba(6, 10, 18, 0.68)");
   ctx.fillStyle = glassGrad;
   ctx.fillRect(0, boxY, width, height - boxY);
 
