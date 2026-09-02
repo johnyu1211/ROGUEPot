@@ -62,13 +62,21 @@ export function renderMoveEffect(
 
   ctx.save();
 
-  // 1. SPECIFIC SIGNATURE MOVES FIRST
+  // 1. SPECIFIC SIGNATURE MOVES FIRST (Moves 001 ~ 008)
   if (moveKey === "karate-chop" || moveKey === "karatechop") {
     drawKarateChopEffect(ctx, targetPos, info.step ?? 4);
   } else if (moveKey === "double-slap" || moveKey === "doubleslap") {
     drawDoubleSlapEffect(ctx, targetPos, info.step ?? 1);
   } else if (moveKey === "comet-punch" || moveKey === "cometpunch") {
     drawCometPunchEffect(ctx, targetPos, info.step ?? 1);
+  } else if (moveKey === "mega-punch" || moveKey === "megapunch") {
+    drawMegaPunchEffect(ctx, targetPos, info.step ?? 1);
+  } else if (moveKey === "pay-day" || moveKey === "payday") {
+    drawPayDayEffect(ctx, targetPos, info.step ?? 1);
+  } else if (moveKey === "fire-punch" || moveKey === "firepunch") {
+    drawFirePunchEffect(ctx, targetPos, info.step ?? 1);
+  } else if (moveKey === "ice-punch" || moveKey === "icepunch") {
+    drawIcePunchEffect(ctx, targetPos, info.step ?? 1);
   } else if (moveKey === "solar-beam" || moveKey === "solar-blade") {
     drawSolarBeamEffect(ctx, startPos, targetPos, angle, dx, dy);
   } else if (moveKey === "mega-drain" || moveKey === "giga-drain" || moveKey === "absorb" || moveKey === "leech-life" || moveKey === "draining-kiss") {
@@ -83,7 +91,7 @@ export function renderMoveEffect(
     drawFireEffect(ctx, startPos, targetPos, info.isSpecial);
   } else if (moveKey === "water-gun" || moveKey === "hydro-pump" || moveKey === "surf" || moveKey === "bubble-beam" || type === "water") {
     drawWaterEffect(ctx, startPos, targetPos, info.isSpecial);
-  } else if (moveKey === "ice-beam" || moveKey === "blizzard" || moveKey === "ice-punch" || type === "ice") {
+  } else if (moveKey === "ice-beam" || moveKey === "blizzard" || type === "ice") {
     drawIceEffect(ctx, startPos, targetPos, info.isSpecial);
   } else if (moveKey === "slash" || moveKey === "scratch" || moveKey === "fury-swipes" || moveKey === "night-slash" || moveKey === "dragon-claw" || moveKey === "shadow-claw") {
     drawSlashEffect(ctx, targetPos, type);
@@ -1171,6 +1179,356 @@ function drawMiniRetroStar(ctx: any, x: number, y: number, radius: number, color
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
+  ctx.restore();
+}
+
+/**
+ * Japanese Koban (금화 / 엽전 코인) Helper for Pay Day
+ */
+function drawKobanCoin(ctx: any, x: number, y: number, scale: number = 1.0, angle: number = 0) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+  ctx.scale(scale, scale);
+
+  // Outer Koban Oval
+  ctx.fillStyle = "#FACC15";
+  ctx.strokeStyle = "#B45309";
+  ctx.lineWidth = 2.4;
+
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 10, 16, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Inner Border Rim
+  ctx.strokeStyle = "#F59E0B";
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 7.5, 13.5, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Koban horizontal groove ridges
+  ctx.strokeStyle = "#92400E";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(-5, -6); ctx.lineTo(5, -6);
+  ctx.moveTo(-6, 0); ctx.lineTo(6, 0);
+  ctx.moveTo(-5, 6); ctx.lineTo(5, 6);
+  ctx.stroke();
+
+  // Center Kanji / seal mark (Square / Cross)
+  ctx.fillStyle = "#78350F";
+  ctx.fillRect(-2, -2, 4, 4);
+
+  // Glimmer highlight
+  ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
+  ctx.beginPath();
+  ctx.ellipse(-3, -8, 2.5, 4, -Math.PI / 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+/**
+ * 005 메가톤펀치 (Mega Punch): Heavyweight Giant Power Fist Smash with Radial Blast Rings
+ */
+export function drawMegaPunchEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
+  ctx.save();
+
+  const isFade = (step % 2 === 0);
+  const alpha = isFade ? 0.35 : 1.0;
+  const targetX = target.x;
+  const targetY = target.y - 12;
+
+  // 1. Concentric Blast Rings
+  ctx.save();
+  ctx.globalAlpha = isFade ? 0.25 : 0.75;
+  ctx.strokeStyle = "#FACC15";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.arc(targetX, targetY - 14, isFade ? 48 : 38, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.strokeStyle = "#FFFFFF";
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.arc(targetX, targetY - 14, isFade ? 32 : 24, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+
+  // 2. Giant Power Fist (Scaled Reference Fist)
+  ctx.save();
+  ctx.translate(targetX, targetY - 18);
+  ctx.scale(isFade ? 0.82 : 0.75, isFade ? 0.82 : 0.75);
+  ctx.globalAlpha = alpha;
+
+  if (cometPunchFistImg) {
+    const fw = cometPunchFistImg.width;
+    const fh = cometPunchFistImg.height;
+    ctx.drawImage(cometPunchFistImg, -fw / 2, -fh / 2, fw, fh);
+  } else {
+    drawFrontStraightPunchFistSvg(ctx, 0, 0, 2.5, 1.0);
+  }
+  ctx.restore();
+
+  // 3. Mega Impact Starburst
+  ctx.save();
+  const sparkX = targetX;
+  const sparkY = targetY - 24;
+  const starRadius = isFade ? 18 : 28;
+  ctx.globalAlpha = isFade ? 0.40 : 1.0;
+
+  ctx.fillStyle = "#FACC15";
+  ctx.strokeStyle = "#FFFFFF";
+  ctx.lineWidth = 2.2;
+  ctx.beginPath();
+  ctx.moveTo(sparkX, sparkY - starRadius);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX + starRadius, sparkY);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX, sparkY + starRadius);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX - starRadius, sparkY);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX - starRadius, sparkY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = "#FFFFFF";
+  const innerR = starRadius * 0.5;
+  ctx.beginPath();
+  ctx.moveTo(sparkX, sparkY - innerR);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX + innerR, sparkY);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX, sparkY + innerR);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX - innerR, sparkY);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX - innerR, sparkY);
+  ctx.closePath();
+  ctx.fill();
+
+  // Heavy blast sparks
+  const sparks = [
+    { ox: -22, oy: -20, r: 3.5, c: "#FFFFFF" },
+    { ox: 24, oy: -18, r: 3.2, c: "#FACC15" },
+    { ox: -20, oy: 20, r: 3.2, c: "#F59E0B" },
+    { ox: 22, oy: 22, r: 3.5, c: "#FFFFFF" },
+    { ox: 0, oy: -34, r: 3.0, c: "#FEF08A" },
+    { ox: 0, oy: 28, r: 3.0, c: "#FACC15" },
+  ];
+  for (const s of sparks) {
+    ctx.fillStyle = s.c;
+    ctx.beginPath();
+    ctx.arc(sparkX + s.ox, sparkY + s.oy, s.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  ctx.restore();
+}
+
+/**
+ * 006 고양이돈받기 (Pay Day): Shower of Spinning Shiny Golden Koban Coins & Sparkle Glints
+ */
+export function drawPayDayEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
+  ctx.save();
+
+  const isFade = (step % 2 === 0);
+  const alpha = isFade ? 0.40 : 1.0;
+  const targetX = target.x;
+  const targetY = target.y - 10;
+
+  ctx.globalAlpha = alpha;
+
+  // Shower of golden Koban coins scattered across target
+  const coins = [
+    { ox: -28, oy: -32, angle: -0.35, scale: 1.0 },
+    { ox: 24, oy: -36, angle: 0.45, scale: 1.1 },
+    { ox: -2, oy: -12, angle: 0.12, scale: 1.3 },
+    { ox: 32, oy: 8, angle: -0.55, scale: 0.95 },
+    { ox: -28, oy: 12, angle: 0.60, scale: 1.05 },
+    { ox: 4, oy: 24, angle: -0.15, scale: 1.15 },
+  ];
+
+  for (const c of coins) {
+    drawKobanCoin(ctx, targetX + c.ox, targetY + c.oy, c.scale, c.angle);
+  }
+
+  // Sparkling Gold Stars
+  const sparkles = [
+    { ox: -16, oy: -45, size: 10, c: "#FEF08A" },
+    { ox: 38, oy: -20, size: 12, c: "#FACC15" },
+    { ox: -36, oy: -8, size: 9, c: "#FEF08A" },
+    { ox: 20, oy: 28, size: 11, c: "#FDE047" },
+    { ox: -12, oy: 32, size: 8, c: "#FFFFFF" },
+  ];
+
+  for (const sp of sparkles) {
+    drawMiniRetroStar(ctx, targetX + sp.ox, targetY + sp.oy, sp.size, sp.c);
+  }
+
+  ctx.restore();
+}
+
+/**
+ * 007 불꽃펀치 (Fire Punch): Blazing Flame Aura, Fire Petals & Burning Embers
+ */
+export function drawFirePunchEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
+  ctx.save();
+
+  const isFade = (step % 2 === 0);
+  const alpha = isFade ? 0.35 : 1.0;
+  const targetX = target.x;
+  const targetY = target.y - 12;
+
+  // 1. Fiery Flame Aura
+  const fireGrad = ctx.createRadialGradient(targetX, targetY - 14, 4, targetX, targetY - 14, isFade ? 52 : 44);
+  fireGrad.addColorStop(0, "#FEF08A");
+  fireGrad.addColorStop(0.35, "#F97316");
+  fireGrad.addColorStop(0.7, "#DC2626");
+  fireGrad.addColorStop(1, "rgba(220, 38, 38, 0)");
+  ctx.fillStyle = fireGrad;
+  ctx.globalAlpha = isFade ? 0.35 : 0.85;
+  ctx.beginPath();
+  ctx.arc(targetX, targetY - 14, isFade ? 52 : 44, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 2. Punch Fist
+  ctx.save();
+  ctx.translate(targetX, targetY - 14);
+  ctx.scale(isFade ? 0.68 : 0.62, isFade ? 0.68 : 0.62);
+  ctx.globalAlpha = alpha;
+
+  if (cometPunchFistImg) {
+    const fw = cometPunchFistImg.width;
+    const fh = cometPunchFistImg.height;
+    ctx.drawImage(cometPunchFistImg, -fw / 2, -fh / 2, fw, fh);
+  } else {
+    drawFrontStraightPunchFistSvg(ctx, 0, 0, 2.2, 1.0);
+  }
+  ctx.restore();
+
+  // 3. Flame Petals / Tongues leaping from knuckles
+  ctx.save();
+  ctx.globalAlpha = isFade ? 0.40 : 0.90;
+  const flames = [
+    { ox: -22, oy: -30, r: 12, c: "#F97316" },
+    { ox: 0, oy: -40, r: 14, c: "#EF4444" },
+    { ox: 22, oy: -30, r: 12, c: "#F97316" },
+    { ox: -26, oy: -10, r: 10, c: "#FDE047" },
+    { ox: 26, oy: -10, r: 10, c: "#FDE047" },
+  ];
+  for (const f of flames) {
+    ctx.fillStyle = f.c;
+    ctx.beginPath();
+    ctx.arc(targetX + f.ox, targetY + f.oy, f.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // 4. Fire Impact Star & Flying Embers
+  const sparkX = targetX;
+  const sparkY = targetY - 22;
+  drawMiniRetroStar(ctx, sparkX, sparkY, isFade ? 14 : 22, "#FDE047");
+
+  const embers = [
+    { ox: -28, oy: -26, r: 2.8, c: "#FEF08A" },
+    { ox: 30, oy: -24, r: 3.0, c: "#F97316" },
+    { ox: -22, oy: 14, r: 2.5, c: "#EF4444" },
+    { ox: 25, oy: 16, r: 2.8, c: "#FDE047" },
+  ];
+  for (const eb of embers) {
+    ctx.fillStyle = eb.c;
+    ctx.beginPath();
+    ctx.arc(sparkX + eb.ox, sparkY + eb.oy, eb.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+/**
+ * 008 냉동펀치 (Ice Punch): Crystalline Glacial Frost Aura, Diamond Ice Shards & Snowflake Burst
+ */
+export function drawIcePunchEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
+  ctx.save();
+
+  const isFade = (step % 2 === 0);
+  const alpha = isFade ? 0.35 : 1.0;
+  const targetX = target.x;
+  const targetY = target.y - 12;
+
+  // 1. Frost Aura
+  const iceGrad = ctx.createRadialGradient(targetX, targetY - 14, 4, targetX, targetY - 14, isFade ? 50 : 42);
+  iceGrad.addColorStop(0, "#FFFFFF");
+  iceGrad.addColorStop(0.4, "#7DD3FC");
+  iceGrad.addColorStop(0.75, "#0284C7");
+  iceGrad.addColorStop(1, "rgba(2, 132, 199, 0)");
+  ctx.fillStyle = iceGrad;
+  ctx.globalAlpha = isFade ? 0.35 : 0.85;
+  ctx.beginPath();
+  ctx.arc(targetX, targetY - 14, isFade ? 50 : 42, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 2. Punch Fist
+  ctx.save();
+  ctx.translate(targetX, targetY - 14);
+  ctx.scale(isFade ? 0.68 : 0.62, isFade ? 0.68 : 0.62);
+  ctx.globalAlpha = alpha;
+
+  if (cometPunchFistImg) {
+    const fw = cometPunchFistImg.width;
+    const fh = cometPunchFistImg.height;
+    ctx.drawImage(cometPunchFistImg, -fw / 2, -fh / 2, fw, fh);
+  } else {
+    drawFrontStraightPunchFistSvg(ctx, 0, 0, 2.2, 1.0);
+  }
+  ctx.restore();
+
+  // 3. Ice Crystal Shards (6-point Diamond Shards)
+  ctx.save();
+  ctx.globalAlpha = isFade ? 0.40 : 0.95;
+  const shards = [
+    { ox: 0, oy: -36, w: 7, h: 14, rot: 0 },
+    { ox: 28, oy: -22, w: 6, h: 12, rot: Math.PI / 3 },
+    { ox: 28, oy: 10, w: 6, h: 12, rot: (2 * Math.PI) / 3 },
+    { ox: 0, oy: 22, w: 7, h: 14, rot: Math.PI },
+    { ox: -28, oy: 10, w: 6, h: 12, rot: (4 * Math.PI) / 3 },
+    { ox: -28, oy: -22, w: 6, h: 12, rot: (5 * Math.PI) / 3 },
+  ];
+
+  for (const sh of shards) {
+    ctx.save();
+    ctx.translate(targetX + sh.ox, targetY + sh.oy);
+    ctx.rotate(sh.rot);
+    ctx.fillStyle = "#E0F2FE";
+    ctx.strokeStyle = "#0284C7";
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(0, -sh.h / 2);
+    ctx.lineTo(sh.w / 2, 0);
+    ctx.lineTo(0, sh.h / 2);
+    ctx.lineTo(-sh.w / 2, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
+  ctx.restore();
+
+  // 4. Glacial Starburst
+  drawMiniRetroStar(ctx, targetX, targetY - 20, isFade ? 12 : 20, "#BAE6FD");
+
+  // Frost Glints
+  const glints = [
+    { ox: -16, oy: -28, r: 2.5, c: "#FFFFFF" },
+    { ox: 18, oy: -26, r: 2.8, c: "#E0F2FE" },
+    { ox: -14, oy: 16, r: 2.2, c: "#38BDF8" },
+    { ox: 16, oy: 18, r: 2.5, c: "#FFFFFF" },
+  ];
+  for (const gl of glints) {
+    ctx.fillStyle = gl.c;
+    ctx.beginPath();
+    ctx.arc(targetX + gl.ox, targetY + gl.oy, gl.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   ctx.restore();
 }
 

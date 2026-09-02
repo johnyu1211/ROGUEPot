@@ -259,9 +259,16 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     hitCount: (battle.lastMoveEffect as any)?.hitCount,
   };
   const isP1 = a1.actor === "player";
-  const isChop1 = (a1.moveKey.toLowerCase().replace(/[\s_]+/g, "-") === "karate-chop");
-  const isSlap1 = (a1.moveKey.toLowerCase().replace(/[\s_]+/g, "-") === "double-slap" || a1.moveKey.toLowerCase().replace(/[\s_]+/g, "-") === "doubleslap");
-  const isPunch1 = (a1.moveKey.toLowerCase().replace(/[\s_]+/g, "-") === "comet-punch" || a1.moveKey.toLowerCase().replace(/[\s_]+/g, "-") === "cometpunch");
+  const mKey1 = a1.moveKey.toLowerCase().replace(/[\s_]+/g, "-");
+  const isChop1 = (mKey1 === "karate-chop" || mKey1 === "karatechop");
+  const isSlap1 = (mKey1 === "double-slap" || mKey1 === "doubleslap");
+  const isPunch1 = (mKey1 === "comet-punch" || mKey1 === "cometpunch");
+  const isSingleStrikeSpecial1 = (
+    mKey1 === "mega-punch" || mKey1 === "megapunch" ||
+    mKey1 === "pay-day" || mKey1 === "payday" ||
+    mKey1 === "fire-punch" || mKey1 === "firepunch" ||
+    mKey1 === "ice-punch" || mKey1 === "icepunch"
+  );
 
   let act1Frames: any[] = [];
   if (isChop1) {
@@ -434,6 +441,52 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           }
         ])
       ];
+    } else if (isSingleStrikeSpecial1) {
+      act1Frames = [
+        // 1. Windup lunge (160ms)
+        {
+          delay: 160,
+          pOffset: isP1 ? { x: 16, y: -8 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -16, y: 8 } : { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+        },
+        // 2. Direct Hit Impact (Full Opacity + Bright Hit Flash) (220ms)
+        {
+          delay: 220,
+          pOffset: isP1 ? { x: 22, y: -9 } : { x: -6, y: 3 },
+          eOffset: isP1 ? { x: 10, y: -3 } : { x: -22, y: 9 },
+          showEffect: true,
+          hitFlash: true,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 1,
+        },
+        // 3. Follow-through Recoil & Particle Fade Out (140ms)
+        {
+          delay: 140,
+          pOffset: isP1 ? { x: 14, y: -5 } : { x: -3, y: 1 },
+          eOffset: isP1 ? { x: 4, y: -1 } : { x: -14, y: 5 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 2,
+        }
+      ];
     } else {
       act1Frames = [
         // Standard Windup (180ms)
@@ -474,9 +527,16 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   if (hasMultipleActions) {
     const a2 = turnActions[1];
     const isP2 = a2.actor === "player";
-    const isChop2 = (a2.moveKey.toLowerCase().replace(/[\s_]+/g, "-") === "karate-chop");
-    const isSlap2 = (a2.moveKey.toLowerCase().replace(/[\s_]+/g, "-") === "double-slap" || a2.moveKey.toLowerCase().replace(/[\s_]+/g, "-") === "doubleslap");
-    const isPunch2 = (a2.moveKey.toLowerCase().replace(/[\s_]+/g, "-") === "comet-punch" || a2.moveKey.toLowerCase().replace(/[\s_]+/g, "-") === "cometpunch");
+    const mKey2 = a2.moveKey.toLowerCase().replace(/[\s_]+/g, "-");
+    const isChop2 = (mKey2 === "karate-chop" || mKey2 === "karatechop");
+    const isSlap2 = (mKey2 === "double-slap" || mKey2 === "doubleslap");
+    const isPunch2 = (mKey2 === "comet-punch" || mKey2 === "cometpunch");
+    const isSingleStrikeSpecial2 = (
+      mKey2 === "mega-punch" || mKey2 === "megapunch" ||
+      mKey2 === "pay-day" || mKey2 === "payday" ||
+      mKey2 === "fire-punch" || mKey2 === "firepunch" ||
+      mKey2 === "ice-punch" || mKey2 === "icepunch"
+    );
 
     let act2Frames: any[] = [];
     if (isChop2) {
@@ -648,6 +708,52 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveStep: idx * 2 + 2,
           }
         ])
+      ];
+    } else if (isSingleStrikeSpecial2) {
+      act2Frames = [
+        // 1. Counter Windup lunge (160ms)
+        {
+          delay: 160,
+          pOffset: isP2 ? { x: 16, y: -8 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -16, y: 8 } : { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+        },
+        // 2. Direct Hit Impact (Full Opacity + Bright Hit Flash) (220ms)
+        {
+          delay: 220,
+          pOffset: isP2 ? { x: 22, y: -9 } : { x: -6, y: 3 },
+          eOffset: !isP2 ? { x: -22, y: 9 } : { x: 10, y: -3 },
+          showEffect: true,
+          hitFlash: true,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 1,
+        },
+        // 3. Follow-through Recoil & Particle Fade Out (140ms)
+        {
+          delay: 140,
+          pOffset: isP2 ? { x: 14, y: -5 } : { x: -3, y: 1 },
+          eOffset: !isP2 ? { x: -14, y: 5 } : { x: 4, y: -1 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 2,
+        }
       ];
     } else {
       act2Frames = [
