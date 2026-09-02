@@ -446,16 +446,18 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
   ctx.imageSmoothingEnabled = false;
 
   const entryFrames = [
+    // Frame 0: Leading Cinematic Soft-Blur Loading Frame (800ms / 0.8s) - Unified full-screen blur without text!
+    { delay: 800, pPlatX: 0, ePlatX: 0, pMonX: 0, eMonX: 0, showHud: false, textLineIdx: 0, isBlur: true },
     // Frame 1: Far Slide (180ms)
-    { delay: 180, pPlatX: -180, ePlatX: 180, pMonX: -220, eMonX: 220, showHud: false, textLineIdx: 0 },
+    { delay: 180, pPlatX: -180, ePlatX: 180, pMonX: -220, eMonX: 220, showHud: false, textLineIdx: 0, isBlur: false },
     // Frame 2: Mid-way Slide (200ms)
-    { delay: 200, pPlatX: -80, ePlatX: 80, pMonX: -100, eMonX: 100, showHud: false, textLineIdx: 0 },
+    { delay: 200, pPlatX: -80, ePlatX: 80, pMonX: -100, eMonX: 100, showHud: false, textLineIdx: 0, isBlur: false },
     // Frame 3: Near Landing (200ms)
-    { delay: 200, pPlatX: -20, ePlatX: 20, pMonX: -25, eMonX: 25, showHud: true, textLineIdx: 1 },
+    { delay: 200, pPlatX: -20, ePlatX: 20, pMonX: -25, eMonX: 25, showHud: true, textLineIdx: 1, isBlur: false },
     // Frame 4: Aligned on Platform (220ms)
-    { delay: 220, pPlatX: 0, ePlatX: 0, pMonX: 0, eMonX: 0, showHud: true, textLineIdx: 2 },
+    { delay: 220, pPlatX: 0, ePlatX: 0, pMonX: 0, eMonX: 0, showHud: true, textLineIdx: 2, isBlur: false },
     // Frame 5: 11-Minute Static Hold Frame (655,000ms - Maximum GIF89a unsigned 16-bit delay limit)
-    { delay: 655000, pPlatX: 0, ePlatX: 0, pMonX: 0, eMonX: 0, showHud: true, textLineIdx: 99 }
+    { delay: 655000, pPlatX: 0, ePlatX: 0, pMonX: 0, eMonX: 0, showHud: true, textLineIdx: 99, isBlur: false }
   ];
 
   const motionDurationMs = entryFrames.slice(0, -1).reduce((sum, f) => sum + f.delay, 0);
@@ -470,39 +472,61 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
   const em = BATTLE_LAYOUT_CONFIG.enemyPokemon;
   const pm = BATTLE_LAYOUT_CONFIG.playerPokemon;
 
-  for (const f of entryFrames) {
-    ctx.clearRect(0, 0, width, height);
+  const offEntryCanvas = createCanvas(width, height);
+  const offEntryCtx = offEntryCanvas.getContext("2d");
+  offEntryCtx.imageSmoothingEnabled = false;
 
-    if (arena.bg) ctx.drawImage(arena.bg, 0, 0, width, 275);
-    else { ctx.fillStyle = "#487848"; ctx.fillRect(0, 0, width, 275); }
+  for (const f of entryFrames) {
+    const targetCtx = f.isBlur ? offEntryCtx : ctx;
+    targetCtx.clearRect(0, 0, width, height);
+
+    if (arena.bg) targetCtx.drawImage(arena.bg, 0, 0, width, 275);
+    else { targetCtx.fillStyle = "#487848"; targetCtx.fillRect(0, 0, width, 275); }
 
     // Sliding Platforms
     if (arena.b) {
       // Enemy Platform sliding from right
-      ctx.drawImage(arena.b, ep.x + f.ePlatX, ep.y, enemyPlatW, enemyPlatH);
+      targetCtx.drawImage(arena.b, ep.x + f.ePlatX, ep.y, enemyPlatW, enemyPlatH);
       // Player Platform sliding from left
-      ctx.save();
-      ctx.translate(width, 0);
-      ctx.scale(-1, 1);
-      ctx.drawImage(arena.b, pp.x + f.pPlatX, pp.y, playerPlatW, playerPlatH);
-      ctx.restore();
+      targetCtx.save();
+      targetCtx.translate(width, 0);
+      targetCtx.scale(-1, 1);
+      targetCtx.drawImage(arena.b, pp.x + f.pPlatX, pp.y, playerPlatW, playerPlatH);
+      targetCtx.restore();
     }
 
     // Sliding Battler Sprites
     if (enemySprite) {
-      drawFittedBattleSprite(ctx, enemySprite, em.x + f.eMonX, em.y, em.size);
+      drawFittedBattleSprite(targetCtx, enemySprite, em.x + f.eMonX, em.y, em.size);
     }
     if (playerSprite) {
-      drawFittedBattleSprite(ctx, playerSprite, pm.x + f.pMonX, pm.y, pm.size);
+      drawFittedBattleSprite(targetCtx, playerSprite, pm.x + f.pMonX, pm.y, pm.size);
     }
 
-    renderBattleHeader(ctx, width, battle, isKo);
+    if (!f.isBlur) {
+      renderBattleHeader(targetCtx, width, battle, isKo);
+      if (f.showHud) {
+        renderBattleHuds(targetCtx, battle, isKo, pbAssets, enemy.hp, playerMon.hp);
+      }
+      renderBattleDialogue(targetCtx, width, height, dialogueLines, f.textLineIdx);
+    } else {
+      // Base empty dialogue box drawn on offEntryCanvas before full-frame blur
+      const boxY = 270;
+      targetCtx.fillStyle = "#131924";
+      targetCtx.fillRect(0, boxY, width, height - boxY);
+      targetCtx.strokeStyle = "#0D9488";
+      targetCtx.lineWidth = 2.5;
+      targetCtx.beginPath();
+      targetCtx.moveTo(0, boxY);
+      targetCtx.lineTo(width, boxY);
+      targetCtx.stroke();
 
-    if (f.showHud) {
-      renderBattleHuds(ctx, battle, isKo, pbAssets, enemy.hp, playerMon.hp);
+      // Apply UNIFIED 100% Full-Screen Blur to main canvas
+      ctx.clearRect(0, 0, width, height);
+      ctx.filter = "blur(6px) brightness(0.88)";
+      ctx.drawImage(offEntryCanvas, 0, 0, width, height);
+      ctx.filter = "none";
     }
-
-    renderBattleDialogue(ctx, width, height, dialogueLines, f.textLineIdx);
 
     encoder.setDelay(f.delay);
     encoder.addFrame(ctx);
