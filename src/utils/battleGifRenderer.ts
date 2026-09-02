@@ -373,81 +373,97 @@ function drawHighSkyCutscene(
   f: any,
   attackerSprite: any
 ) {
-  // 1. High Sky Atmospheric Stratosphere Gradient
+  // 1. Supersonic Stratosphere Vertical Dive Sky Gradient
   const skyGrad = ctx.createLinearGradient(0, 0, 0, height);
-  skyGrad.addColorStop(0, "#0F172A"); // Deep Stratosphere Navy
-  skyGrad.addColorStop(0.35, "#0284C7"); // Sky Blue
-  skyGrad.addColorStop(0.75, "#38BDF8"); // Light Cyan Atmosphere
-  skyGrad.addColorStop(1, "#BAE6FD"); // Cloud Base White
+  skyGrad.addColorStop(0, "#080F1E"); // Deep Stratosphere Space Navy
+  skyGrad.addColorStop(0.30, "#0369A1"); // High-Altitude Azure
+  skyGrad.addColorStop(0.70, "#0284C7"); // Sky Blue
+  skyGrad.addColorStop(1, "#E0F2FE"); // Dense Cloud Base
   ctx.fillStyle = skyGrad;
   ctx.fillRect(0, 0, width, height);
 
-  // 2. Layered Volumetric Horizon Cloud Banks
-  const drawCloudBank = (cy: number, alpha: number, scale: number) => {
+  // 2. High-Speed Upward Streaming Vertical Sonic Speedlines
+  const stepSeed = (f.diveStep || 0) * 47;
+  for (let i = 0; i < 32; i++) {
+    const sx = ((i * 19 + stepSeed * 3) % (width + 60)) - 30;
+    const sy = ((i * 47 + stepSeed * 7) % (height + 220)) - 100;
+    const len = 90 + (i % 5) * 40;
+
+    ctx.save();
+    ctx.strokeStyle = (i % 2 === 0) ? "rgba(255, 255, 255, 0.90)" : "rgba(186, 230, 253, 0.60)";
+    ctx.lineWidth = (i % 3 === 0) ? 2.6 : 1.4;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(sx, sy - len); // Streamlines pointing UPWARDS (diving downwards!)
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // 3. Flanking Cloud Vapor Streams Rushing Upward
+  const drawVerticalCloudPuff = (cx: number, cy: number, r: number, alpha: number) => {
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.fillStyle = "#FFFFFF";
-    for (let x = -40; x <= width + 60; x += 75 * scale) {
-      ctx.beginPath();
-      ctx.arc(x, cy, 46 * scale, 0, Math.PI * 2);
-      ctx.arc(x + 32 * scale, cy - 16 * scale, 36 * scale, 0, Math.PI * 2);
-      ctx.arc(x + 58 * scale, cy + 6 * scale, 42 * scale, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.arc(cx + r * 0.5, cy - r * 0.4, r * 0.8, 0, Math.PI * 2);
+    ctx.arc(cx - r * 0.4, cy + r * 0.3, r * 0.7, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
   };
 
-  drawCloudBank(height - 15, 0.45, 1.4);
-  drawCloudBank(height + 15, 0.75, 1.1);
-  drawCloudBank(height + 45, 0.95, 0.9);
+  const cloudOffset = ((f.diveStep || 0) * 90) % 300;
+  drawVerticalCloudPuff(30, 100 - cloudOffset, 36, 0.45);
+  drawVerticalCloudPuff(50, 260 - cloudOffset, 44, 0.55);
+  drawVerticalCloudPuff(width - 40, 140 - cloudOffset, 40, 0.50);
+  drawVerticalCloudPuff(width - 60, 300 - cloudOffset, 48, 0.60);
 
-  if (f.skyCameraTilt !== undefined) {
-    // Supersonic Vertical Straight-Down Plunge!
+  // 4. Diving Pokémon (Supersonic Aerodynamic Nose-Dive)
+  if (attackerSprite) {
     ctx.save();
-    ctx.translate(width / 2, height / 2);
-    if (f.skyCameraTilt) ctx.rotate(f.skyCameraTilt);
+    const isP = f.isAttackerPlayer !== false;
+    const ox = (isP ? f.pOffset?.x : f.eOffset?.x) || 0;
+    const oy = (isP ? f.pOffset?.y : f.eOffset?.y) || 0;
+    const scale = isP ? f.pScale : f.eScale;
+    const rot = (isP ? f.pRot : f.eRot) || 0;
 
-    // Rapid Vertical Sonic Speedlines Streaming Straight Down
-    for (let i = -14; i <= 14; i++) {
-      const sx = i * 22;
-      const len = 400 + Math.abs(i) * 15;
-      ctx.strokeStyle = Math.abs(i) % 2 === 0 ? "rgba(255, 255, 255, 0.90)" : "rgba(186, 230, 253, 0.65)";
-      ctx.lineWidth = Math.abs(i) % 3 === 0 ? 3.0 : 1.6;
-      ctx.beginPath();
-      ctx.moveTo(sx, -250);
-      ctx.lineTo(sx, -250 + len);
-      ctx.stroke();
-    }
+    const posX = width / 2 + ox;
+    const posY = height / 2 + oy;
 
-    // Aerodynamic Pure White Vertical Nose-Dive Bullet Silhouette
-    if (attackerSprite) {
-      ctx.save();
-      ctx.filter = "brightness(0) invert(1)";
-      if (f.pScale) ctx.scale(f.pScale.x, f.pScale.y);
-      drawFittedBattleSprite(ctx, attackerSprite, 0, 0, 110);
-      ctx.restore();
-    }
+    // Aerodynamic Sonic Shockwave V-Cone Trail behind diving Pokemon
+    ctx.save();
+    const coneGrad = ctx.createLinearGradient(posX, posY - 90, posX, posY + 40);
+    coneGrad.addColorStop(0, "rgba(255, 255, 255, 0.0)");
+    coneGrad.addColorStop(0.65, "rgba(186, 230, 253, 0.40)");
+    coneGrad.addColorStop(1, "rgba(255, 255, 255, 0.80)");
 
+    ctx.fillStyle = coneGrad;
+    ctx.beginPath();
+    ctx.moveTo(posX, posY + 45); // Point of Mach cone
+    ctx.lineTo(posX - 42, posY - 105);
+    ctx.lineTo(posX + 42, posY - 105);
+    ctx.closePath();
+    ctx.fill();
     ctx.restore();
-  } else {
-    // Elegant High-Altitude Gliding State (Over-the-Shoulder OTS Perspective)
-    if (attackerSprite) {
-      ctx.save();
-      const isP = f.isAttackerPlayer !== false;
-      const ox = (isP ? f.pOffset?.x : f.eOffset?.x) || 0;
-      const oy = (isP ? f.pOffset?.y : f.eOffset?.y) || 0;
-      const rot = (isP ? f.pRot : f.eRot) || 0;
-      const scale = isP ? f.pScale : f.eScale;
 
-      const baseAnchorX = f.skyAnchor?.x !== undefined ? f.skyAnchor.x : (width / 2);
-      const baseAnchorY = f.skyAnchor?.y !== undefined ? f.skyAnchor.y : (height / 2);
+    // Sonic shockwave compression rings
+    ctx.save();
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.75)";
+    ctx.lineWidth = 2.0;
+    ctx.beginPath();
+    ctx.ellipse(posX, posY - 20, 34, 10, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(posX, posY - 55, 50, 14, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
 
-      ctx.translate(baseAnchorX + ox, baseAnchorY + oy);
-      if (rot) ctx.rotate(rot);
-      if (scale) ctx.scale(scale.x, scale.y);
-      drawFittedBattleSprite(ctx, attackerSprite, 0, 0, 120);
-      ctx.restore();
-    }
+    // Draw Aerodynamically Compressed Diving Pokémon Sprite
+    ctx.translate(posX, posY);
+    if (rot) ctx.rotate(rot);
+    if (scale) ctx.scale(scale.x, scale.y);
+    drawFittedBattleSprite(ctx, attackerSprite, 0, 0, 120);
+    ctx.restore();
   }
 }
 
@@ -1401,9 +1417,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           }
         ];
       } else {
-        // Turn 2: 15 FPS Subtle Looming Shadow -> High Sky Gliding -> Pure Vertical Streamlined Compressed Plunge -> Ground Slam Impact
+        // Turn 2: 15 FPS Subtle Lo
         act1Frames = [
-          // 1. Subtle Looming Shadow on Field Target (66ms x 3 = 200ms)
+          // 1. Target Battlefield Warning Shadow (66ms x 3 = 200ms)
           {
             delay: 66,
             pOffset: isP1 ? { x: 0, y: -9999 } : { x: 0, y: 0 },
@@ -1412,7 +1428,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             hideEnemy: !isP1,
             hidePShadow: isP1,
             hideEShadow: !isP1,
-            loomingShadow: { offsetY: -35, w: 8, h: 3, alpha: 0.30 },
+            loomingShadow: { offsetY: -25, w: 12, h: 4, alpha: 0.35 },
             isHighSkyCutscene: false,
             isAttackerPlayer: isP1,
             showEffect: false,
@@ -1431,7 +1447,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             hideEnemy: !isP1,
             hidePShadow: isP1,
             hideEShadow: !isP1,
-            loomingShadow: { offsetY: -15, w: 16, h: 6, alpha: 0.45 },
+            loomingShadow: { offsetY: -12, w: 20, h: 6, alpha: 0.55 },
             isHighSkyCutscene: false,
             isAttackerPlayer: isP1,
             showEffect: false,
@@ -1450,7 +1466,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             hideEnemy: !isP1,
             hidePShadow: isP1,
             hideEShadow: !isP1,
-            loomingShadow: { offsetY: 0, w: 26, h: 9, alpha: 0.60 },
+            loomingShadow: { offsetY: 0, w: 28, h: 9, alpha: 0.75 },
             isHighSkyCutscene: false,
             isAttackerPlayer: isP1,
             showEffect: false,
@@ -1462,16 +1478,16 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a1,
           },
 
-          // 2. High Sky Gliding Cutscene: Over-The-Shoulder (OTS) soaring perspective (66ms x 8 = 528ms)
+          // 2. High Sky Supersonic Vertical Nose-Dive Cutscene (66ms x 4 = 264ms)
           {
             delay: 66,
-            skyAnchor: isP1 ? { x: 205, y: 240 } : { x: 355, y: 140 },
-            pOffset: { x: -1, y: -1 },
-            eOffset: { x: -1, y: -1 },
-            pScale: isP1 ? { x: 0.88, y: 0.88 } : undefined,
-            eScale: !isP1 ? { x: 0.88, y: 0.88 } : undefined,
-            pRot: isP1 ? -0.015 : 0,
-            eRot: !isP1 ? -0.015 : 0,
+            diveStep: 1,
+            pOffset: { x: 0, y: -110 },
+            eOffset: { x: 0, y: -110 },
+            pScale: isP1 ? { x: 0.65, y: 1.45 } : undefined,
+            eScale: !isP1 ? { x: 0.65, y: 1.45 } : undefined,
+            pRot: 0,
+            eRot: 0,
             isHighSkyCutscene: true,
             isAttackerPlayer: isP1,
             showEffect: false,
@@ -1484,13 +1500,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           },
           {
             delay: 66,
-            skyAnchor: isP1 ? { x: 215, y: 232 } : { x: 345, y: 148 },
-            pOffset: { x: 1, y: 1 },
-            eOffset: { x: 1, y: 1 },
-            pScale: isP1 ? { x: 1.02, y: 1.02 } : undefined,
-            eScale: !isP1 ? { x: 1.02, y: 1.02 } : undefined,
-            pRot: isP1 ? 0.018 : 0,
-            eRot: !isP1 ? 0.018 : 0,
+            diveStep: 2,
+            pOffset: { x: 0, y: -30 },
+            eOffset: { x: 0, y: -30 },
+            pScale: isP1 ? { x: 0.52, y: 1.75 } : undefined,
+            eScale: !isP1 ? { x: 0.52, y: 1.75 } : undefined,
+            pRot: 0,
+            eRot: 0,
             isHighSkyCutscene: true,
             isAttackerPlayer: isP1,
             showEffect: false,
@@ -1503,13 +1519,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           },
           {
             delay: 66,
-            skyAnchor: isP1 ? { x: 226, y: 222 } : { x: 334, y: 158 },
-            pOffset: { x: -1, y: 0 },
-            eOffset: { x: -1, y: 0 },
-            pScale: isP1 ? { x: 1.18, y: 1.18 } : undefined,
-            eScale: !isP1 ? { x: 1.18, y: 1.18 } : undefined,
-            pRot: isP1 ? -0.015 : 0,
-            eRot: !isP1 ? -0.015 : 0,
+            diveStep: 3,
+            pOffset: { x: 0, y: 55 },
+            eOffset: { x: 0, y: 55 },
+            pScale: isP1 ? { x: 0.42, y: 2.10 } : undefined,
+            eScale: !isP1 ? { x: 0.42, y: 2.10 } : undefined,
+            pRot: 0,
+            eRot: 0,
             isHighSkyCutscene: true,
             isAttackerPlayer: isP1,
             showEffect: false,
@@ -1522,87 +1538,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           },
           {
             delay: 66,
-            skyAnchor: isP1 ? { x: 238, y: 210 } : { x: 322, y: 170 },
-            pOffset: { x: 1, y: -1 },
-            eOffset: { x: 1, y: -1 },
-            pScale: isP1 ? { x: 1.36, y: 1.36 } : undefined,
-            eScale: !isP1 ? { x: 1.36, y: 1.36 } : undefined,
-            pRot: isP1 ? 0.020 : 0,
-            eRot: !isP1 ? 0.020 : 0,
-            isHighSkyCutscene: true,
-            isAttackerPlayer: isP1,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: enemy.hp,
-            playerHp: playerMon.hp,
-            textLineIdx: 1,
-            isBlur: false,
-            moveEffect: a1,
-          },
-          {
-            delay: 66,
-            skyAnchor: isP1 ? { x: 252, y: 196 } : { x: 308, y: 184 },
-            pOffset: { x: -1, y: 1 },
-            eOffset: { x: -1, y: 1 },
-            pScale: isP1 ? { x: 1.56, y: 1.56 } : undefined,
-            eScale: !isP1 ? { x: 1.56, y: 1.56 } : undefined,
-            pRot: isP1 ? -0.014 : 0,
-            eRot: !isP1 ? -0.014 : 0,
-            isHighSkyCutscene: true,
-            isAttackerPlayer: isP1,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: enemy.hp,
-            playerHp: playerMon.hp,
-            textLineIdx: 1,
-            isBlur: false,
-            moveEffect: a1,
-          },
-          {
-            delay: 66,
-            skyAnchor: isP1 ? { x: 268, y: 180 } : { x: 292, y: 200 },
-            pOffset: { x: 1, y: 0 },
-            eOffset: { x: 1, y: 0 },
-            pScale: isP1 ? { x: 1.80, y: 1.80 } : undefined,
-            eScale: !isP1 ? { x: 1.80, y: 1.80 } : undefined,
-            pRot: isP1 ? 0.012 : 0,
-            eRot: !isP1 ? 0.012 : 0,
-            isHighSkyCutscene: true,
-            isAttackerPlayer: isP1,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: enemy.hp,
-            playerHp: playerMon.hp,
-            textLineIdx: 1,
-            isBlur: false,
-            moveEffect: a1,
-          },
-          {
-            delay: 66,
-            skyAnchor: isP1 ? { x: 285, y: 162 } : { x: 275, y: 218 },
-            pOffset: { x: 0, y: -1 },
-            eOffset: { x: 0, y: -1 },
-            pScale: isP1 ? { x: 2.08, y: 2.08 } : undefined,
-            eScale: !isP1 ? { x: 2.08, y: 2.08 } : undefined,
-            pRot: isP1 ? -0.008 : 0,
-            eRot: !isP1 ? -0.008 : 0,
-            isHighSkyCutscene: true,
-            isAttackerPlayer: isP1,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: enemy.hp,
-            playerHp: playerMon.hp,
-            textLineIdx: 1,
-            isBlur: false,
-            moveEffect: a1,
-          },
-          {
-            delay: 66,
-            skyAnchor: isP1 ? { x: 305, y: 140 } : { x: 255, y: 240 },
-            pOffset: { x: 0, y: 0 },
-            eOffset: { x: 0, y: 0 },
-            pScale: isP1 ? { x: 2.42, y: 2.42 } : undefined,
-            eScale: !isP1 ? { x: 2.42, y: 2.42 } : undefined,
+            diveStep: 4,
+            pOffset: { x: 0, y: 155 },
+            eOffset: { x: 0, y: 155 },
+            pScale: isP1 ? { x: 0.32, y: 2.50 } : undefined,
+            eScale: !isP1 ? { x: 0.32, y: 2.50 } : undefined,
             pRot: 0,
             eRot: 0,
             isHighSkyCutscene: true,
@@ -1616,16 +1556,16 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a1,
           },
 
-          // 3. Pure Vertical Straight-Down Plunge (세로로 얇게 압축된 수직 급강하 66ms x 3 = 200ms)
+          // 3. Battlefield Arena Vertical Nose-Dive Plunge (66ms x 2 = 132ms)
           {
             delay: 66,
-            pOffset: isP1 ? { x: 268, y: -460 } : { x: 0, y: 0 },
+            pOffset: isP1 ? { x: 268, y: -360 } : { x: 0, y: 0 },
             eOffset: !isP1 ? { x: -268, y: -160 } : { x: 0, y: 0 },
-            pScale: isP1 ? { x: 0.45, y: 1.80 } : undefined,
-            eScale: !isP1 ? { x: 0.45, y: 1.80 } : undefined,
+            pScale: isP1 ? { x: 0.40, y: 2.00 } : undefined,
+            eScale: !isP1 ? { x: 0.40, y: 2.00 } : undefined,
             pRot: 0,
             eRot: 0,
-            loomingShadow: { offsetY: 0, w: 20, h: 7, alpha: 0.50 },
+            loomingShadow: { offsetY: 0, w: 28, h: 9, alpha: 0.85 },
             isHighSkyCutscene: false,
             isAttackerPlayer: isP1,
             showEffect: false,
@@ -1638,32 +1578,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           },
           {
             delay: 66,
-            pOffset: isP1 ? { x: 268, y: -290 } : { x: 0, y: 0 },
-            eOffset: !isP1 ? { x: -268, y: 10 } : { x: 0, y: 0 },
-            pScale: isP1 ? { x: 0.36, y: 2.10 } : undefined,
-            eScale: !isP1 ? { x: 0.36, y: 2.10 } : undefined,
+            pOffset: isP1 ? { x: 268, y: -180 } : { x: 0, y: 0 },
+            eOffset: !isP1 ? { x: -268, y: 40 } : { x: 0, y: 0 },
+            pScale: isP1 ? { x: 0.30, y: 2.40 } : undefined,
+            eScale: !isP1 ? { x: 0.30, y: 2.40 } : undefined,
             pRot: 0,
             eRot: 0,
-            loomingShadow: { offsetY: 0, w: 26, h: 9, alpha: 0.65 },
-            isHighSkyCutscene: false,
-            isAttackerPlayer: isP1,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: enemy.hp,
-            playerHp: playerMon.hp,
-            textLineIdx: 1,
-            isBlur: false,
-            moveEffect: a1,
-          },
-          {
-            delay: 66,
-            pOffset: isP1 ? { x: 268, y: -120 } : { x: 0, y: 0 },
-            eOffset: !isP1 ? { x: -268, y: 100 } : { x: 0, y: 0 },
-            pScale: isP1 ? { x: 0.28, y: 2.40 } : undefined,
-            eScale: !isP1 ? { x: 0.28, y: 2.40 } : undefined,
-            pRot: 0,
-            eRot: 0,
-            loomingShadow: { offsetY: 0, w: 32, h: 11, alpha: 0.80 },
+            loomingShadow: { offsetY: 0, w: 34, h: 11, alpha: 1.0 },
             isHighSkyCutscene: false,
             isAttackerPlayer: isP1,
             showEffect: false,
@@ -3007,7 +2928,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       } else {
         // Turn 2: 15 FPS Subtle Looming Shadow -> High Sky Gliding -> Pure Vertical Streamlined Compressed Plunge -> Ground Slam Impact
         act2Frames = [
-          // 1. Subtle Looming Shadow on Field Target (66ms x 3 = 200ms)
+          // 1. Target Battlefield Warning Shadow (66ms x 3 = 200ms)
           {
             delay: 66,
             pOffset: isP2 ? { x: 0, y: -9999 } : { x: 0, y: 0 },
@@ -3016,7 +2937,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             hideEnemy: !isP2,
             hidePShadow: isP2,
             hideEShadow: !isP2,
-            loomingShadow: { offsetY: -35, w: 8, h: 3, alpha: 0.30 },
+            loomingShadow: { offsetY: -25, w: 12, h: 4, alpha: 0.35 },
             isHighSkyCutscene: false,
             isAttackerPlayer: isP2,
             showEffect: false,
@@ -3035,7 +2956,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             hideEnemy: !isP2,
             hidePShadow: isP2,
             hideEShadow: !isP2,
-            loomingShadow: { offsetY: -15, w: 16, h: 6, alpha: 0.45 },
+            loomingShadow: { offsetY: -12, w: 20, h: 6, alpha: 0.55 },
             isHighSkyCutscene: false,
             isAttackerPlayer: isP2,
             showEffect: false,
@@ -3054,7 +2975,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             hideEnemy: !isP2,
             hidePShadow: isP2,
             hideEShadow: !isP2,
-            loomingShadow: { offsetY: 0, w: 26, h: 9, alpha: 0.60 },
+            loomingShadow: { offsetY: 0, w: 28, h: 9, alpha: 0.75 },
             isHighSkyCutscene: false,
             isAttackerPlayer: isP2,
             showEffect: false,
@@ -3066,16 +2987,16 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a2,
           },
 
-          // 2. High Sky Gliding Cutscene: Over-The-Shoulder (OTS) soaring perspective (66ms x 8 = 528ms)
+          // 2. High Sky Supersonic Vertical Nose-Dive Cutscene (66ms x 4 = 264ms)
           {
             delay: 66,
-            skyAnchor: isP2 ? { x: 205, y: 240 } : { x: 355, y: 140 },
-            pOffset: { x: -1, y: -1 },
-            eOffset: { x: -1, y: -1 },
-            pScale: isP2 ? { x: 0.88, y: 0.88 } : undefined,
-            eScale: !isP2 ? { x: 0.88, y: 0.88 } : undefined,
-            pRot: isP2 ? -0.015 : 0,
-            eRot: !isP2 ? -0.015 : 0,
+            diveStep: 1,
+            pOffset: { x: 0, y: -110 },
+            eOffset: { x: 0, y: -110 },
+            pScale: isP2 ? { x: 0.65, y: 1.45 } : undefined,
+            eScale: !isP2 ? { x: 0.65, y: 1.45 } : undefined,
+            pRot: 0,
+            eRot: 0,
             isHighSkyCutscene: true,
             isAttackerPlayer: isP2,
             showEffect: false,
@@ -3088,13 +3009,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           },
           {
             delay: 66,
-            skyAnchor: isP2 ? { x: 215, y: 232 } : { x: 345, y: 148 },
-            pOffset: { x: 1, y: 1 },
-            eOffset: { x: 1, y: 1 },
-            pScale: isP2 ? { x: 1.02, y: 1.02 } : undefined,
-            eScale: !isP2 ? { x: 1.02, y: 1.02 } : undefined,
-            pRot: isP2 ? 0.018 : 0,
-            eRot: !isP2 ? 0.018 : 0,
+            diveStep: 2,
+            pOffset: { x: 0, y: -30 },
+            eOffset: { x: 0, y: -30 },
+            pScale: isP2 ? { x: 0.52, y: 1.75 } : undefined,
+            eScale: !isP2 ? { x: 0.52, y: 1.75 } : undefined,
+            pRot: 0,
+            eRot: 0,
             isHighSkyCutscene: true,
             isAttackerPlayer: isP2,
             showEffect: false,
@@ -3107,13 +3028,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           },
           {
             delay: 66,
-            skyAnchor: isP2 ? { x: 226, y: 222 } : { x: 334, y: 158 },
-            pOffset: { x: -1, y: 0 },
-            eOffset: { x: -1, y: 0 },
-            pScale: isP2 ? { x: 1.18, y: 1.18 } : undefined,
-            eScale: !isP2 ? { x: 1.18, y: 1.18 } : undefined,
-            pRot: isP2 ? -0.015 : 0,
-            eRot: !isP2 ? -0.015 : 0,
+            diveStep: 3,
+            pOffset: { x: 0, y: 55 },
+            eOffset: { x: 0, y: 55 },
+            pScale: isP2 ? { x: 0.42, y: 2.10 } : undefined,
+            eScale: !isP2 ? { x: 0.42, y: 2.10 } : undefined,
+            pRot: 0,
+            eRot: 0,
             isHighSkyCutscene: true,
             isAttackerPlayer: isP2,
             showEffect: false,
@@ -3126,87 +3047,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           },
           {
             delay: 66,
-            skyAnchor: isP2 ? { x: 238, y: 210 } : { x: 322, y: 170 },
-            pOffset: { x: 1, y: -1 },
-            eOffset: { x: 1, y: -1 },
-            pScale: isP2 ? { x: 1.36, y: 1.36 } : undefined,
-            eScale: !isP2 ? { x: 1.36, y: 1.36 } : undefined,
-            pRot: isP2 ? 0.020 : 0,
-            eRot: !isP2 ? 0.020 : 0,
-            isHighSkyCutscene: true,
-            isAttackerPlayer: isP2,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: a1.enemyHpAfter,
-            playerHp: a1.playerHpAfter,
-            textLineIdx: 3,
-            isBlur: false,
-            moveEffect: a2,
-          },
-          {
-            delay: 66,
-            skyAnchor: isP2 ? { x: 252, y: 196 } : { x: 308, y: 184 },
-            pOffset: { x: -1, y: 1 },
-            eOffset: { x: -1, y: 1 },
-            pScale: isP2 ? { x: 1.56, y: 1.56 } : undefined,
-            eScale: !isP2 ? { x: 1.56, y: 1.56 } : undefined,
-            pRot: isP2 ? -0.014 : 0,
-            eRot: !isP2 ? -0.014 : 0,
-            isHighSkyCutscene: true,
-            isAttackerPlayer: isP2,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: a1.enemyHpAfter,
-            playerHp: a1.playerHpAfter,
-            textLineIdx: 3,
-            isBlur: false,
-            moveEffect: a2,
-          },
-          {
-            delay: 66,
-            skyAnchor: isP2 ? { x: 268, y: 180 } : { x: 292, y: 200 },
-            pOffset: { x: 1, y: 0 },
-            eOffset: { x: 1, y: 0 },
-            pScale: isP2 ? { x: 1.80, y: 1.80 } : undefined,
-            eScale: !isP2 ? { x: 1.80, y: 1.80 } : undefined,
-            pRot: isP2 ? 0.012 : 0,
-            eRot: !isP2 ? 0.012 : 0,
-            isHighSkyCutscene: true,
-            isAttackerPlayer: isP2,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: a1.enemyHpAfter,
-            playerHp: a1.playerHpAfter,
-            textLineIdx: 3,
-            isBlur: false,
-            moveEffect: a2,
-          },
-          {
-            delay: 66,
-            skyAnchor: isP2 ? { x: 285, y: 162 } : { x: 275, y: 218 },
-            pOffset: { x: 0, y: -1 },
-            eOffset: { x: 0, y: -1 },
-            pScale: isP2 ? { x: 2.08, y: 2.08 } : undefined,
-            eScale: !isP2 ? { x: 2.08, y: 2.08 } : undefined,
-            pRot: isP2 ? -0.008 : 0,
-            eRot: !isP2 ? -0.008 : 0,
-            isHighSkyCutscene: true,
-            isAttackerPlayer: isP2,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: a1.enemyHpAfter,
-            playerHp: a1.playerHpAfter,
-            textLineIdx: 3,
-            isBlur: false,
-            moveEffect: a2,
-          },
-          {
-            delay: 66,
-            skyAnchor: isP2 ? { x: 305, y: 140 } : { x: 255, y: 240 },
-            pOffset: { x: 0, y: 0 },
-            eOffset: { x: 0, y: 0 },
-            pScale: isP2 ? { x: 2.42, y: 2.42 } : undefined,
-            eScale: !isP2 ? { x: 2.42, y: 2.42 } : undefined,
+            diveStep: 4,
+            pOffset: { x: 0, y: 155 },
+            eOffset: { x: 0, y: 155 },
+            pScale: isP2 ? { x: 0.32, y: 2.50 } : undefined,
+            eScale: !isP2 ? { x: 0.32, y: 2.50 } : undefined,
             pRot: 0,
             eRot: 0,
             isHighSkyCutscene: true,
@@ -3220,16 +3065,16 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a2,
           },
 
-          // 3. Pure Vertical Straight-Down Plunge (세로로 얇게 압축된 수직 급강하 66ms x 3 = 200ms)
+          // 3. Battlefield Arena Vertical Nose-Dive Plunge (66ms x 2 = 132ms)
           {
             delay: 66,
-            pOffset: isP2 ? { x: 268, y: -460 } : { x: 0, y: 0 },
+            pOffset: isP2 ? { x: 268, y: -360 } : { x: 0, y: 0 },
             eOffset: !isP2 ? { x: -268, y: -160 } : { x: 0, y: 0 },
-            pScale: isP2 ? { x: 0.45, y: 1.80 } : undefined,
-            eScale: !isP2 ? { x: 0.45, y: 1.80 } : undefined,
+            pScale: isP2 ? { x: 0.40, y: 2.00 } : undefined,
+            eScale: !isP2 ? { x: 0.40, y: 2.00 } : undefined,
             pRot: 0,
             eRot: 0,
-            loomingShadow: { offsetY: 0, w: 20, h: 7, alpha: 0.50 },
+            loomingShadow: { offsetY: 0, w: 28, h: 9, alpha: 0.85 },
             isHighSkyCutscene: false,
             isAttackerPlayer: isP2,
             showEffect: false,
@@ -3242,32 +3087,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           },
           {
             delay: 66,
-            pOffset: isP2 ? { x: 268, y: -290 } : { x: 0, y: 0 },
-            eOffset: !isP2 ? { x: -268, y: 10 } : { x: 0, y: 0 },
-            pScale: isP2 ? { x: 0.36, y: 2.10 } : undefined,
-            eScale: !isP2 ? { x: 0.36, y: 2.10 } : undefined,
+            pOffset: isP2 ? { x: 268, y: -180 } : { x: 0, y: 0 },
+            eOffset: !isP2 ? { x: -268, y: 40 } : { x: 0, y: 0 },
+            pScale: isP2 ? { x: 0.30, y: 2.40 } : undefined,
+            eScale: !isP2 ? { x: 0.30, y: 2.40 } : undefined,
             pRot: 0,
             eRot: 0,
-            loomingShadow: { offsetY: 0, w: 26, h: 9, alpha: 0.65 },
-            isHighSkyCutscene: false,
-            isAttackerPlayer: isP2,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: a1.enemyHpAfter,
-            playerHp: a1.playerHpAfter,
-            textLineIdx: 3,
-            isBlur: false,
-            moveEffect: a2,
-          },
-          {
-            delay: 66,
-            pOffset: isP2 ? { x: 268, y: -120 } : { x: 0, y: 0 },
-            eOffset: !isP2 ? { x: -268, y: 100 } : { x: 0, y: 0 },
-            pScale: isP2 ? { x: 0.28, y: 2.40 } : undefined,
-            eScale: !isP2 ? { x: 0.28, y: 2.40 } : undefined,
-            pRot: 0,
-            eRot: 0,
-            loomingShadow: { offsetY: 0, w: 32, h: 11, alpha: 0.80 },
+            loomingShadow: { offsetY: 0, w: 34, h: 11, alpha: 1.0 },
             isHighSkyCutscene: false,
             isAttackerPlayer: isP2,
             showEffect: false,
