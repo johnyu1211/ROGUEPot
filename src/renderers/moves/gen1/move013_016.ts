@@ -345,13 +345,6 @@ export function drawSwordsDanceEffect(ctx: any, userPos: { x: number; y: number 
   }
 
   const render3DOrbit = (rx: number, ry: number, zOffset: number, basePhase: number, tiltFactor: number) => {
-    // 1. Glowing 3D Orbital Path Ring
-    ctx.strokeStyle = "rgba(239, 68, 68, 0.30)";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.ellipse(ux, uy + zOffset, rx, ry, 0, 0, Math.PI * 2);
-    ctx.stroke();
-
     const count = 3;
     const swords: Sword3D[] = [];
     for (let i = 0; i < count; i++) {
@@ -371,13 +364,6 @@ export function drawSwordsDanceEffect(ctx: any, userPos: { x: number; y: number 
     swords.sort((a, b) => a.depth - b.depth);
 
     for (const s of swords) {
-      // 3D Motion Trail Arc behind each sword
-      ctx.strokeStyle = `rgba(254, 202, 202, ${s.alpha * 0.45})`;
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.ellipse(ux, uy + zOffset, rx, ry, 0, s.angle - 0.55, s.angle);
-      ctx.stroke();
-
       drawThinSolidSword(s.x, s.y, s.rot, s.scale, s.alpha);
     }
   };
