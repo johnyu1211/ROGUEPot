@@ -5473,7 +5473,7 @@ export async function renderBattleScreen(options: BattleScreenOptions): Promise<
     getPbInfoAssets(),
   ]);
   if (arena.bg) {
-    ctx.drawImage(arena.bg, 0, 0, width, 275);
+    ctx.drawImage(arena.bg, 0, 0, width, height);
   } else {
     drawBiomeBackground(ctx, width, battle.biome || "Town");
   }
@@ -5808,12 +5808,18 @@ function drawBattleFightMovesGrid(ctx: any, combatMon: any, isKo: boolean, categ
   // 8. Bottom Dialogue & Command Box (Full Width 100%: x 0, y 270, w 560, h 110)
   const boxY = 270;
   const boxH = height - boxY;
-  ctx.fillStyle = "#131924";
+
+  // Authentic Gen 5 Translucent Glass Gradient
+  const glassGrad = ctx.createLinearGradient(0, boxY, 0, height);
+  glassGrad.addColorStop(0, "rgba(12, 18, 28, 0.72)");
+  glassGrad.addColorStop(1, "rgba(8, 12, 20, 0.84)");
+  ctx.fillStyle = glassGrad;
   ctx.fillRect(0, boxY, width, boxH);
 
   if (battle.phase !== "FIGHT") {
-    // Top Accent Border Line
-    ctx.strokeStyle = battle.phase === "VICTORY" ? "#22C55E" : battle.phase === "DEFEAT" ? "#EF4444" : "#0D9488";
+    // Top Accent Border Line (Gen 5 amber/gold or victory/defeat tint)
+    const topBorderColor = battle.phase === "VICTORY" ? "#22C55E" : battle.phase === "DEFEAT" ? "#EF4444" : "#F59E0B";
+    ctx.strokeStyle = topBorderColor;
     ctx.lineWidth = 2.5;
     ctx.beginPath();
     ctx.moveTo(0, boxY);
@@ -5821,7 +5827,7 @@ function drawBattleFightMovesGrid(ctx: any, combatMon: any, isKo: boolean, categ
     ctx.stroke();
 
     // Subtle Inner Highlight Line
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(0, boxY + 2);
@@ -5833,10 +5839,10 @@ function drawBattleFightMovesGrid(ctx: any, combatMon: any, isKo: boolean, categ
     // ⚔️ Render 2x2 Battle Move Cards Grid during FIGHT phase
     drawBattleFightMovesGrid(ctx, playerMon, isKo, pbAssets.categories);
   } else {
-    // Dialogue Text
+    // Dialogue Text with outline for maximum legibility over translucent background
     ctx.textAlign = "left";
     ctx.textBaseline = "top";
-    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "bold 15px DungGeunMo";
 
     const pDisplayName = getPokemonDisplayName(playerMon, isKo);
     const defaultDialogue = isKo
@@ -5847,7 +5853,12 @@ function drawBattleFightMovesGrid(ctx: any, combatMon: any, isKo: boolean, categ
     const linesToShow = wrapped.length > 3 ? wrapped.slice(-3) : wrapped;
 
     linesToShow.forEach((line: string, lIdx: number) => {
-      ctx.fillText(line, 24, boxY + 16 + lIdx * 26);
+      const textY = boxY + 16 + lIdx * 26;
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.85)";
+      ctx.lineWidth = 3.5;
+      ctx.strokeText(line, 24, textY);
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillText(line, 24, textY);
     });
   }
 
