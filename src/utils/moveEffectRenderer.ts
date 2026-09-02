@@ -5,6 +5,7 @@ import fs from "fs";
 let karateBlackImg: any = null;
 let karateRedImg: any = null;
 let doubleSlapWhiteImg: any = null;
+let cometPunchFistImg: any = null;
 
 export async function preloadMoveAssets() {
   try {
@@ -19,6 +20,10 @@ export async function preloadMoveAssets() {
     if (!doubleSlapWhiteImg) {
       const wPath = path.resolve(process.cwd(), "assets/effects/double_slap_white.png");
       if (fs.existsSync(wPath)) doubleSlapWhiteImg = await loadImage(wPath);
+    }
+    if (!cometPunchFistImg) {
+      const pPath = path.resolve(process.cwd(), "assets/effects/comet_punch_fist.png");
+      if (fs.existsSync(pPath)) cometPunchFistImg = await loadImage(pPath);
     }
   } catch (err) {
     // Ignore asset load errors
@@ -1070,26 +1075,38 @@ export function drawCometPunchEffect(ctx: any, target: { x: number; y: number },
   const isFade = (step % 2 === 0);
   const hitIndex = Math.floor((step - 1) / 2) % 3; // 0 (Hit 1), 1 (Hit 2), 2 (Hit 3)
 
-  // Direct Straight Frontal Punches (No side slaps! Straight into target center)
+  // Direct Straight Frontal Punches on target center (Exact user reference sprite)
   const configs = [
-    { ox: -10, oy: -20, scale: 1.30 }, // Hit 1: Straight Left Jab
-    { ox: 10, oy: -28, scale: 1.35 },  // Hit 2: Straight Right Cross
-    { ox: 0, oy: -24, scale: 1.45 },   // Hit 3: Heavy Straight Direct Smash
+    { ox: -12, oy: -20, scale: 0.55 }, // Hit 1: Straight Left Jab
+    { ox: 12, oy: -26, scale: 0.58 },  // Hit 2: Straight Right Cross
+    { ox: 0, oy: -24, scale: 0.62 },   // Hit 3: Heavy Straight Center Smash
   ];
   const cfg = configs[hitIndex];
 
   const fistX = target.x + cfg.ox;
-  const fistY = target.y + cfg.oy + (isFade ? -4 : 0);
+  const fistY = target.y + cfg.oy + (isFade ? -3 : 0);
   const alpha = isFade ? 0.32 : 1.0;
   const currentScale = isFade ? cfg.scale * 1.08 : cfg.scale;
 
-  // 1. Front-Facing Straight Fist (정면 정권)
-  drawFrontStraightPunchFistSvg(ctx, fistX, fistY, currentScale, alpha);
+  // 1. Draw Exact User Reference Punch Sprite
+  ctx.save();
+  ctx.translate(fistX, fistY);
+  ctx.scale(currentScale, currentScale);
+  ctx.globalAlpha = alpha;
+
+  if (cometPunchFistImg) {
+    const fw = cometPunchFistImg.width;
+    const fh = cometPunchFistImg.height;
+    ctx.drawImage(cometPunchFistImg, -fw / 2, -fh / 2, fw, fh);
+  } else {
+    drawFrontStraightPunchFistSvg(ctx, 0, 0, 2.2, 1.0);
+  }
+  ctx.restore();
 
   // 2. Impact Star / Sparks at Central Knuckle Contact Point
   ctx.save();
   const sparkX = fistX;
-  const sparkY = fistY - 10;
+  const sparkY = fistY - 8;
   const starRadius = isFade ? 12 : 20;
   const starAlpha = isFade ? 0.38 : 1.0;
 
@@ -1102,7 +1119,7 @@ export function drawCometPunchEffect(ctx: any, target: { x: number; y: number },
   ctx.beginPath();
   ctx.moveTo(sparkX, sparkY - starRadius);
   ctx.quadraticCurveTo(sparkX, sparkY, sparkX + starRadius, sparkY);
-  ctx.quadraticCurveTo(sparkX, sparkY, sparkX, sparkY + starRadius);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX + starRadius, sparkY);
   ctx.quadraticCurveTo(sparkX, sparkY, sparkX - starRadius, sparkY);
   ctx.quadraticCurveTo(sparkX, sparkY, sparkX - starRadius, sparkY);
   ctx.closePath();
@@ -1120,7 +1137,6 @@ export function drawCometPunchEffect(ctx: any, target: { x: number; y: number },
   ctx.quadraticCurveTo(sparkX, sparkY, sparkX - innerR, sparkY);
   ctx.closePath();
   ctx.fill();
-  ctx.stroke();
 
   // Spark dots
   const sparkScale = isFade ? 1.4 : 1.0;
