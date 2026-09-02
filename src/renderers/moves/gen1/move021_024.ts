@@ -93,7 +93,6 @@ function drawSingleVine(
   cy2: number,
   tx: number,
   ty: number,
-  tipAngle: number,
   tipScale: number = 1.0,
   alpha: number = 1.0
 ) {
@@ -102,7 +101,7 @@ function drawSingleVine(
 
   // 1. Deep Dark Forest Shadow Outline
   ctx.strokeStyle = "#064E3B";
-  ctx.lineWidth = 3.8;
+  ctx.lineWidth = 3.6;
   ctx.lineCap = "round";
   ctx.beginPath();
   ctx.moveTo(x0, y0);
@@ -111,7 +110,7 @@ function drawSingleVine(
 
   // 2. Rich Botanical Vine Body (Deep Lush Green - NOT whitish!)
   ctx.strokeStyle = "#15803D";
-  ctx.lineWidth = 2.4;
+  ctx.lineWidth = 2.2;
   ctx.beginPath();
   ctx.moveTo(x0, y0);
   ctx.bezierCurveTo(cx1, cy1, cx2, cy2, tx, ty);
@@ -125,24 +124,27 @@ function drawSingleVine(
   ctx.bezierCurveTo(cx1, cy1, cx2, cy2, tx, ty);
   ctx.stroke();
 
-  // 4. Compact Oval Leaf Tip (Deep Forest Green)
+  // 4. Exact Mathematical Tangent Angle at endpoint (tx, ty)
+  const tipAngle = Math.atan2(ty - cy2, tx - cx2);
+
+  // 5. Oval Leaf Tip seamlessly aligned with the curve's tangent
   ctx.save();
   ctx.translate(tx, ty);
   ctx.rotate(tipAngle);
 
-  // Tip body (Compact Deep Green Oval)
+  // Tip body (Compact Deep Green Oval extending along curve)
   ctx.fillStyle = "#15803D";
   ctx.beginPath();
-  ctx.ellipse(0, 0, 8.5 * tipScale, 4.2 * tipScale, 0, 0, Math.PI * 2);
+  ctx.ellipse(3.5 * tipScale, 0, 7.0 * tipScale, 3.5 * tipScale, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.strokeStyle = "#064E3B";
-  ctx.lineWidth = 1.2;
+  ctx.lineWidth = 1.1;
   ctx.stroke();
 
   // Subtle inner leaf spine
   ctx.fillStyle = "#22C55E";
   ctx.beginPath();
-  ctx.ellipse(-1.0 * tipScale, -0.8 * tipScale, 4.5 * tipScale, 1.8 * tipScale, 0, 0, Math.PI * 2);
+  ctx.ellipse(3.0 * tipScale, -0.6 * tipScale, 4.0 * tipScale, 1.4 * tipScale, 0, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.restore();
@@ -198,7 +200,6 @@ export function drawVineWhipEffect(
         start.y - 75,
         start.x + 75 * dirSign,
         start.y - 38,
-        0.65 * dirSign,
         1.0
       );
     } else if (step === 2) {
@@ -213,7 +214,6 @@ export function drawVineWhipEffect(
         start.y - 75,
         start.x + 75 * dirSign,
         start.y - 38,
-        0.65 * dirSign,
         0.85,
         0.35
       );
@@ -227,7 +227,6 @@ export function drawVineWhipEffect(
         start.y - 5,
         start.x + 78 * dirSign,
         start.y - 55,
-        -1.15 * dirSign,
         1.0
       );
     } else if (step >= 3) {
@@ -242,7 +241,6 @@ export function drawVineWhipEffect(
         start.y - 38,
         start.x + 22 * dirSign,
         start.y - 20,
-        0.5 * dirSign,
         0.7,
         0.4
       );
@@ -251,88 +249,86 @@ export function drawVineWhipEffect(
 
   const drawFrontImpact = () => {
     if (step === 1) {
-      // 1타 타격: 적 몸체에 좌상단 -> 우하단 사선 딥그린 덩굴 채찍 참격선 찰싹! + 타격 플래시
+      // 1타 타격: 적 몸체에 좌상단 -> 우하단 사선 딥그린 덩굴 채찍 참격선 찰싹! + 절제된 타격 플래시
       ctx.save();
       ctx.strokeStyle = "#064E3B";
-      ctx.lineWidth = 5.0;
+      ctx.lineWidth = 4.0;
       ctx.lineCap = "round";
       ctx.beginPath();
-      ctx.moveTo(tx - 48 * dirSign, ty - 36);
-      ctx.bezierCurveTo(tx - 14 * dirSign, ty - 28, tx - 16 * dirSign, ty - 5, tx + 32 * dirSign, ty + 14);
+      ctx.moveTo(tx - 45 * dirSign, ty - 32);
+      ctx.bezierCurveTo(tx - 14 * dirSign, ty - 25, tx - 16 * dirSign, ty - 5, tx + 30 * dirSign, ty + 12);
       ctx.stroke();
 
       ctx.strokeStyle = "#15803D";
-      ctx.lineWidth = 2.4;
+      ctx.lineWidth = 2.0;
       ctx.beginPath();
-      ctx.moveTo(tx - 48 * dirSign, ty - 36);
-      ctx.bezierCurveTo(tx - 14 * dirSign, ty - 28, tx - 16 * dirSign, ty - 5, tx + 32 * dirSign, ty + 14);
+      ctx.moveTo(tx - 45 * dirSign, ty - 32);
+      ctx.bezierCurveTo(tx - 14 * dirSign, ty - 25, tx - 16 * dirSign, ty - 5, tx + 30 * dirSign, ty + 12);
       ctx.stroke();
 
-      // 1타 타격 플래시 (Lush Green)
-      const hitGrad1 = ctx.createRadialGradient(tx - 5 * dirSign, ty - 10, 2, tx - 5 * dirSign, ty - 10, 26);
+      // 1타 타격 플래시 (컴팩트한 16px 반경)
+      const hitGrad1 = ctx.createRadialGradient(tx - 4 * dirSign, ty - 8, 1, tx - 4 * dirSign, ty - 8, 16);
       hitGrad1.addColorStop(0, "#FFFFFF");
-      hitGrad1.addColorStop(0.35, "#22C55E");
-      hitGrad1.addColorStop(0.8, "rgba(21, 128, 61, 0.4)");
+      hitGrad1.addColorStop(0.4, "#22C55E");
       hitGrad1.addColorStop(1, "rgba(21, 128, 61, 0.0)");
       ctx.fillStyle = hitGrad1;
       ctx.beginPath();
-      ctx.arc(tx - 5 * dirSign, ty - 10, 26, 0, Math.PI * 2);
+      ctx.arc(tx - 4 * dirSign, ty - 8, 16, 0, Math.PI * 2);
       ctx.fill();
 
-      drawLeaf(tx - 22 * dirSign, ty - 24, -0.6 * dirSign, 6);
-      drawLeaf(tx + 12 * dirSign, ty + 8, 0.8 * dirSign, 5);
+      drawLeaf(tx - 20 * dirSign, ty - 20, -0.6 * dirSign, 5);
+      drawLeaf(tx + 10 * dirSign, ty + 6, 0.8 * dirSign, 4);
       ctx.restore();
     } else if (step === 2) {
-      // 2타 타격: 우상단 -> 좌하단 교차 사선 덩굴 채찍 참격 ('X'자 완성) + 대형 에메랄드 폭발
+      // 2타 타격: 우상단 -> 좌하단 교차 사선 덩굴 채찍 참격 ('X'자 완성) + 절제된 에메랄드 폭발
       ctx.save();
       // 1타 참격선 잔상
-      ctx.strokeStyle = "rgba(6, 78, 59, 0.4)";
-      ctx.lineWidth = 3.2;
+      ctx.strokeStyle = "rgba(6, 78, 59, 0.35)";
+      ctx.lineWidth = 2.5;
       ctx.beginPath();
-      ctx.moveTo(tx - 48 * dirSign, ty - 36);
-      ctx.bezierCurveTo(tx - 14 * dirSign, ty - 28, tx - 16 * dirSign, ty - 5, tx + 32 * dirSign, ty + 14);
+      ctx.moveTo(tx - 45 * dirSign, ty - 32);
+      ctx.bezierCurveTo(tx - 14 * dirSign, ty - 25, tx - 16 * dirSign, ty - 5, tx + 30 * dirSign, ty + 12);
       ctx.stroke();
 
       // 2타 역방향 교차 참격선
       ctx.strokeStyle = "#064E3B";
-      ctx.lineWidth = 5.2;
+      ctx.lineWidth = 4.2;
       ctx.lineCap = "round";
       ctx.beginPath();
-      ctx.moveTo(tx + 48 * dirSign, ty - 36);
-      ctx.bezierCurveTo(tx + 14 * dirSign, ty - 24, tx + 20 * dirSign, ty + 8, tx - 28 * dirSign, ty + 18);
+      ctx.moveTo(tx + 45 * dirSign, ty - 32);
+      ctx.bezierCurveTo(tx + 14 * dirSign, ty - 22, tx + 18 * dirSign, ty + 6, tx - 25 * dirSign, ty + 16);
       ctx.stroke();
 
       ctx.strokeStyle = "#15803D";
-      ctx.lineWidth = 2.4;
+      ctx.lineWidth = 2.0;
       ctx.beginPath();
-      ctx.moveTo(tx + 48 * dirSign, ty - 36);
-      ctx.bezierCurveTo(tx + 14 * dirSign, ty - 24, tx + 20 * dirSign, ty + 8, tx - 28 * dirSign, ty + 18);
+      ctx.moveTo(tx + 45 * dirSign, ty - 32);
+      ctx.bezierCurveTo(tx + 14 * dirSign, ty - 22, tx + 18 * dirSign, ty + 6, tx - 25 * dirSign, ty + 16);
       ctx.stroke();
 
-      // 교차 지점 대형 타격 플래시
-      const hitGrad2 = ctx.createRadialGradient(tx, ty - 6, 2, tx, ty - 6, 32);
+      // 교차 지점 타격 플래시 (컴팩트한 20px 반경)
+      const hitGrad2 = ctx.createRadialGradient(tx, ty - 6, 1, tx, ty - 6, 20);
       hitGrad2.addColorStop(0, "#FFFFFF");
-      hitGrad2.addColorStop(0.35, "#22C55E");
-      hitGrad2.addColorStop(0.8, "rgba(21, 128, 61, 0.4)");
+      hitGrad2.addColorStop(0.4, "#22C55E");
       hitGrad2.addColorStop(1, "rgba(21, 128, 61, 0.0)");
       ctx.fillStyle = hitGrad2;
       ctx.beginPath();
-      ctx.arc(tx, ty - 6, 32, 0, Math.PI * 2);
+      ctx.arc(tx, ty - 6, 20, 0, Math.PI * 2);
       ctx.fill();
 
       // 폭발하는 나뭇잎 파티클
-      drawLeaf(tx + 22 * dirSign, ty - 20, 0.7 * dirSign, 7);
-      drawLeaf(tx - 20 * dirSign, ty - 16, -0.5 * dirSign, 6);
-      drawLeaf(tx + 16 * dirSign, ty + 14, 1.2 * dirSign, 6);
-      drawLeaf(tx - 22 * dirSign, ty + 10, -1.0 * dirSign, 6);
+      drawLeaf(tx + 20 * dirSign, ty - 18, 0.7 * dirSign, 6);
+      drawLeaf(tx - 18 * dirSign, ty - 14, -0.5 * dirSign, 5);
+      drawLeaf(tx + 14 * dirSign, ty + 12, 1.2 * dirSign, 5);
+      drawLeaf(tx - 20 * dirSign, ty + 8, -1.0 * dirSign, 5);
       ctx.restore();
     } else if (step >= 3) {
       // 3단계: 흩날리는 나뭇잎
       ctx.save();
-      drawLeaf(tx - 30 * dirSign, ty - 20, -0.4 * dirSign, 5);
-      drawLeaf(tx + 26 * dirSign, ty - 22, 0.9 * dirSign, 6);
-      drawLeaf(tx + 18 * dirSign, ty + 14, 1.5 * dirSign, 5);
-      drawLeaf(tx - 22 * dirSign, ty + 12, -1.2 * dirSign, 5);
+      drawLeaf(tx - 26 * dirSign, ty - 18, -0.4 * dirSign, 4);
+      drawLeaf(tx + 22 * dirSign, ty - 20, 0.9 * dirSign, 5);
+      drawLeaf(tx + 16 * dirSign, ty + 12, 1.5 * dirSign, 4);
+      drawLeaf(tx - 18 * dirSign, ty + 10, -1.2 * dirSign, 4);
       ctx.restore();
     }
   };
