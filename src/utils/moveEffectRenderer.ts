@@ -2220,80 +2220,68 @@ export function drawViceGripEffect(ctx: any, target: { x: number; y: number }, s
 }
 
 /**
- * Helper to draw a single diagonal tapered Guillotine blade (/ or \)
+ * 012 가위자르기 (Guillotine) Scissor Blade Helper:
+ * Draws a sharp, heavy, faceted blood-red scissor shear (Thick Center, Razor Needle Tips)
  */
-function drawTaperedGuillotineSlash(
+function drawSingleScissorBlade(
   ctx: any,
   cx: number,
   cy: number,
-  isForwardSlash: boolean,
-  radius: number,
-  centerWidth: number,
+  angle: number,
+  bladeLength: number,
+  rootWidth: number,
   tipWidth: number,
   alpha: number = 1.0
 ) {
   ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(angle);
   ctx.globalAlpha = alpha;
 
-  const rayAngles = isForwardSlash
-    ? [(-1 * Math.PI) / 4, (3 * Math.PI) / 4]  // [/] Top-Right to Bottom-Left
-    : [(-3 * Math.PI) / 4, (1 * Math.PI) / 4]; // [\] Top-Left to Bottom-Right
+  const halfL = bladeLength / 2;
+  const halfR = rootWidth / 2;
+  const halfT = tipWidth / 2;
 
-  for (const ang of rayAngles) {
-    const cos = Math.cos(ang);
-    const sin = Math.sin(ang);
-    const nx = -sin;
-    const ny = cos;
+  // Blade Upper Half (0 to +halfL)
+  ctx.fillStyle = "#DC2626";
+  ctx.strokeStyle = "#7F1D1D";
+  ctx.lineWidth = 2.2;
+  ctx.lineJoin = "miter";
+  ctx.beginPath();
+  ctx.moveTo(0, -halfR);
+  ctx.lineTo(halfL * 0.85, -halfT * 1.5);
+  ctx.lineTo(halfL, 0); // Razor sharp tip
+  ctx.lineTo(halfL * 0.85, halfT * 1.5);
+  ctx.lineTo(0, halfR);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
 
-    const halfC = centerWidth / 2;
-    const halfT = tipWidth / 2;
+  // Blade Lower Half (0 to -halfL)
+  ctx.beginPath();
+  ctx.moveTo(0, halfR);
+  ctx.lineTo(-halfL * 0.85, halfT * 1.5);
+  ctx.lineTo(-halfL, 0); // Razor sharp tip
+  ctx.lineTo(-halfL * 0.85, -halfT * 1.5);
+  ctx.lineTo(0, -halfR);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
 
-    const tipX = cx + cos * radius;
-    const tipY = cy + sin * radius;
+  // Sharp Scarlet Cutting Edge Line
+  ctx.strokeStyle = "#EF4444";
+  ctx.lineWidth = Math.max(1.6, rootWidth * 0.25);
+  ctx.beginPath();
+  ctx.moveTo(-halfL * 0.92, 0);
+  ctx.lineTo(halfL * 0.92, 0);
+  ctx.stroke();
 
-    // Solid Deep Crimson Red Blade Body
-    ctx.fillStyle = "#DC2626";
-    ctx.strokeStyle = "#7F1D1D";
-    ctx.lineWidth = 2.0;
-    ctx.lineJoin = "miter";
-    ctx.beginPath();
-    ctx.moveTo(cx + nx * halfC, cy + ny * halfC);
-    ctx.lineTo(tipX + nx * halfT, tipY + ny * halfT);
-    ctx.lineTo(tipX + cos * (tipWidth * 1.5), tipY + sin * (tipWidth * 1.5));
-    ctx.lineTo(tipX - nx * halfT, tipY - ny * halfT);
-    ctx.lineTo(cx - nx * halfC, cy - ny * halfC);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    // Darker Core Ridge for rich deep blood-red depth
-    ctx.strokeStyle = "#991B1B";
-    ctx.lineWidth = Math.max(1.4, centerWidth * 0.28);
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(tipX, tipY);
-    ctx.stroke();
-
-    // Scarlet Red cutting edge (Pure vivid red, NO white/yellow wash out!)
-    ctx.strokeStyle = "#EF4444";
-    ctx.lineWidth = Math.max(1.0, centerWidth * 0.14);
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(tipX * 0.88 + cx * 0.12, tipY * 0.88 + cy * 0.12);
-    ctx.stroke();
-  }
-
-  // Center Junction Diamond
-  const halfC = centerWidth / 2;
-  ctx.fillStyle = "#B91C1C";
+  // Center Pivot Rivet Hub
+  ctx.fillStyle = "#450A0A";
   ctx.strokeStyle = "#7F1D1D";
   ctx.lineWidth = 2.0;
   ctx.beginPath();
-  ctx.moveTo(cx, cy - halfC * 1.2);
-  ctx.lineTo(cx + halfC * 1.2, cy);
-  ctx.lineTo(cx, cy + halfC * 1.2);
-  ctx.lineTo(cx - halfC * 1.2, cy);
-  ctx.closePath();
+  ctx.arc(0, 0, halfR * 0.75, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
 
@@ -2301,10 +2289,10 @@ function drawTaperedGuillotineSlash(
 }
 
 /**
- * 012 가위자르기 (Guillotine):
- * Step 1: First Diagonal Slash [/] (Pure Deep Blood Red)
- * Step 2: Second Diagonal Slash [\] (Pure Deep Blood Red)
- * Step 3: Fatal Full [X] Scissor Execution (Thick Center, Sharp Outer Needle)
+ * 012 가위자르기 (Guillotine): Remade Pure Scissor Blade Execution Engine
+ * Step 1: Diagonal Scissor Slash [/]
+ * Step 2: Opposing Diagonal Scissor Slash [\]
+ * Step 3: FATAL FULL [X] SCISSOR EXECUTION CRASH (Thick Center, Sharp Outer Needle)
  * Step 4: Red [X] Dissipation
  */
 export function drawGuillotineEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
@@ -2313,32 +2301,28 @@ export function drawGuillotineEffect(ctx: any, target: { x: number; y: number },
   const targetX = target.x;
   const targetY = target.y - 12;
 
-  // Dark Execution Backdrop Shadow (prevents red-on-green grass color blending into yellow!)
+  // Dark Neutral Vignette Backdrop (Pure dark overlay to guarantee 100% true blood-red saturation)
   if (step <= 3) {
-    const aura = ctx.createRadialGradient(targetX, targetY - 14, 6, targetX, targetY - 14, 65);
-    aura.addColorStop(0, "rgba(20, 5, 10, 0.55)");
-    aura.addColorStop(0.6, "rgba(15, 0, 5, 0.35)");
-    aura.addColorStop(1, "rgba(0, 0, 0, 0)");
-    ctx.fillStyle = aura;
-    ctx.beginPath();
-    ctx.arc(targetX, targetY - 14, 65, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.save();
+    ctx.fillStyle = step === 3 ? "rgba(0, 0, 0, 0.52)" : "rgba(0, 0, 0, 0.38)";
+    ctx.fillRect(0, 0, 560, 380);
+    ctx.restore();
   }
 
   if (step === 1) {
-    // Step 1: First Diagonal Slash [/]
-    drawTaperedGuillotineSlash(ctx, targetX, targetY - 14, true, 64, 16, 2.5, 1.0);
+    // Step 1: First Diagonal Scissor Slash [/]
+    drawSingleScissorBlade(ctx, targetX, targetY - 14, -Math.PI / 4, 136, 18, 2.5, 1.0);
   } else if (step === 2) {
-    // Step 2: Second Diagonal Slash [\]
-    drawTaperedGuillotineSlash(ctx, targetX, targetY - 14, false, 64, 16, 2.5, 1.0);
+    // Step 2: Second Diagonal Scissor Slash [\]
+    drawSingleScissorBlade(ctx, targetX, targetY - 14, Math.PI / 4, 136, 18, 2.5, 1.0);
   } else if (step === 3) {
     // Step 3: FATAL FULL [X] SCISSOR EXECUTION CRASH
-    drawTaperedGuillotineSlash(ctx, targetX, targetY - 14, true, 74, 24, 2.0, 1.0);
-    drawTaperedGuillotineSlash(ctx, targetX, targetY - 14, false, 74, 24, 2.0, 1.0);
+    drawSingleScissorBlade(ctx, targetX, targetY - 14, -Math.PI / 4, 156, 24, 2.0, 1.0);
+    drawSingleScissorBlade(ctx, targetX, targetY - 14, Math.PI / 4, 156, 24, 2.0, 1.0);
   } else if (step >= 4) {
     // Step 4: Fading Red Shockwave [X] Afterimage
-    drawTaperedGuillotineSlash(ctx, targetX, targetY - 14, true, 84, 12, 1.0, 0.25);
-    drawTaperedGuillotineSlash(ctx, targetX, targetY - 14, false, 84, 12, 1.0, 0.25);
+    drawSingleScissorBlade(ctx, targetX, targetY - 14, -Math.PI / 4, 172, 12, 1.0, 0.25);
+    drawSingleScissorBlade(ctx, targetX, targetY - 14, Math.PI / 4, 172, 12, 1.0, 0.25);
   }
 
   ctx.restore();
