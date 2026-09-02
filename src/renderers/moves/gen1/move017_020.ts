@@ -103,10 +103,6 @@ export function drawWingAttackEffect(ctx: any, target: { x: number; y: number },
     drawAuthenticFeather(tx + 56, ty - 16, 0.82, 25, 0.16, 0.90);   // E: Far Right
     drawAuthenticFeather(tx - 15, ty + 16, -0.40, 23, 0.10, 0.85);  // F: Lower Left
     drawAuthenticFeather(tx + 26, ty + 20, 0.35, 24, -0.14, 0.85);  // G: Lower Right
-
-    // Center sharp impact star & bright flash
-    drawMiniRetroStar(ctx, tx, ty, 20, "#BAE6FD");
-    drawMiniRetroStar(ctx, tx, ty, 10, "#FFFFFF");
   } else if (step === 3) {
     // Step 3: Peak Float & Final Fade - Feathers reach zenith, tilt flat horizontally, and swiftly fade away
     drawAuthenticFeather(tx - 62, ty - 58, -1.42, 27, 0.20, 0.45); // A: tilted slightly up-left
