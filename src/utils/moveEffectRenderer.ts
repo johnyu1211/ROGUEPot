@@ -982,178 +982,141 @@ export function drawDoubleSlapEffect(ctx: any, target: { x: number; y: number },
 }
 
 /**
- * 004 연속펀치 (Comet Punch): Glowing Comet Fist Barrage with Stardust Speed Trails & Flash Impact
+ * Clean White Boxing / Punch Fist SVG (Upright Vertical Angle 0 deg)
  */
-export function drawCometPunchEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
+export function drawWhitePunchFistSvg(
+  ctx: any,
+  x: number,
+  y: number,
+  scale: number = 1.3,
+  isFlipped: boolean = false,
+  alpha: number = 1.0
+) {
   ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(isFlipped ? -scale : scale, scale);
+  ctx.globalAlpha = alpha;
 
-  // Multi-step angle & position cycle (5 distinct punch trajectories)
-  const stepIdx = ((step - 1) % 5);
-  const configs = [
-    { startDx: -55, startDy: -35, hitDx: -10, hitDy: -8, angle: (28 * Math.PI) / 180, scaleX: 1, glowColor: "#38BDF8" },
-    { startDx: 55, startDy: -30, hitDx: 10, hitDy: -6, angle: (-25 * Math.PI) / 180, scaleX: -1, glowColor: "#FBBF24" },
-    { startDx: -45, startDy: 30, hitDx: -8, hitDy: 10, angle: (-35 * Math.PI) / 180, scaleX: 1, glowColor: "#38BDF8" },
-    { startDx: 50, startDy: 20, hitDx: 8, hitDy: 6, angle: (-15 * Math.PI) / 180, scaleX: -1, glowColor: "#F43F5E" },
-    { startDx: 0, startDy: -60, hitDx: 0, hitDy: -12, angle: (5 * Math.PI) / 180, scaleX: 1, glowColor: "#A855F7" },
-  ];
-  const cfg = configs[stepIdx];
-
-  const fistX = target.x + cfg.hitDx;
-  const fistY = target.y + cfg.hitDy;
-  const originX = target.x + cfg.startDx;
-  const originY = target.y + cfg.startDy;
-
-  // 1. Comet Velocity Streaks (Trailing Light Stardust Beam)
-  ctx.save();
-  const cometGrad = ctx.createLinearGradient(originX, originY, fistX, fistY);
-  cometGrad.addColorStop(0, "rgba(255, 255, 255, 0)");
-  cometGrad.addColorStop(0.5, cfg.glowColor);
-  cometGrad.addColorStop(1, "#FFFFFF");
-
-  // Thick Outer Comet Aura
-  ctx.strokeStyle = cometGrad;
-  ctx.lineWidth = 14;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(originX, originY);
-  ctx.lineTo(fistX, fistY);
-  ctx.stroke();
-
-  // Bright Inner Core Beam
-  ctx.strokeStyle = "#FFFFFF";
-  ctx.lineWidth = 5;
-  ctx.beginPath();
-  ctx.moveTo(originX, originY);
-  ctx.lineTo(fistX, fistY);
-  ctx.stroke();
-
-  // Trailing Stardust Sparkles along the path
-  const starOffsets = [
-    { t: 0.25, ox: -8, oy: 4, size: 4 },
-    { t: 0.5, ox: 9, oy: -6, size: 5 },
-    { t: 0.75, ox: -6, oy: -5, size: 4.5 },
-  ];
-  for (const st of starOffsets) {
-    const sx = originX + (fistX - originX) * st.t + st.ox;
-    const sy = originY + (fistY - originY) * st.t + st.oy;
-    drawMiniRetroStar(ctx, sx, sy, st.size, cfg.glowColor);
-  }
-  ctx.restore();
-
-  // 2. Clenched Punch Fist (Boxing Glove / Fighting Fist Vector)
-  ctx.save();
-  ctx.translate(fistX, fistY);
-  ctx.scale(cfg.scaleX * 1.3, 1.3);
-  ctx.rotate(cfg.angle);
-
-  // Fist Body & Knuckles
   ctx.fillStyle = "#FFFFFF";
   ctx.strokeStyle = "#0F172A";
   ctx.lineWidth = 3.2;
   ctx.lineJoin = "round";
   ctx.lineCap = "round";
 
+  // Rounded Boxing Punch Fist Outline (0-deg Upright Horizontal Punch)
   ctx.beginPath();
-  // Wrist Band / Cuff
-  ctx.moveTo(-12, 18);
-  ctx.lineTo(12, 18);
-  ctx.lineTo(13, 8);
-  // Bottom Knuckle (Pinky)
-  ctx.lineTo(17, 3);
-  ctx.arc(15, -1, 4, 0, Math.PI, true);
-  // Middle Knuckles
-  ctx.lineTo(13, -7);
-  ctx.arc(11, -11, 4.5, 0, Math.PI, true);
-  ctx.lineTo(7, -15);
-  ctx.arc(4, -18, 4.5, 0, Math.PI, true);
-  // Index Knuckle
-  ctx.lineTo(-2, -19);
-  ctx.arc(-5, -20, 4.2, 0, Math.PI, true);
-  // Thumb folded across front
-  ctx.lineTo(-12, -10);
-  ctx.arc(-13, -4, 4.2, 0, Math.PI / 2, false);
-  ctx.lineTo(-12, 18);
+  // Wrist at back
+  ctx.moveTo(-16, -10);
+  ctx.lineTo(-6, -11);
+  // Knuckles along top-right to bottom-right
+  ctx.lineTo(8, -12);
+  ctx.arc(14, -7, 4.5, -Math.PI / 2, 0); // Index
+  ctx.arc(15, -1, 4.5, -Math.PI / 3, Math.PI / 6); // Middle
+  ctx.arc(14, 5, 4.5, -Math.PI / 6, Math.PI / 3); // Ring
+  ctx.arc(10, 10, 4.2, 0, Math.PI / 2); // Pinky
+  // Palm bottom
+  ctx.lineTo(-6, 12);
+  ctx.lineTo(-16, 10);
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
 
-  // Inner Knuckle crease details
-  ctx.strokeStyle = "#CBD5E1";
-  ctx.lineWidth = 2.0;
+  // Thumb folded across front
   ctx.beginPath();
-  ctx.moveTo(11, -1); ctx.lineTo(4, 2);
-  ctx.moveTo(7, -7); ctx.lineTo(1, -3);
-  ctx.moveTo(2, -14); ctx.lineTo(-3, -9);
-  ctx.stroke();
-
-  // Thumb overlay crease
-  ctx.strokeStyle = "#0F172A";
-  ctx.lineWidth = 2.8;
-  ctx.beginPath();
-  ctx.moveTo(-6, -16);
-  ctx.quadraticCurveTo(-7, -4, -3, 6);
-  ctx.stroke();
-
-  // Golden / Cyan Energy Sheen Highlight on Fist Top
-  ctx.fillStyle = cfg.glowColor;
-  ctx.globalAlpha = 0.55;
-  ctx.beginPath();
-  ctx.arc(3, -13, 8, 0, Math.PI * 2);
+  ctx.moveTo(-4, 9);
+  ctx.lineTo(6, 8);
+  ctx.arc(8, 4, 4.0, Math.PI / 2, -Math.PI / 2, true);
+  ctx.lineTo(-2, 0);
+  ctx.quadraticCurveTo(-6, 2, -4, 9);
+  ctx.closePath();
+  ctx.fillStyle = "#FFFFFF";
   ctx.fill();
-  ctx.globalAlpha = 1.0;
+  ctx.stroke();
+
+  // Knuckle division creases
+  ctx.beginPath();
+  ctx.moveTo(10, -5);
+  ctx.lineTo(4, -3);
+  ctx.moveTo(11, 0);
+  ctx.lineTo(5, 1);
+  ctx.stroke();
 
   ctx.restore();
+}
 
-  // 3. Shockwave & Starburst Explosion at Point of Contact
+/**
+ * 004 연속펀치 (Comet Punch): 3-hit White Fist Barrage (Vertical Upright Angle 0 deg)
+ * Alternating Left / Right / Center white fist strikes with impact stars and gradual fade!
+ */
+export function drawCometPunchEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
   ctx.save();
-  const impactX = fistX;
-  const impactY = fistY;
 
-  // Expanding Radial Shockwave Ring
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
-  ctx.lineWidth = 2.5;
-  ctx.beginPath();
-  ctx.arc(impactX, impactY, 26, 0, Math.PI * 2);
-  ctx.stroke();
+  // step: 1 (Hit 1 Left Impact), 2 (Hit 1 Left Fade), 3 (Hit 2 Right Impact), 4 (Hit 2 Right Fade), 5 (Hit 3 Center Impact), 6 (Hit 3 Center Fade)
+  const isFade = (step % 2 === 0);
+  const hitIndex = Math.floor((step - 1) / 2) % 3; // 0 (Left), 1 (Right), 2 (Center)
 
-  // 4-point Diamond Comet Starburst
-  ctx.fillStyle = cfg.glowColor;
-  ctx.strokeStyle = "#FFFFFF";
-  ctx.lineWidth = 1.8;
-  ctx.beginPath();
-  ctx.moveTo(impactX, impactY - 22);
-  ctx.quadraticCurveTo(impactX, impactY, impactX + 22, impactY);
-  ctx.quadraticCurveTo(impactX, impactY, impactX, impactY + 22);
-  ctx.quadraticCurveTo(impactX, impactY, impactX - 22, impactY);
-  ctx.quadraticCurveTo(impactX, impactY, impactX, impactY - 22);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-
-  // White Bright Core Star
-  ctx.fillStyle = "#FFFFFF";
-  ctx.beginPath();
-  ctx.moveTo(impactX, impactY - 11);
-  ctx.quadraticCurveTo(impactX, impactY, impactX + 11, impactY);
-  ctx.quadraticCurveTo(impactX, impactY, impactX, impactY + 11);
-  ctx.quadraticCurveTo(impactX, impactY, impactX - 11, impactY);
-  ctx.quadraticCurveTo(impactX, impactY, impactX, impactY - 11);
-  ctx.closePath();
-  ctx.fill();
-
-  // Radial Sparks
-  const sparks = [
-    { dx: -18, dy: -16, r: 2.8, c: "#FFFFFF" },
-    { dx: 19, dy: -14, r: 2.5, c: cfg.glowColor },
-    { dx: -16, dy: 18, r: 2.5, c: cfg.glowColor },
-    { dx: 18, dy: 16, r: 2.8, c: "#FFFFFF" },
-    { dx: 0, dy: -24, r: 2.2, c: "#FEF08A" },
-    { dx: 0, dy: 24, r: 2.2, c: "#FEF08A" },
+  const configs = [
+    { ox: -24, oy: -25, isFlipped: false }, // Hit 1: Left Upper
+    { ox: 24, oy: -12, isFlipped: true },   // Hit 2: Right Lower
+    { ox: -2, oy: -20, isFlipped: false },  // Hit 3: Center Direct
   ];
-  for (const sp of sparks) {
-    ctx.fillStyle = sp.c;
+  const cfg = configs[hitIndex];
+
+  const followOffset = isFade ? (cfg.isFlipped ? -6 : 6) : 0;
+  const fistX = target.x + cfg.ox + followOffset;
+  const fistY = target.y + cfg.oy;
+  const alpha = isFade ? 0.32 : 1.0;
+
+  // 1. White Punch Fist SVG (Purely vertical upright angle)
+  drawWhitePunchFistSvg(ctx, fistX, fistY, 1.25, cfg.isFlipped, alpha);
+
+  // 2. Impact Star / Sparks at Knuckle Contact Point
+  ctx.save();
+  const sparkX = fistX + (cfg.isFlipped ? -16 : 16);
+  const sparkY = fistY - 2;
+  const starRadius = isFade ? 11 : 18;
+  const starAlpha = isFade ? 0.38 : 1.0;
+
+  ctx.globalAlpha = starAlpha;
+
+  // Yellow 4-point Impact Star
+  ctx.fillStyle = "#FACC15";
+  ctx.strokeStyle = "#FFFFFF";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(sparkX, sparkY - starRadius);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX + starRadius, sparkY);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX, sparkY + starRadius);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX - starRadius, sparkY);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX - starRadius, sparkY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // White inner star
+  ctx.fillStyle = "#FFFFFF";
+  const innerR = starRadius * 0.5;
+  ctx.beginPath();
+  ctx.moveTo(sparkX, sparkY - innerR);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX + innerR, sparkY);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX, sparkY + innerR);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX - innerR, sparkY);
+  ctx.quadraticCurveTo(sparkX, sparkY, sparkX - innerR, sparkY);
+  ctx.closePath();
+  ctx.fill();
+
+  // Spark dots
+  const sparkScale = isFade ? 1.4 : 1.0;
+  const sparkDots = [
+    { ox: -12 * sparkScale, oy: -11 * sparkScale, r: 2.5, c: "#FEF08A" },
+    { ox: 13 * sparkScale, oy: -10 * sparkScale, r: 2.2, c: "#FACC15" },
+    { ox: -10 * sparkScale, oy: 13 * sparkScale, r: 2.2, c: "#FACC15" },
+    { ox: 12 * sparkScale, oy: 12 * sparkScale, r: 2.5, c: "#FEF08A" },
+  ];
+  for (const sd of sparkDots) {
+    ctx.fillStyle = sd.c;
     ctx.beginPath();
-    ctx.arc(impactX + sp.dx, impactY + sp.dy, sp.r, 0, Math.PI * 2);
+    ctx.arc(sparkX + sd.ox, sparkY + sd.oy, isFade ? sd.r * 0.8 : sd.r, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();
