@@ -1169,15 +1169,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
       const isMiss1 = !isHit1;
       act1Frames = [
-        // 1. High-speed diagonal forward dive-lunge (thinned out lean along dash vector) (140ms)
+        // 1. High-speed diagonal forward dive-lunge towards target (130ms)
         {
-          delay: 140,
-          pOffset: isP1 ? { x: 120, y: -65 } : { x: 0, y: 0 },
-          eOffset: !isP1 ? { x: -120, y: 65 } : { x: 0, y: 0 },
-          pScale: isP1 ? { x: 0.40, y: 1.35 } : undefined,
-          eScale: !isP1 ? { x: 0.40, y: 1.35 } : undefined,
-          pRot: isP1 ? -0.22 : undefined,
-          eRot: !isP1 ? 0.22 : undefined,
+          delay: 130,
+          pOffset: isP1 ? { x: 130, y: -70 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -130, y: 70 } : { x: 0, y: 0 },
+          pScale: isP1 ? { x: 0.38, y: 1.35 } : undefined,
+          eScale: !isP1 ? { x: 0.38, y: 1.35 } : undefined,
+          pRot: isP1 ? -0.25 : undefined,
+          eRot: !isP1 ? 0.25 : undefined,
           showEffect: true,
           hitFlash: false,
           enemyHp: enemy.hp,
@@ -1187,15 +1187,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 1,
         },
-        // 2. Direct contact wing strike impact at enemy platform! + Feather burst explosion (220ms)
+        // 2. Direct contact strike impact right at target platform + Feather burst explosion! (200ms)
         {
-          delay: 220,
-          pOffset: isP1 ? { x: 235, y: -125 } : (isMiss1 ? { x: 26, y: 4 } : { x: -8, y: 4 }),
-          eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 12, y: -4 }) : { x: -235, y: 125 },
-          pScale: isP1 ? { x: 0.55, y: 1.25 } : undefined,
-          eScale: !isP1 ? { x: 0.55, y: 1.25 } : undefined,
-          pRot: isP1 ? -0.15 : undefined,
-          eRot: !isP1 ? 0.15 : undefined,
+          delay: 200,
+          pOffset: isP1 ? { x: 255, y: -135 } : (isMiss1 ? { x: 26, y: 4 } : { x: -8, y: 4 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 12, y: -4 }) : { x: -255, y: 135 },
+          pScale: isP1 ? { x: 0.48, y: 1.30 } : undefined,
+          eScale: !isP1 ? { x: 0.48, y: 1.30 } : undefined,
+          pRot: isP1 ? -0.20 : undefined,
+          eRot: !isP1 ? 0.20 : undefined,
           showEffect: true,
           hitFlash: isHit1,
           enemyHp: a1.enemyHpAfter,
@@ -1206,15 +1206,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 2,
         },
-        // 3. Rebounding back dash while feathers float and scatter (140ms)
+        // 3. Piercing through target & exiting off-screen to the upper-right (130ms)
         {
-          delay: 140,
-          pOffset: isP1 ? { x: 90, y: -45 } : (isMiss1 ? { x: 16, y: 2 } : { x: -4, y: 2 }),
-          eOffset: isP1 ? (isMiss1 ? { x: 16, y: -2 } : { x: 5, y: -1 }) : { x: -90, y: 45 },
-          pScale: isP1 ? { x: 0.70, y: 1.15 } : undefined,
-          eScale: !isP1 ? { x: 0.70, y: 1.15 } : undefined,
-          pRot: isP1 ? 0.12 : undefined,
-          eRot: !isP1 ? -0.12 : undefined,
+          delay: 130,
+          pOffset: isP1 ? { x: 460, y: -250 } : (isMiss1 ? { x: 16, y: 2 } : { x: -4, y: 2 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 16, y: -2 } : { x: 6, y: -2 }) : { x: -460, y: 250 },
+          pScale: isP1 ? { x: 0.38, y: 1.35 } : undefined,
+          eScale: !isP1 ? { x: 0.38, y: 1.35 } : undefined,
+          pRot: isP1 ? -0.25 : undefined,
+          eRot: !isP1 ? 0.25 : undefined,
           showEffect: true,
           hitFlash: false,
           enemyHp: a1.enemyHpAfter,
@@ -1225,7 +1225,26 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 3,
         },
-        // 4. Smooth landing back on home platform (120ms)
+        // 4. Re-appearing / Swooping in from screen bottom-left towards home platform (130ms)
+        {
+          delay: 130,
+          pOffset: isP1 ? { x: -95, y: 45 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: 95, y: -45 } : { x: 0, y: 0 },
+          pScale: isP1 ? { x: 0.60, y: 1.20 } : undefined,
+          eScale: !isP1 ? { x: 0.60, y: 1.20 } : undefined,
+          pRot: isP1 ? -0.15 : undefined,
+          eRot: !isP1 ? 0.15 : undefined,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          statProgress: undefined,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 4,
+        },
+        // 5. Smooth landing back on home platform (120ms)
         {
           delay: 120,
           pOffset: { x: 0, y: 0 },
@@ -2149,15 +2168,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
       const isMiss2 = !isHit2;
       act2Frames = [
-        // 1. Counter forward dive-lunge (thinned out lean along dash vector) (140ms)
+        // 1. High-speed counter dive-lunge towards target (130ms)
         {
-          delay: 140,
-          pOffset: isP2 ? { x: 120, y: -65 } : { x: 0, y: 0 },
-          eOffset: !isP2 ? { x: -120, y: 65 } : { x: 0, y: 0 },
-          pScale: isP2 ? { x: 0.40, y: 1.35 } : undefined,
-          eScale: !isP2 ? { x: 0.40, y: 1.35 } : undefined,
-          pRot: isP2 ? -0.22 : undefined,
-          eRot: !isP2 ? 0.22 : undefined,
+          delay: 130,
+          pOffset: isP2 ? { x: 130, y: -70 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -130, y: 70 } : { x: 0, y: 0 },
+          pScale: isP2 ? { x: 0.38, y: 1.35 } : undefined,
+          eScale: !isP2 ? { x: 0.38, y: 1.35 } : undefined,
+          pRot: isP2 ? -0.25 : undefined,
+          eRot: !isP2 ? 0.25 : undefined,
           showEffect: true,
           hitFlash: false,
           enemyHp: a1.enemyHpAfter,
@@ -2167,15 +2186,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 1,
         },
-        // 2. Direct contact wing strike impact at defender! + Feather burst (220ms)
+        // 2. Direct contact strike impact right at target platform + Feather burst explosion! (200ms)
         {
-          delay: 220,
-          pOffset: isP2 ? { x: 235, y: -125 } : (isMiss2 ? { x: -26, y: 4 } : { x: -12, y: 4 }),
-          eOffset: !isP2 ? { x: -235, y: 125 } : (isMiss2 ? { x: 26, y: -4 } : { x: 12, y: -4 }),
-          pScale: isP2 ? { x: 0.55, y: 1.25 } : undefined,
-          eScale: !isP2 ? { x: 0.55, y: 1.25 } : undefined,
-          pRot: isP2 ? -0.15 : undefined,
-          eRot: !isP2 ? 0.15 : undefined,
+          delay: 200,
+          pOffset: isP2 ? { x: 255, y: -135 } : (isMiss2 ? { x: -26, y: 4 } : { x: -12, y: 4 }),
+          eOffset: !isP2 ? { x: -255, y: 135 } : (isMiss2 ? { x: 26, y: -4 } : { x: 12, y: -4 }),
+          pScale: isP2 ? { x: 0.48, y: 1.30 } : undefined,
+          eScale: !isP2 ? { x: 0.48, y: 1.30 } : undefined,
+          pRot: isP2 ? -0.20 : undefined,
+          eRot: !isP2 ? 0.20 : undefined,
           showEffect: true,
           hitFlash: isHit2,
           enemyHp: a2.enemyHpAfter,
@@ -2186,15 +2205,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 2,
         },
-        // 3. Rebounding back dash while feathers float (140ms)
+        // 3. Piercing through target & exiting off-screen (130ms)
         {
-          delay: 140,
-          pOffset: isP2 ? { x: 90, y: -45 } : (isMiss2 ? { x: -16, y: 2 } : { x: -5, y: 1 }),
-          eOffset: !isP2 ? { x: -90, y: 45 } : (isMiss2 ? { x: 16, y: -2 } : { x: 5, y: -1 }),
-          pScale: isP2 ? { x: 0.70, y: 1.15 } : undefined,
-          eScale: !isP2 ? { x: 0.70, y: 1.15 } : undefined,
-          pRot: isP2 ? 0.12 : undefined,
-          eRot: !isP2 ? -0.12 : undefined,
+          delay: 130,
+          pOffset: isP2 ? { x: 460, y: -250 } : (isMiss2 ? { x: -16, y: 2 } : { x: -5, y: 1 }),
+          eOffset: !isP2 ? { x: -460, y: 250 } : (isMiss2 ? { x: 16, y: -2 } : { x: 5, y: -1 }),
+          pScale: isP2 ? { x: 0.38, y: 1.35 } : undefined,
+          eScale: !isP2 ? { x: 0.38, y: 1.35 } : undefined,
+          pRot: isP2 ? -0.25 : undefined,
+          eRot: !isP2 ? 0.25 : undefined,
           showEffect: true,
           hitFlash: false,
           enemyHp: a2.enemyHpAfter,
@@ -2205,7 +2224,26 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 3,
         },
-        // 4. Smooth landing back home (120ms)
+        // 4. Re-appearing / Swooping in from off-screen towards home platform (130ms)
+        {
+          delay: 130,
+          pOffset: isP2 ? { x: -95, y: 45 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: 95, y: -45 } : { x: 0, y: 0 },
+          pScale: isP2 ? { x: 0.60, y: 1.20 } : undefined,
+          eScale: !isP2 ? { x: 0.60, y: 1.20 } : undefined,
+          pRot: isP2 ? -0.15 : undefined,
+          eRot: !isP2 ? 0.15 : undefined,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          statProgress: undefined,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 4,
+        },
+        // 5. Smooth landing back on home platform (120ms)
         {
           delay: 120,
           pOffset: { x: 0, y: 0 },
