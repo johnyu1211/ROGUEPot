@@ -347,7 +347,7 @@ export function drawVineWhipEffect(
 }
 
 /**
- * 023 짓밟기 (Stomp): Giant Beast Paw / Foot Silhouette Crushing Down from Above with Heavy Seismic Shockwave Dust
+ * 023 짓밟기 (Stomp): Pokémon directly leaps on top of opponent & crushingly stamps down with heavy seismic shockwave and billowing dust
  */
 export function drawStompEffect(
   ctx: any,
@@ -356,75 +356,45 @@ export function drawStompEffect(
 ) {
   ctx.save();
   const tx = target.x;
-  const ty = target.y - 8;
-
-  // Helper to draw a stylized monster paw / foot stamp
-  const drawBeastFootprint = (fx: number, fy: number, footScale: number, alpha: number) => {
-    ctx.save();
-    ctx.translate(fx, fy);
-    ctx.scale(footScale, footScale);
-    ctx.globalAlpha = alpha;
-
-    // Main Foot Pad (Solid dark charcoal silhouette)
-    ctx.fillStyle = "#334155";
-    ctx.beginPath();
-    ctx.ellipse(0, 0, 32, 24, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "#0F172A";
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-
-    // 3 Sharp Toe Claws
-    const toes = [-20, 0, 20];
-    for (const tox of toes) {
-      ctx.fillStyle = "#1E293B";
-      ctx.beginPath();
-      ctx.ellipse(tox, -24, 9, 14, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-
-      // Sharp claw tip
-      ctx.fillStyle = "#E2E8F0";
-      ctx.beginPath();
-      ctx.moveTo(tox - 4, -30);
-      ctx.lineTo(tox + 4, -30);
-      ctx.lineTo(tox, -42);
-      ctx.closePath();
-      ctx.fill();
-    }
-    ctx.restore();
-  };
+  const ty = target.y;
 
   if (step === 1) {
-    // Step 1: Foot Silhouette Looming High Above & Growing Ground Shadow
+    // Step 1: Looming Ground Shadow as Pokémon leaps above opponent
     ctx.save();
-    // Looming Foot (High altitude, descending)
-    drawBeastFootprint(tx, ty - 65, 1.15, 0.85);
-
-    // Ground Target Reticle / Shadow
-    ctx.fillStyle = "rgba(15, 23, 42, 0.45)";
+    ctx.fillStyle = "rgba(15, 23, 42, 0.40)";
     ctx.beginPath();
-    ctx.ellipse(tx, ty + 24, 38, 12, 0, 0, Math.PI * 2);
+    ctx.ellipse(tx, ty + 24, 34, 10, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   } else if (step === 2) {
-    // Step 2: Heavy Crushing Stomp Slam Impact (Direct ground impact slam)
+    // Step 2: 쿵! Heavy Stomp Slam Impact (Seismic Shockwave & Heavy Ground Blast)
     ctx.save();
-    // Stomping Foot slammed down
-    drawBeastFootprint(tx, ty - 5, 1.35, 0.95);
-
-    // Seismic Impact Flash
-    drawStarburstImpact(ctx, tx, ty + 10, "#F87171", "#FFFFFF", 42);
-
-    // Heavy Ground Shockwave
+    // Inner crisp white shockwave
     ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 4.5;
+    ctx.lineWidth = 4.0;
     ctx.beginPath();
     ctx.ellipse(tx, ty + 22, 60, 18, 0, 0, Math.PI * 2);
     ctx.stroke();
+
+    // Outer seismic impact ring
+    ctx.strokeStyle = "rgba(239, 68, 68, 0.75)";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.ellipse(tx, ty + 22, 75, 22, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Ground Impact Flash
+    const hg = ctx.createRadialGradient(tx, ty + 10, 2, tx, ty + 10, 28);
+    hg.addColorStop(0, "#FFFFFF");
+    hg.addColorStop(0.4, "rgba(254, 202, 202, 0.9)");
+    hg.addColorStop(1, "rgba(239, 68, 68, 0)");
+    ctx.fillStyle = hg;
+    ctx.beginPath();
+    ctx.arc(tx, ty + 10, 28, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
   } else if (step >= 3) {
-    // Step 3: Lateral Dust Plumes & Ground Aftershocks
+    // Step 3: 꾹 누르고 있기 (Heavy Hold Press & Billowing Lateral Dust Clouds)
     ctx.save();
     // Expanding Ground Ripple
     ctx.strokeStyle = "rgba(148, 163, 184, 0.65)";
@@ -433,17 +403,14 @@ export function drawStompEffect(
     ctx.ellipse(tx, ty + 22, 85, 24, 0, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Left & Right Dust Clouds
-    ctx.fillStyle = "rgba(226, 232, 240, 0.70)";
+    // Left & Right Billowing Dust Clouds
+    ctx.fillStyle = "rgba(226, 232, 240, 0.75)";
     ctx.beginPath();
-    ctx.arc(tx - 45, ty + 18, 16, 0, Math.PI * 2);
-    ctx.arc(tx - 65, ty + 20, 12, 0, Math.PI * 2);
-    ctx.arc(tx + 45, ty + 18, 16, 0, Math.PI * 2);
-    ctx.arc(tx + 65, ty + 20, 12, 0, Math.PI * 2);
+    ctx.arc(tx - 45, ty + 20, 16, 0, Math.PI * 2);
+    ctx.arc(tx - 65, ty + 22, 12, 0, Math.PI * 2);
+    ctx.arc(tx + 45, ty + 20, 16, 0, Math.PI * 2);
+    ctx.arc(tx + 65, ty + 22, 12, 0, Math.PI * 2);
     ctx.fill();
-
-    drawMiniRetroStar(ctx, tx - 28, ty - 25, 10, "#CBD5E1");
-    drawMiniRetroStar(ctx, tx + 30, ty - 22, 11, "#FFFFFF");
     ctx.restore();
   }
 
