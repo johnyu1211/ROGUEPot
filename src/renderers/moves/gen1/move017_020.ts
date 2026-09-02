@@ -330,63 +330,77 @@ export function drawFlyEffect(ctx: any, start: { x: number; y: number }, target:
   const ty = target.y - 12;
 
   if (step === 1) {
-    for (let i = -2; i <= 2; i++) {
-      ctx.strokeStyle = "rgba(224, 242, 254, 0.75)";
-      ctx.lineWidth = 2.5;
+    // Step 1: Upward Rocket Launch Speed Lines & Ground Wind Burst
+    ctx.fillStyle = "rgba(224, 242, 254, 0.35)";
+    ctx.beginPath();
+    ctx.ellipse(start.x, start.y + 20, 36, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    for (let i = -3; i <= 3; i++) {
+      ctx.strokeStyle = i === 0 ? "rgba(255, 255, 255, 0.90)" : "rgba(186, 230, 253, 0.70)";
+      ctx.lineWidth = i === 0 ? 3.5 : 2.0;
       ctx.beginPath();
-      ctx.moveTo(start.x + i * 14, start.y + 20);
-      ctx.lineTo(start.x + i * 14, start.y - 70);
+      ctx.moveTo(start.x + i * 12, start.y + 24);
+      ctx.lineTo(start.x + i * 12, start.y - 120);
       ctx.stroke();
     }
   } else if (step === 2) {
-    ctx.fillStyle = "rgba(15, 23, 42, 0.45)";
+    // Step 2: Target Lock Shadow & High-Altitude Supersonic Downward Trail
+    ctx.fillStyle = "rgba(15, 23, 42, 0.50)";
     ctx.beginPath();
-    ctx.ellipse(tx, ty + 24, 32, 10, 0, 0, Math.PI * 2);
+    ctx.ellipse(tx, ty + 24, 36, 12, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    for (let i = -1; i <= 1; i++) {
-      ctx.strokeStyle = "rgba(186, 230, 253, 0.70)";
-      ctx.lineWidth = 2.5;
+    for (let i = -2; i <= 2; i++) {
+      ctx.strokeStyle = i === 0 ? "rgba(255, 255, 255, 0.95)" : "rgba(186, 230, 253, 0.75)";
+      ctx.lineWidth = i === 0 ? 4.0 : 2.5;
       ctx.beginPath();
-      ctx.moveTo(tx + i * 18, 0);
-      ctx.lineTo(tx + i * 18, ty - 30);
+      ctx.moveTo(tx + i * 14, -60);
+      ctx.lineTo(tx + i * 14, ty - 10);
       ctx.stroke();
     }
   } else if (step === 3) {
-    // Step 3: Supersonic Dive-Bomb Impact Slam!
-    ctx.strokeStyle = "#BAE6FD";
-    ctx.lineWidth = 14;
+    // Step 3: Supersonic Dive-Bomb Vertical Sonic Blast & Ground Shockwave Crater
+    ctx.strokeStyle = "rgba(186, 230, 253, 0.60)";
+    ctx.lineWidth = 22;
     ctx.lineCap = "round";
     ctx.beginPath();
-    ctx.moveTo(tx, 0);
-    ctx.lineTo(tx, ty + 10);
+    ctx.moveTo(tx, -40);
+    ctx.lineTo(tx, ty + 12);
+    ctx.stroke();
+
+    ctx.strokeStyle = "#BAE6FD";
+    ctx.lineWidth = 12;
+    ctx.beginPath();
+    ctx.moveTo(tx, -40);
+    ctx.lineTo(tx, ty + 12);
     ctx.stroke();
 
     ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 6;
+    ctx.lineWidth = 5;
     ctx.beginPath();
-    ctx.moveTo(tx, 0);
-    ctx.lineTo(tx, ty + 10);
+    ctx.moveTo(tx, -40);
+    ctx.lineTo(tx, ty + 12);
     ctx.stroke();
 
     // Explosive Ground Crater Shockwave
-    ctx.strokeStyle = "#F8FAFC";
+    ctx.strokeStyle = "#FFFFFF";
     ctx.lineWidth = 5;
     ctx.beginPath();
-    ctx.ellipse(tx, ty + 18, 48, 14, 0, 0, Math.PI * 2);
+    ctx.ellipse(tx, ty + 20, 46, 14, 0, 0, Math.PI * 2);
     ctx.stroke();
 
-    ctx.strokeStyle = "rgba(186, 230, 253, 0.8)";
-    ctx.lineWidth = 3;
+    ctx.strokeStyle = "rgba(186, 230, 253, 0.85)";
+    ctx.lineWidth = 3.5;
     ctx.beginPath();
-    ctx.ellipse(tx, ty + 18, 64, 20, 0, 0, Math.PI * 2);
+    ctx.ellipse(tx, ty + 20, 68, 22, 0, 0, Math.PI * 2);
     ctx.stroke();
   } else if (step >= 4) {
     // Step 4: Radial impact dispersal
-    ctx.strokeStyle = "rgba(224, 242, 254, 0.40)";
+    ctx.strokeStyle = "rgba(224, 242, 254, 0.50)";
     ctx.lineWidth = 3.0;
     ctx.beginPath();
-    ctx.ellipse(tx, ty + 18, 64, 18, 0, 0, Math.PI * 2);
+    ctx.ellipse(tx, ty + 20, 75, 24, 0, 0, Math.PI * 2);
     ctx.stroke();
   }
 

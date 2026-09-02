@@ -1018,12 +1018,17 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       const isTurn1Launch = (a1.damage ?? 0) === 0 && (a1.log?.includes("날아올랐다") || a1.log?.includes("flew up"));
 
       if (isTurn1Launch) {
-        // Turn 1: Sky Launch into Clouds (4 frames @ 100ms = 400ms)
+        // Turn 1: Crouch -> Rocket Launch (Thin vertically & turns pure white!) -> Stratosphere Ascent
         act1Frames = [
+          // 1. Crouch Preparation (100ms)
           {
             delay: 100,
-            pOffset: isP1 ? { x: 4, y: -40 } : { x: 0, y: 0 },
-            eOffset: !isP1 ? { x: -4, y: -40 } : { x: 0, y: 0 },
+            pOffset: isP1 ? { x: 0, y: 6 } : { x: 0, y: 0 },
+            eOffset: !isP1 ? { x: 0, y: 6 } : { x: 0, y: 0 },
+            pScale: isP1 ? { x: 1.25, y: 0.80 } : undefined,
+            eScale: !isP1 ? { x: 1.25, y: 0.80 } : undefined,
+            pWhite: false,
+            eWhite: false,
             showEffect: true,
             hitFlash: false,
             enemyHp: enemy.hp,
@@ -1033,10 +1038,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a1,
             moveStep: 1,
           },
+          // 2. Rocket Sky Launch: Stretched thin vertically & turns pure white! (100ms)
           {
             delay: 100,
-            pOffset: isP1 ? { x: 8, y: -120 } : { x: 0, y: 0 },
-            eOffset: !isP1 ? { x: -8, y: -120 } : { x: 0, y: 0 },
+            pOffset: isP1 ? { x: 0, y: -90 } : { x: 0, y: 0 },
+            eOffset: !isP1 ? { x: 0, y: -90 } : { x: 0, y: 0 },
+            pScale: isP1 ? { x: 0.45, y: 1.80 } : undefined,
+            eScale: !isP1 ? { x: 0.45, y: 1.80 } : undefined,
+            pWhite: isP1,
+            eWhite: !isP1,
             showEffect: true,
             hitFlash: false,
             enemyHp: enemy.hp,
@@ -1046,10 +1056,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a1,
             moveStep: 1,
           },
+          // 3. Stratosphere Ascent: Shooting into clouds, thin white streak! (100ms)
           {
             delay: 100,
-            pOffset: isP1 ? { x: 12, y: -300 } : { x: 0, y: 0 },
-            eOffset: !isP1 ? { x: -12, y: -300 } : { x: 0, y: 0 },
+            pOffset: isP1 ? { x: 0, y: -260 } : { x: 0, y: 0 },
+            eOffset: !isP1 ? { x: 0, y: -260 } : { x: 0, y: 0 },
+            pScale: isP1 ? { x: 0.30, y: 2.20 } : undefined,
+            eScale: !isP1 ? { x: 0.30, y: 2.20 } : undefined,
+            pWhite: isP1,
+            eWhite: !isP1,
             showEffect: true,
             hitFlash: false,
             enemyHp: enemy.hp,
@@ -1059,10 +1074,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a1,
             moveStep: 1,
           },
+          // 4. Disappeared high in sky / Untargetable (100ms)
           {
             delay: 100,
-            pOffset: isP1 ? { x: 12, y: -300 } : { x: 0, y: 0 },
-            eOffset: !isP1 ? { x: -12, y: -300 } : { x: 0, y: 0 },
+            pOffset: isP1 ? { x: 0, y: -600 } : { x: 0, y: 0 },
+            eOffset: !isP1 ? { x: 0, y: -600 } : { x: 0, y: 0 },
             showEffect: false,
             hitFlash: false,
             enemyHp: enemy.hp,
@@ -1074,12 +1090,17 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           }
         ];
       } else {
-        // Turn 2: Supersonic Dive-Bomb Attack! (4 frames @ 100ms = 400ms)
+        // Turn 2: Supersonic Dive-Bomb Slam right onto opponent's sprite!
         act1Frames = [
+          // 1. High Sky Vertical Dive: Directly above opponent, thin & pure white! (100ms)
           {
             delay: 100,
-            pOffset: isP1 ? { x: 8, y: -140 } : { x: 0, y: 0 },
-            eOffset: !isP1 ? { x: -8, y: -140 } : { x: 0, y: 0 },
+            pOffset: isP1 ? { x: 260, y: -260 } : { x: 0, y: 0 },
+            eOffset: !isP1 ? { x: -260, y: -140 } : { x: 0, y: 0 },
+            pScale: isP1 ? { x: 0.45, y: 1.90 } : undefined,
+            eScale: !isP1 ? { x: 0.45, y: 1.90 } : undefined,
+            pWhite: isP1,
+            eWhite: !isP1,
             showEffect: true,
             hitFlash: false,
             enemyHp: enemy.hp,
@@ -1089,10 +1110,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a1,
             moveStep: 2,
           },
+          // 2. Direct Impact Slam into Opponent's Sprite with Crater Blast! (100ms)
           {
             delay: 100,
-            pOffset: isP1 ? { x: 20, y: -8 } : (isMiss1 ? { x: 26, y: 4 } : { x: -8, y: 4 }),
-            eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 10, y: -4 }) : { x: -20, y: 8 },
+            pOffset: isP1 ? { x: 260, y: -120 } : (isMiss1 ? { x: 26, y: 4 } : { x: -12, y: 4 }),
+            eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 12, y: -4 }) : { x: -260, y: 120 },
+            pScale: isP1 ? { x: 1.45, y: 0.65 } : undefined,
+            eScale: !isP1 ? { x: 1.45, y: 0.65 } : undefined,
+            pWhite: false,
+            eWhite: false,
             showEffect: true,
             hitFlash: isHit1,
             enemyHp: a1.enemyHpAfter,
@@ -1102,10 +1128,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a1,
             moveStep: 3,
           },
+          // 3. Rebound & Ground Shockwave Dissipation (100ms)
           {
             delay: 100,
-            pOffset: isP1 ? { x: 8, y: -2 } : (isMiss1 ? { x: 8, y: 1 } : { x: 0, y: 0 }),
-            eOffset: isP1 ? (isMiss1 ? { x: 8, y: -1 } : { x: 2, y: 0 }) : { x: -8, y: 2 },
+            pOffset: isP1 ? { x: 110, y: -40 } : { x: 0, y: 0 },
+            eOffset: !isP1 ? { x: -110, y: 40 } : { x: 0, y: 0 },
+            pScale: isP1 ? { x: 1.15, y: 0.85 } : undefined,
+            eScale: !isP1 ? { x: 1.15, y: 0.85 } : undefined,
             showEffect: true,
             hitFlash: false,
             enemyHp: a1.enemyHpAfter,
@@ -1115,6 +1144,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a1,
             moveStep: 4,
           },
+          // 4. Clean Touchdown on Home Platform (100ms)
           {
             delay: 100,
             pOffset: { x: 0, y: 0 },
@@ -2171,12 +2201,17 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       const isTurn1Launch = (a2.damage ?? 0) === 0 && (a2.log?.includes("날아올랐다") || a2.log?.includes("flew up"));
 
       if (isTurn1Launch) {
-        // Turn 1: Sky Launch into Clouds (4 frames @ 100ms = 400ms)
+        // Turn 1: Crouch -> Rocket Launch (Thin vertically & turns pure white!) -> Stratosphere Ascent
         act2Frames = [
+          // 1. Crouch Preparation (100ms)
           {
             delay: 100,
-            pOffset: !isP2 ? { x: -4, y: -40 } : { x: 0, y: 0 },
-            eOffset: isP2 ? { x: 4, y: -40 } : { x: 0, y: 0 },
+            pOffset: isP2 ? { x: 0, y: 6 } : { x: 0, y: 0 },
+            eOffset: !isP2 ? { x: 0, y: 6 } : { x: 0, y: 0 },
+            pScale: isP2 ? { x: 1.25, y: 0.80 } : undefined,
+            eScale: !isP2 ? { x: 1.25, y: 0.80 } : undefined,
+            pWhite: false,
+            eWhite: false,
             showEffect: true,
             hitFlash: false,
             enemyHp: a1.enemyHpAfter,
@@ -2186,10 +2221,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a2,
             moveStep: 1,
           },
+          // 2. Rocket Sky Launch: Stretched thin vertically & turns pure white! (100ms)
           {
             delay: 100,
-            pOffset: !isP2 ? { x: -8, y: -120 } : { x: 0, y: 0 },
-            eOffset: isP2 ? { x: 8, y: -120 } : { x: 0, y: 0 },
+            pOffset: isP2 ? { x: 0, y: -90 } : { x: 0, y: 0 },
+            eOffset: !isP2 ? { x: 0, y: -90 } : { x: 0, y: 0 },
+            pScale: isP2 ? { x: 0.45, y: 1.80 } : undefined,
+            eScale: !isP2 ? { x: 0.45, y: 1.80 } : undefined,
+            pWhite: isP2,
+            eWhite: !isP2,
             showEffect: true,
             hitFlash: false,
             enemyHp: a1.enemyHpAfter,
@@ -2199,10 +2239,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a2,
             moveStep: 1,
           },
+          // 3. Stratosphere Ascent: Shooting into clouds, thin white streak! (100ms)
           {
             delay: 100,
-            pOffset: !isP2 ? { x: -12, y: -300 } : { x: 0, y: 0 },
-            eOffset: isP2 ? { x: 12, y: -300 } : { x: 0, y: 0 },
+            pOffset: isP2 ? { x: 0, y: -260 } : { x: 0, y: 0 },
+            eOffset: !isP2 ? { x: 0, y: -260 } : { x: 0, y: 0 },
+            pScale: isP2 ? { x: 0.30, y: 2.20 } : undefined,
+            eScale: !isP2 ? { x: 0.30, y: 2.20 } : undefined,
+            pWhite: isP2,
+            eWhite: !isP2,
             showEffect: true,
             hitFlash: false,
             enemyHp: a1.enemyHpAfter,
@@ -2212,10 +2257,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a2,
             moveStep: 1,
           },
+          // 4. Disappeared high in sky / Untargetable (100ms)
           {
             delay: 100,
-            pOffset: !isP2 ? { x: -12, y: -300 } : { x: 0, y: 0 },
-            eOffset: isP2 ? { x: 12, y: -300 } : { x: 0, y: 0 },
+            pOffset: isP2 ? { x: 0, y: -600 } : { x: 0, y: 0 },
+            eOffset: !isP2 ? { x: 0, y: -600 } : { x: 0, y: 0 },
             showEffect: false,
             hitFlash: false,
             enemyHp: a1.enemyHpAfter,
@@ -2227,12 +2273,17 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           }
         ];
       } else {
-        // Turn 2: Supersonic Dive-Bomb Attack! (4 frames @ 100ms = 400ms)
+        // Turn 2: Supersonic Dive-Bomb Slam right onto opponent's sprite!
         act2Frames = [
+          // 1. High Sky Vertical Dive: Directly above opponent, thin & pure white! (100ms)
           {
             delay: 100,
-            pOffset: !isP2 ? { x: -8, y: -140 } : { x: 0, y: 0 },
-            eOffset: isP2 ? { x: 8, y: -140 } : { x: 0, y: 0 },
+            pOffset: isP2 ? { x: 260, y: -260 } : { x: 0, y: 0 },
+            eOffset: !isP2 ? { x: -260, y: -140 } : { x: 0, y: 0 },
+            pScale: isP2 ? { x: 0.45, y: 1.90 } : undefined,
+            eScale: !isP2 ? { x: 0.45, y: 1.90 } : undefined,
+            pWhite: isP2,
+            eWhite: !isP2,
             showEffect: true,
             hitFlash: false,
             enemyHp: a1.enemyHpAfter,
@@ -2242,10 +2293,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a2,
             moveStep: 2,
           },
+          // 2. Direct Impact Slam into Opponent's Sprite with Crater Blast! (100ms)
           {
             delay: 100,
-            pOffset: isP2 ? { x: -20, y: 8 } : (isMiss2 ? { x: 26, y: 4 } : { x: -8, y: 4 }),
-            eOffset: !isP2 ? { x: 20, y: -8 } : (isMiss2 ? { x: 26, y: -4 } : { x: 10, y: -4 }),
+            pOffset: isP2 ? { x: 260, y: -120 } : (isMiss2 ? { x: 26, y: 4 } : { x: -12, y: 4 }),
+            eOffset: isP2 ? (isMiss2 ? { x: 26, y: -4 } : { x: 12, y: -4 }) : { x: -260, y: 120 },
+            pScale: isP2 ? { x: 1.45, y: 0.65 } : undefined,
+            eScale: !isP2 ? { x: 1.45, y: 0.65 } : undefined,
+            pWhite: false,
+            eWhite: false,
             showEffect: true,
             hitFlash: isHit2,
             enemyHp: a2.enemyHpAfter,
@@ -2255,10 +2311,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a2,
             moveStep: 3,
           },
+          // 3. Rebound & Ground Shockwave Dissipation (100ms)
           {
             delay: 100,
-            pOffset: !isP2 ? { x: -8, y: 2 } : (isMiss2 ? { x: 8, y: 1 } : { x: 0, y: 0 }),
-            eOffset: isP2 ? { x: 8, y: -2 } : (isMiss2 ? { x: 8, y: -1 } : { x: 0, y: 0 }),
+            pOffset: isP2 ? { x: 110, y: -40 } : { x: 0, y: 0 },
+            eOffset: !isP2 ? { x: -110, y: 40 } : { x: 0, y: 0 },
+            pScale: isP2 ? { x: 1.15, y: 0.85 } : undefined,
+            eScale: !isP2 ? { x: 1.15, y: 0.85 } : undefined,
             showEffect: true,
             hitFlash: false,
             enemyHp: a2.enemyHpAfter,
@@ -2268,6 +2327,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a2,
             moveStep: 4,
           },
+          // 4. Clean Touchdown on Home Platform (100ms)
           {
             delay: 100,
             pOffset: { x: 0, y: 0 },
@@ -2877,7 +2937,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const eSpriteToDraw = f.useEnemyBack ? (enemyBackSprite || enemySprite) : enemySprite;
     if (eSpriteToDraw && eAlpha > 0.01 && (enemy.hp > 0 || f.enemyHp > 0 || f.targetAlpha !== 0.0)) {
       targetCtx.save();
-      if (f.hitFlash && eTarget) {
+      if (f.eWhite) {
+        targetCtx.filter = "brightness(0) invert(1)";
+      } else if (f.hitFlash && eTarget) {
         targetCtx.filter = "brightness(1.35)";
       }
       if (eAlpha < 0.99) {
@@ -2900,7 +2962,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const pSpriteToDraw = f.usePlayerFront ? (playerFrontSprite || playerSprite) : playerSprite;
     if (pSpriteToDraw && pAlpha > 0.01 && (playerMon.hp > 0 || f.playerHp > 0 || f.targetAlpha !== 0.0)) {
       targetCtx.save();
-      if (f.hitFlash && pTarget) {
+      if (f.pWhite) {
+        targetCtx.filter = "brightness(0) invert(1)";
+      } else if (f.hitFlash && pTarget) {
         targetCtx.filter = "brightness(1.35)";
       }
       if (pAlpha < 0.99) {
