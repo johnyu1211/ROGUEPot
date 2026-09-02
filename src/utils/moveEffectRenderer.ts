@@ -1613,13 +1613,20 @@ export function drawFirePunchEffect(ctx: any, target: { x: number; y: number }, 
 
   // 3. Authentic Rising Flame Tongues (Spiraling Vortex Structure)
   if (step === 1) {
-    // Step 1: Base Flame Eruption around knuckles & target base
-    drawFlameTongue(ctx, targetX - 22, targetY + 4, 18, 34, -0.28, 0.95, -5);
-    drawFlameTongue(ctx, targetX + 22, targetY + 2, 18, 32, 0.30, 0.95, 5);
-    drawFlameTongue(ctx, targetX, targetY - 12, 22, 44, 0.04, 1.0, 2);
+    // Step 1: 5 Knuckle/Finger Flame Tongues erupting from the fist crown
+    // 1. Thumb knuckle (엄지)
+    drawFlameTongue(ctx, targetX - 22, targetY + 2, 14, 28, -0.55, 0.95, -5);
+    // 2. Index knuckle (검지)
+    drawFlameTongue(ctx, targetX - 13, targetY - 14, 16, 36, -0.22, 1.0, -3);
+    // 3. Middle knuckle (중지 - Apex center)
+    drawFlameTongue(ctx, targetX, targetY - 20, 18, 42, 0.0, 1.0, 0);
+    // 4. Ring knuckle (약지)
+    drawFlameTongue(ctx, targetX + 13, targetY - 14, 16, 36, 0.22, 1.0, 3);
+    // 5. Pinky knuckle (새끼)
+    drawFlameTongue(ctx, targetX + 22, targetY + 2, 14, 28, 0.55, 0.95, 5);
 
-    // Impact Star
-    drawMiniRetroStar(ctx, targetX, targetY - 22, 24, "#FDE047");
+    // Impact Star at center
+    drawMiniRetroStar(ctx, targetX, targetY - 14, 22, "#FDE047");
   } else if (step === 2) {
     // Step 2: 4 Spiraling Flame Tongues twisting & rising higher
     drawFlameTongue(ctx, targetX - 28, targetY - 16, 20, 48, -0.42, 0.85, -8);
