@@ -1,7 +1,7 @@
 import {
-  cometPunchFistImg,
-  firePunchFistCanvas,
-  icePunchFistCanvas,
+  getCometPunchFistImg,
+  getFirePunchFistCanvas,
+  getIcePunchFistCanvas,
   drawMiniRetroStar,
 } from "../common/helpers.js";
 import { drawFrontStraightPunchFistSvg } from "./move001_004.js";
@@ -11,6 +11,7 @@ import { drawFrontStraightPunchFistSvg } from "./move001_004.js";
  */
 export function drawMegaPunchEffect(ctx: any, target: { x: number; y: number }, step: number = 3) {
   ctx.save();
+  const cometPunchFistImg = getCometPunchFistImg();
 
   const targetX = target.x;
   const targetY = target.y - 12;
@@ -374,7 +375,7 @@ export function drawFirePunchEffect(ctx: any, target: { x: number; y: number }, 
     ctx.scale(step === 1 ? 0.68 : 0.72, step === 1 ? 0.68 : 0.72);
     ctx.globalAlpha = step === 1 ? 1.0 : 0.35;
 
-    const fistSprite = firePunchFistCanvas || cometPunchFistImg;
+    const fistSprite = getFirePunchFistCanvas();
     if (fistSprite) {
       const fw = fistSprite.width;
       const fh = fistSprite.height;
@@ -487,7 +488,7 @@ export function drawIcePunchEffect(ctx: any, target: { x: number; y: number }, s
     ctx.scale(step === 1 ? 0.68 : 0.72, step === 1 ? 0.68 : 0.72);
     ctx.globalAlpha = fistAlpha;
 
-    const fistSprite = icePunchFistCanvas || cometPunchFistImg;
+    const fistSprite = getIcePunchFistCanvas();
     if (fistSprite) {
       const fw = fistSprite.width;
       const fh = fistSprite.height;

@@ -1,4 +1,4 @@
-import { createCanvas, loadImage } from "@napi-rs/canvas";
+import { createCanvas, Image } from "@napi-rs/canvas";
 import path from "path";
 import fs from "fs";
 
@@ -10,8 +10,22 @@ export let firePunchFistCanvas: any = null;
 export let icePunchFistCanvas: any = null;
 export let thunderPunchFistCanvas: any = null;
 
+function loadSyncImage(relPath: string): any {
+  try {
+    const fullPath = path.resolve(process.cwd(), relPath);
+    if (fs.existsSync(fullPath)) {
+      const img = new Image();
+      img.src = fs.readFileSync(fullPath);
+      return img;
+    }
+  } catch (err) {
+    // Ignore error
+  }
+  return null;
+}
+
 export function createTintedFistCanvas(img: any, fillHex: string) {
-  if (!img) return null;
+  if (!img || !img.width || !img.height) return null;
   const canvas = createCanvas(img.width, img.height);
   const ctx = canvas.getContext("2d");
   ctx.drawImage(img, 0, 0);
@@ -27,11 +41,11 @@ export function createTintedFistCanvas(img: any, fillHex: string) {
     const alpha = data[i + 3];
     if (alpha > 30) {
       const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
-      if (brightness > 50) {
+      if (brightness > 30) {
         const factor = brightness / 255;
-        data[i] = Math.min(255, Math.round(r * factor * 1.15));
-        data[i + 1] = Math.min(255, Math.round(g * factor * 1.15));
-        data[i + 2] = Math.min(255, Math.round(b * factor * 1.15));
+        data[i] = Math.min(255, Math.round(r * factor * 1.25));
+        data[i + 1] = Math.min(255, Math.round(g * factor * 1.25));
+        data[i + 2] = Math.min(255, Math.round(b * factor * 1.25));
       }
     }
   }
@@ -39,32 +53,58 @@ export function createTintedFistCanvas(img: any, fillHex: string) {
   return canvas;
 }
 
-export async function preloadMoveAssets() {
-  try {
-    if (!karateBlackImg) {
-      const bPath = path.resolve(process.cwd(), "assets/effects/karate_chop_black.png");
-      if (fs.existsSync(bPath)) karateBlackImg = await loadImage(bPath);
-    }
-    if (!karateRedImg) {
-      const rPath = path.resolve(process.cwd(), "assets/effects/karate_chop_red.png");
-      if (fs.existsSync(rPath)) karateRedImg = await loadImage(rPath);
-    }
-    if (!doubleSlapWhiteImg) {
-      const wPath = path.resolve(process.cwd(), "assets/effects/double_slap_white.png");
-      if (fs.existsSync(wPath)) doubleSlapWhiteImg = await loadImage(wPath);
-    }
-    if (!cometPunchFistImg) {
-      const pPath = path.resolve(process.cwd(), "assets/effects/comet_punch_fist.png");
-      if (fs.existsSync(pPath)) {
-        cometPunchFistImg = await loadImage(pPath);
-        firePunchFistCanvas = createTintedFistCanvas(cometPunchFistImg, "#FF6B00");
-        icePunchFistCanvas = createTintedFistCanvas(cometPunchFistImg, "#00D2FF");
-        thunderPunchFistCanvas = createTintedFistCanvas(cometPunchFistImg, "#FFD700");
-      }
-    }
-  } catch (err) {
-    // Ignore asset load errors
+export function getKarateBlackImg(): any {
+  if (!karateBlackImg) karateBlackImg = loadSyncImage("assets/effects/karate_chop_black.png");
+  return karateBlackImg;
+}
+
+export function getKarateRedImg(): any {
+  if (!karateRedImg) karateRedImg = loadSyncImage("assets/effects/karate_chop_red.png");
+  return karateRedImg;
+}
+
+export function getDoubleSlapWhiteImg(): any {
+  if (!doubleSlapWhiteImg) doubleSlapWhiteImg = loadSyncImage("assets/effects/double_slap_white.png");
+  return doubleSlapWhiteImg;
+}
+
+export function getCometPunchFistImg(): any {
+  if (!cometPunchFistImg) cometPunchFistImg = loadSyncImage("assets/effects/comet_punch_fist.png");
+  return cometPunchFistImg;
+}
+
+export function getFirePunchFistCanvas(): any {
+  if (!firePunchFistCanvas) {
+    const fist = getCometPunchFistImg();
+    if (fist) firePunchFistCanvas = createTintedFistCanvas(fist, "#FF6B00");
   }
+  return firePunchFistCanvas;
+}
+
+export function getIcePunchFistCanvas(): any {
+  if (!icePunchFistCanvas) {
+    const fist = getCometPunchFistImg();
+    if (fist) icePunchFistCanvas = createTintedFistCanvas(fist, "#00D2FF");
+  }
+  return icePunchFistCanvas;
+}
+
+export function getThunderPunchFistCanvas(): any {
+  if (!thunderPunchFistCanvas) {
+    const fist = getCometPunchFistImg();
+    if (fist) thunderPunchFistCanvas = createTintedFistCanvas(fist, "#FFD700");
+  }
+  return thunderPunchFistCanvas;
+}
+
+export async function preloadMoveAssets() {
+  getKarateBlackImg();
+  getKarateRedImg();
+  getDoubleSlapWhiteImg();
+  getCometPunchFistImg();
+  getFirePunchFistCanvas();
+  getIcePunchFistCanvas();
+  getThunderPunchFistCanvas();
 }
 
 // Initial eager load

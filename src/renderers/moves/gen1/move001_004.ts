@@ -1,8 +1,8 @@
 import {
-  karateBlackImg,
-  karateRedImg,
-  doubleSlapWhiteImg,
-  cometPunchFistImg,
+  getKarateBlackImg,
+  getKarateRedImg,
+  getDoubleSlapWhiteImg,
+  getCometPunchFistImg,
 } from "../common/helpers.js";
 import { drawPhysicalImpactEffect } from "../common/genericTypeEffects.js";
 
@@ -109,7 +109,7 @@ export function drawKarateChopEffect(ctx: any, target: { x: number; y: number },
     showImpact = true;
   }
 
-  const sprite = isRedFlash ? karateRedImg : karateBlackImg;
+  const sprite = isRedFlash ? getKarateRedImg() : getKarateBlackImg();
   if (sprite) {
     ctx.save();
     ctx.translate(cx, cy + handOy);
@@ -163,7 +163,8 @@ export function drawDoubleSlapEffect(ctx: any, target: { x: number; y: number },
   const scaleX = isLeft ? 1 : -1;
   const alpha = isFade ? 0.32 : 1.0;
 
-  if (doubleSlapWhiteImg) {
+  const slapImg = getDoubleSlapWhiteImg();
+  if (slapImg) {
     ctx.save();
     ctx.translate(handX, handY);
     ctx.scale(scaleX * 1.15, 1.15);
@@ -171,7 +172,7 @@ export function drawDoubleSlapEffect(ctx: any, target: { x: number; y: number },
     ctx.globalAlpha = alpha;
     const sw = 80 * 1.15;
     const sh = 60 * 1.15;
-    ctx.drawImage(doubleSlapWhiteImg, -sw / 2, -sh / 2, sw, sh);
+    ctx.drawImage(slapImg, -sw / 2, -sh / 2, sw, sh);
     ctx.restore();
   }
 
@@ -251,10 +252,11 @@ export function drawCometPunchEffect(ctx: any, target: { x: number; y: number },
   ctx.scale(currentScale, currentScale);
   ctx.globalAlpha = alpha;
 
-  if (cometPunchFistImg) {
-    const fw = cometPunchFistImg.width;
-    const fh = cometPunchFistImg.height;
-    ctx.drawImage(cometPunchFistImg, -fw / 2, -fh / 2, fw, fh);
+  const fistImg = getCometPunchFistImg();
+  if (fistImg) {
+    const fw = fistImg.width;
+    const fh = fistImg.height;
+    ctx.drawImage(fistImg, -fw / 2, -fh / 2, fw, fh);
   } else {
     drawFrontStraightPunchFistSvg(ctx, 0, 0, 2.2, 1.0);
   }
