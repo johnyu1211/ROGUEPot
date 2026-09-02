@@ -624,7 +624,7 @@ export class BattleService {
       log: res1.log,
       enemyHpAfter: enemyMon.hp,
       playerHpAfter: playerMon.hp,
-      statChanges: [...statChanges1],
+      statChanges: battle.lastMoveEffect?.statChanges ? [...battle.lastMoveEffect.statChanges] : [],
       typeMod: res1.typeMod,
       hitCount: res1.hitCount,
       isSuperEffective: res1.isSuperEffective,
@@ -658,7 +658,7 @@ export class BattleService {
         log: res2.log,
         enemyHpAfter: enemyMon.hp,
         playerHpAfter: playerMon.hp,
-        statChanges: [...statChanges2],
+        statChanges: battle.lastMoveEffect?.statChanges ? [...battle.lastMoveEffect.statChanges] : [],
         typeMod: res2.typeMod,
         hitCount: res2.hitCount,
         isSuperEffective: res2.isSuperEffective,
@@ -1410,12 +1410,25 @@ export class BattleService {
       return isKo ? `${actorName}의 HP가 ${heal} 회복되었다!` : `${actorName} restored ${heal} HP!`;
     }
 
+    const recordStatChange = (targetWho: "actor" | "target", dir: "up" | "down") => {
+      if (battle?.lastMoveEffect) {
+        const isPlayerActor = actor === battle.playerBattleMon || actor === battle.playerParty?.[battle.playerActiveIndex];
+        const isTargetPlayer = targetWho === "actor" ? isPlayerActor : !isPlayerActor;
+        battle.lastMoveEffect.statChanges = battle.lastMoveEffect.statChanges || [];
+        battle.lastMoveEffect.statChanges.push({
+          target: isTargetPlayer ? "player" : "enemy",
+          direction: dir,
+        });
+      }
+    };
+
     // 5. SPECIAL SETUP & SACRIFICE (Belly Drum, Shell Smash, Haze, Memento)
     if (mName === "belly-drum") {
       const halfHp = Math.floor(actor.maxHp * 0.5);
       if (actor.hp > halfHp && actor.stages.atk < 6) {
         actor.hp -= halfHp;
         actor.stages.atk = 6;
+        recordStatChange("actor", "up");
         return isKo
           ? `${actorName}의 배북!\n자신의 HP를 깎아 공격을 최대치(+6)까지 올렸다!`
           : `${actorName} used Belly Drum!\nCut its own HP to max out Attack (+6)!`;
@@ -1429,6 +1442,8 @@ export class BattleService {
       actor.stages.atk = Math.min(6, actor.stages.atk + 2);
       actor.stages.spa = Math.min(6, actor.stages.spa + 2);
       actor.stages.spe = Math.min(6, actor.stages.spe + 2);
+      recordStatChange("actor", "down");
+      recordStatChange("actor", "up");
       return isKo
         ? `${actorName}의 껍질깨기!\n방어/특방이 떨어지고 공격/특공/스피드가 크게 올랐다! (+2)`
         : `${actorName} used Shell Smash!\nDefense/Sp.Def fell, Attack/Sp.Atk/Speed sharply rose! (+2)`;
@@ -1446,6 +1461,7 @@ export class BattleService {
       actor.hp = 0;
       target.stages.atk = Math.max(-6, target.stages.atk - 2);
       target.stages.spa = Math.max(-6, target.stages.spa - 2);
+      recordStatChange("target", "down");
       return isKo
         ? `${actorName}의 추억의선물!\n${actorName}(은)는 쓰러지고 ${targetName}의 공격/특수공격이 크게 떨어졌다! (-2)`
         : `${actorName} used Memento!\n${actorName} fainted, and ${targetName}'s Attack and Sp. Atk harshly fell! (-2)`;
@@ -1461,98 +1477,118 @@ export class BattleService {
     // 6. STAT STAGES UP
     if (mName === "swords-dance") {
       actor.stages.atk = Math.min(6, actor.stages.atk + 2);
+      recordStatChange("actor", "up");
       return isKo ? `${actorName}의 공격이 크게 올랐다! (+2)` : `${actorName}'s Attack sharply rose! (+2)`;
     }
     if (mName === "nasty-plot" || mName === "tail-glow") {
       const boost = mName === "tail-glow" ? 3 : 2;
       actor.stages.spa = Math.min(6, actor.stages.spa + boost);
+      recordStatChange("actor", "up");
       return isKo ? `${actorName}의 특수공격이 크게 올랐다! (+${boost})` : `${actorName}'s Sp. Atk sharply rose! (+${boost})`;
     }
     if (mName === "dragon-dance") {
       actor.stages.atk = Math.min(6, actor.stages.atk + 1);
       actor.stages.spe = Math.min(6, actor.stages.spe + 1);
+      recordStatChange("actor", "up");
       return isKo ? `${actorName}의 공격과 스피드가 올랐다! (+1)` : `${actorName}'s Attack and Speed rose! (+1)`;
     }
     if (mName === "quiver-dance") {
       actor.stages.spa = Math.min(6, actor.stages.spa + 1);
       actor.stages.spd = Math.min(6, actor.stages.spd + 1);
       actor.stages.spe = Math.min(6, actor.stages.spe + 1);
+      recordStatChange("actor", "up");
       return isKo ? `${actorName}의 특공, 특방, 스피드가 올랐다! (+1)` : `${actorName}'s Sp.Atk, Sp.Def, and Speed rose! (+1)`;
     }
     if (mName === "shift-gear") {
       actor.stages.atk = Math.min(6, actor.stages.atk + 1);
       actor.stages.spe = Math.min(6, actor.stages.spe + 2);
+      recordStatChange("actor", "up");
       return isKo ? `${actorName}의 공격(+1)과 스피드가 크게(+2) 올랐다!` : `${actorName}'s Attack (+1) and Speed sharply (+2) rose!`;
     }
     if (mName === "geomancy") {
       actor.stages.spa = Math.min(6, actor.stages.spa + 2);
       actor.stages.spd = Math.min(6, actor.stages.spd + 2);
       actor.stages.spe = Math.min(6, actor.stages.spe + 2);
+      recordStatChange("actor", "up");
       return isKo ? `${actorName}의 특수공격, 특수방어, 스피드가 크게 올랐다! (+2)` : `${actorName}'s Sp. Atk, Sp. Def, and Speed sharply rose! (+2)`;
     }
     if (mName === "calm-mind" || mName === "bulk-up" || mName === "coil") {
       if (mName === "bulk-up") {
         actor.stages.atk = Math.min(6, actor.stages.atk + 1);
         actor.stages.def = Math.min(6, actor.stages.def + 1);
+        recordStatChange("actor", "up");
         return isKo ? `${actorName}의 공격과 방어가 올랐다! (+1)` : `${actorName}'s Attack and Defense rose! (+1)`;
       }
       if (mName === "coil") {
         actor.stages.atk = Math.min(6, actor.stages.atk + 1);
         actor.stages.def = Math.min(6, actor.stages.def + 1);
         actor.stages.acc = Math.min(6, actor.stages.acc + 1);
+        recordStatChange("actor", "up");
         return isKo ? `${actorName}의 공격, 방어, 명중률이 올랐다! (+1)` : `${actorName}'s Attack, Defense, and Accuracy rose! (+1)`;
       }
       actor.stages.spa = Math.min(6, actor.stages.spa + 1);
       actor.stages.spd = Math.min(6, actor.stages.spd + 1);
+      recordStatChange("actor", "up");
       return isKo ? `${actorName}의 특수공격과 특수방어가 올랐다! (+1)` : `${actorName}'s Sp. Atk and Sp. Def rose! (+1)`;
     }
     if (mName === "iron-defense" || mName === "acid-armor" || mName === "barrier" || mName === "cotton-guard") {
       const boost = mName === "cotton-guard" ? 3 : 2;
       actor.stages.def = Math.min(6, actor.stages.def + boost);
+      recordStatChange("actor", "up");
       return isKo ? `${actorName}의 방어가 크게 올랐다! (+${boost})` : `${actorName}'s Defense sharply rose! (+${boost})`;
     }
     if (mName === "amnesia") {
       actor.stages.spd = Math.min(6, actor.stages.spd + 2);
+      recordStatChange("actor", "up");
       return isKo ? `${actorName}의 특수방어가 크게 올랐다! (+2)` : `${actorName}'s Sp. Def sharply rose! (+2)`;
     }
     if (mName === "agility" || mName === "rock-polish" || mName === "autotomize") {
       actor.stages.spe = Math.min(6, actor.stages.spe + 2);
+      recordStatChange("actor", "up");
       return isKo ? `${actorName}의 스피드가 크게 올랐다! (+2)` : `${actorName}'s Speed sharply rose! (+2)`;
     }
     if (mName === "minimize" || mName === "double-team") {
       const boost = mName === "minimize" ? 2 : 1;
       actor.stages.eva = Math.min(6, actor.stages.eva + boost);
+      recordStatChange("actor", "up");
       return isKo ? `${actorName}의 회피율이 올랐다! (+${boost})` : `${actorName}'s Evasiveness rose! (+${boost})`;
     }
 
     // 7. STAT STAGES DOWN
     if (mName === "growl" || mName === "play-nice") {
       target.stages.atk = Math.max(-6, target.stages.atk - 1);
+      recordStatChange("target", "down");
       return isKo ? `${targetName}의 공격이 떨어졌다! (-1)` : `${targetName}'s Attack fell! (-1)`;
     }
     if (mName === "charm" || mName === "feather-dance" || mName === "baby-doll-eyes") {
       const drop = mName === "baby-doll-eyes" ? 1 : 2;
       target.stages.atk = Math.max(-6, target.stages.atk - drop);
+      recordStatChange("target", "down");
       return isKo ? `${targetName}의 공격이 크게 떨어졌다! (-${drop})` : `${targetName}'s Attack harshly fell! (-${drop})`;
     }
     if (mName === "tail-whip" || mName === "leer") {
       target.stages.def = Math.max(-6, target.stages.def - 1);
+      recordStatChange("target", "down");
       return isKo ? `${targetName}의 방어가 떨어졌다! (-1)` : `${targetName}'s Defense fell! (-1)`;
     }
     if (mName === "screech") {
       target.stages.def = Math.max(-6, target.stages.def - 2);
+      recordStatChange("target", "down");
       return isKo ? `${targetName}의 방어가 크게 떨어졌다! (-2)` : `${targetName}'s Defense harshly fell! (-2)`;
     }
     if (mName === "fake-tears" || mName === "metal-sound") {
       target.stages.spd = Math.max(-6, target.stages.spd - 2);
+      recordStatChange("target", "down");
       return isKo ? `${targetName}의 특수방어가 크게 떨어졌다! (-2)` : `${targetName}'s Sp. Def harshly fell! (-2)`;
     }
     if (mName === "flash" || mName === "sand-attack" || mName === "smokescreen" || mName === "kinesis") {
       target.stages.acc = Math.max(-6, target.stages.acc - 1);
+      recordStatChange("target", "down");
       return isKo ? `${targetName}의 명중률이 떨어졌다! (-1)` : `${targetName}'s Accuracy fell! (-1)`;
     }
     if (mName === "sweet-scent") {
       target.stages.eva = Math.max(-6, target.stages.eva - 2);
+      recordStatChange("target", "down");
       return isKo ? `${targetName}의 회피율이 크게 떨어졌다! (-2)` : `${targetName}'s Evasiveness harshly fell! (-2)`;
     }
 
