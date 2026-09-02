@@ -131,7 +131,7 @@ export function renderMoveEffect(
   } else if (moveKey === "guillotine") {
     drawGuillotineEffect(ctx, targetPos, info.step ?? 1);
   } else if (moveKey === "razor-wind" || moveKey === "razorwind") {
-    drawRazorWindEffect(ctx, targetPos, info.step ?? 1);
+    drawRazorWindEffect(ctx, startPos, targetPos, info.step ?? 1);
   } else if (moveKey === "swords-dance" || moveKey === "swordsdance") {
     drawSwordsDanceEffect(ctx, startPos, info.step ?? 1);
   } else if (moveKey === "cut") {
