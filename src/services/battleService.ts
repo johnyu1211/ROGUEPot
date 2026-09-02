@@ -609,6 +609,10 @@ export class BattleService {
         category: "physical",
         description: "기본 공격 기술",
       };
+    } else if (isTestSandbox) {
+      // TEST12 Mirror Move: Copies player's chosen move to test both player and enemy perspectives in 1 turn!
+      eMoveKey = pMoveKey;
+      eMove = getMoveData(eMoveKey) || pMove;
     } else {
       const eMoveRaw = enemyMon.moves[Math.floor(Math.random() * enemyMon.moves.length)] || "Tackle";
       eMoveKey = getMoveKey(eMoveRaw);
