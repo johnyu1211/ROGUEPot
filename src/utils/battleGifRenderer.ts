@@ -1586,10 +1586,14 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const a1Fainted = a1.enemyHpAfter <= 0 || a1.playerHpAfter <= 0;
     const a2Fainted = a2 && (a2.enemyHpAfter <= 0 || a2.playerHpAfter <= 0);
 
-    const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed")));
-    const isHit2 = a2 ? (a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed")))) : false;
-    const playerFrontHold = (isP1 && isGuillotine1 && isHit1) || (isP2 && isGuillotine2 && isHit2);
-    const enemyBackHold = (!isP1 && isGuillotine1 && isHit1) || (!isP2 && isGuillotine2 && isHit2);
+    // Turn-around victory pose ONLY persists if the Guillotine attack actually scored a lethal KO!
+    const isP1GuillotineKill = isP1 && isGuillotine1 && (a1.enemyHpAfter <= 0);
+    const isP2GuillotineKill = isP2 && isGuillotine2 && (a2 ? a2.enemyHpAfter <= 0 : false);
+    const isE1GuillotineKill = !isP1 && isGuillotine1 && (a1.playerHpAfter <= 0);
+    const isE2GuillotineKill = !isP2 && isGuillotine2 && (a2 ? a2.playerHpAfter <= 0 : false);
+
+    const playerFrontHold = isP1GuillotineKill || isP2GuillotineKill;
+    const enemyBackHold = isE1GuillotineKill || isE2GuillotineKill;
 
     const faintFrames = a2Fainted
       ? createFaintingFrames(a2, a2.playerHpAfter <= 0, 99, playerFrontHold, enemyBackHold)
@@ -1616,7 +1620,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       // === ACT 1 ===
       ...act1Frames,
       // Frame 3: Attacker 1 Recoil & Damage Settling (with Dynamic Effectiveness Blinking!)
-      ...createEffectivenessFlickerFrames(a1, isP1, true, undefined, playerFrontHold, enemyBackHold),
+      ...createEffectivenessFlickerFrames(a1, isP1, true, undefined, isP1GuillotineKill, isE1GuillotineKill),
       // Frame 4: Natural Breathing Room Pause between Turns (380ms - comfortable reading pause!)
       {
         delay: 380,
@@ -1624,8 +1628,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         eOffset: { x: 0, y: 0 },
         showEffect: false,
         hitFlash: false,
-        usePlayerFront: playerFrontHold,
-        useEnemyBack: enemyBackHold,
+        usePlayerFront: isP1GuillotineKill,
+        useEnemyBack: isE1GuillotineKill,
         targetAlpha: 1.0,
         enemyHp: a1.enemyHpAfter,
         playerHp: a1.playerHpAfter,
@@ -1693,15 +1697,14 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     };
 
     const isGuillotineSingle = (eff.moveKey || moveKey).toLowerCase().replace(/[\s_]+/g, "-") === "guillotine";
-    const isHitSingle = eff.isHit !== undefined ? eff.isHit : ((eff.damage ?? 0) > 0 || !eff.log?.includes("빗나갔다"));
-    const playerFrontHold = isP1 && isGuillotineSingle && isHitSingle;
-    const enemyBackHold = !isP1 && isGuillotineSingle && isHitSingle;
-
     const finalEnemyHp = eff.enemyHpAfter !== undefined ? eff.enemyHpAfter : enemyHp;
     const finalPlayerHp = eff.playerHpAfter !== undefined ? eff.playerHpAfter : playerHp;
     const isEnemyFainted = finalEnemyHp <= 0;
     const isPlayerFainted = finalPlayerHp <= 0;
     const isFainted = isEnemyFainted || isPlayerFainted;
+
+    const playerFrontHold = isP1 && isGuillotineSingle && isEnemyFainted;
+    const enemyBackHold = !isP1 && isGuillotineSingle && isPlayerFainted;
 
     const faintFrames = isFainted
       ? createFaintingFrames(eff, isPlayerFainted, 99, playerFrontHold, enemyBackHold)
