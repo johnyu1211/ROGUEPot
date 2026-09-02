@@ -850,14 +850,6 @@ export class BattleService {
 
     const moveNameLower = activeMove.name.toLowerCase().replace(/[\s_]+/g, "-");
 
-    // Target Semi-Invulnerable Check (Fly, Dig, Dive, Bounce, Shadow Force)
-    if (target.isSemiInvulnerable) {
-      return {
-        log: isKo ? `${actorName}의 ${moveName}! 하지만 ${targetName}에게는 닿지 않았다!` : `${actorName}'s ${moveName}! But it couldn't hit ${targetName}!`,
-        damage: 0,
-      };
-    }
-
     // 3.4. 2-Turn Charging Moves (Solar Beam, Solar Blade, Fly, Dig, Dive, Bounce, Skull Bash, Meteor Beam, Sky Attack)
     const isSolarMove = moveNameLower === "solar-beam" || moveNameLower === "solar-blade";
     if (isSolarMove) {
@@ -916,6 +908,26 @@ export class BattleService {
         };
       }
       actor.chargingMove = null;
+    }
+
+    // Target Semi-Invulnerable Check (Fly, Dig, Dive, Bounce, Shadow Force)
+    if (target.isSemiInvulnerable) {
+      const targetCharging = target.chargingMove;
+      const canHitFly = targetCharging === "fly" || targetCharging === "bounce";
+      const canHitDig = targetCharging === "dig";
+      const canHitDive = targetCharging === "dive";
+
+      const bypassFly = canHitFly && ["gust", "twister", "thunder", "hurricane", "sky-uppercut", "smack-down"].includes(moveNameLower);
+      const bypassDig = canHitDig && ["earthquake", "magnitude", "fissure"].includes(moveNameLower);
+      const bypassDive = canHitDive && ["surf", "whirlpool"].includes(moveNameLower);
+      const hasNoGuard = actor.ability === "no-guard";
+
+      if (!bypassFly && !bypassDig && !bypassDive && !hasNoGuard) {
+        return {
+          log: isKo ? `${actorName}의 ${moveName}! 하지만 ${targetName}에게는 닿지 않았다!` : `${actorName}'s ${moveName}! But it couldn't hit ${targetName}!`,
+          damage: 0,
+        };
+      }
     }
 
     // 3.5. OHKO (One-Hit KO / 일격필살기: 뿔드릴, 가위자르기, 땅가르기, 절대영도)

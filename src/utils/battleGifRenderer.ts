@@ -2747,12 +2747,30 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const finalPlayerHp = a2 ? a2.playerHpAfter : a1.playerHpAfter;
     const isAnyFainted = a1Fainted || a2Fainted;
 
+    const isFlyLaunch1 = a1 && (a1.moveKey || "").toLowerCase().replace(/[\s_]+/g, "-") === "fly" && (a1.damage ?? 0) === 0 && (a1.log?.includes("날아올랐다") || a1.log?.includes("flew up"));
+    const isFlyLaunch2 = a2 && (a2.moveKey || "").toLowerCase().replace(/[\s_]+/g, "-") === "fly" && (a2.damage ?? 0) === 0 && (a2.log?.includes("날아올랐다") || a2.log?.includes("flew up"));
+    const isFlyDive1 = a1 && (a1.moveKey || "").toLowerCase().replace(/[\s_]+/g, "-") === "fly" && !isFlyLaunch1;
+    const isFlyDive2 = a2 && (a2.moveKey || "").toLowerCase().replace(/[\s_]+/g, "-") === "fly" && !isFlyLaunch2;
+
+    const isPlayerFlyHold = (isFlyLaunch1 && isP1) || (isFlyLaunch2 && isP2);
+    const isEnemyFlyHold = (isFlyLaunch1 && !isP1) || (isFlyLaunch2 && !isP2);
+
+    const isPlayerStartingInAir = (isFlyDive1 && isP1) || (isFlyDive2 && isP2) || (playerMon.chargingMove === "fly");
+    const isEnemyStartingInAir = (isFlyDive1 && !isP1) || (isFlyDive2 && !isP2) || (enemy.chargingMove === "fly");
+
+    let processedAct2Frames = act2Frames;
+    if (isFlyLaunch1 && isP1) {
+      processedAct2Frames = act2Frames.map(f => ({ ...f, pOffset: { x: 0, y: -600 } }));
+    } else if (isFlyLaunch1 && !isP1) {
+      processedAct2Frames = act2Frames.map(f => ({ ...f, eOffset: { x: 0, y: -600 } }));
+    }
+
     framesConfig = [
       // Frame 0: Leading Cinematic Soft-Blur Loading Frame (800ms / 0.8s)
       {
         delay: 800,
-        pOffset: { x: 0, y: 0 },
-        eOffset: { x: 0, y: 0 },
+        pOffset: isPlayerStartingInAir ? { x: 0, y: -600 } : { x: 0, y: 0 },
+        eOffset: isEnemyStartingInAir ? { x: 0, y: -600 } : { x: 0, y: 0 },
         showEffect: false,
         hitFlash: false,
         enemyHp: enemy.hp,
@@ -2770,8 +2788,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       // Frame 4: Natural Breathing Room Pause between Turns (320ms - comfortable reading pause!)
       {
         delay: 320,
-        pOffset: { x: 0, y: 0 },
-        eOffset: { x: 0, y: 0 },
+        pOffset: (isFlyLaunch1 && isP1) ? { x: 0, y: -600 } : { x: 0, y: 0 },
+        eOffset: (isFlyLaunch1 && !isP1) ? { x: 0, y: -600 } : { x: 0, y: 0 },
         showEffect: false,
         hitFlash: false,
         usePlayerFront: isP1GuillotineKill,
@@ -2785,7 +2803,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         moveEffect: a1,
       },
       // === ACT 2 ===
-      ...act2Frames,
+      ...processedAct2Frames,
       // Frame 7: Attacker 2 Recoil & Counter Damage (with Dynamic Effectiveness Blinking!)
       ...createEffectivenessFlickerFrames(a2, isP2, false, playerFrontHold, enemyBackHold),
       // Dedicated Post-Move Stat Change Phase for Action 2 (if stat changes exist!)
@@ -2795,8 +2813,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       // Final 11-Minute Static Hold Frame (655,000ms) - completely neutral with NO statProgress
       {
         delay: 655000,
-        pOffset: { x: 0, y: 0 },
-        eOffset: { x: 0, y: 0 },
+        pOffset: isPlayerFlyHold ? { x: 0, y: -600 } : { x: 0, y: 0 },
+        eOffset: isEnemyFlyHold ? { x: 0, y: -600 } : { x: 0, y: 0 },
         showEffect: false,
         hitFlash: false,
         usePlayerFront: playerFrontHold,
@@ -2839,12 +2857,21 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       ? createFaintingFrames(eff, isPlayerFainted, 99, playerFrontHold, enemyBackHold)
       : [];
 
+    const isFlyLaunch1 = a1 && (a1.moveKey || "").toLowerCase().replace(/[\s_]+/g, "-") === "fly" && (a1.damage ?? 0) === 0 && (a1.log?.includes("날아올랐다") || a1.log?.includes("flew up"));
+    const isFlyDive1 = a1 && (a1.moveKey || "").toLowerCase().replace(/[\s_]+/g, "-") === "fly" && !isFlyLaunch1;
+
+    const isPlayerFlyHold = isFlyLaunch1 && isP1;
+    const isEnemyFlyHold = isFlyLaunch1 && !isP1;
+
+    const isPlayerStartingInAir = (isFlyDive1 && isP1) || (playerMon.chargingMove === "fly");
+    const isEnemyStartingInAir = (isFlyDive1 && !isP1) || (enemy.chargingMove === "fly");
+
     framesConfig = [
       // Frame 0: Leading Cinematic Soft-Blur Loading Frame (800ms / 0.8s)
       {
         delay: 800,
-        pOffset: { x: 0, y: 0 },
-        eOffset: { x: 0, y: 0 },
+        pOffset: isPlayerStartingInAir ? { x: 0, y: -600 } : { x: 0, y: 0 },
+        eOffset: isEnemyStartingInAir ? { x: 0, y: -600 } : { x: 0, y: 0 },
         showEffect: false,
         hitFlash: false,
         enemyHp: enemy.hp,
@@ -2864,8 +2891,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       // Final 11-Minute Static Hold Frame (655,000ms) - completely neutral with NO statProgress
       {
         delay: 655000,
-        pOffset: { x: 0, y: 0 },
-        eOffset: { x: 0, y: 0 },
+        pOffset: isPlayerFlyHold ? { x: 0, y: -600 } : { x: 0, y: 0 },
+        eOffset: isEnemyFlyHold ? { x: 0, y: -600 } : { x: 0, y: 0 },
         showEffect: false,
         hitFlash: false,
         usePlayerFront: playerFrontHold,
