@@ -255,7 +255,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       act1Frames = [
         // Windup lunge
         {
-          delay: 130,
+          delay: 160,
           pOffset: isP1 ? { x: 14, y: -6 } : { x: 0, y: 0 },
           eOffset: !isP1 ? { x: -14, y: 6 } : { x: 0, y: 0 },
           showEffect: false,
@@ -267,9 +267,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 1,
         },
-        // Alternating Left / Right Cheek Slaps
+        // Alternating Left / Right Cheek Slaps (slower & rhythmic)
         ...Array.from({ length: hits }).map((_, idx) => ({
-          delay: 110,
+          delay: 170,
           pOffset: isP1 ? { x: 20, y: -8 } : { x: -6, y: 3 },
           eOffset: isP1
             ? { x: idx % 2 === 0 ? 10 : -8, y: idx % 2 === 0 ? -3 : 3 }
@@ -430,7 +430,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       act2Frames = [
         // Windup lunge
         {
-          delay: 130,
+          delay: 160,
           pOffset: isP2 ? { x: 14, y: -6 } : { x: 0, y: 0 },
           eOffset: !isP2 ? { x: -14, y: 6 } : { x: 0, y: 0 },
           showEffect: false,
@@ -442,9 +442,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 1,
         },
-        // Alternating Left / Right Cheek Slaps
+        // Alternating Left / Right Cheek Slaps (slower & rhythmic)
         ...Array.from({ length: hits2 }).map((_, idx) => ({
-          delay: 110,
+          delay: 170,
           pOffset: !isP2
             ? { x: idx % 2 === 0 ? 10 : -8, y: idx % 2 === 0 ? -3 : 3 }
             : { x: 20, y: -8 },

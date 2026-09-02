@@ -903,9 +903,9 @@ export function drawDoubleSlapEffect(ctx: any, target: { x: number; y: number },
 
   // step: 1 (Slap Left), 2 (Slap Right), 3 (Slap Left), 4 (Slap Right), 5 (Slap Left)
   const isLeft = (step % 2 !== 0);
-  const handX = target.x + (isLeft ? -36 : 36);
+  const handX = target.x + (isLeft ? -34 : 34);
   const handY = target.y - 25;
-  const rotAngle = isLeft ? (25 * Math.PI) / 180 : (-25 * Math.PI) / 180;
+  const rotAngle = 0; // Purely vertical / upright angle (각도 수직)
   const scaleX = isLeft ? 1 : -1;
 
   // 1. Slap Motion Arc / Wind Streaks
