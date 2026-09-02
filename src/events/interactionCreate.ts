@@ -14,7 +14,7 @@ import {
 import { BotEvent, ExtendedClient } from "../types/index.js";
 import { createBaseEmbed, COLORS } from "../utils/embed.js";
 import { renderTitleScreen, renderBagScreen, renderMultiplayerScreen, renderPokedexScreen, renderStarterSelectScreen, renderGenSelectScreen, renderEggGachaScreen, renderSaveSlotsScreen, renderBattleScreen, StarterSelectPartyItem, PartyViewTab, InGameMessage, getPokemonSprite, isSpriteCached, TYPE_NAMES_KO } from "../utils/canvasRenderer.js";
-import { renderBattleMoveGif, renderBattleFaintGif, renderBattleEntryGif, renderBattleFightMenuGif } from "../utils/battleGifRenderer.js";
+import { renderBattleMoveGif, renderBattleFaintGif, renderBattleEntryGif } from "../utils/battleGifRenderer.js";
 import { MOVES_DATA, getMoveData, getMoveKey } from "../data/movesKo.js";
 import { MOVES_EN_DESC } from "../data/movesEn.js";
 import { saveService, PartyPokemon } from "../services/saveService.js";
@@ -194,8 +194,7 @@ export async function renderBattleMessageData(
   userId: string,
   slotId: number,
   overridePhase?: "MAIN" | "FIGHT" | "BAG" | "PARTY",
-  isEntryTransition?: boolean,
-  isFightTransition?: boolean
+  isEntryTransition?: boolean
 ) {
   const profile = saveService.getProfile(userId);
   const isKo = profile.language === "ko";
@@ -227,14 +226,6 @@ export async function renderBattleMessageData(
     motionDurationMs = res.motionDurationMs;
     fileName = `battle_${uniqueId}.gif`;
     battle.lastMoveEffect = null;
-  } else if (isFightTransition || (overridePhase === "FIGHT" && !isEntryTransition)) {
-    const res = await renderBattleFightMenuGif({
-      battle,
-      lang: profile.language,
-    });
-    imageBuffer = res.buffer;
-    motionDurationMs = res.motionDurationMs;
-    fileName = `battle_${uniqueId}.gif`;
   } else {
     imageBuffer = await renderBattleScreen({
       battle,
