@@ -430,66 +430,78 @@ export function drawSwordsDanceEffect(ctx: any, userPos: { x: number; y: number 
 }
 
 /**
- * 015 풀베기 (Cut): Razor-Sharp Luminous Blade Slash with Severed Flying Leaves
+ * 015 풀베기 (Cut): Sleek Tapered Blade Slash (Yellow Core, White Outer Edges, Tapering to Razor-Thin Points)
  */
 export function drawCutEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
   ctx.save();
   const tx = target.x;
-  const ty = target.y - 12;
+  const ty = target.y - 10;
 
-  const drawLeaf = (lx: number, ly: number, rot: number, size: number) => {
+  // Tapered Curved Blade Slash Helper (Tips taper to 0px at ends, swells in center)
+  const drawTaperedCutSlash = (
+    cx: number,
+    cy: number,
+    angle: number,
+    length: number = 90,
+    maxThickness: number = 5.0,
+    curve: number = 5.0,
+    alpha: number = 1.0
+  ) => {
     ctx.save();
-    ctx.translate(lx, ly);
-    ctx.rotate(rot);
-    ctx.fillStyle = "#22C55E";
-    ctx.strokeStyle = "#15803D";
-    ctx.lineWidth = 1.0;
+    ctx.translate(cx, cy);
+    ctx.rotate(angle);
+    ctx.globalAlpha = alpha;
+
+    const halfL = length / 2;
+
+    // 1. Outer White Layer (바깥쪽 흰색 #FFFFFF, razor-thin sharp points at -halfL and +halfL)
+    ctx.fillStyle = "#FFFFFF";
     ctx.beginPath();
-    ctx.moveTo(0, -size);
-    ctx.quadraticCurveTo(size * 0.7, 0, 0, size);
-    ctx.quadraticCurveTo(-size * 0.7, 0, 0, -size);
+    ctx.moveTo(-halfL, 0); // sharp needle tip left
+    ctx.quadraticCurveTo(0, curve + maxThickness * 0.5, halfL, 0); // sharp needle tip right
+    ctx.quadraticCurveTo(0, curve - maxThickness * 0.5, -halfL, 0);
+    ctx.closePath();
     ctx.fill();
-    ctx.stroke();
+
+    // 2. Middle Yellow Core (중간 노란색 #FACC15, slightly inset)
+    ctx.fillStyle = "#FACC15";
+    ctx.beginPath();
+    ctx.moveTo(-halfL + 5, 0);
+    ctx.quadraticCurveTo(0, curve + maxThickness * 0.28, halfL - 5, 0);
+    ctx.quadraticCurveTo(0, curve - maxThickness * 0.28, -halfL + 5, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    // 3. Bright Yellow-White Center Highlight (#FEF08A)
+    ctx.fillStyle = "#FEF08A";
+    ctx.beginPath();
+    ctx.moveTo(-halfL + 15, 0);
+    ctx.quadraticCurveTo(0, curve + maxThickness * 0.12, halfL - 15, 0);
+    ctx.quadraticCurveTo(0, curve - maxThickness * 0.12, -halfL + 15, 0);
+    ctx.closePath();
+    ctx.fill();
+
     ctx.restore();
   };
 
+  const slashAngle = -Math.PI / 4; // -45 deg diagonal slice (Top-Right to Bottom-Left)
+
   if (step === 1) {
-    ctx.strokeStyle = "rgba(134, 239, 172, 0.45)";
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(tx - 38, ty - 38);
-    ctx.lineTo(tx + 38, ty + 38);
-    ctx.stroke();
+    // Step 1: Initial quick slash inception
+    drawTaperedCutSlash(tx - 6, ty - 6, slashAngle, 65, 4.2, 3.5, 0.85);
   } else if (step === 2) {
-    ctx.strokeStyle = "#22C55E";
-    ctx.lineWidth = 8;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(tx - 48, ty - 48);
-    ctx.lineTo(tx + 48, ty + 48);
-    ctx.stroke();
+    // Step 2: Main crisp full cleave across defender + speed echo
+    drawTaperedCutSlash(tx, ty, slashAngle, 95, 5.2, 5.5, 1.0);
+    drawTaperedCutSlash(tx + 8, ty - 8, slashAngle, 62, 3.2, 4.0, 0.60);
 
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 3.5;
-    ctx.beginPath();
-    ctx.moveTo(tx - 42, ty - 42);
-    ctx.lineTo(tx + 42, ty + 42);
-    ctx.stroke();
-
-    drawLeaf(tx - 24, ty + 12, 0.4, 8);
-    drawLeaf(tx + 26, ty - 18, -0.6, 9);
-    drawLeaf(tx + 12, ty + 24, 1.2, 7);
+    // Center sharp impact glint (White / Yellow)
+    drawMiniRetroStar(ctx, tx, ty, 11, "#FACC15");
+    drawMiniRetroStar(ctx, tx, ty, 6, "#FFFFFF");
   } else if (step === 3) {
-    drawMiniRetroStar(ctx, tx, ty, 16, "#22C55E");
-    drawMiniRetroStar(ctx, tx, ty, 8, "#FFFFFF");
-
-    drawLeaf(tx - 36, ty + 20, 0.8, 8);
-    drawLeaf(tx + 40, ty - 26, -0.9, 9);
-    drawLeaf(tx - 18, ty - 32, 1.5, 7);
-    drawLeaf(tx + 28, ty + 30, -1.2, 8);
-  } else if (step >= 4) {
-    drawLeaf(tx - 44, ty + 32, 1.1, 7);
-    drawLeaf(tx + 48, ty + 24, -1.4, 8);
+    // Step 3: Fading slash trail & dispersing spark
+    drawTaperedCutSlash(tx, ty, slashAngle, 85, 4.0, 5.0, 0.45);
+    drawMiniRetroStar(ctx, tx, ty, 7, "#FACC15");
+    drawMiniRetroStar(ctx, tx, ty, 3.5, "#FFFFFF");
   }
 
   ctx.restore();
