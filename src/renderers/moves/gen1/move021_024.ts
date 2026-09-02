@@ -347,7 +347,7 @@ export function drawVineWhipEffect(
 }
 
 /**
- * 023 짓밟기 (Stomp): Pokémon directly leaps on top of opponent & crushingly stamps down with heavy seismic shockwave and billowing dust
+ * 023 짓밟기 (Stomp): Pokémon approaches upper-left of opponent, tilts forward, and a heavy black oval silhouette slams down to crush the opponent flat
  */
 export function drawStompEffect(
   ctx: any,
@@ -356,41 +356,46 @@ export function drawStompEffect(
 ) {
   ctx.save();
   const tx = target.x;
-  const ty = target.y;
+  const ty = target.y - 8;
 
   if (step === 1) {
-    // Step 1: Looming Ground Shadow as Pokémon leaps above opponent
+    // Step 1: Hovering Black Oval Shadow Silhouette above opponent's head
     ctx.save();
-    ctx.fillStyle = "rgba(15, 23, 42, 0.40)";
+    ctx.fillStyle = "rgba(15, 23, 42, 0.80)";
     ctx.beginPath();
-    ctx.ellipse(tx, ty + 24, 34, 10, 0, 0, Math.PI * 2);
+    ctx.ellipse(tx, ty - 25, 36, 12, 0, 0, Math.PI * 2);
     ctx.fill();
+    ctx.strokeStyle = "#020617";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
     ctx.restore();
   } else if (step === 2) {
-    // Step 2: 쿵! Heavy Stomp Slam Impact (Seismic Shockwave & Heavy Ground Blast)
+    // Step 2: 쿵! Black Oval slams down pressing firmly + Ground shockwave below flattened opponent
     ctx.save();
-    // Inner crisp white shockwave
+    // Heavy Black Oval Pressed Down on target
+    ctx.fillStyle = "rgba(15, 23, 42, 0.92)";
+    ctx.beginPath();
+    ctx.ellipse(tx, ty - 4, 44, 14, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#020617";
+    ctx.lineWidth = 2.0;
+    ctx.stroke();
+
+    // Ground shockwave ring below flattened opponent
     ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 4.0;
+    ctx.lineWidth = 3.5;
     ctx.beginPath();
-    ctx.ellipse(tx, ty + 22, 60, 18, 0, 0, Math.PI * 2);
+    ctx.ellipse(tx, ty + 20, 52, 16, 0, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Outer seismic impact ring
-    ctx.strokeStyle = "rgba(239, 68, 68, 0.75)";
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.ellipse(tx, ty + 22, 75, 22, 0, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Ground Impact Flash
-    const hg = ctx.createRadialGradient(tx, ty + 10, 2, tx, ty + 10, 28);
+    // Compact Ground Impact Flash
+    const hg = ctx.createRadialGradient(tx, ty + 6, 2, tx, ty + 6, 22);
     hg.addColorStop(0, "#FFFFFF");
-    hg.addColorStop(0.4, "rgba(254, 202, 202, 0.9)");
+    hg.addColorStop(0.4, "rgba(254, 202, 202, 0.85)");
     hg.addColorStop(1, "rgba(239, 68, 68, 0)");
     ctx.fillStyle = hg;
     ctx.beginPath();
-    ctx.arc(tx, ty + 10, 28, 0, Math.PI * 2);
+    ctx.arc(tx, ty + 6, 22, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   } else if (step >= 3) {
@@ -398,18 +403,18 @@ export function drawStompEffect(
     ctx.save();
     // Expanding Ground Ripple
     ctx.strokeStyle = "rgba(148, 163, 184, 0.65)";
-    ctx.lineWidth = 3.0;
+    ctx.lineWidth = 2.5;
     ctx.beginPath();
-    ctx.ellipse(tx, ty + 22, 85, 24, 0, 0, Math.PI * 2);
+    ctx.ellipse(tx, ty + 20, 68, 20, 0, 0, Math.PI * 2);
     ctx.stroke();
 
     // Left & Right Billowing Dust Clouds
     ctx.fillStyle = "rgba(226, 232, 240, 0.75)";
     ctx.beginPath();
-    ctx.arc(tx - 45, ty + 20, 16, 0, Math.PI * 2);
-    ctx.arc(tx - 65, ty + 22, 12, 0, Math.PI * 2);
-    ctx.arc(tx + 45, ty + 20, 16, 0, Math.PI * 2);
-    ctx.arc(tx + 65, ty + 22, 12, 0, Math.PI * 2);
+    ctx.arc(tx - 38, ty + 18, 14, 0, Math.PI * 2);
+    ctx.arc(tx - 56, ty + 20, 10, 0, Math.PI * 2);
+    ctx.arc(tx + 38, ty + 18, 14, 0, Math.PI * 2);
+    ctx.arc(tx + 56, ty + 20, 10, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
