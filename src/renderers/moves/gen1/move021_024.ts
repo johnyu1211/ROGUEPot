@@ -347,7 +347,7 @@ export function drawVineWhipEffect(
 }
 
 /**
- * 023 짓밟기 (Stomp): Pokémon approaches upper-left of opponent, tilts forward, and a heavy black oval silhouette slams down to crush the opponent flat
+ * 023 짓밟기 (Stomp): Pokémon approaches upper-left of opponent, tilts forward with perspective scaling, and physically stomps down to crush the opponent flat
  */
 export function drawStompEffect(
   ctx: any,
@@ -359,54 +359,17 @@ export function drawStompEffect(
   const tx = target.x;
   const ty = target.y - 8;
 
-  const drawBehindOval = () => {
-    if (step === 1) {
-      // Step 1: Hovering Black Oval Shadow Silhouette above opponent's head (Behind Attacker)
-      ctx.save();
-      ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
-      ctx.beginPath();
-      ctx.ellipse(tx, ty - 25, 36, 12, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "#020617";
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-      ctx.restore();
-    } else if (step === 2 || step >= 3) {
-      // Step 2 & 3: Heavy Black Oval Pressed Down on target (Behind Attacker, in front of Defender)
-      ctx.save();
-      ctx.fillStyle = "rgba(15, 23, 42, 0.94)";
-      ctx.beginPath();
-      ctx.ellipse(tx, ty - 4, 44, 14, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "#020617";
-      ctx.lineWidth = 2.0;
-      ctx.stroke();
-      ctx.restore();
-    }
-  };
-
-  const drawFrontEffects = () => {
-    if (step >= 3) {
-      // Step 3: 좌우 은은한 흙먼지 연기 (Subtle Dust Clouds on Press Hold)
-      ctx.save();
-      ctx.fillStyle = "rgba(226, 232, 240, 0.70)";
-      ctx.beginPath();
-      ctx.arc(tx - 36, ty + 18, 12, 0, Math.PI * 2);
-      ctx.arc(tx - 52, ty + 20, 8, 0, Math.PI * 2);
-      ctx.arc(tx + 36, ty + 18, 12, 0, Math.PI * 2);
-      ctx.arc(tx + 52, ty + 20, 8, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    }
-  };
-
-  if (layer === "behind") {
-    drawBehindOval();
-  } else if (layer === "front") {
-    drawFrontEffects();
-  } else {
-    drawBehindOval();
-    drawFrontEffects();
+  // Step 3: 좌우 은은한 흙먼지 연기 (Subtle Dust Clouds on Press Hold)
+  if (step >= 3 && layer !== "behind") {
+    ctx.save();
+    ctx.fillStyle = "rgba(226, 232, 240, 0.70)";
+    ctx.beginPath();
+    ctx.arc(tx - 36, ty + 18, 12, 0, Math.PI * 2);
+    ctx.arc(tx - 52, ty + 20, 8, 0, Math.PI * 2);
+    ctx.arc(tx + 36, ty + 18, 12, 0, Math.PI * 2);
+    ctx.arc(tx + 52, ty + 20, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
   }
 
   ctx.restore();
