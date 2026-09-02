@@ -245,6 +245,9 @@ export class BattleService {
     if (speciesId === "inteleon-gmax" || speciesId === "inteleongmax" || speciesId === "inteleon-mega") {
       nameKo = "인텔리온 (거다이맥스)";
       name = "Inteleon [G-Max]";
+    } else if (speciesId.startsWith("testsubject")) {
+      nameKo = "TESTSUBJECT12";
+      name = "TESTSUBJECT12";
     }
 
     const level = forcedLevel !== undefined
