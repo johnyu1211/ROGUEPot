@@ -1488,10 +1488,10 @@ export class BattleService {
         actor.stages.atk = 6;
         recordStatChange("actor", "up");
         return isKo
-          ? `${actorName}의 배북!\n자신의 HP를 깎아 공격을 최대치(+6)까지 올렸다!`
-          : `${actorName} used Belly Drum!\nCut its own HP to max out Attack (+6)!`;
+          ? `자신의 HP를 깎아 공격을 최대치(+6)까지 올렸다!`
+          : `Cut its own HP to max out Attack (+6)!`;
       }
-      return isKo ? `${actorName}의 공격은 이미 최대치이거나 HP가 부족하다!` : `But it failed!`;
+      return isKo ? `하지만 공격은 이미 최대치이거나 HP가 부족하다!` : `But it failed!`;
     }
 
     if (mName === "shell-smash") {
@@ -1503,16 +1503,16 @@ export class BattleService {
       recordStatChange("actor", "down");
       recordStatChange("actor", "up");
       return isKo
-        ? `${actorName}의 껍질깨기!\n방어/특방이 떨어지고 공격/특공/스피드가 크게 올랐다! (+2)`
-        : `${actorName} used Shell Smash!\nDefense/Sp.Def fell, Attack/Sp.Atk/Speed sharply rose! (+2)`;
+        ? `방어와 특수방어가 떨어지고 공격, 특수공격, 스피드가 크게 올랐다! (+2)`
+        : `Defense and Sp. Def fell, Attack, Sp. Atk, and Speed sharply rose! (+2)`;
     }
 
     if (mName === "haze") {
       actor.stages = { atk: 0, def: 0, spa: 0, spd: 0, spe: 0, acc: 0, eva: 0 };
       target.stages = { atk: 0, def: 0, spa: 0, spd: 0, spe: 0, acc: 0, eva: 0 };
       return isKo
-        ? `${actorName}의 흑안개!\n모든 포켓몬의 능력치 변화가 초기화되었다!`
-        : `${actorName} used Haze!\nAll stat changes were reset!`;
+        ? `모든 포켓몬의 능력치 변화가 초기화되었다!`
+        : `All stat changes were reset!`;
     }
 
     if (mName === "memento") {
@@ -1521,15 +1521,15 @@ export class BattleService {
       target.stages.spa = Math.max(-6, target.stages.spa - 2);
       recordStatChange("target", "down");
       return isKo
-        ? `${actorName}의 추억의선물!\n${actorName}(은)는 쓰러지고 ${targetName}의 공격/특수공격이 크게 떨어졌다! (-2)`
-        : `${actorName} used Memento!\n${actorName} fainted, and ${targetName}'s Attack and Sp. Atk harshly fell! (-2)`;
+        ? `${actorName}(은)는 쓰러지고 ${targetName}의 공격과 특수공격이 크게 떨어졌다! (-2)`
+        : `${actorName} fainted, and ${targetName}'s Attack and Sp. Atk harshly fell! (-2)`;
     }
 
     if (mName === "healing-wish" || mName === "lunar-dance") {
       actor.hp = 0;
       return isKo
-        ? `${actorName}의 ${move.nameKo}!\n자신을 희생하여 다음 포켓몬을 위한 소원을 빌었다!`
-        : `${actorName} used ${move.name.toUpperCase()}!\nSacrificed itself for a healing wish!`;
+        ? `자신을 희생하여 다음 포켓몬을 위한 소원을 빌었다!`
+        : `Sacrificed itself for a healing wish!`;
     }
 
     // 6. STAT STAGES UP
