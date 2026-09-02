@@ -3746,16 +3746,16 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
 
     let processedAct1Frames = act1Frames;
     if (isEnemyEvadingDuringAct1) {
-      processedAct1Frames = act1Frames.map(f => ({ ...f, eOffset: { x: 0, y: -9999 }, hideEShadow: true, hideEnemy: true }));
+      processedAct1Frames = act1Frames.map(f => ({ ...f, eOffset: { x: 0, y: -9999 }, hideEShadow: true, hideEnemy: true, eAlpha: 0.0 }));
     } else if (isPlayerEvadingDuringAct1) {
-      processedAct1Frames = act1Frames.map(f => ({ ...f, pOffset: { x: 0, y: -9999 }, hidePShadow: true, hidePlayer: true }));
+      processedAct1Frames = act1Frames.map(f => ({ ...f, pOffset: { x: 0, y: -9999 }, hidePShadow: true, hidePlayer: true, pAlpha: 0.0 }));
     }
 
     let processedAct2Frames = act2Frames;
     if (isPlayerEvadingDuringAct2) {
-      processedAct2Frames = act2Frames.map(f => ({ ...f, pOffset: { x: 0, y: -9999 }, hidePShadow: true, hidePlayer: true }));
+      processedAct2Frames = act2Frames.map(f => ({ ...f, pOffset: { x: 0, y: -9999 }, hidePShadow: true, hidePlayer: true, pAlpha: 0.0 }));
     } else if (isEnemyEvadingDuringAct2) {
-      processedAct2Frames = act2Frames.map(f => ({ ...f, eOffset: { x: 0, y: -9999 }, hideEShadow: true, hideEnemy: true }));
+      processedAct2Frames = act2Frames.map(f => ({ ...f, eOffset: { x: 0, y: -9999 }, hideEShadow: true, hideEnemy: true, eAlpha: 0.0 }));
     }
 
     framesConfig = [
@@ -3764,6 +3764,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         delay: 800,
         pOffset: isPlayerStartingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
         eOffset: isEnemyStartingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
+        pAlpha: isPlayerStartingEvading ? 0.0 : 1.0,
+        eAlpha: isEnemyStartingEvading ? 0.0 : 1.0,
         hidePShadow: isPlayerStartingEvading,
         hideEShadow: isEnemyStartingEvading,
         hidePlayer: isPlayerStartingEvading,
@@ -3779,14 +3781,22 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       // === ACT 1 ===
       ...processedAct1Frames,
       // Frame 3: Attacker 1 Recoil & Damage Settling (with Dynamic Effectiveness Blinking!)
-      ...createEffectivenessFlickerFrames(a1, isP1, true, isP1GuillotineKill, isE1GuillotineKill),
+      ...(createEffectivenessFlickerFrames(a1, isP1, true, isP1GuillotineKill, isE1GuillotineKill).map(f =>
+        isPlayerEvadingDuringAct1 ? { ...f, pOffset: { x: 0, y: -9999 }, hidePlayer: true, hidePShadow: true, pAlpha: 0.0 }
+        : (isEnemyEvadingDuringAct1 ? { ...f, eOffset: { x: 0, y: -9999 }, hideEnemy: true, hideEShadow: true, eAlpha: 0.0 } : f)
+      )),
       // Dedicated Post-Move Stat Change Phase for Action 1 (if stat changes exist!)
-      ...createStatChangeFrames(a1, isP1, 2, isP1GuillotineKill, isE1GuillotineKill),
+      ...(createStatChangeFrames(a1, isP1, 2, isP1GuillotineKill, isE1GuillotineKill).map(f =>
+        isPlayerEvadingDuringAct1 ? { ...f, pOffset: { x: 0, y: -9999 }, hidePlayer: true, hidePShadow: true, pAlpha: 0.0 }
+        : (isEnemyEvadingDuringAct1 ? { ...f, eOffset: { x: 0, y: -9999 }, hideEnemy: true, hideEShadow: true, eAlpha: 0.0 } : f)
+      )),
       // Frame 4: Natural Breathing Room Pause between Turns (320ms - comfortable reading pause!)
       {
         delay: 320,
         pOffset: (a1IsEvasionLaunch && isP1) || isPlayerEvadingDuringAct2 ? { x: 0, y: -9999 } : { x: 0, y: 0 },
         eOffset: (a1IsEvasionLaunch && !isP1) || isEnemyEvadingDuringAct2 ? { x: 0, y: -9999 } : { x: 0, y: 0 },
+        pAlpha: (a1IsEvasionLaunch && isP1) || isPlayerEvadingDuringAct2 ? 0.0 : 1.0,
+        eAlpha: (a1IsEvasionLaunch && !isP1) || isEnemyEvadingDuringAct2 ? 0.0 : 1.0,
         hidePShadow: (a1IsEvasionLaunch && isP1) || isPlayerEvadingDuringAct2,
         hideEShadow: (a1IsEvasionLaunch && !isP1) || isEnemyEvadingDuringAct2,
         hidePlayer: (a1IsEvasionLaunch && isP1) || isPlayerEvadingDuringAct2,
@@ -3806,9 +3816,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       // === ACT 2 ===
       ...processedAct2Frames,
       // Frame 7: Attacker 2 Recoil & Counter Damage (with Dynamic Effectiveness Blinking!)
-      ...createEffectivenessFlickerFrames(a2, isP2, false, playerFrontHold, enemyBackHold),
+      ...(createEffectivenessFlickerFrames(a2, isP2, false, playerFrontHold, enemyBackHold).map(f =>
+        isPlayerEvadingDuringAct2 ? { ...f, pOffset: { x: 0, y: -9999 }, hidePlayer: true, hidePShadow: true, pAlpha: 0.0 }
+        : (isEnemyEvadingDuringAct2 ? { ...f, eOffset: { x: 0, y: -9999 }, hideEnemy: true, hideEShadow: true, eAlpha: 0.0 } : f)
+      )),
       // Dedicated Post-Move Stat Change Phase for Action 2 (if stat changes exist!)
-      ...createStatChangeFrames(a2, isP2, 4, playerFrontHold, enemyBackHold),
+      ...(createStatChangeFrames(a2, isP2, 4, playerFrontHold, enemyBackHold).map(f =>
+        isPlayerEvadingDuringAct2 ? { ...f, pOffset: { x: 0, y: -9999 }, hidePlayer: true, hidePShadow: true, pAlpha: 0.0 }
+        : (isEnemyEvadingDuringAct2 ? { ...f, eOffset: { x: 0, y: -9999 }, hideEnemy: true, hideEShadow: true, eAlpha: 0.0 } : f)
+      )),
       // Sinking Faint Collapse Animation (if someone fainted)
       ...faintFrames,
       // Final 11-Minute Static Hold Frame (655,000ms) - completely neutral with NO statProgress
@@ -3874,9 +3890,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
 
     let processedSingleActFrames = act1Frames;
     if (isEnemyStartingEvading && isP1) {
-      processedSingleActFrames = act1Frames.map(f => ({ ...f, eOffset: { x: 0, y: -9999 }, hideEShadow: true, hideEnemy: true }));
+      processedSingleActFrames = act1Frames.map(f => ({ ...f, eOffset: { x: 0, y: -9999 }, hideEShadow: true, hideEnemy: true, eAlpha: 0.0 }));
     } else if (isPlayerStartingEvading && !isP1) {
-      processedSingleActFrames = act1Frames.map(f => ({ ...f, pOffset: { x: 0, y: -9999 }, hidePShadow: true, hidePlayer: true }));
+      processedSingleActFrames = act1Frames.map(f => ({ ...f, pOffset: { x: 0, y: -9999 }, hidePShadow: true, hidePlayer: true, pAlpha: 0.0 }));
     }
 
     framesConfig = [
@@ -3885,6 +3901,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         delay: 800,
         pOffset: isPlayerStartingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
         eOffset: isEnemyStartingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
+        pAlpha: isPlayerStartingEvading ? 0.0 : 1.0,
+        eAlpha: isEnemyStartingEvading ? 0.0 : 1.0,
         hidePShadow: isPlayerStartingEvading,
         hideEShadow: isEnemyStartingEvading,
         hidePlayer: isPlayerStartingEvading,
@@ -3900,9 +3918,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       // Act 1 Move Animation (Fully executed with all sub-frames!)
       ...processedSingleActFrames,
       // Frame 3: Recoil & Damage Settling (with Dynamic Effectiveness Blinking!)
-      ...createEffectivenessFlickerFrames(eff, isP1, true, playerFrontHold, enemyBackHold),
+      ...(createEffectivenessFlickerFrames(eff, isP1, true, playerFrontHold, enemyBackHold).map(f =>
+        isPlayerStartingEvading && !isP1 ? { ...f, pOffset: { x: 0, y: -9999 }, hidePlayer: true, hidePShadow: true, pAlpha: 0.0 }
+        : (isEnemyStartingEvading && isP1 ? { ...f, eOffset: { x: 0, y: -9999 }, hideEnemy: true, hideEShadow: true, eAlpha: 0.0 } : f)
+      )),
       // Dedicated Post-Move Stat Change Phase (if stat changes exist!)
-      ...createStatChangeFrames(eff, isP1, 2, playerFrontHold, enemyBackHold),
+      ...(createStatChangeFrames(eff, isP1, 2, playerFrontHold, enemyBackHold).map(f =>
+        isPlayerStartingEvading && !isP1 ? { ...f, pOffset: { x: 0, y: -9999 }, hidePlayer: true, hidePShadow: true, pAlpha: 0.0 }
+        : (isEnemyStartingEvading && isP1 ? { ...f, eOffset: { x: 0, y: -9999 }, hideEnemy: true, hideEShadow: true, eAlpha: 0.0 } : f)
+      )),
       // Sinking Faint Collapse Animation (if fainted)
       ...faintFrames,
       // Final 11-Minute Static Hold Frame (655,000ms) - completely neutral with NO statProgress

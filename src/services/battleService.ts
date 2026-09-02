@@ -534,6 +534,28 @@ export class BattleService {
   }
 
   /**
+   * Helper to check if a status move targets self/field rather than opponent
+   */
+  public isSelfTargetStatusMove(moveName: string): boolean {
+    const k = moveName.toLowerCase().replace(/[\s_]+/g, "-");
+    const selfMoves = new Set([
+      "swords-dance", "dragon-dance", "calm-mind", "nasty-plot", "bulk-up", "quiver-dance",
+      "agility", "rock-polish", "iron-defense", "amnesia", "acid-armor", "barrier", "growth",
+      "tail-glow", "belly-drum", "shell-smash", "shift-gear", "coil", "hone-claws", "work-up",
+      "charge", "autotomize", "sharpen", "meditate", "harden", "withdraw", "defense-curl",
+      "minimize", "double-team", "protect", "detect", "spiky-shield", "baneful-bunker",
+      "substitute", "endure", "quick-guard", "wide-guard", "recover", "roost", "soft-boiled",
+      "slack-off", "milk-drink", "synthesis", "moonlight", "morning-sun", "heal-order",
+      "shore-up", "life-dew", "wish", "rest", "swallow", "stockpile", "ingrain", "aqua-ring",
+      "rain-dance", "sunny-day", "sandstorm", "snowscape", "hail", "electric-terrain",
+      "grassy-terrain", "misty-terrain", "psychic-terrain", "tailwind", "trick-room",
+      "reflect", "light-screen", "aurora-veil", "safeguard", "mist", "haze", "refresh",
+      "heal-bell", "aromatherapy", "splash"
+    ]);
+    return selfMoves.has(k);
+  }
+
+  /**
    * Executes a move turn with full speed, priority, damage formula, and secondary effects
    */
   public executePlayerMove(userId: string, slotId: number, moveKey: string, lang: "ko" | "en" = "ko"): BattleState {
@@ -837,6 +859,19 @@ export class BattleService {
 
     // 3. Status Move Processing
     if (activeMove.category === "status") {
+      const isSelfTarget = this.isSelfTargetStatusMove(activeMove.name);
+      if (!isSelfTarget && target.isSemiInvulnerable) {
+        const hasNoGuard = actor.ability === "no-guard";
+        const isPoisonToxic = (activeMove.name.toLowerCase().replace(/[\s_]+/g, "-") === "toxic") && actor.types.includes("poison");
+        if (!hasNoGuard && !isPoisonToxic) {
+          return {
+            log: isKo
+              ? `${actorName}의 ${activeMove.nameKo}!\n하지만 ${targetName}에게는 닿지 않았다!`
+              : `${actorName}'s ${activeMove.name.toUpperCase()}!\nBut it couldn't reach ${targetName}!`,
+            damage: 0,
+          };
+        }
+      }
       const statLog = this.applyStatusMove(actor, target, activeMove, actorName, targetName, isKo, battle);
       const statusHeader = isKo ? `${actorName}의 ${activeMove.nameKo}!` : `${actorName} used ${activeMove.name.toUpperCase()}!`;
       return { log: `${statusHeader}\n${statLog}`, damage: 0 };
