@@ -1267,10 +1267,10 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         // 1. Windup & Cyclone Inception at defender base (140ms)
         {
           delay: 140,
-          pOffset: isP1 ? { x: 12, y: -4 } : { x: 0, y: 0 },
+          pOffset: isP1 ? { x: 12, y: -4 } : (isMiss1 ? { x: -26, y: 4 } : { x: 0, y: -18 }),
           eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 0, y: -18 }) : { x: -12, y: 4 },
-          eRot: isP1 ? 0.35 : undefined,
-          pRot: !isP1 ? -0.35 : undefined,
+          pRot: isP1 ? undefined : (isMiss1 ? undefined : -0.35),
+          eRot: isP1 ? (isMiss1 ? undefined : 0.35) : undefined,
           showEffect: true,
           hitFlash: false,
           enemyHp: enemy.hp,
@@ -1283,10 +1283,10 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         // 2. Towering Cyclone Funnel Surges - Defender spinning & lifted high into mid-air! (220ms)
         {
           delay: 220,
-          pOffset: isP1 ? { x: 16, y: -6 } : (isMiss1 ? { x: 26, y: 4 } : { x: 10, y: -100 }),
+          pOffset: isP1 ? { x: 16, y: -6 } : (isMiss1 ? { x: -26, y: 4 } : { x: -10, y: -100 }),
           eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 10, y: -100 }) : { x: -16, y: 6 },
-          eRot: isP1 ? -1.85 : undefined,
-          pRot: !isP1 ? 1.85 : undefined,
+          pRot: isP1 ? undefined : (isMiss1 ? undefined : 1.85),
+          eRot: isP1 ? (isMiss1 ? undefined : -1.85) : undefined,
           showEffect: true,
           hitFlash: isHit1,
           enemyHp: a1.enemyHpAfter,
@@ -1300,10 +1300,10 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         // 3. Roaring Sky Vortex - Defender spinning continuously and blown completely off top of screen! (200ms)
         {
           delay: 200,
-          pOffset: isP1 ? { x: 10, y: -3 } : (isMiss1 ? { x: 16, y: 2 } : { x: -15, y: -240 }),
+          pOffset: isP1 ? { x: 10, y: -3 } : (isMiss1 ? { x: -16, y: 2 } : { x: 15, y: -240 }),
           eOffset: isP1 ? (isMiss1 ? { x: 16, y: -2 } : { x: -15, y: -240 }) : { x: -10, y: 3 },
-          eRot: isP1 ? 4.20 : undefined,
-          pRot: !isP1 ? -4.20 : undefined,
+          pRot: isP1 ? undefined : (isMiss1 ? undefined : -4.20),
+          eRot: isP1 ? (isMiss1 ? undefined : 4.20) : undefined,
           showEffect: true,
           hitFlash: false,
           enemyHp: a1.enemyHpAfter,
@@ -1319,8 +1319,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           delay: 180,
           pOffset: isP1 ? { x: 4, y: 0 } : { x: 0, y: -25 },
           eOffset: isP1 ? { x: 0, y: -25 } : { x: -4, y: 0 },
+          pRot: isP1 ? undefined : -6.28,
           eRot: isP1 ? 6.28 : undefined,
-          pRot: !isP1 ? -6.28 : undefined,
           showEffect: true,
           hitFlash: false,
           enemyHp: a1.enemyHpAfter,
@@ -2353,10 +2353,10 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         // 1. Windup & Cyclone Inception at defender base (140ms)
         {
           delay: 140,
-          pOffset: isP2 ? (isMiss2 ? { x: 26, y: -4 } : { x: 0, y: -18 }) : { x: 12, y: -4 },
-          eOffset: !isP2 ? (isMiss2 ? { x: -26, y: 4 } : { x: 0, y: -18 }) : { x: -12, y: 4 },
-          pRot: isP2 ? 0.35 : undefined,
-          eRot: !isP2 ? -0.35 : undefined,
+          pOffset: isP2 ? { x: 12, y: -4 } : (isMiss2 ? { x: -26, y: 4 } : { x: 0, y: -18 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 26, y: -4 } : { x: 0, y: -18 }) : { x: -12, y: 4 },
+          pRot: isP2 ? undefined : (isMiss2 ? undefined : -0.35),
+          eRot: isP2 ? (isMiss2 ? undefined : 0.35) : undefined,
           showEffect: true,
           hitFlash: false,
           enemyHp: a1.enemyHpAfter,
@@ -2369,10 +2369,10 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         // 2. Towering Cyclone Funnel Surges - Defender spinning & lifted high into mid-air! (220ms)
         {
           delay: 220,
-          pOffset: isP2 ? (isMiss2 ? { x: 26, y: -4 } : { x: 10, y: -100 }) : { x: 16, y: -6 },
-          eOffset: !isP2 ? (isMiss2 ? { x: -26, y: 4 } : { x: -10, y: -100 }) : { x: -16, y: 6 },
-          pRot: isP2 ? -1.85 : undefined,
-          eRot: !isP2 ? 1.85 : undefined,
+          pOffset: isP2 ? { x: 16, y: -6 } : (isMiss2 ? { x: -26, y: 4 } : { x: -10, y: -100 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 26, y: -4 } : { x: 10, y: -100 }) : { x: -16, y: 6 },
+          pRot: isP2 ? undefined : (isMiss2 ? undefined : 1.85),
+          eRot: isP2 ? (isMiss2 ? undefined : -1.85) : undefined,
           showEffect: true,
           hitFlash: isHit2,
           enemyHp: a2.enemyHpAfter,
@@ -2386,10 +2386,10 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         // 3. Roaring Sky Vortex - Defender spinning continuously and blown completely off top of screen! (200ms)
         {
           delay: 200,
-          pOffset: isP2 ? (isMiss2 ? { x: 16, y: -2 } : { x: -15, y: -240 }) : { x: 10, y: -3 },
-          eOffset: !isP2 ? (isMiss2 ? { x: -16, y: 2 } : { x: 15, y: -240 }) : { x: -10, y: 3 },
-          pRot: isP2 ? 4.20 : undefined,
-          eRot: !isP2 ? -4.20 : undefined,
+          pOffset: isP2 ? { x: 10, y: -3 } : (isMiss2 ? { x: -16, y: 2 } : { x: 15, y: -240 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 16, y: -2 } : { x: -15, y: -240 }) : { x: -10, y: 3 },
+          pRot: isP2 ? undefined : (isMiss2 ? undefined : -4.20),
+          eRot: isP2 ? (isMiss2 ? undefined : 4.20) : undefined,
           showEffect: true,
           hitFlash: false,
           enemyHp: a2.enemyHpAfter,
@@ -2403,10 +2403,10 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         // 4. Cyclone dissipates, Defender completes full spin rotation and floats back down (180ms)
         {
           delay: 180,
-          pOffset: isP2 ? { x: 0, y: -25 } : { x: 4, y: 0 },
-          eOffset: !isP2 ? { x: 0, y: -25 } : { x: -4, y: 0 },
-          pRot: isP2 ? 6.28 : undefined,
-          eRot: !isP2 ? -6.28 : undefined,
+          pOffset: isP2 ? { x: 4, y: 0 } : { x: 0, y: -25 },
+          eOffset: isP2 ? { x: 0, y: -25 } : { x: -4, y: 0 },
+          pRot: isP2 ? undefined : -6.28,
+          eRot: isP2 ? 6.28 : undefined,
           showEffect: true,
           hitFlash: false,
           enemyHp: a2.enemyHpAfter,
