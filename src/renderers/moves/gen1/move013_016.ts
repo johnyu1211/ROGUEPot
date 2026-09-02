@@ -145,16 +145,7 @@ export function drawRazorWindEffect(
   };
 
   if (step === 1) {
-    // Step 1: Glowing Cyan Ground Aura + Initial 3D Tapered Helical Spiral Wrapping around User
-    const groundGrad = ctx.createRadialGradient(sx, sy + 30, 8, sx, sy + 30, 58);
-    groundGrad.addColorStop(0, "rgba(56, 189, 248, 0.85)");
-    groundGrad.addColorStop(0.5, "rgba(56, 189, 248, 0.45)");
-    groundGrad.addColorStop(1, "rgba(56, 189, 248, 0)");
-    ctx.fillStyle = groundGrad;
-    ctx.beginPath();
-    ctx.ellipse(sx, sy + 30, 58, 20, 0, 0, Math.PI * 2);
-    ctx.fill();
-
+    // Step 1: Initial 3D Tapered Helical Spiral Wrapping around User (No ground glow)
     // 4 Tapered Helical Spiral Wind Ribbon Layers ascending up the body
     const ribbonLayers = [
       { y: 25, rx: 52, ry: 16, rot: -0.15, sA: -Math.PI * 0.85, eA: Math.PI * 0.85, maxW: 6.5, col: "#E0F2FE", a: 0.85 },
@@ -166,16 +157,7 @@ export function drawRazorWindEffect(
       drawTaperedHelicalRibbon(sx, sy, r.y, r.rx, r.ry, r.rot, r.sA, r.eA, r.maxW, r.col, r.a);
     }
   } else if (step === 2) {
-    // Step 2: Dense Towering 3D Helical Tornado Whirl around User (Full Enveloping Cyclone)
-    const groundGrad = ctx.createRadialGradient(sx, sy + 30, 10, sx, sy + 30, 68);
-    groundGrad.addColorStop(0, "rgba(56, 189, 248, 0.95)");
-    groundGrad.addColorStop(0.6, "rgba(56, 189, 248, 0.50)");
-    groundGrad.addColorStop(1, "rgba(56, 189, 248, 0)");
-    ctx.fillStyle = groundGrad;
-    ctx.beginPath();
-    ctx.ellipse(sx, sy + 30, 68, 22, 0, 0, Math.PI * 2);
-    ctx.fill();
-
+    // Step 2: Dense Towering 3D Helical Tornado Whirl around User (Full Enveloping Cyclone, No ground glow)
     // 6 Dense Tapered Helical Spiral Ribbon Rings enveloping the Pokémon
     const ribbonLayers = [
       { y: 30, rx: 58, ry: 18, rot: 0.10, sA: -Math.PI * 0.90, eA: Math.PI * 0.90, maxW: 8.0, col: "#BAE6FD", a: 0.95 },
@@ -258,15 +240,15 @@ export function drawRazorWindEffect(
       ctx.fill();
     }
   } else if (step >= 5) {
-    // Step 5: Star Impact Burst & Dispersing Razor Blade Shards
-    drawMiniRetroStar(ctx, tx, ty, 20, "#FACC15");
-    drawMiniRetroStar(ctx, tx, ty, 10, "#FFFFFF");
+    // Step 5: Star Impact Burst & Dispersing Razor Blade Shards with Smooth Fade-Out Alpha
+    drawMiniRetroStar(ctx, tx, ty, 16, "rgba(250, 204, 21, 0.45)");
+    drawMiniRetroStar(ctx, tx, ty, 8, "rgba(255, 255, 255, 0.55)");
 
     const shards = [
-      { cx: tx - 46, cy: ty - 34, ang: -0.5, len: 46, curve: 14, thick: 6.5, a: 0.40 },
-      { cx: tx + 48, cy: ty - 30, ang: 0.6, len: 48, curve: -14, thick: 6.5, a: 0.40 },
-      { cx: tx - 40, cy: ty + 34, ang: 2.2, len: 44, curve: 12, thick: 6.0, a: 0.35 },
-      { cx: tx + 42, cy: ty + 32, ang: -2.2, len: 46, curve: -12, thick: 6.0, a: 0.35 },
+      { cx: tx - 52, cy: ty - 38, ang: -0.5, len: 44, curve: 14, thick: 5.5, a: 0.22 },
+      { cx: tx + 54, cy: ty - 34, ang: 0.6, len: 46, curve: -14, thick: 5.5, a: 0.22 },
+      { cx: tx - 44, cy: ty + 38, ang: 2.2, len: 42, curve: 12, thick: 5.0, a: 0.18 },
+      { cx: tx + 46, cy: ty + 36, ang: -2.2, len: 44, curve: -12, thick: 5.0, a: 0.18 },
     ];
     for (const sh of shards) {
       drawTaperedRazorBlade(sh.cx, sh.cy, sh.ang, sh.len, sh.curve, sh.thick, 0.85, sh.a);
