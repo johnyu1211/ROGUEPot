@@ -166,23 +166,40 @@ export function drawStatBoostEffect(ctx: any, pos: { x: number; y: number }, pro
     return;
   }
 
-  // 3 Sequential Waves of 2~3 Compact Crisp Orbs shooting upward diagonally (↖ ↗)
-  // Clean solid dots matching Gen 5 screenshot (#F6AD7B / #E2B38E)
+  // 4 Continuous Waves of 6 Compact Crisp Orbs (24 total) shooting upward diagonally (↖ ↗)
+  // Wide spread across base (-38px to +38px) fanning out broadly (driftDist 45px ~ 75px)
   const orbConfigs = [
-    // Wave 1
-    { baseX: -10, driftDir: -1, driftDist: 28, spawn: 0.00, life: 0.45, speed: 85, radius: 5.5 },
-    { baseX: 8,   driftDir: 1,  driftDist: 26, spawn: 0.04, life: 0.45, speed: 90, radius: 6.5 },
-    { baseX: -2,  driftDir: -1, driftDist: 18, spawn: 0.08, life: 0.45, speed: 95, radius: 4.8 },
+    // Wave 1: First burst (6 orbs across wide base)
+    { baseX: -28, driftDir: -1, driftDist: 62, spawn: 0.00, life: 0.46, speed: 105, radius: 6.5 },
+    { baseX: 24,  driftDir: 1,  driftDist: 58, spawn: 0.02, life: 0.46, speed: 110, radius: 7.5 },
+    { baseX: -12, driftDir: -1, driftDist: 48, spawn: 0.04, life: 0.46, speed: 115, radius: 5.5 },
+    { baseX: 10,  driftDir: 1,  driftDist: 52, spawn: 0.06, life: 0.46, speed: 100, radius: 8.0 },
+    { baseX: -36, driftDir: -1, driftDist: 70, spawn: 0.08, life: 0.46, speed: 95,  radius: 6.0 },
+    { baseX: 32,  driftDir: 1,  driftDist: 68, spawn: 0.10, life: 0.46, speed: 105, radius: 5.0 },
 
-    // Wave 2
-    { baseX: 12,  driftDir: 1,  driftDist: 30, spawn: 0.28, life: 0.45, speed: 90, radius: 6.0 },
-    { baseX: -8,  driftDir: -1, driftDist: 24, spawn: 0.32, life: 0.45, speed: 85, radius: 5.2 },
-    { baseX: 2,   driftDir: 1,  driftDist: 20, spawn: 0.36, life: 0.45, speed: 95, radius: 6.2 },
+    // Wave 2: Second burst (6 orbs)
+    { baseX: -20, driftDir: -1, driftDist: 55, spawn: 0.20, life: 0.46, speed: 110, radius: 7.0 },
+    { baseX: 18,  driftDir: 1,  driftDist: 60, spawn: 0.22, life: 0.46, speed: 115, radius: 6.0 },
+    { baseX: -6,  driftDir: -1, driftDist: 44, spawn: 0.25, life: 0.46, speed: 120, radius: 8.0 },
+    { baseX: 6,   driftDir: 1,  driftDist: 46, spawn: 0.27, life: 0.46, speed: 105, radius: 5.5 },
+    { baseX: -32, driftDir: -1, driftDist: 72, spawn: 0.30, life: 0.46, speed: 100, radius: 7.5 },
+    { baseX: 28,  driftDir: 1,  driftDist: 66, spawn: 0.32, life: 0.46, speed: 110, radius: 6.5 },
 
-    // Wave 3
-    { baseX: -14, driftDir: -1, driftDist: 32, spawn: 0.55, life: 0.42, speed: 85, radius: 5.5 },
-    { baseX: 10,  driftDir: 1,  driftDist: 28, spawn: 0.58, life: 0.42, speed: 90, radius: 6.0 },
-    { baseX: -4,  driftDir: -1, driftDist: 22, spawn: 0.62, life: 0.42, speed: 90, radius: 5.0 },
+    // Wave 3: Third burst (6 orbs)
+    { baseX: -24, driftDir: -1, driftDist: 64, spawn: 0.40, life: 0.44, speed: 105, radius: 6.0 },
+    { baseX: 22,  driftDir: 1,  driftDist: 62, spawn: 0.42, life: 0.44, speed: 110, radius: 7.5 },
+    { baseX: -10, driftDir: -1, driftDist: 50, spawn: 0.45, life: 0.44, speed: 115, radius: 8.0 },
+    { baseX: 14,  driftDir: 1,  driftDist: 54, spawn: 0.47, life: 0.44, speed: 100, radius: 5.5 },
+    { baseX: -38, driftDir: -1, driftDist: 75, spawn: 0.50, life: 0.44, speed: 95,  radius: 7.0 },
+    { baseX: 34,  driftDir: 1,  driftDist: 72, spawn: 0.52, life: 0.44, speed: 105, radius: 6.0 },
+
+    // Wave 4: Fourth burst (6 orbs)
+    { baseX: -16, driftDir: -1, driftDist: 58, spawn: 0.58, life: 0.40, speed: 110, radius: 6.5 },
+    { baseX: 12,  driftDir: 1,  driftDist: 56, spawn: 0.60, life: 0.40, speed: 105, radius: 7.0 },
+    { baseX: -4,  driftDir: -1, driftDist: 46, spawn: 0.62, life: 0.40, speed: 115, radius: 5.5 },
+    { baseX: 8,   driftDir: 1,  driftDist: 48, spawn: 0.64, life: 0.40, speed: 100, radius: 7.5 },
+    { baseX: -30, driftDir: -1, driftDist: 68, spawn: 0.66, life: 0.40, speed: 95,  radius: 6.0 },
+    { baseX: 26,  driftDir: 1,  driftDist: 65, spawn: 0.68, life: 0.40, speed: 105, radius: 5.0 },
   ];
 
   for (const cfg of orbConfigs) {
@@ -201,7 +218,7 @@ export function drawStatBoostEffect(ctx: any, pos: { x: number; y: number }, pro
     ctx.globalAlpha = alpha;
 
     // Radius gently shrinks as it dissolves into air
-    const r = cfg.radius * (1.0 - 0.3 * t);
+    const r = cfg.radius * (1.0 - 0.25 * t);
 
     // 1. Rich vibrant orange compact orb body (#F97316 / #FB923C)
     ctx.fillStyle = "rgba(249, 115, 22, 0.96)";
@@ -227,7 +244,7 @@ export function drawStatBoostEffect(ctx: any, pos: { x: number; y: number }, pro
 }
 
 /**
- * Stat Drop Effect (능력치 하락 / 랭크 하락): 3 Sequential Waves of Crisp Cyan/Blue Orbs descending diagonally and fading
+ * Stat Drop Effect (능력치 하락 / 랭크 하락): 4 Sequential Waves of Crisp Cyan/Blue Orbs descending diagonally and fading
  */
 export function drawStatDropEffect(ctx: any, pos: { x: number; y: number }, progress: number = 0.5) {
   ctx.save();
@@ -239,19 +256,36 @@ export function drawStatDropEffect(ctx: any, pos: { x: number; y: number }, prog
 
   const orbConfigs = [
     // Wave 1
-    { baseX: -10, driftDir: -1, driftDist: 28, spawn: 0.00, life: 0.45, speed: 85, radius: 5.5 },
-    { baseX: 8,   driftDir: 1,  driftDist: 26, spawn: 0.04, life: 0.45, speed: 90, radius: 6.5 },
-    { baseX: -2,  driftDir: -1, driftDist: 18, spawn: 0.08, life: 0.45, speed: 95, radius: 4.8 },
+    { baseX: -28, driftDir: -1, driftDist: 62, spawn: 0.00, life: 0.46, speed: 105, radius: 6.5 },
+    { baseX: 24,  driftDir: 1,  driftDist: 58, spawn: 0.02, life: 0.46, speed: 110, radius: 7.5 },
+    { baseX: -12, driftDir: -1, driftDist: 48, spawn: 0.04, life: 0.46, speed: 115, radius: 5.5 },
+    { baseX: 10,  driftDir: 1,  driftDist: 52, spawn: 0.06, life: 0.46, speed: 100, radius: 8.0 },
+    { baseX: -36, driftDir: -1, driftDist: 70, spawn: 0.08, life: 0.46, speed: 95,  radius: 6.0 },
+    { baseX: 32,  driftDir: 1,  driftDist: 68, spawn: 0.10, life: 0.46, speed: 105, radius: 5.0 },
 
     // Wave 2
-    { baseX: 12,  driftDir: 1,  driftDist: 30, spawn: 0.28, life: 0.45, speed: 90, radius: 6.0 },
-    { baseX: -8,  driftDir: -1, driftDist: 24, spawn: 0.32, life: 0.45, speed: 85, radius: 5.2 },
-    { baseX: 2,   driftDir: 1,  driftDist: 20, spawn: 0.36, life: 0.45, speed: 95, radius: 6.2 },
+    { baseX: -20, driftDir: -1, driftDist: 55, spawn: 0.20, life: 0.46, speed: 110, radius: 7.0 },
+    { baseX: 18,  driftDir: 1,  driftDist: 60, spawn: 0.22, life: 0.46, speed: 115, radius: 6.0 },
+    { baseX: -6,  driftDir: -1, driftDist: 44, spawn: 0.25, life: 0.46, speed: 120, radius: 8.0 },
+    { baseX: 6,   driftDir: 1,  driftDist: 46, spawn: 0.27, life: 0.46, speed: 105, radius: 5.5 },
+    { baseX: -32, driftDir: -1, driftDist: 72, spawn: 0.30, life: 0.46, speed: 100, radius: 7.5 },
+    { baseX: 28,  driftDir: 1,  driftDist: 66, spawn: 0.32, life: 0.46, speed: 110, radius: 6.5 },
 
     // Wave 3
-    { baseX: -14, driftDir: -1, driftDist: 32, spawn: 0.55, life: 0.42, speed: 85, radius: 5.5 },
-    { baseX: 10,  driftDir: 1,  driftDist: 28, spawn: 0.58, life: 0.42, speed: 90, radius: 6.0 },
-    { baseX: -4,  driftDir: -1, driftDist: 22, spawn: 0.62, life: 0.42, speed: 90, radius: 5.0 },
+    { baseX: -24, driftDir: -1, driftDist: 64, spawn: 0.40, life: 0.44, speed: 105, radius: 6.0 },
+    { baseX: 22,  driftDir: 1,  driftDist: 62, spawn: 0.42, life: 0.44, speed: 110, radius: 7.5 },
+    { baseX: -10, driftDir: -1, driftDist: 50, spawn: 0.45, life: 0.44, speed: 115, radius: 8.0 },
+    { baseX: 14,  driftDir: 1,  driftDist: 54, spawn: 0.47, life: 0.44, speed: 100, radius: 5.5 },
+    { baseX: -38, driftDir: -1, driftDist: 75, spawn: 0.50, life: 0.44, speed: 95,  radius: 7.0 },
+    { baseX: 34,  driftDir: 1,  driftDist: 72, spawn: 0.52, life: 0.44, speed: 105, radius: 6.0 },
+
+    // Wave 4
+    { baseX: -16, driftDir: -1, driftDist: 58, spawn: 0.58, life: 0.40, speed: 110, radius: 6.5 },
+    { baseX: 12,  driftDir: 1,  driftDist: 56, spawn: 0.60, life: 0.40, speed: 105, radius: 7.0 },
+    { baseX: -4,  driftDir: -1, driftDist: 46, spawn: 0.62, life: 0.40, speed: 115, radius: 5.5 },
+    { baseX: 8,   driftDir: 1,  driftDist: 48, spawn: 0.64, life: 0.40, speed: 100, radius: 7.5 },
+    { baseX: -30, driftDir: -1, driftDist: 68, spawn: 0.66, life: 0.40, speed: 95,  radius: 6.0 },
+    { baseX: 26,  driftDir: 1,  driftDist: 65, spawn: 0.68, life: 0.40, speed: 105, radius: 5.0 },
   ];
 
   for (const cfg of orbConfigs) {
@@ -261,13 +295,13 @@ export function drawStatDropEffect(ctx: any, pos: { x: number; y: number }, prog
     if (alpha <= 0.02) continue;
 
     const soarT = Math.pow(t, 0.9);
-    const orbY = (pos.y - 75) + (soarT * cfg.speed);
+    const orbY = (pos.y - 85) + (soarT * cfg.speed);
     const orbX = pos.x + cfg.baseX + (cfg.driftDir * soarT * cfg.driftDist);
 
     ctx.save();
     ctx.globalAlpha = alpha;
 
-    const r = cfg.radius * (1.0 - 0.3 * t);
+    const r = cfg.radius * (1.0 - 0.25 * t);
 
     // Crisp compact blue circular dot (Clean #93C5FD)
     ctx.fillStyle = "rgba(147, 197, 253, 0.95)";
