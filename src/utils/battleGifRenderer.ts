@@ -5785,30 +5785,24 @@ export async function renderBattleFightMenuGif(options: BattleAnimationOptions):
   const em = BATTLE_LAYOUT_CONFIG.enemyPokemon;
   const pm = BATTLE_LAYOUT_CONFIG.playerPokemon;
 
-  const bounceFrames = [
-    // 0. Neutral start (90ms)
-    { delay: 90, pY: 0, pScaleY: 1.0, pScaleX: 1.0, hudY: 0 },
-    // 1. Dip anticipation (90ms)
-    { delay: 90, pY: 4, pScaleY: 0.94, pScaleX: 1.04, hudY: 3 },
-    // 2. Battle Ready Spring Up (110ms)
-    { delay: 110, pY: -12, pScaleY: 1.06, pScaleX: 0.96, hudY: -8 },
-    // 3. Peak Float & Forward (100ms)
-    { delay: 100, pY: -7, pScaleY: 1.02, pScaleX: 0.98, hudY: -5 },
-    // 4. Landing Soft Compression (95ms)
-    { delay: 95, pY: 2, pScaleY: 0.97, pScaleX: 1.03, hudY: 1 },
-    // 5. Settle Back (90ms)
-    { delay: 90, pY: 0, pScaleY: 1.0, pScaleX: 1.0, hudY: 0 },
-    // 6. Hold frame (655,000ms - Maximum GIF89a unsigned 16-bit delay limit)
-    { delay: 655000, pY: 0, pScaleY: 1.0, pScaleX: 1.0, hudY: 0 }
+  // Authentic DS style: subtle alternating vertical bobbing
+  // 체력창과 포켓몬이 번갈아가며(교차/시소 리듬) 살짝 위아래로 호흡하듯 움직임 (점프/스케일 왜곡 없음, 2~3px 미세 변위)
+  const bobbingFrames = [
+    { delay: 180, pY: -3, hudY: 2 },
+    { delay: 180, pY: -1, hudY: 1 },
+    { delay: 180, pY: 1, hudY: -1 },
+    { delay: 180, pY: 3, hudY: -2 },
+    { delay: 180, pY: 1, hudY: -1 },
+    { delay: 180, pY: -1, hudY: 1 }
   ];
 
-  const motionDurationMs = bounceFrames.slice(0, -1).reduce((sum, f) => sum + f.delay, 0);
+  const motionDurationMs = bobbingFrames.reduce((sum, f) => sum + f.delay, 0);
 
   const promptText = isKo
     ? `${getPokemonDisplayName(playerMon, isKo)}은(는) 무엇을 할까?`
     : `What will ${getPokemonDisplayName(playerMon, isKo)} do?`;
 
-  for (const f of bounceFrames) {
+  for (const f of bobbingFrames) {
     ctx.clearRect(0, 0, width, height);
 
     if (arena.bg) ctx.drawImage(arena.bg, 0, 0, width, height);
@@ -5830,11 +5824,7 @@ export async function renderBattleFightMenuGif(options: BattleAnimationOptions):
 
     if (playerSprite) {
       drawPokemonSilhouetteShadow(ctx, playerSprite, pm.x, pm.y, pm.size);
-      ctx.save();
-      ctx.translate(pm.x, pm.y + f.pY);
-      ctx.scale(f.pScaleX, f.pScaleY);
-      drawFittedBattleSprite(ctx, playerSprite, 0, 0, pm.size);
-      ctx.restore();
+      drawFittedBattleSprite(ctx, playerSprite, pm.x, pm.y + f.pY, pm.size);
     }
 
     renderBattleHeader(ctx, width, battle, isKo);
