@@ -284,7 +284,10 @@ export function drawFittedBattleSprite(ctx: any, sprite: any, targetX: number, t
       const actW = maxX - minX + 1;
       const actH = maxY - minY + 1;
       const maxDim = Math.max(actW, actH);
-      const scale = targetSize / maxDim;
+      // Natural proportional scaling based on sprite pixel dimensions (baseline: 70px)
+      const sizeRatio = Math.max(0.55, Math.min(1.35, maxDim / 70));
+      const effectiveSize = targetSize * sizeRatio;
+      const scale = effectiveSize / maxDim;
 
       const drawW = actW * scale;
       const drawH = actH * scale;
@@ -339,7 +342,9 @@ export function drawPokemonSilhouetteShadow(
     const actW = maxX - minX + 1;
     const actH = maxY - minY + 1;
     const maxDim = Math.max(actW, actH);
-    const scale = targetSize / maxDim;
+    const sizeRatio = Math.max(0.55, Math.min(1.35, maxDim / 70));
+    const effectiveSize = targetSize * sizeRatio;
+    const scale = effectiveSize / maxDim;
     const drawW = actW * scale;
     const drawH = actH * scale;
 
