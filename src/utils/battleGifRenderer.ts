@@ -59,6 +59,15 @@ function createEffectivenessFlickerFrames(
   usePlayerFront: boolean = false,
   useEnemyBack: boolean = false
 ): any[] {
+  if (!action) return [];
+
+  // Skip flicker / recoil settling completely for 0-damage actions (charging moves, misses, immunities)
+  const moveNameLower = (action.moveKey || "").toLowerCase().replace(/[\s_]+/g, "-");
+  const isCharging = ["fly", "dig", "dive", "bounce", "shadow-force", "phantom-force", "solar-beam", "solar-blade", "skull-bash", "meteor-beam", "sky-attack"].includes(moveNameLower) && (action.damage ?? 0) === 0;
+  if (isCharging || (action.damage ?? 0) === 0) {
+    return [];
+  }
+
   const typeMod = action.typeMod !== undefined ? action.typeMod : (action.isSuperEffective ? 2.0 : 1.0);
   
   let blinkCount = 0; // Default: 0 blinks for normal hits (1.0x) and not very effective (<= 0.5x)
@@ -71,7 +80,7 @@ function createEffectivenessFlickerFrames(
   if (blinkCount === 0) {
     return [
       {
-        delay: 380,
+        delay: 200,
         pOffset: (usePlayerFront && isP) ? { x: 0, y: 0 } : (isP ? { x: 6, y: -3 } : { x: 0, y: 0 }),
         eOffset: (useEnemyBack && !isP) ? { x: 0, y: 0 } : (!isP ? { x: -6, y: 3 } : { x: 0, y: 0 }),
         showEffect: false,
