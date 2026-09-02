@@ -430,14 +430,14 @@ export function drawSwordsDanceEffect(ctx: any, userPos: { x: number; y: number 
 }
 
 /**
- * 015 풀베기 (Cut): Clean, Crisp Diagonal Blade Slash (Outer White Rim, Inner Vibrant Yellow Core)
+ * 015 풀베기 (Cut): Clean, Crisp Diagonal Blade Slash (Thin Outer White Rim, Inner Ultra-Vibrant Electric Yellow Core)
  */
 export function drawCutEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
   ctx.save();
   const tx = target.x;
   const ty = target.y - 10;
 
-  // Clean Diagonal Blade Slash Helper (Outer White, Inner Yellow, Bright Highlight Core)
+  // Clean Diagonal Blade Slash Helper (Thin Outer White Rim, Vivid Pure Electric Yellow)
   const drawSlashLine = (
     x1: number,
     y1: number,
@@ -451,7 +451,7 @@ export function drawCutEffect(ctx: any, target: { x: number; y: number }, step: 
     ctx.globalAlpha = alpha;
     ctx.lineCap = "round";
 
-    // 1. Outer White Rim (바깥쪽 흰색 #FFFFFF)
+    // 1. Thin Outer White Rim (바깥쪽 얇은 흰색 테두리 #FFFFFF)
     ctx.strokeStyle = "#FFFFFF";
     ctx.lineWidth = outerWidth;
     ctx.beginPath();
@@ -459,17 +459,17 @@ export function drawCutEffect(ctx: any, target: { x: number; y: number }, step: 
     ctx.lineTo(x2, y2);
     ctx.stroke();
 
-    // 2. Middle Vibrant Yellow Core (중간 노란색 #FACC15)
-    ctx.strokeStyle = "#FACC15";
+    // 2. Middle Ultra-Vibrant Electric Lemon Yellow Core (쨍하고 맑은 고채도 노란색 #FFE600)
+    ctx.strokeStyle = "#FFE600";
     ctx.lineWidth = innerWidth;
     ctx.beginPath();
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
     ctx.stroke();
 
-    // 3. Crisp Bright Center Line (#FEF08A)
-    ctx.strokeStyle = "#FEF08A";
-    ctx.lineWidth = Math.max(1.8, innerWidth * 0.4);
+    // 3. Crisp Bright Center Line (#FFFF88)
+    ctx.strokeStyle = "#FFFF88";
+    ctx.lineWidth = Math.max(1.5, innerWidth * 0.35);
     ctx.beginPath();
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
@@ -480,13 +480,13 @@ export function drawCutEffect(ctx: any, target: { x: number; y: number }, step: 
 
   if (step === 1) {
     // Step 1: Swift diagonal slash begins from top-right past center
-    drawSlashLine(tx + 65, ty - 65, tx - 25, ty + 25, 9.5, 5.0, 0.95);
+    drawSlashLine(tx + 65, ty - 65, tx - 25, ty + 25, 7.0, 5.4, 0.95);
   } else if (step === 2) {
     // Step 2: Full bright diagonal blade cleave across defender
-    drawSlashLine(tx + 80, ty - 80, tx - 80, ty + 80, 11.5, 6.0, 1.0);
+    drawSlashLine(tx + 80, ty - 80, tx - 80, ty + 80, 8.5, 6.8, 1.0);
   } else if (step === 3) {
     // Step 3: Slash fades out
-    drawSlashLine(tx + 75, ty - 75, tx - 75, ty + 75, 7.5, 3.8, 0.45);
+    drawSlashLine(tx + 75, ty - 75, tx - 75, ty + 75, 6.0, 4.6, 0.45);
   }
 
   ctx.restore();
