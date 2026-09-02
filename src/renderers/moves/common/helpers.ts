@@ -161,40 +161,61 @@ export function drawStarburstImpact(ctx: any, tx: number, ty: number, color1: st
 export function drawStatBoostEffect(ctx: any, pos: { x: number; y: number }, progress: number = 0.5) {
   ctx.save();
   const clampedProgress = Math.min(1.0, Math.max(0.0, progress));
+  if (clampedProgress <= 0.0 || clampedProgress >= 1.0) {
+    ctx.restore();
+    return;
+  }
 
-  // Glowing circular orb particles rising from the sprite horizontal bottom baseline
+  // 3 Sequential Waves of 2~3 Compact Crisp Orbs shooting upward diagonally (↖ ↗)
+  // Clean solid dots matching Gen 5 screenshot (#F6AD7B / #E2B38E)
   const orbConfigs = [
-    { offsetX: -38, delay: 0.00, speed: 80, radius: 5.0, color: "rgba(239, 68, 68, 0.85)" },
-    { offsetX: -26, delay: 0.25, speed: 90, radius: 6.5, color: "rgba(245, 158, 11, 0.90)" },
-    { offsetX: -14, delay: 0.10, speed: 85, radius: 5.5, color: "rgba(253, 224, 71, 0.95)" },
-    { offsetX: -2,  delay: 0.35, speed: 95, radius: 7.0, color: "rgba(254, 240, 138, 0.95)" },
-    { offsetX: 10,  delay: 0.05, speed: 90, radius: 6.0, color: "rgba(253, 224, 71, 0.95)" },
-    { offsetX: 22,  delay: 0.20, speed: 85, radius: 5.5, color: "rgba(245, 158, 11, 0.90)" },
-    { offsetX: 34,  delay: 0.40, speed: 80, radius: 4.5, color: "rgba(239, 68, 68, 0.85)" },
+    // Wave 1
+    { baseX: -10, driftDir: -1, driftDist: 28, spawn: 0.00, life: 0.45, speed: 85, radius: 5.5 },
+    { baseX: 8,   driftDir: 1,  driftDist: 26, spawn: 0.04, life: 0.45, speed: 90, radius: 6.5 },
+    { baseX: -2,  driftDir: -1, driftDist: 18, spawn: 0.08, life: 0.45, speed: 95, radius: 4.8 },
+
+    // Wave 2
+    { baseX: 12,  driftDir: 1,  driftDist: 30, spawn: 0.28, life: 0.45, speed: 90, radius: 6.0 },
+    { baseX: -8,  driftDir: -1, driftDist: 24, spawn: 0.32, life: 0.45, speed: 85, radius: 5.2 },
+    { baseX: 2,   driftDir: 1,  driftDist: 20, spawn: 0.36, life: 0.45, speed: 95, radius: 6.2 },
+
+    // Wave 3
+    { baseX: -14, driftDir: -1, driftDist: 32, spawn: 0.55, life: 0.42, speed: 85, radius: 5.5 },
+    { baseX: 10,  driftDir: 1,  driftDist: 28, spawn: 0.58, life: 0.42, speed: 90, radius: 6.0 },
+    { baseX: -4,  driftDir: -1, driftDist: 22, spawn: 0.62, life: 0.42, speed: 90, radius: 5.0 },
   ];
 
   for (const cfg of orbConfigs) {
-    const localProgress = (clampedProgress + cfg.delay) % 1.0;
-    // Starts exactly at sprite bottom baseline (pos.y) and rises upward
-    const orbY = pos.y - (localProgress * cfg.speed);
-    const orbX = pos.x + cfg.offsetX;
-    const alpha = Math.sin(localProgress * Math.PI);
+    if (clampedProgress < cfg.spawn || clampedProgress > cfg.spawn + cfg.life) continue;
+    const t = (clampedProgress - cfg.spawn) / cfg.life; // strictly 0.0 -> 1.0 within its wave
+    // Starts solid at bottom (t=0) and smoothly fades out as it ascends higher (t -> 1)
+    const alpha = Math.pow(1.0 - t, 1.25) * 0.95;
+    if (alpha <= 0.02) continue;
 
-    if (alpha <= 0.05) continue;
+    // Soars upward from bottom ground baseline, expanding diagonally outward
+    const soarT = Math.pow(t, 0.9);
+    const orbY = pos.y - (soarT * cfg.speed);
+    const orbX = pos.x + cfg.baseX + (cfg.driftDir * soarT * cfg.driftDist);
 
     ctx.save();
     ctx.globalAlpha = alpha;
 
-    const r = cfg.radius * (0.75 + 0.35 * Math.sin(localProgress * Math.PI));
+    // Radius gently shrinks as it dissolves into air
+    const r = cfg.radius * (1.0 - 0.3 * t);
 
-    // Outer warm glowing circle
-    ctx.fillStyle = cfg.color;
+    // 1. Rich vibrant orange compact orb body (#F97316 / #FB923C)
+    ctx.fillStyle = "rgba(249, 115, 22, 0.96)";
     ctx.beginPath();
     ctx.arc(orbX, orbY, r, 0, Math.PI * 2);
     ctx.fill();
 
-    // Inner bright white center
-    ctx.fillStyle = "#FFFFFF";
+    // 2. Warm amber-orange subtle outer rim
+    ctx.strokeStyle = "rgba(234, 88, 12, 0.85)";
+    ctx.lineWidth = 0.9;
+    ctx.stroke();
+
+    // 3. Glowing warm apricot/peach inner highlight
+    ctx.fillStyle = "rgba(254, 215, 170, 0.95)";
     ctx.beginPath();
     ctx.arc(orbX, orbY, r * 0.45, 0, Math.PI * 2);
     ctx.fill();
@@ -206,58 +227,58 @@ export function drawStatBoostEffect(ctx: any, pos: { x: number; y: number }, pro
 }
 
 /**
- * Stat Drop Effect (능력치 하락 / 랭크 하락)
+ * Stat Drop Effect (능력치 하락 / 랭크 하락): 3 Sequential Waves of Crisp Cyan/Blue Orbs descending diagonally and fading
  */
 export function drawStatDropEffect(ctx: any, pos: { x: number; y: number }, progress: number = 0.5) {
   ctx.save();
   const clampedProgress = Math.min(1.0, Math.max(0.0, progress));
+  if (clampedProgress <= 0.0 || clampedProgress >= 1.0) {
+    ctx.restore();
+    return;
+  }
 
-  // Pure blue descending arrow particles spanning across the sprite horizontal width down to bottom baseline
-  const arrowConfigs = [
-    { offsetX: -36, delay: 0.00, speed: 75, size: 10, color: "#3B82F6" },
-    { offsetX: -22, delay: 0.20, speed: 85, size: 12, color: "#60A5FA" },
-    { offsetX: -8,  delay: 0.08, speed: 90, size: 14, color: "#93C5FD" },
-    { offsetX: 8,   delay: 0.16, speed: 90, size: 14, color: "#93C5FD" },
-    { offsetX: 22,  delay: 0.04, speed: 85, size: 12, color: "#60A5FA" },
-    { offsetX: 36,  delay: 0.24, speed: 75, size: 10, color: "#3B82F6" },
+  const orbConfigs = [
+    // Wave 1
+    { baseX: -10, driftDir: -1, driftDist: 28, spawn: 0.00, life: 0.45, speed: 85, radius: 5.5 },
+    { baseX: 8,   driftDir: 1,  driftDist: 26, spawn: 0.04, life: 0.45, speed: 90, radius: 6.5 },
+    { baseX: -2,  driftDir: -1, driftDist: 18, spawn: 0.08, life: 0.45, speed: 95, radius: 4.8 },
+
+    // Wave 2
+    { baseX: 12,  driftDir: 1,  driftDist: 30, spawn: 0.28, life: 0.45, speed: 90, radius: 6.0 },
+    { baseX: -8,  driftDir: -1, driftDist: 24, spawn: 0.32, life: 0.45, speed: 85, radius: 5.2 },
+    { baseX: 2,   driftDir: 1,  driftDist: 20, spawn: 0.36, life: 0.45, speed: 95, radius: 6.2 },
+
+    // Wave 3
+    { baseX: -14, driftDir: -1, driftDist: 32, spawn: 0.55, life: 0.42, speed: 85, radius: 5.5 },
+    { baseX: 10,  driftDir: 1,  driftDist: 28, spawn: 0.58, life: 0.42, speed: 90, radius: 6.0 },
+    { baseX: -4,  driftDir: -1, driftDist: 22, spawn: 0.62, life: 0.42, speed: 90, radius: 5.0 },
   ];
 
-  for (const cfg of arrowConfigs) {
-    const localProgress = (clampedProgress + cfg.delay) % 1.0;
-    // Descends from top of sprite down to bottom baseline (pos.y)
-    const arrowY = (pos.y - 75) + (localProgress * cfg.speed);
-    const arrowX = pos.x + cfg.offsetX;
-    const alpha = Math.sin(localProgress * Math.PI);
+  for (const cfg of orbConfigs) {
+    if (clampedProgress < cfg.spawn || clampedProgress > cfg.spawn + cfg.life) continue;
+    const t = (clampedProgress - cfg.spawn) / cfg.life;
+    const alpha = Math.pow(1.0 - t, 1.25) * 0.95;
+    if (alpha <= 0.02) continue;
 
-    if (alpha <= 0.05) continue;
+    const soarT = Math.pow(t, 0.9);
+    const orbY = (pos.y - 75) + (soarT * cfg.speed);
+    const orbX = pos.x + cfg.baseX + (cfg.driftDir * soarT * cfg.driftDist);
 
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.shadowColor = cfg.color;
-    ctx.shadowBlur = 8;
-    ctx.strokeStyle = cfg.color;
-    ctx.lineWidth = 3.0;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
 
-    const s = cfg.size;
-    ctx.beginPath();
-    ctx.moveTo(arrowX - s, arrowY - s * 0.55);
-    ctx.lineTo(arrowX, arrowY + s * 0.45);
-    ctx.lineTo(arrowX + s, arrowY - s * 0.55);
-    ctx.stroke();
+    const r = cfg.radius * (1.0 - 0.3 * t);
 
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 1.4;
+    // Crisp compact blue circular dot (Clean #93C5FD)
+    ctx.fillStyle = "rgba(147, 197, 253, 0.95)";
     ctx.beginPath();
-    ctx.moveTo(arrowX - s * 0.7, arrowY - s * 0.45);
-    ctx.lineTo(arrowX, arrowY + s * 0.35);
-    ctx.lineTo(arrowX + s * 0.7, arrowY - s * 0.45);
-    ctx.stroke();
+    ctx.arc(orbX, orbY, r, 0, Math.PI * 2);
+    ctx.fill();
 
-    ctx.fillStyle = cfg.color;
+    // Subtle bright center highlight
+    ctx.fillStyle = "rgba(239, 246, 255, 0.95)";
     ctx.beginPath();
-    ctx.arc(arrowX, arrowY - s * 1.0, 2.2, 0, Math.PI * 2);
+    ctx.arc(orbX, orbY, r * 0.45, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.restore();

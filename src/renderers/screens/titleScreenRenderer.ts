@@ -55,8 +55,8 @@ export async function renderTitleScreen(options?: TitleScreenOptions): Promise<B
     }
   }
 
-  // 4. RIGHT SIDE PANEL: showSlotNumbers is FALSE on Title Screen
-  await drawPartyRightPanel(ctx, 295, 18, 244, 344, {
+  // 4. RIGHT SIDE PANEL: occupy entire right half of the screen
+  await drawPartyRightPanel(ctx, 280, 0, 280, 380, {
     username: options?.username,
     avatarUrl: options?.avatarUrl,
     party: options?.party,
