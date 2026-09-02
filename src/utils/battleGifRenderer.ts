@@ -717,9 +717,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     } else if (isGuillotine1) {
       const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed")));
       act1Frames = [
-        // 1. Windup lunge (130ms)
+        // 1. Windup lunge (120ms)
         {
-          delay: 130,
+          delay: 120,
           pOffset: isP1 ? { x: 16, y: -8 } : { x: 0, y: 0 },
           eOffset: !isP1 ? { x: -16, y: 8 } : { x: 0, y: 0 },
           showEffect: false,
@@ -730,13 +730,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a1,
         },
-        // 2. Step 1: First Diagonal Slash [/] (150ms)
+        // 2. Step 1: First Diagonal Slash [/] - Turn around to Front Sprite INSTANTLY! (160ms)
         {
-          delay: 150,
-          pOffset: isP1 ? { x: 26, y: -10 } : { x: -4, y: 2 },
-          eOffset: isP1 ? { x: 6, y: -2 } : { x: -26, y: 10 },
+          delay: 160,
+          pOffset: isP1 ? { x: 22, y: -8 } : { x: -4, y: 2 },
+          eOffset: isP1 ? { x: 6, y: -2 } : { x: -22, y: 8 },
           showEffect: true,
           hitFlash: false,
+          usePlayerFront: isP1,
+          useEnemyBack: !isP1,
           enemyHp: enemy.hp,
           playerHp: playerMon.hp,
           textLineIdx: 1,
@@ -745,13 +747,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 1,
         },
-        // 3. Step 2: Second Diagonal Slash [\] (150ms) - Slashes past target
+        // 3. Step 2: Second Diagonal Slash [\] - Still Facing Front! (160ms)
         {
-          delay: 150,
-          pOffset: isP1 ? { x: 36, y: -14 } : { x: -6, y: 3 },
-          eOffset: isP1 ? { x: 8, y: -3 } : { x: -36, y: 14 },
+          delay: 160,
+          pOffset: isP1 ? { x: 20, y: -6 } : { x: -6, y: 3 },
+          eOffset: isP1 ? { x: 8, y: -3 } : { x: -20, y: 6 },
           showEffect: true,
           hitFlash: false,
+          usePlayerFront: isP1,
+          useEnemyBack: !isP1,
           enemyHp: isHit1 ? enemy.hp : a1.enemyHpAfter,
           playerHp: isHit1 ? playerMon.hp : a1.playerHpAfter,
           textLineIdx: 1,
@@ -761,23 +765,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveStep: 2,
         },
         ...(isHit1 ? [
-          // 4. Turn Around to Front Sprite (180ms) - Ally dashes past and turns to face camera!
-          {
-            delay: 180,
-            pOffset: isP1 ? { x: 20, y: -6 } : { x: -8, y: 4 },
-            eOffset: isP1 ? { x: 0, y: 0 } : { x: -20, y: 6 },
-            showEffect: false,
-            hitFlash: false,
-            usePlayerFront: isP1,
-            useEnemyBack: !isP1,
-            enemyHp: enemy.hp,
-            playerHp: playerMon.hp,
-            textLineIdx: 1,
-            statProgress: 0.25,
-            isBlur: false,
-            moveEffect: a1,
-          },
-          // 5. Step 3: FATAL FULL [X] SCISSOR EXECUTION CRASH behind the turned ally! (260ms)
+          // 4. Step 3: FATAL FULL [X] SCISSOR EXECUTION CRASH behind the turned ally! (260ms)
           {
             delay: 260,
             pOffset: isP1 ? { x: 20, y: -6 } : { x: -8, y: 4 },
@@ -794,7 +782,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a1,
             moveStep: 3,
           },
-          // 6. Step 4: Red [X] Dissipation (140ms)
+          // 5. Step 4: Red [X] Dissipation (140ms)
           {
             delay: 140,
             pOffset: isP1 ? { x: 10, y: -3 } : { x: 0, y: 0 },
@@ -819,6 +807,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             eOffset: isP1 ? { x: 4, y: 0 } : { x: -12, y: 4 },
             showEffect: false,
             hitFlash: false,
+            usePlayerFront: isP1,
+            useEnemyBack: !isP1,
             enemyHp: a1.enemyHpAfter,
             playerHp: a1.playerHpAfter,
             textLineIdx: 1,
@@ -1377,9 +1367,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     } else if (isGuillotine2) {
       const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed")));
       act2Frames = [
-        // 1. Counter Windup lunge (140ms)
+        // 1. Counter Windup lunge (120ms)
         {
-          delay: 140,
+          delay: 120,
           pOffset: isP2 ? { x: 16, y: -8 } : { x: 0, y: 0 },
           eOffset: !isP2 ? { x: -16, y: 8 } : { x: 0, y: 0 },
           showEffect: false,
@@ -1390,13 +1380,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a2,
         },
-        // 2. Step 1: First Diagonal Slash [/] (160ms)
+        // 2. Step 1: First Diagonal Slash [/] - Turn around to Front Sprite INSTANTLY! (160ms)
         {
           delay: 160,
-          pOffset: isP2 ? { x: 22, y: -9 } : { x: -4, y: 2 },
-          eOffset: !isP2 ? { x: -22, y: 9 } : { x: 6, y: -2 },
+          pOffset: isP2 ? { x: 22, y: -8 } : { x: -4, y: 2 },
+          eOffset: !isP2 ? { x: -22, y: 8 } : { x: 6, y: -2 },
           showEffect: true,
           hitFlash: false,
+          usePlayerFront: isP2,
+          useEnemyBack: !isP2,
           enemyHp: a1.enemyHpAfter,
           playerHp: a1.playerHpAfter,
           textLineIdx: 3,
@@ -1405,13 +1397,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 1,
         },
-        // 3. Step 2: Second Diagonal Slash [\] (160ms)
+        // 3. Step 2: Second Diagonal Slash [\] - Still Facing Front! (160ms)
         {
           delay: 160,
-          pOffset: isP2 ? { x: 22, y: -9 } : { x: -6, y: 3 },
-          eOffset: !isP2 ? { x: -22, y: 9 } : { x: 8, y: -3 },
+          pOffset: isP2 ? { x: 20, y: -6 } : { x: -6, y: 3 },
+          eOffset: !isP2 ? { x: -20, y: 6 } : { x: 8, y: -3 },
           showEffect: true,
           hitFlash: false,
+          usePlayerFront: isP2,
+          useEnemyBack: !isP2,
           enemyHp: isHit2 ? a1.enemyHpAfter : a2.enemyHpAfter,
           playerHp: isHit2 ? a1.playerHpAfter : a2.playerHpAfter,
           textLineIdx: 3,
@@ -1421,23 +1415,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveStep: 2,
         },
         ...(isHit2 ? [
-          // 4. Turn Around to Front Sprite (180ms)
-          {
-            delay: 180,
-            pOffset: isP2 ? { x: 20, y: -6 } : { x: -8, y: 4 },
-            eOffset: !isP2 ? { x: -20, y: 6 } : { x: 0, y: 0 },
-            showEffect: false,
-            hitFlash: false,
-            usePlayerFront: isP2,
-            useEnemyBack: !isP2,
-            enemyHp: enemy.hp,
-            playerHp: playerMon.hp,
-            textLineIdx: 3,
-            statProgress: 0.25,
-            isBlur: false,
-            moveEffect: a2,
-          },
-          // 5. Step 3: FATAL FULL [X] SCISSOR EXECUTION CRASH + Hit Flash (260ms) - ONLY ON HIT!
+          // 4. Step 3: FATAL FULL [X] SCISSOR EXECUTION CRASH + Hit Flash (260ms) - ONLY ON HIT!
           {
             delay: 260,
             pOffset: isP2 ? { x: 20, y: -6 } : { x: -8, y: 4 },
@@ -1454,7 +1432,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a2,
             moveStep: 3,
           },
-          // 6. Step 4: Red [X] Dissipation (140ms)
+          // 5. Step 4: Red [X] Dissipation (140ms)
           {
             delay: 140,
             pOffset: isP2 ? { x: 10, y: -3 } : { x: 0, y: 0 },
@@ -1479,6 +1457,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             eOffset: !isP2 ? { x: -12, y: 4 } : { x: 4, y: 0 },
             showEffect: false,
             hitFlash: false,
+            usePlayerFront: isP2,
+            useEnemyBack: !isP2,
             enemyHp: a2.enemyHpAfter,
             playerHp: a2.playerHpAfter,
             textLineIdx: 3,
