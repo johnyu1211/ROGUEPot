@@ -267,11 +267,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   const isPayDay1 = (mKey1 === "pay-day" || mKey1 === "payday");
   const isFirePunch1 = (mKey1 === "fire-punch" || mKey1 === "firepunch");
   const isIcePunch1 = (mKey1 === "ice-punch" || mKey1 === "icepunch");
+  const isGuillotine1 = (mKey1 === "guillotine");
   const isSingleStrikeSpecial1 = (
     mKey1 === "thunder-punch" || mKey1 === "thunderpunch" ||
     mKey1 === "scratch" ||
-    mKey1 === "vice-grip" || mKey1 === "vicegrip" ||
-    mKey1 === "guillotine"
+    mKey1 === "vice-grip" || mKey1 === "vicegrip"
   );
 
   let act1Frames: any[] = [];
@@ -704,6 +704,82 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveStep: 3,
         }
       ];
+    } else if (isGuillotine1) {
+      act1Frames = [
+        // 1. Windup lunge (140ms)
+        {
+          delay: 140,
+          pOffset: isP1 ? { x: 16, y: -8 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -16, y: 8 } : { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+        },
+        // 2. Step 1: First Diagonal Slash [/] (160ms)
+        {
+          delay: 160,
+          pOffset: isP1 ? { x: 22, y: -9 } : { x: -4, y: 2 },
+          eOffset: isP1 ? { x: 6, y: -2 } : { x: -22, y: 9 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 1,
+        },
+        // 3. Step 2: Second Diagonal Slash [\] (160ms)
+        {
+          delay: 160,
+          pOffset: isP1 ? { x: 22, y: -9 } : { x: -6, y: 3 },
+          eOffset: isP1 ? { x: 8, y: -3 } : { x: -22, y: 9 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 2,
+        },
+        // 4. Step 3: FATAL FULL [X] SCISSOR EXECUTION CRASH + Hit Flash (220ms)
+        {
+          delay: 220,
+          pOffset: isP1 ? { x: 24, y: -10 } : { x: -8, y: 4 },
+          eOffset: isP1 ? { x: 12, y: -4 } : { x: -24, y: 10 },
+          showEffect: true,
+          hitFlash: true,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 3,
+        },
+        // 5. Step 4: Red [X] Dissipation (140ms)
+        {
+          delay: 140,
+          pOffset: isP1 ? { x: 12, y: -4 } : { x: 0, y: 0 },
+          eOffset: isP1 ? { x: 4, y: 0 } : { x: -12, y: 4 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 4,
+        }
+      ];
     } else if (isSingleStrikeSpecial1) {
       act1Frames = [
         // 1. Windup lunge (150ms)
@@ -813,11 +889,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const isPayDay2 = (mKey2 === "pay-day" || mKey2 === "payday");
     const isFirePunch2 = (mKey2 === "fire-punch" || mKey2 === "firepunch");
     const isIcePunch2 = (mKey2 === "ice-punch" || mKey2 === "icepunch");
+    const isGuillotine2 = (mKey2 === "guillotine");
     const isSingleStrikeSpecial2 = (
       mKey2 === "thunder-punch" || mKey2 === "thunderpunch" ||
       mKey2 === "scratch" ||
-      mKey2 === "vice-grip" || mKey2 === "vicegrip" ||
-      mKey2 === "guillotine"
+      mKey2 === "vice-grip" || mKey2 === "vicegrip"
     );
 
     let act2Frames: any[] = [];
@@ -1248,6 +1324,82 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a2,
           moveStep: 3,
+        }
+      ];
+    } else if (isGuillotine2) {
+      act2Frames = [
+        // 1. Counter Windup lunge (140ms)
+        {
+          delay: 140,
+          pOffset: isP2 ? { x: 16, y: -8 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -16, y: 8 } : { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+        },
+        // 2. Step 1: First Diagonal Slash [/] (160ms)
+        {
+          delay: 160,
+          pOffset: isP2 ? { x: 22, y: -9 } : { x: -4, y: 2 },
+          eOffset: !isP2 ? { x: -22, y: 9 } : { x: 6, y: -2 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 1,
+        },
+        // 3. Step 2: Second Diagonal Slash [\] (160ms)
+        {
+          delay: 160,
+          pOffset: isP2 ? { x: 22, y: -9 } : { x: -6, y: 3 },
+          eOffset: !isP2 ? { x: -22, y: 9 } : { x: 8, y: -3 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 2,
+        },
+        // 4. Step 3: FATAL FULL [X] SCISSOR EXECUTION CRASH + Hit Flash (220ms)
+        {
+          delay: 220,
+          pOffset: isP2 ? { x: 24, y: -10 } : { x: -8, y: 4 },
+          eOffset: !isP2 ? { x: -24, y: 10 } : { x: 12, y: -4 },
+          showEffect: true,
+          hitFlash: true,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 3,
+        },
+        // 5. Step 4: Red [X] Dissipation (140ms)
+        {
+          delay: 140,
+          pOffset: isP2 ? { x: 12, y: -4 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -12, y: 4 } : { x: 4, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 4,
         }
       ];
     } else if (isSingleStrikeSpecial2) {
