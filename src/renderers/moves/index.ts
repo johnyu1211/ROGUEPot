@@ -69,6 +69,13 @@ import {
   drawBindEffect,
 } from "./gen1/move017_020.js";
 
+import {
+  drawSlamEffect,
+  drawVineWhipEffect,
+  drawStompEffect,
+  drawDoubleKickEffect,
+} from "./gen1/move021_024.js";
+
 import { getMoveKey, MOVES_DATA } from "../../data/movesKo.js";
 
 // Re-export everything for modules and backward compatibility
@@ -80,6 +87,7 @@ export * from "./gen1/move005_008.js";
 export * from "./gen1/move009_012.js";
 export * from "./gen1/move013_016.js";
 export * from "./gen1/move017_020.js";
+export * from "./gen1/move021_024.js";
 
 /**
  * Central Dispatcher for rendering Pokémon move visual effects onto the battle canvas
@@ -113,7 +121,7 @@ export function renderMoveEffect(
     return;
   }
 
-  // 1. SPECIFIC SIGNATURE MOVES (Gen 1: Moves 001 ~ 020)
+  // 1. SPECIFIC SIGNATURE MOVES (Gen 1: Moves 001 ~ 024)
   if (moveKey === "pound") {
     drawPoundEffect(ctx, targetPos, info.step ?? 1);
   } else if (moveKey === "karate-chop" || moveKey === "karatechop") {
@@ -154,7 +162,15 @@ export function renderMoveEffect(
     drawFlyEffect(ctx, startPos, targetPos, info.step ?? 1);
   } else if (moveKey === "bind") {
     drawBindEffect(ctx, targetPos, info.step ?? 1);
-  } 
+  } else if (moveKey === "slam") {
+    drawSlamEffect(ctx, startPos, targetPos, info.step ?? 1);
+  } else if (moveKey === "vine-whip" || moveKey === "vinewhip") {
+    drawVineWhipEffect(ctx, startPos, targetPos, info.step ?? 1);
+  } else if (moveKey === "stomp") {
+    drawStompEffect(ctx, targetPos, info.step ?? 1);
+  } else if (moveKey === "double-kick" || moveKey === "doublekick") {
+    drawDoubleKickEffect(ctx, startPos, targetPos, info.step ?? 1);
+  }
   // 2. ICONIC SPECIAL & ELEMENTAL MOVES
   else if (moveKey === "solar-beam" || moveKey === "solar-blade") {
     drawSolarBeamEffect(ctx, startPos, targetPos, angle, dx, dy);
