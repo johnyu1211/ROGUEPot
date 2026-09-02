@@ -422,39 +422,22 @@ export function drawSwordsDanceEffect(ctx: any, userPos: { x: number; y: number 
     const scaleF = 1.25;
     const cyF = apexY + 34 * scaleF;
     drawThinSolidSword(apexX, cyF - 2, 0, scaleF, 1.0);
-
-    // Clash flash & impact spark at the touching tip apex
-    drawMiniRetroStar(ctx, apexX, apexY, 22, "#FACC15");
-    drawMiniRetroStar(ctx, apexX, apexY, 12, "#FFFFFF");
-
-    // Attack Up Text
-    ctx.fillStyle = "#EF4444";
-    ctx.font = "bold 16px DungGeunMo";
-    ctx.textAlign = "center";
-    ctx.fillText("▲ ATK UP", ux, uy - 68);
   } else if (step >= 6) {
-    // Step 6: Power Dispersal
-    const offsets = [
-      { ox: -36, oy: -52, rot: -0.45 },
-      { ox: 36, oy: -52, rot: 0.45 },
-      { ox: -48, oy: -20, rot: -0.80 },
-      { ox: 48, oy: -20, rot: 0.80 },
-    ];
-    for (const o of offsets) {
-      drawThinSolidSword(ux + o.ox, uy + o.oy, o.rot, 1.0, 0.35);
-    }
+    // Step 6: Clean Fade-out Dispersal (No extra sparks/text)
+    const apexX = ux;
+    const apexY = uy - 48;
 
-    const sparks = [
-      { ox: -20, oy: -45, r: 3.5, c: "#EF4444" },
-      { ox: 20, oy: -48, r: 3.5, c: "#F59E0B" },
-      { ox: 0, oy: -58, r: 4.2, c: "#FFFFFF" },
-    ];
-    for (const sp of sparks) {
-      ctx.fillStyle = sp.c;
-      ctx.beginPath();
-      ctx.arc(ux + sp.ox, uy + sp.oy, sp.r, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    const rotL = Math.PI * 0.25;
+    const scaleL = 1.10;
+    const cxL = apexX - 8 - Math.sin(rotL) * 34 * scaleL;
+    const cyL = apexY + 4 + Math.cos(rotL) * 34 * scaleL;
+    drawThinSolidSword(cxL, cyL, rotL, scaleL, 0.25);
+
+    const rotR = -Math.PI * 0.25;
+    const scaleR = 1.10;
+    const cxR = apexX + 8 - Math.sin(rotR) * 34 * scaleR;
+    const cyR = apexY + 4 + Math.cos(rotR) * 34 * scaleR;
+    drawThinSolidSword(cxR, cyR, rotR, scaleR, 0.25);
   }
 
   ctx.restore();
