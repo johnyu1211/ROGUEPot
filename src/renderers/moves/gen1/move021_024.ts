@@ -81,7 +81,7 @@ export function drawSlamEffect(
 }
 
 /**
- * Helper: Single Slender Curved Vine Stem with Compact Oval Tip
+ * Helper: Single Slender Curved Vine Stem with Compact Oval Tip (Deep Botanical Forest Green)
  */
 function drawSingleVine(
   ctx: any,
@@ -100,49 +100,49 @@ function drawSingleVine(
   ctx.save();
   if (alpha < 1.0) ctx.globalAlpha = alpha;
 
-  // 1. Dark outer border of vine (Slender)
-  ctx.strokeStyle = "#14532D";
-  ctx.lineWidth = 3.6;
+  // 1. Deep Dark Forest Shadow Outline
+  ctx.strokeStyle = "#064E3B";
+  ctx.lineWidth = 3.8;
   ctx.lineCap = "round";
   ctx.beginPath();
   ctx.moveTo(x0, y0);
   ctx.bezierCurveTo(cx1, cy1, cx2, cy2, tx, ty);
   ctx.stroke();
 
-  // 2. Rich emerald vine body
+  // 2. Rich Botanical Vine Body (Deep Lush Green - NOT whitish!)
+  ctx.strokeStyle = "#15803D";
+  ctx.lineWidth = 2.4;
+  ctx.beginPath();
+  ctx.moveTo(x0, y0);
+  ctx.bezierCurveTo(cx1, cy1, cx2, cy2, tx, ty);
+  ctx.stroke();
+
+  // 3. Subtle Leaf Gloss Spine (Rich Emerald - NO washed out white!)
   ctx.strokeStyle = "#22C55E";
-  ctx.lineWidth = 2.2;
+  ctx.lineWidth = 0.8;
   ctx.beginPath();
   ctx.moveTo(x0, y0);
   ctx.bezierCurveTo(cx1, cy1, cx2, cy2, tx, ty);
   ctx.stroke();
 
-  // 3. Bright lime highlight
-  ctx.strokeStyle = "#86EFAC";
-  ctx.lineWidth = 0.9;
-  ctx.beginPath();
-  ctx.moveTo(x0, y0);
-  ctx.bezierCurveTo(cx1, cy1, cx2, cy2, tx, ty);
-  ctx.stroke();
-
-  // 4. Compact Oval Leaf Tip at the end of the vine
+  // 4. Compact Oval Leaf Tip (Deep Forest Green)
   ctx.save();
   ctx.translate(tx, ty);
   ctx.rotate(tipAngle);
 
-  // Tip body (Compact Oval)
-  ctx.fillStyle = "#22C55E";
+  // Tip body (Compact Deep Green Oval)
+  ctx.fillStyle = "#15803D";
   ctx.beginPath();
-  ctx.ellipse(0, 0, 7.5 * tipScale, 4.0 * tipScale, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 0, 8.5 * tipScale, 4.2 * tipScale, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = "#14532D";
+  ctx.strokeStyle = "#064E3B";
   ctx.lineWidth = 1.2;
   ctx.stroke();
 
-  // Tip inner highlight
-  ctx.fillStyle = "#BBF7D0";
+  // Subtle inner leaf spine
+  ctx.fillStyle = "#22C55E";
   ctx.beginPath();
-  ctx.ellipse(-1.2 * tipScale, -1.0 * tipScale, 4.0 * tipScale, 1.8 * tipScale, 0, 0, Math.PI * 2);
+  ctx.ellipse(-1.0 * tipScale, -0.8 * tipScale, 4.5 * tipScale, 1.8 * tipScale, 0, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.restore();
@@ -150,7 +150,7 @@ function drawSingleVine(
 }
 
 /**
- * 022 덩굴채찍 (Vine Whip): Slender organic green vines emerging from behind caster with compact oval tips & target cross slash cuts
+ * 022 덩굴채찍 (Vine Whip): Slender organic deep green vines emerging from behind caster with compact oval tips & target cross slash cuts
  */
 export function drawVineWhipEffect(
   ctx: any,
@@ -170,13 +170,13 @@ export function drawVineWhipEffect(
     ctx.save();
     ctx.translate(lx, ly);
     ctx.rotate(angle);
-    ctx.fillStyle = "#22C55E";
+    ctx.fillStyle = "#15803D";
     ctx.beginPath();
     ctx.moveTo(0, -size);
     ctx.quadraticCurveTo(size * 0.8, 0, 0, size);
     ctx.quadraticCurveTo(-size * 0.8, 0, 0, -size);
     ctx.fill();
-    ctx.strokeStyle = "#15803D";
+    ctx.strokeStyle = "#064E3B";
     ctx.lineWidth = 1;
     ctx.stroke();
     ctx.restore();
@@ -187,33 +187,33 @@ export function drawVineWhipEffect(
 
   const drawBehindVines = () => {
     if (step === 1) {
-      // 1타: 시전자 등 뒤 좌측에서 돋아나 시전자 주변에서 아담하게 허공을 가르는 1차 덩굴 채찍
+      // 1타: 시전자 등 뒤 좌측에서 돋아나 시전자 전방으로 길고 우아하게 뻗어나가는 1차 덩굴 채찍
       drawSingleVine(
         ctx,
         start.x - 10 * dirSign,
         start.y - 16,
-        start.x - 25 * dirSign,
-        start.y - 48,
-        start.x + 20 * dirSign,
-        start.y - 62,
-        start.x + 46 * dirSign,
-        start.y - 32,
-        0.7 * dirSign,
+        start.x - 30 * dirSign,
+        start.y - 55,
+        start.x + 35 * dirSign,
+        start.y - 75,
+        start.x + 75 * dirSign,
+        start.y - 38,
+        0.65 * dirSign,
         1.0
       );
     } else if (step === 2) {
-      // 2타: 1차 덩굴 페이드 + 시전자 등 뒤 우측에서 돋아난 2차 덩굴 채찍
+      // 2타: 1차 덩굴 페이드 + 시전자 등 뒤 우측에서 돋아나 전방으로 길게 휘둘러지는 2차 덩굴 채찍
       drawSingleVine(
         ctx,
         start.x - 10 * dirSign,
         start.y - 16,
-        start.x - 25 * dirSign,
-        start.y - 48,
-        start.x + 20 * dirSign,
-        start.y - 62,
-        start.x + 46 * dirSign,
-        start.y - 32,
-        0.7 * dirSign,
+        start.x - 30 * dirSign,
+        start.y - 55,
+        start.x + 35 * dirSign,
+        start.y - 75,
+        start.x + 75 * dirSign,
+        start.y - 38,
+        0.65 * dirSign,
         0.85,
         0.35
       );
@@ -221,13 +221,13 @@ export function drawVineWhipEffect(
         ctx,
         start.x + 10 * dirSign,
         start.y - 8,
-        start.x + 35 * dirSign,
-        start.y + 15,
-        start.x + 60 * dirSign,
-        start.y - 10,
-        start.x + 50 * dirSign,
-        start.y - 45,
-        -1.1 * dirSign,
+        start.x + 45 * dirSign,
+        start.y + 20,
+        start.x + 85 * dirSign,
+        start.y - 5,
+        start.x + 78 * dirSign,
+        start.y - 55,
+        -1.15 * dirSign,
         1.0
       );
     } else if (step >= 3) {
@@ -251,32 +251,32 @@ export function drawVineWhipEffect(
 
   const drawFrontImpact = () => {
     if (step === 1) {
-      // 1타 타격: 적 몸체에 좌상단 -> 우하단 사선 덩굴 채찍 참격선 찰싹! + 타격 플래시
+      // 1타 타격: 적 몸체에 좌상단 -> 우하단 사선 딥그린 덩굴 채찍 참격선 찰싹! + 타격 플래시
       ctx.save();
-      ctx.strokeStyle = "#15803D";
-      ctx.lineWidth = 4.5;
+      ctx.strokeStyle = "#064E3B";
+      ctx.lineWidth = 5.0;
       ctx.lineCap = "round";
       ctx.beginPath();
-      ctx.moveTo(tx - 45 * dirSign, ty - 35);
-      ctx.bezierCurveTo(tx - 12 * dirSign, ty - 28, tx - 15 * dirSign, ty - 5, tx + 30 * dirSign, ty + 12);
+      ctx.moveTo(tx - 48 * dirSign, ty - 36);
+      ctx.bezierCurveTo(tx - 14 * dirSign, ty - 28, tx - 16 * dirSign, ty - 5, tx + 32 * dirSign, ty + 14);
       ctx.stroke();
 
-      ctx.strokeStyle = "#86EFAC";
-      ctx.lineWidth = 1.8;
+      ctx.strokeStyle = "#15803D";
+      ctx.lineWidth = 2.4;
       ctx.beginPath();
-      ctx.moveTo(tx - 45 * dirSign, ty - 35);
-      ctx.bezierCurveTo(tx - 12 * dirSign, ty - 28, tx - 15 * dirSign, ty - 5, tx + 30 * dirSign, ty + 12);
+      ctx.moveTo(tx - 48 * dirSign, ty - 36);
+      ctx.bezierCurveTo(tx - 14 * dirSign, ty - 28, tx - 16 * dirSign, ty - 5, tx + 32 * dirSign, ty + 14);
       ctx.stroke();
 
-      // 1타 타격 플래시
-      const hitGrad1 = ctx.createRadialGradient(tx - 5 * dirSign, ty - 10, 2, tx - 5 * dirSign, ty - 10, 24);
+      // 1타 타격 플래시 (Lush Green)
+      const hitGrad1 = ctx.createRadialGradient(tx - 5 * dirSign, ty - 10, 2, tx - 5 * dirSign, ty - 10, 26);
       hitGrad1.addColorStop(0, "#FFFFFF");
-      hitGrad1.addColorStop(0.35, "rgba(74, 222, 128, 0.95)");
-      hitGrad1.addColorStop(0.8, "rgba(34, 197, 94, 0.3)");
-      hitGrad1.addColorStop(1, "rgba(34, 197, 94, 0.0)");
+      hitGrad1.addColorStop(0.35, "#22C55E");
+      hitGrad1.addColorStop(0.8, "rgba(21, 128, 61, 0.4)");
+      hitGrad1.addColorStop(1, "rgba(21, 128, 61, 0.0)");
       ctx.fillStyle = hitGrad1;
       ctx.beginPath();
-      ctx.arc(tx - 5 * dirSign, ty - 10, 24, 0, Math.PI * 2);
+      ctx.arc(tx - 5 * dirSign, ty - 10, 26, 0, Math.PI * 2);
       ctx.fill();
 
       drawLeaf(tx - 22 * dirSign, ty - 24, -0.6 * dirSign, 6);
@@ -286,38 +286,38 @@ export function drawVineWhipEffect(
       // 2타 타격: 우상단 -> 좌하단 교차 사선 덩굴 채찍 참격 ('X'자 완성) + 대형 에메랄드 폭발
       ctx.save();
       // 1타 참격선 잔상
-      ctx.strokeStyle = "rgba(34, 197, 94, 0.4)";
-      ctx.lineWidth = 3.0;
+      ctx.strokeStyle = "rgba(6, 78, 59, 0.4)";
+      ctx.lineWidth = 3.2;
       ctx.beginPath();
-      ctx.moveTo(tx - 45 * dirSign, ty - 35);
-      ctx.bezierCurveTo(tx - 12 * dirSign, ty - 28, tx - 15 * dirSign, ty - 5, tx + 30 * dirSign, ty + 12);
+      ctx.moveTo(tx - 48 * dirSign, ty - 36);
+      ctx.bezierCurveTo(tx - 14 * dirSign, ty - 28, tx - 16 * dirSign, ty - 5, tx + 32 * dirSign, ty + 14);
       ctx.stroke();
 
       // 2타 역방향 교차 참격선
-      ctx.strokeStyle = "#166534";
-      ctx.lineWidth = 5.0;
+      ctx.strokeStyle = "#064E3B";
+      ctx.lineWidth = 5.2;
       ctx.lineCap = "round";
       ctx.beginPath();
-      ctx.moveTo(tx + 45 * dirSign, ty - 35);
-      ctx.bezierCurveTo(tx + 12 * dirSign, ty - 24, tx + 20 * dirSign, ty + 8, tx - 25 * dirSign, ty + 16);
+      ctx.moveTo(tx + 48 * dirSign, ty - 36);
+      ctx.bezierCurveTo(tx + 14 * dirSign, ty - 24, tx + 20 * dirSign, ty + 8, tx - 28 * dirSign, ty + 18);
       ctx.stroke();
 
-      ctx.strokeStyle = "#BBF7D0";
-      ctx.lineWidth = 2.2;
+      ctx.strokeStyle = "#15803D";
+      ctx.lineWidth = 2.4;
       ctx.beginPath();
-      ctx.moveTo(tx + 45 * dirSign, ty - 35);
-      ctx.bezierCurveTo(tx + 12 * dirSign, ty - 24, tx + 20 * dirSign, ty + 8, tx - 25 * dirSign, ty + 16);
+      ctx.moveTo(tx + 48 * dirSign, ty - 36);
+      ctx.bezierCurveTo(tx + 14 * dirSign, ty - 24, tx + 20 * dirSign, ty + 8, tx - 28 * dirSign, ty + 18);
       ctx.stroke();
 
       // 교차 지점 대형 타격 플래시
-      const hitGrad2 = ctx.createRadialGradient(tx, ty - 6, 2, tx, ty - 6, 30);
+      const hitGrad2 = ctx.createRadialGradient(tx, ty - 6, 2, tx, ty - 6, 32);
       hitGrad2.addColorStop(0, "#FFFFFF");
-      hitGrad2.addColorStop(0.35, "rgba(74, 222, 128, 0.95)");
-      hitGrad2.addColorStop(0.8, "rgba(34, 197, 94, 0.3)");
-      hitGrad2.addColorStop(1, "rgba(34, 197, 94, 0.0)");
+      hitGrad2.addColorStop(0.35, "#22C55E");
+      hitGrad2.addColorStop(0.8, "rgba(21, 128, 61, 0.4)");
+      hitGrad2.addColorStop(1, "rgba(21, 128, 61, 0.0)");
       ctx.fillStyle = hitGrad2;
       ctx.beginPath();
-      ctx.arc(tx, ty - 6, 30, 0, Math.PI * 2);
+      ctx.arc(tx, ty - 6, 32, 0, Math.PI * 2);
       ctx.fill();
 
       // 폭발하는 나뭇잎 파티클
