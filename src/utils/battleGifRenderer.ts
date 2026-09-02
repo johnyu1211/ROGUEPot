@@ -274,11 +274,12 @@ function createFaintingFrames(
       delay: 140,
       pOffset: isTargetPlayer ? { x: 0, y: 18 } : { x: 0, y: 0 },
       eOffset: isEnemy ? { x: 0, y: 18 } : { x: 0, y: 0 },
+      pAlpha: isTargetPlayer ? 0.85 : 1.0,
+      eAlpha: isEnemy ? 0.85 : 1.0,
       showEffect: false,
       hitFlash: false,
       usePlayerFront: usePlayerFront,
       useEnemyBack: useEnemyBack,
-      targetAlpha: 0.85,
       enemyHp: action.enemyHpAfter,
       playerHp: action.playerHpAfter,
       textLineIdx: dialogueTextIdx,
@@ -291,11 +292,12 @@ function createFaintingFrames(
       delay: 140,
       pOffset: isTargetPlayer ? { x: 0, y: 46 } : { x: 0, y: 0 },
       eOffset: isEnemy ? { x: 0, y: 46 } : { x: 0, y: 0 },
+      pAlpha: isTargetPlayer ? 0.55 : 1.0,
+      eAlpha: isEnemy ? 0.55 : 1.0,
       showEffect: false,
       hitFlash: false,
       usePlayerFront: usePlayerFront,
       useEnemyBack: useEnemyBack,
-      targetAlpha: 0.55,
       enemyHp: action.enemyHpAfter,
       playerHp: action.playerHpAfter,
       textLineIdx: dialogueTextIdx,
@@ -308,11 +310,12 @@ function createFaintingFrames(
       delay: 140,
       pOffset: isTargetPlayer ? { x: 0, y: 80 } : { x: 0, y: 0 },
       eOffset: isEnemy ? { x: 0, y: 80 } : { x: 0, y: 0 },
+      pAlpha: isTargetPlayer ? 0.20 : 1.0,
+      eAlpha: isEnemy ? 0.20 : 1.0,
       showEffect: false,
       hitFlash: false,
       usePlayerFront: usePlayerFront,
       useEnemyBack: useEnemyBack,
-      targetAlpha: 0.20,
       enemyHp: action.enemyHpAfter,
       playerHp: action.playerHpAfter,
       textLineIdx: dialogueTextIdx,
@@ -323,13 +326,16 @@ function createFaintingFrames(
     // Step 4: Fully fainted / platform empty (350ms)
     {
       delay: 350,
-      pOffset: { x: 0, y: 0 },
-      eOffset: { x: 0, y: 0 },
+      pOffset: isTargetPlayer ? { x: 0, y: -9999 } : { x: 0, y: 0 },
+      eOffset: isEnemy ? { x: 0, y: -9999 } : { x: 0, y: 0 },
+      pAlpha: isTargetPlayer ? 0.0 : 1.0,
+      eAlpha: isEnemy ? 0.0 : 1.0,
+      hidePlayer: isTargetPlayer,
+      hideEnemy: isEnemy,
       showEffect: false,
       hitFlash: false,
       usePlayerFront: usePlayerFront,
       useEnemyBack: useEnemyBack,
-      targetAlpha: 0.0,
       enemyHp: action.enemyHpAfter,
       playerHp: action.playerHpAfter,
       textLineIdx: dialogueTextIdx,
@@ -3506,13 +3512,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const playerFrontHold = isP1GuillotineKill || isP2GuillotineKill;
     const enemyBackHold = isE1GuillotineKill || isE2GuillotineKill;
 
-    const faintFrames = a2Fainted
-      ? createFaintingFrames(a2, a2.playerHpAfter <= 0, 99, playerFrontHold, enemyBackHold)
-      : (a1Fainted ? createFaintingFrames(a1, a1.playerHpAfter <= 0, 99, playerFrontHold, enemyBackHold) : []);
-
     const finalEnemyHp = a2 ? a2.enemyHpAfter : a1.enemyHpAfter;
     const finalPlayerHp = a2 ? a2.playerHpAfter : a1.playerHpAfter;
+    const isEnemyFainted = finalEnemyHp <= 0;
+    const isPlayerFainted = finalPlayerHp <= 0;
     const isAnyFainted = a1Fainted || a2Fainted;
+
+    const faintFrames = a2Fainted
+      ? createFaintingFrames(a2, isPlayerFainted, 99, playerFrontHold, enemyBackHold)
+      : (a1Fainted ? createFaintingFrames(a1, isPlayerFainted, 99, playerFrontHold, enemyBackHold) : []);
 
     const a1IsEvasionLaunch = isEvasionLaunch(a1);
     const a1IsEvasionStrike = isEvasionStrike(a1);
@@ -3611,15 +3619,16 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         delay: 655000,
         pOffset: isPlayerEndingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
         eOffset: isEnemyEndingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
-        hidePShadow: isPlayerEndingEvading,
-        hideEShadow: isEnemyEndingEvading,
-        hidePlayer: isPlayerEndingEvading,
-        hideEnemy: isEnemyEndingEvading,
+        pAlpha: isPlayerFainted ? 0.0 : 1.0,
+        eAlpha: isEnemyFainted ? 0.0 : 1.0,
+        hidePShadow: isPlayerEndingEvading || isPlayerFainted,
+        hideEShadow: isEnemyEndingEvading || isEnemyFainted,
+        hidePlayer: isPlayerEndingEvading || isPlayerFainted,
+        hideEnemy: isEnemyEndingEvading || isEnemyFainted,
         showEffect: false,
         hitFlash: false,
         usePlayerFront: playerFrontHold,
         useEnemyBack: enemyBackHold,
-        targetAlpha: isAnyFainted ? 0.0 : 1.0,
         enemyHp: finalEnemyHp,
         playerHp: finalPlayerHp,
         textLineIdx: 99,
@@ -3704,15 +3713,16 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         delay: 655000,
         pOffset: isPlayerEndingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
         eOffset: isEnemyEndingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
-        hidePShadow: isPlayerEndingEvading,
-        hideEShadow: isEnemyEndingEvading,
-        hidePlayer: isPlayerEndingEvading,
-        hideEnemy: isEnemyEndingEvading,
+        pAlpha: isPlayerFainted ? 0.0 : 1.0,
+        eAlpha: isEnemyFainted ? 0.0 : 1.0,
+        hidePShadow: isPlayerEndingEvading || isPlayerFainted,
+        hideEShadow: isEnemyEndingEvading || isEnemyFainted,
+        hidePlayer: isPlayerEndingEvading || isPlayerFainted,
+        hideEnemy: isEnemyEndingEvading || isEnemyFainted,
         showEffect: false,
         hitFlash: false,
         usePlayerFront: playerFrontHold,
         useEnemyBack: enemyBackHold,
-        targetAlpha: isFainted ? 0.0 : 1.0,
         enemyHp: finalEnemyHp,
         playerHp: finalPlayerHp,
         textLineIdx: 99,
@@ -3839,12 +3849,16 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         targetCtx.restore();
       }
 
-      // Determine target entity for alpha & filter styling
+      // Determine target entity for hitFlash & filter styling
       const eTarget = (f.moveEffect ? f.moveEffect.actor === "player" : isPlayer);
       const pTarget = (f.moveEffect ? f.moveEffect.actor === "enemy" : !isPlayer);
 
-      const eAlpha = (f.targetAlpha !== undefined && eTarget) ? f.targetAlpha : 1.0;
-      const pAlpha = (f.targetAlpha !== undefined && pTarget) ? f.targetAlpha : 1.0;
+      const eAlpha = f.eAlpha !== undefined
+        ? f.eAlpha
+        : ((f.targetAlpha !== undefined && eTarget) ? f.targetAlpha : (enemy.hp <= 0 && f.enemyHp <= 0 ? 0.0 : 1.0));
+      const pAlpha = f.pAlpha !== undefined
+        ? f.pAlpha
+        : ((f.targetAlpha !== undefined && pTarget) ? f.targetAlpha : (playerMon.hp <= 0 && f.playerHp <= 0 ? 0.0 : 1.0));
 
       // Pokémon Silhouette Shadows (cast onto platform ground - suppressed during high-speed mid-air flight, underground, or off-screen)
       const isEnemyHidden = (f.eOffset && (f.eOffset.y <= -50 || f.eOffset.y >= 9000)) || f.hideEShadow || f.hideEnemy || (eAlpha <= 0.02) || Boolean(f.eScale);
@@ -3864,7 +3878,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       // Enemy Sprite
       const eSpriteToDraw = f.useEnemyBack ? (enemyBackSprite || enemySprite) : enemySprite;
       const isEnemySpriteHidden = (f.eOffset && (f.eOffset.y <= -500 || f.eOffset.y >= 9000)) || f.hideEnemy || (eAlpha <= 0.01);
-      if (eSpriteToDraw && !isEnemySpriteHidden && (enemy.hp > 0 || f.enemyHp > 0 || f.targetAlpha !== 0.0)) {
+      if (eSpriteToDraw && !isEnemySpriteHidden && (enemy.hp > 0 || f.enemyHp > 0 || eAlpha > 0.01)) {
         targetCtx.save();
         if (f.eWhite) {
           targetCtx.filter = "brightness(0) invert(1)";
@@ -3890,7 +3904,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       // Player Sprite
       const pSpriteToDraw = f.usePlayerFront ? (playerFrontSprite || playerSprite) : playerSprite;
       const isPlayerSpriteHidden = (f.pOffset && (f.pOffset.y <= -500 || f.pOffset.y >= 9000)) || f.hidePlayer || (pAlpha <= 0.01);
-      if (pSpriteToDraw && !isPlayerSpriteHidden && (playerMon.hp > 0 || f.playerHp > 0 || f.targetAlpha !== 0.0)) {
+      if (pSpriteToDraw && !isPlayerSpriteHidden && (playerMon.hp > 0 || f.playerHp > 0 || pAlpha > 0.01)) {
         targetCtx.save();
         if (f.pWhite) {
           targetCtx.filter = "brightness(0) invert(1)";
