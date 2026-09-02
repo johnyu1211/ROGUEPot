@@ -398,7 +398,7 @@ export function drawDoubleKickEffect(
     // Boot sole & body
     ctx.fillStyle = "#EF4444";
     ctx.beginPath();
-    ctx.ellipse(0, 0, 20, 10, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, 18, 9, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = "#991B1B";
     ctx.lineWidth = 2.0;
@@ -407,75 +407,85 @@ export function drawDoubleKickEffect(
     // Boot toe cap highlight
     ctx.fillStyle = "#FEE2E2";
     ctx.beginPath();
-    ctx.arc(14, 0, 6, -Math.PI / 2, Math.PI / 2);
+    ctx.arc(12, 0, 5.5, -Math.PI / 2, Math.PI / 2);
     ctx.fill();
 
     ctx.restore();
   };
 
-  if (step === 1) {
-    // Step 1: 1st Kick - Fast Low/Mid Diagonal Kick from Left
+  // Helper for crisp comic diamond hit sparks (replaces awkward straight line bursts)
+  const drawDiamondParticle = (cx: number, cy: number, w: number, h: number, angle: number, color: string) => {
     ctx.save();
-    // Slashing Kick Arc
-    const kickArcGrad = ctx.createLinearGradient(tx - 50, ty + 20, tx + 10, ty - 25);
-    kickArcGrad.addColorStop(0, "rgba(239, 68, 68, 0.0)");
-    kickArcGrad.addColorStop(0.5, "rgba(249, 115, 22, 0.85)");
-    kickArcGrad.addColorStop(1, "#FFFFFF");
-
-    ctx.strokeStyle = kickArcGrad;
-    ctx.lineWidth = 7.0;
-    ctx.lineCap = "round";
+    ctx.translate(cx, cy);
+    ctx.rotate(angle);
+    ctx.fillStyle = color;
     ctx.beginPath();
-    ctx.arc(tx - 15, ty, 38, Math.PI * 0.7, -Math.PI * 0.15, true);
-    ctx.stroke();
+    ctx.moveTo(0, -h);
+    ctx.lineTo(w, 0);
+    ctx.lineTo(0, h);
+    ctx.lineTo(-w, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  };
 
-    // 1st Boot Strike
-    drawKickBoot(tx - 6, ty - 6, -0.4, 1.1);
+  if (step === 1) {
+    // Step 1: 1st Kick - Fast Diagonal Kick from Left
+    ctx.save();
+    drawKickBoot(tx - 10, ty - 6, -0.35, 1.15);
 
-    // 1st Impact Spark
-    drawStarburstImpact(ctx, tx - 4, ty - 8, "#F97171", "#FFFFFF", 26);
-    drawMiniRetroStar(ctx, tx - 25, ty - 25, 9, "#FED7AA");
+    // Soft localized impact flash (No circular wire ring, no straight wire lines)
+    const g = ctx.createRadialGradient(tx - 4, ty - 6, 2, tx - 4, ty - 6, 22);
+    g.addColorStop(0, "#FFFFFF");
+    g.addColorStop(0.4, "rgba(254, 215, 170, 0.85)");
+    g.addColorStop(1, "rgba(239, 68, 68, 0)");
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(tx - 4, ty - 6, 22, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Natural diamond sparks & retro stars
+    drawDiamondParticle(tx + 14, ty - 16, 4.5, 11, 0.45, "#FDE047");
+    drawDiamondParticle(tx + 16, ty + 10, 3.5, 9, -0.6, "#F97316");
+    drawDiamondParticle(tx - 22, ty - 18, 3.5, 8, -0.3, "#FFFFFF");
+    drawMiniRetroStar(ctx, tx - 18, ty - 22, 8, "#FED7AA");
+    drawMiniRetroStar(ctx, tx + 12, ty + 14, 7, "#FFFFFF");
     ctx.restore();
   } else if (step === 2) {
     // Step 2: 2nd Kick - High Jump Roundhouse Kick from Right
     ctx.save();
-    // 2nd High Roundhouse Kick Arc
-    const kickArcGrad2 = ctx.createLinearGradient(tx + 50, ty - 40, tx - 20, ty + 10);
-    kickArcGrad2.addColorStop(0, "rgba(239, 68, 68, 0.0)");
-    kickArcGrad2.addColorStop(0.5, "rgba(245, 158, 11, 0.90)");
-    kickArcGrad2.addColorStop(1, "#FFFFFF");
+    drawKickBoot(tx + 10, ty - 12, 0.50, -1.2);
 
-    ctx.strokeStyle = kickArcGrad2;
-    ctx.lineWidth = 8.5;
-    ctx.lineCap = "round";
+    // Soft localized impact flash
+    const g = ctx.createRadialGradient(tx + 4, ty - 10, 2, tx + 4, ty - 10, 26);
+    g.addColorStop(0, "#FFFFFF");
+    g.addColorStop(0.4, "rgba(254, 240, 138, 0.9)");
+    g.addColorStop(1, "rgba(245, 158, 11, 0)");
+    ctx.fillStyle = g;
     ctx.beginPath();
-    ctx.arc(tx + 10, ty - 8, 44, -Math.PI * 0.85, Math.PI * 0.2, false);
-    ctx.stroke();
+    ctx.arc(tx + 4, ty - 10, 26, 0, Math.PI * 2);
+    ctx.fill();
 
-    // 2nd Boot Strike from Right
-    drawKickBoot(tx + 8, ty - 12, 0.55, -1.2);
-
-    // 2nd Major Impact Sparkle & Blast
-    drawStarburstImpact(ctx, tx + 6, ty - 10, "#F59E0B", "#FFFFFF", 36);
-    drawMiniRetroStar(ctx, tx + 28, ty - 30, 11, "#FEF08A");
-    drawMiniRetroStar(ctx, tx - 26, ty + 12, 9, "#FFFFFF");
+    // Natural diamond sparks & retro stars
+    drawDiamondParticle(tx - 20, ty - 18, 5, 13, -0.5, "#FDE047");
+    drawDiamondParticle(tx - 22, ty + 12, 4, 10, 0.7, "#EF4444");
+    drawDiamondParticle(tx + 22, ty - 22, 4.5, 11, 0.4, "#FFFFFF");
+    drawDiamondParticle(tx + 12, ty + 18, 3.5, 8, -0.2, "#F59E0B");
+    drawMiniRetroStar(ctx, tx + 24, ty - 26, 10, "#FEF08A");
+    drawMiniRetroStar(ctx, tx - 22, ty + 10, 8, "#FFFFFF");
     ctx.restore();
   } else if (step >= 3) {
-    // Step 3: Dual Kick Impact Afterglow & Radial Burst Lines
+    // Step 3: Dual Kick Impact Afterglow (No straight wire lines!)
     ctx.save();
-    ctx.strokeStyle = "rgba(249, 115, 22, 0.6)";
-    ctx.lineWidth = 2.5;
-    for (let a = 0; a < 8; a++) {
-      const ang = (a * Math.PI) / 4;
-      ctx.beginPath();
-      ctx.moveTo(tx + Math.cos(ang) * 15, ty - 8 + Math.sin(ang) * 15);
-      ctx.lineTo(tx + Math.cos(ang) * 38, ty - 8 + Math.sin(ang) * 38);
-      ctx.stroke();
-    }
+    drawDiamondParticle(tx - 24, ty - 20, 3.5, 8, -0.4, "#FED7AA");
+    drawDiamondParticle(tx + 24, ty - 18, 3.5, 8, 0.5, "#FDE047");
+    drawDiamondParticle(tx - 16, ty + 16, 3, 7, 0.8, "#F97316");
+    drawDiamondParticle(tx + 18, ty + 14, 3, 7, -0.3, "#FFFFFF");
 
-    drawMiniRetroStar(ctx, tx - 18, ty - 22, 8, "#FED7AA");
-    drawMiniRetroStar(ctx, tx + 20, ty - 16, 10, "#FFFFFF");
-    drawMiniRetroStar(ctx, tx, ty + 10, 8, "#F97316");
+    drawMiniRetroStar(ctx, tx - 20, ty - 24, 7, "#FED7AA");
+    drawMiniRetroStar(ctx, tx + 22, ty - 16, 8, "#FFFFFF");
+    drawMiniRetroStar(ctx, tx, ty + 12, 7, "#F97316");
+    drawMiniRetroStar(ctx, tx + 6, ty - 28, 6, "#FEF08A");
     ctx.restore();
   }
 
