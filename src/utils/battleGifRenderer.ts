@@ -115,14 +115,85 @@ function createEffectivenessFlickerFrames(
       targetAlpha: 1.0,
       enemyHp: action.enemyHpAfter,
       playerHp: action.playerHpAfter,
-      textLineIdx: textIdx,
-      statProgress: isLast ? statProgress : undefined,
-      isBlur: false,
       moveEffect: action,
     });
   }
 
   return frames;
+}
+
+/**
+ * Creates a smooth 4-step sinking faint animation when a Pokémon reaches 0 HP
+ */
+function createFaintingFrames(
+  action: TurnActionInfo,
+  isTargetPlayer: boolean,
+  dialogueTextIdx: number = 99
+): any[] {
+  const isEnemy = !isTargetPlayer;
+
+  return [
+    // Step 1: Initial stumble and start sinking (140ms)
+    {
+      delay: 140,
+      pOffset: isTargetPlayer ? { x: 0, y: 18 } : { x: 0, y: 0 },
+      eOffset: isEnemy ? { x: 0, y: 18 } : { x: 0, y: 0 },
+      showEffect: false,
+      hitFlash: false,
+      targetAlpha: 0.85,
+      enemyHp: action.enemyHpAfter,
+      playerHp: action.playerHpAfter,
+      textLineIdx: dialogueTextIdx,
+      statProgress: undefined,
+      isBlur: false,
+      moveEffect: action,
+    },
+    // Step 2: Sinking deeper into the platform (140ms)
+    {
+      delay: 140,
+      pOffset: isTargetPlayer ? { x: 0, y: 46 } : { x: 0, y: 0 },
+      eOffset: isEnemy ? { x: 0, y: 46 } : { x: 0, y: 0 },
+      showEffect: false,
+      hitFlash: false,
+      targetAlpha: 0.55,
+      enemyHp: action.enemyHpAfter,
+      playerHp: action.playerHpAfter,
+      textLineIdx: dialogueTextIdx,
+      statProgress: undefined,
+      isBlur: false,
+      moveEffect: action,
+    },
+    // Step 3: Submerged / nearly gone (140ms)
+    {
+      delay: 140,
+      pOffset: isTargetPlayer ? { x: 0, y: 80 } : { x: 0, y: 0 },
+      eOffset: isEnemy ? { x: 0, y: 80 } : { x: 0, y: 0 },
+      showEffect: false,
+      hitFlash: false,
+      targetAlpha: 0.20,
+      enemyHp: action.enemyHpAfter,
+      playerHp: action.playerHpAfter,
+      textLineIdx: dialogueTextIdx,
+      statProgress: undefined,
+      isBlur: false,
+      moveEffect: action,
+    },
+    // Step 4: Fully fainted / platform empty (350ms)
+    {
+      delay: 350,
+      pOffset: { x: 0, y: 0 },
+      eOffset: { x: 0, y: 0 },
+      showEffect: false,
+      hitFlash: false,
+      targetAlpha: 0.0,
+      enemyHp: action.enemyHpAfter,
+      playerHp: action.playerHpAfter,
+      textLineIdx: dialogueTextIdx,
+      statProgress: undefined,
+      isBlur: false,
+      moveEffect: action,
+    }
+  ];
 }
 
 export async function renderBattleMoveGif(options: BattleAnimationOptions): Promise<RenderGifResult> {
@@ -610,6 +681,17 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       ];
     }
 
+    const a1Fainted = a1.enemyHpAfter <= 0 || a1.playerHpAfter <= 0;
+    const a2Fainted = a2 && (a2.enemyHpAfter <= 0 || a2.playerHpAfter <= 0);
+
+    const faintFrames = a2Fainted
+      ? createFaintingFrames(a2, a2.playerHpAfter <= 0, 99)
+      : (a1Fainted ? createFaintingFrames(a1, a1.playerHpAfter <= 0, 99) : []);
+
+    const finalEnemyHp = a2 ? a2.enemyHpAfter : a1.enemyHpAfter;
+    const finalPlayerHp = a2 ? a2.playerHpAfter : a1.playerHpAfter;
+    const isAnyFainted = a1Fainted || a2Fainted;
+
     framesConfig = [
       // Frame 0: Leading Cinematic Soft-Blur Loading Frame (800ms / 0.8s)
       {
@@ -647,30 +729,35 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       ...act2Frames,
       // Frame 7: Attacker 2 Recoil & Counter Damage (with Dynamic Effectiveness Blinking!)
       ...createEffectivenessFlickerFrames(a2, isP2, false, 0.75),
-      // Frame 8: Neutral Return & Stat Changes Peak (320ms)
-      {
-        delay: 320,
-        pOffset: { x: 0, y: 0 },
-        eOffset: { x: 0, y: 0 },
-        showEffect: false,
-        hitFlash: false,
-        targetAlpha: 1.0,
-        enemyHp: a2.enemyHpAfter,
-        playerHp: a2.playerHpAfter,
-        textLineIdx: 99,
-        statProgress: 0.95,
-        isBlur: false,
-        moveEffect: a2,
-      },
-      // Frame 9: 11-Minute Static Hold Frame (655,000ms)
+      // Sinking Faint Collapse Animation (if someone fainted)
+      ...faintFrames,
+      // Frame 8: Neutral Return & Stat Changes Peak (if nobody fainted)
+      ...(!isAnyFainted ? [
+        {
+          delay: 320,
+          pOffset: { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          targetAlpha: 1.0,
+          enemyHp: finalEnemyHp,
+          playerHp: finalPlayerHp,
+          textLineIdx: 99,
+          statProgress: 0.95,
+          isBlur: false,
+          moveEffect: a2,
+        }
+      ] : []),
+      // Final 11-Minute Static Hold Frame (655,000ms)
       {
         delay: 655000,
         pOffset: { x: 0, y: 0 },
         eOffset: { x: 0, y: 0 },
         showEffect: false,
         hitFlash: false,
-        enemyHp: a2.enemyHpAfter,
-        playerHp: a2.playerHpAfter,
+        targetAlpha: isAnyFainted ? 0.0 : 1.0,
+        enemyHp: finalEnemyHp,
+        playerHp: finalPlayerHp,
         textLineIdx: 99,
         statProgress: undefined,
         isBlur: false,
@@ -688,7 +775,19 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       isSpecial,
       isPlayerAttacking: isPlayer,
       statChanges: battle.lastMoveEffect?.statChanges,
+      enemyHpAfter: enemyHp,
+      playerHpAfter: playerHp,
     };
+
+    const finalEnemyHp = eff.enemyHpAfter !== undefined ? eff.enemyHpAfter : enemyHp;
+    const finalPlayerHp = eff.playerHpAfter !== undefined ? eff.playerHpAfter : playerHp;
+    const isEnemyFainted = finalEnemyHp <= 0;
+    const isPlayerFainted = finalPlayerHp <= 0;
+    const isFainted = isEnemyFainted || isPlayerFainted;
+
+    const faintFrames = isFainted
+      ? createFaintingFrames(eff, isPlayerFainted, 99)
+      : [];
 
     framesConfig = [
       // Frame 0: Leading Cinematic Soft-Blur Loading Frame (800ms / 0.8s)
@@ -698,29 +797,35 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         eOffset: { x: 0, y: 0 },
         showEffect: false,
         hitFlash: false,
-        enemyHp: enemyHp,
-        playerHp: playerHp,
+        enemyHp: enemy.hp,
+        playerHp: playerMon.hp,
         textLineIdx: 0,
         statProgress: undefined,
         isBlur: true,
       },
+      // Act 1 Move Animation (Fully executed with all sub-frames!)
       ...act1Frames,
       // Frame 3: Recoil & Damage Settling (with Dynamic Effectiveness Blinking!)
       ...createEffectivenessFlickerFrames(eff, isP1, true, 0.65),
-      // Frame 4: Neutral Return & Stat Particles Peak (240ms)
-      {
-        delay: 240,
-        pOffset: { x: 0, y: 0 },
-        eOffset: { x: 0, y: 0 },
-        showEffect: false,
-        hitFlash: false,
-        enemyHp: enemyHp,
-        playerHp: playerHp,
-        textLineIdx: 3,
-        statProgress: 0.95,
-        isBlur: false,
-        moveEffect: eff,
-      },
+      // Sinking Faint Collapse Animation (if fainted)
+      ...faintFrames,
+      // Frame 4: Neutral Return & Stat Particles Peak (if not fainted)
+      ...(!isFainted ? [
+        {
+          delay: 240,
+          pOffset: { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          targetAlpha: 1.0,
+          enemyHp: finalEnemyHp,
+          playerHp: finalPlayerHp,
+          textLineIdx: 3,
+          statProgress: 0.95,
+          isBlur: false,
+          moveEffect: eff,
+        }
+      ] : []),
       // Frame 5: 11-Minute Static Hold Frame (655,000ms)
       {
         delay: 655000,
@@ -728,8 +833,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         eOffset: { x: 0, y: 0 },
         showEffect: false,
         hitFlash: false,
-        enemyHp: enemyHp,
-        playerHp: playerHp,
+        targetAlpha: isFainted ? 0.0 : 1.0,
+        enemyHp: finalEnemyHp,
+        playerHp: finalPlayerHp,
         textLineIdx: 99,
         statProgress: undefined,
         isBlur: false,
@@ -770,40 +876,47 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       targetCtx.restore();
     }
 
+    // Determine target entity for alpha & filter styling
+    const eTarget = (f.moveEffect ? f.moveEffect.actor === "player" : isPlayer);
+    const pTarget = (f.moveEffect ? f.moveEffect.actor === "enemy" : !isPlayer);
+
+    const eAlpha = (f.targetAlpha !== undefined && eTarget) ? f.targetAlpha : 1.0;
+    const pAlpha = (f.targetAlpha !== undefined && pTarget) ? f.targetAlpha : 1.0;
+
     // Pokémon Silhouette Shadows (cast onto platform ground)
-    if (enemySprite && (enemy.hp > 0 || f.enemyHp > 0)) {
+    if (enemySprite && eAlpha > 0.02 && (enemy.hp > 0 || f.enemyHp > 0)) {
       const eShadowX = em.x + f.eOffset.x;
-      const eShadowY = em.y + f.eOffset.y;
-      drawPokemonSilhouetteShadow(targetCtx, enemySprite, eShadowX, eShadowY, em.size, false, 0.42);
+      const eShadowY = em.y;
+      drawPokemonSilhouetteShadow(targetCtx, enemySprite, eShadowX, eShadowY, em.size, false, 0.42 * eAlpha);
     }
 
-    if (playerSprite && (playerMon.hp > 0 || f.playerHp > 0)) {
+    if (playerSprite && pAlpha > 0.02 && (playerMon.hp > 0 || f.playerHp > 0)) {
       const pShadowX = pm.x + f.pOffset.x;
-      const pShadowY = pm.y + f.pOffset.y;
-      drawPokemonSilhouetteShadow(targetCtx, playerSprite, pShadowX, pShadowY, pm.size, true, 0.42);
+      const pShadowY = pm.y;
+      drawPokemonSilhouetteShadow(targetCtx, playerSprite, pShadowX, pShadowY, pm.size, true, 0.42 * pAlpha);
     }
 
-    if (enemySprite) {
+    // Enemy Sprite
+    if (enemySprite && eAlpha > 0.01 && (enemy.hp > 0 || f.enemyHp > 0 || f.targetAlpha !== 0.0)) {
       targetCtx.save();
-      const isTarget = (f.moveEffect ? f.moveEffect.actor === "player" : isPlayer);
-      if (f.hitFlash && isTarget) {
+      if (f.hitFlash && eTarget) {
         targetCtx.filter = "brightness(1.8) contrast(1.2)";
       }
-      if (f.targetAlpha !== undefined && isTarget) {
-        targetCtx.globalAlpha = f.targetAlpha;
+      if (eAlpha < 0.99) {
+        targetCtx.globalAlpha = eAlpha;
       }
       drawFittedBattleSprite(targetCtx, enemySprite, em.x + f.eOffset.x, em.y + f.eOffset.y, em.size);
       targetCtx.restore();
     }
 
-    if (playerSprite) {
+    // Player Sprite
+    if (playerSprite && pAlpha > 0.01 && (playerMon.hp > 0 || f.playerHp > 0 || f.targetAlpha !== 0.0)) {
       targetCtx.save();
-      const isTarget = (f.moveEffect ? f.moveEffect.actor === "enemy" : !isPlayer);
-      if (f.hitFlash && isTarget) {
+      if (f.hitFlash && pTarget) {
         targetCtx.filter = "brightness(1.8) contrast(1.2)";
       }
-      if (f.targetAlpha !== undefined && isTarget) {
-        targetCtx.globalAlpha = f.targetAlpha;
+      if (pAlpha < 0.99) {
+        targetCtx.globalAlpha = pAlpha;
       }
       drawFittedBattleSprite(targetCtx, playerSprite, pm.x + f.pOffset.x, pm.y + f.pOffset.y, pm.size);
       targetCtx.restore();
