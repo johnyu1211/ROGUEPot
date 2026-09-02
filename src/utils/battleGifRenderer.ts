@@ -287,10 +287,17 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   const isFirePunch1 = (mKey1 === "fire-punch" || mKey1 === "firepunch");
   const isIcePunch1 = (mKey1 === "ice-punch" || mKey1 === "icepunch");
   const isGuillotine1 = (mKey1 === "guillotine");
+  const isSwordsDance1 = (mKey1 === "swords-dance" || mKey1 === "swordsdance");
+  const isFly1 = (mKey1 === "fly");
   const isSingleStrikeSpecial1 = (
     mKey1 === "thunder-punch" || mKey1 === "thunderpunch" ||
     mKey1 === "scratch" ||
-    mKey1 === "vice-grip" || mKey1 === "vicegrip"
+    mKey1 === "vice-grip" || mKey1 === "vicegrip" ||
+    mKey1 === "razor-wind" || mKey1 === "razorwind" ||
+    mKey1 === "cut" ||
+    mKey1 === "gust" ||
+    mKey1 === "wing-attack" || mKey1 === "wingattack" ||
+    mKey1 === "whirlwind"
   );
 
   let act1Frames: any[] = [];
@@ -828,6 +835,133 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           }
         ])
       ];
+    } else if (isSwordsDance1) {
+      act1Frames = [
+        // 1. Swords appear orbiting user (150ms)
+        {
+          delay: 150,
+          pOffset: isP1 ? { x: 0, y: -4 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: 0, y: -4 } : { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          statProgress: undefined,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 1,
+        },
+        // 2. Fast upward spin with red aura (170ms)
+        {
+          delay: 170,
+          pOffset: isP1 ? { x: 0, y: -6 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: 0, y: -6 } : { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          statProgress: 0.35,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 2,
+        },
+        // 3. Swords clash above head with brilliant ATK UP burst! (240ms)
+        {
+          delay: 240,
+          pOffset: isP1 ? { x: 0, y: -8 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: 0, y: -8 } : { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          statProgress: 0.85,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 3,
+        },
+        // 4. Power dispersal (140ms)
+        {
+          delay: 140,
+          pOffset: { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          statProgress: 1.0,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 4,
+        }
+      ];
+    } else if (isFly1) {
+      const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
+      const isMiss1 = !isHit1;
+      act1Frames = [
+        // 1. Sky Launch: Attacker launches up into clouds (160ms)
+        {
+          delay: 160,
+          pOffset: isP1 ? { x: 4, y: -36 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -4, y: -36 } : { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 1,
+        },
+        // 2. High Altitude Target Lock (180ms)
+        {
+          delay: 180,
+          pOffset: isP1 ? { x: 8, y: -48 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -8, y: -48 } : { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 2,
+        },
+        // 3. Supersonic Dive-Bomb Impact Slam! (240ms)
+        {
+          delay: 240,
+          pOffset: isP1 ? { x: 20, y: -8 } : (isMiss1 ? { x: 26, y: 4 } : { x: -8, y: 4 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 10, y: -4 }) : { x: -20, y: 8 },
+          showEffect: true,
+          hitFlash: isHit1,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 3,
+        },
+        // 4. Ground Crater Dispersal (140ms)
+        {
+          delay: 140,
+          pOffset: isP1 ? { x: 8, y: -2 } : (isMiss1 ? { x: 8, y: 1 } : { x: 0, y: 0 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 8, y: -1 } : { x: 2, y: 0 }) : { x: -8, y: 2 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 4,
+        }
+      ];
     } else if (isSingleStrikeSpecial1) {
       const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
       const isMiss1 = !isHit1;
@@ -942,10 +1076,17 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const isFirePunch2 = (mKey2 === "fire-punch" || mKey2 === "firepunch");
     const isIcePunch2 = (mKey2 === "ice-punch" || mKey2 === "icepunch");
     const isGuillotine2 = (mKey2 === "guillotine");
+    const isSwordsDance2 = (mKey2 === "swords-dance" || mKey2 === "swordsdance");
+    const isFly2 = (mKey2 === "fly");
     const isSingleStrikeSpecial2 = (
       mKey2 === "thunder-punch" || mKey2 === "thunderpunch" ||
       mKey2 === "scratch" ||
-      mKey2 === "vice-grip" || mKey2 === "vicegrip"
+      mKey2 === "vice-grip" || mKey2 === "vicegrip" ||
+      mKey2 === "razor-wind" || mKey2 === "razorwind" ||
+      mKey2 === "cut" ||
+      mKey2 === "gust" ||
+      mKey2 === "wing-attack" || mKey2 === "wingattack" ||
+      mKey2 === "whirlwind"
     );
 
     let act2Frames: any[] = [];
@@ -1482,6 +1623,133 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a2,
           }
         ])
+      ];
+    } else if (isSwordsDance2) {
+      act2Frames = [
+        // 1. Swords appear orbiting user (150ms)
+        {
+          delay: 150,
+          pOffset: isP2 ? { x: 0, y: -4 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: 0, y: -4 } : { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          statProgress: undefined,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 1,
+        },
+        // 2. Fast upward spin with red aura (170ms)
+        {
+          delay: 170,
+          pOffset: isP2 ? { x: 0, y: -6 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: 0, y: -6 } : { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          statProgress: 0.35,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 2,
+        },
+        // 3. Swords clash above head with brilliant ATK UP burst! (240ms)
+        {
+          delay: 240,
+          pOffset: isP2 ? { x: 0, y: -8 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: 0, y: -8 } : { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          statProgress: 0.85,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 3,
+        },
+        // 4. Power dispersal (140ms)
+        {
+          delay: 140,
+          pOffset: { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          statProgress: 1.0,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 4,
+        }
+      ];
+    } else if (isFly2) {
+      const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
+      const isMiss2 = !isHit2;
+      act2Frames = [
+        // 1. Sky Launch: Attacker launches up into clouds (160ms)
+        {
+          delay: 160,
+          pOffset: isP2 ? { x: 4, y: -36 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -4, y: -36 } : { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 1,
+        },
+        // 2. High Altitude Target Lock (180ms)
+        {
+          delay: 180,
+          pOffset: isP2 ? { x: 8, y: -48 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -8, y: -48 } : { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 2,
+        },
+        // 3. Supersonic Dive-Bomb Impact Slam! (240ms)
+        {
+          delay: 240,
+          pOffset: isP2 ? { x: 20, y: -8 } : (isMiss2 ? { x: 26, y: 4 } : { x: -8, y: 4 }),
+          eOffset: !isP2 ? { x: -20, y: 8 } : (isMiss2 ? { x: 26, y: -4 } : { x: 10, y: -4 }),
+          showEffect: true,
+          hitFlash: isHit2,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 3,
+        },
+        // 4. Ground Crater Dispersal (140ms)
+        {
+          delay: 140,
+          pOffset: isP2 ? { x: 8, y: -2 } : (isMiss2 ? { x: 8, y: 1 } : { x: 0, y: 0 }),
+          eOffset: !isP2 ? { x: -8, y: 2 } : (isMiss2 ? { x: 8, y: -1 } : { x: 0, y: 0 }),
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          statProgress: 0.25,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 4,
+        }
       ];
     } else if (isSingleStrikeSpecial2) {
       const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
