@@ -1400,43 +1400,72 @@ export function drawMegaPunchEffect(ctx: any, target: { x: number; y: number }, 
 }
 
 /**
- * 006 고양이돈받기 (Pay Day): Shower of Spinning Shiny Golden Koban Coins & Sparkle Glints
+ * 006 고양이돈받기 (Pay Day):
+ * Step 1: Initial Coin Cluster + Impact Burst Stars (Full Opacity)
+ * Step 2: Coins burst outward radially with rotation (Alpha 0.65)
+ * Step 3: Coins disperse far outward and fade transparently (Alpha 0.25)
  */
 export function drawPayDayEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
   ctx.save();
 
-  const isFade = (step % 2 === 0);
-  const alpha = isFade ? 0.40 : 1.0;
   const targetX = target.x;
   const targetY = target.y - 10;
 
-  ctx.globalAlpha = alpha;
+  // Step 1: Tight Cluster (spread: 0.75, alpha: 1.0)
+  // Step 2: Mid Radial Scatter (spread: 1.40, alpha: 0.65)
+  // Step 3+: Far Dispersion & Fade (spread: 2.10, alpha: 0.25)
+  let spread = 0.75;
+  let alpha = 1.0;
+  let spinMultiplier = 0.0;
 
-  // Shower of golden Koban coins scattered across target
-  const coins = [
-    { ox: -28, oy: -32, angle: -0.35, scale: 1.0 },
-    { ox: 24, oy: -36, angle: 0.45, scale: 1.1 },
-    { ox: -2, oy: -12, angle: 0.12, scale: 1.3 },
-    { ox: 32, oy: 8, angle: -0.55, scale: 0.95 },
-    { ox: -28, oy: 12, angle: 0.60, scale: 1.05 },
-    { ox: 4, oy: 24, angle: -0.15, scale: 1.15 },
-  ];
-
-  for (const c of coins) {
-    drawKobanCoin(ctx, targetX + c.ox, targetY + c.oy, c.scale, c.angle);
+  if (step === 2) {
+    spread = 1.40;
+    alpha = 0.65;
+    spinMultiplier = 1.0;
+  } else if (step >= 3) {
+    spread = 2.10;
+    alpha = 0.25;
+    spinMultiplier = 2.2;
   }
 
-  // Sparkling Gold Stars
+  ctx.globalAlpha = alpha;
+
+  // Base Coins with radial velocity trajectories
+  const baseCoins = [
+    { vx: -22, vy: -26, baseAngle: -0.30, spin: -0.5, scale: 1.05 },
+    { vx: 20, vy: -28, baseAngle: 0.35, spin: 0.6, scale: 1.15 },
+    { vx: -30, vy: -2, baseAngle: -0.45, spin: -0.7, scale: 1.0 },
+    { vx: 28, vy: 6, baseAngle: 0.40, spin: 0.8, scale: 1.1 },
+    { vx: -18, vy: 22, baseAngle: 0.55, spin: -0.6, scale: 1.05 },
+    { vx: 14, vy: 24, baseAngle: -0.25, spin: 0.5, scale: 1.2 },
+    { vx: 0, vy: -10, baseAngle: 0.10, spin: 0.9, scale: 1.25 },
+  ];
+
+  for (const c of baseCoins) {
+    const coinX = targetX + c.vx * spread;
+    const coinY = targetY + c.vy * spread;
+    const coinAngle = c.baseAngle + c.spin * spinMultiplier;
+    drawKobanCoin(ctx, coinX, coinY, c.scale, coinAngle);
+  }
+
+  // Sparkling Gold Stars scattered along the burst
   const sparkles = [
-    { ox: -16, oy: -45, size: 10, c: "#FEF08A" },
-    { ox: 38, oy: -20, size: 12, c: "#FACC15" },
-    { ox: -36, oy: -8, size: 9, c: "#FEF08A" },
-    { ox: 20, oy: 28, size: 11, c: "#FDE047" },
-    { ox: -12, oy: 32, size: 8, c: "#FFFFFF" },
+    { ox: -16, oy: -35, size: 10, c: "#FEF08A" },
+    { ox: 32, oy: -16, size: 12, c: "#FACC15" },
+    { ox: -30, oy: -6, size: 9, c: "#FEF08A" },
+    { ox: 18, oy: 22, size: 11, c: "#FDE047" },
+    { ox: -10, oy: 26, size: 8, c: "#FFFFFF" },
+    { ox: 0, oy: -20, size: 14, c: "#FACC15" },
   ];
 
   for (const sp of sparkles) {
-    drawMiniRetroStar(ctx, targetX + sp.ox, targetY + sp.oy, sp.size, sp.c);
+    drawMiniRetroStar(
+      ctx,
+      targetX + sp.ox * (spread * 0.9),
+      targetY + sp.oy * (spread * 0.9),
+      step >= 3 ? sp.size * 0.75 : sp.size,
+      sp.c
+    );
   }
 
   ctx.restore();
