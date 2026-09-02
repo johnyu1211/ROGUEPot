@@ -21,9 +21,12 @@
   "license": "AGPL-3.0-or-later",
   "dependencies": {
     "@napi-rs/canvas": "^1.0.8",
+    "@types/gifencoder": "^2.0.3",
     "better-sqlite3": "^13.0.3",
     "discord.js": "^14.18.0",
-    "dotenv": "^16.4.7"
+    "dotenv": "^16.4.7",
+    "gif-encoder-2": "^1.0.5",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^9.6.0",
