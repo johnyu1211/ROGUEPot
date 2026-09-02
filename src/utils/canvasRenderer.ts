@@ -2543,7 +2543,75 @@ function drawEggIcon(ctx: any, cx: number, cy: number, rx: number = 10, ry: numb
 }
 
 /**
- * Draws an authentic 5th Gen / PokéRogue battle shadow under a Pokémon.
+ * Draws an authentic Pokémon Sprite Silhouette Shadow.
+ * Extracts the exact pixel outline of the battler's sprite,
+ * creates a silhouette mask, and projects/skews it flat onto the platform ground.
+ */
+export function drawPokemonSilhouetteShadow(
+  ctx: any,
+  sprite: any,
+  targetX: number,
+  targetY: number,
+  targetSize: number,
+  isPlayer: boolean = false,
+  opacity: number = 0.40
+) {
+  if (!sprite || !sprite.width || !sprite.height) return;
+
+  try {
+    const tempCanvas = createCanvas(sprite.width, sprite.height);
+    const tempCtx = tempCanvas.getContext("2d");
+    tempCtx.drawImage(sprite, 0, 0);
+    const data = tempCtx.getImageData(0, 0, sprite.width, sprite.height).data;
+
+    let minX = sprite.width, maxX = 0, minY = sprite.height, maxY = 0;
+    for (let y = 0; y < sprite.height; y++) {
+      for (let x = 0; x < sprite.width; x++) {
+        const a = data[(y * sprite.width + x) * 4 + 3];
+        if (a > 10) {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+
+    if (maxX < minX || maxY < minY) return;
+
+    const actW = maxX - minX + 1;
+    const actH = maxY - minY + 1;
+    const maxDim = Math.max(actW, actH);
+    const scale = targetSize / maxDim;
+    const drawW = actW * scale;
+    const drawH = actH * scale;
+
+    const silCanvas = createCanvas(actW, actH);
+    const silCtx = silCanvas.getContext("2d");
+    silCtx.drawImage(sprite, minX, minY, actW, actH, 0, 0, actW, actH);
+    silCtx.globalCompositeOperation = "source-in";
+    silCtx.fillStyle = `rgba(10, 22, 16, ${opacity})`;
+    silCtx.fillRect(0, 0, actW, actH);
+
+    ctx.save();
+    ctx.translate(targetX, targetY);
+    const skewX = isPlayer ? -0.38 : -0.42;
+    const scaleY = isPlayer ? 0.30 : 0.32;
+    ctx.transform(1, 0, skewX, scaleY, 0, 0);
+    ctx.drawImage(silCanvas, -drawW / 2, -drawH, drawW, drawH);
+    ctx.restore();
+  } catch (err) {
+    ctx.save();
+    ctx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
+    ctx.beginPath();
+    ctx.ellipse(targetX, targetY - 4, targetSize * 0.35, targetSize * 0.11, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+/**
+ * Backward compatibility alias for drawPokemonShadow
  */
 export function drawPokemonShadow(
   ctx: any,
@@ -5460,12 +5528,12 @@ export async function renderBattleScreen(options: BattleScreenOptions): Promise<
   const em = BATTLE_LAYOUT_CONFIG.enemyPokemon;
   const pm = BATTLE_LAYOUT_CONFIG.playerPokemon;
 
-  // 4. Draw Pokémon Shadows (under sprites on platform ground)
+  // 4. Draw Pokémon Silhouette Shadows (cast onto platform ground)
   if (enemySprite && (battle.phase !== "VICTORY" || enemy.hp > 0)) {
-    drawPokemonShadow(ctx, em.x, 159, em.size * 0.36, em.size * 0.11, 0.36);
+    drawPokemonSilhouetteShadow(ctx, enemySprite, em.x, em.y, em.size, false, 0.42);
   }
   if (playerSprite) {
-    drawPokemonShadow(ctx, pm.x + pm.size * 0.12, 310, pm.size * 0.34, pm.size * 0.10, 0.36);
+    drawPokemonSilhouetteShadow(ctx, playerSprite, pm.x, pm.y, pm.size, true, 0.42);
   }
 
   // On VICTORY screen, fainted enemy is gone (empty platform)
