@@ -1,7 +1,7 @@
 // @ts-ignore
 import GIFEncoder from "gif-encoder-2";
 import { createCanvas } from "@napi-rs/canvas";
-import { BattleState } from "../services/battleService.js";
+import { BattleState, TurnActionInfo } from "../services/battleService.js";
 import { renderMoveEffect, drawStatBoostEffect, drawStatDropEffect } from "./moveEffectRenderer.js";
 import { POKEMON_SPECIES_DATA } from "../data/pokemonStats.js";
 import {
@@ -41,6 +41,89 @@ export interface RenderGifResult {
  * Frame 4: Neutral Return + Stat Particles Climax
  * Frame 5: 11-Minute Static Hold Frame (Effect OFF, holds still)
  */
+/**
+ * Generates recoil and damage settling frames with sprite transparency flickering
+ * based on type effectiveness:
+ * - Not very effective (<= 0.5x) or Immune (0x): 0 blinks (steady hit)
+ * - Normal hit (1.0x): 1 blink (transparent -> normal)
+ * - Super Effective (2.0x): 3 blinks (strobe 3 times)
+ * - Double Super Effective (>= 4.0x): 4 blinks (strobe 4 times)
+ */
+function createEffectivenessFlickerFrames(
+  action: TurnActionInfo,
+  isAttackerPlayer: boolean,
+  isAct1: boolean,
+  statProgress?: number
+): any[] {
+  const typeMod = action.typeMod !== undefined ? action.typeMod : (action.isSuperEffective ? 2.0 : 1.0);
+  
+  let blinkCount = 1; // Default normal hit (1.0x) -> 1 blink
+  if (typeMod <= 0.5) blinkCount = 0; // Not very effective (<= 0.5x) or immune (0x) -> 0 blinks (steady)
+  else if (typeMod >= 4.0) blinkCount = 4; // Double super effective (>= 4.0x) -> 4 blinks
+  else if (typeMod >= 2.0) blinkCount = 3; // Super effective (2.0x) -> 3 blinks
+
+  const isP = isAttackerPlayer;
+  const textIdx = isAct1 ? 2 : 99;
+
+  if (blinkCount === 0) {
+    return [
+      {
+        delay: 420,
+        pOffset: isP ? { x: 6, y: -3 } : { x: 0, y: 0 },
+        eOffset: !isP ? { x: -6, y: 3 } : { x: 0, y: 0 },
+        showEffect: false,
+        hitFlash: false,
+        targetAlpha: 1.0,
+        enemyHp: action.enemyHpAfter,
+        playerHp: action.playerHpAfter,
+        textLineIdx: textIdx,
+        statProgress,
+        isBlur: false,
+        moveEffect: action,
+      }
+    ];
+  }
+
+  const frames: any[] = [];
+  const durationPerHalf = blinkCount >= 4 ? 55 : (blinkCount === 3 ? 65 : 100);
+
+  for (let i = 0; i < blinkCount; i++) {
+    const isLast = (i === blinkCount - 1);
+    // 1. Transparent half-blink
+    frames.push({
+      delay: durationPerHalf,
+      pOffset: isP ? { x: Math.max(0, 6 - i * 2), y: Math.min(0, -3 + i) } : { x: 4 - (i % 2) * 8, y: -2 },
+      eOffset: !isP ? { x: Math.min(0, -6 + i * 2), y: Math.max(0, 3 - i) } : { x: 4 - (i % 2) * 8, y: -2 },
+      showEffect: false,
+      hitFlash: false,
+      targetAlpha: 0.1,
+      enemyHp: action.enemyHpAfter,
+      playerHp: action.playerHpAfter,
+      textLineIdx: textIdx,
+      statProgress: isLast ? statProgress : undefined,
+      isBlur: false,
+      moveEffect: action,
+    });
+    // 2. Visible normal half-blink
+    frames.push({
+      delay: isLast ? durationPerHalf + 80 : durationPerHalf,
+      pOffset: isP ? { x: Math.max(0, 4 - i * 2), y: Math.min(0, -2 + i) } : { x: 0, y: 0 },
+      eOffset: !isP ? { x: Math.min(0, -4 + i * 2), y: Math.max(0, 2 - i) } : { x: 0, y: 0 },
+      showEffect: false,
+      hitFlash: false,
+      targetAlpha: 1.0,
+      enemyHp: action.enemyHpAfter,
+      playerHp: action.playerHpAfter,
+      textLineIdx: textIdx,
+      statProgress: isLast ? statProgress : undefined,
+      isBlur: false,
+      moveEffect: action,
+    });
+  }
+
+  return frames;
+}
+
 export async function renderBattleMoveGif(options: BattleAnimationOptions): Promise<RenderGifResult> {
   const width = 560;
   const height = 380;
@@ -296,76 +379,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       },
       // === ACT 1 ===
       ...act1Frames,
-      // Frame 3: Attacker 1 Recoil & Damage Settling (with Super Effective Sprite Transparency Blinking!)
-      ...(a1.isSuperEffective ? [
-        {
-          delay: 110,
-          pOffset: isP1 ? { x: 6, y: -3 } : { x: 0, y: 0 },
-          eOffset: !isP1 ? { x: -6, y: 3 } : { x: 4, y: -2 },
-          showEffect: false,
-          hitFlash: false,
-          targetAlpha: 0.1, // Transparent Blink 1
-          enemyHp: a1.enemyHpAfter,
-          playerHp: a1.playerHpAfter,
-          textLineIdx: 2,
-          isBlur: false,
-          moveEffect: a1,
-        },
-        {
-          delay: 110,
-          pOffset: isP1 ? { x: 4, y: -2 } : { x: 0, y: 0 },
-          eOffset: !isP1 ? { x: -4, y: 2 } : { x: -4, y: 2 },
-          showEffect: false,
-          hitFlash: false,
-          targetAlpha: 1.0, // Normal
-          enemyHp: a1.enemyHpAfter,
-          playerHp: a1.playerHpAfter,
-          textLineIdx: 2,
-          isBlur: false,
-          moveEffect: a1,
-        },
-        {
-          delay: 110,
-          pOffset: isP1 ? { x: 2, y: -1 } : { x: 0, y: 0 },
-          eOffset: !isP1 ? { x: -2, y: 1 } : { x: 3, y: -1 },
-          showEffect: false,
-          hitFlash: false,
-          targetAlpha: 0.1, // Transparent Blink 2
-          enemyHp: a1.enemyHpAfter,
-          playerHp: a1.playerHpAfter,
-          textLineIdx: 2,
-          isBlur: false,
-          moveEffect: a1,
-        },
-        {
-          delay: 130,
-          pOffset: { x: 0, y: 0 },
-          eOffset: { x: 0, y: 0 },
-          showEffect: false,
-          hitFlash: false,
-          targetAlpha: 1.0, // Normal settle
-          enemyHp: a1.enemyHpAfter,
-          playerHp: a1.playerHpAfter,
-          textLineIdx: 2,
-          isBlur: false,
-          moveEffect: a1,
-        }
-      ] : [
-        {
-          delay: 420,
-          pOffset: isP1 ? { x: 6, y: -3 } : { x: 0, y: 0 },
-          eOffset: !isP1 ? { x: -6, y: 3 } : { x: 0, y: 0 },
-          showEffect: false,
-          hitFlash: false,
-          targetAlpha: 1.0,
-          enemyHp: a1.enemyHpAfter,
-          playerHp: a1.playerHpAfter,
-          textLineIdx: 2,
-          statProgress: undefined,
-          isBlur: false,
-          moveEffect: a1,
-        }
-      ]),
+      // Frame 3: Attacker 1 Recoil & Damage Settling (with Dynamic Effectiveness Blinking!)
+      ...createEffectivenessFlickerFrames(a1, isP1, true),
       // Frame 4: Natural Breathing Room Pause between Turns (380ms - comfortable reading pause!)
       {
         delay: 380,
@@ -383,80 +398,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       },
       // === ACT 2 ===
       ...act2Frames,
-      // Frame 7: Attacker 2 Recoil & Counter Damage (with Super Effective Sprite Transparency Blinking!)
-      ...(a2.isSuperEffective ? [
-        {
-          delay: 110,
-          pOffset: isP2 ? { x: 6, y: -3 } : { x: 4, y: -2 },
-          eOffset: !isP2 ? { x: -6, y: 3 } : { x: 0, y: 0 },
-          showEffect: false,
-          hitFlash: false,
-          targetAlpha: 0.1, // Transparent Blink 1
-          enemyHp: a2.enemyHpAfter,
-          playerHp: a2.playerHpAfter,
-          textLineIdx: 99,
-          statProgress: 0.75,
-          isBlur: false,
-          moveEffect: a2,
-        },
-        {
-          delay: 110,
-          pOffset: isP2 ? { x: 4, y: -2 } : { x: -4, y: 2 },
-          eOffset: !isP2 ? { x: -4, y: 2 } : { x: 0, y: 0 },
-          showEffect: false,
-          hitFlash: false,
-          targetAlpha: 1.0, // Normal
-          enemyHp: a2.enemyHpAfter,
-          playerHp: a2.playerHpAfter,
-          textLineIdx: 99,
-          statProgress: 0.85,
-          isBlur: false,
-          moveEffect: a2,
-        },
-        {
-          delay: 110,
-          pOffset: isP2 ? { x: 2, y: -1 } : { x: 3, y: -1 },
-          eOffset: !isP2 ? { x: -2, y: 1 } : { x: 0, y: 0 },
-          showEffect: false,
-          hitFlash: false,
-          targetAlpha: 0.1, // Transparent Blink 2
-          enemyHp: a2.enemyHpAfter,
-          playerHp: a2.playerHpAfter,
-          textLineIdx: 99,
-          statProgress: 0.95,
-          isBlur: false,
-          moveEffect: a2,
-        },
-        {
-          delay: 140,
-          pOffset: { x: 0, y: 0 },
-          eOffset: { x: 0, y: 0 },
-          showEffect: false,
-          hitFlash: false,
-          targetAlpha: 1.0, // Normal settle
-          enemyHp: a2.enemyHpAfter,
-          playerHp: a2.playerHpAfter,
-          textLineIdx: 99,
-          statProgress: 0.95,
-          isBlur: false,
-          moveEffect: a2,
-        }
-      ] : [
-        {
-          delay: 450,
-          pOffset: isP2 ? { x: 6, y: -3 } : { x: 0, y: 0 },
-          eOffset: !isP2 ? { x: -6, y: 3 } : { x: 0, y: 0 },
-          showEffect: false,
-          hitFlash: false,
-          targetAlpha: 1.0,
-          enemyHp: a2.enemyHpAfter,
-          playerHp: a2.playerHpAfter,
-          textLineIdx: 99,
-          statProgress: 0.75,
-          isBlur: false,
-          moveEffect: a2,
-        }
-      ]),
+      // Frame 7: Attacker 2 Recoil & Counter Damage (with Dynamic Effectiveness Blinking!)
+      ...createEffectivenessFlickerFrames(a2, isP2, false, 0.75),
       // Frame 8: Neutral Return & Stat Changes Peak (320ms)
       {
         delay: 320,
@@ -464,6 +407,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         eOffset: { x: 0, y: 0 },
         showEffect: false,
         hitFlash: false,
+        targetAlpha: 1.0,
         enemyHp: a2.enemyHpAfter,
         playerHp: a2.playerHpAfter,
         textLineIdx: 99,
@@ -541,20 +485,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         isBlur: false,
         moveEffect: eff,
       },
-      // Frame 3: Recoil & Damage Settling (300ms)
-      {
-        delay: 300,
-        pOffset: isP1 ? { x: 6, y: -3 } : { x: 0, y: 0 },
-        eOffset: !isP1 ? { x: -6, y: 3 } : { x: 0, y: 0 },
-        showEffect: false,
-        hitFlash: false,
-        enemyHp: enemyHp,
-        playerHp: playerHp,
-        textLineIdx: 2,
-        statProgress: 0.65,
-        isBlur: false,
-        moveEffect: eff,
-      },
+      // Frame 3: Recoil & Damage Settling (with Dynamic Effectiveness Blinking!)
+      ...createEffectivenessFlickerFrames(eff, isP1, true, 0.65),
       // Frame 4: Neutral Return & Stat Particles Peak (240ms)
       {
         delay: 240,

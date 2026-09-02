@@ -109,6 +109,7 @@ export interface TurnActionInfo {
     target: "player" | "enemy";
     direction: "up" | "down";
   }[];
+  typeMod?: number;
   isSuperEffective?: boolean;
 }
 
@@ -616,6 +617,7 @@ export class BattleService {
       enemyHpAfter: enemyMon.hp,
       playerHpAfter: playerMon.hp,
       statChanges: [...statChanges1],
+      typeMod: res1.typeMod,
       isSuperEffective: res1.isSuperEffective,
     });
 
@@ -645,6 +647,7 @@ export class BattleService {
         enemyHpAfter: enemyMon.hp,
         playerHpAfter: playerMon.hp,
         statChanges: [...statChanges2],
+        typeMod: res2.typeMod,
         isSuperEffective: res2.isSuperEffective,
       });
     } else if (secondActor.isFlinched && secondActor.hp > 0) {
@@ -852,7 +855,7 @@ export class BattleService {
     isActorPlayer: boolean,
     isKo: boolean,
     battle?: BattleState
-  ): { log: string; damage: number; isSuperEffective?: boolean } {
+  ): { log: string; damage: number; typeMod?: number; isSuperEffective?: boolean } {
     const actorName = isActorPlayer ? actor.name : (isKo ? actor.nameKo : actor.name);
     const targetName = isActorPlayer ? (isKo ? target.nameKo : target.name) : target.name;
     const moveName = isKo ? move.nameKo : move.name.toUpperCase();
@@ -1263,7 +1266,7 @@ export class BattleService {
     const mainLog = isKo
       ? `${actorName}의 ${moveName}! ${damage > 0 ? `${damage} 데미지!` : ""}${effLog}${damageLog}${extraEffects}`
       : `${actorName}'s ${moveName}! ${damage > 0 ? `${damage} damage!` : ""}${effLog}${damageLog}${extraEffects}`;
-    return { log: mainLog, damage, isSuperEffective: typeMod >= 2.0 };
+    return { log: mainLog, damage, typeMod, isSuperEffective: typeMod >= 2.0 };
   }
 
   /**
