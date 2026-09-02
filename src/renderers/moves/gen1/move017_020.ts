@@ -374,30 +374,7 @@ export function drawBindEffect(ctx: any, target: { x: number; y: number }, step:
   const globalAlpha = step >= 5 ? 0.40 : (step === 4 ? 0.85 : 1.0);
   ctx.globalAlpha = globalAlpha;
 
-  // 1. Inward Contracting Pressure Brackets / Tension Lines (Steps 3 & 4)
-  if (step === 3 || step === 4) {
-    ctx.save();
-    ctx.strokeStyle = "rgba(254, 240, 138, 0.75)";
-    ctx.lineWidth = 2.0;
-    const bracketDist = step === 3 ? 44 : 48;
-    
-    // Left pressure chevron
-    ctx.beginPath();
-    ctx.moveTo(tx - bracketDist, ty - 20);
-    ctx.lineTo(tx - bracketDist + 8, ty);
-    ctx.lineTo(tx - bracketDist, ty + 20);
-    ctx.stroke();
-
-    // Right pressure chevron
-    ctx.beginPath();
-    ctx.moveTo(tx + bracketDist, ty - 20);
-    ctx.lineTo(tx + bracketDist - 8, ty);
-    ctx.lineTo(tx + bracketDist, ty + 20);
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  // 2. Ascending Dynamic 3D Wrapping Coils (Bottom: +16, Middle: 0, Top: -16)
+  // Dynamic 3D Wrapping Coils (Bottom: +16, Middle: 0, Top: -16)
   let activeOffsets: number[] = [];
   if (step === 1) {
     activeOffsets = [16]; // Bottom only
