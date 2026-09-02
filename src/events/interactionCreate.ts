@@ -169,44 +169,6 @@ export async function safeInteractionUpdate(interaction: any, data: any) {
   }
 }
 
-const activeBattleTimers = new Map<string, NodeJS.Timeout>();
-
-export function clearBattleStaticization(userId: string, slotId: number) {
-  const timerKey = `${userId}_${slotId}`;
-  if (activeBattleTimers.has(timerKey)) {
-    clearTimeout(activeBattleTimers.get(timerKey)!);
-    activeBattleTimers.delete(timerKey);
-  }
-}
-
-export function scheduleBattleStaticization(
-  interaction: any,
-  userId: string,
-  slotId: number,
-  motionDurationMs: number
-) {
-  clearBattleStaticization(userId, slotId);
-
-  if (!motionDurationMs || motionDurationMs <= 0) return;
-
-  const timerKey = `${userId}_${slotId}`;
-  const timer = setTimeout(async () => {
-    activeBattleTimers.delete(timerKey);
-    try {
-      const battle = battleService.getOrCreateBattle(userId, slotId);
-      // Seamlessly transition GIF to lightweight static PNG matching the exact finished animation duration!
-      if (battle.phase === "MAIN" || battle.phase === "FIGHT" || battle.phase === "VICTORY" || battle.phase === "DEFEAT") {
-        const staticData = await renderBattleMessageData(userId, slotId);
-        await safeInteractionUpdate(interaction, staticData);
-      }
-    } catch (e) {
-      // Silently ignore expired tokens or if user already clicked next action
-    }
-  }, motionDurationMs);
-
-  activeBattleTimers.set(timerKey, timer);
-}
-
 export async function renderBattleMessageData(
   userId: string,
   slotId: number,
@@ -3627,9 +3589,6 @@ export const interactionCreateEvent: BotEvent = {
           saveService.setActiveSlot(interaction.user.id, slotNum);
           const battleData = await renderBattleMessageData(interaction.user.id, slotNum, undefined, true);
           await interaction.update(battleData);
-          if (battleData.motionDurationMs && battleData.motionDurationMs > 0) {
-            scheduleBattleStaticization(interaction, interaction.user.id, slotNum, battleData.motionDurationMs);
-          }
         }
         return;
       }
@@ -3639,7 +3598,6 @@ export const interactionCreateEvent: BotEvent = {
         // 2-7-A. Fight Menu Selected
         if (customId.startsWith("battle_menu_fight_")) {
           const slotId = parseInt(parts[3], 10) || 1;
-          clearBattleStaticization(interaction.user.id, slotId);
           const battle = battleService.getOrCreateBattle(interaction.user.id, slotId);
           const combatMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
           if (combatMon?.chargingMove) {
@@ -3648,9 +3606,6 @@ export const interactionCreateEvent: BotEvent = {
             battleService.executePlayerMove(interaction.user.id, slotId, combatMon.chargingMove, profile.language);
             const battleData = await renderBattleMessageData(interaction.user.id, slotId);
             await safeInteractionUpdate(interaction, battleData);
-            if (battleData.motionDurationMs && battleData.motionDurationMs > 0) {
-              scheduleBattleStaticization(interaction, interaction.user.id, slotId, battleData.motionDurationMs);
-            }
             return;
           }
           const battleData = await renderBattleMessageData(interaction.user.id, slotId, "FIGHT");
@@ -3661,7 +3616,6 @@ export const interactionCreateEvent: BotEvent = {
         // 2-7-B. Bag Menu Selected
         if (customId.startsWith("battle_menu_bag_")) {
           const slotId = parseInt(parts[3], 10) || 1;
-          clearBattleStaticization(interaction.user.id, slotId);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId, "BAG");
           await safeInteractionUpdate(interaction, battleData);
           return;
@@ -3670,7 +3624,6 @@ export const interactionCreateEvent: BotEvent = {
         // 2-7-C. Party Menu Selected
         if (customId.startsWith("battle_menu_party_")) {
           const slotId = parseInt(parts[3], 10) || 1;
-          clearBattleStaticization(interaction.user.id, slotId);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId, "PARTY");
           await safeInteractionUpdate(interaction, battleData);
           return;
@@ -3678,8 +3631,6 @@ export const interactionCreateEvent: BotEvent = {
 
         // 2-7-D. Run Away (Back to Title)
         if (customId.startsWith("battle_menu_run_")) {
-          const slotId = parseInt(parts[3], 10) || 1;
-          clearBattleStaticization(interaction.user.id, slotId);
           const titleData = await renderTitleMessageData(client, interaction.user.id);
           await safeInteractionUpdate(interaction, titleData);
           return;
@@ -3688,7 +3639,6 @@ export const interactionCreateEvent: BotEvent = {
         // 2-7-E. Cancel / Back to Main Battle Menu
         if (customId.startsWith("battle_cancel_")) {
           const slotId = parseInt(parts[2], 10) || 1;
-          clearBattleStaticization(interaction.user.id, slotId);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId, "MAIN");
           await safeInteractionUpdate(interaction, battleData);
           return;
@@ -3703,9 +3653,6 @@ export const interactionCreateEvent: BotEvent = {
           battleService.executePlayerMove(interaction.user.id, slotId, moveKey, profile.language);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId);
           await safeInteractionUpdate(interaction, battleData);
-          if (battleData.motionDurationMs && battleData.motionDurationMs > 0) {
-            scheduleBattleStaticization(interaction, interaction.user.id, slotId, battleData.motionDurationMs);
-          }
           return;
         }
 
@@ -3718,9 +3665,6 @@ export const interactionCreateEvent: BotEvent = {
           battleService.attemptCatch(interaction.user.id, slotId, ballType, profile.language);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId);
           await safeInteractionUpdate(interaction, battleData);
-          if (battleData.motionDurationMs && battleData.motionDurationMs > 0) {
-            scheduleBattleStaticization(interaction, interaction.user.id, slotId, battleData.motionDurationMs);
-          }
           return;
         }
 
@@ -3733,9 +3677,6 @@ export const interactionCreateEvent: BotEvent = {
           battleService.switchPlayerPokemon(interaction.user.id, slotId, targetIdx, profile.language);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId);
           await safeInteractionUpdate(interaction, battleData);
-          if (battleData.motionDurationMs && battleData.motionDurationMs > 0) {
-            scheduleBattleStaticization(interaction, interaction.user.id, slotId, battleData.motionDurationMs);
-          }
           return;
         }
 
@@ -3746,9 +3687,6 @@ export const interactionCreateEvent: BotEvent = {
           battleService.advanceToNextWave(interaction.user.id, slotId);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId, undefined, true);
           await safeInteractionUpdate(interaction, battleData);
-          if (battleData.motionDurationMs && battleData.motionDurationMs > 0) {
-            scheduleBattleStaticization(interaction, interaction.user.id, slotId, battleData.motionDurationMs);
-          }
           return;
         }
 
@@ -3760,9 +3698,6 @@ export const interactionCreateEvent: BotEvent = {
           battleService.restartRunFromDefeat(interaction.user.id, slotId, profile.language);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId);
           await safeInteractionUpdate(interaction, battleData);
-          if (battleData.motionDurationMs && battleData.motionDurationMs > 0) {
-            scheduleBattleStaticization(interaction, interaction.user.id, slotId, battleData.motionDurationMs);
-          }
           return;
         }
       }
