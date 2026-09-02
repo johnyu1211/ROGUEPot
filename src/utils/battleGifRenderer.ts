@@ -2399,8 +2399,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         // 1. 적의 좌상단으로 접근 & 앞쪽으로 살짝 기울임 (원근법 축소/확대 적용 - 100ms)
         {
           delay: 100,
-          pOffset: isP1 ? { x: 217, y: -103 } : { x: 0, y: 0 },
-          eOffset: !isP1 ? { x: -217, y: 67 } : { x: 0, y: 0 },
+          pOffset: isP1 ? { x: 217, y: -86 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -217, y: 50 } : { x: 0, y: 0 },
           pRot: isP1 ? 0.18 : undefined,
           eRot: !isP1 ? -0.18 : undefined,
           pScale: isP1 ? { x: 0.82, y: 0.82 } : undefined,
@@ -2420,8 +2420,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         // 2. 검은 타원 쿵! 누름 + 상대 가로로 넓어지며 납작해짐 (원근감 비례 짓누르기 - 130ms)
         {
           delay: 130,
-          pOffset: isP1 ? { x: 219, y: -95 } : (isMiss1 ? { x: 20, y: 0 } : { x: 0, y: 8 }),
-          eOffset: isP1 ? (isMiss1 ? { x: 20, y: 0 } : { x: 0, y: 8 }) : { x: -219, y: 75 },
+          pOffset: isP1 ? { x: 219, y: -78 } : (isMiss1 ? { x: 20, y: 0 } : { x: 0, y: 8 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 20, y: 0 } : { x: 0, y: 8 }) : { x: -219, y: 58 },
           pRot: isP1 ? 0.22 : undefined,
           eRot: !isP1 ? -0.22 : undefined,
           pScale: isP1 ? { x: 0.92, y: 0.70 } : (isMiss1 ? undefined : { x: 1.25, y: 0.70 }),
@@ -2441,8 +2441,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         // 3. 꾹 누르고 버티기 & 지면 먼지 (원근감 비례 유지 - 110ms)
         {
           delay: 110,
-          pOffset: isP1 ? { x: 219, y: -95 } : (isMiss1 ? { x: 20, y: 0 } : { x: 0, y: 6 }),
-          eOffset: isP1 ? (isMiss1 ? { x: 20, y: 0 } : { x: 0, y: 6 }) : { x: -219, y: 75 },
+          pOffset: isP1 ? { x: 219, y: -78 } : (isMiss1 ? { x: 20, y: 0 } : { x: 0, y: 6 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 20, y: 0 } : { x: 0, y: 6 }) : { x: -219, y: 58 },
           pRot: isP1 ? 0.20 : undefined,
           eRot: !isP1 ? -0.20 : undefined,
           pScale: isP1 ? { x: 0.86, y: 0.74 } : (isMiss1 ? undefined : { x: 1.20, y: 0.75 }),
@@ -4437,8 +4437,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         // 1. 적의 좌상단으로 접근 & 앞쪽으로 살짝 기울임 (원근법 축소/확대 적용 - 100ms)
         {
           delay: 100,
-          pOffset: isP2 ? { x: 217, y: -103 } : { x: 0, y: 0 },
-          eOffset: !isP2 ? { x: -217, y: 67 } : { x: 0, y: 0 },
+          pOffset: isP2 ? { x: 217, y: -86 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -217, y: 50 } : { x: 0, y: 0 },
           pRot: isP2 ? 0.18 : undefined,
           eRot: !isP2 ? -0.18 : undefined,
           pScale: isP2 ? { x: 0.82, y: 0.82 } : undefined,
@@ -4458,8 +4458,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         // 2. 검은 타원 쿵! 누름 + 상대 가로로 넓어지며 납작해짐 (원근감 비례 짓누르기 - 130ms)
         {
           delay: 130,
-          pOffset: isP2 ? { x: 219, y: -95 } : (isMiss2 ? { x: 20, y: 0 } : { x: 0, y: 8 }),
-          eOffset: isP2 ? (isMiss2 ? { x: 20, y: 0 } : { x: 0, y: 8 }) : { x: -219, y: 75 },
+          pOffset: isP2 ? { x: 219, y: -78 } : (isMiss2 ? { x: 20, y: 0 } : { x: 0, y: 8 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 20, y: 0 } : { x: 0, y: 8 }) : { x: -219, y: 58 },
           pRot: isP2 ? 0.22 : undefined,
           eRot: !isP2 ? -0.22 : undefined,
           pScale: isP2 ? { x: 0.92, y: 0.70 } : (isMiss2 ? undefined : { x: 1.25, y: 0.70 }),
@@ -4479,8 +4479,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         // 3. 꾹 누르고 버티기 & 지면 먼지 (원근감 비례 유지 - 110ms)
         {
           delay: 110,
-          pOffset: isP2 ? { x: 219, y: -95 } : (isMiss2 ? { x: 20, y: 0 } : { x: 0, y: 6 }),
-          eOffset: isP2 ? (isMiss2 ? { x: 20, y: 0 } : { x: 0, y: 6 }) : { x: -219, y: 75 },
+          pOffset: isP2 ? { x: 219, y: -78 } : (isMiss2 ? { x: 20, y: 0 } : { x: 0, y: 6 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 20, y: 0 } : { x: 0, y: 6 }) : { x: -219, y: 58 },
           pRot: isP2 ? 0.20 : undefined,
           eRot: !isP2 ? -0.20 : undefined,
           pScale: isP2 ? { x: 0.86, y: 0.74 } : (isMiss2 ? undefined : { x: 1.20, y: 0.75 }),

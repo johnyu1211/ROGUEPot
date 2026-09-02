@@ -9,9 +9,9 @@ import { POKEMON_SPECIES_DATA } from "../../data/pokemonStats.js";
 import { renderMoveEffect } from "../../utils/moveEffectRenderer.js";
 
 export const BATTLE_LAYOUT_CONFIG = {
-  enemyPlatform: { scale: 1.5, x: 95, y: 25 },
+  enemyPlatform: { scale: 1.5, x: 95, y: 42 },
   playerPlatform: { scale: 2.0, x: -25, y: 130 },
-  enemyPokemon: { size: 75, x: 418, y: 135 },
+  enemyPokemon: { size: 95, x: 418, y: 152 },
   playerPokemon: { size: 135, x: 150, y: 280 },
   enemyHud: { x: 16, y: 16, w: 228, h: 54 },
   playerHud: { x: 316, y: 180, w: 228, h: 74 }
