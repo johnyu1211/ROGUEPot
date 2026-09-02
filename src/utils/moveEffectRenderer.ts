@@ -1,7 +1,26 @@
-/**
- * PokéRogue Authentic Move Effect Renderer
- * Renders authentic Gen 3/4/5 style battle move visual effects on 2D Canvas.
- */
+import { loadImage } from "@napi-rs/canvas";
+import path from "path";
+import fs from "fs";
+
+let karateBlackImg: any = null;
+let karateRedImg: any = null;
+
+export async function preloadMoveAssets() {
+  try {
+    if (!karateBlackImg) {
+      const bPath = path.resolve(process.cwd(), "assets/effects/karate_chop_black.png");
+      if (fs.existsSync(bPath)) karateBlackImg = await loadImage(bPath);
+    }
+    if (!karateRedImg) {
+      const rPath = path.resolve(process.cwd(), "assets/effects/karate_chop_red.png");
+      if (fs.existsSync(rPath)) karateRedImg = await loadImage(rPath);
+    }
+  } catch (err) {
+    // Ignore asset load errors
+  }
+}
+// Initial eager load
+preloadMoveAssets();
 
 export interface MoveEffectInfo {
   moveKey: string;
@@ -825,65 +844,17 @@ export function drawKarateChopEffect(ctx: any, target: { x: number; y: number },
     showImpact = true;
   }
 
-  // 1. Draw Blocky Karate Hand
-  ctx.save();
-  ctx.translate(cx, cy + handOy);
-  ctx.rotate((rotDeg * Math.PI) / 180);
-  ctx.scale(1.35, 1.35);
-
-  const fillColor = isRedFlash ? "#DC2626" : "#000000";
-  const strokeColor = "#FFFFFF";
-  const strokeWidth = 3.2;
-
-  ctx.fillStyle = fillColor;
-  ctx.strokeStyle = strokeColor;
-  ctx.lineWidth = strokeWidth;
-  ctx.lineJoin = "round";
-  ctx.lineCap = "round";
-
-  // Unified Blocky Hand Path matching the official Gen 5 sprite:
-  ctx.beginPath();
-  // Wrist / right edge
-  ctx.moveTo(18, -4);
-  ctx.lineTo(18, 20);
-  // Bottom finger (Pinky)
-  ctx.lineTo(-24, 20);
-  ctx.arc(-24, 16.5, 3.5, Math.PI / 2, (Math.PI * 3) / 2);
-  ctx.lineTo(2, 13);
-  // Gap 4-3
-  ctx.lineTo(2, 11);
-  ctx.lineTo(-27, 11);
-  ctx.arc(-27, 7.5, 3.5, Math.PI / 2, (Math.PI * 3) / 2);
-  ctx.lineTo(2, 4);
-  // Gap 3-2
-  ctx.lineTo(2, 2);
-  ctx.lineTo(-28, 2);
-  ctx.arc(-28, -1.5, 3.5, Math.PI / 2, (Math.PI * 3) / 2);
-  ctx.lineTo(2, -5);
-  // Gap 2-1
-  ctx.lineTo(2, -7);
-  ctx.lineTo(-25, -7);
-  ctx.arc(-25, -10.5, 3.5, Math.PI / 2, (Math.PI * 3) / 2);
-  ctx.lineTo(0, -14);
-  // Thumb hook on top
-  ctx.lineTo(-12, -14);
-  ctx.arc(-12, -18.5, 4.5, Math.PI / 2, (Math.PI * 3) / 2);
-  ctx.lineTo(8, -23);
-  ctx.quadraticCurveTo(18, -20, 18, -4);
-  ctx.closePath();
-
-  ctx.fill();
-  ctx.stroke();
-
-  // Internal subtle glow if red flash
-  if (isRedFlash) {
-    ctx.fillStyle = "#F97316";
-    ctx.beginPath();
-    ctx.arc(4, 0, 8, 0, Math.PI * 2);
-    ctx.fill();
+  // 1. Draw Authentic 5th Gen Hand Sprite Asset
+  const sprite = isRedFlash ? karateRedImg : karateBlackImg;
+  if (sprite) {
+    ctx.save();
+    ctx.translate(cx, cy + handOy);
+    ctx.rotate((rotDeg * Math.PI) / 180);
+    const sw = 80 * 1.15;
+    const sh = 60 * 1.15;
+    ctx.drawImage(sprite, -sw / 2, -sh / 2, sw, sh);
+    ctx.restore();
   }
-
-  ctx.restore();
 
   // 2. Orange / Amber Hit Embers on Impact (Step 3)
   if (showImpact) {
