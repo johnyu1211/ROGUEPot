@@ -1,4 +1,4 @@
-import { createCanvas, Image } from "@napi-rs/canvas";
+import { createCanvas, loadImage } from "@napi-rs/canvas";
 import path from "path";
 import fs from "fs";
 
@@ -9,20 +9,6 @@ export let cometPunchFistImg: any = null;
 export let firePunchFistCanvas: any = null;
 export let icePunchFistCanvas: any = null;
 export let thunderPunchFistCanvas: any = null;
-
-function loadSyncImage(relPath: string): any {
-  try {
-    const fullPath = path.resolve(process.cwd(), relPath);
-    if (fs.existsSync(fullPath)) {
-      const img = new Image();
-      img.src = fs.readFileSync(fullPath);
-      return img;
-    }
-  } catch (err) {
-    // Ignore error
-  }
-  return null;
-}
 
 export function createTintedFistCanvas(img: any, fillHex: string) {
   if (!img || !img.width || !img.height) return null;
@@ -53,62 +39,59 @@ export function createTintedFistCanvas(img: any, fillHex: string) {
   return canvas;
 }
 
+// Top-level await guarantees 100% decoded pixel buffers before any render call
+try {
+  const bPath = path.resolve(process.cwd(), "assets/effects/karate_chop_black.png");
+  if (fs.existsSync(bPath)) karateBlackImg = await loadImage(bPath);
+
+  const rPath = path.resolve(process.cwd(), "assets/effects/karate_chop_red.png");
+  if (fs.existsSync(rPath)) karateRedImg = await loadImage(rPath);
+
+  const wPath = path.resolve(process.cwd(), "assets/effects/double_slap_white.png");
+  if (fs.existsSync(wPath)) doubleSlapWhiteImg = await loadImage(wPath);
+
+  const pPath = path.resolve(process.cwd(), "assets/effects/comet_punch_fist.png");
+  if (fs.existsSync(pPath)) {
+    cometPunchFistImg = await loadImage(pPath);
+    firePunchFistCanvas = createTintedFistCanvas(cometPunchFistImg, "#FF6B00");
+    icePunchFistCanvas = createTintedFistCanvas(cometPunchFistImg, "#00D2FF");
+    thunderPunchFistCanvas = createTintedFistCanvas(cometPunchFistImg, "#FFD700");
+  }
+} catch (err) {
+  // Ignore error
+}
+
 export function getKarateBlackImg(): any {
-  if (!karateBlackImg) karateBlackImg = loadSyncImage("assets/effects/karate_chop_black.png");
   return karateBlackImg;
 }
 
 export function getKarateRedImg(): any {
-  if (!karateRedImg) karateRedImg = loadSyncImage("assets/effects/karate_chop_red.png");
   return karateRedImg;
 }
 
 export function getDoubleSlapWhiteImg(): any {
-  if (!doubleSlapWhiteImg) doubleSlapWhiteImg = loadSyncImage("assets/effects/double_slap_white.png");
   return doubleSlapWhiteImg;
 }
 
 export function getCometPunchFistImg(): any {
-  if (!cometPunchFistImg) cometPunchFistImg = loadSyncImage("assets/effects/comet_punch_fist.png");
   return cometPunchFistImg;
 }
 
 export function getFirePunchFistCanvas(): any {
-  if (!firePunchFistCanvas) {
-    const fist = getCometPunchFistImg();
-    if (fist) firePunchFistCanvas = createTintedFistCanvas(fist, "#FF6B00");
-  }
   return firePunchFistCanvas;
 }
 
 export function getIcePunchFistCanvas(): any {
-  if (!icePunchFistCanvas) {
-    const fist = getCometPunchFistImg();
-    if (fist) icePunchFistCanvas = createTintedFistCanvas(fist, "#00D2FF");
-  }
   return icePunchFistCanvas;
 }
 
 export function getThunderPunchFistCanvas(): any {
-  if (!thunderPunchFistCanvas) {
-    const fist = getCometPunchFistImg();
-    if (fist) thunderPunchFistCanvas = createTintedFistCanvas(fist, "#FFD700");
-  }
   return thunderPunchFistCanvas;
 }
 
 export async function preloadMoveAssets() {
-  getKarateBlackImg();
-  getKarateRedImg();
-  getDoubleSlapWhiteImg();
-  getCometPunchFistImg();
-  getFirePunchFistCanvas();
-  getIcePunchFistCanvas();
-  getThunderPunchFistCanvas();
+  // Pre-loaded synchronously via top-level await!
 }
-
-// Initial eager load
-preloadMoveAssets();
 
 /**
  * Common Helper: Mini Pixel Star Impact Burst
