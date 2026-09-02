@@ -5332,14 +5332,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     if (f.delay >= 10000) {
       effectiveDelay = f.delay;
     } else if (f.isBlur) {
-      // Snappy leading loading frame (500ms instead of 1600ms)
-      effectiveDelay = 500;
-    } else if (f.showEffect || f.moveStep || f.hitFlash) {
-      // Core combat attack & impact frames: comfortable, weighty, and readable (3.4x)
-      effectiveDelay = Math.round(f.delay * 3.4);
+      // Quick, seamless 350ms leading loading transition
+      effectiveDelay = 350;
     } else {
-      // Windup, pause between turns, recoil recovery: natural pacing (2.4x)
-      effectiveDelay = Math.round(f.delay * 2.4);
+      // Fluid, smooth 8~10 FPS animation timing (1.25x) - crisp, dynamic, and free of stutter/lag
+      effectiveDelay = Math.max(70, Math.round(f.delay * 1.25));
     }
 
     encoder.setDelay(effectiveDelay);
@@ -5349,9 +5346,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   const totalMotionMs = framesConfig
     .filter(f => f.delay < 10000)
     .reduce((sum, f) => {
-      if (f.isBlur) return sum + 500;
-      if (f.showEffect || f.moveStep || f.hitFlash) return sum + Math.round(f.delay * 3.4);
-      return sum + Math.round(f.delay * 2.4);
+      if (f.isBlur) return sum + 350;
+      return sum + Math.max(70, Math.round(f.delay * 1.25));
     }, 0);
 
   encoder.finish();
