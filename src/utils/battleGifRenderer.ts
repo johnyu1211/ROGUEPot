@@ -432,18 +432,6 @@ function drawHighSkyCutscene(
     ctx.translate(ox, oy);
     if (rot) ctx.rotate(rot);
 
-    // Supersonic Wind Trails behind wings in local space
-    ctx.save();
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.65)";
-    ctx.lineWidth = 2.2;
-    ctx.beginPath();
-    ctx.moveTo(-25, -15);
-    ctx.lineTo(-115, -15);
-    ctx.moveTo(-25, 15);
-    ctx.lineTo(-115, 15);
-    ctx.stroke();
-    ctx.restore();
-
     if (scale) ctx.scale(scale.x, scale.y);
     drawFittedBattleSprite(ctx, attackerSprite, 0, 65, 130);
     ctx.restore();
