@@ -1422,6 +1422,52 @@ export class BattleService {
       }
     };
 
+    const applyStatStage = (
+      subject: "actor" | "target",
+      statKey: keyof StatStages,
+      statNameKo: string,
+      statNameEn: string,
+      delta: number
+    ): { success: boolean; log: string } => {
+      const mon = subject === "actor" ? actor : target;
+      const monName = subject === "actor" ? actorName : targetName;
+      const current = mon.stages[statKey] || 0;
+
+      if (delta > 0) {
+        if (current >= 6) {
+          return {
+            success: false,
+            log: isKo ? `${monName}의 ${statNameKo}(은)는 더 이상 올라가지 않는다!` : `${monName}'s ${statNameEn} won't go any higher!`,
+          };
+        }
+        const actualDelta = Math.min(6 - current, delta);
+        mon.stages[statKey] = current + actualDelta;
+        recordStatChange(subject, "up");
+        const sharply = actualDelta >= 2 ? (isKo ? " 크게" : " sharply") : "";
+        const sign = `(+${actualDelta})`;
+        return {
+          success: true,
+          log: isKo ? `${monName}의 ${statNameKo}이${sharply} 올랐다! ${sign}` : `${monName}'s ${statNameEn}${sharply} rose! ${sign}`,
+        };
+      } else {
+        if (current <= -6) {
+          return {
+            success: false,
+            log: isKo ? `${monName}의 ${statNameKo}(은)는 더 이상 떨어지지 않는다!` : `${monName}'s ${statNameEn} won't go any lower!`,
+          };
+        }
+        const actualDelta = Math.max(-6 - current, delta);
+        mon.stages[statKey] = current + actualDelta;
+        recordStatChange(subject, "down");
+        const harshly = Math.abs(actualDelta) >= 2 ? (isKo ? " 크게" : " harshly") : "";
+        const sign = `(${actualDelta})`;
+        return {
+          success: true,
+          log: isKo ? `${monName}의 ${statNameKo}이${harshly} 떨어졌다! ${sign}` : `${monName}'s ${statNameEn}${harshly} fell! ${sign}`,
+        };
+      }
+    };
+
     // 5. SPECIAL SETUP & SACRIFICE (Belly Drum, Shell Smash, Haze, Memento)
     if (mName === "belly-drum") {
       const halfHp = Math.floor(actor.maxHp * 0.5);
@@ -1433,7 +1479,7 @@ export class BattleService {
           ? `${actorName}의 배북!\n자신의 HP를 깎아 공격을 최대치(+6)까지 올렸다!`
           : `${actorName} used Belly Drum!\nCut its own HP to max out Attack (+6)!`;
       }
-      return isKo ? `하지만 기술은 실패했다!` : `But it failed!`;
+      return isKo ? `${actorName}의 공격은 이미 최대치이거나 HP가 부족하다!` : `But it failed!`;
     }
 
     if (mName === "shell-smash") {
@@ -1476,120 +1522,108 @@ export class BattleService {
 
     // 6. STAT STAGES UP
     if (mName === "swords-dance") {
-      actor.stages.atk = Math.min(6, actor.stages.atk + 2);
-      recordStatChange("actor", "up");
-      return isKo ? `${actorName}의 공격이 크게 올랐다! (+2)` : `${actorName}'s Attack sharply rose! (+2)`;
+      return applyStatStage("actor", "atk", "공격", "Attack", 2).log;
     }
     if (mName === "nasty-plot" || mName === "tail-glow") {
       const boost = mName === "tail-glow" ? 3 : 2;
-      actor.stages.spa = Math.min(6, actor.stages.spa + boost);
-      recordStatChange("actor", "up");
-      return isKo ? `${actorName}의 특수공격이 크게 올랐다! (+${boost})` : `${actorName}'s Sp. Atk sharply rose! (+${boost})`;
+      return applyStatStage("actor", "spa", "특수공격", "Sp. Atk", boost).log;
     }
     if (mName === "dragon-dance") {
-      actor.stages.atk = Math.min(6, actor.stages.atk + 1);
-      actor.stages.spe = Math.min(6, actor.stages.spe + 1);
-      recordStatChange("actor", "up");
+      const r1 = applyStatStage("actor", "atk", "공격", "Attack", 1);
+      const r2 = applyStatStage("actor", "spe", "스피드", "Speed", 1);
+      if (!r1.success && !r2.success) {
+        return isKo ? `${actorName}의 공격과 스피드는 더 이상 올라가지 않는다!` : `${actorName}'s stats won't go any higher!`;
+      }
       return isKo ? `${actorName}의 공격과 스피드가 올랐다! (+1)` : `${actorName}'s Attack and Speed rose! (+1)`;
     }
     if (mName === "quiver-dance") {
-      actor.stages.spa = Math.min(6, actor.stages.spa + 1);
-      actor.stages.spd = Math.min(6, actor.stages.spd + 1);
-      actor.stages.spe = Math.min(6, actor.stages.spe + 1);
-      recordStatChange("actor", "up");
+      const r1 = applyStatStage("actor", "spa", "특수공격", "Sp.Atk", 1);
+      const r2 = applyStatStage("actor", "spd", "특수방어", "Sp.Def", 1);
+      const r3 = applyStatStage("actor", "spe", "스피드", "Speed", 1);
+      if (!r1.success && !r2.success && !r3.success) {
+        return isKo ? `${actorName}의 능력치는 더 이상 올라가지 않는다!` : `${actorName}'s stats won't go any higher!`;
+      }
       return isKo ? `${actorName}의 특공, 특방, 스피드가 올랐다! (+1)` : `${actorName}'s Sp.Atk, Sp.Def, and Speed rose! (+1)`;
     }
     if (mName === "shift-gear") {
-      actor.stages.atk = Math.min(6, actor.stages.atk + 1);
-      actor.stages.spe = Math.min(6, actor.stages.spe + 2);
-      recordStatChange("actor", "up");
+      const r1 = applyStatStage("actor", "atk", "공격", "Attack", 1);
+      const r2 = applyStatStage("actor", "spe", "스피드", "Speed", 2);
+      if (!r1.success && !r2.success) {
+        return isKo ? `${actorName}의 능력치는 더 이상 올라가지 않는다!` : `${actorName}'s stats won't go any higher!`;
+      }
       return isKo ? `${actorName}의 공격(+1)과 스피드가 크게(+2) 올랐다!` : `${actorName}'s Attack (+1) and Speed sharply (+2) rose!`;
     }
     if (mName === "geomancy") {
-      actor.stages.spa = Math.min(6, actor.stages.spa + 2);
-      actor.stages.spd = Math.min(6, actor.stages.spd + 2);
-      actor.stages.spe = Math.min(6, actor.stages.spe + 2);
-      recordStatChange("actor", "up");
+      const r1 = applyStatStage("actor", "spa", "특수공격", "Sp.Atk", 2);
+      const r2 = applyStatStage("actor", "spd", "특수방어", "Sp.Def", 2);
+      const r3 = applyStatStage("actor", "spe", "스피드", "Speed", 2);
+      if (!r1.success && !r2.success && !r3.success) {
+        return isKo ? `${actorName}의 능력치는 더 이상 올라가지 않는다!` : `${actorName}'s stats won't go any higher!`;
+      }
       return isKo ? `${actorName}의 특수공격, 특수방어, 스피드가 크게 올랐다! (+2)` : `${actorName}'s Sp. Atk, Sp. Def, and Speed sharply rose! (+2)`;
     }
     if (mName === "calm-mind" || mName === "bulk-up" || mName === "coil") {
       if (mName === "bulk-up") {
-        actor.stages.atk = Math.min(6, actor.stages.atk + 1);
-        actor.stages.def = Math.min(6, actor.stages.def + 1);
-        recordStatChange("actor", "up");
+        const r1 = applyStatStage("actor", "atk", "공격", "Attack", 1);
+        const r2 = applyStatStage("actor", "def", "방어", "Defense", 1);
+        if (!r1.success && !r2.success) {
+          return isKo ? `${actorName}의 공격과 방어는 더 이상 올라가지 않는다!` : `${actorName}'s stats won't go any higher!`;
+        }
         return isKo ? `${actorName}의 공격과 방어가 올랐다! (+1)` : `${actorName}'s Attack and Defense rose! (+1)`;
       }
       if (mName === "coil") {
-        actor.stages.atk = Math.min(6, actor.stages.atk + 1);
-        actor.stages.def = Math.min(6, actor.stages.def + 1);
-        actor.stages.acc = Math.min(6, actor.stages.acc + 1);
-        recordStatChange("actor", "up");
+        const r1 = applyStatStage("actor", "atk", "공격", "Attack", 1);
+        const r2 = applyStatStage("actor", "def", "방어", "Defense", 1);
+        const r3 = applyStatStage("actor", "acc", "명중률", "Accuracy", 1);
+        if (!r1.success && !r2.success && !r3.success) {
+          return isKo ? `${actorName}의 능력치는 더 이상 올라가지 않는다!` : `${actorName}'s stats won't go any higher!`;
+        }
         return isKo ? `${actorName}의 공격, 방어, 명중률이 올랐다! (+1)` : `${actorName}'s Attack, Defense, and Accuracy rose! (+1)`;
       }
-      actor.stages.spa = Math.min(6, actor.stages.spa + 1);
-      actor.stages.spd = Math.min(6, actor.stages.spd + 1);
-      recordStatChange("actor", "up");
+      const r1 = applyStatStage("actor", "spa", "특수공격", "Sp. Atk", 1);
+      const r2 = applyStatStage("actor", "spd", "특수방어", "Sp. Def", 1);
+      if (!r1.success && !r2.success) {
+        return isKo ? `${actorName}의 특수공격과 특수방어는 더 이상 올라가지 않는다!` : `${actorName}'s stats won't go any higher!`;
+      }
       return isKo ? `${actorName}의 특수공격과 특수방어가 올랐다! (+1)` : `${actorName}'s Sp. Atk and Sp. Def rose! (+1)`;
     }
     if (mName === "iron-defense" || mName === "acid-armor" || mName === "barrier" || mName === "cotton-guard") {
       const boost = mName === "cotton-guard" ? 3 : 2;
-      actor.stages.def = Math.min(6, actor.stages.def + boost);
-      recordStatChange("actor", "up");
-      return isKo ? `${actorName}의 방어가 크게 올랐다! (+${boost})` : `${actorName}'s Defense sharply rose! (+${boost})`;
+      return applyStatStage("actor", "def", "방어", "Defense", boost).log;
     }
     if (mName === "amnesia") {
-      actor.stages.spd = Math.min(6, actor.stages.spd + 2);
-      recordStatChange("actor", "up");
-      return isKo ? `${actorName}의 특수방어가 크게 올랐다! (+2)` : `${actorName}'s Sp. Def sharply rose! (+2)`;
+      return applyStatStage("actor", "spd", "특수방어", "Sp. Def", 2).log;
     }
     if (mName === "agility" || mName === "rock-polish" || mName === "autotomize") {
-      actor.stages.spe = Math.min(6, actor.stages.spe + 2);
-      recordStatChange("actor", "up");
-      return isKo ? `${actorName}의 스피드가 크게 올랐다! (+2)` : `${actorName}'s Speed sharply rose! (+2)`;
+      return applyStatStage("actor", "spe", "스피드", "Speed", 2).log;
     }
     if (mName === "minimize" || mName === "double-team") {
       const boost = mName === "minimize" ? 2 : 1;
-      actor.stages.eva = Math.min(6, actor.stages.eva + boost);
-      recordStatChange("actor", "up");
-      return isKo ? `${actorName}의 회피율이 올랐다! (+${boost})` : `${actorName}'s Evasiveness rose! (+${boost})`;
+      return applyStatStage("actor", "eva", "회피율", "Evasiveness", boost).log;
     }
 
     // 7. STAT STAGES DOWN
     if (mName === "growl" || mName === "play-nice") {
-      target.stages.atk = Math.max(-6, target.stages.atk - 1);
-      recordStatChange("target", "down");
-      return isKo ? `${targetName}의 공격이 떨어졌다! (-1)` : `${targetName}'s Attack fell! (-1)`;
+      return applyStatStage("target", "atk", "공격", "Attack", -1).log;
     }
     if (mName === "charm" || mName === "feather-dance" || mName === "baby-doll-eyes") {
       const drop = mName === "baby-doll-eyes" ? 1 : 2;
-      target.stages.atk = Math.max(-6, target.stages.atk - drop);
-      recordStatChange("target", "down");
-      return isKo ? `${targetName}의 공격이 크게 떨어졌다! (-${drop})` : `${targetName}'s Attack harshly fell! (-${drop})`;
+      return applyStatStage("target", "atk", "공격", "Attack", -drop).log;
     }
     if (mName === "tail-whip" || mName === "leer") {
-      target.stages.def = Math.max(-6, target.stages.def - 1);
-      recordStatChange("target", "down");
-      return isKo ? `${targetName}의 방어가 떨어졌다! (-1)` : `${targetName}'s Defense fell! (-1)`;
+      return applyStatStage("target", "def", "방어", "Defense", -1).log;
     }
     if (mName === "screech") {
-      target.stages.def = Math.max(-6, target.stages.def - 2);
-      recordStatChange("target", "down");
-      return isKo ? `${targetName}의 방어가 크게 떨어졌다! (-2)` : `${targetName}'s Defense harshly fell! (-2)`;
+      return applyStatStage("target", "def", "방어", "Defense", -2).log;
     }
     if (mName === "fake-tears" || mName === "metal-sound") {
-      target.stages.spd = Math.max(-6, target.stages.spd - 2);
-      recordStatChange("target", "down");
-      return isKo ? `${targetName}의 특수방어가 크게 떨어졌다! (-2)` : `${targetName}'s Sp. Def harshly fell! (-2)`;
+      return applyStatStage("target", "spd", "특수방어", "Sp. Def", -2).log;
     }
     if (mName === "flash" || mName === "sand-attack" || mName === "smokescreen" || mName === "kinesis") {
-      target.stages.acc = Math.max(-6, target.stages.acc - 1);
-      recordStatChange("target", "down");
-      return isKo ? `${targetName}의 명중률이 떨어졌다! (-1)` : `${targetName}'s Accuracy fell! (-1)`;
+      return applyStatStage("target", "acc", "명중률", "Accuracy", -1).log;
     }
     if (mName === "sweet-scent") {
-      target.stages.eva = Math.max(-6, target.stages.eva - 2);
-      recordStatChange("target", "down");
-      return isKo ? `${targetName}의 회피율이 크게 떨어졌다! (-2)` : `${targetName}'s Evasiveness harshly fell! (-2)`;
+      return applyStatStage("target", "eva", "회피율", "Evasiveness", -2).log;
     }
 
     // 8. STATUS AILMENTS
