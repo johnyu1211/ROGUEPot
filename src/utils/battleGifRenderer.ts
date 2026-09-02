@@ -313,6 +313,26 @@ function createFaintingFrames(
   ];
 }
 
+function isEvasionLaunch(action?: TurnActionInfo | null): boolean {
+  if (!action) return false;
+  const k = (action.moveKey || "").toLowerCase().replace(/[\s_]+/g, "-");
+  if (!["fly", "dig", "dive", "bounce", "shadow-force", "phantom-force"].includes(k)) return false;
+  return (action.damage ?? 0) === 0 && (
+    action.log?.includes("날아올랐다") || action.log?.includes("flew up") ||
+    action.log?.includes("파고들었다") || action.log?.includes("burrowed") ||
+    action.log?.includes("잠수했다") || action.log?.includes("underwater") ||
+    action.log?.includes("모습을 감췄다") || action.log?.includes("vanished") ||
+    action.log?.includes("튀어올랐다") || action.log?.includes("bounced")
+  );
+}
+
+function isEvasionStrike(action?: TurnActionInfo | null): boolean {
+  if (!action) return false;
+  const k = (action.moveKey || "").toLowerCase().replace(/[\s_]+/g, "-");
+  if (!["fly", "dig", "dive", "bounce", "shadow-force", "phantom-force"].includes(k)) return false;
+  return !isEvasionLaunch(action);
+}
+
 export async function renderBattleMoveGif(options: BattleAnimationOptions): Promise<RenderGifResult> {
   const width = 560;
   const height = 380;
@@ -2756,37 +2776,51 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const finalPlayerHp = a2 ? a2.playerHpAfter : a1.playerHpAfter;
     const isAnyFainted = a1Fainted || a2Fainted;
 
-    const isFlyLaunch1 = a1 && (a1.moveKey || "").toLowerCase().replace(/[\s_]+/g, "-") === "fly" && (a1.damage ?? 0) === 0 && (a1.log?.includes("날아올랐다") || a1.log?.includes("flew up"));
-    const isFlyLaunch2 = a2 && (a2.moveKey || "").toLowerCase().replace(/[\s_]+/g, "-") === "fly" && (a2.damage ?? 0) === 0 && (a2.log?.includes("날아올랐다") || a2.log?.includes("flew up"));
-    const isFlyDive1 = a1 && (a1.moveKey || "").toLowerCase().replace(/[\s_]+/g, "-") === "fly" && !isFlyLaunch1;
-    const isFlyDive2 = a2 && (a2.moveKey || "").toLowerCase().replace(/[\s_]+/g, "-") === "fly" && !isFlyLaunch2;
+    const a1IsEvasionLaunch = isEvasionLaunch(a1);
+    const a1IsEvasionStrike = isEvasionStrike(a1);
+    const a2IsEvasionLaunch = isEvasionLaunch(a2);
+    const a2IsEvasionStrike = isEvasionStrike(a2);
 
-    const isPlayerFlyHold = (isFlyLaunch1 && isP1) || (isFlyLaunch2 && isP2);
-    const isEnemyFlyHold = (isFlyLaunch1 && !isP1) || (isFlyLaunch2 && !isP2);
+    // Evasion state at START of turn (before Act 1 starts)
+    const isPlayerStartingEvading = (a1IsEvasionStrike && isP1) || (a2IsEvasionStrike && isP2) || (Boolean(a1 && a1.log?.includes("닿지 않았다") && !isP1));
+    const isEnemyStartingEvading = (a1IsEvasionStrike && !isP1) || (a2IsEvasionStrike && !isP2) || (Boolean(a1 && a1.log?.includes("닿지 않았다") && isP1));
 
-    const isPlayerStartingInAir = (isFlyDive1 && isP1) || (playerMon.chargingMove === "fly");
-    const isEnemyStartingInAir = (isFlyDive1 && !isP1) || (enemy.chargingMove === "fly");
+    // Evasion state during Act 1 (for non-acting Pokemon)
+    const isPlayerEvadingDuringAct1 = isPlayerStartingEvading && !isP1;
+    const isEnemyEvadingDuringAct1 = isEnemyStartingEvading && isP1;
+
+    // Evasion state during Act 2 (for non-acting Pokemon)
+    const isPlayerEvadingDuringAct2 = (a1IsEvasionLaunch && isP1) || (isPlayerStartingEvading && !isP1 && !a1IsEvasionStrike);
+    const isEnemyEvadingDuringAct2 = (a1IsEvasionLaunch && !isP1) || (isEnemyStartingEvading && isP1 && !a1IsEvasionStrike);
+
+    // Evasion state at END of turn (final hold frame)
+    const isPlayerEndingEvading = (a1IsEvasionLaunch && isP1 && !a2) || (a2IsEvasionLaunch && isP2) || (Boolean(playerMon.semiInvulnerableState || playerMon.chargingMove));
+    const isEnemyEndingEvading = (a1IsEvasionLaunch && !isP1 && !a2) || (a2IsEvasionLaunch && !isP2) || (Boolean(enemy.semiInvulnerableState || enemy.chargingMove));
 
     let processedAct1Frames = act1Frames;
-    if (isEnemyStartingInAir && isP1) {
-      processedAct1Frames = act1Frames.map(f => ({ ...f, eOffset: { x: 0, y: -600 }, hideEShadow: true }));
-    } else if (isPlayerStartingInAir && !isP1) {
-      processedAct1Frames = act1Frames.map(f => ({ ...f, pOffset: { x: 0, y: -600 }, hidePShadow: true }));
+    if (isEnemyEvadingDuringAct1) {
+      processedAct1Frames = act1Frames.map(f => ({ ...f, eOffset: { x: 0, y: -9999 }, hideEShadow: true, hideEnemy: true }));
+    } else if (isPlayerEvadingDuringAct1) {
+      processedAct1Frames = act1Frames.map(f => ({ ...f, pOffset: { x: 0, y: -9999 }, hidePShadow: true, hidePlayer: true }));
     }
 
     let processedAct2Frames = act2Frames;
-    if (isFlyLaunch1 && isP1) {
-      processedAct2Frames = act2Frames.map(f => ({ ...f, pOffset: { x: 0, y: -600 }, hidePShadow: true }));
-    } else if (isFlyLaunch1 && !isP1) {
-      processedAct2Frames = act2Frames.map(f => ({ ...f, eOffset: { x: 0, y: -600 }, hideEShadow: true }));
+    if (isPlayerEvadingDuringAct2) {
+      processedAct2Frames = act2Frames.map(f => ({ ...f, pOffset: { x: 0, y: -9999 }, hidePShadow: true, hidePlayer: true }));
+    } else if (isEnemyEvadingDuringAct2) {
+      processedAct2Frames = act2Frames.map(f => ({ ...f, eOffset: { x: 0, y: -9999 }, hideEShadow: true, hideEnemy: true }));
     }
 
     framesConfig = [
       // Frame 0: Leading Cinematic Soft-Blur Loading Frame (800ms / 0.8s)
       {
         delay: 800,
-        pOffset: isPlayerStartingInAir ? { x: 0, y: -600 } : { x: 0, y: 0 },
-        eOffset: isEnemyStartingInAir ? { x: 0, y: -600 } : { x: 0, y: 0 },
+        pOffset: isPlayerStartingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
+        eOffset: isEnemyStartingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
+        hidePShadow: isPlayerStartingEvading,
+        hideEShadow: isEnemyStartingEvading,
+        hidePlayer: isPlayerStartingEvading,
+        hideEnemy: isEnemyStartingEvading,
         showEffect: false,
         hitFlash: false,
         enemyHp: enemy.hp,
@@ -2804,8 +2838,12 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       // Frame 4: Natural Breathing Room Pause between Turns (320ms - comfortable reading pause!)
       {
         delay: 320,
-        pOffset: (isFlyLaunch1 && isP1) ? { x: 0, y: -600 } : { x: 0, y: 0 },
-        eOffset: (isFlyLaunch1 && !isP1) ? { x: 0, y: -600 } : { x: 0, y: 0 },
+        pOffset: (a1IsEvasionLaunch && isP1) || isPlayerEvadingDuringAct2 ? { x: 0, y: -9999 } : { x: 0, y: 0 },
+        eOffset: (a1IsEvasionLaunch && !isP1) || isEnemyEvadingDuringAct2 ? { x: 0, y: -9999 } : { x: 0, y: 0 },
+        hidePShadow: (a1IsEvasionLaunch && isP1) || isPlayerEvadingDuringAct2,
+        hideEShadow: (a1IsEvasionLaunch && !isP1) || isEnemyEvadingDuringAct2,
+        hidePlayer: (a1IsEvasionLaunch && isP1) || isPlayerEvadingDuringAct2,
+        hideEnemy: (a1IsEvasionLaunch && !isP1) || isEnemyEvadingDuringAct2,
         showEffect: false,
         hitFlash: false,
         usePlayerFront: isP1GuillotineKill,
@@ -2829,8 +2867,12 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       // Final 11-Minute Static Hold Frame (655,000ms) - completely neutral with NO statProgress
       {
         delay: 655000,
-        pOffset: isPlayerFlyHold ? { x: 0, y: -600 } : { x: 0, y: 0 },
-        eOffset: isEnemyFlyHold ? { x: 0, y: -600 } : { x: 0, y: 0 },
+        pOffset: isPlayerEndingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
+        eOffset: isEnemyEndingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
+        hidePShadow: isPlayerEndingEvading,
+        hideEShadow: isEnemyEndingEvading,
+        hidePlayer: isPlayerEndingEvading,
+        hideEnemy: isEnemyEndingEvading,
         showEffect: false,
         hitFlash: false,
         usePlayerFront: playerFrontHold,
@@ -2873,28 +2915,32 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       ? createFaintingFrames(eff, isPlayerFainted, 99, playerFrontHold, enemyBackHold)
       : [];
 
-    const isFlyLaunch1 = a1 && (a1.moveKey || "").toLowerCase().replace(/[\s_]+/g, "-") === "fly" && (a1.damage ?? 0) === 0 && (a1.log?.includes("날아올랐다") || a1.log?.includes("flew up"));
-    const isFlyDive1 = a1 && (a1.moveKey || "").toLowerCase().replace(/[\s_]+/g, "-") === "fly" && !isFlyLaunch1;
+    const a1IsEvasionLaunch = isEvasionLaunch(a1);
+    const a1IsEvasionStrike = isEvasionStrike(a1);
 
-    const isPlayerFlyHold = isFlyLaunch1 && isP1;
-    const isEnemyFlyHold = isFlyLaunch1 && !isP1;
+    const isPlayerStartingEvading = (a1IsEvasionStrike && isP1) || (Boolean(a1 && a1.log?.includes("닿지 않았다") && !isP1));
+    const isEnemyStartingEvading = (a1IsEvasionStrike && !isP1) || (Boolean(a1 && a1.log?.includes("닿지 않았다") && isP1));
 
-    const isPlayerStartingInAir = (isFlyDive1 && isP1) || (playerMon.chargingMove === "fly");
-    const isEnemyStartingInAir = (isFlyDive1 && !isP1) || (enemy.chargingMove === "fly");
+    const isPlayerEndingEvading = (a1IsEvasionLaunch && isP1) || Boolean(playerMon.semiInvulnerableState || playerMon.chargingMove);
+    const isEnemyEndingEvading = (a1IsEvasionLaunch && !isP1) || Boolean(enemy.semiInvulnerableState || enemy.chargingMove);
 
     let processedSingleActFrames = act1Frames;
-    if (isEnemyStartingInAir && isP1) {
-      processedSingleActFrames = act1Frames.map(f => ({ ...f, eOffset: { x: 0, y: -600 }, hideEShadow: true }));
-    } else if (isPlayerStartingInAir && !isP1) {
-      processedSingleActFrames = act1Frames.map(f => ({ ...f, pOffset: { x: 0, y: -600 }, hidePShadow: true }));
+    if (isEnemyStartingEvading && isP1) {
+      processedSingleActFrames = act1Frames.map(f => ({ ...f, eOffset: { x: 0, y: -9999 }, hideEShadow: true, hideEnemy: true }));
+    } else if (isPlayerStartingEvading && !isP1) {
+      processedSingleActFrames = act1Frames.map(f => ({ ...f, pOffset: { x: 0, y: -9999 }, hidePShadow: true, hidePlayer: true }));
     }
 
     framesConfig = [
       // Frame 0: Leading Cinematic Soft-Blur Loading Frame (800ms / 0.8s)
       {
         delay: 800,
-        pOffset: isPlayerStartingInAir ? { x: 0, y: -600 } : { x: 0, y: 0 },
-        eOffset: isEnemyStartingInAir ? { x: 0, y: -600 } : { x: 0, y: 0 },
+        pOffset: isPlayerStartingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
+        eOffset: isEnemyStartingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
+        hidePShadow: isPlayerStartingEvading,
+        hideEShadow: isEnemyStartingEvading,
+        hidePlayer: isPlayerStartingEvading,
+        hideEnemy: isEnemyStartingEvading,
         showEffect: false,
         hitFlash: false,
         enemyHp: enemy.hp,
@@ -2914,8 +2960,12 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       // Final 11-Minute Static Hold Frame (655,000ms) - completely neutral with NO statProgress
       {
         delay: 655000,
-        pOffset: isPlayerFlyHold ? { x: 0, y: -600 } : { x: 0, y: 0 },
-        eOffset: isEnemyFlyHold ? { x: 0, y: -600 } : { x: 0, y: 0 },
+        pOffset: isPlayerEndingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
+        eOffset: isEnemyEndingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
+        hidePShadow: isPlayerEndingEvading,
+        hideEShadow: isEnemyEndingEvading,
+        hidePlayer: isPlayerEndingEvading,
+        hideEnemy: isEnemyEndingEvading,
         showEffect: false,
         hitFlash: false,
         usePlayerFront: playerFrontHold,
