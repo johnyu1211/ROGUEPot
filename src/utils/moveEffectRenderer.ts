@@ -2220,7 +2220,63 @@ export function drawViceGripEffect(ctx: any, target: { x: number; y: number }, s
 }
 
 /**
- * 012 가위자르기 (Guillotine): Pure Lethal Scissor Blade Cross Cut (X-Motion Execution)
+ * Helper to draw a single heavy blood-red Guillotine Scissor Blade
+ */
+function drawGuillotineScissorBlade(
+  ctx: any,
+  startX: number,
+  startY: number,
+  endX: number,
+  endY: number,
+  bladeWidth: number,
+  alpha: number = 1.0
+) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  const dx = endX - startX;
+  const dy = endY - startY;
+  const len = Math.hypot(dx, dy);
+  const angle = Math.atan2(dy, dx);
+
+  ctx.translate(startX, startY);
+  ctx.rotate(angle);
+
+  // 1. Heavy Blood-Red Scissor Blade Solid Body
+  ctx.fillStyle = "#DC2626";
+  ctx.strokeStyle = "#7F1D1D";
+  ctx.lineWidth = 2.0;
+  ctx.beginPath();
+  ctx.moveTo(0, -bladeWidth / 2);
+  ctx.lineTo(len * 0.85, -bladeWidth / 3);
+  ctx.lineTo(len, 0); // Sharp blade tip
+  ctx.lineTo(len * 0.85, bladeWidth / 3);
+  ctx.lineTo(0, bladeWidth / 2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // 2. Bright Crimson-Silver Gleaming Cutting Edge
+  ctx.strokeStyle = "#FECACA";
+  ctx.lineWidth = Math.max(1.8, bladeWidth * 0.30);
+  ctx.beginPath();
+  ctx.moveTo(len * 0.05, 0);
+  ctx.lineTo(len * 0.92, 0);
+  ctx.stroke();
+
+  // 3. White-Hot Razor Center Line
+  ctx.strokeStyle = "#FFFFFF";
+  ctx.lineWidth = Math.max(1.0, bladeWidth * 0.12);
+  ctx.beginPath();
+  ctx.moveTo(len * 0.15, 0);
+  ctx.lineTo(len * 0.85, 0);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+/**
+ * 012 가위자르기 (Guillotine): Heavy Blood-Red Scissor Blades X-Motion Execution
  */
 export function drawGuillotineEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
   ctx.save();
@@ -2228,13 +2284,13 @@ export function drawGuillotineEffect(ctx: any, target: { x: number; y: number },
   const targetX = target.x;
   const targetY = target.y - 12;
 
-  // Step 1: Giant Scissor Blades Crossing Inward (Opening X-Stance)
-  // Step 2: LETHAL SCISSOR EXECUTION SNAP: Giant Fatal X-Cross Cut + Hit Flash & Starburst
-  // Step 3: Fading Cross Cut Shockwave Lines & Critical Spark Burst
+  // Step 1: Open Blood-Red Scissor Stance (Blades Angle Inward)
+  // Step 2: LETHAL SCISSOR CROSS CUT SNAP (Full Screen X-Cut + Hit Flash & Starburst)
+  // Step 3: Fading Red Shockwave X-Lines & Spark Dissipation
   if (step === 1) {
-    // 1. Dark Execution Backdrop Aura
+    // 1. Dark Crimson Execution Backdrop Aura
     const aura = ctx.createRadialGradient(targetX, targetY - 14, 6, targetX, targetY - 14, 65);
-    aura.addColorStop(0, "rgba(220, 38, 38, 0.65)");
+    aura.addColorStop(0, "rgba(220, 38, 38, 0.70)");
     aura.addColorStop(0.5, "rgba(127, 29, 29, 0.45)");
     aura.addColorStop(1, "rgba(0, 0, 0, 0)");
     ctx.fillStyle = aura;
@@ -2242,69 +2298,29 @@ export function drawGuillotineEffect(ctx: any, target: { x: number; y: number },
     ctx.arc(targetX, targetY - 14, 65, 0, Math.PI * 2);
     ctx.fill();
 
-    // 2. Incoming Scissor Blade Crossing Lines (Open Scissors)
-    ctx.save();
-    ctx.strokeStyle = "#DC2626";
-    ctx.lineWidth = 6.0;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    // Top-Left to Bottom-Right Blade
-    ctx.moveTo(targetX - 45, targetY - 14 - 45);
-    ctx.lineTo(targetX + 45, targetY - 14 + 45);
-    // Top-Right to Bottom-Left Blade
-    ctx.moveTo(targetX + 45, targetY - 14 - 45);
-    ctx.lineTo(targetX - 45, targetY - 14 + 45);
-    ctx.stroke();
-
-    // Inner Silver-White Blade Edge
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 2.4;
-    ctx.beginPath();
-    ctx.moveTo(targetX - 45, targetY - 14 - 45);
-    ctx.lineTo(targetX + 45, targetY - 14 + 45);
-    ctx.moveTo(targetX + 45, targetY - 14 - 45);
-    ctx.lineTo(targetX - 45, targetY - 14 + 45);
-    ctx.stroke();
-    ctx.restore();
+    // 2. Open Blood-Red Scissor Blades Ingress
+    drawGuillotineScissorBlade(ctx, targetX - 55, targetY - 14 - 55, targetX, targetY - 14, 12, 1.0);
+    drawGuillotineScissorBlade(ctx, targetX + 55, targetY - 14 + 55, targetX, targetY - 14, 12, 1.0);
+    drawGuillotineScissorBlade(ctx, targetX + 55, targetY - 14 - 55, targetX, targetY - 14, 12, 1.0);
+    drawGuillotineScissorBlade(ctx, targetX - 55, targetY - 14 + 55, targetX, targetY - 14, 12, 1.0);
   } else if (step === 2) {
-    // Step 2: FATAL EXECUTION CROSS CUT SNAP
-    // 1. Giant Lethal Diagonal Cross Lines
-    ctx.save();
-    ctx.strokeStyle = "#DC2626";
-    ctx.lineWidth = 9.0;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    // Slash 1 (\)
-    ctx.moveTo(targetX - 60, targetY - 14 - 60);
-    ctx.lineTo(targetX + 60, targetY - 14 + 60);
-    // Slash 2 (/)
-    ctx.moveTo(targetX + 60, targetY - 14 - 60);
-    ctx.lineTo(targetX - 60, targetY - 14 + 60);
-    ctx.stroke();
-
-    // Inner White Hot Scissor Core
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 3.8;
-    ctx.beginPath();
-    ctx.moveTo(targetX - 60, targetY - 14 - 60);
-    ctx.lineTo(targetX + 60, targetY - 14 + 60);
-    ctx.moveTo(targetX + 60, targetY - 14 - 60);
-    ctx.lineTo(targetX - 60, targetY - 14 + 60);
-    ctx.stroke();
-    ctx.restore();
+    // Step 2: FATAL SCISSOR EXECUTION SNAP
+    // 1. Massive Crossing Blood-Red Scissor Blades
+    drawGuillotineScissorBlade(ctx, targetX - 65, targetY - 14 - 65, targetX + 65, targetY - 14 + 65, 16, 1.0);
+    drawGuillotineScissorBlade(ctx, targetX + 65, targetY - 14 - 65, targetX - 65, targetY - 14 + 65, 16, 1.0);
 
     // 2. Massive Execution Starburst
     drawMiniRetroStar(ctx, targetX, targetY - 14, 34, "#FFFFFF");
     drawMiniRetroStar(ctx, targetX, targetY - 14, 26, "#EF4444");
 
-    // 3. Heavy Lethal Sparks
+    // 3. Heavy Crimson Lethal Sparks
     const sparks = [
       { ox: -36, oy: -36, r: 4.0, c: "#FFFFFF" },
-      { ox: 36, oy: -36, r: 4.0, c: "#FEF08A" },
+      { ox: 36, oy: -36, r: 4.0, c: "#FECACA" },
       { ox: -36, oy: 36, r: 4.0, c: "#DC2626" },
       { ox: 36, oy: 36, r: 4.0, c: "#FFFFFF" },
       { ox: 0, oy: -50, r: 3.5, c: "#EF4444" },
-      { ox: 0, oy: 50, r: 3.5, c: "#FEF08A" },
+      { ox: 0, oy: 50, r: 3.5, c: "#FECACA" },
     ];
     for (const sp of sparks) {
       ctx.fillStyle = sp.c;
@@ -2313,11 +2329,11 @@ export function drawGuillotineEffect(ctx: any, target: { x: number; y: number },
       ctx.fill();
     }
   } else if (step >= 3) {
-    // Step 3: Fading Cross Lines
+    // Step 3: Fading Red Shockwave Cross Lines
     ctx.save();
     ctx.globalAlpha = 0.30;
     ctx.strokeStyle = "#EF4444";
-    ctx.lineWidth = 4.5;
+    ctx.lineWidth = 5.0;
     ctx.beginPath();
     ctx.moveTo(targetX - 70, targetY - 14 - 70);
     ctx.lineTo(targetX + 70, targetY - 14 + 70);
