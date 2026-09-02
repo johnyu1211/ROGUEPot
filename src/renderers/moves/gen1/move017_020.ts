@@ -15,7 +15,7 @@ export function drawWingAttackEffect(ctx: any, target: { x: number; y: number },
     ctx.scale(scale, scale);
     ctx.globalAlpha = alpha;
 
-    ctx.fillStyle = "rgba(56, 189, 248, 0.25)";
+    ctx.fillStyle = "rgba(224, 242, 254, 0.30)";
     ctx.beginPath();
     ctx.moveTo(-45, 10);
     ctx.quadraticCurveTo(-15, -45, 50, -25);
@@ -35,7 +35,7 @@ export function drawWingAttackEffect(ctx: any, target: { x: number; y: number },
       ctx.translate(f.ox, f.oy);
       ctx.rotate(f.r);
       ctx.fillStyle = "#F8FAFC";
-      ctx.strokeStyle = "#38BDF8";
+      ctx.strokeStyle = "#BAE6FD";
       ctx.lineWidth = 1.8;
       ctx.beginPath();
       ctx.moveTo(0, 0);
@@ -60,7 +60,7 @@ export function drawWingAttackEffect(ctx: any, target: { x: number; y: number },
     drawWing(tx - 38, ty - 18, -Math.PI * 0.25, 0.9, 0.85);
   } else if (step === 2) {
     drawWing(tx, ty - 6, Math.PI * 0.15, 1.25, 1.0);
-    ctx.strokeStyle = "#38BDF8";
+    ctx.strokeStyle = "#BAE6FD";
     ctx.lineWidth = 6;
     ctx.beginPath();
     ctx.moveTo(tx - 55, ty - 32);
@@ -74,7 +74,7 @@ export function drawWingAttackEffect(ctx: any, target: { x: number; y: number },
     ctx.lineTo(tx + 48, ty + 20);
     ctx.stroke();
   } else if (step === 3) {
-    drawMiniRetroStar(ctx, tx, ty, 20, "#38BDF8");
+    drawMiniRetroStar(ctx, tx, ty, 20, "#BAE6FD");
     drawMiniRetroStar(ctx, tx, ty, 10, "#FFFFFF");
 
     const sparks = [
@@ -84,13 +84,13 @@ export function drawWingAttackEffect(ctx: any, target: { x: number; y: number },
       { ox: 24, oy: 28 },
     ];
     for (const sp of sparks) {
-      ctx.fillStyle = "#E0F2FE";
+      ctx.fillStyle = "#F0F9FF";
       ctx.beginPath();
       ctx.arc(tx + sp.ox, ty + sp.oy, 3.2, 0, Math.PI * 2);
       ctx.fill();
     }
   } else if (step >= 4) {
-    drawMiniRetroStar(ctx, tx, ty, 8, "rgba(224, 242, 254, 0.45)");
+    drawMiniRetroStar(ctx, tx, ty, 8, "rgba(240, 249, 255, 0.45)");
   }
 
   ctx.restore();
@@ -173,7 +173,7 @@ export function drawFlyEffect(ctx: any, start: { x: number; y: number }, target:
     ctx.fill();
 
     for (let i = -1; i <= 1; i++) {
-      ctx.strokeStyle = "rgba(56, 189, 248, 0.65)";
+      ctx.strokeStyle = "rgba(186, 230, 253, 0.70)";
       ctx.lineWidth = 2.5;
       ctx.beginPath();
       ctx.moveTo(tx + i * 18, 0);
@@ -181,7 +181,8 @@ export function drawFlyEffect(ctx: any, start: { x: number; y: number }, target:
       ctx.stroke();
     }
   } else if (step === 3) {
-    ctx.strokeStyle = "#38BDF8";
+    // Step 3: Supersonic Dive-Bomb Impact Slam!
+    ctx.strokeStyle = "#BAE6FD";
     ctx.lineWidth = 14;
     ctx.lineCap = "round";
     ctx.beginPath();
@@ -196,16 +197,18 @@ export function drawFlyEffect(ctx: any, start: { x: number; y: number }, target:
     ctx.lineTo(tx, ty + 10);
     ctx.stroke();
 
+    // Explosive Ground Crater Shockwave
     ctx.strokeStyle = "#F8FAFC";
     ctx.lineWidth = 5;
     ctx.beginPath();
     ctx.ellipse(tx, ty + 18, 48, 14, 0, 0, Math.PI * 2);
     ctx.stroke();
 
-    drawMiniRetroStar(ctx, tx, ty, 24, "#38BDF8");
+    drawMiniRetroStar(ctx, tx, ty, 24, "#BAE6FD");
     drawMiniRetroStar(ctx, tx, ty, 14, "#FFFFFF");
   } else if (step >= 4) {
-    ctx.strokeStyle = "rgba(56, 189, 248, 0.35)";
+    // Step 4: Radial impact dispersal
+    ctx.strokeStyle = "rgba(224, 242, 254, 0.40)";
     ctx.lineWidth = 3.0;
     ctx.beginPath();
     ctx.ellipse(tx, ty + 18, 64, 18, 0, 0, Math.PI * 2);
