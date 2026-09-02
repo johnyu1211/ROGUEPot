@@ -373,52 +373,65 @@ function drawHighSkyCutscene(
   f: any,
   attackerSprite: any
 ) {
-  // 1. Supersonic Stratosphere Vertical Dive Sky Gradient
-  const skyGrad = ctx.createLinearGradient(0, 0, 0, height);
-  skyGrad.addColorStop(0, "#080F1E"); // Deep Stratosphere Space Navy
-  skyGrad.addColorStop(0.30, "#0369A1"); // High-Altitude Azure
-  skyGrad.addColorStop(0.70, "#0284C7"); // Sky Blue
-  skyGrad.addColorStop(1, "#E0F2FE"); // Dense Cloud Base
-  ctx.fillStyle = skyGrad;
-  ctx.fillRect(0, 0, width, height);
+  ctx.save();
 
-  // 2. High-Speed Upward Streaming Vertical Sonic Speedlines
-  const stepSeed = (f.diveStep || 0) * 47;
-  for (let i = 0; i < 32; i++) {
-    const sx = ((i * 19 + stepSeed * 3) % (width + 60)) - 30;
-    const sy = ((i * 47 + stepSeed * 7) % (height + 220)) - 100;
-    const len = 90 + (i % 5) * 40;
+  // Camera Tilt Angle (0 = level straight flight, -0.30 to -0.78 = diagonal bank)
+  const cameraTilt = f.skyCameraTilt || 0;
+  const isDiagonalBank = Math.abs(cameraTilt) > 0.05;
+
+  // Apply Camera Tilt Transform centered at canvas center
+  ctx.translate(width / 2, height / 2);
+  if (cameraTilt) {
+    ctx.rotate(cameraTilt);
+  }
+
+  // Large bounding size to cover entire screen seamlessly when rotated
+  const bgSize = Math.max(width, height) * 1.8;
+
+  // 1. Clear Atmospheric Gradient (Distinct Top Space Navy vs Bottom Bright Horizon)
+  const skyGrad = ctx.createLinearGradient(0, -bgSize / 2, 0, bgSize / 2);
+  skyGrad.addColorStop(0, "#080E1E");    // Top: Deep Stratosphere (Space Navy)
+  skyGrad.addColorStop(0.35, "#0369A1"); // Mid-Upper: High Azure Sky
+  skyGrad.addColorStop(0.65, "#38BDF8"); // Horizon: Light Atmosphere Blue
+  skyGrad.addColorStop(0.85, "#BAE6FD"); // Cloud Base: Bright Cyan
+  skyGrad.addColorStop(1, "#FFFFFF");    // Bottom: Ground Horizon Cloud Layer (Pure White)
+
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(-bgSize / 2, -bgSize / 2, bgSize, bgSize);
+
+  // 2. Horizon Cloud Sea at the Bottom (Clearly marking the Ground/Bottom Direction!)
+  ctx.save();
+  ctx.globalAlpha = 0.90;
+  ctx.fillStyle = "#FFFFFF";
+  const cloudBaseY = bgSize * 0.22;
+  for (let x = -bgSize / 2 - 50; x <= bgSize / 2 + 50; x += 65) {
+    ctx.beginPath();
+    ctx.arc(x, cloudBaseY, 48, 0, Math.PI * 2);
+    ctx.arc(x + 28, cloudBaseY - 18, 38, 0, Math.PI * 2);
+    ctx.arc(x + 52, cloudBaseY + 6, 42, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // 3. Dynamic Speedlines (Streaming horizontally relative to flight direction)
+  const stepSeed = (f.diveStep || 0) * 53;
+  const numLines = isDiagonalBank ? 32 : 22;
+  for (let i = 0; i < numLines; i++) {
+    const lx = ((i * 39 + stepSeed * 9) % bgSize) - bgSize / 2;
+    const ly = ((i * 43 + stepSeed * 4) % (bgSize * 0.65)) - bgSize * 0.32;
+    const len = 80 + (i % 4) * 40;
 
     ctx.save();
-    ctx.strokeStyle = (i % 2 === 0) ? "rgba(255, 255, 255, 0.90)" : "rgba(186, 230, 253, 0.60)";
-    ctx.lineWidth = (i % 3 === 0) ? 2.6 : 1.4;
+    ctx.strokeStyle = (i % 2 === 0) ? "rgba(255, 255, 255, 0.85)" : "rgba(186, 230, 253, 0.55)";
+    ctx.lineWidth = (i % 3 === 0) ? 2.5 : 1.3;
     ctx.beginPath();
-    ctx.moveTo(sx, sy);
-    ctx.lineTo(sx, sy - len); // Streamlines pointing UPWARDS (diving downwards!)
+    ctx.moveTo(lx, ly);
+    ctx.lineTo(lx - len, ly);
     ctx.stroke();
     ctx.restore();
   }
 
-  // 3. Flanking Cloud Vapor Streams Rushing Upward
-  const drawVerticalCloudPuff = (cx: number, cy: number, r: number, alpha: number) => {
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = "#FFFFFF";
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.arc(cx + r * 0.5, cy - r * 0.4, r * 0.8, 0, Math.PI * 2);
-    ctx.arc(cx - r * 0.4, cy + r * 0.3, r * 0.7, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  };
-
-  const cloudOffset = ((f.diveStep || 0) * 90) % 300;
-  drawVerticalCloudPuff(30, 100 - cloudOffset, 36, 0.45);
-  drawVerticalCloudPuff(50, 260 - cloudOffset, 44, 0.55);
-  drawVerticalCloudPuff(width - 40, 140 - cloudOffset, 40, 0.50);
-  drawVerticalCloudPuff(width - 60, 300 - cloudOffset, 48, 0.60);
-
-  // 4. Diving Pokémon (Supersonic Aerodynamic Nose-Dive)
+  // 4. Gliding / Banking Pokémon Sprite
   if (attackerSprite) {
     ctx.save();
     const isP = f.isAttackerPlayer !== false;
@@ -427,44 +440,26 @@ function drawHighSkyCutscene(
     const scale = isP ? f.pScale : f.eScale;
     const rot = (isP ? f.pRot : f.eRot) || 0;
 
-    const posX = width / 2 + ox;
-    const posY = height / 2 + oy;
-
-    // Aerodynamic Sonic Shockwave V-Cone Trail behind diving Pokemon
+    // Supersonic Wind Trails behind wings
     ctx.save();
-    const coneGrad = ctx.createLinearGradient(posX, posY - 90, posX, posY + 40);
-    coneGrad.addColorStop(0, "rgba(255, 255, 255, 0.0)");
-    coneGrad.addColorStop(0.65, "rgba(186, 230, 253, 0.40)");
-    coneGrad.addColorStop(1, "rgba(255, 255, 255, 0.80)");
-
-    ctx.fillStyle = coneGrad;
-    ctx.beginPath();
-    ctx.moveTo(posX, posY + 45); // Point of Mach cone
-    ctx.lineTo(posX - 42, posY - 105);
-    ctx.lineTo(posX + 42, posY - 105);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-
-    // Sonic shockwave compression rings
-    ctx.save();
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.75)";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.60)";
     ctx.lineWidth = 2.0;
     ctx.beginPath();
-    ctx.ellipse(posX, posY - 20, 34, 10, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.ellipse(posX, posY - 55, 50, 14, 0, 0, Math.PI * 2);
+    ctx.moveTo(ox - 30, oy - 15);
+    ctx.lineTo(ox - 120, oy - 15);
+    ctx.moveTo(ox - 30, oy + 15);
+    ctx.lineTo(ox - 120, oy + 15);
     ctx.stroke();
     ctx.restore();
 
-    // Draw Aerodynamically Compressed Diving Pokémon Sprite
-    ctx.translate(posX, posY);
+    ctx.translate(ox, oy);
     if (rot) ctx.rotate(rot);
     if (scale) ctx.scale(scale.x, scale.y);
     drawFittedBattleSprite(ctx, attackerSprite, 0, 0, 120);
     ctx.restore();
   }
+
+  ctx.restore();
 }
 
 export async function renderBattleMoveGif(options: BattleAnimationOptions): Promise<RenderGifResult> {
@@ -1417,75 +1412,17 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           }
         ];
       } else {
-        // Turn 2: 15 FPS Subtle Lo
+        // Turn 2: Straight-Line Soar -> Diagonal Camera Bank -> Field Vertical Plunge & Slam
         act1Frames = [
-          // 1. Target Battlefield Warning Shadow (66ms x 3 = 200ms)
-          {
-            delay: 66,
-            pOffset: isP1 ? { x: 0, y: -9999 } : { x: 0, y: 0 },
-            eOffset: !isP1 ? { x: 0, y: -9999 } : { x: 0, y: 0 },
-            hidePlayer: isP1,
-            hideEnemy: !isP1,
-            hidePShadow: isP1,
-            hideEShadow: !isP1,
-            loomingShadow: { offsetY: -25, w: 12, h: 4, alpha: 0.35 },
-            isHighSkyCutscene: false,
-            isAttackerPlayer: isP1,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: enemy.hp,
-            playerHp: playerMon.hp,
-            textLineIdx: 1,
-            isBlur: false,
-            moveEffect: a1,
-          },
-          {
-            delay: 66,
-            pOffset: isP1 ? { x: 0, y: -9999 } : { x: 0, y: 0 },
-            eOffset: !isP1 ? { x: 0, y: -9999 } : { x: 0, y: 0 },
-            hidePlayer: isP1,
-            hideEnemy: !isP1,
-            hidePShadow: isP1,
-            hideEShadow: !isP1,
-            loomingShadow: { offsetY: -12, w: 20, h: 6, alpha: 0.55 },
-            isHighSkyCutscene: false,
-            isAttackerPlayer: isP1,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: enemy.hp,
-            playerHp: playerMon.hp,
-            textLineIdx: 1,
-            isBlur: false,
-            moveEffect: a1,
-          },
-          {
-            delay: 66,
-            pOffset: isP1 ? { x: 0, y: -9999 } : { x: 0, y: 0 },
-            eOffset: !isP1 ? { x: 0, y: -9999 } : { x: 0, y: 0 },
-            hidePlayer: isP1,
-            hideEnemy: !isP1,
-            hidePShadow: isP1,
-            hideEShadow: !isP1,
-            loomingShadow: { offsetY: 0, w: 28, h: 9, alpha: 0.75 },
-            isHighSkyCutscene: false,
-            isAttackerPlayer: isP1,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: enemy.hp,
-            playerHp: playerMon.hp,
-            textLineIdx: 1,
-            isBlur: false,
-            moveEffect: a1,
-          },
-
-          // 2. High Sky Supersonic Vertical Nose-Dive Cutscene (66ms x 4 = 264ms)
+          // 1. High Sky Straight-Line Soar (위/아래 명확한 대기 색구분 직선 활공 66ms x 3 = 200ms)
           {
             delay: 66,
             diveStep: 1,
-            pOffset: { x: 0, y: -110 },
-            eOffset: { x: 0, y: -110 },
-            pScale: isP1 ? { x: 0.65, y: 1.45 } : undefined,
-            eScale: !isP1 ? { x: 0.65, y: 1.45 } : undefined,
+            skyCameraTilt: 0.0,
+            pOffset: { x: -20, y: -10 },
+            eOffset: { x: -20, y: -10 },
+            pScale: isP1 ? { x: 1.05, y: 0.95 } : undefined,
+            eScale: !isP1 ? { x: 1.05, y: 0.95 } : undefined,
             pRot: 0,
             eRot: 0,
             isHighSkyCutscene: true,
@@ -1501,12 +1438,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           {
             delay: 66,
             diveStep: 2,
-            pOffset: { x: 0, y: -30 },
-            eOffset: { x: 0, y: -30 },
-            pScale: isP1 ? { x: 0.52, y: 1.75 } : undefined,
-            eScale: !isP1 ? { x: 0.52, y: 1.75 } : undefined,
-            pRot: 0,
-            eRot: 0,
+            skyCameraTilt: 0.0,
+            pOffset: { x: 0, y: -12 },
+            eOffset: { x: 0, y: -12 },
+            pScale: isP1 ? { x: 1.08, y: 0.92 } : undefined,
+            eScale: !isP1 ? { x: 1.08, y: 0.92 } : undefined,
+            pRot: isP1 ? -0.02 : 0,
+            eRot: !isP1 ? -0.02 : 0,
             isHighSkyCutscene: true,
             isAttackerPlayer: isP1,
             showEffect: false,
@@ -1520,12 +1458,35 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           {
             delay: 66,
             diveStep: 3,
-            pOffset: { x: 0, y: 55 },
-            eOffset: { x: 0, y: 55 },
-            pScale: isP1 ? { x: 0.42, y: 2.10 } : undefined,
-            eScale: !isP1 ? { x: 0.42, y: 2.10 } : undefined,
-            pRot: 0,
-            eRot: 0,
+            skyCameraTilt: 0.0,
+            pOffset: { x: 20, y: -8 },
+            eOffset: { x: 20, y: -8 },
+            pScale: isP1 ? { x: 1.12, y: 0.90 } : undefined,
+            eScale: !isP1 ? { x: 1.12, y: 0.90 } : undefined,
+            pRot: isP1 ? 0.01 : 0,
+            eRot: !isP1 ? 0.01 : 0,
+            isHighSkyCutscene: true,
+            isAttackerPlayer: isP1,
+            showEffect: false,
+            hitFlash: false,
+            enemyHp: enemy.hp,
+            playerHp: playerMon.hp,
+            textLineIdx: 1,
+            isBlur: false,
+            moveEffect: a1,
+          },
+
+          // 2. Dynamic Diagonal Camera Bank (대각선으로 기울어지는 카메라 뱅킹 전환 66ms x 3 = 200ms)
+          {
+            delay: 66,
+            diveStep: 4,
+            skyCameraTilt: isP1 ? -0.28 : 0.28,
+            pOffset: { x: 10, y: -5 },
+            eOffset: { x: 10, y: -5 },
+            pScale: isP1 ? { x: 0.95, y: 1.10 } : undefined,
+            eScale: !isP1 ? { x: 0.95, y: 1.10 } : undefined,
+            pRot: isP1 ? -0.15 : 0.15,
+            eRot: !isP1 ? -0.15 : 0.15,
             isHighSkyCutscene: true,
             isAttackerPlayer: isP1,
             showEffect: false,
@@ -1538,13 +1499,34 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           },
           {
             delay: 66,
-            diveStep: 4,
-            pOffset: { x: 0, y: 155 },
-            eOffset: { x: 0, y: 155 },
-            pScale: isP1 ? { x: 0.32, y: 2.50 } : undefined,
-            eScale: !isP1 ? { x: 0.32, y: 2.50 } : undefined,
-            pRot: 0,
-            eRot: 0,
+            diveStep: 5,
+            skyCameraTilt: isP1 ? -0.55 : 0.55,
+            pOffset: { x: 0, y: 10 },
+            eOffset: { x: 0, y: 10 },
+            pScale: isP1 ? { x: 0.80, y: 1.30 } : undefined,
+            eScale: !isP1 ? { x: 0.80, y: 1.30 } : undefined,
+            pRot: isP1 ? -0.32 : 0.32,
+            eRot: !isP1 ? -0.32 : 0.32,
+            isHighSkyCutscene: true,
+            isAttackerPlayer: isP1,
+            showEffect: false,
+            hitFlash: false,
+            enemyHp: enemy.hp,
+            playerHp: playerMon.hp,
+            textLineIdx: 1,
+            isBlur: false,
+            moveEffect: a1,
+          },
+          {
+            delay: 66,
+            diveStep: 6,
+            skyCameraTilt: isP1 ? -0.80 : 0.80,
+            pOffset: { x: -10, y: 30 },
+            eOffset: { x: -10, y: 30 },
+            pScale: isP1 ? { x: 0.65, y: 1.60 } : undefined,
+            eScale: !isP1 ? { x: 0.65, y: 1.60 } : undefined,
+            pRot: isP1 ? -0.50 : 0.50,
+            eRot: !isP1 ? -0.50 : 0.50,
             isHighSkyCutscene: true,
             isAttackerPlayer: isP1,
             showEffect: false,
@@ -1556,7 +1538,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a1,
           },
 
-          // 3. Battlefield Arena Vertical Nose-Dive Plunge (66ms x 2 = 132ms)
+          // 3. Battlefield Arena Vertical Plunge (필드 수직낙하 66ms x 2 = 132ms)
           {
             delay: 66,
             pOffset: isP1 ? { x: 268, y: -360 } : { x: 0, y: 0 },
@@ -2926,75 +2908,17 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           }
         ];
       } else {
-        // Turn 2: 15 FPS Subtle Looming Shadow -> High Sky Gliding -> Pure Vertical Streamlined Compressed Plunge -> Ground Slam Impact
+        // Turn 2: Straight-Line Soar -> Diagonal Camera Bank -> Field Vertical Plunge & Slam
         act2Frames = [
-          // 1. Target Battlefield Warning Shadow (66ms x 3 = 200ms)
-          {
-            delay: 66,
-            pOffset: isP2 ? { x: 0, y: -9999 } : { x: 0, y: 0 },
-            eOffset: !isP2 ? { x: 0, y: -9999 } : { x: 0, y: 0 },
-            hidePlayer: isP2,
-            hideEnemy: !isP2,
-            hidePShadow: isP2,
-            hideEShadow: !isP2,
-            loomingShadow: { offsetY: -25, w: 12, h: 4, alpha: 0.35 },
-            isHighSkyCutscene: false,
-            isAttackerPlayer: isP2,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: a1.enemyHpAfter,
-            playerHp: a1.playerHpAfter,
-            textLineIdx: 3,
-            isBlur: false,
-            moveEffect: a2,
-          },
-          {
-            delay: 66,
-            pOffset: isP2 ? { x: 0, y: -9999 } : { x: 0, y: 0 },
-            eOffset: !isP2 ? { x: 0, y: -9999 } : { x: 0, y: 0 },
-            hidePlayer: isP2,
-            hideEnemy: !isP2,
-            hidePShadow: isP2,
-            hideEShadow: !isP2,
-            loomingShadow: { offsetY: -12, w: 20, h: 6, alpha: 0.55 },
-            isHighSkyCutscene: false,
-            isAttackerPlayer: isP2,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: a1.enemyHpAfter,
-            playerHp: a1.playerHpAfter,
-            textLineIdx: 3,
-            isBlur: false,
-            moveEffect: a2,
-          },
-          {
-            delay: 66,
-            pOffset: isP2 ? { x: 0, y: -9999 } : { x: 0, y: 0 },
-            eOffset: !isP2 ? { x: 0, y: -9999 } : { x: 0, y: 0 },
-            hidePlayer: isP2,
-            hideEnemy: !isP2,
-            hidePShadow: isP2,
-            hideEShadow: !isP2,
-            loomingShadow: { offsetY: 0, w: 28, h: 9, alpha: 0.75 },
-            isHighSkyCutscene: false,
-            isAttackerPlayer: isP2,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: a1.enemyHpAfter,
-            playerHp: a1.playerHpAfter,
-            textLineIdx: 3,
-            isBlur: false,
-            moveEffect: a2,
-          },
-
-          // 2. High Sky Supersonic Vertical Nose-Dive Cutscene (66ms x 4 = 264ms)
+          // 1. High Sky Straight-Line Soar (위/아래 명확한 대기 색구분 직선 활공 66ms x 3 = 200ms)
           {
             delay: 66,
             diveStep: 1,
-            pOffset: { x: 0, y: -110 },
-            eOffset: { x: 0, y: -110 },
-            pScale: isP2 ? { x: 0.65, y: 1.45 } : undefined,
-            eScale: !isP2 ? { x: 0.65, y: 1.45 } : undefined,
+            skyCameraTilt: 0.0,
+            pOffset: { x: -20, y: -10 },
+            eOffset: { x: -20, y: -10 },
+            pScale: isP2 ? { x: 1.05, y: 0.95 } : undefined,
+            eScale: !isP2 ? { x: 1.05, y: 0.95 } : undefined,
             pRot: 0,
             eRot: 0,
             isHighSkyCutscene: true,
@@ -3010,12 +2934,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           {
             delay: 66,
             diveStep: 2,
-            pOffset: { x: 0, y: -30 },
-            eOffset: { x: 0, y: -30 },
-            pScale: isP2 ? { x: 0.52, y: 1.75 } : undefined,
-            eScale: !isP2 ? { x: 0.52, y: 1.75 } : undefined,
-            pRot: 0,
-            eRot: 0,
+            skyCameraTilt: 0.0,
+            pOffset: { x: 0, y: -12 },
+            eOffset: { x: 0, y: -12 },
+            pScale: isP2 ? { x: 1.08, y: 0.92 } : undefined,
+            eScale: !isP2 ? { x: 1.08, y: 0.92 } : undefined,
+            pRot: isP2 ? -0.02 : 0,
+            eRot: !isP2 ? -0.02 : 0,
             isHighSkyCutscene: true,
             isAttackerPlayer: isP2,
             showEffect: false,
@@ -3029,12 +2954,35 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           {
             delay: 66,
             diveStep: 3,
-            pOffset: { x: 0, y: 55 },
-            eOffset: { x: 0, y: 55 },
-            pScale: isP2 ? { x: 0.42, y: 2.10 } : undefined,
-            eScale: !isP2 ? { x: 0.42, y: 2.10 } : undefined,
-            pRot: 0,
-            eRot: 0,
+            skyCameraTilt: 0.0,
+            pOffset: { x: 20, y: -8 },
+            eOffset: { x: 20, y: -8 },
+            pScale: isP2 ? { x: 1.12, y: 0.90 } : undefined,
+            eScale: !isP2 ? { x: 1.12, y: 0.90 } : undefined,
+            pRot: isP2 ? 0.01 : 0,
+            eRot: !isP2 ? 0.01 : 0,
+            isHighSkyCutscene: true,
+            isAttackerPlayer: isP2,
+            showEffect: false,
+            hitFlash: false,
+            enemyHp: a1.enemyHpAfter,
+            playerHp: a1.playerHpAfter,
+            textLineIdx: 3,
+            isBlur: false,
+            moveEffect: a2,
+          },
+
+          // 2. Dynamic Diagonal Camera Bank (대각선으로 기울어지는 카메라 뱅킹 전환 66ms x 3 = 200ms)
+          {
+            delay: 66,
+            diveStep: 4,
+            skyCameraTilt: isP2 ? -0.28 : 0.28,
+            pOffset: { x: 10, y: -5 },
+            eOffset: { x: 10, y: -5 },
+            pScale: isP2 ? { x: 0.95, y: 1.10 } : undefined,
+            eScale: !isP2 ? { x: 0.95, y: 1.10 } : undefined,
+            pRot: isP2 ? -0.15 : 0.15,
+            eRot: !isP2 ? -0.15 : 0.15,
             isHighSkyCutscene: true,
             isAttackerPlayer: isP2,
             showEffect: false,
@@ -3047,13 +2995,34 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           },
           {
             delay: 66,
-            diveStep: 4,
-            pOffset: { x: 0, y: 155 },
-            eOffset: { x: 0, y: 155 },
-            pScale: isP2 ? { x: 0.32, y: 2.50 } : undefined,
-            eScale: !isP2 ? { x: 0.32, y: 2.50 } : undefined,
-            pRot: 0,
-            eRot: 0,
+            diveStep: 5,
+            skyCameraTilt: isP2 ? -0.55 : 0.55,
+            pOffset: { x: 0, y: 10 },
+            eOffset: { x: 0, y: 10 },
+            pScale: isP2 ? { x: 0.80, y: 1.30 } : undefined,
+            eScale: !isP2 ? { x: 0.80, y: 1.30 } : undefined,
+            pRot: isP2 ? -0.32 : 0.32,
+            eRot: !isP2 ? -0.32 : 0.32,
+            isHighSkyCutscene: true,
+            isAttackerPlayer: isP2,
+            showEffect: false,
+            hitFlash: false,
+            enemyHp: a1.enemyHpAfter,
+            playerHp: a1.playerHpAfter,
+            textLineIdx: 3,
+            isBlur: false,
+            moveEffect: a2,
+          },
+          {
+            delay: 66,
+            diveStep: 6,
+            skyCameraTilt: isP2 ? -0.80 : 0.80,
+            pOffset: { x: -10, y: 30 },
+            eOffset: { x: -10, y: 30 },
+            pScale: isP2 ? { x: 0.65, y: 1.60 } : undefined,
+            eScale: !isP2 ? { x: 0.65, y: 1.60 } : undefined,
+            pRot: isP2 ? -0.50 : 0.50,
+            eRot: !isP2 ? -0.50 : 0.50,
             isHighSkyCutscene: true,
             isAttackerPlayer: isP2,
             showEffect: false,
@@ -3065,7 +3034,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a2,
           },
 
-          // 3. Battlefield Arena Vertical Nose-Dive Plunge (66ms x 2 = 132ms)
+          // 3. Battlefield Arena Vertical Plunge (필드 수직낙하 66ms x 2 = 132ms)
           {
             delay: 66,
             pOffset: isP2 ? { x: 268, y: -360 } : { x: 0, y: 0 },
