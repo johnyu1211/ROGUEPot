@@ -621,8 +621,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const targetCtx = f.isBlur ? offCtx : ctx;
     targetCtx.clearRect(0, 0, width, height);
 
-    if (arena.bg) targetCtx.drawImage(arena.bg, 0, 0, width, 275);
-    else { targetCtx.fillStyle = "#487848"; targetCtx.fillRect(0, 0, width, 275); }
+    if (arena.bg) targetCtx.drawImage(arena.bg, 0, 0, width, height);
+    else { targetCtx.fillStyle = "#487848"; targetCtx.fillRect(0, 0, width, height); }
 
     if (arena.b) {
       targetCtx.drawImage(arena.b, ep.x, ep.y, enemyPlatW, enemyPlatH);
@@ -718,9 +718,12 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     } else {
       // Base empty dialogue box drawn on offCanvas before full-frame blur
       const boxY = 270;
-      targetCtx.fillStyle = "#131924";
+      const glassGrad = targetCtx.createLinearGradient(0, boxY, 0, height);
+      glassGrad.addColorStop(0, "rgba(12, 18, 28, 0.72)");
+      glassGrad.addColorStop(1, "rgba(8, 12, 20, 0.84)");
+      targetCtx.fillStyle = glassGrad;
       targetCtx.fillRect(0, boxY, width, height - boxY);
-      targetCtx.strokeStyle = "#0D9488";
+      targetCtx.strokeStyle = "#F59E0B";
       targetCtx.lineWidth = 2.5;
       targetCtx.beginPath();
       targetCtx.moveTo(0, boxY);
@@ -825,8 +828,8 @@ export async function renderBattleFaintGif(options: BattleAnimationOptions): Pro
     const targetCtx = f.isBlur ? offFaintCtx : ctx;
     targetCtx.clearRect(0, 0, width, height);
 
-    if (arena.bg) targetCtx.drawImage(arena.bg, 0, 0, width, 275);
-    else { targetCtx.fillStyle = "#487848"; targetCtx.fillRect(0, 0, width, 275); }
+    if (arena.bg) targetCtx.drawImage(arena.bg, 0, 0, width, height);
+    else { targetCtx.fillStyle = "#487848"; targetCtx.fillRect(0, 0, width, height); }
 
     if (arena.b) {
       targetCtx.drawImage(arena.b, ep.x, ep.y, enemyPlatW, enemyPlatH);
@@ -861,9 +864,12 @@ export async function renderBattleFaintGif(options: BattleAnimationOptions): Pro
     } else {
       // Base empty dialogue box drawn on offCanvas before full-frame blur
       const boxY = 270;
-      targetCtx.fillStyle = "#131924";
+      const glassGrad = targetCtx.createLinearGradient(0, boxY, 0, height);
+      glassGrad.addColorStop(0, "rgba(12, 18, 28, 0.72)");
+      glassGrad.addColorStop(1, "rgba(8, 12, 20, 0.84)");
+      targetCtx.fillStyle = glassGrad;
       targetCtx.fillRect(0, boxY, width, height - boxY);
-      targetCtx.strokeStyle = "#0D9488";
+      targetCtx.strokeStyle = "#F59E0B";
       targetCtx.lineWidth = 2.5;
       targetCtx.beginPath();
       targetCtx.moveTo(0, boxY);
@@ -967,8 +973,8 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
     const targetCtx = f.isBlur ? offEntryCtx : ctx;
     targetCtx.clearRect(0, 0, width, height);
 
-    if (arena.bg) targetCtx.drawImage(arena.bg, 0, 0, width, 275);
-    else { targetCtx.fillStyle = "#487848"; targetCtx.fillRect(0, 0, width, 275); }
+    if (arena.bg) targetCtx.drawImage(arena.bg, 0, 0, width, height);
+    else { targetCtx.fillStyle = "#487848"; targetCtx.fillRect(0, 0, width, height); }
 
     // Sliding Platforms
     if (arena.b) {
@@ -999,9 +1005,12 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
     } else {
       // Base empty dialogue box drawn on offEntryCanvas before full-frame blur
       const boxY = 270;
-      targetCtx.fillStyle = "#131924";
+      const glassGrad = targetCtx.createLinearGradient(0, boxY, 0, height);
+      glassGrad.addColorStop(0, "rgba(12, 18, 28, 0.72)");
+      glassGrad.addColorStop(1, "rgba(8, 12, 20, 0.84)");
+      targetCtx.fillStyle = glassGrad;
       targetCtx.fillRect(0, boxY, width, height - boxY);
-      targetCtx.strokeStyle = "#0D9488";
+      targetCtx.strokeStyle = "#F59E0B";
       targetCtx.lineWidth = 2.5;
       targetCtx.beginPath();
       targetCtx.moveTo(0, boxY);
@@ -1115,17 +1124,22 @@ function renderBattleHuds(ctx: any, battle: BattleState, isKo: boolean, pbAssets
  */
 function renderBattleDialogue(ctx: any, width: number, height: number, dialogueLines: string[], textLineIdx: number) {
   const boxY = 270;
-  ctx.fillStyle = "#131924";
+  const glassGrad = ctx.createLinearGradient(0, boxY, 0, height);
+  glassGrad.addColorStop(0, "rgba(12, 18, 28, 0.72)");
+  glassGrad.addColorStop(1, "rgba(8, 12, 20, 0.84)");
+  ctx.fillStyle = glassGrad;
   ctx.fillRect(0, boxY, width, height - boxY);
 
-  ctx.strokeStyle = "#0D9488";
+  // Top Accent Amber Line
+  ctx.strokeStyle = "#F59E0B";
   ctx.lineWidth = 2.5;
   ctx.beginPath();
   ctx.moveTo(0, boxY);
   ctx.lineTo(width, boxY);
   ctx.stroke();
 
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+  // Subtle Inner Highlight Line
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(0, boxY + 2);
@@ -1134,8 +1148,7 @@ function renderBattleDialogue(ctx: any, width: number, height: number, dialogueL
 
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
-  ctx.font = "bold 14px DungGeunMo";
-  ctx.fillStyle = "#FFFFFF";
+  ctx.font = "bold 15px DungGeunMo";
 
   if (textLineIdx > 0) {
     const fullText = dialogueLines.join("\n");
@@ -1143,7 +1156,12 @@ function renderBattleDialogue(ctx: any, width: number, height: number, dialogueL
     const available = wrapped.slice(0, textLineIdx);
     const linesToShow = available.length > 3 ? available.slice(-3) : available;
     linesToShow.forEach((line: string, lIdx: number) => {
-      ctx.fillText(line, 24, boxY + 16 + lIdx * 26);
+      const textY = boxY + 16 + lIdx * 26;
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.85)";
+      ctx.lineWidth = 3.5;
+      ctx.strokeText(line, 24, textY);
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillText(line, 24, textY);
     });
   }
 }
