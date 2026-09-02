@@ -815,7 +815,7 @@ export function drawStatDropEffect(ctx: any, pos: { x: number; y: number }, prog
  * 4 horizontal blocky fingers with rounded caps extending to the left, thumb folded on top-right,
  * charging red/orange flash and slamming down with orange/amber impact embers!
  */
-export function drawKarateChopEffect(ctx: any, target: { x: number; y: number }, step: number = 3) {
+export function drawKarateChopEffect(ctx: any, target: { x: number; y: number }, step: number = 4) {
   ctx.save();
 
   const cx = target.x;
@@ -827,17 +827,22 @@ export function drawKarateChopEffect(ctx: any, target: { x: number; y: number },
   let showImpact = false;
 
   if (step === 1) {
-    // Step 1: Hover & Pre-chop dip (Black Hand)
-    handOy = -48;
-    rotDeg = -6;
+    // Step 1: Hand appears hovering above target head (Black Hand)
+    handOy = -62;
+    rotDeg = 4;
     isRedFlash = false;
   } else if (step === 2) {
-    // Step 2: High windup tension + Red/Orange Flash charging!
-    handOy = -70;
-    rotDeg = 12;
+    // Step 2: 살짝 아래로 틱 흔들림 (Pre-chop dip & micro-shake)
+    handOy = -46;
+    rotDeg = -8;
+    isRedFlash = false;
+  } else if (step === 3) {
+    // Step 3: 위로 살짝 올라갔다가 멈칫 장전 (Rise up & Red charging hold)
+    handOy = -76;
+    rotDeg = 14;
     isRedFlash = true;
   } else {
-    // Step 3: SLAM CHOP DIRECTLY ONTO HEAD! (Solid Black Hand + Orange Embers)
+    // Step 4: 팍! 하고 내려침 (Devastating slam chop impact on head + Orange embers!)
     handOy = -15;
     rotDeg = -4;
     isRedFlash = false;
