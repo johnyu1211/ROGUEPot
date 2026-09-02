@@ -430,63 +430,76 @@ export function drawSwordsDanceEffect(ctx: any, userPos: { x: number; y: number 
 }
 
 /**
- * 015 풀베기 (Cut): Clean, Crisp Diagonal Blade Slash (Thin Outer White Rim, Inner Ultra-Vibrant Electric Yellow Core)
+ * 015 풀베기 (Cut): Razor-Sharp Tapered Straight Slash (Sharp Needle Tips at Both Ends, Thin Outer White Rim, Vibrant Yellow Core)
  */
 export function drawCutEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
   ctx.save();
   const tx = target.x;
   const ty = target.y - 10;
 
-  // Clean Diagonal Blade Slash Helper (Thin Outer White Rim, Vivid Pure Electric Yellow)
-  const drawSlashLine = (
-    x1: number,
-    y1: number,
-    x2: number,
-    y2: number,
-    outerWidth: number,
-    innerWidth: number,
-    alpha: number
+  // Straight Needle Slash (Points at both ends taper to razor-sharp 0px points)
+  const drawSharpNeedleSlash = (
+    cx: number,
+    cy: number,
+    angle: number,
+    length: number = 170,
+    outerThick: number = 7.5,
+    innerThick: number = 5.6,
+    alpha: number = 1.0
   ) => {
     ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(angle);
     ctx.globalAlpha = alpha;
-    ctx.lineCap = "round";
 
-    // 1. Thin Outer White Rim (바깥쪽 얇은 흰색 테두리 #FFFFFF)
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = outerWidth;
+    const halfL = length / 2;
+    const halfOuter = outerThick / 2;
+    const halfInner = innerThick / 2;
+
+    // 1. Outer White Razor Layer (양 끝이 0px 바늘 끝으로 뾰족하게 닫히는 날카로운 흰색 테두리)
+    ctx.fillStyle = "#FFFFFF";
     ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.stroke();
+    ctx.moveTo(-halfL, 0);       // sharp 0px needle tip left
+    ctx.lineTo(0, -halfOuter);   // top center
+    ctx.lineTo(halfL, 0);        // sharp 0px needle tip right
+    ctx.lineTo(0, halfOuter);    // bottom center
+    ctx.closePath();
+    ctx.fill();
 
     // 2. Middle Ultra-Vibrant Electric Lemon Yellow Core (쨍하고 맑은 고채도 노란색 #FFE600)
-    ctx.strokeStyle = "#FFE600";
-    ctx.lineWidth = innerWidth;
+    ctx.fillStyle = "#FFE600";
     ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.stroke();
+    ctx.moveTo(-halfL + 6, 0);   // sharp needle tip inside
+    ctx.lineTo(0, -halfInner);
+    ctx.lineTo(halfL - 6, 0);
+    ctx.lineTo(0, halfInner);
+    ctx.closePath();
+    ctx.fill();
 
-    // 3. Crisp Bright Center Line (#FFFF88)
-    ctx.strokeStyle = "#FFFF88";
-    ctx.lineWidth = Math.max(1.5, innerWidth * 0.35);
+    // 3. Crisp Bright Center Line (#FFFF99)
+    ctx.fillStyle = "#FFFF99";
     ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.stroke();
+    ctx.moveTo(-halfL + 20, 0);
+    ctx.lineTo(0, -halfInner * 0.35);
+    ctx.lineTo(halfL - 20, 0);
+    ctx.lineTo(0, halfInner * 0.35);
+    ctx.closePath();
+    ctx.fill();
 
     ctx.restore();
   };
 
+  const slashAngle = -Math.PI / 4; // -45 deg diagonal (Straight line from top-right to bottom-left)
+
   if (step === 1) {
-    // Step 1: Swift diagonal slash begins from top-right past center
-    drawSlashLine(tx + 65, ty - 65, tx - 25, ty + 25, 7.0, 5.4, 0.95);
+    // Step 1: Swift diagonal slash beginning
+    drawSharpNeedleSlash(tx, ty, slashAngle, 145, 6.5, 4.8, 0.95);
   } else if (step === 2) {
-    // Step 2: Full bright diagonal blade cleave across defender
-    drawSlashLine(tx + 80, ty - 80, tx - 80, ty + 80, 8.5, 6.8, 1.0);
+    // Step 2: Full razor-sharp blade cleave across defender
+    drawSharpNeedleSlash(tx, ty, slashAngle, 175, 8.0, 6.2, 1.0);
   } else if (step === 3) {
-    // Step 3: Slash fades out
-    drawSlashLine(tx + 75, ty - 75, tx - 75, ty + 75, 6.0, 4.6, 0.45);
+    // Step 3: Fading razor trail
+    drawSharpNeedleSlash(tx, ty, slashAngle, 155, 5.5, 4.0, 0.45);
   }
 
   ctx.restore();
