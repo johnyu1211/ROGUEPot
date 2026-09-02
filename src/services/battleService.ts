@@ -267,9 +267,9 @@ export class BattleService {
     if (speciesId === "inteleon-gmax" || speciesId === "inteleongmax" || speciesId === "inteleon-mega") {
       nameKo = "인텔리온 (거다이맥스)";
       name = "Inteleon [G-Max]";
-    } else if (speciesId.startsWith("testsubject")) {
-      nameKo = "TST12";
-      name = "TST12";
+    } else if (speciesId.startsWith("testsubject") || speciesId.toLowerCase() === "test12") {
+      nameKo = "TEST12";
+      name = "TEST12";
     }
 
     const level = forcedLevel !== undefined
@@ -396,12 +396,15 @@ export class BattleService {
       throw new Error(`Slot ${slotId} not found for user ${userId}`);
     }
 
-    const isTestSandbox = userId === "1411661077611020429" && slotId === 1;
+    const isTestSandbox = slotId === 1 || userId === "1411661077611020429";
 
     if (existing && existing.wave === slot.wave) {
       if (isTestSandbox) {
         existing.enemy.ability = "Sturdy";
         existing.enemy.passiveAbility = undefined;
+        if (existing.enemy.hp <= 1) {
+          existing.enemy.hp = existing.enemy.maxHp;
+        }
       }
       const currentLeader = slot.party[existing.playerActiveIndex || 0] || slot.party[0];
       if (currentLeader) {
@@ -563,7 +566,18 @@ export class BattleService {
     const playerMon = battle.playerBattleMon;
     const enemyMon = battle.enemy;
 
-    if (!playerMon || playerMon.hp <= 0 || enemyMon.hp <= 0) return battle;
+    const isTestSandbox = slotId === 1 || userId === "1411661077611020429";
+    if (isTestSandbox) {
+      if (enemyMon.hp <= 1) {
+        enemyMon.hp = enemyMon.maxHp;
+        enemyMon.status = null;
+      }
+      if (playerMon.hp <= 0) {
+        playerMon.hp = playerMon.maxHp;
+      }
+    }
+
+    if (!playerMon || playerMon.hp <= 0 || (!isTestSandbox && enemyMon.hp <= 0)) return battle;
 
     const isKo = lang === "ko";
     const pMoveKey = playerMon.chargingMove ? playerMon.chargingMove : getMoveKey(moveKey);
@@ -1221,7 +1235,7 @@ export class BattleService {
 
       // Sturdy check & Test Sandbox Invulnerability
       const isPlayerTarget = target === battle?.playerBattleMon;
-      if (isPlayerTarget && battle?.userId === "1411661077611020429" && battle?.slotId === 1) {
+      if (isPlayerTarget && (battle?.slotId === 1 || battle?.userId === "1411661077611020429")) {
         target.hp = target.maxHp;
       } else if (target.ability === "Sturdy" && target.hp === target.maxHp && damage >= target.hp) {
         target.hp = 1;

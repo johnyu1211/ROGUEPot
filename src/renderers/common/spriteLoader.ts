@@ -82,7 +82,7 @@ export async function getPokemonSprite(
     if (!allowFetch) return null;
 
     // 1. Resolve Dex number
-    const isTestSubject = clean.startsWith("testsubject");
+    const isTestSubject = clean.startsWith("testsubject") || clean === "test12" || clean === "tst12";
     let lookupKey = isTestSubject ? "ditto" : clean;
 
     let dexNo: number | null = null;
