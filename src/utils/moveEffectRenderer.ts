@@ -2220,7 +2220,7 @@ export function drawViceGripEffect(ctx: any, target: { x: number; y: number }, s
 }
 
 /**
- * 012 가위자르기 (Guillotine): Lethal Giant Guillotine Shears + Screen-Splitting Fatal X-Slash Execution
+ * 012 가위자르기 (Guillotine): Pure Lethal Scissor Blade Cross Cut (X-Motion Execution)
  */
 export function drawGuillotineEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
   ctx.save();
@@ -2228,47 +2228,68 @@ export function drawGuillotineEffect(ctx: any, target: { x: number; y: number },
   const targetX = target.x;
   const targetY = target.y - 12;
 
-  // Step 1: Giant Menacing Guillotine Blades Descend & Open Wide (alpha: 1.0)
-  // Step 2: LETHAL GUILLOTINE EXECUTION SNAP: Giant Cross Shear Slash + Dark Shock Aura (Hit Flash)
-  // Step 3: Massive Shockwave Cross Lines Fade & Heavy Sparks (alpha: 0.30)
+  // Step 1: Giant Scissor Blades Crossing Inward (Opening X-Stance)
+  // Step 2: LETHAL SCISSOR EXECUTION SNAP: Giant Fatal X-Cross Cut + Hit Flash & Starburst
+  // Step 3: Fading Cross Cut Shockwave Lines & Critical Spark Burst
   if (step === 1) {
-    // 1. Dark Menacing Aura
+    // 1. Dark Execution Backdrop Aura
     const aura = ctx.createRadialGradient(targetX, targetY - 14, 6, targetX, targetY - 14, 65);
-    aura.addColorStop(0, "rgba(220, 38, 38, 0.75)");
-    aura.addColorStop(0.5, "rgba(127, 29, 29, 0.55)");
+    aura.addColorStop(0, "rgba(220, 38, 38, 0.65)");
+    aura.addColorStop(0.5, "rgba(127, 29, 29, 0.45)");
     aura.addColorStop(1, "rgba(0, 0, 0, 0)");
     ctx.fillStyle = aura;
     ctx.beginPath();
     ctx.arc(targetX, targetY - 14, 65, 0, Math.PI * 2);
     ctx.fill();
 
-    // 2. Giant Guillotine Pincers Opening Wide
-    drawPincerClaw(ctx, targetX - 32, targetY - 22, true, 1.55, true);
-    drawPincerClaw(ctx, targetX + 32, targetY - 22, false, 1.55, true);
+    // 2. Incoming Scissor Blade Crossing Lines (Open Scissors)
+    ctx.save();
+    ctx.strokeStyle = "#DC2626";
+    ctx.lineWidth = 6.0;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    // Top-Left to Bottom-Right Blade
+    ctx.moveTo(targetX - 45, targetY - 14 - 45);
+    ctx.lineTo(targetX + 45, targetY - 14 + 45);
+    // Top-Right to Bottom-Left Blade
+    ctx.moveTo(targetX + 45, targetY - 14 - 45);
+    ctx.lineTo(targetX - 45, targetY - 14 + 45);
+    ctx.stroke();
+
+    // Inner Silver-White Blade Edge
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    ctx.moveTo(targetX - 45, targetY - 14 - 45);
+    ctx.lineTo(targetX + 45, targetY - 14 + 45);
+    ctx.moveTo(targetX + 45, targetY - 14 - 45);
+    ctx.lineTo(targetX - 45, targetY - 14 + 45);
+    ctx.stroke();
+    ctx.restore();
   } else if (step === 2) {
-    // Step 2: FATAL EXECUTION CROSS CUT
+    // Step 2: FATAL EXECUTION CROSS CUT SNAP
     // 1. Giant Lethal Diagonal Cross Lines
     ctx.save();
     ctx.strokeStyle = "#DC2626";
-    ctx.lineWidth = 8.0;
+    ctx.lineWidth = 9.0;
     ctx.lineCap = "round";
     ctx.beginPath();
     // Slash 1 (\)
-    ctx.moveTo(targetX - 55, targetY - 14 - 55);
-    ctx.lineTo(targetX + 55, targetY - 14 + 55);
+    ctx.moveTo(targetX - 60, targetY - 14 - 60);
+    ctx.lineTo(targetX + 60, targetY - 14 + 60);
     // Slash 2 (/)
-    ctx.moveTo(targetX + 55, targetY - 14 - 55);
-    ctx.lineTo(targetX - 55, targetY - 14 + 55);
+    ctx.moveTo(targetX + 60, targetY - 14 - 60);
+    ctx.lineTo(targetX - 60, targetY - 14 + 60);
     ctx.stroke();
 
-    // Inner White Hot Blade Core
+    // Inner White Hot Scissor Core
     ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 3.5;
+    ctx.lineWidth = 3.8;
     ctx.beginPath();
-    ctx.moveTo(targetX - 55, targetY - 14 - 55);
-    ctx.lineTo(targetX + 55, targetY - 14 + 55);
-    ctx.moveTo(targetX + 55, targetY - 14 - 55);
-    ctx.lineTo(targetX - 55, targetY - 14 + 55);
+    ctx.moveTo(targetX - 60, targetY - 14 - 60);
+    ctx.lineTo(targetX + 60, targetY - 14 + 60);
+    ctx.moveTo(targetX + 60, targetY - 14 - 60);
+    ctx.lineTo(targetX - 60, targetY - 14 + 60);
     ctx.stroke();
     ctx.restore();
 
@@ -2278,12 +2299,12 @@ export function drawGuillotineEffect(ctx: any, target: { x: number; y: number },
 
     // 3. Heavy Lethal Sparks
     const sparks = [
-      { ox: -35, oy: -35, r: 4.0, c: "#FFFFFF" },
-      { ox: 35, oy: -35, r: 4.0, c: "#FEF08A" },
-      { ox: -35, oy: 35, r: 4.0, c: "#DC2626" },
-      { ox: 35, oy: 35, r: 4.0, c: "#FFFFFF" },
-      { ox: 0, oy: -48, r: 3.5, c: "#EF4444" },
-      { ox: 0, oy: 48, r: 3.5, c: "#FEF08A" },
+      { ox: -36, oy: -36, r: 4.0, c: "#FFFFFF" },
+      { ox: 36, oy: -36, r: 4.0, c: "#FEF08A" },
+      { ox: -36, oy: 36, r: 4.0, c: "#DC2626" },
+      { ox: 36, oy: 36, r: 4.0, c: "#FFFFFF" },
+      { ox: 0, oy: -50, r: 3.5, c: "#EF4444" },
+      { ox: 0, oy: 50, r: 3.5, c: "#FEF08A" },
     ];
     for (const sp of sparks) {
       ctx.fillStyle = sp.c;
@@ -2296,12 +2317,12 @@ export function drawGuillotineEffect(ctx: any, target: { x: number; y: number },
     ctx.save();
     ctx.globalAlpha = 0.30;
     ctx.strokeStyle = "#EF4444";
-    ctx.lineWidth = 4.0;
+    ctx.lineWidth = 4.5;
     ctx.beginPath();
-    ctx.moveTo(targetX - 65, targetY - 14 - 65);
-    ctx.lineTo(targetX + 65, targetY - 14 + 65);
-    ctx.moveTo(targetX + 65, targetY - 14 - 65);
-    ctx.lineTo(targetX - 65, targetY - 14 + 65);
+    ctx.moveTo(targetX - 70, targetY - 14 - 70);
+    ctx.lineTo(targetX + 70, targetY - 14 + 70);
+    ctx.moveTo(targetX + 70, targetY - 14 - 70);
+    ctx.lineTo(targetX - 70, targetY - 14 + 70);
     ctx.stroke();
 
     drawMiniRetroStar(ctx, targetX, targetY - 14, 18, "rgba(239, 68, 68, 0.4)");
