@@ -162,52 +162,41 @@ export function drawStatBoostEffect(ctx: any, pos: { x: number; y: number }, pro
   ctx.save();
   const clampedProgress = Math.min(1.0, Math.max(0.0, progress));
 
-  // Pure rising arrow particles spanning across the sprite horizontal bottom baseline
-  const arrowConfigs = [
-    { offsetX: -36, delay: 0.00, speed: 75, size: 10, color: "#EF4444" },
-    { offsetX: -22, delay: 0.20, speed: 85, size: 12, color: "#F59E0B" },
-    { offsetX: -8,  delay: 0.08, speed: 90, size: 14, color: "#FDE047" },
-    { offsetX: 8,   delay: 0.16, speed: 90, size: 14, color: "#FDE047" },
-    { offsetX: 22,  delay: 0.04, speed: 85, size: 12, color: "#F59E0B" },
-    { offsetX: 36,  delay: 0.24, speed: 75, size: 10, color: "#EF4444" },
+  // Glowing circular orb particles rising from the sprite horizontal bottom baseline
+  const orbConfigs = [
+    { offsetX: -38, delay: 0.00, speed: 80, radius: 5.0, color: "rgba(239, 68, 68, 0.85)" },
+    { offsetX: -26, delay: 0.25, speed: 90, radius: 6.5, color: "rgba(245, 158, 11, 0.90)" },
+    { offsetX: -14, delay: 0.10, speed: 85, radius: 5.5, color: "rgba(253, 224, 71, 0.95)" },
+    { offsetX: -2,  delay: 0.35, speed: 95, radius: 7.0, color: "rgba(254, 240, 138, 0.95)" },
+    { offsetX: 10,  delay: 0.05, speed: 90, radius: 6.0, color: "rgba(253, 224, 71, 0.95)" },
+    { offsetX: 22,  delay: 0.20, speed: 85, radius: 5.5, color: "rgba(245, 158, 11, 0.90)" },
+    { offsetX: 34,  delay: 0.40, speed: 80, radius: 4.5, color: "rgba(239, 68, 68, 0.85)" },
   ];
 
-  for (const cfg of arrowConfigs) {
+  for (const cfg of orbConfigs) {
     const localProgress = (clampedProgress + cfg.delay) % 1.0;
-    // Starts at sprite bottom baseline (pos.y) and rises upward
-    const arrowY = pos.y - (localProgress * cfg.speed);
-    const arrowX = pos.x + cfg.offsetX;
+    // Starts exactly at sprite bottom baseline (pos.y) and rises upward
+    const orbY = pos.y - (localProgress * cfg.speed);
+    const orbX = pos.x + cfg.offsetX;
     const alpha = Math.sin(localProgress * Math.PI);
 
     if (alpha <= 0.05) continue;
 
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.shadowColor = cfg.color;
-    ctx.shadowBlur = 8;
-    ctx.strokeStyle = cfg.color;
-    ctx.lineWidth = 3.0;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
 
-    const s = cfg.size;
-    ctx.beginPath();
-    ctx.moveTo(arrowX - s, arrowY + s * 0.55);
-    ctx.lineTo(arrowX, arrowY - s * 0.45);
-    ctx.lineTo(arrowX + s, arrowY + s * 0.55);
-    ctx.stroke();
+    const r = cfg.radius * (0.75 + 0.35 * Math.sin(localProgress * Math.PI));
 
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 1.4;
-    ctx.beginPath();
-    ctx.moveTo(arrowX - s * 0.7, arrowY + s * 0.45);
-    ctx.lineTo(arrowX, arrowY - s * 0.35);
-    ctx.lineTo(arrowX + s * 0.7, arrowY + s * 0.45);
-    ctx.stroke();
-
+    // Outer warm glowing circle
     ctx.fillStyle = cfg.color;
     ctx.beginPath();
-    ctx.arc(arrowX, arrowY + s * 1.0, 2.2, 0, Math.PI * 2);
+    ctx.arc(orbX, orbY, r, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Inner bright white center
+    ctx.fillStyle = "#FFFFFF";
+    ctx.beginPath();
+    ctx.arc(orbX, orbY, r * 0.45, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.restore();
