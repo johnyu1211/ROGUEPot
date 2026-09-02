@@ -232,18 +232,28 @@ export function drawWhirlwindEffect(ctx: any, target: { x: number; y: number }, 
     streams.push(pts);
   }
 
-  // PASS A: Render Back-side of 3D Helices (z <= 0)
+  // PASS A: Render Back-side of 3D Helices (z <= 0) - Thick translucent air ribbons wrapping behind
   for (const pts of streams) {
     ctx.save();
     ctx.lineCap = "round";
     for (let i = 0; i < pts.length - 1; i++) {
       const p1 = pts[i];
       const p2 = pts[i + 1];
-      if (p1.z <= 0.1 || p2.z <= 0.1) {
-        const segAlpha = globalAlpha * (0.35 + (1 - p1.t) * 0.35);
+      if (p1.z <= 0.15 || p2.z <= 0.15) {
+        const segAlpha = globalAlpha * (0.28 + (1 - p1.t) * 0.28);
         ctx.globalAlpha = segAlpha;
-        ctx.strokeStyle = "rgba(186, 230, 253, 0.60)";
-        ctx.lineWidth = 2.2;
+
+        // Wide soft back-swath
+        ctx.strokeStyle = "rgba(186, 230, 253, 0.35)";
+        ctx.lineWidth = 9.0 + p1.t * 7.0; // 9px at base to 16px at top
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+
+        // Inner soft highlight
+        ctx.strokeStyle = "rgba(224, 242, 254, 0.45)";
+        ctx.lineWidth = 3.5 + p1.t * 2.5;
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
         ctx.lineTo(p2.x, p2.y);
@@ -255,13 +265,13 @@ export function drawWhirlwindEffect(ctx: any, target: { x: number; y: number }, 
 
   // PASS B: Volumetric 3D Translucent Funnel Body (Conical Air Core Shading)
   ctx.save();
-  ctx.globalAlpha = globalAlpha * 0.40;
+  ctx.globalAlpha = globalAlpha * 0.35;
   const coneGrad = ctx.createLinearGradient(tx - rTop, 0, tx + rTop, 0);
-  coneGrad.addColorStop(0, "rgba(255, 255, 255, 0.60)");
-  coneGrad.addColorStop(0.25, "rgba(224, 242, 254, 0.45)");
-  coneGrad.addColorStop(0.5, "rgba(186, 230, 253, 0.18)"); // transparent core reveals interior 3D depth!
-  coneGrad.addColorStop(0.75, "rgba(224, 242, 254, 0.45)");
-  coneGrad.addColorStop(1, "rgba(255, 255, 255, 0.60)");
+  coneGrad.addColorStop(0, "rgba(255, 255, 255, 0.55)");
+  coneGrad.addColorStop(0.25, "rgba(224, 242, 254, 0.38)");
+  coneGrad.addColorStop(0.5, "rgba(186, 230, 253, 0.12)"); // hollow transparent core gives true 3D cylinder depth
+  coneGrad.addColorStop(0.75, "rgba(224, 242, 254, 0.38)");
+  coneGrad.addColorStop(1, "rgba(255, 255, 255, 0.55)");
 
   ctx.fillStyle = coneGrad;
   ctx.beginPath();
@@ -273,28 +283,36 @@ export function drawWhirlwindEffect(ctx: any, target: { x: number; y: number }, 
   ctx.fill();
   ctx.restore();
 
-  // PASS C: Render Front-side of 3D Helices (z > 0) with Brilliant Glowing White Rim
+  // PASS C: Render Front-side of 3D Helices (z > 0) with Thick Translucent Luminous Wind Bands
   for (const pts of streams) {
     ctx.save();
     ctx.lineCap = "round";
     for (let i = 0; i < pts.length - 1; i++) {
       const p1 = pts[i];
       const p2 = pts[i + 1];
-      if (p1.z > -0.1 && p2.z > -0.1) {
-        const segAlpha = globalAlpha * (0.65 + p1.z * 0.35);
+      if (p1.z > -0.15 && p2.z > -0.15) {
+        const segAlpha = globalAlpha * (0.55 + p1.z * 0.40);
         ctx.globalAlpha = segAlpha;
 
-        // Outer sky-blue ribbon glow
-        ctx.strokeStyle = "rgba(224, 242, 254, 0.85)";
-        ctx.lineWidth = 4.2;
+        // 1. Broad outer translucent wind swath (14px to 22px wide!)
+        ctx.strokeStyle = "rgba(224, 242, 254, 0.48)";
+        ctx.lineWidth = 14.0 + p1.t * 8.0;
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
         ctx.lineTo(p2.x, p2.y);
         ctx.stroke();
 
-        // Inner brilliant pure white cutting core
+        // 2. Medium bright translucent body (7px to 11px wide)
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.65)";
+        ctx.lineWidth = 7.0 + p1.t * 4.0;
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+
+        // 3. Crisp white center filament (2.5px to 3.5px wide)
         ctx.strokeStyle = "#FFFFFF";
-        ctx.lineWidth = 2.2;
+        ctx.lineWidth = 2.5 + p1.t * 1.0;
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
         ctx.lineTo(p2.x, p2.y);
