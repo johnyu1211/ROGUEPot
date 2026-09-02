@@ -914,32 +914,7 @@ export function drawDoubleSlapEffect(ctx: any, target: { x: number; y: number },
   const scaleX = isLeft ? 1 : -1;
   const alpha = isFade ? 0.32 : 1.0;
 
-  // 1. Slap Motion Arc / Wind Streaks
-  ctx.save();
-  ctx.strokeStyle = isFade ? "rgba(254, 240, 138, 0.4)" : "rgba(254, 240, 138, 0.9)";
-  ctx.lineWidth = isFade ? 3.5 : 4.5;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  if (isLeft) {
-    ctx.arc(target.x - 10, target.y - 20, isFade ? 40 : 36, Math.PI * 0.85, Math.PI * 1.6);
-  } else {
-    ctx.arc(target.x + 10, target.y - 20, isFade ? 40 : 36, Math.PI * 1.4, Math.PI * 2.15);
-  }
-  ctx.stroke();
-
-  // Outer white speed trail
-  ctx.strokeStyle = isFade ? "rgba(255, 255, 255, 0.3)" : "rgba(255, 255, 255, 0.8)";
-  ctx.lineWidth = isFade ? 1.8 : 2.5;
-  ctx.beginPath();
-  if (isLeft) {
-    ctx.arc(target.x - 10, target.y - 20, isFade ? 48 : 44, Math.PI * 0.9, Math.PI * 1.55);
-  } else {
-    ctx.arc(target.x + 10, target.y - 20, isFade ? 48 : 44, Math.PI * 1.45, Math.PI * 2.1);
-  }
-  ctx.stroke();
-  ctx.restore();
-
-  // 2. Inverted Karate Chop Hand Sprite (with dynamic fade transparency)
+  // 1. Inverted Karate Chop Hand Sprite (with dynamic fade transparency)
   if (doubleSlapWhiteImg) {
     ctx.save();
     ctx.translate(handX, handY);
