@@ -182,86 +182,157 @@ export function drawVineWhipEffect(
     ctx.restore();
   };
 
+  const isFacingRight = dx > 0;
+  const dirSign = isFacingRight ? 1 : -1;
+
   const drawBehindVines = () => {
-    // Vine 1 definition (상단 호를 그리며 적을 넘어 우하단으로 내려치는 옆면 후려치기)
-    const v1_x0 = start.x - 12;
-    const v1_y0 = start.y - 20;
-    const v1_cx1 = start.x + dx * 0.25;
-    const v1_cy1 = start.y + dy * 0.25 - 110;
-    const v1_cx2 = target.x - 30;
-    const v1_cy2 = target.y - 75;
-    const v1_tx = target.x + 55;
-    const v1_ty = target.y + 40;
-    const v1_ang = Math.atan2(v1_ty - v1_cy2, v1_tx - v1_cx2);
-
-    // Vine 2 definition (하단 호를 그리며 적을 넘어 좌상단으로 쓸어올리는 옆면 후려치기)
-    const v2_x0 = start.x + 14;
-    const v2_y0 = start.y - 8;
-    const v2_cx1 = start.x + dx * 0.45 + 40;
-    const v2_cy1 = start.y + dy * 0.45 + 50;
-    const v2_cx2 = target.x + 65;
-    const v2_cy2 = target.y + 60;
-    const v2_tx = target.x - 50;
-    const v2_ty = target.y - 45;
-    const v2_ang = Math.atan2(v2_ty - v2_cy2, v2_tx - v2_cx2);
-
     if (step === 1) {
-      // 1타: 상단에서 내려치며 옆면으로 찰싹! (1st Side-Slap from Top-Left across Defender)
-      drawSingleVine(ctx, v1_x0, v1_y0, v1_cx1, v1_cy1, v1_cx2, v1_cy2, v1_tx, v1_ty, v1_ang, 1.2);
+      // 1타: 시전자 등 뒤 좌측에서 돋아나 시전자 주변에서 멋지게 허공을 가르는 1차 덩굴 채찍 휘두르기
+      drawSingleVine(
+        ctx,
+        start.x - 12 * dirSign,
+        start.y - 18,
+        start.x - 35 * dirSign,
+        start.y - 75,
+        start.x + 35 * dirSign,
+        start.y - 95,
+        start.x + 68 * dirSign,
+        start.y - 45,
+        0.6 * dirSign,
+        1.1
+      );
     } else if (step === 2) {
-      // 2타: 하단에서 올려치며 옆면으로 찰싹! (2nd Side-Slap from Bottom-Right across Defender, 1st vine fading)
-      drawSingleVine(ctx, v1_x0, v1_y0, v1_cx1, v1_cy1, v1_cx2, v1_cy2, v1_tx, v1_ty, v1_ang, 1.0, 0.3);
-      drawSingleVine(ctx, v2_x0, v2_y0, v2_cx1, v2_cy1, v2_cx2, v2_cy2, v2_tx, v2_ty, v2_ang, 1.25);
+      // 2타: 1차 덩굴 페이드 + 시전자 등 뒤 우측에서 돋아난 2차 덩굴 채찍 휘두르기
+      drawSingleVine(
+        ctx,
+        start.x - 12 * dirSign,
+        start.y - 18,
+        start.x - 35 * dirSign,
+        start.y - 75,
+        start.x + 35 * dirSign,
+        start.y - 95,
+        start.x + 68 * dirSign,
+        start.y - 45,
+        0.6 * dirSign,
+        0.9,
+        0.35
+      );
+      drawSingleVine(
+        ctx,
+        start.x + 14 * dirSign,
+        start.y - 8,
+        start.x + 50 * dirSign,
+        start.y + 25,
+        start.x + 85 * dirSign,
+        start.y - 10,
+        start.x + 72 * dirSign,
+        start.y - 65,
+        -1.2 * dirSign,
+        1.15
+      );
     } else if (step >= 3) {
-      // 3단계: 두 채찍 부드럽게 회수 (Retracting)
-      drawSingleVine(ctx, v1_x0, v1_y0, v1_cx1, v1_cy1, start.x + dx * 0.45 - 10, start.y + dy * 0.45 - 30, start.x + dx * 0.50 - 10, start.y + dy * 0.50 - 15, v1_ang, 0.8, 0.5);
-      drawSingleVine(ctx, v2_x0, v2_y0, v2_cx1, v2_cy1, start.x + dx * 0.45 + 15, start.y + dy * 0.45 + 10, start.x + dx * 0.48 + 8, start.y + dy * 0.48 + 5, v2_ang, 0.8, 0.5);
+      // 3단계: 덩굴이 시전자 등 뒤로 부드럽게 회수
+      drawSingleVine(
+        ctx,
+        start.x - 12 * dirSign,
+        start.y - 18,
+        start.x - 15 * dirSign,
+        start.y - 45,
+        start.x + 15 * dirSign,
+        start.y - 50,
+        start.x + 30 * dirSign,
+        start.y - 25,
+        0.4 * dirSign,
+        0.7,
+        0.4
+      );
     }
   };
 
   const drawFrontImpact = () => {
     if (step === 1) {
-      // 1타 타격 플래시 (옆면 타격 중심부)
+      // 1타 타격: 적 몸체에 좌상단 -> 우하단 사선 덩굴 채찍 참격선 찰싹! + 타격 플래시
       ctx.save();
-      const hitGrad1 = ctx.createRadialGradient(target.x + 6, target.y - 2, 2, target.x + 6, target.y - 2, 34);
+      ctx.strokeStyle = "#15803D";
+      ctx.lineWidth = 6.0;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(tx - 55 * dirSign, ty - 45);
+      ctx.bezierCurveTo(tx - 15 * dirSign, ty - 35, tx - 20 * dirSign, ty - 5, tx + 35 * dirSign, ty + 15);
+      ctx.stroke();
+
+      ctx.strokeStyle = "#86EFAC";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(tx - 55 * dirSign, ty - 45);
+      ctx.bezierCurveTo(tx - 15 * dirSign, ty - 35, tx - 20 * dirSign, ty - 5, tx + 35 * dirSign, ty + 15);
+      ctx.stroke();
+
+      // 1타 타격 플래시
+      const hitGrad1 = ctx.createRadialGradient(tx - 5 * dirSign, ty - 10, 2, tx - 5 * dirSign, ty - 10, 28);
       hitGrad1.addColorStop(0, "#FFFFFF");
       hitGrad1.addColorStop(0.35, "rgba(74, 222, 128, 0.95)");
       hitGrad1.addColorStop(0.8, "rgba(34, 197, 94, 0.3)");
       hitGrad1.addColorStop(1, "rgba(34, 197, 94, 0.0)");
       ctx.fillStyle = hitGrad1;
       ctx.beginPath();
-      ctx.arc(target.x + 6, target.y - 2, 34, 0, Math.PI * 2);
+      ctx.arc(tx - 5 * dirSign, ty - 10, 28, 0, Math.PI * 2);
       ctx.fill();
 
-      drawLeaf(tx + 24, ty - 18, 0.6, 7);
-      drawLeaf(tx + 12, ty + 10, 1.1, 6);
+      drawLeaf(tx - 28 * dirSign, ty - 30, -0.6 * dirSign, 7);
+      drawLeaf(tx + 15 * dirSign, ty + 10, 0.8 * dirSign, 6);
       ctx.restore();
     } else if (step === 2) {
-      // 2타 타격 플래시 (옆면 타격 중심부 & 대형 잎사귀 폭발)
+      // 2타 타격: 우상단 -> 좌하단 교차 사선 덩굴 채찍 참격 ('X'자 완성) + 대형 에메랄드 폭발
       ctx.save();
-      const hitGrad2 = ctx.createRadialGradient(target.x - 4, target.y + 4, 2, target.x - 4, target.y + 4, 38);
+      // 1타 참격선 잔상
+      ctx.strokeStyle = "rgba(34, 197, 94, 0.4)";
+      ctx.lineWidth = 4.0;
+      ctx.beginPath();
+      ctx.moveTo(tx - 55 * dirSign, ty - 45);
+      ctx.bezierCurveTo(tx - 15 * dirSign, ty - 35, tx - 20 * dirSign, ty - 5, tx + 35 * dirSign, ty + 15);
+      ctx.stroke();
+
+      // 2타 역방향 교차 참격선
+      ctx.strokeStyle = "#166534";
+      ctx.lineWidth = 7.0;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(tx + 55 * dirSign, ty - 45);
+      ctx.bezierCurveTo(tx + 15 * dirSign, ty - 30, tx + 25 * dirSign, ty + 10, tx - 30 * dirSign, ty + 20);
+      ctx.stroke();
+
+      ctx.strokeStyle = "#BBF7D0";
+      ctx.lineWidth = 3.0;
+      ctx.beginPath();
+      ctx.moveTo(tx + 55 * dirSign, ty - 45);
+      ctx.bezierCurveTo(tx + 15 * dirSign, ty - 30, tx + 25 * dirSign, ty + 10, tx - 30 * dirSign, ty + 20);
+      ctx.stroke();
+
+      // 교차 지점 대형 타격 플래시
+      const hitGrad2 = ctx.createRadialGradient(tx, ty - 8, 2, tx, ty - 8, 36);
       hitGrad2.addColorStop(0, "#FFFFFF");
       hitGrad2.addColorStop(0.35, "rgba(74, 222, 128, 0.95)");
       hitGrad2.addColorStop(0.8, "rgba(34, 197, 94, 0.3)");
       hitGrad2.addColorStop(1, "rgba(34, 197, 94, 0.0)");
       ctx.fillStyle = hitGrad2;
       ctx.beginPath();
-      ctx.arc(target.x - 4, target.y + 4, 38, 0, Math.PI * 2);
+      ctx.arc(tx, ty - 8, 36, 0, Math.PI * 2);
       ctx.fill();
 
-      // Bursting foliage leaves
-      drawLeaf(tx - 24, ty + 16, -0.8, 8);
-      drawLeaf(tx + 22, ty - 20, 0.7, 8);
-      drawLeaf(tx - 18, ty - 14, -0.4, 7);
-      drawLeaf(tx + 16, ty + 18, 1.3, 7);
+      // 폭발하는 나뭇잎 파티클
+      drawLeaf(tx + 28 * dirSign, ty - 25, 0.7 * dirSign, 8);
+      drawLeaf(tx - 24 * dirSign, ty - 20, -0.5 * dirSign, 7);
+      drawLeaf(tx + 20 * dirSign, ty + 16, 1.2 * dirSign, 7);
+      drawLeaf(tx - 28 * dirSign, ty + 12, -1.0 * dirSign, 7);
       ctx.restore();
     } else if (step >= 3) {
       // 3단계: 흩날리는 나뭇잎
       ctx.save();
-      drawLeaf(tx - 36, ty - 25, -0.4, 6);
-      drawLeaf(tx + 32, ty - 28, 0.9, 7);
-      drawLeaf(tx + 22, ty + 18, 1.5, 6);
-      drawLeaf(tx - 28, ty + 16, -1.2, 6);
+      drawLeaf(tx - 36 * dirSign, ty - 25, -0.4 * dirSign, 6);
+      drawLeaf(tx + 32 * dirSign, ty - 28, 0.9 * dirSign, 7);
+      drawLeaf(tx + 22 * dirSign, ty + 18, 1.5 * dirSign, 6);
+      drawLeaf(tx - 28 * dirSign, ty + 16, -1.2 * dirSign, 6);
       ctx.restore();
     }
   };
