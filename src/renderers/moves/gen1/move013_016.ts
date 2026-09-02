@@ -276,8 +276,8 @@ export function drawSwordsDanceEffect(ctx: any, userPos: { x: number; y: number 
     rot: number,
     scale: number = 1.0,
     alpha: number = 1.0,
-    color: string = "#FFFFFF",
-    strokeColor: string = "#EF4444"
+    color: string = "#FDE047",
+    strokeColor: string = "#D97706"
   ) => {
     ctx.save();
     ctx.translate(cx, cy);
