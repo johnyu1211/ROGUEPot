@@ -394,8 +394,8 @@ export class BattleService {
 
     if (existing && existing.wave === slot.wave) {
       if (isTestSandbox) {
-        existing.enemy.ability = undefined;
-        existing.enemy.passiveAbility = undefined;
+        existing.enemy.ability = "Sturdy";
+        existing.enemy.passiveAbility = "Sturdy";
       }
       const currentLeader = slot.party[existing.playerActiveIndex || 0] || slot.party[0];
       if (currentLeader) {
@@ -414,7 +414,7 @@ export class BattleService {
     }
 
     const wildPokemon = isTestSandbox
-      ? this.spawnWildPokemon(1, "Town", "testsubject12", 1, undefined)
+      ? this.spawnWildPokemon(1, "Town", "testsubject12", 1, "Sturdy")
       : this.spawnWildPokemon(slot.wave, slot.biome || "Town");
     const isKo = profile.language === "ko";
 
