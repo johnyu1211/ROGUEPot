@@ -705,7 +705,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         }
       ];
     } else if (isGuillotine1) {
-      const isHit1 = isP1 ? (a1.enemyHpAfter < enemy.hp) : (a1.playerHpAfter < playerMon.hp);
+      const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed")));
       act1Frames = [
         // 1. Windup lunge (140ms)
         {
@@ -1345,7 +1345,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         }
       ];
     } else if (isGuillotine2) {
-      const isHit2 = isP2 ? (a2.enemyHpAfter < a1.enemyHpAfter) : (a2.playerHpAfter < a1.playerHpAfter);
+      const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed")));
       act2Frames = [
         // 1. Counter Windup lunge (140ms)
         {
