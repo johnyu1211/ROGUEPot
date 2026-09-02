@@ -865,12 +865,13 @@ export class BattleService {
         // Turn 2: Unleash attack
         actor.chargingMove = null;
       }
-    } else if (["dig", "dive", "bounce", "shadow-force", "phantom-force"].includes(moveNameLower)) {
+    } else if (["fly", "dig", "dive", "bounce", "shadow-force", "phantom-force"].includes(moveNameLower)) {
       if (actor.chargingMove !== moveNameLower) {
         actor.chargingMove = moveNameLower;
         actor.isSemiInvulnerable = true;
         let chargeText = "";
-        if (moveNameLower === "dig") chargeText = isKo ? `${actorName}(은)는 땅속으로 파고들었다!` : `${actorName} burrowed underground!`;
+        if (moveNameLower === "fly") chargeText = isKo ? `${actorName}(은)는 하늘 높이 날아올랐다!` : `${actorName} flew up high!`;
+        else if (moveNameLower === "dig") chargeText = isKo ? `${actorName}(은)는 땅속으로 파고들었다!` : `${actorName} burrowed underground!`;
         else if (moveNameLower === "dive") chargeText = isKo ? `${actorName}(은)는 물속으로 잠수했다!` : `${actorName} hid underwater!`;
         else if (moveNameLower === "bounce") chargeText = isKo ? `${actorName}(은)는 높이 튀어올랐다!` : `${actorName} bounced up high!`;
         else chargeText = isKo ? `${actorName}(은)는 모습을 감췄다!` : `${actorName} vanished instantly!`;
