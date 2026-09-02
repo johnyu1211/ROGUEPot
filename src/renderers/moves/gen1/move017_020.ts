@@ -123,52 +123,127 @@ export function drawWingAttackEffect(ctx: any, target: { x: number; y: number },
 }
 
 /**
- * 018 날려버리기 (Whirlwind): Towering Spiral Tornado Column
+ * 018 날려버리기 (Whirlwind): Rising Towering Cyclone Funnel & Sky Vortex
  */
 export function drawWhirlwindEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
   ctx.save();
   const tx = target.x;
   const ty = target.y - 12;
+  const baseY = ty + 38; // ground platform base
+
+  // Helper: Draw spiral wind ribbon funnel ring
+  const drawFunnelRing = (
+    cy: number,
+    radiusX: number,
+    radiusY: number,
+    rot: number,
+    alpha: number,
+    lineWidth: number = 3.0
+  ) => {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(tx, cy);
+    ctx.rotate(rot);
+
+    // Outer luminous air glow
+    ctx.strokeStyle = "rgba(224, 242, 254, 0.75)";
+    ctx.lineWidth = lineWidth + 2.0;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, radiusX, radiusY, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Inner brilliant white core
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = lineWidth;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, radiusX * 0.95, radiusY * 0.9, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.restore();
+  };
+
+  // Helper: Draw vertical spiral helix streamers wrapping around the cone
+  const drawAscendingStreamer = (
+    startY: number,
+    endY: number,
+    startW: number,
+    endW: number,
+    phaseOffset: number,
+    alpha: number
+  ) => {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+
+    const segments = 16;
+    for (let i = 0; i <= segments; i++) {
+      const t = i / segments;
+      const curY = startY + (endY - startY) * t;
+      const curW = startW + (endW - startW) * t;
+      const curX = tx + Math.sin(t * Math.PI * 3 + phaseOffset) * curW;
+      if (i === 0) ctx.moveTo(curX, curY);
+      else ctx.lineTo(curX, curY);
+    }
+    ctx.stroke();
+    ctx.restore();
+  };
 
   if (step === 1) {
-    for (let i = 0; i < 3; i++) {
-      ctx.strokeStyle = "rgba(148, 163, 184, 0.55)";
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.ellipse(tx, ty + 20 - i * 8, 30 + i * 6, 8, 0, 0, Math.PI * 2);
-      ctx.stroke();
+    // Step 1: Whirlwind begins spinning and rising from ground to waist
+    const numRings = 5;
+    for (let i = 0; i < numRings; i++) {
+      const t = i / (numRings - 1);
+      const ringY = baseY - t * 45;
+      const rx = 16 + t * 14;
+      const ry = 6 + t * 3;
+      const rot = i * 0.4 - 0.2;
+      drawFunnelRing(ringY, rx, ry, rot, 0.65 + t * 0.25, 2.5);
     }
-  } else if (step === 2 || step === 3) {
-    const layers = 8;
-    for (let i = 0; i < layers; i++) {
-      const ringY = ty + 25 - i * 14;
-      const ringW = 20 + i * 5.5;
-      const ringH = 8 + i * 1.5;
-      const rot = ((step * 3 + i) * Math.PI) / 6;
-
-      ctx.strokeStyle = i % 2 === 0 ? "#E2E8F0" : "#94A3B8";
-      ctx.lineWidth = 3.2;
-      ctx.beginPath();
-      ctx.ellipse(tx, ringY, ringW, ringH, rot, 0, Math.PI * 2);
-      ctx.stroke();
-
-      ctx.strokeStyle = "#FFFFFF";
-      ctx.lineWidth = 1.4;
-      ctx.beginPath();
-      ctx.ellipse(tx, ringY, ringW * 0.9, ringH * 0.85, rot + 0.2, 0, Math.PI * 2);
-      ctx.stroke();
+    drawAscendingStreamer(baseY, baseY - 45, 16, 30, 0, 0.7);
+    drawAscendingStreamer(baseY, baseY - 45, 16, 30, Math.PI, 0.7);
+  } else if (step === 2) {
+    // Step 2: Towering cyclone funnel surges violently upward through defender into the sky
+    const numRings = 10;
+    for (let i = 0; i < numRings; i++) {
+      const t = i / (numRings - 1);
+      const ringY = baseY - t * 150;
+      const rx = 18 + t * 42; // expanding funnel: 18px at base to 60px at top
+      const ry = 6 + t * 10;
+      const rot = Math.sin(i * 0.8 + 1) * 0.25;
+      drawFunnelRing(ringY, rx, ry, rot, 0.85, 3.2);
     }
+    drawAscendingStreamer(baseY, baseY - 150, 18, 60, 0.5, 0.9);
+    drawAscendingStreamer(baseY, baseY - 150, 18, 60, 0.5 + Math.PI * 0.66, 0.9);
+    drawAscendingStreamer(baseY, baseY - 150, 18, 60, 0.5 + Math.PI * 1.33, 0.9);
 
-    if (step === 3) {
-      drawMiniRetroStar(ctx, tx, ty - 20, 16, "rgba(148, 163, 184, 0.85)");
+    // Starburst flash
+    drawMiniRetroStar(ctx, tx, ty - 40, 18, "#BAE6FD");
+  } else if (step === 3) {
+    // Step 3: Roaring Sky Vortex - Tornado engulfs everything and surges high past the top of the screen
+    const numRings = 11;
+    for (let i = 0; i < numRings; i++) {
+      const t = i / (numRings - 1);
+      const ringY = baseY + 10 - t * 210; // surges all the way past y < 0
+      const rx = 22 + t * 55;
+      const ry = 7 + t * 12;
+      const rot = Math.sin(i * 0.8 + 2.5) * 0.3;
+      drawFunnelRing(ringY, rx, ry, rot, 0.9, 3.5);
     }
+    drawAscendingStreamer(baseY, baseY - 210, 22, 75, 1.2, 0.95);
+    drawAscendingStreamer(baseY, baseY - 210, 22, 75, 1.2 + Math.PI * 0.66, 0.95);
+    drawAscendingStreamer(baseY, baseY - 210, 22, 75, 1.2 + Math.PI * 1.33, 0.95);
   } else if (step >= 4) {
-    for (let i = 0; i < 3; i++) {
-      ctx.strokeStyle = "rgba(226, 232, 240, 0.35)";
-      ctx.lineWidth = 2.0;
-      ctx.beginPath();
-      ctx.ellipse(tx, ty - 20 + i * 20, 55 + i * 10, 12, 0, 0, Math.PI * 2);
-      ctx.stroke();
+    // Step 4: Sky Vortex Dispersal - Wide fading wind rings in the high sky
+    const numRings = 5;
+    for (let i = 0; i < numRings; i++) {
+      const t = i / (numRings - 1);
+      const ringY = ty - 40 - t * 100;
+      const rx = 45 + t * 35;
+      const ry = 10 + t * 8;
+      const rot = i * 0.3;
+      drawFunnelRing(ringY, rx, ry, rot, 0.35 * (1 - t * 0.5), 2.0);
     }
   }
 
