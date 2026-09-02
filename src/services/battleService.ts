@@ -809,9 +809,14 @@ export class BattleService {
       }
     }
 
-    // If not VICTORY and not DEFEAT, reset battle phase back to MAIN command select!
+    // If not VICTORY and not DEFEAT, reset battle phase back to MAIN command select (or FIGHT if charging move like Fly)!
     if (battle.phase !== "VICTORY" && battle.phase !== "DEFEAT") {
-      battle.phase = "MAIN";
+      const activeMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
+      if (activeMon?.chargingMove) {
+        battle.phase = "FIGHT";
+      } else {
+        battle.phase = "MAIN";
+      }
     }
 
     battle.dialogueText = turnLogs.join("\n");
@@ -885,6 +890,11 @@ export class BattleService {
 
     // 3. Status Move Processing
     if (activeMove.category === "status") {
+      if (actor.chargingMove) {
+        actor.chargingMove = null;
+        actor.isSemiInvulnerable = false;
+        actor.semiInvulnerableState = null;
+      }
       const isSelfTarget = this.isSelfTargetStatusMove(activeMove.name);
       if (!isSelfTarget && target.isSemiInvulnerable) {
         const hasNoGuard = actor.ability === "no-guard";
@@ -904,6 +914,13 @@ export class BattleService {
     }
 
     const moveNameLower = activeMove.name.toLowerCase().replace(/[\s_]+/g, "-");
+
+    // If actor is charging a move, but chose a DIFFERENT attacking move, reset charging state!
+    if (actor.chargingMove && actor.chargingMove !== moveNameLower) {
+      actor.chargingMove = null;
+      actor.isSemiInvulnerable = false;
+      actor.semiInvulnerableState = null;
+    }
 
     // 3.4. 2-Turn Charging Moves (Solar Beam, Solar Blade, Fly, Dig, Dive, Bounce, Skull Bash, Meteor Beam, Sky Attack)
     const isSolarMove = moveNameLower === "solar-beam" || moveNameLower === "solar-blade";
