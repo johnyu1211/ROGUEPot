@@ -827,34 +827,29 @@ export function drawKarateChopEffect(ctx: any, target: { x: number; y: number },
   let showImpact = false;
 
   if (step === 1) {
-    // Step 1: Hand appears hovering above target head (Black Hand)
-    handOy = -62;
-    rotDeg = 4;
+    // Step 1: Hand appears hovering above target head (Black Hand, purely horizontal)
+    handOy = -58;
     isRedFlash = false;
   } else if (step === 2) {
-    // Step 2: 살짝 아래로 틱 흔들림 (Pre-chop dip & micro-shake)
-    handOy = -46;
-    rotDeg = -8;
+    // Step 2: 살짝 아래로 틱 내려감 (Pure vertical dip down)
+    handOy = -44;
     isRedFlash = false;
   } else if (step === 3) {
-    // Step 3: 위로 살짝 올라갔다가 멈칫 장전 (Rise up & Red charging hold)
+    // Step 3: 위로 살짝 올라갔다가 멈칫 장전 (Pure vertical rise up & Red charging hold)
     handOy = -76;
-    rotDeg = 14;
     isRedFlash = true;
   } else {
-    // Step 4: 팍! 하고 내려침 (Devastating slam chop impact on head + Orange embers!)
+    // Step 4: 팍! 하고 정수리에 딱 내리찍음 (Pure vertical slam down on head + Orange embers!)
     handOy = -15;
-    rotDeg = -4;
     isRedFlash = false;
     showImpact = true;
   }
 
-  // 1. Draw Authentic 5th Gen Hand Sprite Asset
+  // 1. Draw Authentic 5th Gen Hand Sprite Asset (Fixed 0 degree angle)
   const sprite = isRedFlash ? karateRedImg : karateBlackImg;
   if (sprite) {
     ctx.save();
     ctx.translate(cx, cy + handOy);
-    ctx.rotate((rotDeg * Math.PI) / 180);
     const sw = 80 * 1.15;
     const sh = 60 * 1.15;
     ctx.drawImage(sprite, -sw / 2, -sh / 2, sw, sh);
