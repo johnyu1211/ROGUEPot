@@ -84,9 +84,10 @@ export interface BattlePokemon {
     isShiny?: boolean;
   } | null;
 
-  // Special Mechanic: 2-Turn Charging & Recharge Moves (Solar Beam, Fly, Dig, Hyper Beam, etc.)
+  // Special Mechanic: 2-Turn Charging & Semi-Invulnerable Evasion (Fly, Dig, Dive, Phantom Force, Bounce, etc.)
   chargingMove?: string | null;
   isSemiInvulnerable?: boolean;
+  semiInvulnerableState?: "air" | "underground" | "underwater" | "shadow" | null;
   mustRecharge?: boolean;
 
   isShiny?: boolean;
@@ -870,15 +871,26 @@ export class BattleService {
         actor.chargingMove = moveNameLower;
         actor.isSemiInvulnerable = true;
         let chargeText = "";
-        if (moveNameLower === "fly") chargeText = isKo ? `${actorName}(은)는 하늘 높이 날아올랐다!` : `${actorName} flew up high!`;
-        else if (moveNameLower === "dig") chargeText = isKo ? `${actorName}(은)는 땅속으로 파고들었다!` : `${actorName} burrowed underground!`;
-        else if (moveNameLower === "dive") chargeText = isKo ? `${actorName}(은)는 물속으로 잠수했다!` : `${actorName} hid underwater!`;
-        else if (moveNameLower === "bounce") chargeText = isKo ? `${actorName}(은)는 높이 튀어올랐다!` : `${actorName} bounced up high!`;
-        else chargeText = isKo ? `${actorName}(은)는 모습을 감췄다!` : `${actorName} vanished instantly!`;
+        if (moveNameLower === "fly" || moveNameLower === "bounce") {
+          actor.semiInvulnerableState = "air";
+          chargeText = moveNameLower === "fly"
+            ? (isKo ? `${actorName}(은)는 하늘 높이 날아올랐다!` : `${actorName} flew up high!`)
+            : (isKo ? `${actorName}(은)는 높이 튀어올랐다!` : `${actorName} bounced up high!`);
+        } else if (moveNameLower === "dig") {
+          actor.semiInvulnerableState = "underground";
+          chargeText = isKo ? `${actorName}(은)는 땅속으로 파고들었다!` : `${actorName} burrowed underground!`;
+        } else if (moveNameLower === "dive") {
+          actor.semiInvulnerableState = "underwater";
+          chargeText = isKo ? `${actorName}(은)는 물속으로 잠수했다!` : `${actorName} hid underwater!`;
+        } else {
+          actor.semiInvulnerableState = "shadow";
+          chargeText = isKo ? `${actorName}(은)는 그림자 속으로 모습을 감췄다!` : `${actorName} vanished into the shadows!`;
+        }
         return { log: chargeText, damage: 0 };
       }
       actor.chargingMove = null;
       actor.isSemiInvulnerable = false;
+      actor.semiInvulnerableState = null;
     } else if (moveNameLower === "skull-bash") {
       if (actor.chargingMove !== moveNameLower) {
         actor.chargingMove = moveNameLower;

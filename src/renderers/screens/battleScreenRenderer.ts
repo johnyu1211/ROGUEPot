@@ -575,23 +575,23 @@ export async function renderBattleScreen(options: BattleScreenOptions): Promise<
   const em = BATTLE_LAYOUT_CONFIG.enemyPokemon;
   const pm = BATTLE_LAYOUT_CONFIG.playerPokemon;
 
-  const isPlayerInAir = Boolean(playerMon.chargingMove === "fly" || playerMon.isSemiInvulnerable);
-  const isEnemyInAir = Boolean(enemy.chargingMove === "fly" || enemy.isSemiInvulnerable);
+  const isPlayerEvading = Boolean((playerMon as any).semiInvulnerableState || playerMon.chargingMove === "fly" || playerMon.chargingMove === "dig" || playerMon.chargingMove === "dive" || playerMon.chargingMove === "bounce" || playerMon.chargingMove === "shadow-force" || playerMon.chargingMove === "phantom-force" || playerMon.isSemiInvulnerable);
+  const isEnemyEvading = Boolean((enemy as any).semiInvulnerableState || enemy.chargingMove === "fly" || enemy.chargingMove === "dig" || enemy.chargingMove === "dive" || enemy.chargingMove === "bounce" || enemy.chargingMove === "shadow-force" || enemy.chargingMove === "phantom-force" || enemy.isSemiInvulnerable);
 
   // 4. Draw Pokémon Silhouette Shadows (cast onto platform ground)
-  if (enemySprite && (battle.phase !== "VICTORY" || enemy.hp > 0) && !isEnemyInAir) {
+  if (enemySprite && (battle.phase !== "VICTORY" || enemy.hp > 0) && !isEnemyEvading) {
     drawPokemonSilhouetteShadow(ctx, enemySprite, em.x, em.y, em.size, false, 0.42);
   }
-  if (playerSprite && !isPlayerInAir) {
+  if (playerSprite && !isPlayerEvading) {
     drawPokemonSilhouetteShadow(ctx, playerSprite, pm.x, pm.y, pm.size, true, 0.42);
   }
 
   // On VICTORY screen, fainted enemy is gone (empty platform)
-  if (enemySprite && (battle.phase !== "VICTORY" || enemy.hp > 0) && !isEnemyInAir) {
+  if (enemySprite && (battle.phase !== "VICTORY" || enemy.hp > 0) && !isEnemyEvading) {
     drawFittedBattleSprite(ctx, enemySprite, em.x, em.y, em.size);
   }
 
-  if (playerSprite && !isPlayerInAir) {
+  if (playerSprite && !isPlayerEvading) {
     drawFittedBattleSprite(ctx, playerSprite, pm.x, pm.y, pm.size);
   }
 
