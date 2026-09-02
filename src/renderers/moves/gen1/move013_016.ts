@@ -516,7 +516,7 @@ export function drawGustEffect(
 ) {
   ctx.save();
   const tx = target.x;
-  const ty = target.y - 12;
+  const ty = target.y + 6; // Shifted slightly lower towards body/feet baseline
 
   // 1. Subtle Battlefield White Veil Filter (화면 전체 아주 약간의 투명한 흰색 필터, 대화창 및 UI 제외)
   ctx.save();
@@ -525,7 +525,7 @@ export function drawGustEffect(
   ctx.fillRect(0, 0, 560, 270);
   ctx.restore();
 
-  // Helper: Draw soft billowy multi-circle sand dust puff cluster
+  // Helper: Draw compact billowy multi-circle sand dust puff cluster
   const drawDustCluster = (
     baseX: number,
     baseY: number,
@@ -538,14 +538,14 @@ export function drawGustEffect(
     ctx.translate(baseX, baseY + wobbleY);
     ctx.scale(scale, scale);
 
-    // Sub-puffs forming a natural puffy billowy dust cloud
+    // Sub-puffs forming a natural compact puffy dust cloud
     const puffs = [
-      { ox: 0, oy: 0, r: 18, col: "rgba(217, 180, 130, 0.70)" },
-      { ox: -12, oy: -4, r: 14, col: "rgba(235, 215, 175, 0.75)" },
-      { ox: 13, oy: -3, r: 15, col: "rgba(225, 195, 145, 0.70)" },
-      { ox: -6, oy: 8, r: 13, col: "rgba(202, 168, 114, 0.65)" },
-      { ox: 8, oy: 7, r: 14, col: "rgba(217, 180, 130, 0.68)" },
-      { ox: 0, oy: -8, r: 12, col: "rgba(245, 230, 200, 0.80)" }, // bright puffy top
+      { ox: 0, oy: 0, r: 13.5, col: "rgba(217, 180, 130, 0.70)" },
+      { ox: -9, oy: -3, r: 10.5, col: "rgba(235, 215, 175, 0.75)" },
+      { ox: 10, oy: -2, r: 11.2, col: "rgba(225, 195, 145, 0.70)" },
+      { ox: -5, oy: 6, r: 9.8, col: "rgba(202, 168, 114, 0.65)" },
+      { ox: 6, oy: 5, r: 10.5, col: "rgba(217, 180, 130, 0.68)" },
+      { ox: 0, oy: -6, r: 9.0, col: "rgba(245, 230, 200, 0.80)" }, // bright puffy top
     ];
 
     for (const p of puffs) {
@@ -560,24 +560,24 @@ export function drawGustEffect(
 
   if (step === 1) {
     // Step 1: Sand-dust cloud clusters entering from the left with subtle up/down wave wobble
-    drawDustCluster(tx - 65, ty + 12, 1.0, -6, 0.75);
-    drawDustCluster(tx - 40, ty - 14, 0.85, 5, 0.80);
-    drawDustCluster(tx - 20, ty + 16, 1.15, -4, 0.70);
-    drawDustCluster(tx - 50, ty + 2, 0.9, 3, 0.65);
+    drawDustCluster(tx - 55, ty + 8, 0.90, -4, 0.75);
+    drawDustCluster(tx - 35, ty - 10, 0.78, 3, 0.80);
+    drawDustCluster(tx - 15, ty + 12, 1.05, -3, 0.70);
+    drawDustCluster(tx - 42, ty + 2, 0.82, 2, 0.65);
   } else if (step === 2) {
     // Step 2: Peak billowy sand-dust clouds engulfing and sweeping across defender with dynamic wave wobble
-    drawDustCluster(tx - 35, ty - 8, 1.25, 8, 0.85);
-    drawDustCluster(tx - 8, ty + 16, 1.40, -10, 0.88);
-    drawDustCluster(tx + 18, ty - 14, 1.30, 7, 0.85);
-    drawDustCluster(tx + 40, ty + 10, 1.15, -6, 0.80);
-    drawDustCluster(tx - 20, ty + 2, 1.0, 4, 0.75);
-    drawDustCluster(tx + 10, ty + 4, 1.2, -3, 0.80);
+    drawDustCluster(tx - 30, ty - 6, 1.10, 6, 0.85);
+    drawDustCluster(tx - 6, ty + 12, 1.20, -7, 0.88);
+    drawDustCluster(tx + 15, ty - 10, 1.12, 5, 0.85);
+    drawDustCluster(tx + 35, ty + 8, 1.00, -4, 0.80);
+    drawDustCluster(tx - 16, ty + 2, 0.88, 3, 0.75);
+    drawDustCluster(tx + 8, ty + 3, 1.05, -2, 0.80);
   } else if (step === 3) {
     // Step 3: Sand-dust clouds drifting past to the right while softly fading out
-    drawDustCluster(tx + 25, ty + 8, 1.20, -5, 0.45);
-    drawDustCluster(tx + 50, ty - 12, 1.10, 6, 0.40);
-    drawDustCluster(tx + 75, ty + 14, 0.95, -4, 0.35);
-    drawDustCluster(tx + 40, ty + 2, 0.85, 3, 0.35);
+    drawDustCluster(tx + 22, ty + 6, 1.05, -4, 0.45);
+    drawDustCluster(tx + 45, ty - 8, 0.95, 4, 0.40);
+    drawDustCluster(tx + 68, ty + 10, 0.85, -3, 0.35);
+    drawDustCluster(tx + 35, ty + 2, 0.75, 2, 0.35);
   }
 
   ctx.restore();
