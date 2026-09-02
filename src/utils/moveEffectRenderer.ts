@@ -1505,10 +1505,64 @@ export function drawPayDayEffect(ctx: any, target: { x: number; y: number }, ste
 }
 
 /**
+ * Sharp Layered Teardrop Flame Tongue Helper for Fire Effects (Crimson -> Orange -> Blazing Yellow -> White Hot Core)
+ */
+function drawFlameTongue(
+  ctx: any,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  angle: number = 0,
+  alpha: number = 1.0,
+  tipCurve: number = 0
+) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+  ctx.globalAlpha = alpha;
+
+  // 1. Outer Crimson / Red Silhouette Flame
+  ctx.fillStyle = "#DC2626";
+  ctx.beginPath();
+  ctx.moveTo(0, h * 0.5);
+  ctx.bezierCurveTo(-w * 0.65, h * 0.3, -w * 0.6, -h * 0.2, tipCurve, -h * 0.5);
+  ctx.bezierCurveTo(w * 0.2, -h * 0.2, w * 0.65, h * 0.3, 0, h * 0.5);
+  ctx.closePath();
+  ctx.fill();
+
+  // 2. Mid Vibrant Fire Orange Body
+  ctx.fillStyle = "#F97316";
+  ctx.beginPath();
+  ctx.moveTo(0, h * 0.44);
+  ctx.bezierCurveTo(-w * 0.45, h * 0.24, -w * 0.40, -h * 0.15, tipCurve * 0.8, -h * 0.38);
+  ctx.bezierCurveTo(w * 0.15, -h * 0.15, w * 0.45, h * 0.24, 0, h * 0.44);
+  ctx.closePath();
+  ctx.fill();
+
+  // 3. Inner Blazing Yellow Core
+  ctx.fillStyle = "#FEF08A";
+  ctx.beginPath();
+  ctx.moveTo(0, h * 0.36);
+  ctx.bezierCurveTo(-w * 0.26, h * 0.18, -w * 0.22, -h * 0.08, tipCurve * 0.5, -h * 0.24);
+  ctx.bezierCurveTo(w * 0.08, -h * 0.08, w * 0.26, h * 0.18, 0, h * 0.36);
+  ctx.closePath();
+  ctx.fill();
+
+  // 4. White Hot Core Sparkle
+  ctx.fillStyle = "#FFFFFF";
+  ctx.beginPath();
+  ctx.ellipse(0, h * 0.16, w * 0.14, h * 0.14, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+/**
  * 007 불꽃펀치 (Fire Punch):
- * Step 1: Direct Fire Punch Impact (Orange Filter Fist + Clustered Flame Burst)
- * Step 2: Fire bursts & scatters outward in all 8 directions (Distance x1.5, Alpha 0.65)
- * Step 3: Flames disperse far outward and dissipate with flying embers (Distance x2.3, Alpha 0.25)
+ * Step 1: Direct Fire Punch Strike + Base Flame Tongues Erupt
+ * Step 2: Spiraling Fiery Vortex (4 Layered Flame Tongues spiral & rise up target)
+ * Step 3: Apex Flame Flare & Upward Dissipation into Spark Embers
  */
 export function drawFirePunchEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
   ctx.save();
@@ -1516,22 +1570,7 @@ export function drawFirePunchEffect(ctx: any, target: { x: number; y: number }, 
   const targetX = target.x;
   const targetY = target.y - 12;
 
-  // Spread and Alpha by step
-  let spread = 0.85;
-  let alpha = 1.0;
-  let fistAlpha = 1.0;
-
-  if (step === 2) {
-    spread = 1.55;
-    alpha = 0.65;
-    fistAlpha = 0.35;
-  } else if (step >= 3) {
-    spread = 2.30;
-    alpha = 0.25;
-    fistAlpha = 0.0;
-  }
-
-  // 1. Fiery Flame Radial Background Aura
+  // 1. Fiery Warm Glow Background Aura
   if (step <= 2) {
     const fireGrad = ctx.createRadialGradient(
       targetX,
@@ -1539,25 +1578,25 @@ export function drawFirePunchEffect(ctx: any, target: { x: number; y: number }, 
       4,
       targetX,
       targetY - 14,
-      step === 1 ? 46 : 58
+      step === 1 ? 46 : 56
     );
-    fireGrad.addColorStop(0, "#FEF08A");
-    fireGrad.addColorStop(0.35, "#F97316");
-    fireGrad.addColorStop(0.7, "#DC2626");
+    fireGrad.addColorStop(0, "rgba(254, 240, 138, 0.75)");
+    fireGrad.addColorStop(0.4, "rgba(249, 115, 22, 0.65)");
+    fireGrad.addColorStop(0.75, "rgba(220, 38, 38, 0.40)");
     fireGrad.addColorStop(1, "rgba(220, 38, 38, 0)");
     ctx.fillStyle = fireGrad;
-    ctx.globalAlpha = step === 1 ? 0.85 : 0.45;
+    ctx.globalAlpha = step === 1 ? 0.90 : 0.50;
     ctx.beginPath();
-    ctx.arc(targetX, targetY - 14, step === 1 ? 46 : 58, 0, Math.PI * 2);
+    ctx.arc(targetX, targetY - 14, step === 1 ? 46 : 56, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  // 2. Punch Fist with Vibrant ORANGE Filter Tint
-  if (fistAlpha > 0.02) {
+  // 2. Punch Fist with Orange Filter
+  if (step <= 2) {
     ctx.save();
     ctx.translate(targetX, targetY - 14);
     ctx.scale(step === 1 ? 0.68 : 0.72, step === 1 ? 0.68 : 0.72);
-    ctx.globalAlpha = fistAlpha;
+    ctx.globalAlpha = step === 1 ? 1.0 : 0.35;
 
     // Rich saturated orange fire filter applied to the fist
     ctx.filter = "sepia(1) saturate(7) hue-rotate(-25deg) brightness(1.05)";
@@ -1572,69 +1611,49 @@ export function drawFirePunchEffect(ctx: any, target: { x: number; y: number }, 
     ctx.restore();
   }
 
-  // 3. Flame Burst Petals Scattering in All 8 Directions
-  ctx.save();
-  ctx.globalAlpha = alpha;
+  // 3. Authentic Rising Flame Tongues (Spiraling Vortex Structure)
+  if (step === 1) {
+    // Step 1: Base Flame Eruption around knuckles & target base
+    drawFlameTongue(ctx, targetX - 22, targetY + 4, 18, 34, -0.28, 0.95, -5);
+    drawFlameTongue(ctx, targetX + 22, targetY + 2, 18, 32, 0.30, 0.95, 5);
+    drawFlameTongue(ctx, targetX, targetY - 12, 22, 44, 0.04, 1.0, 2);
 
-  const flamePetals = [
-    { vx: 0, vy: -32, r: 14, c: "#EF4444" },     // North
-    { vx: 24, vy: -24, r: 13, c: "#F97316" },   // North-East
-    { vx: 32, vy: 0, r: 12, c: "#FDE047" },     // East
-    { vx: 22, vy: 24, r: 13, c: "#F97316" },    // South-East
-    { vx: 0, vy: 30, r: 14, c: "#EF4444" },     // South
-    { vx: -22, vy: 24, r: 13, c: "#F97316" },   // South-West
-    { vx: -32, vy: 0, r: 12, c: "#FDE047" },    // West
-    { vx: -24, vy: -24, r: 13, c: "#F97316" },  // North-West
-  ];
+    // Impact Star
+    drawMiniRetroStar(ctx, targetX, targetY - 22, 24, "#FDE047");
+  } else if (step === 2) {
+    // Step 2: 4 Spiraling Flame Tongues twisting & rising higher
+    drawFlameTongue(ctx, targetX - 28, targetY - 16, 20, 48, -0.42, 0.85, -8);
+    drawFlameTongue(ctx, targetX + 26, targetY - 20, 20, 46, 0.44, 0.85, 8);
+    drawFlameTongue(ctx, targetX - 10, targetY - 34, 24, 56, 0.16, 0.90, 6);
+    drawFlameTongue(ctx, targetX + 12, targetY - 30, 22, 50, -0.18, 0.90, -6);
 
-  for (const f of flamePetals) {
-    const fx = targetX + f.vx * spread;
-    const fy = targetY - 14 + f.vy * spread;
-    const fr = step >= 3 ? f.r * 0.75 : f.r;
-
-    // Glowing core flame gradient
-    const pGrad = ctx.createRadialGradient(fx, fy, 1, fx, fy, fr);
-    pGrad.addColorStop(0, "#FFFFFF");
-    pGrad.addColorStop(0.4, f.c);
-    pGrad.addColorStop(1, "rgba(239, 68, 68, 0)");
-
-    ctx.fillStyle = pGrad;
-    ctx.beginPath();
-    ctx.arc(fx, fy, fr, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.restore();
-
-  // 4. Central Fire Impact Star (Step 1 & 2)
-  if (step <= 2) {
-    const sparkX = targetX;
-    const sparkY = targetY - 22;
-    drawMiniRetroStar(ctx, sparkX, sparkY, step === 1 ? 24 : 16, "#FDE047");
+    // Small impact star remnant
+    drawMiniRetroStar(ctx, targetX, targetY - 22, 14, "rgba(253, 224, 71, 0.65)");
+  } else if (step >= 3) {
+    // Step 3: Apex Flames stretching tall and dissipating into the sky
+    drawFlameTongue(ctx, targetX - 16, targetY - 46, 16, 42, -0.22, 0.40, -6);
+    drawFlameTongue(ctx, targetX + 16, targetY - 50, 16, 40, 0.26, 0.40, 6);
+    drawFlameTongue(ctx, targetX, targetY - 58, 18, 50, 0.05, 0.45, 3);
   }
 
-  // 5. Flying Embers Scattering Outward
+  // 4. Flying Embers Rising with the Fiery Updraft
   ctx.save();
-  ctx.globalAlpha = alpha;
+  ctx.globalAlpha = step === 1 ? 0.9 : (step === 2 ? 0.7 : 0.35);
+  const emberOffsetY = (step - 1) * -16;
   const embers = [
-    { vx: -30, vy: -30, r: 3.2, c: "#FEF08A" },
-    { vx: 32, vy: -28, r: 3.0, c: "#F97316" },
-    { vx: -26, vy: 20, r: 2.8, c: "#EF4444" },
-    { vx: 28, vy: 22, r: 3.0, c: "#FDE047" },
-    { vx: 0, vy: -38, r: 3.0, c: "#FEF08A" },
-    { vx: 36, vy: 4, r: 2.8, c: "#F97316" },
-    { vx: -36, vy: 4, r: 2.8, c: "#FDE047" },
+    { ox: -26, oy: -20 + emberOffsetY, r: 2.8, c: "#FEF08A" },
+    { ox: 28, oy: -18 + emberOffsetY, r: 3.0, c: "#F97316" },
+    { ox: -18, oy: 10 + emberOffsetY, r: 2.5, c: "#EF4444" },
+    { ox: 22, oy: 12 + emberOffsetY, r: 2.8, c: "#FDE047" },
+    { ox: 0, oy: -36 + emberOffsetY, r: 3.0, c: "#FEF08A" },
+    { ox: 32, oy: 2 + emberOffsetY, r: 2.6, c: "#F97316" },
+    { ox: -30, oy: 2 + emberOffsetY, r: 2.6, c: "#FDE047" },
   ];
 
   for (const eb of embers) {
     ctx.fillStyle = eb.c;
     ctx.beginPath();
-    ctx.arc(
-      targetX + eb.vx * spread,
-      targetY - 14 + eb.vy * spread,
-      step >= 3 ? eb.r * 0.7 : eb.r,
-      0,
-      Math.PI * 2
-    );
+    ctx.arc(targetX + eb.ox, targetY - 14 + eb.oy, step >= 3 ? eb.r * 0.7 : eb.r, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();
