@@ -717,11 +717,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     } else if (isGuillotine1) {
       const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed")));
       act1Frames = [
-        // 1. Windup lunge (120ms)
+        // 1. Windup stance - In place (120ms)
         {
           delay: 120,
-          pOffset: isP1 ? { x: 16, y: -8 } : { x: 0, y: 0 },
-          eOffset: !isP1 ? { x: -16, y: 8 } : { x: 0, y: 0 },
+          pOffset: { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
           showEffect: false,
           hitFlash: false,
           enemyHp: enemy.hp,
@@ -730,11 +730,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a1,
         },
-        // 2. Step 1: First Diagonal Slash [/] - Turn around to Front Sprite INSTANTLY! (160ms)
+        // 2. Step 1: First Diagonal Slash [/] - Turn around in place! (160ms)
         {
           delay: 160,
-          pOffset: isP1 ? { x: 22, y: -8 } : { x: -4, y: 2 },
-          eOffset: isP1 ? { x: 6, y: -2 } : { x: -22, y: 8 },
+          pOffset: { x: 0, y: 0 },
+          eOffset: isP1 ? { x: 6, y: -2 } : { x: 0, y: 0 },
           showEffect: true,
           hitFlash: false,
           usePlayerFront: isP1,
@@ -747,11 +747,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 1,
         },
-        // 3. Step 2: Second Diagonal Slash [\] - Still Facing Front! (160ms)
+        // 3. Step 2: Second Diagonal Slash [\] - In place (160ms)
         {
           delay: 160,
-          pOffset: isP1 ? { x: 20, y: -6 } : { x: -6, y: 3 },
-          eOffset: isP1 ? { x: 8, y: -3 } : { x: -20, y: 6 },
+          pOffset: { x: 0, y: 0 },
+          eOffset: isP1 ? { x: 8, y: -3 } : { x: 0, y: 0 },
           showEffect: true,
           hitFlash: false,
           usePlayerFront: isP1,
@@ -765,11 +765,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveStep: 2,
         },
         ...(isHit1 ? [
-          // 4. Step 3: FATAL FULL [X] SCISSOR EXECUTION CRASH behind the turned ally! (260ms)
+          // 4. Step 3: FATAL FULL [X] SCISSOR EXECUTION CRASH behind in place! (260ms)
           {
             delay: 260,
-            pOffset: isP1 ? { x: 20, y: -6 } : { x: -8, y: 4 },
-            eOffset: isP1 ? { x: 12, y: -4 } : { x: -20, y: 6 },
+            pOffset: { x: 0, y: 0 },
+            eOffset: isP1 ? { x: 12, y: -4 } : { x: 0, y: 0 },
             showEffect: true,
             hitFlash: true,
             usePlayerFront: isP1,
@@ -782,11 +782,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a1,
             moveStep: 3,
           },
-          // 5. Step 4: Red [X] Dissipation (140ms)
+          // 5. Step 4: Red [X] Dissipation in place (140ms)
           {
             delay: 140,
-            pOffset: isP1 ? { x: 10, y: -3 } : { x: 0, y: 0 },
-            eOffset: isP1 ? { x: 4, y: 0 } : { x: -10, y: 3 },
+            pOffset: { x: 0, y: 0 },
+            eOffset: isP1 ? { x: 4, y: 0 } : { x: 0, y: 0 },
             showEffect: true,
             hitFlash: false,
             usePlayerFront: isP1,
@@ -803,8 +803,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           // On Miss: Slashes swing by without forming the lethal X (140ms)
           {
             delay: 140,
-            pOffset: isP1 ? { x: 12, y: -4 } : { x: 0, y: 0 },
-            eOffset: isP1 ? { x: 4, y: 0 } : { x: -12, y: 4 },
+            pOffset: { x: 0, y: 0 },
+            eOffset: { x: 0, y: 0 },
             showEffect: false,
             hitFlash: false,
             usePlayerFront: isP1,
@@ -1367,11 +1367,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     } else if (isGuillotine2) {
       const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed")));
       act2Frames = [
-        // 1. Counter Windup lunge (120ms)
+        // 1. Counter Windup stance - In place (120ms)
         {
           delay: 120,
-          pOffset: isP2 ? { x: 16, y: -8 } : { x: 0, y: 0 },
-          eOffset: !isP2 ? { x: -16, y: 8 } : { x: 0, y: 0 },
+          pOffset: { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
           showEffect: false,
           hitFlash: false,
           enemyHp: a1.enemyHpAfter,
@@ -1380,11 +1380,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a2,
         },
-        // 2. Step 1: First Diagonal Slash [/] - Turn around to Front Sprite INSTANTLY! (160ms)
+        // 2. Step 1: First Diagonal Slash [/] - Turn around in place! (160ms)
         {
           delay: 160,
-          pOffset: isP2 ? { x: 22, y: -8 } : { x: -4, y: 2 },
-          eOffset: !isP2 ? { x: -22, y: 8 } : { x: 6, y: -2 },
+          pOffset: !isP2 ? { x: -6, y: 2 } : { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
           showEffect: true,
           hitFlash: false,
           usePlayerFront: isP2,
@@ -1397,11 +1397,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 1,
         },
-        // 3. Step 2: Second Diagonal Slash [\] - Still Facing Front! (160ms)
+        // 3. Step 2: Second Diagonal Slash [\] - In place (160ms)
         {
           delay: 160,
-          pOffset: isP2 ? { x: 20, y: -6 } : { x: -6, y: 3 },
-          eOffset: !isP2 ? { x: -20, y: 6 } : { x: 8, y: -3 },
+          pOffset: !isP2 ? { x: -8, y: 3 } : { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
           showEffect: true,
           hitFlash: false,
           usePlayerFront: isP2,
@@ -1415,11 +1415,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveStep: 2,
         },
         ...(isHit2 ? [
-          // 4. Step 3: FATAL FULL [X] SCISSOR EXECUTION CRASH + Hit Flash (260ms) - ONLY ON HIT!
+          // 4. Step 3: FATAL FULL [X] SCISSOR EXECUTION CRASH behind in place! (260ms)
           {
             delay: 260,
-            pOffset: isP2 ? { x: 20, y: -6 } : { x: -8, y: 4 },
-            eOffset: !isP2 ? { x: -20, y: 6 } : { x: 12, y: -4 },
+            pOffset: !isP2 ? { x: -12, y: 4 } : { x: 0, y: 0 },
+            eOffset: { x: 0, y: 0 },
             showEffect: true,
             hitFlash: true,
             usePlayerFront: isP2,
@@ -1432,11 +1432,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a2,
             moveStep: 3,
           },
-          // 5. Step 4: Red [X] Dissipation (140ms)
+          // 5. Step 4: Red [X] Dissipation in place (140ms)
           {
             delay: 140,
-            pOffset: isP2 ? { x: 10, y: -3 } : { x: 0, y: 0 },
-            eOffset: !isP2 ? { x: -10, y: 3 } : { x: 4, y: 0 },
+            pOffset: !isP2 ? { x: -4, y: 0 } : { x: 0, y: 0 },
+            eOffset: { x: 0, y: 0 },
             showEffect: true,
             hitFlash: false,
             usePlayerFront: isP2,
@@ -1453,8 +1453,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           // On Miss: Slashes swing by without forming the lethal X (140ms)
           {
             delay: 140,
-            pOffset: isP2 ? { x: 12, y: -4 } : { x: 0, y: 0 },
-            eOffset: !isP2 ? { x: -12, y: 4 } : { x: 4, y: 0 },
+            pOffset: { x: 0, y: 0 },
+            eOffset: { x: 0, y: 0 },
             showEffect: false,
             hitFlash: false,
             usePlayerFront: isP2,
