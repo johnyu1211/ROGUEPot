@@ -5309,6 +5309,53 @@ export function formatMoney(amount: number): string {
 }
 
 /**
+ * Splits and wraps dialogue text into clean lines fitting within maxWidth
+ */
+export function wrapDialogueText(ctx: any, text: string, maxWidth: number): string[] {
+  const rawLines = text.split("\n");
+  const wrapped: string[] = [];
+
+  for (const raw of rawLines) {
+    const trimmed = raw.trim();
+    if (!trimmed) continue;
+
+    if (ctx.measureText(trimmed).width <= maxWidth) {
+      wrapped.push(trimmed);
+      continue;
+    }
+
+    const words = trimmed.split(" ");
+    let currentLine = "";
+
+    for (const word of words) {
+      const testLine = currentLine ? `${currentLine} ${word}` : word;
+      if (ctx.measureText(testLine).width <= maxWidth) {
+        currentLine = testLine;
+      } else {
+        if (currentLine) wrapped.push(currentLine);
+        if (ctx.measureText(word).width > maxWidth) {
+          let charLine = "";
+          for (const char of word) {
+            if (ctx.measureText(charLine + char).width <= maxWidth) {
+              charLine += char;
+            } else {
+              wrapped.push(charLine);
+              charLine = char;
+            }
+          }
+          currentLine = charLine;
+        } else {
+          currentLine = word;
+        }
+      }
+    }
+    if (currentLine) wrapped.push(currentLine);
+  }
+
+  return wrapped;
+}
+
+/**
  * Renders the Authentic PokéRogue Battle Screen (560x380) with 2x SuperSampling
  */
 export async function renderBattleScreen(options: BattleScreenOptions): Promise<Buffer> {
@@ -5694,18 +5741,18 @@ function drawBattleFightMovesGrid(ctx: any, combatMon: any, isKo: boolean, categ
     // Dialogue Text
     ctx.textAlign = "left";
     ctx.textBaseline = "top";
-    ctx.font = "bold 15px DungGeunMo";
     ctx.fillStyle = "#FFFFFF";
 
     const pDisplayName = getPokemonDisplayName(playerMon, isKo);
     const defaultDialogue = isKo
       ? `${pDisplayName}(은)는 무엇을 할까?`
       : `What will ${pDisplayName} do?`;
-    const rawLines = (battle.dialogueText || defaultDialogue).replace(/\\n/g, "\n").split("\n").map((l: string) => l.trim()).filter((l: string) => l.length > 0);
-    const linesToShow = rawLines.length > 3 ? rawLines.slice(-3) : rawLines;
+    const fullText = (battle.dialogueText || defaultDialogue).replace(/\\n/g, "\n");
+    const wrapped = wrapDialogueText(ctx, fullText, width - 48);
+    const linesToShow = wrapped.length > 3 ? wrapped.slice(-3) : wrapped;
 
     linesToShow.forEach((line: string, lIdx: number) => {
-      ctx.fillText(line, 24, boxY + 16 + lIdx * 25);
+      ctx.fillText(line, 24, boxY + 16 + lIdx * 26);
     });
   }
 

@@ -13,6 +13,7 @@ import {
   drawFittedBattleSprite,
   getPokemonDisplayName,
   formatMoney,
+  wrapDialogueText,
   BIOME_NAMES_KO,
 } from "./canvasRenderer.js";
 
@@ -137,30 +138,30 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         isBlur: false,
         moveEffect: a1,
       },
-      // Frame 3: Attacker 1 Recoil & Damage Settling (300ms)
+      // Frame 3: Attacker 1 Recoil & Damage Settling (420ms - allows reading action 1 outcome!)
       {
-        delay: 300,
+        delay: 420,
         pOffset: isP1 ? { x: 6, y: -3 } : { x: 0, y: 0 },
         eOffset: !isP1 ? { x: -6, y: 3 } : { x: 0, y: 0 },
         showEffect: false,
         hitFlash: false,
         enemyHp: a1.enemyHpAfter,
         playerHp: a1.playerHpAfter,
-        textLineIdx: 1,
+        textLineIdx: 2,
         statProgress: undefined,
         isBlur: false,
         moveEffect: a1,
       },
-      // Frame 4: Natural Breathing Room Pause between Turns (340ms)
+      // Frame 4: Natural Breathing Room Pause between Turns (380ms - comfortable reading pause!)
       {
-        delay: 340,
+        delay: 380,
         pOffset: { x: 0, y: 0 },
         eOffset: { x: 0, y: 0 },
         showEffect: false,
         hitFlash: false,
         enemyHp: a1.enemyHpAfter,
         playerHp: a1.playerHpAfter,
-        textLineIdx: 1,
+        textLineIdx: 2,
         statProgress: undefined,
         isBlur: false,
         moveEffect: a1,
@@ -175,7 +176,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         hitFlash: false,
         enemyHp: a1.enemyHpAfter,
         playerHp: a1.playerHpAfter,
-        textLineIdx: 2,
+        textLineIdx: 3,
         statProgress: undefined,
         isBlur: false,
         moveEffect: a2,
@@ -184,33 +185,33 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       {
         delay: 240,
         pOffset: isP2 ? { x: 20, y: -10 } : { x: -8, y: 4 },
-        eOffset: isP2 ? { x: -20, y: 10 } : { x: 8, y: -2 },
+        eOffset: !isP2 ? { x: -20, y: 10 } : { x: 8, y: -2 },
         showEffect: true,
         hitFlash: true,
         enemyHp: a2.enemyHpAfter,
         playerHp: a2.playerHpAfter,
-        textLineIdx: 2,
+        textLineIdx: 3,
         statProgress: 0.25,
         isBlur: false,
         moveEffect: a2,
       },
-      // Frame 7: Attacker 2 Recoil & Stat Changes Start (300ms)
+      // Frame 7: Attacker 2 Recoil & Stat Changes Start (450ms - allows reading counter attack log!)
       {
-        delay: 300,
+        delay: 450,
         pOffset: isP2 ? { x: 6, y: -3 } : { x: 0, y: 0 },
         eOffset: !isP2 ? { x: -6, y: 3 } : { x: 0, y: 0 },
         showEffect: false,
         hitFlash: false,
         enemyHp: a2.enemyHpAfter,
         playerHp: a2.playerHpAfter,
-        textLineIdx: 3,
+        textLineIdx: 99,
         statProgress: 0.75,
         isBlur: false,
         moveEffect: a2,
       },
-      // Frame 8: Neutral Return & Stat Changes Peak (240ms)
+      // Frame 8: Neutral Return & Stat Changes Peak (320ms)
       {
-        delay: 240,
+        delay: 320,
         pOffset: { x: 0, y: 0 },
         eOffset: { x: 0, y: 0 },
         showEffect: false,
@@ -845,15 +846,16 @@ function renderBattleDialogue(ctx: any, width: number, height: number, dialogueL
 
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
-  ctx.font = "bold 15px DungGeunMo";
+  ctx.font = "bold 14px DungGeunMo";
   ctx.fillStyle = "#FFFFFF";
 
   if (textLineIdx > 0) {
-    const rawLines = dialogueLines.map((l: string) => l.trim()).filter((l: string) => l.length > 0);
-    const available = rawLines.slice(0, textLineIdx);
+    const fullText = dialogueLines.join("\n");
+    const wrapped = wrapDialogueText(ctx, fullText, width - 48);
+    const available = wrapped.slice(0, textLineIdx);
     const linesToShow = available.length > 3 ? available.slice(-3) : available;
     linesToShow.forEach((line: string, lIdx: number) => {
-      ctx.fillText(line, 24, boxY + 16 + lIdx * 25);
+      ctx.fillText(line, 24, boxY + 16 + lIdx * 26);
     });
   }
 }
