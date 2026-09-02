@@ -506,7 +506,7 @@ export function drawCutEffect(ctx: any, target: { x: number; y: number }, step: 
 }
 
 /**
- * 016 바람일으키기 (Gust): Battlefield White Atmospheric Veil & Sand-Dust Wind Gust Sweeping across Defender
+ * 016 바람일으키기 (Gust): Battlefield White Atmospheric Veil & Billowy Sand-Dust Clouds Drifting and Wobbling across Defender
  */
 export function drawGustEffect(
   ctx: any,
@@ -520,111 +520,64 @@ export function drawGustEffect(
 
   // 1. Subtle Battlefield White Veil Filter (화면 전체 아주 약간의 투명한 흰색 필터, 대화창 및 UI 제외)
   ctx.save();
-  const filterAlpha = step === 1 ? 0.08 : (step === 2 ? 0.15 : 0.07);
+  const filterAlpha = step === 1 ? 0.07 : (step === 2 ? 0.14 : 0.06);
   ctx.fillStyle = `rgba(255, 255, 255, ${filterAlpha})`;
   ctx.fillRect(0, 0, 560, 270);
   ctx.restore();
 
-  // Helper: Draw soft billowy sand-dust cloud puff
-  const drawDustPuff = (cx: number, cy: number, rx: number, ry: number, rot: number, col: string, alpha: number) => {
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.translate(cx, cy);
-    ctx.rotate(rot);
-    ctx.fillStyle = col;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  };
-
-  // Helper: Draw aerodynamic sweeping wind streak (sand / white)
-  const drawWindStream = (
-    sx: number,
-    sy: number,
-    ex: number,
-    ey: number,
-    curveY: number,
-    thickness: number,
-    color: string,
+  // Helper: Draw soft billowy multi-circle sand dust puff cluster
+  const drawDustCluster = (
+    baseX: number,
+    baseY: number,
+    scale: number,
+    wobbleY: number,
     alpha: number
   ) => {
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.strokeStyle = color;
-    ctx.lineWidth = thickness;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    const mx = (sx + ex) / 2;
-    const my = (sy + ey) / 2 + curveY;
-    ctx.moveTo(sx, sy);
-    ctx.quadraticCurveTo(mx, my, ex, ey);
-    ctx.stroke();
-    ctx.restore();
-  };
+    ctx.translate(baseX, baseY + wobbleY);
+    ctx.scale(scale, scale);
 
-  // Helper: Draw flying sand grain / dust speck
-  const drawDustSpeck = (x: number, y: number, r: number, color: string, alpha: number) => {
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
+    // Sub-puffs forming a natural puffy billowy dust cloud
+    const puffs = [
+      { ox: 0, oy: 0, r: 18, col: "rgba(217, 180, 130, 0.70)" },
+      { ox: -12, oy: -4, r: 14, col: "rgba(235, 215, 175, 0.75)" },
+      { ox: 13, oy: -3, r: 15, col: "rgba(225, 195, 145, 0.70)" },
+      { ox: -6, oy: 8, r: 13, col: "rgba(202, 168, 114, 0.65)" },
+      { ox: 8, oy: 7, r: 14, col: "rgba(217, 180, 130, 0.68)" },
+      { ox: 0, oy: -8, r: 12, col: "rgba(245, 230, 200, 0.80)" }, // bright puffy top
+    ];
+
+    for (const p of puffs) {
+      ctx.fillStyle = p.col;
+      ctx.beginPath();
+      ctx.arc(p.ox, p.oy, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
     ctx.restore();
   };
 
   if (step === 1) {
-    // Step 1: Gust surge rushing in from left towards target
-    drawWindStream(tx - 90, ty + 18, tx - 10, ty - 6, -8, 4.5, "rgba(235, 215, 175, 0.75)", 0.75);
-    drawWindStream(tx - 80, ty - 12, tx + 10, ty - 22, -6, 3.5, "rgba(255, 255, 255, 0.85)", 0.85);
-    drawWindStream(tx - 70, ty + 30, tx + 5, ty + 10, -10, 5.0, "rgba(217, 180, 130, 0.70)", 0.70);
-
-    // Initial dust puffs entering from left
-    drawDustPuff(tx - 45, ty + 8, 22, 11, -0.15, "rgba(217, 180, 130, 0.55)", 0.55);
-    drawDustPuff(tx - 30, ty - 10, 18, 9, 0.10, "rgba(235, 215, 175, 0.60)", 0.60);
-    drawDustPuff(tx - 55, ty + 20, 26, 13, -0.20, "rgba(202, 168, 114, 0.45)", 0.45);
-
-    // Flying sand grains
-    drawDustSpeck(tx - 35, ty - 18, 2.5, "#E8D5B5", 0.7);
-    drawDustSpeck(tx - 15, ty + 5, 3.0, "#D4B886", 0.8);
-    drawDustSpeck(tx - 50, ty + 25, 2.2, "#C2A675", 0.6);
+    // Step 1: Sand-dust cloud clusters entering from the left with subtle up/down wave wobble
+    drawDustCluster(tx - 65, ty + 12, 1.0, -6, 0.75);
+    drawDustCluster(tx - 40, ty - 14, 0.85, 5, 0.80);
+    drawDustCluster(tx - 20, ty + 16, 1.15, -4, 0.70);
+    drawDustCluster(tx - 50, ty + 2, 0.9, 3, 0.65);
   } else if (step === 2) {
-    // Step 2: Peak Sand Dust Windstorm engulfing & sweeping across target
-    drawDustPuff(tx - 15, ty + 14, 34, 16, -0.12, "rgba(217, 180, 130, 0.70)", 0.70);
-    drawDustPuff(tx + 18, ty - 6, 30, 14, 0.15, "rgba(235, 215, 175, 0.75)", 0.75);
-    drawDustPuff(tx - 25, ty - 16, 26, 12, -0.08, "rgba(202, 168, 114, 0.60)", 0.60);
-    drawDustPuff(tx + 10, ty + 24, 36, 17, -0.18, "rgba(217, 180, 130, 0.65)", 0.65);
-    drawDustPuff(tx + 35, ty + 6, 24, 11, 0.20, "rgba(245, 230, 200, 0.60)", 0.60);
-
-    // Fast cutting wind trails
-    drawWindStream(tx - 95, ty - 22, tx + 85, ty - 32, -10, 4.0, "rgba(255, 255, 255, 0.90)", 0.90);
-    drawWindStream(tx - 85, ty + 2, tx + 95, ty - 10, -12, 5.5, "rgba(235, 215, 175, 0.85)", 0.85);
-    drawWindStream(tx - 100, ty + 26, tx + 75, ty + 12, -14, 6.0, "rgba(217, 180, 130, 0.80)", 0.80);
-    drawWindStream(tx - 70, ty - 8, tx + 60, ty - 18, -6, 3.0, "rgba(255, 255, 255, 0.95)", 0.95);
-
-    // Dense scattered sand dust specks flying with high velocity
-    drawDustSpeck(tx - 40, ty - 26, 3.2, "#FFFFFF", 0.9);
-    drawDustSpeck(tx - 10, ty - 30, 2.6, "#E8D5B5", 0.85);
-    drawDustSpeck(tx + 25, ty - 20, 3.5, "#D4B886", 0.9);
-    drawDustSpeck(tx + 60, ty - 14, 2.8, "#FFFFFF", 0.85);
-    drawDustSpeck(tx - 20, ty + 18, 3.8, "#C2A675", 0.8);
-    drawDustSpeck(tx + 40, ty + 20, 3.0, "#E8D5B5", 0.85);
-    drawDustSpeck(tx + 70, ty + 5, 2.5, "#D4B886", 0.75);
+    // Step 2: Peak billowy sand-dust clouds engulfing and sweeping across defender with dynamic wave wobble
+    drawDustCluster(tx - 35, ty - 8, 1.25, 8, 0.85);
+    drawDustCluster(tx - 8, ty + 16, 1.40, -10, 0.88);
+    drawDustCluster(tx + 18, ty - 14, 1.30, 7, 0.85);
+    drawDustCluster(tx + 40, ty + 10, 1.15, -6, 0.80);
+    drawDustCluster(tx - 20, ty + 2, 1.0, 4, 0.75);
+    drawDustCluster(tx + 10, ty + 4, 1.2, -3, 0.80);
   } else if (step === 3) {
-    // Step 3: Sand dust gust trailing off and dissipating to the right
-    drawDustPuff(tx + 25, ty + 8, 28, 13, 0.12, "rgba(217, 180, 130, 0.40)", 0.40);
-    drawDustPuff(tx + 45, ty - 10, 24, 11, 0.18, "rgba(235, 215, 175, 0.45)", 0.45);
-    drawDustPuff(tx + 60, ty + 18, 26, 12, -0.10, "rgba(202, 168, 114, 0.35)", 0.35);
-
-    // Fading wind streaks
-    drawWindStream(tx - 20, ty - 14, tx + 95, ty - 24, -6, 3.0, "rgba(255, 255, 255, 0.50)", 0.50);
-    drawWindStream(tx - 10, ty + 12, tx + 105, ty + 2, -8, 3.8, "rgba(235, 215, 175, 0.45)", 0.45);
-
-    // Dissipating dust motes
-    drawDustSpeck(tx + 50, ty - 18, 2.4, "#E8D5B5", 0.5);
-    drawDustSpeck(tx + 75, ty - 6, 2.8, "#D4B886", 0.45);
-    drawDustSpeck(tx + 85, ty + 15, 2.2, "#FFFFFF", 0.4);
+    // Step 3: Sand-dust clouds drifting past to the right while softly fading out
+    drawDustCluster(tx + 25, ty + 8, 1.20, -5, 0.45);
+    drawDustCluster(tx + 50, ty - 12, 1.10, 6, 0.40);
+    drawDustCluster(tx + 75, ty + 14, 0.95, -4, 0.35);
+    drawDustCluster(tx + 40, ty + 2, 0.85, 3, 0.35);
   }
 
   ctx.restore();
