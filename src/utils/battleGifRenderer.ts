@@ -1888,38 +1888,18 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
       const isMiss1 = !isHit1;
       act1Frames = [
-        // 1. Approach & Enter Orbit (Left 9 o'clock) (75ms)
+        // 1. Arc 1 [BOTTOM FRONT 6 o'clock] - Entering at Defender's Feet (80ms)
         {
-          delay: 75,
-          pOffset: isP1 ? { x: 195, y: -85 } : { x: 0, y: 0 },
-          eOffset: !isP1 ? { x: -195, y: 85 } : { x: 0, y: 0 },
+          delay: 80,
+          pOffset: isP1 ? { x: 210, y: -58 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -210, y: 112 } : { x: 0, y: 0 },
           pScale: isP1 ? { x: 0.74, y: 0.74 } : undefined,
           eScale: !isP1 ? { x: 1.36, y: 1.36 } : undefined,
           pRot: isP1 ? -0.15 : undefined,
           eRot: !isP1 ? 0.15 : undefined,
           usePlayerFront: isP1,
           useEnemyBack: !isP1,
-          drawEnemyOnTop: !isP1, // Attacker in front of defender
-          showEffect: false,
-          hitFlash: false,
-          enemyHp: enemy.hp,
-          playerHp: playerMon.hp,
-          textLineIdx: 1,
-          isBlur: false,
-          moveEffect: a1,
-        },
-        // 2. Orbit Arc 1 [FRONT BOTTOM 6 o'clock] - Passing In Front of Defender (75ms)
-        {
-          delay: 75,
-          pOffset: isP1 ? { x: 245, y: -60 } : (isMiss1 ? { x: 16, y: 4 } : { x: -6, y: 4 }),
-          eOffset: isP1 ? (isMiss1 ? { x: 16, y: -4 } : { x: 6, y: -4 }) : { x: -245, y: 110 },
-          pScale: isP1 ? { x: 0.74, y: 0.74 } : undefined,
-          eScale: !isP1 ? { x: 1.36, y: 1.36 } : undefined,
-          pRot: isP1 ? -0.08 : undefined,
-          eRot: !isP1 ? 0.08 : undefined,
-          usePlayerFront: isP1,
-          useEnemyBack: !isP1,
-          drawEnemyOnTop: !isP1, // Attacker in front of defender
+          drawEnemyOnTop: !isP1, // Attacker in front of defender feet
           showEffect: true,
           hitFlash: false,
           enemyHp: enemy.hp,
@@ -1927,20 +1907,20 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           textLineIdx: 1,
           isBlur: false,
           moveEffect: a1,
-          moveStep: 1,
+          moveStep: 1, // Bottom Strand 1 Appears
         },
-        // 3. Orbit Arc 2 [RIGHT FLANK 3 o'clock] - Wrapping to Right Side (75ms)
+        // 2. Arc 2 [BOTTOM-RIGHT 3 o'clock] - Ascending around right side to back (80ms)
         {
-          delay: 75,
-          pOffset: isP1 ? { x: 295, y: -85 } : (isMiss1 ? { x: 20, y: 4 } : { x: -8, y: 4 }),
-          eOffset: isP1 ? (isMiss1 ? { x: 20, y: -4 } : { x: 8, y: -4 }) : { x: -295, y: 85 },
+          delay: 80,
+          pOffset: isP1 ? { x: 285, y: -70 } : (isMiss1 ? { x: 20, y: 4 } : { x: -8, y: 4 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 20, y: -4 } : { x: 8, y: -4 }) : { x: -285, y: 98 },
           pScale: isP1 ? { x: 0.74, y: 0.74 } : undefined,
           eScale: !isP1 ? { x: 1.36, y: 1.36 } : undefined,
-          pRot: isP1 ? 0.12 : undefined,
-          eRot: !isP1 ? -0.12 : undefined,
+          pRot: isP1 ? 0.10 : undefined,
+          eRot: !isP1 ? -0.10 : undefined,
           usePlayerFront: !isP1,
           useEnemyBack: isP1,
-          drawEnemyOnTop: isP1, // Inverts Z-index: Defender in front, Attacker begins curling behind
+          drawEnemyOnTop: isP1, // Inverts Z-index: Behind defender
           showEffect: true,
           hitFlash: false,
           enemyHp: enemy.hp,
@@ -1950,18 +1930,18 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 1,
         },
-        // 4. Orbit Arc 3 [BACK TOP 12 o'clock] - Passing BEHIND Defender (75ms)
+        // 3. Arc 3 [MIDDLE BACK 12 o'clock] - Passing Behind Waist (80ms)
         {
-          delay: 75,
-          pOffset: isP1 ? { x: 245, y: -110 } : (isMiss1 ? { x: 22, y: 4 } : { x: -8, y: 4 }),
-          eOffset: isP1 ? (isMiss1 ? { x: 22, y: -4 } : { x: 8, y: -4 }) : { x: -245, y: 60 },
+          delay: 80,
+          pOffset: isP1 ? { x: 245, y: -88 } : (isMiss1 ? { x: 22, y: 4 } : { x: -8, y: 4 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 22, y: -4 } : { x: 8, y: -4 }) : { x: -245, y: 84 },
           pScale: isP1 ? { x: 0.74, y: 0.74 } : undefined,
           eScale: !isP1 ? { x: 1.36, y: 1.36 } : undefined,
           pRot: isP1 ? 0.16 : undefined,
           eRot: !isP1 ? -0.16 : undefined,
           usePlayerFront: !isP1,
           useEnemyBack: isP1,
-          drawEnemyOnTop: isP1, // Attacker is completely BEHIND defender!
+          drawEnemyOnTop: isP1, // Completely behind defender
           showEffect: true,
           hitFlash: false,
           enemyHp: enemy.hp,
@@ -1969,20 +1949,20 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           textLineIdx: 1,
           isBlur: false,
           moveEffect: a1,
-          moveStep: 2,
+          moveStep: 2, // Middle Strand 2 Added
         },
-        // 5. Orbit Arc 4 [TIGHT INNER FRONT-LEFT 7 o'clock] - Spiraling back to front (75ms)
+        // 4. Arc 4 [TOP-LEFT 9 o'clock] - Ascending to Upper Chest in Front (80ms)
         {
-          delay: 75,
-          pOffset: isP1 ? { x: 220, y: -72 } : (isMiss1 ? { x: 24, y: 4 } : { x: -9, y: 4 }),
-          eOffset: isP1 ? (isMiss1 ? { x: 24, y: -4 } : { x: 9, y: -4 }) : { x: -220, y: 98 },
+          delay: 80,
+          pOffset: isP1 ? { x: 200, y: -106 } : (isMiss1 ? { x: 24, y: 4 } : { x: -9, y: 4 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 24, y: -4 } : { x: 9, y: -4 }) : { x: -200, y: 66 },
           pScale: isP1 ? { x: 0.74, y: 0.74 } : undefined,
           eScale: !isP1 ? { x: 1.36, y: 1.36 } : undefined,
-          pRot: isP1 ? -0.10 : undefined,
-          eRot: !isP1 ? 0.10 : undefined,
+          pRot: isP1 ? -0.12 : undefined,
+          eRot: !isP1 ? 0.12 : undefined,
           usePlayerFront: isP1,
           useEnemyBack: !isP1,
-          drawEnemyOnTop: !isP1, // Attacker in front!
+          drawEnemyOnTop: !isP1, // Out in front of upper body
           showEffect: true,
           hitFlash: false,
           enemyHp: enemy.hp,
@@ -1992,11 +1972,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 2,
         },
-        // 6. Maximum Constriction Squeeze Clamp & Impact Burst (150ms)
+        // 5. Arc 5 [FULL LOCK CLAMP] - Top Strand 3 Completes Full 3-Tier Squeeze Clamp (160ms)
         {
-          delay: 150,
-          pOffset: isP1 ? { x: 245, y: -85 } : (isMiss1 ? { x: 26, y: 4 } : { x: -10, y: 4 }),
-          eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 10, y: -4 }) : { x: -245, y: 85 },
+          delay: 160,
+          pOffset: isP1 ? { x: 245, y: -88 } : (isMiss1 ? { x: 26, y: 4 } : { x: -10, y: 4 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 10, y: -4 }) : { x: -245, y: 84 },
           pScale: isP1 ? { x: 0.76, y: 0.76 } : undefined,
           eScale: !isP1 ? { x: 1.40, y: 1.40 } : undefined,
           pRot: 0,
@@ -2011,13 +1991,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           textLineIdx: 1,
           isBlur: false,
           moveEffect: a1,
-          moveStep: 2,
+          moveStep: 3, // All 3 Tiers Clamping Squeeze
         },
-        // 7. Pulse Squeeze Lock (90ms)
+        // 6. Pulse Squeeze Lock (90ms)
         {
           delay: 90,
-          pOffset: isP1 ? { x: 245, y: -85 } : { x: 0, y: 0 },
-          eOffset: !isP1 ? { x: -245, y: 85 } : { x: 0, y: 0 },
+          pOffset: isP1 ? { x: 245, y: -88 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -245, y: 84 } : { x: 0, y: 0 },
           pScale: isP1 ? { x: 0.74, y: 0.74 } : undefined,
           eScale: !isP1 ? { x: 1.36, y: 1.36 } : undefined,
           usePlayerFront: isP1,
@@ -2030,9 +2010,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           textLineIdx: 1,
           isBlur: false,
           moveEffect: a1,
-          moveStep: 3,
+          moveStep: 4,
         },
-        // 8. Spring Back Return (80ms)
+        // 7. Spring Back Return (80ms)
         {
           delay: 80,
           pOffset: isP1 ? { x: 90, y: -45 } : { x: 0, y: 0 },
@@ -2047,9 +2027,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           textLineIdx: 1,
           isBlur: false,
           moveEffect: a1,
-          moveStep: 4,
+          moveStep: 5,
         },
-        // 9. Touchdown Landing (70ms)
+        // 8. Touchdown Landing (70ms)
         {
           delay: 70,
           pOffset: { x: 0, y: 0 },
@@ -3564,38 +3544,18 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
       const isMiss2 = !isHit2;
       act2Frames = [
-        // 1. Approach & Enter Orbit (Left 9 o'clock) (75ms)
+        // 1. Arc 1 [BOTTOM FRONT 6 o'clock] - Entering at Defender's Feet (80ms)
         {
-          delay: 75,
-          pOffset: isP2 ? { x: 195, y: -85 } : { x: 0, y: 0 },
-          eOffset: !isP2 ? { x: -195, y: 85 } : { x: 0, y: 0 },
+          delay: 80,
+          pOffset: isP2 ? { x: 210, y: -58 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -210, y: 112 } : { x: 0, y: 0 },
           pScale: isP2 ? { x: 0.74, y: 0.74 } : undefined,
           eScale: !isP2 ? { x: 1.36, y: 1.36 } : undefined,
           pRot: isP2 ? -0.15 : undefined,
           eRot: !isP2 ? 0.15 : undefined,
           usePlayerFront: isP2,
           useEnemyBack: !isP2,
-          drawEnemyOnTop: !isP2, // Attacker in front of defender
-          showEffect: false,
-          hitFlash: false,
-          enemyHp: a1.enemyHpAfter,
-          playerHp: a1.playerHpAfter,
-          textLineIdx: 3,
-          isBlur: false,
-          moveEffect: a2,
-        },
-        // 2. Orbit Arc 1 [FRONT BOTTOM 6 o'clock] - Passing In Front of Defender (75ms)
-        {
-          delay: 75,
-          pOffset: isP2 ? { x: 245, y: -60 } : (isMiss2 ? { x: 16, y: 4 } : { x: -6, y: 4 }),
-          eOffset: isP2 ? (isMiss2 ? { x: 16, y: -4 } : { x: 6, y: -4 }) : { x: -245, y: 110 },
-          pScale: isP2 ? { x: 0.74, y: 0.74 } : undefined,
-          eScale: !isP2 ? { x: 1.36, y: 1.36 } : undefined,
-          pRot: isP2 ? -0.08 : undefined,
-          eRot: !isP2 ? 0.08 : undefined,
-          usePlayerFront: isP2,
-          useEnemyBack: !isP2,
-          drawEnemyOnTop: !isP2, // Attacker in front of defender
+          drawEnemyOnTop: !isP2, // Attacker in front of defender feet
           showEffect: true,
           hitFlash: false,
           enemyHp: a1.enemyHpAfter,
@@ -3603,20 +3563,20 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           textLineIdx: 3,
           isBlur: false,
           moveEffect: a2,
-          moveStep: 1,
+          moveStep: 1, // Bottom Strand 1 Appears
         },
-        // 3. Orbit Arc 2 [RIGHT FLANK 3 o'clock] - Wrapping to Right Side (75ms)
+        // 2. Arc 2 [BOTTOM-RIGHT 3 o'clock] - Ascending around right side to back (80ms)
         {
-          delay: 75,
-          pOffset: isP2 ? { x: 295, y: -85 } : (isMiss2 ? { x: 20, y: 4 } : { x: -8, y: 4 }),
-          eOffset: isP2 ? (isMiss2 ? { x: 20, y: -4 } : { x: 8, y: -4 }) : { x: -295, y: 85 },
+          delay: 80,
+          pOffset: isP2 ? { x: 285, y: -70 } : (isMiss2 ? { x: 20, y: 4 } : { x: -8, y: 4 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 20, y: -4 } : { x: 8, y: -4 }) : { x: -285, y: 98 },
           pScale: isP2 ? { x: 0.74, y: 0.74 } : undefined,
           eScale: !isP2 ? { x: 1.36, y: 1.36 } : undefined,
-          pRot: isP2 ? 0.12 : undefined,
-          eRot: !isP2 ? -0.12 : undefined,
+          pRot: isP2 ? 0.10 : undefined,
+          eRot: !isP2 ? -0.10 : undefined,
           usePlayerFront: !isP2,
           useEnemyBack: isP2,
-          drawEnemyOnTop: isP2, // Inverts Z-index: Defender in front, Attacker begins curling behind
+          drawEnemyOnTop: isP2, // Inverts Z-index: Behind defender
           showEffect: true,
           hitFlash: false,
           enemyHp: a1.enemyHpAfter,
@@ -3626,18 +3586,18 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 1,
         },
-        // 4. Orbit Arc 3 [BACK TOP 12 o'clock] - Passing BEHIND Defender (75ms)
+        // 3. Arc 3 [MIDDLE BACK 12 o'clock] - Passing Behind Waist (80ms)
         {
-          delay: 75,
-          pOffset: isP2 ? { x: 245, y: -110 } : (isMiss2 ? { x: 22, y: 4 } : { x: -8, y: 4 }),
-          eOffset: isP2 ? (isMiss2 ? { x: 22, y: -4 } : { x: 8, y: -4 }) : { x: -245, y: 60 },
+          delay: 80,
+          pOffset: isP2 ? { x: 245, y: -88 } : (isMiss2 ? { x: 22, y: 4 } : { x: -8, y: 4 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 22, y: -4 } : { x: 8, y: -4 }) : { x: -245, y: 84 },
           pScale: isP2 ? { x: 0.74, y: 0.74 } : undefined,
           eScale: !isP2 ? { x: 1.36, y: 1.36 } : undefined,
           pRot: isP2 ? 0.16 : undefined,
           eRot: !isP2 ? -0.16 : undefined,
           usePlayerFront: !isP2,
           useEnemyBack: isP2,
-          drawEnemyOnTop: isP2, // Attacker is completely BEHIND defender!
+          drawEnemyOnTop: isP2, // Completely behind defender
           showEffect: true,
           hitFlash: false,
           enemyHp: a1.enemyHpAfter,
@@ -3645,20 +3605,20 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           textLineIdx: 3,
           isBlur: false,
           moveEffect: a2,
-          moveStep: 2,
+          moveStep: 2, // Middle Strand 2 Added
         },
-        // 5. Orbit Arc 4 [TIGHT INNER FRONT-LEFT 7 o'clock] - Spiraling back to front (75ms)
+        // 4. Arc 4 [TOP-LEFT 9 o'clock] - Ascending to Upper Chest in Front (80ms)
         {
-          delay: 75,
-          pOffset: isP2 ? { x: 220, y: -72 } : (isMiss2 ? { x: 24, y: 4 } : { x: -9, y: 4 }),
-          eOffset: isP2 ? (isMiss2 ? { x: 24, y: -4 } : { x: 9, y: -4 }) : { x: -220, y: 98 },
+          delay: 80,
+          pOffset: isP2 ? { x: 200, y: -106 } : (isMiss2 ? { x: 24, y: 4 } : { x: -9, y: 4 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 24, y: -4 } : { x: 9, y: -4 }) : { x: -200, y: 66 },
           pScale: isP2 ? { x: 0.74, y: 0.74 } : undefined,
           eScale: !isP2 ? { x: 1.36, y: 1.36 } : undefined,
-          pRot: isP2 ? -0.10 : undefined,
-          eRot: !isP2 ? 0.10 : undefined,
+          pRot: isP2 ? -0.12 : undefined,
+          eRot: !isP2 ? 0.12 : undefined,
           usePlayerFront: isP2,
           useEnemyBack: !isP2,
-          drawEnemyOnTop: !isP2, // Attacker in front!
+          drawEnemyOnTop: !isP2, // Out in front of upper body
           showEffect: true,
           hitFlash: false,
           enemyHp: a1.enemyHpAfter,
@@ -3668,11 +3628,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 2,
         },
-        // 6. Maximum Constriction Squeeze Clamp & Impact Burst (150ms)
+        // 5. Arc 5 [FULL LOCK CLAMP] - Top Strand 3 Completes Full 3-Tier Squeeze Clamp (160ms)
         {
-          delay: 150,
-          pOffset: isP2 ? { x: 245, y: -85 } : (isMiss2 ? { x: 26, y: 4 } : { x: -10, y: 4 }),
-          eOffset: isP2 ? (isMiss2 ? { x: 26, y: -4 } : { x: 10, y: -4 }) : { x: -245, y: 85 },
+          delay: 160,
+          pOffset: isP2 ? { x: 245, y: -88 } : (isMiss2 ? { x: 26, y: 4 } : { x: -10, y: 4 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 26, y: -4 } : { x: 10, y: -4 }) : { x: -245, y: 84 },
           pScale: isP2 ? { x: 0.76, y: 0.76 } : undefined,
           eScale: !isP2 ? { x: 1.40, y: 1.40 } : undefined,
           pRot: 0,
@@ -3687,13 +3647,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           textLineIdx: 3,
           isBlur: false,
           moveEffect: a2,
-          moveStep: 2,
+          moveStep: 3, // All 3 Tiers Clamping Squeeze
         },
-        // 7. Pulse Squeeze Lock (90ms)
+        // 6. Pulse Squeeze Lock (90ms)
         {
           delay: 90,
-          pOffset: isP2 ? { x: 245, y: -85 } : { x: 0, y: 0 },
-          eOffset: !isP2 ? { x: -245, y: 85 } : { x: 0, y: 0 },
+          pOffset: isP2 ? { x: 245, y: -88 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -245, y: 84 } : { x: 0, y: 0 },
           pScale: isP2 ? { x: 0.74, y: 0.74 } : undefined,
           eScale: !isP2 ? { x: 1.36, y: 1.36 } : undefined,
           usePlayerFront: isP2,
@@ -3706,9 +3666,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           textLineIdx: 3,
           isBlur: false,
           moveEffect: a2,
-          moveStep: 3,
+          moveStep: 4,
         },
-        // 8. Spring Back Return (80ms)
+        // 7. Spring Back Return (80ms)
         {
           delay: 80,
           pOffset: isP2 ? { x: 90, y: -45 } : { x: 0, y: 0 },
@@ -3723,9 +3683,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           textLineIdx: 3,
           isBlur: false,
           moveEffect: a2,
-          moveStep: 4,
+          moveStep: 5,
         },
-        // 9. Touchdown Landing (70ms)
+        // 8. Touchdown Landing (70ms)
         {
           delay: 70,
           pOffset: { x: 0, y: 0 },

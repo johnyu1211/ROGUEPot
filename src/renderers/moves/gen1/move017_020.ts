@@ -358,27 +358,28 @@ export function drawFlyEffect(ctx: any, start: { x: number; y: number }, target:
 }
 
 /**
- * 020 조이기 (Bind): Heavy Physical Constriction Grapple & High-Tension Squeeze Coils
+ * 020 조이기 (Bind): Heavy Physical Constriction Grapple & High-Tension Squeeze Coils (Ascending Bottom-to-Top)
  */
 export function drawBindEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
   ctx.save();
   const tx = target.x;
   const ty = target.y - 12;
 
-  // Step 1: Grapple Clasp & Initial Wrap (squeeze 1.0)
-  // Step 2: Max Squeeze Impact & Pressure Burst (squeeze 0.72)
-  // Step 3: Pulsing Residual Tightness (squeeze 0.84)
-  // Step 4: Dispersing Fade (squeeze 0.92)
-  const squeeze = step === 2 ? 0.72 : (step === 3 ? 0.84 : (step === 4 ? 0.92 : 1.0));
-  const globalAlpha = step === 4 ? 0.40 : (step === 3 ? 0.85 : 1.0);
+  // Step 1: Bottom Coil 1 (squeeze 1.0)
+  // Step 2: Bottom + Middle Coils (squeeze 0.95)
+  // Step 3: Full 3 Tiers Max Squeeze Impact & Pressure Burst (squeeze 0.72)
+  // Step 4: Full 3 Tiers Pulsing Residual Tightness (squeeze 0.84)
+  // Step 5: Full 3 Tiers Dispersing Fade (squeeze 0.92)
+  const squeeze = step === 3 ? 0.72 : (step === 4 ? 0.84 : (step >= 5 ? 0.92 : 1.0));
+  const globalAlpha = step >= 5 ? 0.40 : (step === 4 ? 0.85 : 1.0);
   ctx.globalAlpha = globalAlpha;
 
-  // 1. Inward Contracting Pressure Brackets / Tension Lines (Steps 2 & 3)
-  if (step === 2 || step === 3) {
+  // 1. Inward Contracting Pressure Brackets / Tension Lines (Steps 3 & 4)
+  if (step === 3 || step === 4) {
     ctx.save();
     ctx.strokeStyle = "rgba(254, 240, 138, 0.75)";
     ctx.lineWidth = 2.0;
-    const bracketDist = step === 2 ? 44 : 48;
+    const bracketDist = step === 3 ? 44 : 48;
     
     // Left pressure chevron
     ctx.beginPath();
@@ -396,10 +397,19 @@ export function drawBindEffect(ctx: any, target: { x: number; y: number }, step:
     ctx.restore();
   }
 
-  // 2. 3-Tier Dynamic 3D Wrapping Constriction Coils
-  const coilOffsets = [-16, 0, 16];
-  for (let i = 0; i < coilOffsets.length; i++) {
-    const cy = ty + coilOffsets[i];
+  // 2. Ascending Dynamic 3D Wrapping Coils (Bottom: +16, Middle: 0, Top: -16)
+  let activeOffsets: number[] = [];
+  if (step === 1) {
+    activeOffsets = [16]; // Bottom only
+  } else if (step === 2) {
+    activeOffsets = [16, 0]; // Bottom + Middle
+  } else {
+    activeOffsets = [16, 0, -16]; // Full 3 Tiers
+  }
+
+  for (let i = 0; i < activeOffsets.length; i++) {
+    const offset = activeOffsets[i];
+    const cy = ty + offset;
     const coilAngle = -0.22 + (i % 2) * 0.08;
     const rx = 34 * squeeze;
     const ry = 11 * squeeze;
