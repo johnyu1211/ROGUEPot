@@ -731,15 +731,14 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a1,
         },
-        // 2. Step 1: First Diagonal Slash [/] - Defender shifts right if miss! (160ms)
+        // 2. Step 1: First Diagonal Slash [/] (160ms)
         {
           delay: 160,
-          pOffset: !isP1 && isMiss1 ? { x: 26, y: 4 } : { x: 0, y: 0 },
+          pOffset: isP1 ? { x: 0, y: 0 } : (isMiss1 ? { x: 26, y: 4 } : { x: -4, y: 2 }),
           eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 6, y: -2 }) : { x: 0, y: 0 },
           showEffect: true,
           hitFlash: false,
           usePlayerFront: isP1,
-          useEnemyBack: !isP1,
           enemyHp: enemy.hp,
           playerHp: playerMon.hp,
           textLineIdx: 1,
@@ -748,15 +747,14 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 1,
         },
-        // 3. Step 2: Second Diagonal Slash [\] - Defender holds rightward dodge! (160ms)
+        // 3. Step 2: Second Diagonal Slash [\] (160ms)
         {
           delay: 160,
-          pOffset: !isP1 && isMiss1 ? { x: 24, y: 3 } : { x: 0, y: 0 },
+          pOffset: isP1 ? { x: 0, y: 0 } : (isMiss1 ? { x: 24, y: 3 } : { x: -6, y: 3 }),
           eOffset: isP1 ? (isMiss1 ? { x: 24, y: -3 } : { x: 8, y: -3 }) : { x: 0, y: 0 },
           showEffect: true,
           hitFlash: false,
           usePlayerFront: isP1,
-          useEnemyBack: !isP1,
           enemyHp: isHit1 ? enemy.hp : a1.enemyHpAfter,
           playerHp: isHit1 ? playerMon.hp : a1.playerHpAfter,
           textLineIdx: 1,
@@ -766,15 +764,14 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveStep: 2,
         },
         ...(isHit1 ? [
-          // 4. Step 3: FATAL FULL [X] SCISSOR EXECUTION CRASH behind in place! (260ms)
+          // 4. Step 3: FATAL FULL [X] SCISSOR EXECUTION CRASH (260ms)
           {
             delay: 260,
-            pOffset: { x: 0, y: 0 },
+            pOffset: isP1 ? { x: 0, y: 0 } : { x: -12, y: 4 },
             eOffset: isP1 ? { x: 12, y: -4 } : { x: 0, y: 0 },
             showEffect: true,
             hitFlash: true,
             usePlayerFront: isP1,
-            useEnemyBack: !isP1,
             enemyHp: a1.enemyHpAfter,
             playerHp: a1.playerHpAfter,
             textLineIdx: 1,
@@ -783,15 +780,14 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a1,
             moveStep: 3,
           },
-          // 5. Step 4: Red [X] Dissipation in place (140ms)
+          // 5. Step 4: Red [X] Dissipation (140ms)
           {
             delay: 140,
-            pOffset: { x: 0, y: 0 },
+            pOffset: isP1 ? { x: 0, y: 0 } : { x: -4, y: 1 },
             eOffset: isP1 ? { x: 4, y: 0 } : { x: 0, y: 0 },
             showEffect: true,
             hitFlash: false,
             usePlayerFront: isP1,
-            useEnemyBack: !isP1,
             enemyHp: a1.enemyHpAfter,
             playerHp: a1.playerHpAfter,
             textLineIdx: 1,
@@ -809,7 +805,6 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             showEffect: false,
             hitFlash: false,
             usePlayerFront: isP1,
-            useEnemyBack: !isP1,
             enemyHp: a1.enemyHpAfter,
             playerHp: a1.playerHpAfter,
             textLineIdx: 1,
@@ -1386,15 +1381,14 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a2,
         },
-        // 2. Step 1: First Diagonal Slash [/] - Defender shifts right if miss! (160ms)
+        // 2. Step 1: First Diagonal Slash [/] (160ms)
         {
           delay: 160,
-          pOffset: isP2 ? (isMiss2 ? { x: 26, y: -4 } : { x: 6, y: -2 }) : { x: 0, y: 0 },
-          eOffset: !isP2 && isMiss2 ? { x: 26, y: 4 } : { x: 0, y: 0 },
+          pOffset: isP2 ? { x: 0, y: 0 } : (isMiss2 ? { x: 26, y: 4 } : { x: -4, y: 2 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 26, y: -4 } : { x: 6, y: -2 }) : { x: 0, y: 0 },
           showEffect: true,
           hitFlash: false,
           usePlayerFront: isP2,
-          useEnemyBack: !isP2,
           enemyHp: a1.enemyHpAfter,
           playerHp: a1.playerHpAfter,
           textLineIdx: 3,
@@ -1403,15 +1397,14 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 1,
         },
-        // 3. Step 2: Second Diagonal Slash [\] - Defender holds rightward dodge! (160ms)
+        // 3. Step 2: Second Diagonal Slash [\] (160ms)
         {
           delay: 160,
-          pOffset: isP2 ? (isMiss2 ? { x: 24, y: -3 } : { x: 8, y: -3 }) : { x: 0, y: 0 },
-          eOffset: !isP2 && isMiss2 ? { x: 24, y: 3 } : { x: 0, y: 0 },
+          pOffset: isP2 ? { x: 0, y: 0 } : (isMiss2 ? { x: 24, y: 3 } : { x: -6, y: 3 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 24, y: -3 } : { x: 8, y: -3 }) : { x: 0, y: 0 },
           showEffect: true,
           hitFlash: false,
           usePlayerFront: isP2,
-          useEnemyBack: !isP2,
           enemyHp: isHit2 ? a1.enemyHpAfter : a2.enemyHpAfter,
           playerHp: isHit2 ? a1.playerHpAfter : a2.playerHpAfter,
           textLineIdx: 3,
@@ -1421,15 +1414,14 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveStep: 2,
         },
         ...(isHit2 ? [
-          // 4. Step 3: FATAL FULL [X] SCISSOR EXECUTION CRASH behind in place! (260ms)
+          // 4. Step 3: FATAL FULL [X] SCISSOR EXECUTION CRASH (260ms)
           {
             delay: 260,
-            pOffset: isP2 ? { x: 12, y: -4 } : { x: 0, y: 0 },
-            eOffset: { x: 0, y: 0 },
+            pOffset: isP2 ? { x: 0, y: 0 } : { x: -12, y: 4 },
+            eOffset: isP2 ? { x: 12, y: -4 } : { x: 0, y: 0 },
             showEffect: true,
             hitFlash: true,
             usePlayerFront: isP2,
-            useEnemyBack: !isP2,
             enemyHp: a2.enemyHpAfter,
             playerHp: a2.playerHpAfter,
             textLineIdx: 3,
@@ -1438,15 +1430,14 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a2,
             moveStep: 3,
           },
-          // 5. Step 4: Red [X] Dissipation in place (140ms)
+          // 5. Step 4: Red [X] Dissipation (140ms)
           {
             delay: 140,
-            pOffset: isP2 ? { x: 4, y: 0 } : { x: 0, y: 0 },
-            eOffset: { x: 0, y: 0 },
+            pOffset: isP2 ? { x: 0, y: 0 } : { x: -4, y: 1 },
+            eOffset: isP2 ? { x: 4, y: 0 } : { x: 0, y: 0 },
             showEffect: true,
             hitFlash: false,
             usePlayerFront: isP2,
-            useEnemyBack: !isP2,
             enemyHp: a2.enemyHpAfter,
             playerHp: a2.playerHpAfter,
             textLineIdx: 3,
@@ -1459,12 +1450,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           // On Miss: Defender slides smoothly back to center (180ms)
           {
             delay: 180,
-            pOffset: isP2 ? { x: 8, y: -1 } : { x: 0, y: 0 },
-            eOffset: !isP2 ? { x: 8, y: 1 } : { x: 0, y: 0 },
+            pOffset: !isP2 ? { x: 8, y: 1 } : { x: 0, y: 0 },
+            eOffset: isP2 ? { x: 8, y: -1 } : { x: 0, y: 0 },
             showEffect: false,
             hitFlash: false,
             usePlayerFront: isP2,
-            useEnemyBack: !isP2,
             enemyHp: a2.enemyHpAfter,
             playerHp: a2.playerHpAfter,
             textLineIdx: 3,
