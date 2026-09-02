@@ -3912,21 +3912,21 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
 
       const eAlpha = f.eAlpha !== undefined
         ? f.eAlpha
-        : ((f.targetAlpha !== undefined && eTarget) ? f.targetAlpha : (enemy.hp <= 0 && f.enemyHp <= 0 ? 0.0 : 1.0));
+        : ((f.targetAlpha !== undefined && eTarget) ? f.targetAlpha : 1.0);
       const pAlpha = f.pAlpha !== undefined
         ? f.pAlpha
-        : ((f.targetAlpha !== undefined && pTarget) ? f.targetAlpha : (playerMon.hp <= 0 && f.playerHp <= 0 ? 0.0 : 1.0));
+        : ((f.targetAlpha !== undefined && pTarget) ? f.targetAlpha : 1.0);
 
       // Pokémon Silhouette Shadows (cast onto platform ground - suppressed during high-speed mid-air flight, underground, or off-screen)
       const isEnemyHidden = (f.eOffset && (f.eOffset.y <= -50 || f.eOffset.y >= 9000)) || f.hideEShadow || f.hideEnemy || (eAlpha <= 0.02) || Boolean(f.eScale);
-      if (enemySprite && (enemy.hp > 0 || f.enemyHp > 0) && !isEnemyHidden) {
+      if (enemySprite && !isEnemyHidden) {
         const eShadowX = em.x + f.eOffset.x;
         const eShadowY = em.y;
         drawPokemonSilhouetteShadow(targetCtx, enemySprite, eShadowX, eShadowY, em.size, false, 0.42 * eAlpha);
       }
 
       const isPlayerHidden = (f.pOffset && (f.pOffset.y <= -50 || f.pOffset.y >= 9000)) || f.hidePShadow || f.hidePlayer || (pAlpha <= 0.02) || Boolean(f.pScale);
-      if (playerSprite && (playerMon.hp > 0 || f.playerHp > 0) && !isPlayerHidden) {
+      if (playerSprite && !isPlayerHidden) {
         const pShadowX = pm.x + f.pOffset.x;
         const pShadowY = pm.y;
         drawPokemonSilhouetteShadow(targetCtx, playerSprite, pShadowX, pShadowY, pm.size, true, 0.42 * pAlpha);
@@ -3935,7 +3935,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       // Enemy Sprite
       const eSpriteToDraw = f.useEnemyBack ? (enemyBackSprite || enemySprite) : enemySprite;
       const isEnemySpriteHidden = (f.eOffset && (f.eOffset.y <= -500 || f.eOffset.y >= 9000)) || f.hideEnemy || (eAlpha <= 0.01);
-      if (eSpriteToDraw && !isEnemySpriteHidden && (enemy.hp > 0 || f.enemyHp > 0 || eAlpha > 0.01)) {
+      if (eSpriteToDraw && !isEnemySpriteHidden) {
         targetCtx.save();
         if (f.eWhite) {
           targetCtx.filter = "brightness(0) invert(1)";
