@@ -967,9 +967,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
       const isMiss1 = !isHit1;
       act1Frames = [
-        // 1. Blade Generation & Orbit around Attacker (160ms)
+        // 1. Helical Spiral Orbit around Attacker (150ms)
         {
-          delay: 160,
+          delay: 150,
           pOffset: isP1 ? { x: 4, y: -2 } : { x: 0, y: 0 },
           eOffset: !isP1 ? { x: -4, y: 2 } : { x: 0, y: 0 },
           showEffect: true,
@@ -981,11 +981,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 1,
         },
-        // 2. Revolving Cyclone Ring of Blades on Attacker (160ms)
+        // 2. Swirl Dissolving & Fading Out at Attacker (150ms)
         {
-          delay: 160,
-          pOffset: isP1 ? { x: 8, y: -4 } : { x: 0, y: 0 },
-          eOffset: !isP1 ? { x: -8, y: 4 } : { x: 0, y: 0 },
+          delay: 150,
+          pOffset: isP1 ? { x: 6, y: -3 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -6, y: 3 } : { x: 0, y: 0 },
           showEffect: true,
           hitFlash: false,
           enemyHp: enemy.hp,
@@ -995,7 +995,21 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 2,
         },
-        // 3. Revolving Blade Ring Flying toward Defender (170ms)
+        // 3. Faint Translucent Opposite Pairs Spawning at Defender (150ms)
+        {
+          delay: 150,
+          pOffset: isP1 ? { x: 8, y: -4 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -8, y: 4 } : { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 3,
+        },
+        // 4. Blades Closing In & Becoming Denser from All Opposing Sides (170ms)
         {
           delay: 170,
           pOffset: isP1 ? { x: 12, y: -6 } : { x: 0, y: 0 },
@@ -1007,9 +1021,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           textLineIdx: 1,
           isBlur: false,
           moveEffect: a1,
-          moveStep: 3,
+          moveStep: 4,
         },
-        // 4. Cross Convergence Cleave "사사사사삿!" on Defender (240ms)
+        // 5. Full Omnidirectional 8-Way Cleave Storm Impact (240ms)
         {
           delay: 240,
           pOffset: isP1 ? { x: 14, y: -7 } : (isMiss1 ? { x: 26, y: 4 } : { x: -6, y: 3 }),
@@ -1021,11 +1035,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           textLineIdx: 1,
           isBlur: false,
           moveEffect: a1,
-          moveStep: 4,
+          moveStep: 5,
         },
-        // 5. Impact Star & Dispersing Shards (150ms)
+        // 6. Gentle Shard Fade-Out Dispersal (140ms)
         {
-          delay: 150,
+          delay: 140,
           pOffset: isP1 ? { x: 4, y: -2 } : { x: 0, y: 0 },
           eOffset: isP1 ? { x: 2, y: 0 } : { x: -4, y: 2 },
           showEffect: true,
@@ -1035,7 +1049,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           textLineIdx: 1,
           isBlur: false,
           moveEffect: a1,
-          moveStep: 5,
+          moveStep: 6,
         }
       ];
     } else if (isSingleStrikeSpecial1) {
@@ -1831,9 +1845,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
       const isMiss2 = !isHit2;
       act2Frames = [
-        // 1. Counter Blade Generation & Orbit around Attacker (160ms)
+        // 1. Counter Helical Spiral Orbit around Attacker (150ms)
         {
-          delay: 160,
+          delay: 150,
           pOffset: isP2 ? { x: 4, y: -2 } : { x: 0, y: 0 },
           eOffset: !isP2 ? { x: -4, y: 2 } : { x: 0, y: 0 },
           showEffect: true,
@@ -1845,11 +1859,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 1,
         },
-        // 2. Revolving Cyclone Ring of Blades on Attacker (160ms)
+        // 2. Counter Swirl Dissolving & Fading Out at Attacker (150ms)
         {
-          delay: 160,
-          pOffset: isP2 ? { x: 8, y: -4 } : { x: 0, y: 0 },
-          eOffset: !isP2 ? { x: -8, y: 4 } : { x: 0, y: 0 },
+          delay: 150,
+          pOffset: isP2 ? { x: 6, y: -3 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -6, y: 3 } : { x: 0, y: 0 },
           showEffect: true,
           hitFlash: false,
           enemyHp: a1.enemyHpAfter,
@@ -1859,7 +1873,21 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 2,
         },
-        // 3. Revolving Blade Ring Flying toward Defender (170ms)
+        // 3. Faint Translucent Opposite Pairs Spawning at Defender (150ms)
+        {
+          delay: 150,
+          pOffset: isP2 ? { x: 8, y: -4 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -8, y: 4 } : { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 3,
+        },
+        // 4. Blades Closing In & Becoming Denser from All Opposing Sides (170ms)
         {
           delay: 170,
           pOffset: isP2 ? { x: 12, y: -6 } : { x: 0, y: 0 },
@@ -1871,9 +1899,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           textLineIdx: 3,
           isBlur: false,
           moveEffect: a2,
-          moveStep: 3,
+          moveStep: 4,
         },
-        // 4. Cross Convergence Cleave "사사사사삿!" on Defender (240ms)
+        // 5. Full Omnidirectional 8-Way Cleave Storm Impact (240ms)
         {
           delay: 240,
           pOffset: isP2 ? (isMiss2 ? { x: 26, y: -4 } : { x: 10, y: -3 }) : { x: -14, y: 7 },
@@ -1885,11 +1913,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           textLineIdx: 3,
           isBlur: false,
           moveEffect: a2,
-          moveStep: 4,
+          moveStep: 5,
         },
-        // 5. Impact Star & Dispersing Shards (150ms)
+        // 6. Gentle Shard Fade-Out Dispersal (140ms)
         {
-          delay: 150,
+          delay: 140,
           pOffset: isP2 ? { x: 2, y: 0 } : { x: -4, y: 2 },
           eOffset: !isP2 ? { x: 4, y: -2 } : { x: 0, y: 0 },
           showEffect: true,
@@ -1899,7 +1927,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           textLineIdx: 3,
           isBlur: false,
           moveEffect: a2,
-          moveStep: 5,
+          moveStep: 6,
         }
       ];
     } else if (isSingleStrikeSpecial2) {
