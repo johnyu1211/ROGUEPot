@@ -196,16 +196,7 @@ export async function renderBattleMessageData(
     imageBuffer = res.buffer;
     motionDurationMs = res.motionDurationMs;
     fileName = `battle_${uniqueId}.gif`;
-  } else if (battle.phase === "VICTORY" && battle.lastMoveEffect) {
-    const res = await renderBattleFaintGif({
-      battle,
-      lang: profile.language,
-    });
-    imageBuffer = res.buffer;
-    motionDurationMs = res.motionDurationMs;
-    fileName = `battle_${uniqueId}.gif`;
-    battle.lastMoveEffect = null;
-  } else if (battle.lastMoveEffect && battle.phase === "MAIN") {
+  } else if (battle.lastMoveEffect && (battle.phase === "VICTORY" || battle.phase === "DEFEAT" || battle.phase === "MAIN")) {
     const res = await renderBattleMoveGif({
       battle,
       lang: profile.language,
