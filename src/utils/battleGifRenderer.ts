@@ -379,13 +379,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   const isFly1 = (mKey1 === "fly");
   const isRazorWind1 = (mKey1 === "razor-wind" || mKey1 === "razorwind");
   const isWingAttack1 = (mKey1 === "wing-attack" || mKey1 === "wingattack");
+  const isWhirlwind1 = (mKey1 === "whirlwind");
   const isSingleStrikeSpecial1 = (
     mKey1 === "thunder-punch" || mKey1 === "thunderpunch" ||
     mKey1 === "scratch" ||
     mKey1 === "vice-grip" || mKey1 === "vicegrip" ||
     mKey1 === "cut" ||
-    mKey1 === "gust" ||
-    mKey1 === "whirlwind"
+    mKey1 === "gust"
   );
 
   let act1Frames: any[] = [];
@@ -1260,6 +1260,93 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveStep: 4,
         }
       ];
+    } else if (isWhirlwind1) {
+      const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
+      const isMiss1 = !isHit1;
+      act1Frames = [
+        // 1. Windup & Cyclone Inception at defender base (140ms)
+        {
+          delay: 140,
+          pOffset: isP1 ? { x: 12, y: -4 } : { x: 0, y: 0 },
+          eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 0, y: -18 }) : { x: -12, y: 4 },
+          eRot: isP1 ? 0.10 : undefined,
+          pRot: !isP1 ? -0.10 : undefined,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 1,
+        },
+        // 2. Towering Cyclone Funnel Surges - Defender lifted high into mid-air! (220ms)
+        {
+          delay: 220,
+          pOffset: isP1 ? { x: 16, y: -6 } : (isMiss1 ? { x: 26, y: 4 } : { x: 10, y: -100 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 10, y: -100 }) : { x: -16, y: 6 },
+          eRot: isP1 ? -0.28 : undefined,
+          pRot: !isP1 ? 0.28 : undefined,
+          showEffect: true,
+          hitFlash: isHit1,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          statProgress: undefined,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 2,
+        },
+        // 3. Roaring Sky Vortex - Defender blown completely off top of screen into the clouds! (200ms)
+        {
+          delay: 200,
+          pOffset: isP1 ? { x: 10, y: -3 } : (isMiss1 ? { x: 16, y: 2 } : { x: -15, y: -240 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 16, y: -2 } : { x: -15, y: -240 }) : { x: -10, y: 3 },
+          eRot: isP1 ? 0.45 : undefined,
+          pRot: !isP1 ? -0.45 : undefined,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          statProgress: undefined,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 3,
+        },
+        // 4. Cyclone dissipates, Defender floats back down into frame (180ms)
+        {
+          delay: 180,
+          pOffset: isP1 ? { x: 4, y: 0 } : { x: 0, y: -25 },
+          eOffset: isP1 ? { x: 0, y: -25 } : { x: -4, y: 0 },
+          eRot: isP1 ? 0.08 : undefined,
+          pRot: !isP1 ? -0.08 : undefined,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          statProgress: undefined,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 4,
+        },
+        // 5. Landed safely back on platform (120ms)
+        {
+          delay: 120,
+          pOffset: { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          statProgress: undefined,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 4,
+        }
+      ];
     } else if (isSingleStrikeSpecial1) {
       const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
       const isMiss1 = !isHit1;
@@ -1378,13 +1465,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const isFly2 = (mKey2 === "fly");
     const isRazorWind2 = (mKey2 === "razor-wind" || mKey2 === "razorwind");
     const isWingAttack2 = (mKey2 === "wing-attack" || mKey2 === "wingattack");
+    const isWhirlwind2 = (mKey2 === "whirlwind");
     const isSingleStrikeSpecial2 = (
       mKey2 === "thunder-punch" || mKey2 === "thunderpunch" ||
       mKey2 === "scratch" ||
       mKey2 === "vice-grip" || mKey2 === "vicegrip" ||
       mKey2 === "cut" ||
-      mKey2 === "gust" ||
-      mKey2 === "whirlwind"
+      mKey2 === "gust"
     );
 
     let act2Frames: any[] = [];
@@ -2244,6 +2331,93 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveStep: 4,
         },
         // 5. Smooth landing back on home platform (120ms)
+        {
+          delay: 120,
+          pOffset: { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          statProgress: undefined,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 4,
+        }
+      ];
+    } else if (isWhirlwind2) {
+      const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
+      const isMiss2 = !isHit2;
+      act2Frames = [
+        // 1. Windup & Cyclone Inception at defender base (140ms)
+        {
+          delay: 140,
+          pOffset: isP2 ? (isMiss2 ? { x: 26, y: -4 } : { x: 0, y: -18 }) : { x: 12, y: -4 },
+          eOffset: !isP2 ? (isMiss2 ? { x: -26, y: 4 } : { x: 0, y: -18 }) : { x: -12, y: 4 },
+          pRot: isP2 ? 0.10 : undefined,
+          eRot: !isP2 ? 0.10 : undefined,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 1,
+        },
+        // 2. Towering Cyclone Funnel Surges - Defender lifted high into mid-air! (220ms)
+        {
+          delay: 220,
+          pOffset: isP2 ? (isMiss2 ? { x: 26, y: -4 } : { x: 10, y: -100 }) : { x: 16, y: -6 },
+          eOffset: !isP2 ? (isMiss2 ? { x: -26, y: 4 } : { x: -10, y: -100 }) : { x: -16, y: 6 },
+          pRot: isP2 ? -0.28 : undefined,
+          eRot: !isP2 ? -0.28 : undefined,
+          showEffect: true,
+          hitFlash: isHit2,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          statProgress: undefined,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 2,
+        },
+        // 3. Roaring Sky Vortex - Defender blown completely off top of screen into the clouds! (200ms)
+        {
+          delay: 200,
+          pOffset: isP2 ? (isMiss2 ? { x: 16, y: -2 } : { x: -15, y: -240 }) : { x: 10, y: -3 },
+          eOffset: !isP2 ? (isMiss2 ? { x: -16, y: 2 } : { x: 15, y: -240 }) : { x: -10, y: 3 },
+          pRot: isP2 ? 0.45 : undefined,
+          eRot: !isP2 ? 0.45 : undefined,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          statProgress: undefined,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 3,
+        },
+        // 4. Cyclone dissipates, Defender floats back down into frame (180ms)
+        {
+          delay: 180,
+          pOffset: isP2 ? { x: 0, y: -25 } : { x: 4, y: 0 },
+          eOffset: !isP2 ? { x: 0, y: -25 } : { x: -4, y: 0 },
+          pRot: isP2 ? 0.08 : undefined,
+          eRot: !isP2 ? 0.08 : undefined,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          statProgress: undefined,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 4,
+        },
+        // 5. Landed safely back on platform (120ms)
         {
           delay: 120,
           pOffset: { x: 0, y: 0 },
