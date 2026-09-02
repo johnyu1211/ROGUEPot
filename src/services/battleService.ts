@@ -232,7 +232,7 @@ export class BattleService {
   /**
    * Spawns a wild encounter with proper stats and abilities
    */
-  public spawnWildPokemon(wave: number, biome: string, forcedSpecies?: string, forcedLevel?: number): BattlePokemon {
+  public spawnWildPokemon(wave: number, biome: string, forcedSpecies?: string, forcedLevel?: number, forcedAbility?: string): BattlePokemon {
     const isBoss = forcedSpecies?.includes("gmax") || forcedSpecies?.includes("mega") || (wave % 10 === 0 && !forcedSpecies);
     const pool = isBoss ? (BOSS_ENCOUNTERS[wave] || BOSS_ENCOUNTERS[10]) : (BIOME_ENCOUNTERS[biome] || BIOME_ENCOUNTERS["Town"]);
     const speciesId = forcedSpecies || pool[Math.floor(Math.random() * pool.length)] || "pidgey";
@@ -280,7 +280,7 @@ export class BattleService {
         const mInfo = MOVES_DATA[m.toLowerCase().replace(/[\s_]+/g, "-")];
         return mInfo?.pp || 20;
       }),
-      ability: sData.abilities["0"] || "Limber",
+      ability: forcedAbility || sData.abilities["0"] || "Limber",
       stages: createDefaultStages(),
       isShiny,
       isBoss,
@@ -386,7 +386,7 @@ export class BattleService {
     }
 
     const wildPokemon = isTestSandbox
-      ? this.spawnWildPokemon(1, "Town", "testsubject12", 1)
+      ? this.spawnWildPokemon(1, "Town", "testsubject12", 1, "Sturdy")
       : this.spawnWildPokemon(slot.wave, slot.biome || "Town");
     const isKo = profile.language === "ko";
 
@@ -516,20 +516,27 @@ export class BattleService {
       description: "기본 공격 기술",
     };
 
-    // Enemy chooses random move
-    const eMoveRaw = enemyMon.moves[Math.floor(Math.random() * enemyMon.moves.length)] || "Tackle";
-    const eMoveKey = eMoveRaw.toLowerCase().replace(/[\s_]+/g, "-");
-    const eMove = MOVES_DATA[eMoveKey] || {
-      id: 0,
-      name: eMoveRaw,
-      nameKo: eMoveRaw,
-      type: "normal",
-      power: 40,
-      accuracy: 100,
-      pp: 35,
-      category: "physical",
-      description: "기본 공격 기술",
-    };
+    // Enemy chooses move (in Slot 1 sandbox: mimics player's exact move!)
+    const isTestSandbox = userId === "1411661077611020429" && slotId === 1;
+    const eMoveRaw = isTestSandbox
+      ? pMove.name
+      : (enemyMon.moves[Math.floor(Math.random() * enemyMon.moves.length)] || "Tackle");
+    const eMoveKey = isTestSandbox
+      ? pMoveKey
+      : eMoveRaw.toLowerCase().replace(/[\s_]+/g, "-");
+    const eMove = isTestSandbox
+      ? pMove
+      : (MOVES_DATA[eMoveKey] || {
+          id: 0,
+          name: eMoveRaw,
+          nameKo: eMoveRaw,
+          type: "normal",
+          power: 40,
+          accuracy: 100,
+          pp: 35,
+          category: "physical",
+          description: "기본 공격 기술",
+        });
 
     // 1. Determine Turn Priority & Speed Order
     const pPriority = this.getMovePriority(pMoveKey);
