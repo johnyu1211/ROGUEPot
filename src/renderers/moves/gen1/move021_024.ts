@@ -389,31 +389,6 @@ export function drawDoubleKickEffect(
   const ty = target.y - 8;
 
 
-  // Helper to draw a stylized martial arts kick foot / boot in deep fighting orange
-  const drawKickBoot = (bx: number, by: number, rotAngle: number, scaleX: number = 1) => {
-    ctx.save();
-    ctx.translate(bx, by);
-    ctx.rotate(rotAngle);
-    ctx.scale(scaleX, 1);
-
-    // Boot sole & body
-    ctx.fillStyle = "#C2410C";
-    ctx.beginPath();
-    ctx.ellipse(0, 0, 18, 9, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "#431407";
-    ctx.lineWidth = 2.0;
-    ctx.stroke();
-
-    // Boot toe cap highlight
-    ctx.fillStyle = "#FED7AA";
-    ctx.beginPath();
-    ctx.arc(12, 0, 5.5, -Math.PI / 2, Math.PI / 2);
-    ctx.fill();
-
-    ctx.restore();
-  };
-
   // Clean Fighting-Orange Impact Burst (Direct solid burst without flying particles/grains)
   const drawCleanOrangeBurst = (cx: number, cy: number, radius: number) => {
     ctx.save();
@@ -435,15 +410,13 @@ export function drawDoubleKickEffect(
   const hitY2 = ty + 18;
 
   if (step === 1) {
-    // Step 1: 1타 - 명확한 좌 상단 (Top-Left) 주황 타격 버스트 (추가 파티클/알갱이 없음)
+    // Step 1: 1타 - 명확한 좌 상단 (Top-Left) 주황 타격 버스트 (주황색 타원 완전 제거)
     ctx.save();
-    drawKickBoot(hitX1 - 8, hitY1 - 6, -0.55, 1.15);
     drawCleanOrangeBurst(hitX1, hitY1, 26);
     ctx.restore();
   } else if (step === 2) {
-    // Step 2: 2타 - 명확한 우 하단 (Bottom-Right) 주황 타격 버스트 (추가 파티클/알갱이 없음)
+    // Step 2: 2타 - 명확한 우 하단 (Bottom-Right) 주황 타격 버스트 (주황색 타원 완전 제거)
     ctx.save();
-    drawKickBoot(hitX2 + 8, hitY2 + 6, 0.60, -1.2);
     drawCleanOrangeBurst(hitX2, hitY2, 30);
     ctx.restore();
   } else if (step >= 3) {
