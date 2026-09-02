@@ -110,6 +110,7 @@ export interface TurnActionInfo {
     direction: "up" | "down";
   }[];
   typeMod?: number;
+  hitCount?: number;
   isSuperEffective?: boolean;
 }
 
@@ -618,6 +619,7 @@ export class BattleService {
       playerHpAfter: playerMon.hp,
       statChanges: [...statChanges1],
       typeMod: res1.typeMod,
+      hitCount: res1.hitCount,
       isSuperEffective: res1.isSuperEffective,
     });
 
@@ -648,6 +650,7 @@ export class BattleService {
         playerHpAfter: playerMon.hp,
         statChanges: [...statChanges2],
         typeMod: res2.typeMod,
+        hitCount: res2.hitCount,
         isSuperEffective: res2.isSuperEffective,
       });
     } else if (secondActor.isFlinched && secondActor.hp > 0) {
@@ -855,7 +858,7 @@ export class BattleService {
     isActorPlayer: boolean,
     isKo: boolean,
     battle?: BattleState
-  ): { log: string; damage: number; typeMod?: number; isSuperEffective?: boolean } {
+  ): { log: string; damage: number; typeMod?: number; hitCount?: number; isSuperEffective?: boolean } {
     const actorName = isActorPlayer ? actor.name : (isKo ? actor.nameKo : actor.name);
     const targetName = isActorPlayer ? (isKo ? target.nameKo : target.name) : target.name;
     const moveName = isKo ? move.nameKo : move.name.toUpperCase();
@@ -1266,7 +1269,7 @@ export class BattleService {
     const mainLog = isKo
       ? `${actorName}의 ${moveName}! ${damage > 0 ? `${damage} 데미지!` : ""}${effLog}${damageLog}${extraEffects}`
       : `${actorName}'s ${moveName}! ${damage > 0 ? `${damage} damage!` : ""}${effLog}${damageLog}${extraEffects}`;
-    return { log: mainLog, damage, typeMod, isSuperEffective: typeMod >= 2.0 };
+    return { log: mainLog, damage, typeMod, hitCount, isSuperEffective: typeMod >= 2.0 };
   }
 
   /**
@@ -1703,8 +1706,11 @@ export class BattleService {
     if (k === "double-hit" || k === "dual-wingbeat" || k === "twin-beam" || k === "dragon-darts") return 2;
     if (k === "surging-strikes" || k === "triple-dive") return 3;
     if (
+      k === "double-slap" || k === "comet-punch" || k === "fury-swipes" ||
+      k === "fury-attack" || k === "pin-missile" || k === "spike-cannon" ||
+      k === "barrage" || k === "bone-rush" || k === "arm-thrust" ||
       k === "bullet-seed" || k === "icicle-spear" || k === "rock-blast" ||
-      k === "pin-missile" || k === "scale-shot"
+      k === "tail-slap" || k === "scale-shot" || k === "water-shuriken"
     ) {
       const rolls = [2, 2, 3, 3, 4, 5];
       return rolls[Math.floor(Math.random() * rolls.length)];
