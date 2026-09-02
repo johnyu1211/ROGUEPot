@@ -165,7 +165,7 @@ export function renderMoveEffect(
   } else if (moveKey === "slam") {
     drawSlamEffect(ctx, startPos, targetPos, info.step ?? 1);
   } else if (moveKey === "vine-whip" || moveKey === "vinewhip") {
-    drawVineWhipEffect(ctx, startPos, targetPos, info.step ?? 1);
+    drawVineWhipEffect(ctx, startPos, targetPos, info.step ?? 1, info.layer ?? "all");
   } else if (moveKey === "stomp") {
     drawStompEffect(ctx, targetPos, info.step ?? 1);
   } else if (moveKey === "double-kick" || moveKey === "doublekick") {

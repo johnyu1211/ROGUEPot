@@ -5,6 +5,7 @@ export interface MoveEffectInfo {
   isSpecial: boolean;
   isPlayerAttacking: boolean;
   step?: number;
+  layer?: "behind" | "front" | "all";
 }
 
 export interface MovePoint {
