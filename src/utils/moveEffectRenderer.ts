@@ -2276,15 +2276,6 @@ function drawSingleScissorBlade(
   ctx.lineTo(halfL * 0.92, 0);
   ctx.stroke();
 
-  // Center Pivot Rivet Hub
-  ctx.fillStyle = "#450A0A";
-  ctx.strokeStyle = "#7F1D1D";
-  ctx.lineWidth = 2.0;
-  ctx.beginPath();
-  ctx.arc(0, 0, halfR * 0.75, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-
   ctx.restore();
 }
 
@@ -2301,13 +2292,19 @@ export function drawGuillotineEffect(ctx: any, target: { x: number; y: number },
   const targetX = target.x;
   const targetY = target.y - 12;
 
-  // Dark Neutral Vignette Backdrop (Pure dark overlay to guarantee 100% true blood-red saturation)
-  if (step <= 3) {
-    ctx.save();
-    ctx.fillStyle = step === 3 ? "rgba(0, 0, 0, 0.52)" : "rgba(0, 0, 0, 0.38)";
+  // Heavy Cinematic Execution Vignette (Darkens arena dramatically on lethal X execution)
+  ctx.save();
+  if (step === 3) {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.82)"; // Much darker cinematic execution blackout!
     ctx.fillRect(0, 0, 560, 380);
-    ctx.restore();
+  } else if (step === 1 || step === 2) {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.42)";
+    ctx.fillRect(0, 0, 560, 380);
+  } else if (step >= 4) {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.48)";
+    ctx.fillRect(0, 0, 560, 380);
   }
+  ctx.restore();
 
   if (step === 1) {
     // Step 1: First Diagonal Scissor Slash [/]
