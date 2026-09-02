@@ -4,6 +4,7 @@ import fs from "fs";
 
 let karateBlackImg: any = null;
 let karateRedImg: any = null;
+let doubleSlapWhiteImg: any = null;
 
 export async function preloadMoveAssets() {
   try {
@@ -14,6 +15,10 @@ export async function preloadMoveAssets() {
     if (!karateRedImg) {
       const rPath = path.resolve(process.cwd(), "assets/effects/karate_chop_red.png");
       if (fs.existsSync(rPath)) karateRedImg = await loadImage(rPath);
+    }
+    if (!doubleSlapWhiteImg) {
+      const wPath = path.resolve(process.cwd(), "assets/effects/double_slap_white.png");
+      if (fs.existsSync(wPath)) doubleSlapWhiteImg = await loadImage(wPath);
     }
   } catch (err) {
     // Ignore asset load errors
@@ -928,56 +933,17 @@ export function drawDoubleSlapEffect(ctx: any, target: { x: number; y: number },
   ctx.stroke();
   ctx.restore();
 
-  // 2. Open Palm Hand (Glove silhouette with 5 fingers)
-  ctx.save();
-  ctx.translate(handX, handY);
-  ctx.scale(scaleX * 1.25, 1.25);
-  ctx.rotate(rotAngle);
-
-  ctx.fillStyle = "#FFFFFF";
-  ctx.strokeStyle = "#0F172A";
-  ctx.lineWidth = 3.2;
-  ctx.lineJoin = "round";
-  ctx.lineCap = "round";
-
-  ctx.beginPath();
-  // Wrist
-  ctx.moveTo(-10, 22);
-  ctx.lineTo(10, 22);
-  ctx.lineTo(12, 6);
-  // Pinky
-  ctx.lineTo(18, -4);
-  ctx.arc(16, -7, 3.2, 0, Math.PI, true);
-  ctx.lineTo(11, 2);
-  // Ring
-  ctx.lineTo(11, -12);
-  ctx.arc(9, -15, 3.2, 0, Math.PI, true);
-  ctx.lineTo(6, 0);
-  // Middle
-  ctx.lineTo(4, -18);
-  ctx.arc(2, -21, 3.5, 0, Math.PI, true);
-  ctx.lineTo(0, -2);
-  // Index
-  ctx.lineTo(-3, -15);
-  ctx.arc(-5, -18, 3.2, 0, Math.PI, true);
-  ctx.lineTo(-6, 2);
-  // Thumb
-  ctx.lineTo(-16, -6);
-  ctx.arc(-18, -4, 3.8, 0, Math.PI, true);
-  ctx.lineTo(-12, 12);
-  ctx.closePath();
-
-  ctx.fill();
-  ctx.stroke();
-
-  // Palm crease / inner shading
-  ctx.strokeStyle = "#CBD5E1";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.arc(0, 8, 6, 0.2 * Math.PI, 0.8 * Math.PI);
-  ctx.stroke();
-
-  ctx.restore();
+  // 2. Inverted Karate Chop Hand Sprite (Authentic White Hand Sprite)
+  if (doubleSlapWhiteImg) {
+    ctx.save();
+    ctx.translate(handX, handY);
+    ctx.scale(scaleX * 1.15, 1.15);
+    ctx.rotate(rotAngle);
+    const sw = 80 * 1.15;
+    const sh = 60 * 1.15;
+    ctx.drawImage(doubleSlapWhiteImg, -sw / 2, -sh / 2, sw, sh);
+    ctx.restore();
+  }
 
   // 3. Impact Star / Sparks at Point of Cheek Contact
   ctx.save();
