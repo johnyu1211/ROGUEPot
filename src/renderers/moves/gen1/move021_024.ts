@@ -388,7 +388,14 @@ export function drawDoubleKickEffect(
   const tx = target.x;
   const ty = target.y - 8;
 
-  // Helper to draw a stylized martial arts kick foot / boot
+  // Deep fighting martial arts amber-orange colors (Authentic Fighting type tone)
+  const COLOR_FIGHTING_DEEP = "#C2410C";
+  const COLOR_FIGHTING_MAIN = "#EA580C";
+  const COLOR_FIGHTING_DARK = "#7C2D12";
+  const COLOR_FIGHTING_AMBER = "#D97706";
+  const COLOR_FIGHTING_PEACH = "#FED7AA";
+
+  // Helper to draw a stylized martial arts kick foot / boot in deep fighting orange
   const drawKickBoot = (bx: number, by: number, rotAngle: number, scaleX: number = 1) => {
     ctx.save();
     ctx.translate(bx, by);
@@ -396,16 +403,16 @@ export function drawDoubleKickEffect(
     ctx.scale(scaleX, 1);
 
     // Boot sole & body
-    ctx.fillStyle = "#EF4444";
+    ctx.fillStyle = COLOR_FIGHTING_DEEP;
     ctx.beginPath();
     ctx.ellipse(0, 0, 18, 9, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = "#991B1B";
+    ctx.strokeStyle = COLOR_FIGHTING_DARK;
     ctx.lineWidth = 2.0;
     ctx.stroke();
 
     // Boot toe cap highlight
-    ctx.fillStyle = "#FEE2E2";
+    ctx.fillStyle = COLOR_FIGHTING_PEACH;
     ctx.beginPath();
     ctx.arc(12, 0, 5.5, -Math.PI / 2, Math.PI / 2);
     ctx.fill();
@@ -413,7 +420,7 @@ export function drawDoubleKickEffect(
     ctx.restore();
   };
 
-  // Helper for crisp comic diamond hit sparks (replaces awkward straight line bursts)
+  // Helper for crisp comic diamond hit sparks
   const drawDiamondParticle = (cx: number, cy: number, w: number, h: number, angle: number, color: string) => {
     ctx.save();
     ctx.translate(cx, cy);
@@ -430,62 +437,70 @@ export function drawDoubleKickEffect(
   };
 
   if (step === 1) {
-    // Step 1: 1st Kick - Fast Diagonal Kick from Left
+    // Step 1: 1타 - 명확한 좌 상단 (Top-Left) 대각선 타격
     ctx.save();
-    drawKickBoot(tx - 10, ty - 6, -0.35, 1.15);
+    const hitX = tx - 28;
+    const hitY = ty - 26;
 
-    // Soft localized impact flash (No circular wire ring, no straight wire lines)
-    const g = ctx.createRadialGradient(tx - 4, ty - 6, 2, tx - 4, ty - 6, 22);
-    g.addColorStop(0, "#FFFFFF");
-    g.addColorStop(0.4, "rgba(254, 215, 170, 0.85)");
-    g.addColorStop(1, "rgba(239, 68, 68, 0)");
+    drawKickBoot(hitX - 8, hitY - 6, -0.55, 1.15);
+
+    // Deep fighting orange impact flash (No rings, no straight lines)
+    const g = ctx.createRadialGradient(hitX, hitY, 2, hitX, hitY, 24);
+    g.addColorStop(0, "#FFF7ED");
+    g.addColorStop(0.4, "rgba(234, 88, 12, 0.88)");
+    g.addColorStop(1, "rgba(194, 65, 12, 0)");
     ctx.fillStyle = g;
     ctx.beginPath();
-    ctx.arc(tx - 4, ty - 6, 22, 0, Math.PI * 2);
+    ctx.arc(hitX, hitY, 24, 0, Math.PI * 2);
     ctx.fill();
 
-    // Natural diamond sparks & retro stars
-    drawDiamondParticle(tx + 14, ty - 16, 4.5, 11, 0.45, "#FDE047");
-    drawDiamondParticle(tx + 16, ty + 10, 3.5, 9, -0.6, "#F97316");
-    drawDiamondParticle(tx - 22, ty - 18, 3.5, 8, -0.3, "#FFFFFF");
-    drawMiniRetroStar(ctx, tx - 18, ty - 22, 8, "#FED7AA");
-    drawMiniRetroStar(ctx, tx + 12, ty + 14, 7, "#FFFFFF");
+    // Deep fighting orange diamond sparks & stars
+    drawDiamondParticle(hitX - 14, hitY - 14, 4.5, 11, -0.6, COLOR_FIGHTING_AMBER);
+    drawDiamondParticle(hitX + 14, hitY - 10, 3.5, 9, 0.4, COLOR_FIGHTING_MAIN);
+    drawDiamondParticle(hitX - 12, hitY + 12, 4, 10, 0.8, COLOR_FIGHTING_DEEP);
+    drawMiniRetroStar(ctx, hitX - 16, hitY - 18, 8, COLOR_FIGHTING_PEACH);
+    drawMiniRetroStar(ctx, hitX + 16, hitY + 10, 7, "#FFFFFF");
     ctx.restore();
   } else if (step === 2) {
-    // Step 2: 2nd Kick - High Jump Roundhouse Kick from Right
+    // Step 2: 2타 - 명확한 우 하단 (Bottom-Right) 대각선 타격
     ctx.save();
-    drawKickBoot(tx + 10, ty - 12, 0.50, -1.2);
+    const hitX = tx + 26;
+    const hitY = ty + 18;
 
-    // Soft localized impact flash
-    const g = ctx.createRadialGradient(tx + 4, ty - 10, 2, tx + 4, ty - 10, 26);
-    g.addColorStop(0, "#FFFFFF");
-    g.addColorStop(0.4, "rgba(254, 240, 138, 0.9)");
-    g.addColorStop(1, "rgba(245, 158, 11, 0)");
+    drawKickBoot(hitX + 8, hitY + 6, 0.60, -1.2);
+
+    // Deep fighting orange impact flash
+    const g = ctx.createRadialGradient(hitX, hitY, 2, hitX, hitY, 28);
+    g.addColorStop(0, "#FFF7ED");
+    g.addColorStop(0.4, "rgba(234, 88, 12, 0.92)");
+    g.addColorStop(1, "rgba(194, 65, 12, 0)");
     ctx.fillStyle = g;
     ctx.beginPath();
-    ctx.arc(tx + 4, ty - 10, 26, 0, Math.PI * 2);
+    ctx.arc(hitX, hitY, 28, 0, Math.PI * 2);
     ctx.fill();
 
-    // Natural diamond sparks & retro stars
-    drawDiamondParticle(tx - 20, ty - 18, 5, 13, -0.5, "#FDE047");
-    drawDiamondParticle(tx - 22, ty + 12, 4, 10, 0.7, "#EF4444");
-    drawDiamondParticle(tx + 22, ty - 22, 4.5, 11, 0.4, "#FFFFFF");
-    drawDiamondParticle(tx + 12, ty + 18, 3.5, 8, -0.2, "#F59E0B");
-    drawMiniRetroStar(ctx, tx + 24, ty - 26, 10, "#FEF08A");
-    drawMiniRetroStar(ctx, tx - 22, ty + 10, 8, "#FFFFFF");
+    // Deep fighting orange diamond sparks & stars
+    drawDiamondParticle(hitX + 16, hitY + 14, 5, 13, 0.5, COLOR_FIGHTING_AMBER);
+    drawDiamondParticle(hitX - 14, hitY + 12, 4, 10, -0.7, COLOR_FIGHTING_MAIN);
+    drawDiamondParticle(hitX + 16, hitY - 12, 4.5, 11, -0.4, COLOR_FIGHTING_DEEP);
+    drawDiamondParticle(hitX - 12, hitY - 16, 3.5, 8, 0.3, COLOR_FIGHTING_PEACH);
+    drawMiniRetroStar(ctx, hitX + 20, hitY + 18, 10, COLOR_FIGHTING_PEACH);
+    drawMiniRetroStar(ctx, hitX - 18, hitY - 12, 8, "#FFFFFF");
     ctx.restore();
   } else if (step >= 3) {
-    // Step 3: Dual Kick Impact Afterglow (No straight wire lines!)
+    // Step 3: 좌상단 + 우하단 타격 지점의 듀얼 잔상 (Afterglow)
     ctx.save();
-    drawDiamondParticle(tx - 24, ty - 20, 3.5, 8, -0.4, "#FED7AA");
-    drawDiamondParticle(tx + 24, ty - 18, 3.5, 8, 0.5, "#FDE047");
-    drawDiamondParticle(tx - 16, ty + 16, 3, 7, 0.8, "#F97316");
-    drawDiamondParticle(tx + 18, ty + 14, 3, 7, -0.3, "#FFFFFF");
+    const hitX1 = tx - 28, hitY1 = ty - 26;
+    const hitX2 = tx + 26, hitY2 = ty + 18;
 
-    drawMiniRetroStar(ctx, tx - 20, ty - 24, 7, "#FED7AA");
-    drawMiniRetroStar(ctx, tx + 22, ty - 16, 8, "#FFFFFF");
-    drawMiniRetroStar(ctx, tx, ty + 12, 7, "#F97316");
-    drawMiniRetroStar(ctx, tx + 6, ty - 28, 6, "#FEF08A");
+    // Top-Left remnants
+    drawDiamondParticle(hitX1 - 16, hitY1 - 12, 3.5, 8, -0.4, COLOR_FIGHTING_AMBER);
+    drawMiniRetroStar(ctx, hitX1 - 12, hitY1 - 16, 7, COLOR_FIGHTING_PEACH);
+
+    // Bottom-Right remnants
+    drawDiamondParticle(hitX2 + 16, hitY2 + 12, 3.5, 8, 0.5, COLOR_FIGHTING_MAIN);
+    drawMiniRetroStar(ctx, hitX2 + 14, hitY2 + 14, 7, "#FFFFFF");
+    drawMiniRetroStar(ctx, tx, ty, 8, COLOR_FIGHTING_DEEP);
     ctx.restore();
   }
 

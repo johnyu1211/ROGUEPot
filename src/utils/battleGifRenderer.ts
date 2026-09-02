@@ -591,13 +591,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   const isSlam1 = (mKey1 === "slam");
   const isVineWhip1 = (mKey1 === "vine-whip" || mKey1 === "vinewhip");
   const isStomp1 = (mKey1 === "stomp");
+  const isDoubleKick1 = (mKey1 === "double-kick" || mKey1 === "doublekick");
   const isSingleStrikeSpecial1 = (
     mKey1 === "thunder-punch" || mKey1 === "thunderpunch" ||
     mKey1 === "scratch" ||
     mKey1 === "vice-grip" || mKey1 === "vicegrip" ||
     mKey1 === "cut" ||
-    mKey1 === "gust" ||
-    mKey1 === "double-kick" || mKey1 === "doublekick"
+    mKey1 === "gust"
   );
 
   const moveData1 = getMoveData(mKey1);
@@ -2475,6 +2475,70 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
         }
       ];
+    } else if (isDoubleKick1) {
+      const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
+      const isMiss1 = !isHit1;
+      act1Frames = [
+        // 1. 1타: 좌상단 대각선 강타 (Top-Left Strike - 110ms) -> 피격자 우하단으로 살짝 밀림
+        {
+          delay: 110,
+          pOffset: isP1 ? { x: 20, y: -12 } : (isMiss1 ? { x: 24, y: 4 } : { x: -14, y: 6 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 24, y: -4 } : { x: 14, y: 6 }) : { x: -20, y: 12 },
+          pRot: isP1 ? -0.06 : undefined,
+          eRot: !isP1 ? 0.06 : undefined,
+          showEffect: true,
+          hitFlash: isHit1,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 1,
+        },
+        // 2. 2타: 우하단 대각선 강타 (Bottom-Right Strike - 120ms) -> 피격자 좌상단으로 반동
+        {
+          delay: 120,
+          pOffset: isP1 ? { x: 26, y: -4 } : (isMiss1 ? { x: 28, y: 4 } : { x: -18, y: -4 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 28, y: -4 } : { x: 18, y: -6 }) : { x: -26, y: 4 },
+          pRot: isP1 ? 0.08 : undefined,
+          eRot: !isP1 ? -0.08 : undefined,
+          showEffect: true,
+          hitFlash: isHit1,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 2,
+        },
+        // 3. 듀얼 잔상 및 타격 여운 (100ms)
+        {
+          delay: 100,
+          pOffset: isP1 ? { x: 12, y: -3 } : (isMiss1 ? { x: 14, y: 2 } : { x: -8, y: 2 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 14, y: -2 } : { x: 8, y: -2 }) : { x: -12, y: 3 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 3,
+        },
+        // 4. 복귀 (90ms)
+        {
+          delay: 90,
+          pOffset: { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+        }
+      ];
     } else if (isSingleStrikeSpecial1) {
       const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
       const isMiss1 = !isHit1;
@@ -2628,13 +2692,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const isSlam2 = (mKey2 === "slam");
     const isVineWhip2 = (mKey2 === "vine-whip" || mKey2 === "vinewhip");
     const isStomp2 = (mKey2 === "stomp");
+    const isDoubleKick2 = (mKey2 === "double-kick" || mKey2 === "doublekick");
     const isSingleStrikeSpecial2 = (
       mKey2 === "thunder-punch" || mKey2 === "thunderpunch" ||
       mKey2 === "scratch" ||
       mKey2 === "vice-grip" || mKey2 === "vicegrip" ||
       mKey2 === "cut" ||
-      mKey2 === "gust" ||
-      mKey2 === "double-kick" || mKey2 === "doublekick"
+      mKey2 === "gust"
     );
 
     const moveData2 = getMoveData(mKey2);
@@ -4504,6 +4568,70 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           eOffset: { x: 0, y: 0 },
           pScale: isP2 ? undefined : (isMiss2 ? undefined : { x: 0.97, y: 1.05 }),
           eScale: isP2 ? (isMiss2 ? undefined : { x: 0.97, y: 1.05 }) : undefined,
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+        }
+      ];
+    } else if (isDoubleKick2) {
+      const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
+      const isMiss2 = !isHit2;
+      act2Frames = [
+        // 1. 1타: 좌상단 대각선 강타 (Top-Left Strike - 110ms) -> 피격자 우하단으로 살짝 밀림
+        {
+          delay: 110,
+          pOffset: isP2 ? { x: 20, y: -12 } : (isMiss2 ? { x: 24, y: 4 } : { x: -14, y: 6 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 24, y: -4 } : { x: 14, y: 6 }) : { x: -20, y: 12 },
+          pRot: isP2 ? -0.06 : undefined,
+          eRot: !isP2 ? 0.06 : undefined,
+          showEffect: true,
+          hitFlash: isHit2,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 1,
+        },
+        // 2. 2타: 우하단 대각선 강타 (Bottom-Right Strike - 120ms) -> 피격자 좌상단으로 반동
+        {
+          delay: 120,
+          pOffset: isP2 ? { x: 26, y: -4 } : (isMiss2 ? { x: 28, y: 4 } : { x: -18, y: -4 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 28, y: -4 } : { x: 18, y: -6 }) : { x: -26, y: 4 },
+          pRot: isP2 ? 0.08 : undefined,
+          eRot: !isP2 ? -0.08 : undefined,
+          showEffect: true,
+          hitFlash: isHit2,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 2,
+        },
+        // 3. 듀얼 잔상 및 타격 여운 (100ms)
+        {
+          delay: 100,
+          pOffset: isP2 ? { x: 12, y: -3 } : (isMiss2 ? { x: 14, y: 2 } : { x: -8, y: 2 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 14, y: -2 } : { x: 8, y: -2 }) : { x: -12, y: 3 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 3,
+        },
+        // 4. 복귀 (90ms)
+        {
+          delay: 90,
+          pOffset: { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
           showEffect: false,
           hitFlash: false,
           enemyHp: a2.enemyHpAfter,
