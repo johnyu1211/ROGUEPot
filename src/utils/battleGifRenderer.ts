@@ -2917,9 +2917,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const a2IsEvasionLaunch = isEvasionLaunch(a2);
     const a2IsEvasionStrike = isEvasionStrike(a2);
 
-    // Evasion state at START of turn (before Act 1 starts)
-    const isPlayerStartingEvading = (a1IsEvasionStrike && isP1) || (a2IsEvasionStrike && isP2) || (Boolean(a1 && a1.log?.includes("닿지 않았다") && !isP1)) || Boolean(playerMon.semiInvulnerableState || playerMon.chargingMove);
-    const isEnemyStartingEvading = (a1IsEvasionStrike && !isP1) || (a2IsEvasionStrike && !isP2) || (Boolean(a1 && a1.log?.includes("닿지 않았다") && isP1)) || Boolean(enemy.semiInvulnerableState || enemy.chargingMove);
+    // Evasion state at START of turn (before Act 1 starts) - ONLY true if unleashing an evasion strike or opponent missed into empty air
+    const isPlayerStartingEvading = !a1IsEvasionLaunch && !a2IsEvasionLaunch && (
+      (a1IsEvasionStrike && isP1) || (a2IsEvasionStrike && isP2) || (Boolean(a1 && a1.log?.includes("닿지 않았다") && !isP1))
+    );
+    const isEnemyStartingEvading = !a1IsEvasionLaunch && !a2IsEvasionLaunch && (
+      (a1IsEvasionStrike && !isP1) || (a2IsEvasionStrike && !isP2) || (Boolean(a1 && a1.log?.includes("닿지 않았다") && isP1))
+    );
 
     // Evasion state during Act 1 (for non-acting Pokemon)
     const isPlayerEvadingDuringAct1 = isPlayerStartingEvading && !isP1;
@@ -3054,8 +3058,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const a1IsEvasionLaunch = isEvasionLaunch(a1);
     const a1IsEvasionStrike = isEvasionStrike(a1);
 
-    const isPlayerStartingEvading = (a1IsEvasionStrike && isP1) || (Boolean(a1 && a1.log?.includes("닿지 않았다") && !isP1));
-    const isEnemyStartingEvading = (a1IsEvasionStrike && !isP1) || (Boolean(a1 && a1.log?.includes("닿지 않았다") && isP1));
+    const isPlayerStartingEvading = !a1IsEvasionLaunch && ((a1IsEvasionStrike && isP1) || (Boolean(a1 && a1.log?.includes("닿지 않았다") && !isP1)));
+    const isEnemyStartingEvading = !a1IsEvasionLaunch && ((a1IsEvasionStrike && !isP1) || (Boolean(a1 && a1.log?.includes("닿지 않았다") && isP1)));
 
     const isPlayerEndingEvading = (a1IsEvasionLaunch && isP1) || Boolean(playerMon.semiInvulnerableState || playerMon.chargingMove);
     const isEnemyEndingEvading = (a1IsEvasionLaunch && !isP1) || Boolean(enemy.semiInvulnerableState || enemy.chargingMove);
