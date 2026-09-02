@@ -169,66 +169,52 @@ export function drawRazorWindEffect(
       drawTaperedHelicalRibbon(sx, sy, r.y, r.rx, r.ry, r.rot, r.sA, r.eA, r.maxW, r.col, r.a);
     }
   } else if (step === 3) {
-    // Step 3: At Defender - Opposing Outer Pairs Form with Faint Translucency (Transparent -> Starting to appear)
-    const earlyBlades = [
-      { cx: tx - 52, cy: ty - 40, ang: -0.42, len: 62, curve: 16, thick: 7.5, a: 0.38 },
-      { cx: tx + 52, cy: ty + 40, ang: -2.35, len: 62, curve: -16, thick: 7.5, a: 0.38 },
-      { cx: tx + 50, cy: ty - 38, ang: 0.48, len: 60, curve: -16, thick: 7.5, a: 0.38 },
-      { cx: tx - 50, cy: ty + 38, ang: 2.25, len: 60, curve: 16, thick: 7.5, a: 0.38 },
+    // Step 3: First Symmetrical Diagonal Pair Inception (Upper-Left <-> Lower-Right, Faint Alpha)
+    const earlyPair = [
+      { cx: tx - 46, cy: ty - 32, ang: -0.42, len: 64, curve: 16, thick: 7.5, a: 0.45 },
+      { cx: tx + 46, cy: ty + 32, ang: -2.35, len: 64, curve: -16, thick: 7.5, a: 0.45 },
     ];
-    for (const b of earlyBlades) {
-      drawTaperedRazorBlade(b.cx, b.cy, b.ang, b.len, b.curve, b.thick, 0.95, b.a);
+    for (const b of earlyPair) {
+      drawTaperedRazorBlade(b.cx, b.cy, b.ang, b.len, b.curve, b.thick, 1.0, b.a);
     }
   } else if (step === 4) {
-    // Step 4: Closing In from All Opposing Directions - Becoming Denser / Semi-Opaque (사사사삭 쇄도!)
-    const midBlades = [
-      // Diagonal Opposing Pairs (Closer to center, darker alpha)
-      { cx: tx - 32, cy: ty - 26, ang: -0.40, len: 68, curve: 18, thick: 8.5, a: 0.78 },
-      { cx: tx + 32, cy: ty + 26, ang: -2.40, len: 68, curve: -18, thick: 8.5, a: 0.78 },
-      { cx: tx + 34, cy: ty - 24, ang: 0.45, len: 70, curve: -18, thick: 8.5, a: 0.78 },
-      { cx: tx - 34, cy: ty + 24, ang: 2.35, len: 70, curve: 18, thick: 8.5, a: 0.78 },
-      // Horizontal / Vertical Opposing Pairs joining in
-      { cx: tx - 44, cy: ty - 4, ang: 0.10, len: 64, curve: 16, thick: 8.0, a: 0.68 },
-      { cx: tx + 44, cy: ty + 4, ang: -0.15, len: 64, curve: -16, thick: 8.0, a: 0.68 },
-      { cx: tx - 4, cy: ty - 46, ang: 1.50, len: 60, curve: 15, thick: 7.5, a: 0.65 },
-      { cx: tx + 4, cy: ty + 46, ang: -1.55, len: 60, curve: -15, thick: 7.5, a: 0.65 },
+    // Step 4: Clean Symmetrical X-Cross Convergence (4 Blades, Semi-Opaque)
+    const crossBlades = [
+      // Diagonal Pair 1: Upper-Left <-> Lower-Right (Slicing Inward)
+      { cx: tx - 24, cy: ty - 18, ang: -0.42, len: 70, curve: 18, thick: 8.5, a: 0.85 },
+      { cx: tx + 24, cy: ty + 18, ang: -2.35, len: 70, curve: -18, thick: 8.5, a: 0.85 },
+      // Diagonal Pair 2: Upper-Right <-> Lower-Left (Joining the Cross)
+      { cx: tx + 38, cy: ty - 26, ang: 0.48, len: 68, curve: -18, thick: 8.0, a: 0.70 },
+      { cx: tx - 38, cy: ty + 26, ang: 2.25, len: 68, curve: 18, thick: 8.0, a: 0.70 },
     ];
-    for (const b of midBlades) {
+    for (const b of crossBlades) {
       drawTaperedRazorBlade(b.cx, b.cy, b.ang, b.len, b.curve, b.thick, 1.0, b.a);
     }
   } else if (step === 5) {
-    // Step 5: Full Omnidirectional Solid Cleave Impact (100% Solid Alpha, 사사사사삿!) + Double Star Flash
-    const stormBlades = [
-      { cx: tx - 18, cy: ty - 20, ang: -0.40, len: 74, curve: 20, thick: 9.5, s: 1.1 },
-      { cx: tx + 20, cy: ty - 18, ang: 0.45, len: 76, curve: -20, thick: 9.5, s: 1.15 },
-      { cx: tx - 28, cy: ty - 2, ang: 0.10, len: 70, curve: 18, thick: 9.0, s: 1.05 },
-      { cx: tx + 26, cy: ty + 2, ang: -0.15, len: 72, curve: -18, thick: 9.0, s: 1.1 },
-      { cx: tx - 20, cy: ty + 20, ang: 2.35, len: 68, curve: 18, thick: 8.5, s: 1.05 },
-      { cx: tx + 22, cy: ty + 18, ang: -2.40, len: 70, curve: -18, thick: 8.5, s: 1.05 },
-      { cx: tx - 4, cy: ty - 30, ang: 1.50, len: 64, curve: 16, thick: 8.0, s: 1.0 },
-      { cx: tx + 4, cy: ty + 28, ang: -1.55, len: 64, curve: -16, thick: 8.0, s: 1.0 },
+    // Step 5: Climax Crisp Symmetrical X-Cross Cleave (100% Solid) + Center Impact Star
+    const climaxCross = [
+      { cx: tx - 14, cy: ty - 10, ang: -0.42, len: 78, curve: 20, thick: 9.5, s: 1.1 },
+      { cx: tx + 14, cy: ty + 10, ang: -2.35, len: 78, curve: -20, thick: 9.5, s: 1.1 },
+      { cx: tx + 14, cy: ty - 10, ang: 0.48, len: 78, curve: -20, thick: 9.5, s: 1.1 },
+      { cx: tx - 14, cy: ty + 10, ang: 2.25, len: 78, curve: 20, thick: 9.5, s: 1.1 },
     ];
 
-    for (const b of stormBlades) {
+    for (const b of climaxCross) {
       drawTaperedRazorBlade(b.cx, b.cy, b.ang, b.len, b.curve, b.thick, b.s, 1.0);
     }
 
-    // Double Center Impact Stars (Yellow & White)
-    drawMiniRetroStar(ctx, tx - 6, ty - 8, 28, "#FACC15");
-    drawMiniRetroStar(ctx, tx - 6, ty - 8, 14, "#FFFFFF");
-    drawMiniRetroStar(ctx, tx + 8, ty + 6, 22, "#FDE047");
-    drawMiniRetroStar(ctx, tx + 8, ty + 6, 11, "#FFFFFF");
+    // Single Crisp Center Impact Star (Clean & Sharp)
+    drawMiniRetroStar(ctx, tx, ty, 26, "#FACC15");
+    drawMiniRetroStar(ctx, tx, ty, 13, "#FFFFFF");
 
-    // Piercing Tapered Light Streaks radiating from center
-    const streaks = [
-      { ox: -30, oy: -24, ex: -65, ey: -50 },
-      { ox: 28, oy: -22, ex: 62, ey: -46 },
-      { ox: -28, oy: 24, ex: 58, ey: 48 },
-      { ox: 26, oy: 22, ex: 54, ey: 44 },
-      { ox: 0, oy: -32, ex: 0, ey: -68 },
-      { ox: 0, oy: 30, ex: 0, ey: 64 },
+    // 4 Clean Diagonal Tapered Needle Glints
+    const glints = [
+      { ox: -24, oy: -18, ex: -56, ey: -42 },
+      { ox: 24, oy: -18, ex: 56, ey: -42 },
+      { ox: -24, oy: 18, ex: -56, ey: 42 },
+      { ox: 24, oy: 18, ex: 56, ey: 42 },
     ];
-    for (const st of streaks) {
+    for (const st of glints) {
       const dx = st.ex - st.ox;
       const dy = st.ey - st.oy;
       const len = Math.hypot(dx, dy) || 1;
@@ -237,22 +223,22 @@ export function drawRazorWindEffect(
 
       ctx.fillStyle = "#FFFFFF";
       ctx.beginPath();
-      ctx.moveTo(tx + st.ox + nx * 2, ty + st.oy + ny * 2);
+      ctx.moveTo(tx + st.ox + nx * 1.8, ty + st.oy + ny * 1.8);
       ctx.lineTo(tx + st.ex, ty + st.ey);
-      ctx.lineTo(tx + st.ox - nx * 2, ty + st.oy - ny * 2);
+      ctx.lineTo(tx + st.ox - nx * 1.8, ty + st.oy - ny * 1.8);
       ctx.closePath();
       ctx.fill();
     }
   } else if (step >= 6) {
-    // Step 6: Star Impact Burst & Dispersing Razor Blade Shards with Smooth Fade-Out Alpha
-    drawMiniRetroStar(ctx, tx, ty, 16, "rgba(250, 204, 21, 0.45)");
-    drawMiniRetroStar(ctx, tx, ty, 8, "rgba(255, 255, 255, 0.55)");
+    // Step 6: Symmetrical Fade-Out Dispersal
+    drawMiniRetroStar(ctx, tx, ty, 14, "rgba(250, 204, 21, 0.40)");
+    drawMiniRetroStar(ctx, tx, ty, 7, "rgba(255, 255, 255, 0.50)");
 
     const shards = [
-      { cx: tx - 52, cy: ty - 38, ang: -0.5, len: 44, curve: 14, thick: 5.5, a: 0.20 },
-      { cx: tx + 54, cy: ty - 34, ang: 0.6, len: 46, curve: -14, thick: 5.5, a: 0.20 },
-      { cx: tx - 44, cy: ty + 38, ang: 2.2, len: 42, curve: 12, thick: 5.0, a: 0.16 },
-      { cx: tx + 46, cy: ty + 36, ang: -2.2, len: 44, curve: -12, thick: 5.0, a: 0.16 },
+      { cx: tx - 44, cy: ty - 32, ang: -0.42, len: 48, curve: 14, thick: 5.5, a: 0.20 },
+      { cx: tx + 44, cy: ty + 32, ang: -2.35, len: 48, curve: -14, thick: 5.5, a: 0.20 },
+      { cx: tx + 44, cy: ty - 32, ang: 0.48, len: 48, curve: -14, thick: 5.5, a: 0.20 },
+      { cx: tx - 44, cy: ty + 32, ang: 2.25, len: 48, curve: 14, thick: 5.5, a: 0.20 },
     ];
     for (const sh of shards) {
       drawTaperedRazorBlade(sh.cx, sh.cy, sh.ang, sh.len, sh.curve, sh.thick, 0.85, sh.a);
