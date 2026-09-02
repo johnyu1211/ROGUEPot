@@ -376,8 +376,11 @@ export function drawFlyEffect(ctx: any, start: { x: number; y: number }, target:
     ctx.ellipse(tx, ty + 18, 48, 14, 0, 0, Math.PI * 2);
     ctx.stroke();
 
-    drawMiniRetroStar(ctx, tx, ty, 24, "#BAE6FD");
-    drawMiniRetroStar(ctx, tx, ty, 14, "#FFFFFF");
+    ctx.strokeStyle = "rgba(186, 230, 253, 0.8)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(tx, ty + 18, 64, 20, 0, 0, Math.PI * 2);
+    ctx.stroke();
   } else if (step >= 4) {
     // Step 4: Radial impact dispersal
     ctx.strokeStyle = "rgba(224, 242, 254, 0.40)";

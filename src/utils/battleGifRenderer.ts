@@ -1015,67 +1015,120 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     } else if (isFly1) {
       const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
       const isMiss1 = !isHit1;
-      act1Frames = [
-        // 1. Sky Launch: Attacker launches up into clouds (160ms)
-        {
-          delay: 160,
-          pOffset: isP1 ? { x: 4, y: -36 } : { x: 0, y: 0 },
-          eOffset: !isP1 ? { x: -4, y: -36 } : { x: 0, y: 0 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: enemy.hp,
-          playerHp: playerMon.hp,
-          textLineIdx: 1,
-          isBlur: false,
-          moveEffect: a1,
-          moveStep: 1,
-        },
-        // 2. High Altitude Target Lock (180ms)
-        {
-          delay: 180,
-          pOffset: isP1 ? { x: 8, y: -48 } : { x: 0, y: 0 },
-          eOffset: !isP1 ? { x: -8, y: -48 } : { x: 0, y: 0 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: enemy.hp,
-          playerHp: playerMon.hp,
-          textLineIdx: 1,
-          statProgress: undefined,
-          isBlur: false,
-          moveEffect: a1,
-          moveStep: 2,
-        },
-        // 3. Supersonic Dive-Bomb Impact Slam! (240ms)
-        {
-          delay: 240,
-          pOffset: isP1 ? { x: 20, y: -8 } : (isMiss1 ? { x: 26, y: 4 } : { x: -8, y: 4 }),
-          eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 10, y: -4 }) : { x: -20, y: 8 },
-          showEffect: true,
-          hitFlash: isHit1,
-          enemyHp: a1.enemyHpAfter,
-          playerHp: a1.playerHpAfter,
-          textLineIdx: 1,
-          statProgress: undefined,
-          isBlur: false,
-          moveEffect: a1,
-          moveStep: 3,
-        },
-        // 4. Ground Crater Dispersal (140ms)
-        {
-          delay: 140,
-          pOffset: isP1 ? { x: 8, y: -2 } : (isMiss1 ? { x: 8, y: 1 } : { x: 0, y: 0 }),
-          eOffset: isP1 ? (isMiss1 ? { x: 8, y: -1 } : { x: 2, y: 0 }) : { x: -8, y: 2 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a1.enemyHpAfter,
-          playerHp: a1.playerHpAfter,
-          textLineIdx: 1,
-          statProgress: undefined,
-          isBlur: false,
-          moveEffect: a1,
-          moveStep: 4,
-        }
-      ];
+      const isTurn1Launch = (a1.damage ?? 0) === 0 && (a1.log?.includes("날아올랐다") || a1.log?.includes("flew up"));
+
+      if (isTurn1Launch) {
+        // Turn 1: Sky Launch into Clouds (4 frames @ 100ms = 400ms)
+        act1Frames = [
+          {
+            delay: 100,
+            pOffset: isP1 ? { x: 4, y: -40 } : { x: 0, y: 0 },
+            eOffset: !isP1 ? { x: -4, y: -40 } : { x: 0, y: 0 },
+            showEffect: true,
+            hitFlash: false,
+            enemyHp: enemy.hp,
+            playerHp: playerMon.hp,
+            textLineIdx: 1,
+            isBlur: false,
+            moveEffect: a1,
+            moveStep: 1,
+          },
+          {
+            delay: 100,
+            pOffset: isP1 ? { x: 8, y: -120 } : { x: 0, y: 0 },
+            eOffset: !isP1 ? { x: -8, y: -120 } : { x: 0, y: 0 },
+            showEffect: true,
+            hitFlash: false,
+            enemyHp: enemy.hp,
+            playerHp: playerMon.hp,
+            textLineIdx: 1,
+            isBlur: false,
+            moveEffect: a1,
+            moveStep: 1,
+          },
+          {
+            delay: 100,
+            pOffset: isP1 ? { x: 12, y: -300 } : { x: 0, y: 0 },
+            eOffset: !isP1 ? { x: -12, y: -300 } : { x: 0, y: 0 },
+            showEffect: true,
+            hitFlash: false,
+            enemyHp: enemy.hp,
+            playerHp: playerMon.hp,
+            textLineIdx: 1,
+            isBlur: false,
+            moveEffect: a1,
+            moveStep: 1,
+          },
+          {
+            delay: 100,
+            pOffset: isP1 ? { x: 12, y: -300 } : { x: 0, y: 0 },
+            eOffset: !isP1 ? { x: -12, y: -300 } : { x: 0, y: 0 },
+            showEffect: false,
+            hitFlash: false,
+            enemyHp: enemy.hp,
+            playerHp: playerMon.hp,
+            textLineIdx: 1,
+            isBlur: false,
+            moveEffect: a1,
+            moveStep: 1,
+          }
+        ];
+      } else {
+        // Turn 2: Supersonic Dive-Bomb Attack! (4 frames @ 100ms = 400ms)
+        act1Frames = [
+          {
+            delay: 100,
+            pOffset: isP1 ? { x: 8, y: -140 } : { x: 0, y: 0 },
+            eOffset: !isP1 ? { x: -8, y: -140 } : { x: 0, y: 0 },
+            showEffect: true,
+            hitFlash: false,
+            enemyHp: enemy.hp,
+            playerHp: playerMon.hp,
+            textLineIdx: 1,
+            isBlur: false,
+            moveEffect: a1,
+            moveStep: 2,
+          },
+          {
+            delay: 100,
+            pOffset: isP1 ? { x: 20, y: -8 } : (isMiss1 ? { x: 26, y: 4 } : { x: -8, y: 4 }),
+            eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 10, y: -4 }) : { x: -20, y: 8 },
+            showEffect: true,
+            hitFlash: isHit1,
+            enemyHp: a1.enemyHpAfter,
+            playerHp: a1.playerHpAfter,
+            textLineIdx: 1,
+            isBlur: false,
+            moveEffect: a1,
+            moveStep: 3,
+          },
+          {
+            delay: 100,
+            pOffset: isP1 ? { x: 8, y: -2 } : (isMiss1 ? { x: 8, y: 1 } : { x: 0, y: 0 }),
+            eOffset: isP1 ? (isMiss1 ? { x: 8, y: -1 } : { x: 2, y: 0 }) : { x: -8, y: 2 },
+            showEffect: true,
+            hitFlash: false,
+            enemyHp: a1.enemyHpAfter,
+            playerHp: a1.playerHpAfter,
+            textLineIdx: 1,
+            isBlur: false,
+            moveEffect: a1,
+            moveStep: 4,
+          },
+          {
+            delay: 100,
+            pOffset: { x: 0, y: 0 },
+            eOffset: { x: 0, y: 0 },
+            showEffect: false,
+            hitFlash: false,
+            enemyHp: a1.enemyHpAfter,
+            playerHp: a1.playerHpAfter,
+            textLineIdx: 1,
+            isBlur: false,
+            moveEffect: a1,
+          }
+        ];
+      }
     } else if (isRazorWind1) {
       const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
       const isMiss1 = !isHit1;
@@ -1169,18 +1222,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
       const isMiss1 = !isHit1;
       act1Frames = [
-        // 1. Dive Lunge (2 frames @ 65ms = 130ms)
-        ...[
-          { x: 120, y: -60, sx: 1.30, sy: 0.55, rot: -0.18 },
-          { x: 255, y: -135, sx: 1.45, sy: 0.38, rot: -0.25 }
-        ].map(p => ({
-          delay: 65,
-          pOffset: isP1 ? { x: p.x, y: p.y } : { x: 0, y: 0 },
-          eOffset: !isP1 ? { x: -p.x, y: -p.y } : { x: 0, y: 0 },
-          pScale: isP1 ? { x: p.sx, y: p.sy } : undefined,
-          eScale: !isP1 ? { x: p.sx, y: p.sy } : undefined,
-          pRot: isP1 ? p.rot : undefined,
-          eRot: !isP1 ? -p.rot : undefined,
+        // 1. Dive Lunge (100ms)
+        {
+          delay: 100,
+          pOffset: isP1 ? { x: 180, y: -90 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -180, y: 90 } : { x: 0, y: 0 },
+          pScale: isP1 ? { x: 1.40, y: 0.45 } : undefined,
+          eScale: !isP1 ? { x: 1.40, y: 0.45 } : undefined,
+          pRot: isP1 ? -0.22 : undefined,
+          eRot: !isP1 ? 0.22 : undefined,
           showEffect: true,
           hitFlash: false,
           enemyHp: enemy.hp,
@@ -1189,10 +1239,10 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a1,
           moveStep: 1,
-        })),
-        // 2. Direct Contact Strike & Feather Burst (1 frame @ 90ms)
+        },
+        // 2. Direct Contact Strike & Feather Burst (100ms)
         {
-          delay: 90,
+          delay: 100,
           pOffset: isP1 ? { x: 260, y: -138 } : (isMiss1 ? { x: 26, y: 4 } : { x: -8, y: 4 }),
           eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 12, y: -4 }) : { x: -260, y: 138 },
           pScale: isP1 ? { x: 1.35, y: 0.48 } : undefined,
@@ -1208,14 +1258,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 2,
         },
-        // 3. Piercing Fly-Through Off-Screen (2 frames @ 65ms = 130ms)
-        ...[
-          { x: 390, y: -210 },
-          { x: 490, y: -270 },
-        ].map(p => ({
-          delay: 65,
-          pOffset: isP1 ? { x: p.x, y: p.y } : (isMiss1 ? { x: 16, y: 2 } : { x: -4, y: 2 }),
-          eOffset: isP1 ? (isMiss1 ? { x: 16, y: -2 } : { x: 6, y: -2 }) : { x: -p.x, y: -p.y },
+        // 3. Piercing Fly-Through Off-Screen (100ms)
+        {
+          delay: 100,
+          pOffset: isP1 ? { x: 450, y: -245 } : (isMiss1 ? { x: 16, y: 2 } : { x: -4, y: 2 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 16, y: -2 } : { x: 6, y: -2 }) : { x: -450, y: 245 },
           pScale: isP1 ? { x: 1.45, y: 0.38 } : undefined,
           eScale: !isP1 ? { x: 1.45, y: 0.38 } : undefined,
           pRot: isP1 ? -0.25 : undefined,
@@ -1228,19 +1275,16 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a1,
           moveStep: 3,
-        })),
-        // 4. Swooping Re-entry from Bottom-Left (2 frames @ 65ms = 130ms)
-        ...[
-          { x: -80, y: 38, sx: 1.30, sy: 0.55, rot: -0.18 },
-          { x: -25, y: 12, sx: 1.10, sy: 0.85, rot: -0.06 },
-        ].map(p => ({
-          delay: 65,
-          pOffset: isP1 ? { x: p.x, y: p.y } : { x: 0, y: 0 },
-          eOffset: !isP1 ? { x: -p.x, y: -p.y } : { x: 0, y: 0 },
-          pScale: isP1 ? { x: p.sx, y: p.sy } : undefined,
-          eScale: !isP1 ? { x: p.sx, y: p.sy } : undefined,
-          pRot: isP1 ? p.rot : undefined,
-          eRot: !isP1 ? -p.rot : undefined,
+        },
+        // 4. Swooping Re-entry from Bottom-Left (100ms)
+        {
+          delay: 100,
+          pOffset: isP1 ? { x: -50, y: 24 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: 50, y: -24 } : { x: 0, y: 0 },
+          pScale: isP1 ? { x: 1.20, y: 0.70 } : undefined,
+          eScale: !isP1 ? { x: 1.20, y: 0.70 } : undefined,
+          pRot: isP1 ? -0.12 : undefined,
+          eRot: !isP1 ? 0.12 : undefined,
           showEffect: true,
           hitFlash: false,
           enemyHp: a1.enemyHpAfter,
@@ -1249,10 +1293,10 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a1,
           moveStep: 4,
-        })),
-        // 5. Clean Landing Touchdown (1 frame @ 90ms)
+        },
+        // 5. Clean Landing Touchdown (100ms)
         {
-          delay: 90,
+          delay: 100,
           pOffset: { x: 0, y: 0 },
           eOffset: { x: 0, y: 0 },
           showEffect: true,
@@ -1269,16 +1313,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
       const isMiss1 = !isHit1;
       act1Frames = [
-        // 1. Cyclone Inception & Rising Float (2 frames @ 65ms = 130ms)
-        ...[
-          { dy: -14, rot: 0.25, ax: 8, ay: -2 },
-          { dy: -36, rot: 0.65, ax: 14, ay: -5 },
-        ].map(p => ({
-          delay: 65,
-          pOffset: isP1 ? { x: p.ax, y: p.ay } : (isMiss1 ? { x: -26, y: 4 } : { x: 0, y: p.dy }),
-          eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 0, y: p.dy }) : { x: -p.ax, y: -p.ay },
-          pRot: isP1 ? undefined : (isMiss1 ? undefined : -p.rot),
-          eRot: isP1 ? (isMiss1 ? undefined : p.rot) : undefined,
+        // 1. Cyclone Inception & Rising Float (100ms)
+        {
+          delay: 100,
+          pOffset: isP1 ? { x: 12, y: -4 } : (isMiss1 ? { x: -26, y: 4 } : { x: 0, y: -30 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 0, y: -30 }) : { x: -12, y: 4 },
+          pRot: isP1 ? undefined : (isMiss1 ? undefined : -0.55),
+          eRot: isP1 ? (isMiss1 ? undefined : 0.55) : undefined,
           showEffect: true,
           hitFlash: false,
           enemyHp: enemy.hp,
@@ -1287,36 +1328,30 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a1,
           moveStep: 1,
-        })),
-        // 2. Towering Cyclone Surge & Mid-Air Spin (2 frames @ 65ms = 130ms)
-        ...[
-          { dx: 8, dy: -80, rot: 1.60, hit: isHit1 },
-          { dx: -8, dy: -170, rot: 3.40, hit: false },
-        ].map(p => ({
-          delay: 65,
-          pOffset: isP1 ? { x: 16, y: -6 } : (isMiss1 ? { x: -26, y: 4 } : { x: -p.dx, y: p.dy }),
-          eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: p.dx, y: p.dy }) : { x: -16, y: 6 },
-          pRot: isP1 ? undefined : (isMiss1 ? undefined : -p.rot),
-          eRot: isP1 ? (isMiss1 ? undefined : p.rot) : undefined,
+        },
+        // 2. Towering Cyclone Surge & Mid-Air Spin (100ms)
+        {
+          delay: 100,
+          pOffset: isP1 ? { x: 16, y: -6 } : (isMiss1 ? { x: -26, y: 4 } : { x: -10, y: -130 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 10, y: -130 }) : { x: -16, y: 6 },
+          pRot: isP1 ? undefined : (isMiss1 ? undefined : -2.6),
+          eRot: isP1 ? (isMiss1 ? undefined : 2.6) : undefined,
           showEffect: true,
-          hitFlash: p.hit,
+          hitFlash: isHit1,
           enemyHp: a1.enemyHpAfter,
           playerHp: a1.playerHpAfter,
           textLineIdx: 1,
           isBlur: false,
           moveEffect: a1,
           moveStep: 2,
-        })),
-        // 3. Roaring Sky Vortex Off-Screen Ejection (2 frames @ 65ms = 130ms)
-        ...[
-          { dx: 4, dy: -245, rot: 4.90 },
-          { dx: 10, dy: -265, rot: 6.28 },
-        ].map(p => ({
-          delay: 65,
-          pOffset: isP1 ? { x: 10, y: -3 } : (isMiss1 ? { x: -16, y: 2 } : { x: -p.dx, y: p.dy }),
-          eOffset: isP1 ? (isMiss1 ? { x: 16, y: -2 } : { x: p.dx, y: p.dy }) : { x: -10, y: 3 },
-          pRot: isP1 ? undefined : (isMiss1 ? undefined : -p.rot),
-          eRot: isP1 ? (isMiss1 ? undefined : p.rot) : undefined,
+        },
+        // 3. Roaring Sky Vortex Off-Screen Ejection (100ms)
+        {
+          delay: 100,
+          pOffset: isP1 ? { x: 10, y: -3 } : (isMiss1 ? { x: -16, y: 2 } : { x: -6, y: -260 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 16, y: -2 } : { x: 6, y: -260 }) : { x: -10, y: 3 },
+          pRot: isP1 ? undefined : (isMiss1 ? undefined : -5.8),
+          eRot: isP1 ? (isMiss1 ? undefined : 5.8) : undefined,
           showEffect: true,
           hitFlash: false,
           enemyHp: a1.enemyHpAfter,
@@ -1325,17 +1360,14 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a1,
           moveStep: 3,
-        })),
-        // 4. Cyclone Dissipates & Soft Float Down (2 frames @ 65ms = 130ms)
-        ...[
-          { dy: -110, rot: 0.35 },
-          { dy: -25, rot: 0.08 },
-        ].map(p => ({
-          delay: 65,
-          pOffset: isP1 ? { x: 4, y: 0 } : { x: 0, y: p.dy },
-          eOffset: isP1 ? { x: 0, y: p.dy } : { x: -4, y: 0 },
-          pRot: isP1 ? undefined : -p.rot,
-          eRot: isP1 ? p.rot : undefined,
+        },
+        // 4. Cyclone Dissipates & Soft Float Down (100ms)
+        {
+          delay: 100,
+          pOffset: isP1 ? { x: 4, y: 0 } : { x: 0, y: -70 },
+          eOffset: isP1 ? { x: 0, y: -70 } : { x: -4, y: 0 },
+          pRot: isP1 ? undefined : -0.20,
+          eRot: isP1 ? 0.20 : undefined,
           showEffect: true,
           hitFlash: false,
           enemyHp: a1.enemyHpAfter,
@@ -1344,10 +1376,10 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a1,
           moveStep: 4,
-        })),
-        // 5. Clean Ground Touchdown (1 frame @ 90ms)
+        },
+        // 5. Clean Ground Touchdown (100ms)
         {
-          delay: 90,
+          delay: 100,
           pOffset: { x: 0, y: 0 },
           eOffset: { x: 0, y: 0 },
           showEffect: true,
@@ -1364,9 +1396,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
       const isMiss1 = !isHit1;
       act1Frames = [
-        // 1. Windup Lunge (1 frame @ 70ms)
+        // 1. Windup Lunge (100ms)
         {
-          delay: 70,
+          delay: 100,
           pOffset: isP1 ? { x: 18, y: -8 } : { x: 0, y: 0 },
           eOffset: !isP1 ? { x: -18, y: 8 } : { x: 0, y: 0 },
           showEffect: false,
@@ -1377,9 +1409,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a1,
         },
-        // 2. Direct Strike Impact (1 frame @ 90ms)
+        // 2. Direct Strike Impact (100ms)
         {
-          delay: 90,
+          delay: 100,
           pOffset: isP1 ? { x: 22, y: -9 } : (isMiss1 ? { x: 26, y: 4 } : { x: -14, y: 4 }),
           eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 14, y: -4 }) : { x: -22, y: 9 },
           showEffect: true,
@@ -1391,11 +1423,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 1,
         },
-        // 3. Effect action (1 frame @ 70ms)
+        // 3. Effect Action (100ms)
         {
-          delay: 70,
-          pOffset: isP1 ? { x: 16, y: -6 } : (isMiss1 ? { x: 22, y: 3 } : { x: -10, y: 2 }),
-          eOffset: isP1 ? (isMiss1 ? { x: 22, y: -3 } : { x: 10, y: -2 }) : { x: -16, y: 6 },
+          delay: 100,
+          pOffset: isP1 ? { x: 14, y: -5 } : (isMiss1 ? { x: 16, y: 2 } : { x: -8, y: 2 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 16, y: -2 } : { x: 8, y: -2 }) : { x: -14, y: 5 },
           showEffect: true,
           hitFlash: false,
           enemyHp: a1.enemyHpAfter,
@@ -1405,23 +1437,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 2,
         },
-        // 4. Effect dissipation (1 frame @ 70ms)
+        // 4. Recovery (100ms)
         {
-          delay: 70,
-          pOffset: isP1 ? { x: 8, y: -3 } : (isMiss1 ? { x: 8, y: 1 } : { x: -4, y: 1 }),
-          eOffset: isP1 ? (isMiss1 ? { x: 8, y: -1 } : { x: 4, y: -1 }) : { x: -8, y: 3 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a1.enemyHpAfter,
-          playerHp: a1.playerHpAfter,
-          textLineIdx: 1,
-          isBlur: false,
-          moveEffect: a1,
-          moveStep: 3,
-        },
-        // 5. Recovery (1 frame @ 90ms)
-        {
-          delay: 90,
+          delay: 100,
           pOffset: { x: 0, y: 0 },
           eOffset: { x: 0, y: 0 },
           showEffect: true,
@@ -1438,9 +1456,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
       const isMiss1 = !isHit1;
       act1Frames = [
-        // Standard Windup (1 frame @ 80ms)
+        // 1. Standard Windup (100ms)
         {
-          delay: 80,
+          delay: 100,
           pOffset: isP1 ? (a1.isSpecial ? { x: 0, y: -6 } : { x: 18, y: -8 }) : { x: 0, y: 0 },
           eOffset: !isP1 ? (a1.isSpecial ? { x: 0, y: -6 } : { x: -18, y: 8 }) : { x: 0, y: 0 },
           showEffect: false,
@@ -1452,9 +1470,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 1,
         },
-        // Standard Strike Impact (1 frame @ 110ms)
+        // 2. Standard Strike Impact (100ms)
         {
-          delay: 110,
+          delay: 100,
           pOffset: isP1 ? { x: 22, y: -9 } : (isMiss1 ? { x: 26, y: 4 } : { x: -14, y: 4 }),
           eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 14, y: -4 }) : { x: -22, y: 9 },
           showEffect: true,
@@ -1466,11 +1484,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 2,
         },
-        // Recoil Shake (1 frame @ 70ms)
+        // 3. Recoil Shake (100ms)
         {
-          delay: 70,
-          pOffset: isP1 ? { x: 14, y: -5 } : (isMiss1 ? { x: 14, y: 2 } : { x: -6, y: 2 }),
-          eOffset: isP1 ? (isMiss1 ? { x: 14, y: -2 } : { x: 6, y: -2 }) : { x: -14, y: 5 },
+          delay: 100,
+          pOffset: isP1 ? { x: 12, y: -4 } : (isMiss1 ? { x: 12, y: 2 } : { x: -6, y: 2 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 12, y: -2 } : { x: 6, y: -2 }) : { x: -12, y: 4 },
           showEffect: true,
           hitFlash: false,
           enemyHp: a1.enemyHpAfter,
@@ -1480,9 +1498,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
           moveStep: 3,
         },
-        // Recovery (1 frame @ 90ms)
+        // 4. Recovery (100ms)
         {
-          delay: 90,
+          delay: 100,
           pOffset: { x: 0, y: 0 },
           eOffset: { x: 0, y: 0 },
           showEffect: false,
@@ -2150,67 +2168,120 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     } else if (isFly2) {
       const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
       const isMiss2 = !isHit2;
-      act2Frames = [
-        // 1. Sky Launch: Attacker launches up into clouds (160ms)
-        {
-          delay: 160,
-          pOffset: isP2 ? { x: 4, y: -36 } : { x: 0, y: 0 },
-          eOffset: !isP2 ? { x: -4, y: -36 } : { x: 0, y: 0 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a1.enemyHpAfter,
-          playerHp: a1.playerHpAfter,
-          textLineIdx: 3,
-          isBlur: false,
-          moveEffect: a2,
-          moveStep: 1,
-        },
-        // 2. High Altitude Target Lock (180ms)
-        {
-          delay: 180,
-          pOffset: isP2 ? { x: 8, y: -48 } : { x: 0, y: 0 },
-          eOffset: !isP2 ? { x: -8, y: -48 } : { x: 0, y: 0 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a1.enemyHpAfter,
-          playerHp: a1.playerHpAfter,
-          textLineIdx: 3,
-          statProgress: undefined,
-          isBlur: false,
-          moveEffect: a2,
-          moveStep: 2,
-        },
-        // 3. Supersonic Dive-Bomb Impact Slam! (240ms)
-        {
-          delay: 240,
-          pOffset: isP2 ? { x: 20, y: -8 } : (isMiss2 ? { x: 26, y: 4 } : { x: -8, y: 4 }),
-          eOffset: !isP2 ? { x: -20, y: 8 } : (isMiss2 ? { x: 26, y: -4 } : { x: 10, y: -4 }),
-          showEffect: true,
-          hitFlash: isHit2,
-          enemyHp: a2.enemyHpAfter,
-          playerHp: a2.playerHpAfter,
-          textLineIdx: 3,
-          statProgress: undefined,
-          isBlur: false,
-          moveEffect: a2,
-          moveStep: 3,
-        },
-        // 4. Ground Crater Dispersal (140ms)
-        {
-          delay: 140,
-          pOffset: isP2 ? { x: 8, y: -2 } : (isMiss2 ? { x: 8, y: 1 } : { x: 0, y: 0 }),
-          eOffset: !isP2 ? { x: -8, y: 2 } : (isMiss2 ? { x: 8, y: -1 } : { x: 0, y: 0 }),
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a2.enemyHpAfter,
-          playerHp: a2.playerHpAfter,
-          textLineIdx: 3,
-          statProgress: undefined,
-          isBlur: false,
-          moveEffect: a2,
-          moveStep: 4,
-        }
-      ];
+      const isTurn1Launch = (a2.damage ?? 0) === 0 && (a2.log?.includes("날아올랐다") || a2.log?.includes("flew up"));
+
+      if (isTurn1Launch) {
+        // Turn 1: Sky Launch into Clouds (4 frames @ 100ms = 400ms)
+        act2Frames = [
+          {
+            delay: 100,
+            pOffset: !isP2 ? { x: -4, y: -40 } : { x: 0, y: 0 },
+            eOffset: isP2 ? { x: 4, y: -40 } : { x: 0, y: 0 },
+            showEffect: true,
+            hitFlash: false,
+            enemyHp: a1.enemyHpAfter,
+            playerHp: a1.playerHpAfter,
+            textLineIdx: 3,
+            isBlur: false,
+            moveEffect: a2,
+            moveStep: 1,
+          },
+          {
+            delay: 100,
+            pOffset: !isP2 ? { x: -8, y: -120 } : { x: 0, y: 0 },
+            eOffset: isP2 ? { x: 8, y: -120 } : { x: 0, y: 0 },
+            showEffect: true,
+            hitFlash: false,
+            enemyHp: a1.enemyHpAfter,
+            playerHp: a1.playerHpAfter,
+            textLineIdx: 3,
+            isBlur: false,
+            moveEffect: a2,
+            moveStep: 1,
+          },
+          {
+            delay: 100,
+            pOffset: !isP2 ? { x: -12, y: -300 } : { x: 0, y: 0 },
+            eOffset: isP2 ? { x: 12, y: -300 } : { x: 0, y: 0 },
+            showEffect: true,
+            hitFlash: false,
+            enemyHp: a1.enemyHpAfter,
+            playerHp: a1.playerHpAfter,
+            textLineIdx: 3,
+            isBlur: false,
+            moveEffect: a2,
+            moveStep: 1,
+          },
+          {
+            delay: 100,
+            pOffset: !isP2 ? { x: -12, y: -300 } : { x: 0, y: 0 },
+            eOffset: isP2 ? { x: 12, y: -300 } : { x: 0, y: 0 },
+            showEffect: false,
+            hitFlash: false,
+            enemyHp: a1.enemyHpAfter,
+            playerHp: a1.playerHpAfter,
+            textLineIdx: 3,
+            isBlur: false,
+            moveEffect: a2,
+            moveStep: 1,
+          }
+        ];
+      } else {
+        // Turn 2: Supersonic Dive-Bomb Attack! (4 frames @ 100ms = 400ms)
+        act2Frames = [
+          {
+            delay: 100,
+            pOffset: !isP2 ? { x: -8, y: -140 } : { x: 0, y: 0 },
+            eOffset: isP2 ? { x: 8, y: -140 } : { x: 0, y: 0 },
+            showEffect: true,
+            hitFlash: false,
+            enemyHp: a1.enemyHpAfter,
+            playerHp: a1.playerHpAfter,
+            textLineIdx: 3,
+            isBlur: false,
+            moveEffect: a2,
+            moveStep: 2,
+          },
+          {
+            delay: 100,
+            pOffset: isP2 ? { x: -20, y: 8 } : (isMiss2 ? { x: 26, y: 4 } : { x: -8, y: 4 }),
+            eOffset: !isP2 ? { x: 20, y: -8 } : (isMiss2 ? { x: 26, y: -4 } : { x: 10, y: -4 }),
+            showEffect: true,
+            hitFlash: isHit2,
+            enemyHp: a2.enemyHpAfter,
+            playerHp: a2.playerHpAfter,
+            textLineIdx: 3,
+            isBlur: false,
+            moveEffect: a2,
+            moveStep: 3,
+          },
+          {
+            delay: 100,
+            pOffset: !isP2 ? { x: -8, y: 2 } : (isMiss2 ? { x: 8, y: 1 } : { x: 0, y: 0 }),
+            eOffset: isP2 ? { x: 8, y: -2 } : (isMiss2 ? { x: 8, y: -1 } : { x: 0, y: 0 }),
+            showEffect: true,
+            hitFlash: false,
+            enemyHp: a2.enemyHpAfter,
+            playerHp: a2.playerHpAfter,
+            textLineIdx: 3,
+            isBlur: false,
+            moveEffect: a2,
+            moveStep: 4,
+          },
+          {
+            delay: 100,
+            pOffset: { x: 0, y: 0 },
+            eOffset: { x: 0, y: 0 },
+            showEffect: false,
+            hitFlash: false,
+            enemyHp: a2.enemyHpAfter,
+            playerHp: a2.playerHpAfter,
+            textLineIdx: 3,
+            isBlur: false,
+            moveEffect: a2,
+          }
+        ];
+      }
     } else if (isRazorWind2) {
       const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
       const isMiss2 = !isHit2;
@@ -2304,18 +2375,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
       const isMiss2 = !isHit2;
       act2Frames = [
-        // 1. Counter Dive Lunge (2 frames @ 65ms = 130ms)
-        ...[
-          { x: 120, y: -60, sx: 1.30, sy: 0.55, rot: -0.18 },
-          { x: 255, y: -135, sx: 1.45, sy: 0.38, rot: -0.25 }
-        ].map(p => ({
-          delay: 65,
-          pOffset: isP2 ? { x: p.x, y: p.y } : { x: 0, y: 0 },
-          eOffset: !isP2 ? { x: -p.x, y: -p.y } : { x: 0, y: 0 },
-          pScale: isP2 ? { x: p.sx, y: p.sy } : undefined,
-          eScale: !isP2 ? { x: p.sx, y: p.sy } : undefined,
-          pRot: isP2 ? p.rot : undefined,
-          eRot: !isP2 ? -p.rot : undefined,
+        // 1. Counter Dive Lunge (100ms)
+        {
+          delay: 100,
+          pOffset: isP2 ? { x: 180, y: -90 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -180, y: 90 } : { x: 0, y: 0 },
+          pScale: isP2 ? { x: 1.40, y: 0.45 } : undefined,
+          eScale: !isP2 ? { x: 1.40, y: 0.45 } : undefined,
+          pRot: isP2 ? -0.22 : undefined,
+          eRot: !isP2 ? 0.22 : undefined,
           showEffect: true,
           hitFlash: false,
           enemyHp: a1.enemyHpAfter,
@@ -2324,10 +2392,10 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a2,
           moveStep: 1,
-        })),
-        // 2. Direct Contact Strike & Feather Burst (1 frame @ 90ms)
+        },
+        // 2. Direct Contact Strike & Feather Burst (100ms)
         {
-          delay: 90,
+          delay: 100,
           pOffset: isP2 ? { x: 260, y: -138 } : (isMiss2 ? { x: 26, y: 4 } : { x: -8, y: 4 }),
           eOffset: isP2 ? (isMiss2 ? { x: 26, y: -4 } : { x: 12, y: -4 }) : { x: -260, y: 138 },
           pScale: isP2 ? { x: 1.35, y: 0.48 } : undefined,
@@ -2343,14 +2411,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 2,
         },
-        // 3. Piercing Fly-Through Off-Screen (2 frames @ 65ms = 130ms)
-        ...[
-          { x: 390, y: -210 },
-          { x: 490, y: -270 },
-        ].map(p => ({
-          delay: 65,
-          pOffset: isP2 ? { x: p.x, y: p.y } : (isMiss2 ? { x: 16, y: 2 } : { x: -4, y: 2 }),
-          eOffset: isP2 ? (isMiss2 ? { x: 16, y: -2 } : { x: 6, y: -2 }) : { x: -p.x, y: -p.y },
+        // 3. Piercing Fly-Through Off-Screen (100ms)
+        {
+          delay: 100,
+          pOffset: isP2 ? { x: 450, y: -245 } : (isMiss2 ? { x: 16, y: 2 } : { x: -4, y: 2 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 16, y: -2 } : { x: 6, y: -2 }) : { x: -450, y: 245 },
           pScale: isP2 ? { x: 1.45, y: 0.38 } : undefined,
           eScale: !isP2 ? { x: 1.45, y: 0.38 } : undefined,
           pRot: isP2 ? -0.25 : undefined,
@@ -2363,19 +2428,16 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a2,
           moveStep: 3,
-        })),
-        // 4. Swooping Re-entry from Bottom-Left (2 frames @ 65ms = 130ms)
-        ...[
-          { x: -80, y: 38, sx: 1.30, sy: 0.55, rot: -0.18 },
-          { x: -25, y: 12, sx: 1.10, sy: 0.85, rot: -0.06 },
-        ].map(p => ({
-          delay: 65,
-          pOffset: isP2 ? { x: p.x, y: p.y } : { x: 0, y: 0 },
-          eOffset: !isP2 ? { x: -p.x, y: -p.y } : { x: 0, y: 0 },
-          pScale: isP2 ? { x: p.sx, y: p.sy } : undefined,
-          eScale: !isP2 ? { x: p.sx, y: p.sy } : undefined,
-          pRot: isP2 ? p.rot : undefined,
-          eRot: !isP2 ? -p.rot : undefined,
+        },
+        // 4. Swooping Re-entry from Bottom-Left (100ms)
+        {
+          delay: 100,
+          pOffset: isP2 ? { x: -50, y: 24 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: 50, y: -24 } : { x: 0, y: 0 },
+          pScale: isP2 ? { x: 1.20, y: 0.70 } : undefined,
+          eScale: !isP2 ? { x: 1.20, y: 0.70 } : undefined,
+          pRot: isP2 ? -0.12 : undefined,
+          eRot: !isP2 ? 0.12 : undefined,
           showEffect: true,
           hitFlash: false,
           enemyHp: a2.enemyHpAfter,
@@ -2384,10 +2446,10 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a2,
           moveStep: 4,
-        })),
-        // 5. Clean Landing Touchdown (1 frame @ 90ms)
+        },
+        // 5. Clean Landing Touchdown (100ms)
         {
-          delay: 90,
+          delay: 100,
           pOffset: { x: 0, y: 0 },
           eOffset: { x: 0, y: 0 },
           showEffect: true,
@@ -2404,16 +2466,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
       const isMiss2 = !isHit2;
       act2Frames = [
-        // 1. Cyclone Inception & Rising Float (2 frames @ 65ms = 130ms)
-        ...[
-          { dy: -14, rot: 0.25, ax: 8, ay: -2 },
-          { dy: -36, rot: 0.65, ax: 14, ay: -5 },
-        ].map(p => ({
-          delay: 65,
-          pOffset: isP2 ? { x: p.ax, y: p.ay } : (isMiss2 ? { x: -26, y: 4 } : { x: 0, y: p.dy }),
-          eOffset: isP2 ? (isMiss2 ? { x: 26, y: -4 } : { x: 0, y: p.dy }) : { x: -p.ax, y: -p.ay },
-          pRot: isP2 ? undefined : (isMiss2 ? undefined : -p.rot),
-          eRot: isP2 ? (isMiss2 ? undefined : p.rot) : undefined,
+        // 1. Cyclone Inception & Rising Float (100ms)
+        {
+          delay: 100,
+          pOffset: isP2 ? { x: 12, y: -4 } : (isMiss2 ? { x: -26, y: 4 } : { x: 0, y: -30 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 26, y: -4 } : { x: 0, y: -30 }) : { x: -12, y: 4 },
+          pRot: isP2 ? undefined : (isMiss2 ? undefined : -0.55),
+          eRot: isP2 ? (isMiss2 ? undefined : 0.55) : undefined,
           showEffect: true,
           hitFlash: false,
           enemyHp: a1.enemyHpAfter,
@@ -2422,36 +2481,30 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a2,
           moveStep: 1,
-        })),
-        // 2. Towering Cyclone Surge & Mid-Air Spin (2 frames @ 65ms = 130ms)
-        ...[
-          { dx: 8, dy: -80, rot: 1.60, hit: isHit2 },
-          { dx: -8, dy: -170, rot: 3.40, hit: false },
-        ].map(p => ({
-          delay: 65,
-          pOffset: isP2 ? { x: 16, y: -6 } : (isMiss2 ? { x: -26, y: 4 } : { x: -p.dx, y: p.dy }),
-          eOffset: isP2 ? (isMiss2 ? { x: 26, y: -4 } : { x: p.dx, y: p.dy }) : { x: -16, y: 6 },
-          pRot: isP2 ? undefined : (isMiss2 ? undefined : -p.rot),
-          eRot: isP2 ? (isMiss2 ? undefined : p.rot) : undefined,
+        },
+        // 2. Towering Cyclone Surge & Mid-Air Spin (100ms)
+        {
+          delay: 100,
+          pOffset: isP2 ? { x: 16, y: -6 } : (isMiss2 ? { x: -26, y: 4 } : { x: -10, y: -130 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 26, y: -4 } : { x: 10, y: -130 }) : { x: -16, y: 6 },
+          pRot: isP2 ? undefined : (isMiss2 ? undefined : -2.6),
+          eRot: isP2 ? (isMiss2 ? undefined : 2.6) : undefined,
           showEffect: true,
-          hitFlash: p.hit,
+          hitFlash: isHit2,
           enemyHp: a2.enemyHpAfter,
           playerHp: a2.playerHpAfter,
           textLineIdx: 3,
           isBlur: false,
           moveEffect: a2,
           moveStep: 2,
-        })),
-        // 3. Roaring Sky Vortex Off-Screen Ejection (2 frames @ 65ms = 130ms)
-        ...[
-          { dx: 4, dy: -245, rot: 4.90 },
-          { dx: 10, dy: -265, rot: 6.28 },
-        ].map(p => ({
-          delay: 65,
-          pOffset: isP2 ? { x: 10, y: -3 } : (isMiss2 ? { x: -16, y: 2 } : { x: -p.dx, y: p.dy }),
-          eOffset: isP2 ? (isMiss2 ? { x: 16, y: -2 } : { x: p.dx, y: p.dy }) : { x: -10, y: 3 },
-          pRot: isP2 ? undefined : (isMiss2 ? undefined : -p.rot),
-          eRot: isP2 ? (isMiss2 ? undefined : p.rot) : undefined,
+        },
+        // 3. Roaring Sky Vortex Off-Screen Ejection (100ms)
+        {
+          delay: 100,
+          pOffset: isP2 ? { x: 10, y: -3 } : (isMiss2 ? { x: -16, y: 2 } : { x: -6, y: -260 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 16, y: -2 } : { x: 6, y: -260 }) : { x: -10, y: 3 },
+          pRot: isP2 ? undefined : (isMiss2 ? undefined : -5.8),
+          eRot: isP2 ? (isMiss2 ? undefined : 5.8) : undefined,
           showEffect: true,
           hitFlash: false,
           enemyHp: a2.enemyHpAfter,
@@ -2460,17 +2513,14 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a2,
           moveStep: 3,
-        })),
-        // 4. Cyclone Dissipates & Soft Float Down (2 frames @ 65ms = 130ms)
-        ...[
-          { dy: -110, rot: 0.35 },
-          { dy: -25, rot: 0.08 },
-        ].map(p => ({
-          delay: 65,
-          pOffset: isP2 ? { x: 4, y: 0 } : { x: 0, y: p.dy },
-          eOffset: isP2 ? { x: 0, y: p.dy } : { x: -4, y: 0 },
-          pRot: isP2 ? undefined : -p.rot,
-          eRot: isP2 ? p.rot : undefined,
+        },
+        // 4. Cyclone Dissipates & Soft Float Down (100ms)
+        {
+          delay: 100,
+          pOffset: isP2 ? { x: 4, y: 0 } : { x: 0, y: -70 },
+          eOffset: isP2 ? { x: 0, y: -70 } : { x: -4, y: 0 },
+          pRot: isP2 ? undefined : -0.20,
+          eRot: isP2 ? 0.20 : undefined,
           showEffect: true,
           hitFlash: false,
           enemyHp: a2.enemyHpAfter,
@@ -2479,10 +2529,10 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a2,
           moveStep: 4,
-        })),
-        // 5. Clean Ground Touchdown (1 frame @ 90ms)
+        },
+        // 5. Clean Ground Touchdown (100ms)
         {
-          delay: 90,
+          delay: 100,
           pOffset: { x: 0, y: 0 },
           eOffset: { x: 0, y: 0 },
           showEffect: true,
@@ -2499,9 +2549,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
       const isMiss2 = !isHit2;
       act2Frames = [
-        // 1. Windup Lunge (1 frame @ 70ms)
+        // 1. Windup Lunge (100ms)
         {
-          delay: 70,
+          delay: 100,
           pOffset: isP2 ? { x: 18, y: -8 } : { x: 0, y: 0 },
           eOffset: !isP2 ? { x: -18, y: 8 } : { x: 0, y: 0 },
           showEffect: false,
@@ -2512,9 +2562,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           isBlur: false,
           moveEffect: a2,
         },
-        // 2. Direct Strike Impact (1 frame @ 90ms)
+        // 2. Direct Strike Impact (100ms)
         {
-          delay: 90,
+          delay: 100,
           pOffset: isP2 ? { x: 22, y: -9 } : (isMiss2 ? { x: 26, y: 4 } : { x: -14, y: 4 }),
           eOffset: !isP2 ? { x: -22, y: 9 } : (isMiss2 ? { x: 26, y: -4 } : { x: 10, y: -3 }),
           showEffect: true,
@@ -2526,11 +2576,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 1,
         },
-        // 3. Effect action (1 frame @ 70ms)
+        // 3. Effect Action (100ms)
         {
-          delay: 70,
-          pOffset: isP2 ? { x: 16, y: -6 } : (isMiss2 ? { x: 22, y: 3 } : { x: -10, y: 2 }),
-          eOffset: !isP2 ? { x: -16, y: 6 } : (isMiss2 ? { x: 22, y: -3 } : { x: 5, y: -1 }),
+          delay: 100,
+          pOffset: isP2 ? { x: 14, y: -5 } : (isMiss2 ? { x: 16, y: 2 } : { x: -8, y: 2 }),
+          eOffset: !isP2 ? { x: -14, y: 5 } : (isMiss2 ? { x: 16, y: -2 } : { x: 8, y: -2 }),
           showEffect: true,
           hitFlash: false,
           enemyHp: a2.enemyHpAfter,
@@ -2540,23 +2590,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 2,
         },
-        // 4. Effect dissipation (1 frame @ 70ms)
+        // 4. Recovery (100ms)
         {
-          delay: 70,
-          pOffset: isP2 ? { x: 8, y: -3 } : (isMiss2 ? { x: 8, y: 1 } : { x: -4, y: 1 }),
-          eOffset: !isP2 ? { x: -8, y: 3 } : (isMiss2 ? { x: 8, y: -1 } : { x: 2, y: 0 }),
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a2.enemyHpAfter,
-          playerHp: a2.playerHpAfter,
-          textLineIdx: 3,
-          isBlur: false,
-          moveEffect: a2,
-          moveStep: 3,
-        },
-        // 5. Recovery (1 frame @ 90ms)
-        {
-          delay: 90,
+          delay: 100,
           pOffset: { x: 0, y: 0 },
           eOffset: { x: 0, y: 0 },
           showEffect: true,
@@ -2573,9 +2609,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
       const isMiss2 = !isHit2;
       act2Frames = [
-        // Standard Windup (1 frame @ 80ms)
+        // 1. Standard Windup (100ms)
         {
-          delay: 80,
+          delay: 100,
           pOffset: isP2 ? (a2.isSpecial ? { x: 0, y: -6 } : { x: 18, y: -8 }) : { x: 0, y: 0 },
           eOffset: !isP2 ? (a2.isSpecial ? { x: 0, y: -6 } : { x: -18, y: 8 }) : { x: 0, y: 0 },
           showEffect: false,
@@ -2587,9 +2623,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 1,
         },
-        // Standard Strike Impact (1 frame @ 110ms)
+        // 2. Standard Strike Impact (100ms)
         {
-          delay: 110,
+          delay: 100,
           pOffset: isP2 ? { x: 22, y: -9 } : (isMiss2 ? { x: 26, y: 4 } : { x: -14, y: 4 }),
           eOffset: !isP2 ? { x: -22, y: 9 } : (isMiss2 ? { x: 26, y: -4 } : { x: 8, y: -2 }),
           showEffect: true,
@@ -2601,11 +2637,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 2,
         },
-        // Recoil Shake (1 frame @ 70ms)
+        // 3. Recoil Shake (100ms)
         {
-          delay: 70,
-          pOffset: isP2 ? { x: 14, y: -5 } : (isMiss2 ? { x: 14, y: 2 } : { x: -6, y: 2 }),
-          eOffset: !isP2 ? { x: -14, y: 5 } : (isMiss2 ? { x: 14, y: -2 } : { x: 6, y: -2 }),
+          delay: 100,
+          pOffset: isP2 ? { x: 12, y: -4 } : (isMiss2 ? { x: 12, y: 2 } : { x: -6, y: 2 }),
+          eOffset: !isP2 ? { x: -12, y: 4 } : (isMiss2 ? { x: 12, y: -2 } : { x: 6, y: -2 }),
           showEffect: true,
           hitFlash: false,
           enemyHp: a2.enemyHpAfter,
@@ -2615,9 +2651,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
           moveStep: 3,
         },
-        // Recovery (1 frame @ 90ms)
+        // 4. Recovery (100ms)
         {
-          delay: 90,
+          delay: 100,
           pOffset: { x: 0, y: 0 },
           eOffset: { x: 0, y: 0 },
           showEffect: false,
