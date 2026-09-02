@@ -1137,13 +1137,16 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       if (isTurn1Launch) {
         // Turn 1: Crouch -> Rocket Launch (Thin vertically & turns pure white!) -> Disappears High in Sky (Off-screen)
         act1Frames = [
-          // 1. Crouch Preparation (100ms)
+          // 1. Crouch Preparation & Camera Dynamic Close-Up (160ms)
           {
-            delay: 100,
+            delay: 160,
             pOffset: isP1 ? { x: 0, y: 6 } : { x: 0, y: 0 },
             eOffset: !isP1 ? { x: 0, y: 6 } : { x: 0, y: 0 },
             pScale: isP1 ? { x: 1.25, y: 0.80 } : undefined,
             eScale: !isP1 ? { x: 1.25, y: 0.80 } : undefined,
+            cameraZoom: 1.28,
+            cameraPan: { x: 0, y: 8 },
+            isAttackerPlayer: isP1,
             pWhite: false,
             eWhite: false,
             showEffect: true,
@@ -1155,13 +1158,16 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a1,
             moveStep: 1,
           },
-          // 2. Rocket Sky Launch: Stretched thin vertically & turns pure white! (100ms)
+          // 2. Rocket Sky Launch: Camera smooth upward tilt tracking! (160ms)
           {
-            delay: 100,
-            pOffset: isP1 ? { x: 0, y: -90 } : { x: 0, y: 0 },
-            eOffset: !isP1 ? { x: 0, y: -90 } : { x: 0, y: 0 },
-            pScale: isP1 ? { x: 0.45, y: 1.80 } : undefined,
-            eScale: !isP1 ? { x: 0.45, y: 1.80 } : undefined,
+            delay: 160,
+            pOffset: isP1 ? { x: 0, y: -100 } : { x: 0, y: 0 },
+            eOffset: !isP1 ? { x: 0, y: -100 } : { x: 0, y: 0 },
+            pScale: isP1 ? { x: 0.45, y: 1.85 } : undefined,
+            eScale: !isP1 ? { x: 0.45, y: 1.85 } : undefined,
+            cameraZoom: 1.22,
+            cameraPan: { x: 0, y: 70 },
+            isAttackerPlayer: isP1,
             pWhite: isP1,
             eWhite: !isP1,
             showEffect: true,
@@ -1173,27 +1179,29 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a1,
             moveStep: 1,
           },
-          // 3. Stratosphere Ascent: Shooting into clouds, thin white streak! (100ms)
+          // 3. Stratosphere Ascent: Camera follows high into clouds! (150ms)
           {
-            delay: 100,
-            pOffset: isP1 ? { x: 0, y: -260 } : { x: 0, y: 0 },
-            eOffset: !isP1 ? { x: 0, y: -260 } : { x: 0, y: 0 },
+            delay: 150,
+            pOffset: isP1 ? { x: 0, y: -270 } : { x: 0, y: 0 },
+            eOffset: !isP1 ? { x: 0, y: -270 } : { x: 0, y: 0 },
             pScale: isP1 ? { x: 0.30, y: 2.20 } : undefined,
             eScale: !isP1 ? { x: 0.30, y: 2.20 } : undefined,
+            cameraZoom: 1.15,
+            cameraPan: { x: 0, y: 140 },
+            isAttackerPlayer: isP1,
             pWhite: isP1,
             eWhite: !isP1,
-            showEffect: true,
+            showEffect: false,
             hitFlash: false,
             enemyHp: enemy.hp,
             playerHp: playerMon.hp,
             textLineIdx: 1,
             isBlur: false,
             moveEffect: a1,
-            moveStep: 1,
           },
-          // 4. Disappeared high in sky / Platform is completely empty! (100ms)
+          // 4. Camera returns to neutral full arena view & platform is empty (120ms)
           {
-            delay: 100,
+            delay: 120,
             pOffset: isP1 ? { x: 0, y: -600 } : { x: 0, y: 0 },
             eOffset: !isP1 ? { x: 0, y: -600 } : { x: 0, y: 0 },
             showEffect: false,
@@ -1203,19 +1211,18 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             textLineIdx: 1,
             isBlur: false,
             moveEffect: a1,
-            moveStep: 1,
           }
         ];
       } else {
         // Turn 2: Supersonic Dive-Bomb Slam right onto opponent's sprite!
         act1Frames = [
-          // 1. High Sky Gliding Cutscene: Pokémon gliding peacefully in stratosphere sky! (140ms)
+          // 1A. High Sky Gliding Cutscene - Phase 1: Majestic soaring in upper stratosphere (220ms)
           {
-            delay: 140,
-            pOffset: { x: 0, y: 0 },
-            eOffset: { x: 0, y: 0 },
-            pScale: isP1 ? { x: 1.06, y: 0.94 } : undefined,
-            eScale: !isP1 ? { x: 1.06, y: 0.94 } : undefined,
+            delay: 220,
+            pOffset: { x: 0, y: -6 },
+            eOffset: { x: 0, y: -6 },
+            pScale: isP1 ? { x: 1.08, y: 0.94 } : undefined,
+            eScale: !isP1 ? { x: 1.08, y: 0.94 } : undefined,
             isHighSkyCutscene: true,
             isAttackerPlayer: isP1,
             showEffect: false,
@@ -1227,9 +1234,27 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a1,
             moveStep: 1,
           },
-          // 2. Camera Dutch Angle Tilt & Supersonic Plunge: Speedlines & Squashed Aerodynamic Bullet Sprite! (120ms)
+          // 1B. High Sky Gliding Cutscene - Phase 2: Target lock altitude & wings banking forward (220ms)
           {
-            delay: 120,
+            delay: 220,
+            pOffset: { x: 0, y: 4 },
+            eOffset: { x: 0, y: 4 },
+            pScale: isP1 ? { x: 1.02, y: 0.98 } : undefined,
+            eScale: !isP1 ? { x: 1.02, y: 0.98 } : undefined,
+            isHighSkyCutscene: true,
+            isAttackerPlayer: isP1,
+            showEffect: false,
+            hitFlash: false,
+            enemyHp: enemy.hp,
+            playerHp: playerMon.hp,
+            textLineIdx: 1,
+            isBlur: false,
+            moveEffect: a1,
+            moveStep: 1,
+          },
+          // 2. Camera Dutch Angle Tilt & Supersonic Plunge: Speedlines & Squashed Aerodynamic Bullet Sprite! (180ms)
+          {
+            delay: 180,
             pOffset: { x: 0, y: 0 },
             eOffset: { x: 0, y: 0 },
             pScale: isP1 ? { x: 0.32, y: 2.30 } : undefined,
@@ -1246,9 +1271,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a1,
             moveStep: 2,
           },
-          // 3. Ground Arena Breakthrough & Massive Crater Impact Slam! (110ms)
+          // 3. Ground Arena Breakthrough & Massive Crater Impact Slam! (140ms)
           {
-            delay: 110,
+            delay: 140,
             pOffset: isP1 ? { x: 260, y: -120 } : (isMiss1 ? { x: 26, y: 4 } : { x: -12, y: 4 }),
             eOffset: isP1 ? (isMiss1 ? { x: 26, y: -4 } : { x: 12, y: -4 }) : { x: -260, y: 120 },
             pScale: isP1 ? { x: 1.55, y: 0.55 } : undefined,
@@ -1267,9 +1292,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a1,
             moveStep: 3,
           },
-          // 4. Rebound & Ground Shockwave Dissipation (100ms)
+          // 4. Rebound & Ground Shockwave Dissipation (110ms)
           {
-            delay: 100,
+            delay: 110,
             pOffset: isP1 ? { x: 120, y: -40 } : { x: 0, y: 0 },
             eOffset: !isP1 ? { x: -120, y: 40 } : { x: 0, y: 0 },
             pScale: isP1 ? { x: 1.15, y: 0.85 } : undefined,
@@ -2344,13 +2369,16 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       if (isTurn1Launch) {
         // Turn 1: Crouch -> Rocket Launch (Thin vertically & turns pure white!) -> Disappears High in Sky (Off-screen)
         act2Frames = [
-          // 1. Crouch Preparation (100ms)
+          // 1. Crouch Preparation & Camera Dynamic Close-Up (160ms)
           {
-            delay: 100,
+            delay: 160,
             pOffset: isP2 ? { x: 0, y: 6 } : { x: 0, y: 0 },
             eOffset: !isP2 ? { x: 0, y: 6 } : { x: 0, y: 0 },
             pScale: isP2 ? { x: 1.25, y: 0.80 } : undefined,
             eScale: !isP2 ? { x: 1.25, y: 0.80 } : undefined,
+            cameraZoom: 1.28,
+            cameraPan: { x: 0, y: 8 },
+            isAttackerPlayer: isP2,
             pWhite: false,
             eWhite: false,
             showEffect: true,
@@ -2362,13 +2390,16 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a2,
             moveStep: 1,
           },
-          // 2. Rocket Sky Launch: Stretched thin vertically & turns pure white! (100ms)
+          // 2. Rocket Sky Launch: Camera smooth upward tilt tracking! (160ms)
           {
-            delay: 100,
-            pOffset: isP2 ? { x: 0, y: -90 } : { x: 0, y: 0 },
-            eOffset: !isP2 ? { x: 0, y: -90 } : { x: 0, y: 0 },
-            pScale: isP2 ? { x: 0.45, y: 1.80 } : undefined,
-            eScale: !isP2 ? { x: 0.45, y: 1.80 } : undefined,
+            delay: 160,
+            pOffset: isP2 ? { x: 0, y: -100 } : { x: 0, y: 0 },
+            eOffset: !isP2 ? { x: 0, y: -100 } : { x: 0, y: 0 },
+            pScale: isP2 ? { x: 0.45, y: 1.85 } : undefined,
+            eScale: !isP2 ? { x: 0.45, y: 1.85 } : undefined,
+            cameraZoom: 1.22,
+            cameraPan: { x: 0, y: 70 },
+            isAttackerPlayer: isP2,
             pWhite: isP2,
             eWhite: !isP2,
             showEffect: true,
@@ -2380,27 +2411,29 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a2,
             moveStep: 1,
           },
-          // 3. Stratosphere Ascent: Shooting into clouds, thin white streak! (100ms)
+          // 3. Stratosphere Ascent: Camera follows high into clouds! (150ms)
           {
-            delay: 100,
-            pOffset: isP2 ? { x: 0, y: -260 } : { x: 0, y: 0 },
-            eOffset: !isP2 ? { x: 0, y: -260 } : { x: 0, y: 0 },
+            delay: 150,
+            pOffset: isP2 ? { x: 0, y: -270 } : { x: 0, y: 0 },
+            eOffset: !isP2 ? { x: 0, y: -270 } : { x: 0, y: 0 },
             pScale: isP2 ? { x: 0.30, y: 2.20 } : undefined,
             eScale: !isP2 ? { x: 0.30, y: 2.20 } : undefined,
+            cameraZoom: 1.15,
+            cameraPan: { x: 0, y: 140 },
+            isAttackerPlayer: isP2,
             pWhite: isP2,
             eWhite: !isP2,
-            showEffect: true,
+            showEffect: false,
             hitFlash: false,
             enemyHp: a1.enemyHpAfter,
             playerHp: a1.playerHpAfter,
             textLineIdx: 3,
             isBlur: false,
             moveEffect: a2,
-            moveStep: 1,
           },
-          // 4. Disappeared high in sky / Platform is completely empty! (100ms)
+          // 4. Camera returns to neutral full arena view & platform is empty (120ms)
           {
-            delay: 100,
+            delay: 120,
             pOffset: isP2 ? { x: 0, y: -600 } : { x: 0, y: 0 },
             eOffset: !isP2 ? { x: 0, y: -600 } : { x: 0, y: 0 },
             showEffect: false,
@@ -2410,19 +2443,18 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             textLineIdx: 3,
             isBlur: false,
             moveEffect: a2,
-            moveStep: 1,
           }
         ];
       } else {
         // Turn 2: Supersonic Dive-Bomb Slam right onto opponent's sprite!
         act2Frames = [
-          // 1. High Sky Gliding Cutscene: Pokémon gliding peacefully in stratosphere sky! (140ms)
+          // 1A. High Sky Gliding Cutscene - Phase 1: Majestic soaring in upper stratosphere (220ms)
           {
-            delay: 140,
-            pOffset: { x: 0, y: 0 },
-            eOffset: { x: 0, y: 0 },
-            pScale: isP2 ? { x: 1.06, y: 0.94 } : undefined,
-            eScale: !isP2 ? { x: 1.06, y: 0.94 } : undefined,
+            delay: 220,
+            pOffset: { x: 0, y: -6 },
+            eOffset: { x: 0, y: -6 },
+            pScale: isP2 ? { x: 1.08, y: 0.94 } : undefined,
+            eScale: !isP2 ? { x: 1.08, y: 0.94 } : undefined,
             isHighSkyCutscene: true,
             isAttackerPlayer: isP2,
             showEffect: false,
@@ -2434,9 +2466,27 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a2,
             moveStep: 1,
           },
-          // 2. Camera Dutch Angle Tilt & Supersonic Plunge: Speedlines & Squashed Aerodynamic Bullet Sprite! (120ms)
+          // 1B. High Sky Gliding Cutscene - Phase 2: Target lock altitude & wings banking forward (220ms)
           {
-            delay: 120,
+            delay: 220,
+            pOffset: { x: 0, y: 4 },
+            eOffset: { x: 0, y: 4 },
+            pScale: isP2 ? { x: 1.02, y: 0.98 } : undefined,
+            eScale: !isP2 ? { x: 1.02, y: 0.98 } : undefined,
+            isHighSkyCutscene: true,
+            isAttackerPlayer: isP2,
+            showEffect: false,
+            hitFlash: false,
+            enemyHp: a1.enemyHpAfter,
+            playerHp: a1.playerHpAfter,
+            textLineIdx: 3,
+            isBlur: false,
+            moveEffect: a2,
+            moveStep: 1,
+          },
+          // 2. Camera Dutch Angle Tilt & Supersonic Plunge: Speedlines & Squashed Aerodynamic Bullet Sprite! (180ms)
+          {
+            delay: 180,
             pOffset: { x: 0, y: 0 },
             eOffset: { x: 0, y: 0 },
             pScale: isP2 ? { x: 0.32, y: 2.30 } : undefined,
@@ -2453,9 +2503,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a2,
             moveStep: 2,
           },
-          // 3. Ground Arena Breakthrough & Massive Crater Impact Slam! (110ms)
+          // 3. Ground Arena Breakthrough & Massive Crater Impact Slam! (140ms)
           {
-            delay: 110,
+            delay: 140,
             pOffset: isP2 ? { x: 260, y: -120 } : (isMiss2 ? { x: 26, y: 4 } : { x: -12, y: 4 }),
             eOffset: isP2 ? (isMiss2 ? { x: 26, y: -4 } : { x: 12, y: -4 }) : { x: -260, y: 120 },
             pScale: isP2 ? { x: 1.55, y: 0.55 } : undefined,
@@ -2474,9 +2524,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a2,
             moveStep: 3,
           },
-          // 4. Rebound & Ground Shockwave Dissipation (100ms)
+          // 4. Rebound & Ground Shockwave Dissipation (110ms)
           {
-            delay: 100,
+            delay: 110,
             pOffset: isP2 ? { x: 120, y: -40 } : { x: 0, y: 0 },
             eOffset: !isP2 ? { x: -120, y: 40 } : { x: 0, y: 0 },
             pScale: isP2 ? { x: 1.15, y: 0.85 } : undefined,
@@ -3145,6 +3195,20 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       const attackerSprite = f.isAttackerPlayer ? playerSprite : enemySprite;
       drawHighSkyCutscene(targetCtx, width, height, f, attackerSprite);
     } else {
+      const hasCamera = Boolean(f.cameraZoom || f.cameraPan);
+      if (hasCamera) {
+        targetCtx.save();
+        const zoom = f.cameraZoom || 1.0;
+        const panX = f.cameraPan?.x || 0;
+        const panY = f.cameraPan?.y || 0;
+        const focalX = f.isAttackerPlayer ? pm.x : em.x;
+        const focalY = f.isAttackerPlayer ? pm.y : em.y;
+
+        targetCtx.translate(focalX + panX, focalY + panY);
+        targetCtx.scale(zoom, zoom);
+        targetCtx.translate(-focalX, -focalY);
+      }
+
       if (arena.bg) targetCtx.drawImage(arena.bg, 0, 0, width, height);
       else { targetCtx.fillStyle = "#487848"; targetCtx.fillRect(0, 0, width, height); }
 
@@ -3230,25 +3294,29 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         }
         targetCtx.restore();
       }
-    }
 
-    // Move Effect Rendering (including Karate Chop multi-step hand animation)
-    if (f.showEffect || f.moveStep) {
-      const activeEffect = f.moveEffect || battle.lastMoveEffect || {
-        moveKey,
-        type,
-        isSpecial,
-        isPlayerAttacking: isPlayer,
-      };
-      const activeKey = (activeEffect.moveKey || moveKey).toLowerCase().replace(/[\s_]+/g, "-");
-      if (f.showEffect || activeKey === "karate-chop" || activeKey === "karatechop") {
-        renderMoveEffect(targetCtx, {
-          moveKey: activeEffect.moveKey || moveKey,
-          type: activeEffect.type || type,
-          isSpecial: activeEffect.isSpecial !== undefined ? activeEffect.isSpecial : isSpecial,
-          isPlayerAttacking: activeEffect.actor ? (activeEffect.actor === "player") : (activeEffect.isPlayerAttacking ?? isPlayer),
-          step: f.moveStep ?? (f.showEffect ? 3 : 1),
-        });
+      // Move Effect Rendering (including Karate Chop multi-step hand animation)
+      if (f.showEffect || f.moveStep) {
+        const activeEffect = f.moveEffect || battle.lastMoveEffect || {
+          moveKey,
+          type,
+          isSpecial,
+          isPlayerAttacking: isPlayer,
+        };
+        const activeKey = (activeEffect.moveKey || moveKey).toLowerCase().replace(/[\s_]+/g, "-");
+        if (f.showEffect || activeKey === "karate-chop" || activeKey === "karatechop") {
+          renderMoveEffect(targetCtx, {
+            moveKey: activeEffect.moveKey || moveKey,
+            type: activeEffect.type || type,
+            isSpecial: activeEffect.isSpecial !== undefined ? activeEffect.isSpecial : isSpecial,
+            isPlayerAttacking: activeEffect.actor ? (activeEffect.actor === "player") : (activeEffect.isPlayerAttacking ?? isPlayer),
+            step: f.moveStep ?? (f.showEffect ? 3 : 1),
+          });
+        }
+      }
+
+      if (hasCamera) {
+        targetCtx.restore();
       }
     }
 
