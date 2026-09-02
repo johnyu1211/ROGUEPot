@@ -410,9 +410,9 @@ export function drawBindEffect(ctx: any, target: { x: number; y: number }, step:
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
-  // Layer 1: Heavy Deep Amber Cord Foundation
-  ctx.strokeStyle = "#78350F";
-  ctx.lineWidth = 6.5;
+  // Layer 1: Soft Golden Foundation Outline
+  ctx.strokeStyle = "#CA8A04";
+  ctx.lineWidth = 5.5;
   ctx.beginPath();
   ctx.moveTo(points[0].x, points[0].y);
   for (let i = 1; i < points.length; i++) {
@@ -420,20 +420,20 @@ export function drawBindEffect(ctx: any, target: { x: number; y: number }, step:
   }
   ctx.stroke();
 
-  // Layer 2: Vivid Golden Twisted Body
-  ctx.strokeStyle = "#F59E0B";
-  ctx.lineWidth = 4.0;
-  ctx.beginPath();
-  ctx.moveTo(points[0].x, points[0].y);
-  for (let i = 1; i < points.length; i++) {
-    ctx.lineTo(points[i].x, points[i].y);
-  }
-  ctx.stroke();
-
-  // Layer 3: Braided Rope Twist Texture (Dashed Highlight Core)
-  ctx.save();
+  // Layer 2: Soft Luminous Light Yellow Body
   ctx.strokeStyle = "#FEF08A";
-  ctx.lineWidth = 1.8;
+  ctx.lineWidth = 3.6;
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  for (let i = 1; i < points.length; i++) {
+    ctx.lineTo(points[i].x, points[i].y);
+  }
+  ctx.stroke();
+
+  // Layer 3: Pure Light Pale Cream / White Braided Highlight
+  ctx.save();
+  ctx.strokeStyle = "#FFFFFF";
+  ctx.lineWidth = 1.6;
   ctx.setLineDash([7, 4]); // Creates realistic twisted rope strand texture
   ctx.beginPath();
   ctx.moveTo(points[0].x, points[0].y);
@@ -446,7 +446,7 @@ export function drawBindEffect(ctx: any, target: { x: number; y: number }, step:
   // Layer 4: Leading Thread Glow Tip (following the Pokémon's head/path)
   if (progress < 1.0 && points.length > 0) {
     const tip = points[points.length - 1];
-    ctx.fillStyle = "#FEF08A";
+    ctx.fillStyle = "#FFFFFF";
     ctx.beginPath();
     ctx.arc(tip.x, tip.y, 3.5, 0, Math.PI * 2);
     ctx.fill();
