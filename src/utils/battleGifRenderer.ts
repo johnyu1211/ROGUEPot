@@ -95,22 +95,69 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const isP1 = a1.actor === "player";
     const isP2 = a2.actor === "player";
 
-    framesConfig = [
-      // Frame 0: Leading Cinematic Soft-Blur Loading Frame (800ms / 0.8s)
+    const isChop1 = (a1.moveKey.toLowerCase().replace(/[\s_]+/g, "-") === "karate-chop");
+    const isChop2 = (a2.moveKey.toLowerCase().replace(/[\s_]+/g, "-") === "karate-chop");
+
+    const act1Frames = isChop1 ? [
+      // 1A: Hand appears hovering above target head (130ms)
       {
-        delay: 800,
-        pOffset: { x: 0, y: 0 },
-        eOffset: { x: 0, y: 0 },
+        delay: 130,
+        pOffset: isP1 ? { x: 12, y: -5 } : { x: 0, y: 0 },
+        eOffset: !isP1 ? { x: -12, y: 5 } : { x: 0, y: 0 },
         showEffect: false,
         hitFlash: false,
         enemyHp: enemy.hp,
         playerHp: playerMon.hp,
-        textLineIdx: 0,
-        statProgress: undefined,
-        isBlur: true,
+        textLineIdx: 1,
+        isBlur: false,
+        moveEffect: a1,
+        moveStep: 1,
       },
-      // === ACT 1: First Attacker (e.g. Player) ===
-      // Frame 1: Attacker 1 Windup & Lunge (180ms)
+      // 1B: 살짝 아래로 틱 흔들림 (140ms - Pre-chop dip & micro-shake)
+      {
+        delay: 140,
+        pOffset: isP1 ? { x: 16, y: -6 } : { x: 0, y: 0 },
+        eOffset: !isP1 ? { x: -16, y: 6 } : { x: 0, y: 0 },
+        showEffect: false,
+        hitFlash: false,
+        enemyHp: enemy.hp,
+        playerHp: playerMon.hp,
+        textLineIdx: 1,
+        isBlur: false,
+        moveEffect: a1,
+        moveStep: 2,
+      },
+      // 1C: 위로 살짝 올라갔다가 멈칫 장전 (150ms - Rise up & Red charge)
+      {
+        delay: 150,
+        pOffset: isP1 ? { x: 18, y: -8 } : { x: 0, y: 0 },
+        eOffset: !isP1 ? { x: -18, y: 8 } : { x: 0, y: 0 },
+        showEffect: false,
+        hitFlash: false,
+        enemyHp: enemy.hp,
+        playerHp: playerMon.hp,
+        textLineIdx: 1,
+        isBlur: false,
+        moveEffect: a1,
+        moveStep: 3,
+      },
+      // 1D: 팍! 하고 내려침 (240ms - Slam chop impact on head + Orange embers!)
+      {
+        delay: 240,
+        pOffset: isP1 ? { x: 20, y: -10 } : { x: -8, y: 4 },
+        eOffset: isP1 ? { x: 8, y: -2 } : { x: -20, y: 10 },
+        showEffect: true,
+        hitFlash: true,
+        enemyHp: a1.enemyHpAfter,
+        playerHp: a1.playerHpAfter,
+        textLineIdx: 1,
+        statProgress: 0.25,
+        isBlur: false,
+        moveEffect: a1,
+        moveStep: 4,
+      }
+    ] : [
+      // Standard Windup (180ms)
       {
         delay: 180,
         pOffset: isP1 ? (a1.isSpecial ? { x: 0, y: -6 } : { x: 18, y: -8 }) : { x: 0, y: 0 },
@@ -125,7 +172,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         moveEffect: a1,
         moveStep: 1,
       },
-      // Frame 2: Attacker 1 Strike Impact & Move Effect (240ms)
+      // Standard Strike Impact (240ms)
       {
         delay: 240,
         pOffset: isP1 ? { x: 20, y: -10 } : { x: -8, y: 4 },
@@ -139,7 +186,116 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         isBlur: false,
         moveEffect: a1,
         moveStep: 3,
+      }
+    ];
+
+    const act2Frames = isChop2 ? [
+      // 2A: Hand appears hovering above player (130ms)
+      {
+        delay: 130,
+        pOffset: isP2 ? { x: 12, y: -5 } : { x: 0, y: 0 },
+        eOffset: !isP2 ? { x: -12, y: 5 } : { x: 0, y: 0 },
+        showEffect: false,
+        hitFlash: false,
+        enemyHp: a1.enemyHpAfter,
+        playerHp: a1.playerHpAfter,
+        textLineIdx: 3,
+        isBlur: false,
+        moveEffect: a2,
+        moveStep: 1,
       },
+      // 2B: 살짝 아래로 틱 흔들림 (140ms)
+      {
+        delay: 140,
+        pOffset: isP2 ? { x: 16, y: -6 } : { x: 0, y: 0 },
+        eOffset: !isP2 ? { x: -16, y: 6 } : { x: 0, y: 0 },
+        showEffect: false,
+        hitFlash: false,
+        enemyHp: a1.enemyHpAfter,
+        playerHp: a1.playerHpAfter,
+        textLineIdx: 3,
+        isBlur: false,
+        moveEffect: a2,
+        moveStep: 2,
+      },
+      // 2C: 위로 살짝 올라갔다가 멈칫 장전 (150ms)
+      {
+        delay: 150,
+        pOffset: isP2 ? { x: 18, y: -8 } : { x: 0, y: 0 },
+        eOffset: !isP2 ? { x: -18, y: 8 } : { x: 0, y: 0 },
+        showEffect: false,
+        hitFlash: false,
+        enemyHp: a1.enemyHpAfter,
+        playerHp: a1.playerHpAfter,
+        textLineIdx: 3,
+        isBlur: false,
+        moveEffect: a2,
+        moveStep: 3,
+      },
+      // 2D: 팍! 하고 내려침 (240ms)
+      {
+        delay: 240,
+        pOffset: isP2 ? { x: 20, y: -10 } : { x: -8, y: 4 },
+        eOffset: !isP2 ? { x: -20, y: 10 } : { x: 8, y: -2 },
+        showEffect: true,
+        hitFlash: true,
+        enemyHp: a2.enemyHpAfter,
+        playerHp: a2.playerHpAfter,
+        textLineIdx: 3,
+        statProgress: 0.25,
+        isBlur: false,
+        moveEffect: a2,
+        moveStep: 4,
+      }
+    ] : [
+      // Standard Counter Windup (180ms)
+      {
+        delay: 180,
+        pOffset: isP2 ? (a2.isSpecial ? { x: 0, y: -6 } : { x: 18, y: -8 }) : { x: 0, y: 0 },
+        eOffset: !isP2 ? (a2.isSpecial ? { x: 0, y: -6 } : { x: -18, y: 8 }) : { x: 0, y: 0 },
+        showEffect: false,
+        hitFlash: false,
+        enemyHp: a1.enemyHpAfter,
+        playerHp: a1.playerHpAfter,
+        textLineIdx: 3,
+        statProgress: undefined,
+        isBlur: false,
+        moveEffect: a2,
+        moveStep: 1,
+      },
+      // Standard Counter Strike (240ms)
+      {
+        delay: 240,
+        pOffset: isP2 ? { x: 20, y: -10 } : { x: -8, y: 4 },
+        eOffset: !isP2 ? { x: -20, y: 10 } : { x: 8, y: -2 },
+        showEffect: true,
+        hitFlash: true,
+        enemyHp: a2.enemyHpAfter,
+        playerHp: a2.playerHpAfter,
+        textLineIdx: 3,
+        statProgress: 0.25,
+        isBlur: false,
+        moveEffect: a2,
+        moveStep: 3,
+      }
+    ];
+
+    framesConfig = [
+      // Frame 0: Leading Cinematic Soft-Blur Loading Frame (800ms / 0.8s)
+      {
+        delay: 800,
+        pOffset: { x: 0, y: 0 },
+        eOffset: { x: 0, y: 0 },
+        showEffect: false,
+        hitFlash: false,
+        enemyHp: enemy.hp,
+        playerHp: playerMon.hp,
+        textLineIdx: 0,
+        statProgress: undefined,
+        isBlur: true,
+      },
+      // === ACT 1 ===
+      ...act1Frames,
       // Frame 3: Attacker 1 Recoil & Damage Settling (420ms - allows reading action 1 outcome!)
       {
         delay: 420,
@@ -168,37 +324,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         isBlur: false,
         moveEffect: a1,
       },
-      // === ACT 2: Counter-Attacker (e.g. Enemy) ===
-      // Frame 5: Attacker 2 Windup & Counter Lunge (180ms)
-      {
-        delay: 180,
-        pOffset: isP2 ? (a2.isSpecial ? { x: 0, y: -6 } : { x: 18, y: -8 }) : { x: 0, y: 0 },
-        eOffset: !isP2 ? (a2.isSpecial ? { x: 0, y: -6 } : { x: -18, y: 8 }) : { x: 0, y: 0 },
-        showEffect: false,
-        hitFlash: false,
-        enemyHp: a1.enemyHpAfter,
-        playerHp: a1.playerHpAfter,
-        textLineIdx: 3,
-        statProgress: undefined,
-        isBlur: false,
-        moveEffect: a2,
-        moveStep: 1,
-      },
-      // Frame 6: Attacker 2 Counter Strike Impact & Move Effect (240ms)
-      {
-        delay: 240,
-        pOffset: isP2 ? { x: 20, y: -10 } : { x: -8, y: 4 },
-        eOffset: !isP2 ? { x: -20, y: 10 } : { x: 8, y: -2 },
-        showEffect: true,
-        hitFlash: true,
-        enemyHp: a2.enemyHpAfter,
-        playerHp: a2.playerHpAfter,
-        textLineIdx: 3,
-        statProgress: 0.25,
-        isBlur: false,
-        moveEffect: a2,
-        moveStep: 3,
-      },
+      // === ACT 2 ===
+      ...act2Frames,
       // Frame 7: Attacker 2 Recoil & Stat Changes Start (450ms - allows reading counter attack log!)
       {
         delay: 450,
