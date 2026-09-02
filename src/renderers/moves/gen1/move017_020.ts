@@ -108,31 +108,16 @@ export function drawWingAttackEffect(ctx: any, target: { x: number; y: number },
     drawMiniRetroStar(ctx, tx, ty, 20, "#BAE6FD");
     drawMiniRetroStar(ctx, tx, ty, 10, "#FFFFFF");
   } else if (step === 3) {
-    // Step 3: Peak Float & Rapid Early Fade - Feathers reach zenith and immediately begin fading transparent
-    drawAuthenticFeather(tx - 62, ty - 58, -1.42, 27, 0.20, 0.60); // A: tilted slightly up-left
-    drawAuthenticFeather(tx - 18, ty - 78, 1.66, 31, -0.15, 0.65);  // B: floated high, right-tilt
-    drawAuthenticFeather(tx + 14, ty - 84, -1.58, 33, 0.12, 0.68); // C: highest apex, nearly flat
-    drawAuthenticFeather(tx + 48, ty - 65, 1.48, 29, -0.20, 0.62);  // D: rightward hang
-    drawAuthenticFeather(tx + 72, ty - 32, -1.64, 25, 0.14, 0.52); // E: wide drift
-    drawAuthenticFeather(tx - 32, ty + 8, 1.52, 23, 0.08, 0.45);   // F: low hover
-    drawAuthenticFeather(tx + 36, ty + 10, -1.48, 24, -0.12, 0.45); // G: low hover
-  } else if (step === 4) {
-    // Step 4: Swift Transparent Dissolve during Falling Sway
-    drawAuthenticFeather(tx - 52, ty - 20, -1.72, 27, 0.16, 0.30); // A: swayed down-left
-    drawAuthenticFeather(tx - 28, ty - 38, 1.46, 31, -0.12, 0.35);  // B: fluttered leftward
-    drawAuthenticFeather(tx + 4, ty - 44, -1.48, 33, 0.10, 0.35);   // C: rocked counter-direction
-    drawAuthenticFeather(tx + 58, ty - 26, 1.68, 29, -0.16, 0.32);  // D: swayed rightward
-    drawAuthenticFeather(tx + 64, ty - 8, -1.44, 25, 0.10, 0.24);   // E: fluttered inward
-    drawAuthenticFeather(tx - 24, ty + 16, 1.64, 23, 0.06, 0.20);   // F: gently sinking
-    drawAuthenticFeather(tx + 30, ty + 18, -1.62, 24, -0.10, 0.20); // G: gently sinking
-  } else if (step >= 5) {
-    // Step 5: Final Faint Dissolving Traces
-    drawAuthenticFeather(tx - 45, ty + 18, -1.52, 27, 0.10, 0.10);
-    drawAuthenticFeather(tx - 20, ty + 24, 1.60, 31, -0.08, 0.12);
-    drawAuthenticFeather(tx + 8, ty + 20, -1.55, 33, 0.06, 0.12);
-    drawAuthenticFeather(tx + 48, ty + 16, 1.50, 29, -0.10, 0.10);
-    drawAuthenticFeather(tx + 58, ty + 26, -1.58, 25, 0.06, 0.07);
+    // Step 3: Peak Float & Final Fade - Feathers reach zenith, tilt flat horizontally, and swiftly fade away
+    drawAuthenticFeather(tx - 62, ty - 58, -1.42, 27, 0.20, 0.45); // A: tilted slightly up-left
+    drawAuthenticFeather(tx - 18, ty - 78, 1.66, 31, -0.15, 0.50);  // B: floated high, right-tilt
+    drawAuthenticFeather(tx + 14, ty - 84, -1.58, 33, 0.12, 0.52); // C: highest apex, nearly flat
+    drawAuthenticFeather(tx + 48, ty - 65, 1.48, 29, -0.20, 0.48);  // D: rightward hang
+    drawAuthenticFeather(tx + 72, ty - 32, -1.64, 25, 0.14, 0.38); // E: wide drift
+    drawAuthenticFeather(tx - 32, ty + 8, 1.52, 23, 0.08, 0.35);   // F: low hover
+    drawAuthenticFeather(tx + 36, ty + 10, -1.48, 24, -0.12, 0.35); // G: low hover
   }
+  // Step 4 & Step 5: Completely transparent and vanished (100% clean)
 
   ctx.restore();
 }
