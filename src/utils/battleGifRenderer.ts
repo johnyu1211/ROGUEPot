@@ -83,86 +83,259 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   const enemyHp = enemy.hp;
   const playerHp = playerMon.hp;
 
-  const framesConfig = [
-    // Frame 0: Leading Cinematic Soft-Blur Loading Frame (800ms / 0.8s) - Atmospheric focus transition without text!
-    {
-      delay: 800,
-      pOffset: { x: 0, y: 0 },
-      eOffset: { x: 0, y: 0 },
-      showEffect: false,
-      hitFlash: false,
-      enemyHp: enemyHp,
-      playerHp: playerHp,
-      textLineIdx: 0,
-      statProgress: undefined,
-      isBlur: true,
-    },
-    // Frame 1: Attacker Windup & Lunge (180ms)
-    {
-      delay: 180,
-      pOffset: isPlayer ? (isSpecial ? { x: 0, y: -6 } : { x: 16, y: -8 }) : { x: 0, y: 0 },
-      eOffset: !isPlayer ? (isSpecial ? { x: 0, y: -6 } : { x: -16, y: 8 }) : { x: 0, y: 0 },
-      showEffect: false,
-      hitFlash: false,
-      enemyHp: enemyHp,
-      playerHp: playerHp,
-      textLineIdx: 1,
-      statProgress: undefined,
-      isBlur: false,
-    },
-    // Frame 2: Move Effect Strikes Target (240ms) - ONLY FRAME WITH EFFECT!
-    {
-      delay: 240,
-      pOffset: isPlayer ? (isSpecial ? { x: 0, y: -4 } : { x: 18, y: -10 }) : { x: 0, y: 0 },
-      eOffset: isPlayer ? { x: -6, y: 3 } : (isSpecial ? { x: 0, y: -4 } : { x: -18, y: 10 }),
-      showEffect: true,
-      hitFlash: true,
-      enemyHp: enemyHp,
-      playerHp: playerHp,
-      textLineIdx: 1,
-      statProgress: 0.25,
-      isBlur: false,
-    },
-    // Frame 3: Recoil & Damage Settling + Stat Particles (220ms) - EFFECT OFF!
-    {
-      delay: 220,
-      pOffset: isPlayer ? { x: 6, y: -3 } : { x: 0, y: 0 },
-      eOffset: isPlayer ? { x: -8, y: 4 } : { x: 6, y: -3 },
-      showEffect: false,
-      hitFlash: false,
-      enemyHp: enemyHp,
-      playerHp: playerHp,
-      textLineIdx: 2,
-      statProgress: 0.65,
-      isBlur: false,
-    },
-    // Frame 4: Neutral Stance Return + Stat Particles Peak (200ms) - EFFECT OFF!
-    {
-      delay: 200,
-      pOffset: { x: 0, y: 0 },
-      eOffset: { x: 0, y: 0 },
-      showEffect: false,
-      hitFlash: false,
-      enemyHp: enemyHp,
-      playerHp: playerHp,
-      textLineIdx: 3,
-      statProgress: 0.95,
-      isBlur: false,
-    },
-    // Frame 5: 11-Minute Static Hold Frame (655,000ms - Maximum GIF89a unsigned 16-bit delay limit)
-    {
-      delay: 655000,
-      pOffset: { x: 0, y: 0 },
-      eOffset: { x: 0, y: 0 },
-      showEffect: false,
-      hitFlash: false,
-      enemyHp: enemyHp,
-      playerHp: playerHp,
-      textLineIdx: 99,
-      statProgress: undefined,
-      isBlur: false,
-    }
-  ];
+  const turnActions = battle.turnActions || [];
+  const hasMultipleActions = turnActions.length >= 2;
+
+  let framesConfig: any[] = [];
+
+  if (hasMultipleActions) {
+    const a1 = turnActions[0];
+    const a2 = turnActions[1];
+    const isP1 = a1.actor === "player";
+    const isP2 = a2.actor === "player";
+
+    framesConfig = [
+      // Frame 0: Leading Cinematic Soft-Blur Loading Frame (800ms / 0.8s)
+      {
+        delay: 800,
+        pOffset: { x: 0, y: 0 },
+        eOffset: { x: 0, y: 0 },
+        showEffect: false,
+        hitFlash: false,
+        enemyHp: enemy.hp,
+        playerHp: playerMon.hp,
+        textLineIdx: 0,
+        statProgress: undefined,
+        isBlur: true,
+      },
+      // === ACT 1: First Attacker (e.g. Player) ===
+      // Frame 1: Attacker 1 Windup & Lunge (180ms)
+      {
+        delay: 180,
+        pOffset: isP1 ? (a1.isSpecial ? { x: 0, y: -6 } : { x: 18, y: -8 }) : { x: 0, y: 0 },
+        eOffset: !isP1 ? (a1.isSpecial ? { x: 0, y: -6 } : { x: -18, y: 8 }) : { x: 0, y: 0 },
+        showEffect: false,
+        hitFlash: false,
+        enemyHp: enemy.hp,
+        playerHp: playerMon.hp,
+        textLineIdx: 1,
+        statProgress: undefined,
+        isBlur: false,
+        moveEffect: a1,
+      },
+      // Frame 2: Attacker 1 Strike Impact & Move Effect (240ms)
+      {
+        delay: 240,
+        pOffset: isP1 ? { x: 20, y: -10 } : { x: -8, y: 4 },
+        eOffset: isP1 ? { x: 8, y: -2 } : { x: -20, y: 10 },
+        showEffect: true,
+        hitFlash: true,
+        enemyHp: a1.enemyHpAfter,
+        playerHp: a1.playerHpAfter,
+        textLineIdx: 1,
+        statProgress: 0.25,
+        isBlur: false,
+        moveEffect: a1,
+      },
+      // Frame 3: Attacker 1 Recoil & Damage Settling (300ms)
+      {
+        delay: 300,
+        pOffset: isP1 ? { x: 6, y: -3 } : { x: 0, y: 0 },
+        eOffset: !isP1 ? { x: -6, y: 3 } : { x: 0, y: 0 },
+        showEffect: false,
+        hitFlash: false,
+        enemyHp: a1.enemyHpAfter,
+        playerHp: a1.playerHpAfter,
+        textLineIdx: 1,
+        statProgress: undefined,
+        isBlur: false,
+        moveEffect: a1,
+      },
+      // Frame 4: Natural Breathing Room Pause between Turns (340ms)
+      {
+        delay: 340,
+        pOffset: { x: 0, y: 0 },
+        eOffset: { x: 0, y: 0 },
+        showEffect: false,
+        hitFlash: false,
+        enemyHp: a1.enemyHpAfter,
+        playerHp: a1.playerHpAfter,
+        textLineIdx: 1,
+        statProgress: undefined,
+        isBlur: false,
+        moveEffect: a1,
+      },
+      // === ACT 2: Counter-Attacker (e.g. Enemy) ===
+      // Frame 5: Attacker 2 Windup & Counter Lunge (180ms)
+      {
+        delay: 180,
+        pOffset: isP2 ? (a2.isSpecial ? { x: 0, y: -6 } : { x: 18, y: -8 }) : { x: 0, y: 0 },
+        eOffset: !isP2 ? (a2.isSpecial ? { x: 0, y: -6 } : { x: -18, y: 8 }) : { x: 0, y: 0 },
+        showEffect: false,
+        hitFlash: false,
+        enemyHp: a1.enemyHpAfter,
+        playerHp: a1.playerHpAfter,
+        textLineIdx: 2,
+        statProgress: undefined,
+        isBlur: false,
+        moveEffect: a2,
+      },
+      // Frame 6: Attacker 2 Counter Strike Impact & Move Effect (240ms)
+      {
+        delay: 240,
+        pOffset: isP2 ? { x: 20, y: -10 } : { x: -8, y: 4 },
+        eOffset: isP2 ? { x: -20, y: 10 } : { x: 8, y: -2 },
+        showEffect: true,
+        hitFlash: true,
+        enemyHp: a2.enemyHpAfter,
+        playerHp: a2.playerHpAfter,
+        textLineIdx: 2,
+        statProgress: 0.25,
+        isBlur: false,
+        moveEffect: a2,
+      },
+      // Frame 7: Attacker 2 Recoil & Stat Changes Start (300ms)
+      {
+        delay: 300,
+        pOffset: isP2 ? { x: 6, y: -3 } : { x: 0, y: 0 },
+        eOffset: !isP2 ? { x: -6, y: 3 } : { x: 0, y: 0 },
+        showEffect: false,
+        hitFlash: false,
+        enemyHp: a2.enemyHpAfter,
+        playerHp: a2.playerHpAfter,
+        textLineIdx: 3,
+        statProgress: 0.75,
+        isBlur: false,
+        moveEffect: a2,
+      },
+      // Frame 8: Neutral Return & Stat Changes Peak (240ms)
+      {
+        delay: 240,
+        pOffset: { x: 0, y: 0 },
+        eOffset: { x: 0, y: 0 },
+        showEffect: false,
+        hitFlash: false,
+        enemyHp: a2.enemyHpAfter,
+        playerHp: a2.playerHpAfter,
+        textLineIdx: 99,
+        statProgress: 0.95,
+        isBlur: false,
+        moveEffect: a2,
+      },
+      // Frame 9: 11-Minute Static Hold Frame (655,000ms)
+      {
+        delay: 655000,
+        pOffset: { x: 0, y: 0 },
+        eOffset: { x: 0, y: 0 },
+        showEffect: false,
+        hitFlash: false,
+        enemyHp: a2.enemyHpAfter,
+        playerHp: a2.playerHpAfter,
+        textLineIdx: 99,
+        statProgress: undefined,
+        isBlur: false,
+        moveEffect: a2,
+      }
+    ];
+  } else {
+    // Single Action Turn (e.g. 1 move executed or enemy fainted)
+    const a1 = turnActions[0];
+    const isP1 = a1 ? (a1.actor === "player") : isPlayer;
+    const eff = a1 || {
+      moveKey,
+      moveName: moveKey,
+      type,
+      isSpecial,
+      isPlayerAttacking: isPlayer,
+      statChanges: battle.lastMoveEffect?.statChanges,
+    };
+
+    framesConfig = [
+      // Frame 0: Leading Cinematic Soft-Blur Loading Frame (800ms / 0.8s)
+      {
+        delay: 800,
+        pOffset: { x: 0, y: 0 },
+        eOffset: { x: 0, y: 0 },
+        showEffect: false,
+        hitFlash: false,
+        enemyHp: enemyHp,
+        playerHp: playerHp,
+        textLineIdx: 0,
+        statProgress: undefined,
+        isBlur: true,
+      },
+      // Frame 1: Attacker Windup & Lunge (180ms)
+      {
+        delay: 180,
+        pOffset: isP1 ? (eff.isSpecial ? { x: 0, y: -6 } : { x: 18, y: -8 }) : { x: 0, y: 0 },
+        eOffset: !isP1 ? (eff.isSpecial ? { x: 0, y: -6 } : { x: -18, y: 8 }) : { x: 0, y: 0 },
+        showEffect: false,
+        hitFlash: false,
+        enemyHp: enemyHp,
+        playerHp: playerHp,
+        textLineIdx: 1,
+        statProgress: undefined,
+        isBlur: false,
+        moveEffect: eff,
+      },
+      // Frame 2: Move Effect Strikes Target (240ms)
+      {
+        delay: 240,
+        pOffset: isP1 ? (eff.isSpecial ? { x: 0, y: -4 } : { x: 20, y: -10 }) : { x: 0, y: 0 },
+        eOffset: isP1 ? { x: 8, y: -2 } : (eff.isSpecial ? { x: 0, y: -4 } : { x: -20, y: 10 }),
+        showEffect: true,
+        hitFlash: true,
+        enemyHp: enemyHp,
+        playerHp: playerHp,
+        textLineIdx: 1,
+        statProgress: 0.25,
+        isBlur: false,
+        moveEffect: eff,
+      },
+      // Frame 3: Recoil & Damage Settling (300ms)
+      {
+        delay: 300,
+        pOffset: isP1 ? { x: 6, y: -3 } : { x: 0, y: 0 },
+        eOffset: !isP1 ? { x: -6, y: 3 } : { x: 0, y: 0 },
+        showEffect: false,
+        hitFlash: false,
+        enemyHp: enemyHp,
+        playerHp: playerHp,
+        textLineIdx: 2,
+        statProgress: 0.65,
+        isBlur: false,
+        moveEffect: eff,
+      },
+      // Frame 4: Neutral Return & Stat Particles Peak (240ms)
+      {
+        delay: 240,
+        pOffset: { x: 0, y: 0 },
+        eOffset: { x: 0, y: 0 },
+        showEffect: false,
+        hitFlash: false,
+        enemyHp: enemyHp,
+        playerHp: playerHp,
+        textLineIdx: 3,
+        statProgress: 0.95,
+        isBlur: false,
+        moveEffect: eff,
+      },
+      // Frame 5: 11-Minute Static Hold Frame (655,000ms)
+      {
+        delay: 655000,
+        pOffset: { x: 0, y: 0 },
+        eOffset: { x: 0, y: 0 },
+        showEffect: false,
+        hitFlash: false,
+        enemyHp: enemyHp,
+        playerHp: playerHp,
+        textLineIdx: 99,
+        statProgress: undefined,
+        isBlur: false,
+        moveEffect: eff,
+      }
+    ];
+  }
 
   const motionDurationMs = framesConfig.slice(0, -1).reduce((sum, f) => sum + f.delay, 0);
 
@@ -198,39 +371,60 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
 
     if (enemySprite) {
       targetCtx.save();
-      if (f.hitFlash && isPlayer) targetCtx.filter = "brightness(1.8) contrast(1.2)";
+      if (f.hitFlash && ((f.moveEffect ? f.moveEffect.actor === "player" : isPlayer))) {
+        targetCtx.filter = "brightness(1.8) contrast(1.2)";
+      }
       drawFittedBattleSprite(targetCtx, enemySprite, em.x + f.eOffset.x, em.y + f.eOffset.y, em.size);
       targetCtx.restore();
     }
 
     if (playerSprite) {
       targetCtx.save();
-      if (f.hitFlash && !isPlayer) targetCtx.filter = "brightness(1.8) contrast(1.2)";
+      if (f.hitFlash && ((f.moveEffect ? f.moveEffect.actor === "enemy" : !isPlayer))) {
+        targetCtx.filter = "brightness(1.8) contrast(1.2)";
+      }
       drawFittedBattleSprite(targetCtx, playerSprite, pm.x + f.pOffset.x, pm.y + f.pOffset.y, pm.size);
       targetCtx.restore();
     }
 
+    // Move Effect Rendering
     if (f.showEffect) {
-      renderMoveEffect(targetCtx, { moveKey, type, isSpecial, isPlayerAttacking: isPlayer });
+      const activeEffect = f.moveEffect || battle.lastMoveEffect || {
+        moveKey,
+        type,
+        isSpecial,
+        isPlayerAttacking: isPlayer,
+      };
+      renderMoveEffect(targetCtx, {
+        moveKey: activeEffect.moveKey || moveKey,
+        type: activeEffect.type || type,
+        isSpecial: activeEffect.isSpecial !== undefined ? activeEffect.isSpecial : isSpecial,
+        isPlayerAttacking: activeEffect.actor ? (activeEffect.actor === "player") : (activeEffect.isPlayerAttacking ?? isPlayer),
+      });
     }
 
-    // Draw Stat Boost (Upward Arrows) / Stat Drop (Downward Arrows)
-    if (f.statProgress !== undefined && battle.lastMoveEffect?.statChanges && battle.lastMoveEffect.statChanges.length > 0) {
-      for (const sc of battle.lastMoveEffect.statChanges) {
-        const centerPos = sc.target === "player"
-          ? { x: pm.x + pm.size / 2, y: pm.y + pm.size * 0.45 }
-          : { x: em.x + em.size / 2, y: em.y + em.size * 0.45 };
-        if (sc.direction === "up") {
-          drawStatBoostEffect(targetCtx, centerPos, f.statProgress);
-        } else if (sc.direction === "down") {
-          drawStatDropEffect(targetCtx, centerPos, f.statProgress);
+    // Stat Boost / Drop Arrow Particles
+    if (f.statProgress !== undefined) {
+      const activeEffect = f.moveEffect || battle.lastMoveEffect;
+      const statChanges = activeEffect?.statChanges || battle.lastMoveEffect?.statChanges;
+      if (statChanges && statChanges.length > 0) {
+        for (const change of statChanges) {
+          const targetPos = change.target === "player"
+            ? { x: pm.x + f.pOffset.x, y: pm.y + f.pOffset.y - pm.size * 0.45 }
+            : { x: em.x + f.eOffset.x, y: em.y + f.eOffset.y - em.size * 0.45 };
+
+          if (change.direction === "up") {
+            drawStatBoostEffect(targetCtx, targetPos, f.statProgress);
+          } else {
+            drawStatDropEffect(targetCtx, targetPos, f.statProgress);
+          }
         }
       }
     }
 
     if (!f.isBlur) {
       renderBattleHeader(targetCtx, width, battle, isKo);
-      renderBattleHuds(targetCtx, battle, isKo, pbAssets, f.enemyHp, f.playerHp);
+      renderBattleHuds(targetCtx, battle, isKo, pbAssets, f.enemyHp !== undefined ? f.enemyHp : enemyHp, f.playerHp !== undefined ? f.playerHp : playerHp);
       renderBattleDialogue(targetCtx, width, height, dialogueLines, f.textLineIdx);
     } else {
       // Base empty dialogue box drawn on offCanvas before full-frame blur
