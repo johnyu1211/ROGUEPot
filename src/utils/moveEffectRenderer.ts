@@ -2330,32 +2330,11 @@ export function drawGuillotineEffect(ctx: any, target: { x: number; y: number },
     drawTaperedGuillotineCross(ctx, targetX, targetY - 14, 52, 14, 3.0, 1.0);
   } else if (step === 2) {
     // Step 2: FATAL SCISSOR EXECUTION SNAP
-    // 1. Massive Chunky-Center, Needle-Tip Blood-Red X Scissor Cut
+    // Massive Chunky-Center, Needle-Tip Blood-Red X Scissor Cut (Pure Clean Red X)
     drawTaperedGuillotineCross(ctx, targetX, targetY - 14, 70, 22, 2.0, 1.0);
-
-    // 2. Massive Execution Starburst
-    drawMiniRetroStar(ctx, targetX, targetY - 14, 34, "#FFFFFF");
-    drawMiniRetroStar(ctx, targetX, targetY - 14, 26, "#EF4444");
-
-    // 3. Heavy Crimson Lethal Sparks
-    const sparks = [
-      { ox: -38, oy: -38, r: 4.0, c: "#FFFFFF" },
-      { ox: 38, oy: -38, r: 4.0, c: "#FECACA" },
-      { ox: -38, oy: 38, r: 4.0, c: "#DC2626" },
-      { ox: 38, oy: 38, r: 4.0, c: "#FFFFFF" },
-      { ox: 0, oy: -52, r: 3.5, c: "#EF4444" },
-      { ox: 0, oy: 52, r: 3.5, c: "#FECACA" },
-    ];
-    for (const sp of sparks) {
-      ctx.fillStyle = sp.c;
-      ctx.beginPath();
-      ctx.arc(targetX + sp.ox, targetY - 14 + sp.oy, sp.r, 0, Math.PI * 2);
-      ctx.fill();
-    }
   } else if (step >= 3) {
     // Step 3: Fading Red Shockwave Cross Lines
     drawTaperedGuillotineCross(ctx, targetX, targetY - 14, 80, 10, 1.0, 0.30);
-    drawMiniRetroStar(ctx, targetX, targetY - 14, 18, "rgba(239, 68, 68, 0.4)");
   }
 
   ctx.restore();
