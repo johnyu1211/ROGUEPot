@@ -589,13 +589,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   const isWhirlwind1 = (mKey1 === "whirlwind");
   const isBind1 = (mKey1 === "bind" || mKey1 === "wrap" || mKey1 === "clamp" || mKey1 === "sand-tomb" || mKey1 === "whirlpool" || mKey1 === "fire-spin" || mKey1 === "infestation" || mKey1 === "snap-trap");
   const isSlam1 = (mKey1 === "slam");
+  const isVineWhip1 = (mKey1 === "vine-whip" || mKey1 === "vinewhip");
   const isSingleStrikeSpecial1 = (
     mKey1 === "thunder-punch" || mKey1 === "thunderpunch" ||
     mKey1 === "scratch" ||
     mKey1 === "vice-grip" || mKey1 === "vicegrip" ||
     mKey1 === "cut" ||
     mKey1 === "gust" ||
-    mKey1 === "vine-whip" || mKey1 === "vinewhip" ||
     mKey1 === "stomp" ||
     mKey1 === "double-kick" || mKey1 === "doublekick"
   );
@@ -2328,6 +2328,70 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a1,
         }
       ];
+    } else if (isVineWhip1) {
+      const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
+      const isMiss1 = !isHit1;
+      act1Frames = [
+        // 1. Vine Shoot / Tension Extension (100ms)
+        {
+          delay: 100,
+          pOffset: isP1 ? { x: 10, y: -4 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -10, y: 4 } : { x: 0, y: 0 },
+          pRot: isP1 ? 0.05 : undefined,
+          eRot: !isP1 ? -0.05 : undefined,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: enemy.hp,
+          playerHp: playerMon.hp,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 1,
+        },
+        // 2. Double Lash Crack & Oval Tip Strike (110ms)
+        {
+          delay: 110,
+          pOffset: isP1 ? { x: 16, y: -6 } : (isMiss1 ? { x: 20, y: 4 } : { x: -12, y: 4 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 20, y: -4 } : { x: 18, y: -6 }) : { x: -16, y: 6 },
+          pRot: isP1 ? 0.08 : undefined,
+          eRot: !isP1 ? -0.08 : undefined,
+          showEffect: true,
+          hitFlash: isHit1,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 2,
+        },
+        // 3. Vines Retracting & Leaf Flutter (100ms)
+        {
+          delay: 100,
+          pOffset: isP1 ? { x: 6, y: -2 } : (isMiss1 ? { x: 10, y: 2 } : { x: -6, y: 2 }),
+          eOffset: isP1 ? (isMiss1 ? { x: 10, y: -2 } : { x: 8, y: -2 }) : { x: -6, y: 2 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+          moveStep: 3,
+        },
+        // 4. Recovery (80ms)
+        {
+          delay: 80,
+          pOffset: { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 1,
+          isBlur: false,
+          moveEffect: a1,
+        }
+      ];
     } else if (isSingleStrikeSpecial1) {
       const isHit1 = a1.isHit !== undefined ? a1.isHit : ((a1.damage ?? 0) > 0 || (!a1.log?.includes("빗나갔다") && !a1.log?.includes("missed") && !a1.log?.includes("빗나가")));
       const isMiss1 = !isHit1;
@@ -2479,13 +2543,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const isWhirlwind2 = (mKey2 === "whirlwind");
     const isBind2 = (mKey2 === "bind" || mKey2 === "wrap" || mKey2 === "clamp" || mKey2 === "sand-tomb" || mKey2 === "whirlpool" || mKey2 === "fire-spin" || mKey2 === "infestation" || mKey2 === "snap-trap");
     const isSlam2 = (mKey2 === "slam");
+    const isVineWhip2 = (mKey2 === "vine-whip" || mKey2 === "vinewhip");
     const isSingleStrikeSpecial2 = (
       mKey2 === "thunder-punch" || mKey2 === "thunderpunch" ||
       mKey2 === "scratch" ||
       mKey2 === "vice-grip" || mKey2 === "vicegrip" ||
       mKey2 === "cut" ||
       mKey2 === "gust" ||
-      mKey2 === "vine-whip" || mKey2 === "vinewhip" ||
       mKey2 === "stomp" ||
       mKey2 === "double-kick" || mKey2 === "doublekick"
     );
@@ -4218,6 +4282,70 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           moveEffect: a2,
         }
       ];
+    } else if (isVineWhip2) {
+      const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
+      const isMiss2 = !isHit2;
+      act2Frames = [
+        // 1. Vine Shoot / Tension Extension (100ms)
+        {
+          delay: 100,
+          pOffset: isP2 ? { x: 10, y: -4 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -10, y: 4 } : { x: 0, y: 0 },
+          pRot: isP2 ? 0.05 : undefined,
+          eRot: !isP2 ? -0.05 : undefined,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 1,
+        },
+        // 2. Double Lash Crack & Oval Tip Strike (110ms)
+        {
+          delay: 110,
+          pOffset: isP2 ? { x: 16, y: -6 } : (isMiss2 ? { x: 20, y: 4 } : { x: -12, y: 4 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 20, y: -4 } : { x: 18, y: -6 }) : { x: -16, y: 6 },
+          pRot: isP2 ? 0.08 : undefined,
+          eRot: !isP2 ? -0.08 : undefined,
+          showEffect: true,
+          hitFlash: isHit2,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 2,
+        },
+        // 3. Vines Retracting & Leaf Flutter (100ms)
+        {
+          delay: 100,
+          pOffset: isP2 ? { x: 6, y: -2 } : (isMiss2 ? { x: 10, y: 2 } : { x: -6, y: 2 }),
+          eOffset: isP2 ? (isMiss2 ? { x: 10, y: -2 } : { x: 8, y: -2 }) : { x: -6, y: 2 },
+          showEffect: true,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+          moveStep: 3,
+        },
+        // 4. Recovery (80ms)
+        {
+          delay: 80,
+          pOffset: { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 3,
+          isBlur: false,
+          moveEffect: a2,
+        }
+      ];
     } else if (isSingleStrikeSpecial2) {
       const isHit2 = a2.isHit !== undefined ? a2.isHit : ((a2.damage ?? 0) > 0 || (!a2.log?.includes("빗나갔다") && !a2.log?.includes("missed") && !a2.log?.includes("빗나가")));
       const isMiss2 = !isHit2;
@@ -4811,6 +4939,27 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         }
       };
 
+      // Behind-Sprite Move Effect Layer (e.g. Vine Whip vines emerging from behind attacker's body)
+      if (f.showEffect || f.moveStep) {
+        const activeEffect = f.moveEffect || battle.lastMoveEffect || {
+          moveKey,
+          type,
+          isSpecial,
+          isPlayerAttacking: isPlayer,
+        };
+        const activeKey = (activeEffect.moveKey || moveKey).toLowerCase().replace(/[\s_]+/g, "-");
+        if (activeKey === "vine-whip" || activeKey === "vinewhip") {
+          renderMoveEffect(targetCtx, {
+            moveKey: activeEffect.moveKey || moveKey,
+            type: activeEffect.type || type,
+            isSpecial: activeEffect.isSpecial !== undefined ? activeEffect.isSpecial : isSpecial,
+            isPlayerAttacking: activeEffect.actor ? (activeEffect.actor === "player") : (activeEffect.isPlayerAttacking ?? isPlayer),
+            step: f.moveStep ?? (f.showEffect ? 2 : 1),
+            layer: "behind",
+          });
+        }
+      }
+
       if (f.drawEnemyOnTop) {
         drawPlayerSprite();
         drawEnemySprite();
@@ -4819,7 +4968,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         drawPlayerSprite();
       }
 
-      // Move Effect Rendering (including Karate Chop multi-step hand animation)
+      // Front-Sprite Move Effect Layer (Target strike flash, impact bursts, leaf particles)
       if (f.showEffect || f.moveStep) {
         const activeEffect = f.moveEffect || battle.lastMoveEffect || {
           moveKey,
@@ -4835,6 +4984,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             isSpecial: activeEffect.isSpecial !== undefined ? activeEffect.isSpecial : isSpecial,
             isPlayerAttacking: activeEffect.actor ? (activeEffect.actor === "player") : (activeEffect.isPlayerAttacking ?? isPlayer),
             step: f.moveStep ?? (f.showEffect ? 3 : 1),
+            layer: (activeKey === "vine-whip" || activeKey === "vinewhip") ? "front" : "all",
           });
         }
       }

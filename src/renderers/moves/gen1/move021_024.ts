@@ -81,17 +81,89 @@ export function drawSlamEffect(
 }
 
 /**
- * 022 덩굴채찍 (Vine Whip): Organic Double Snapping Green Vines with Thorny Nodes & Leaf Bursts
+ * Helper: Single Curved Vine Stem with Oval Tip
+ */
+function drawSingleVine(
+  ctx: any,
+  x0: number,
+  y0: number,
+  cx1: number,
+  cy1: number,
+  cx2: number,
+  cy2: number,
+  tx: number,
+  ty: number,
+  tipAngle: number,
+  tipScale: number = 1.0,
+  alpha: number = 1.0
+) {
+  ctx.save();
+  if (alpha < 1.0) ctx.globalAlpha = alpha;
+
+  // 1. Dark outer border of vine
+  ctx.strokeStyle = "#14532D";
+  ctx.lineWidth = 7.0;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(x0, y0);
+  ctx.bezierCurveTo(cx1, cy1, cx2, cy2, tx, ty);
+  ctx.stroke();
+
+  // 2. Rich emerald vine body
+  ctx.strokeStyle = "#22C55E";
+  ctx.lineWidth = 4.5;
+  ctx.beginPath();
+  ctx.moveTo(x0, y0);
+  ctx.bezierCurveTo(cx1, cy1, cx2, cy2, tx, ty);
+  ctx.stroke();
+
+  // 3. Bright lime highlight
+  ctx.strokeStyle = "#86EFAC";
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  ctx.moveTo(x0, y0);
+  ctx.bezierCurveTo(cx1, cy1, cx2, cy2, tx, ty);
+  ctx.stroke();
+
+  // 4. Oval Leaf Tip at the end of the vine
+  ctx.save();
+  ctx.translate(tx, ty);
+  ctx.rotate(tipAngle);
+
+  // Tip body (Oval)
+  ctx.fillStyle = "#22C55E";
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 15 * tipScale, 8 * tipScale, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#14532D";
+  ctx.lineWidth = 2.0;
+  ctx.stroke();
+
+  // Tip inner highlight
+  ctx.fillStyle = "#BBF7D0";
+  ctx.beginPath();
+  ctx.ellipse(-2 * tipScale, -2 * tipScale, 9 * tipScale, 3.5 * tipScale, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+  ctx.restore();
+}
+
+/**
+ * 022 덩굴채찍 (Vine Whip): Two organic curved green vines with oval tips emerging from behind the attacker's center point
  */
 export function drawVineWhipEffect(
   ctx: any,
   start: { x: number; y: number },
   target: { x: number; y: number },
-  step: number = 1
+  step: number = 1,
+  layer: "behind" | "front" | "all" = "all"
 ) {
   ctx.save();
   const tx = target.x;
   const ty = target.y - 8;
+  const dx = target.x - start.x;
+  const dy = target.y - start.y;
 
   // Helper to draw a stylized leaf particle
   const drawLeaf = (lx: number, ly: number, angle: number, size: number) => {
@@ -110,81 +182,121 @@ export function drawVineWhipEffect(
     ctx.restore();
   };
 
-  if (step === 1) {
-    // Step 1: 1st Vine Lash (Snapping diagonally from top-left to center)
-    ctx.save();
-    ctx.strokeStyle = "#15803D";
-    ctx.lineWidth = 6.0;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(tx - 65, ty - 55);
-    ctx.bezierCurveTo(tx - 25, ty - 45, tx - 40, ty - 10, tx + 15, ty + 10);
-    ctx.stroke();
+  const drawBehindVines = () => {
+    if (step === 1) {
+      // Step 1: Rapidly shooting out vines (75% extension)
+      const v1_x0 = start.x - 8;
+      const v1_y0 = start.y - 18;
+      const v1_cx1 = start.x + dx * 0.20 - 25;
+      const v1_cy1 = start.y + dy * 0.20 - 60;
+      const v1_cx2 = start.x + dx * 0.55 - 15;
+      const v1_cy2 = start.y + dy * 0.55 - 40;
+      const v1_tx = start.x + dx * 0.75 - 15;
+      const v1_ty = start.y + dy * 0.75 - 20;
+      const v1_ang = Math.atan2(v1_ty - v1_cy2, v1_tx - v1_cx2);
 
-    // Inner bright vine core
-    ctx.strokeStyle = "#86EFAC";
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.moveTo(tx - 65, ty - 55);
-    ctx.bezierCurveTo(tx - 25, ty - 45, tx - 40, ty - 10, tx + 15, ty + 10);
-    ctx.stroke();
+      const v2_x0 = start.x + 12;
+      const v2_y0 = start.y - 10;
+      const v2_cx1 = start.x + dx * 0.30 + 30;
+      const v2_cy1 = start.y + dy * 0.30 + 30;
+      const v2_cx2 = start.x + dx * 0.60 + 20;
+      const v2_cy2 = start.y + dy * 0.60 + 15;
+      const v2_tx = start.x + dx * 0.72 + 10;
+      const v2_ty = start.y + dy * 0.72 + 10;
+      const v2_ang = Math.atan2(v2_ty - v2_cy2, v2_tx - v2_cx2);
 
-    // Whip tip crack & leaves
-    drawStarburstImpact(ctx, tx - 5, ty - 10, "#4ADE80", "#FFFFFF", 22);
-    drawLeaf(tx - 35, ty - 35, -0.6, 7);
-    drawLeaf(tx + 5, ty + 5, 0.8, 6);
-    ctx.restore();
-  } else if (step === 2) {
-    // Step 2: 2nd Vine Lash (Cross whip from top-right to bottom-left with 'X' intersection)
-    ctx.save();
-    // 1st Vine fading
-    ctx.strokeStyle = "rgba(34, 197, 94, 0.45)";
-    ctx.lineWidth = 4.0;
-    ctx.beginPath();
-    ctx.moveTo(tx - 65, ty - 55);
-    ctx.bezierCurveTo(tx - 25, ty - 45, tx - 40, ty - 10, tx + 15, ty + 10);
-    ctx.stroke();
+      drawSingleVine(ctx, v1_x0, v1_y0, v1_cx1, v1_cy1, v1_cx2, v1_cy2, v1_tx, v1_ty, v1_ang, 0.95);
+      drawSingleVine(ctx, v2_x0, v2_y0, v2_cx1, v2_cy1, v2_cx2, v2_cy2, v2_tx, v2_ty, v2_ang, 0.95);
+    } else if (step === 2) {
+      // Step 2: Full Double Vine Lash Strike with Oval Tips across Target
+      const v1_x0 = start.x - 8;
+      const v1_y0 = start.y - 18;
+      const v1_cx1 = start.x + dx * 0.20 - 25;
+      const v1_cy1 = start.y + dy * 0.20 - 70;
+      const v1_cx2 = start.x + dx * 0.70 - 15;
+      const v1_cy2 = start.y + dy * 0.70 - 45;
+      const v1_tx = target.x - 12;
+      const v1_ty = target.y - 14;
+      const v1_ang = Math.atan2(v1_ty - v1_cy2, v1_tx - v1_cx2);
 
-    // 2nd Vine heavy slash
-    ctx.strokeStyle = "#166534";
-    ctx.lineWidth = 7.0;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(tx + 65, ty - 50);
-    ctx.bezierCurveTo(tx + 20, ty - 35, tx + 35, ty + 5, tx - 25, ty + 15);
-    ctx.stroke();
+      const v2_x0 = start.x + 12;
+      const v2_y0 = start.y - 10;
+      const v2_cx1 = start.x + dx * 0.35 + 30;
+      const v2_cy1 = start.y + dy * 0.35 + 35;
+      const v2_cx2 = start.x + dx * 0.75 + 20;
+      const v2_cy2 = start.y + dy * 0.75 + 15;
+      const v2_tx = target.x + 14;
+      const v2_ty = target.y + 10;
+      const v2_ang = Math.atan2(v2_ty - v2_cy2, v2_tx - v2_cx2);
 
-    ctx.strokeStyle = "#BBF7D0";
-    ctx.lineWidth = 3.0;
-    ctx.beginPath();
-    ctx.moveTo(tx + 65, ty - 50);
-    ctx.bezierCurveTo(tx + 20, ty - 35, tx + 35, ty + 5, tx - 25, ty + 15);
-    ctx.stroke();
+      drawSingleVine(ctx, v1_x0, v1_y0, v1_cx1, v1_cy1, v1_cx2, v1_cy2, v1_tx, v1_ty, v1_ang, 1.15);
+      drawSingleVine(ctx, v2_x0, v2_y0, v2_cx1, v2_cy1, v2_cx2, v2_cy2, v2_tx, v2_ty, v2_ang, 1.15);
+    } else if (step >= 3) {
+      // Step 3: Retracting Vines
+      const v1_x0 = start.x - 8;
+      const v1_y0 = start.y - 18;
+      const v1_cx1 = start.x + dx * 0.15 - 20;
+      const v1_cy1 = start.y + dy * 0.15 - 50;
+      const v1_cx2 = start.x + dx * 0.45 - 10;
+      const v1_cy2 = start.y + dy * 0.45 - 30;
+      const v1_tx = start.x + dx * 0.50 - 10;
+      const v1_ty = start.y + dy * 0.50 - 15;
+      const v1_ang = Math.atan2(v1_ty - v1_cy2, v1_tx - v1_cx2);
 
-    // Central Crossing Crack Flash
-    drawStarburstImpact(ctx, tx, ty - 8, "#22C55E", "#FFFFFF", 34);
+      const v2_x0 = start.x + 12;
+      const v2_y0 = start.y - 10;
+      const v2_cx1 = start.x + dx * 0.20 + 20;
+      const v2_cy1 = start.y + dy * 0.20 + 20;
+      const v2_cx2 = start.x + dx * 0.45 + 15;
+      const v2_cy2 = start.y + dy * 0.45 + 10;
+      const v2_tx = start.x + dx * 0.48 + 8;
+      const v2_ty = start.y + dy * 0.48 + 5;
+      const v2_ang = Math.atan2(v2_ty - v2_cy2, v2_tx - v2_cx2);
 
-    // Bursting foliage leaves
-    drawLeaf(tx + 30, ty - 25, 0.7, 8);
-    drawLeaf(tx - 20, ty - 20, -0.5, 7);
-    drawLeaf(tx + 18, ty + 12, 1.2, 6);
-    drawLeaf(tx - 30, ty + 10, -1.0, 7);
-    ctx.restore();
-  } else if (step >= 3) {
-    // Step 3: Lingering Emerald Leaves & Dissipating Whip Ripple
-    ctx.save();
-    ctx.strokeStyle = "rgba(74, 222, 128, 0.5)";
-    ctx.lineWidth = 2.0;
-    ctx.beginPath();
-    ctx.ellipse(tx, ty + 15, 48, 14, 0, 0, Math.PI * 2);
-    ctx.stroke();
+      drawSingleVine(ctx, v1_x0, v1_y0, v1_cx1, v1_cy1, v1_cx2, v1_cy2, v1_tx, v1_ty, v1_ang, 0.8, 0.5);
+      drawSingleVine(ctx, v2_x0, v2_y0, v2_cx1, v2_cy1, v2_cx2, v2_cy2, v2_tx, v2_ty, v2_ang, 0.8, 0.5);
+    }
+  };
 
-    drawLeaf(tx - 40, ty - 30, -0.4, 6);
-    drawLeaf(tx + 35, ty - 35, 0.9, 7);
-    drawLeaf(tx + 25, ty + 20, 1.5, 6);
-    drawLeaf(tx - 32, ty + 18, -1.2, 6);
-    drawMiniRetroStar(ctx, tx, ty - 8, 10, "#86EFAC");
-    ctx.restore();
+  const drawFrontImpact = () => {
+    if (step === 2) {
+      // Step 2: Target Strike Flash & Bursting Foliage Leaves
+      ctx.save();
+      const hitGrad = ctx.createRadialGradient(tx, ty, 2, tx, ty, 32);
+      hitGrad.addColorStop(0, "#FFFFFF");
+      hitGrad.addColorStop(0.35, "rgba(74, 222, 128, 0.95)");
+      hitGrad.addColorStop(0.8, "rgba(34, 197, 94, 0.4)");
+      hitGrad.addColorStop(1, "rgba(34, 197, 94, 0.0)");
+      ctx.fillStyle = hitGrad;
+      ctx.beginPath();
+      ctx.arc(tx, ty, 32, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Bursting foliage leaves
+      drawLeaf(tx + 28, ty - 22, 0.7, 8);
+      drawLeaf(tx - 22, ty - 18, -0.5, 7);
+      drawLeaf(tx + 18, ty + 14, 1.2, 7);
+      drawLeaf(tx - 28, ty + 12, -1.0, 7);
+      ctx.restore();
+    } else if (step >= 3) {
+      // Step 3: Lingering Emerald Leaves
+      ctx.save();
+      drawLeaf(tx - 36, ty - 25, -0.4, 6);
+      drawLeaf(tx + 32, ty - 28, 0.9, 7);
+      drawLeaf(tx + 22, ty + 18, 1.5, 6);
+      drawLeaf(tx - 28, ty + 16, -1.2, 6);
+      ctx.restore();
+    }
+  };
+
+  if (layer === "behind") {
+    drawBehindVines();
+  } else if (layer === "front") {
+    drawFrontImpact();
+  } else {
+    // "all"
+    drawBehindVines();
+    drawFrontImpact();
   }
 
   ctx.restore();
