@@ -1857,7 +1857,7 @@ export function drawIcePunchEffect(ctx: any, target: { x: number; y: number }, s
 }
 
 /**
- * Dynamic Writhing Sharp Zigzag Lightning Bolt (No branch clutter, pure pulsing high-voltage kinks)
+ * Dynamic Writhing Sharp Zigzag Lightning Bolt with Root-to-Tip Tapering
  */
 function drawWrithingLightningBolt(
   ctx: any,
@@ -1895,27 +1895,35 @@ function drawWrithingLightningBolt(
     });
   }
 
-  // 1. Outer High-Voltage Electric Glow Line
+  // 1. Outer High-Voltage Electric Glow Line (Tapering from root to tip)
   ctx.strokeStyle = "#FACC15";
-  ctx.lineWidth = step >= 3 ? 3.0 : 4.5;
   ctx.lineCap = "round";
   ctx.lineJoin = "miter";
-  ctx.beginPath();
-  ctx.moveTo(pts[0].x, pts[0].y);
-  for (let i = 1; i < pts.length; i++) {
-    ctx.lineTo(pts[i].x, pts[i].y);
-  }
-  ctx.stroke();
+  const baseGlowW = step >= 3 ? 3.6 : 5.4;
 
-  // 2. Inner Pure White Lightning Core Line
-  ctx.strokeStyle = "#FFFFFF";
-  ctx.lineWidth = step >= 3 ? 1.4 : 2.0;
-  ctx.beginPath();
-  ctx.moveTo(pts[0].x, pts[0].y);
-  for (let i = 1; i < pts.length; i++) {
-    ctx.lineTo(pts[i].x, pts[i].y);
+  for (let i = 0; i < numSegments; i++) {
+    const t = i / numSegments;
+    const taper = Math.max(0.20, 1.0 - t * 0.80);
+    ctx.lineWidth = baseGlowW * taper;
+    ctx.beginPath();
+    ctx.moveTo(pts[i].x, pts[i].y);
+    ctx.lineTo(pts[i + 1].x, pts[i + 1].y);
+    ctx.stroke();
   }
-  ctx.stroke();
+
+  // 2. Inner Pure White Lightning Core Line (Tapering from root to tip)
+  ctx.strokeStyle = "#FFFFFF";
+  const baseCoreW = step >= 3 ? 1.6 : 2.4;
+
+  for (let i = 0; i < numSegments; i++) {
+    const t = i / numSegments;
+    const taper = Math.max(0.20, 1.0 - t * 0.80);
+    ctx.lineWidth = baseCoreW * taper;
+    ctx.beginPath();
+    ctx.moveTo(pts[i].x, pts[i].y);
+    ctx.lineTo(pts[i + 1].x, pts[i + 1].y);
+    ctx.stroke();
+  }
 
   ctx.restore();
 }
@@ -1993,14 +2001,14 @@ export function drawThunderPunchEffect(ctx: any, target: { x: number; y: number 
     ctx.restore();
   }
 
-  // 3. 6-Direction Writhing Jagged Lightning Bolts
+  // 3. 6-Direction Writhing Jagged Lightning Bolts (Upright 6-Point Star Angles: Top/Bottom + 4 Diagonals)
   const boltAngles = [
-    0,                     // 0° (Right)
-    Math.PI / 3,           // 60° (Bottom-Right)
-    (2 * Math.PI) / 3,     // 120° (Bottom-Left)
-    Math.PI,               // 180° (Left)
-    (4 * Math.PI) / 3,     // 240° (Top-Left)
-    (5 * Math.PI) / 3,     // 300° (Top-Right)
+    -Math.PI / 2,          // -90° (Straight UP ⬆️)
+    -Math.PI / 6,          // -30° (Top-Right ↗️)
+    Math.PI / 6,           // 30° (Bottom-Right ↘️)
+    Math.PI / 2,           // 90° (Straight DOWN ⬇️)
+    (5 * Math.PI) / 6,     // 150° (Bottom-Left ↙️)
+    (7 * Math.PI) / 6,     // 210° (Top-Left ↖️)
   ];
 
   for (let i = 0; i < boltAngles.length; i++) {
