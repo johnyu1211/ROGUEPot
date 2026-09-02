@@ -557,8 +557,7 @@ export class BattleService {
       description: "기본 공격 기술",
     };
 
-    // Enemy chooses move (in Slot 1 sandbox: mimics player's exact move!)
-    const isTestSandbox = userId === "1411661077611020429" && slotId === 1;
+    // Enemy chooses move
     let eMoveKey: string;
     let eMove: any;
     if (enemyMon.chargingMove) {
@@ -575,25 +574,19 @@ export class BattleService {
         description: "기본 공격 기술",
       };
     } else {
-      const eMoveRaw = isTestSandbox
-        ? pMove.name
-        : (enemyMon.moves[Math.floor(Math.random() * enemyMon.moves.length)] || "Tackle");
-      eMoveKey = isTestSandbox
-        ? pMoveKey
-        : getMoveKey(eMoveRaw);
-      eMove = isTestSandbox
-        ? pMove
-        : (getMoveData(eMoveRaw) || {
-            id: 0,
-            name: eMoveKey,
-            nameKo: eMoveRaw,
-            type: "normal",
-            power: 40,
-            accuracy: 100,
-            pp: 35,
-            category: "physical",
-            description: "기본 공격 기술",
-          });
+      const eMoveRaw = enemyMon.moves[Math.floor(Math.random() * enemyMon.moves.length)] || "Tackle";
+      eMoveKey = getMoveKey(eMoveRaw);
+      eMove = getMoveData(eMoveRaw) || {
+        id: 0,
+        name: eMoveKey,
+        nameKo: eMoveRaw,
+        type: "normal",
+        power: 40,
+        accuracy: 100,
+        pp: 35,
+        category: "physical",
+        description: "기본 공격 기술",
+      };
     }
 
     // 1. Determine Turn Priority & Speed Order
