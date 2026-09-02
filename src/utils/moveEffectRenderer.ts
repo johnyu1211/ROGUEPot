@@ -1648,36 +1648,38 @@ export function drawFirePunchEffect(ctx: any, target: { x: number; y: number }, 
     ctx.restore();
   }
 
-  // 3. Authentic Rising Flame Tongues (Spiraling Vortex Structure)
-  if (step === 1) {
-    // Step 1: 5 Knuckle/Finger Flame Tongues erupting from the fist crown
-    // 1. Thumb knuckle (엄지)
-    drawFlameTongue(ctx, targetX - 22, targetY + 2, 14, 28, -0.55, 0.95, -5);
-    // 2. Index knuckle (검지)
-    drawFlameTongue(ctx, targetX - 13, targetY - 14, 16, 36, -0.22, 1.0, -3);
-    // 3. Middle knuckle (중지 - Apex center)
-    drawFlameTongue(ctx, targetX, targetY - 20, 18, 42, 0.0, 1.0, 0);
-    // 4. Ring knuckle (약지)
-    drawFlameTongue(ctx, targetX + 13, targetY - 14, 16, 36, 0.22, 1.0, 3);
-    // 5. Pinky knuckle (새끼)
-    drawFlameTongue(ctx, targetX + 22, targetY + 2, 14, 28, 0.55, 0.95, 5);
+  // 3. Authentic 5-Finger Flaming Fist Afterimage (Step 1 -> Step 2 -> Step 3 Rising & Dissipating)
+  let riseY = 0;
+  let flameScale = 1.0;
+  let flameAlpha = 1.0;
 
-    // Impact Star at center
+  if (step === 2) {
+    riseY = -14;
+    flameScale = 1.15;
+    flameAlpha = 0.70;
+  } else if (step >= 3) {
+    riseY = -28;
+    flameScale = 1.25;
+    flameAlpha = 0.30;
+  }
+
+  // Draw 5 Finger Flame Tongues moving together as a fiery fist afterimage
+  // 1. Thumb knuckle (엄지)
+  drawFlameTongue(ctx, targetX - 22 * flameScale, targetY + riseY + 2, 14 * flameScale, 28 * flameScale, -0.55, flameAlpha, -5);
+  // 2. Index knuckle (검지)
+  drawFlameTongue(ctx, targetX - 13 * flameScale, targetY + riseY - 14, 16 * flameScale, 36 * flameScale, -0.22, flameAlpha, -3);
+  // 3. Middle knuckle (중지 - Apex center)
+  drawFlameTongue(ctx, targetX, targetY + riseY - 20, 18 * flameScale, 42 * flameScale, 0.0, flameAlpha, 0);
+  // 4. Ring knuckle (약지)
+  drawFlameTongue(ctx, targetX + 13 * flameScale, targetY + riseY - 14, 16 * flameScale, 36 * flameScale, 0.22, flameAlpha, 3);
+  // 5. Pinky knuckle (새끼)
+  drawFlameTongue(ctx, targetX + 22 * flameScale, targetY + riseY + 2, 14 * flameScale, 28 * flameScale, 0.55, flameAlpha, 5);
+
+  // Central Fire Impact Star
+  if (step === 1) {
     drawMiniRetroStar(ctx, targetX, targetY - 14, 22, "#FDE047");
   } else if (step === 2) {
-    // Step 2: 4 Spiraling Flame Tongues twisting & rising higher
-    drawFlameTongue(ctx, targetX - 28, targetY - 16, 20, 48, -0.42, 0.85, -8);
-    drawFlameTongue(ctx, targetX + 26, targetY - 20, 20, 46, 0.44, 0.85, 8);
-    drawFlameTongue(ctx, targetX - 10, targetY - 34, 24, 56, 0.16, 0.90, 6);
-    drawFlameTongue(ctx, targetX + 12, targetY - 30, 22, 50, -0.18, 0.90, -6);
-
-    // Small impact star remnant
-    drawMiniRetroStar(ctx, targetX, targetY - 22, 14, "rgba(253, 224, 71, 0.65)");
-  } else if (step >= 3) {
-    // Step 3: Apex Flames stretching tall and dissipating into the sky
-    drawFlameTongue(ctx, targetX - 16, targetY - 46, 16, 42, -0.22, 0.40, -6);
-    drawFlameTongue(ctx, targetX + 16, targetY - 50, 16, 40, 0.26, 0.40, 6);
-    drawFlameTongue(ctx, targetX, targetY - 58, 18, 50, 0.05, 0.45, 3);
+    drawMiniRetroStar(ctx, targetX, targetY - 24, 14, "rgba(253, 224, 71, 0.60)");
   }
 
   // 4. Flying Embers Rising with the Fiery Updraft
