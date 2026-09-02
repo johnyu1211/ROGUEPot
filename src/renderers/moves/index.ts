@@ -69,6 +69,8 @@ import {
   drawBindEffect,
 } from "./gen1/move017_020.js";
 
+import { getMoveKey } from "../../data/movesKo.js";
+
 // Re-export everything for modules and backward compatibility
 export * from "./types.js";
 export * from "./common/helpers.js";
@@ -87,7 +89,7 @@ export function renderMoveEffect(
   info: MoveEffectInfo
 ) {
   const isPlayer = info.isPlayerAttacking;
-  const moveKey = info.moveKey.toLowerCase().replace(/[\s_]+/g, "-");
+  const moveKey = getMoveKey(info.moveKey || info.moveName);
   const type = (info.type || "normal").toLowerCase();
 
   // Attacker & Target Anchor Points (Logical 560x380 coordinates)

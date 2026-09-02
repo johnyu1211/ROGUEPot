@@ -11045,3 +11045,46 @@ export const MOVES_DATA: Record<string, MoveData> = {
     "descriptionEn": "Has a 50% chance to badly poison the target."
   }
 };
+
+const KO_NAME_TO_MOVE_MAP: Record<string, MoveData> = {};
+const EN_NAME_TO_MOVE_MAP: Record<string, MoveData> = {};
+
+for (const [key, move] of Object.entries(MOVES_DATA)) {
+  const normKey = key.toLowerCase().replace(/[\s_]+/g, "-");
+  EN_NAME_TO_MOVE_MAP[normKey] = move;
+  if (move.name) {
+    EN_NAME_TO_MOVE_MAP[move.name.toLowerCase().replace(/[\s_]+/g, "-")] = move;
+  }
+  if (move.nameKo) {
+    KO_NAME_TO_MOVE_MAP[move.nameKo.trim()] = move;
+    KO_NAME_TO_MOVE_MAP[move.nameKo.replace(/\s+/g, "")] = move;
+  }
+}
+
+/**
+ * Resolves a MoveData entry by either Korean name or English key
+ */
+export function getMoveData(nameOrKey: string | undefined): MoveData | undefined {
+  if (!nameOrKey) return undefined;
+  const clean = nameOrKey.trim();
+  const lowerClean = clean.toLowerCase().replace(/[\s_]+/g, "-");
+
+  return (
+    EN_NAME_TO_MOVE_MAP[lowerClean] ||
+    KO_NAME_TO_MOVE_MAP[clean] ||
+    KO_NAME_TO_MOVE_MAP[clean.replace(/\s+/g, "")] ||
+    MOVES_DATA[lowerClean]
+  );
+}
+
+/**
+ * Resolves canonical English kebab-case move key from any Korean/English move name
+ */
+export function getMoveKey(nameOrKey: string | undefined): string {
+  const data = getMoveData(nameOrKey);
+  if (data && data.name) {
+    return data.name.toLowerCase().replace(/[\s_]+/g, "-");
+  }
+  return (nameOrKey || "tackle").toLowerCase().replace(/[\s_]+/g, "-");
+}
+

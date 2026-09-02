@@ -15,7 +15,7 @@ import { BotEvent, ExtendedClient } from "../types/index.js";
 import { createBaseEmbed, COLORS } from "../utils/embed.js";
 import { renderTitleScreen, renderBagScreen, renderMultiplayerScreen, renderPokedexScreen, renderStarterSelectScreen, renderGenSelectScreen, renderEggGachaScreen, renderSaveSlotsScreen, renderBattleScreen, StarterSelectPartyItem, PartyViewTab, InGameMessage, getPokemonSprite, isSpriteCached, TYPE_NAMES_KO } from "../utils/canvasRenderer.js";
 import { renderBattleMoveGif, renderBattleFaintGif, renderBattleEntryGif } from "../utils/battleGifRenderer.js";
-import { MOVES_DATA } from "../data/movesKo.js";
+import { MOVES_DATA, getMoveData, getMoveKey } from "../data/movesKo.js";
 import { MOVES_EN_DESC } from "../data/movesEn.js";
 import { saveService, PartyPokemon } from "../services/saveService.js";
 import { battleService, BattleState } from "../services/battleService.js";
@@ -257,8 +257,8 @@ export async function renderBattleMessageData(
     const row1 = new ActionRowBuilder<ButtonBuilder>();
     for (let i = 0; i < Math.min(2, moves.length); i++) {
       const mKey = moves[i];
-      const cleanKey = mKey.toLowerCase().replace(/[\s_]+/g, "-");
-      const mData = MOVES_DATA[cleanKey] || { nameKo: mKey, name: mKey, type: "normal", pp: 35 };
+      const cleanKey = getMoveKey(mKey);
+      const mData = getMoveData(mKey) || { nameKo: mKey, name: mKey, type: "normal", pp: 35 };
       const mName = isKo ? mData.nameKo : mData.name;
       const typeName = isKo ? (TYPE_NAMES_KO[mData.type.toLowerCase()] || mData.type) : mData.type.toUpperCase();
       row1.addComponents(
@@ -274,8 +274,8 @@ export async function renderBattleMessageData(
     const row2 = new ActionRowBuilder<ButtonBuilder>();
     for (let i = 2; i < Math.min(4, moves.length); i++) {
       const mKey = moves[i];
-      const cleanKey = mKey.toLowerCase().replace(/[\s_]+/g, "-");
-      const mData = MOVES_DATA[cleanKey] || { nameKo: mKey, name: mKey, type: "normal", pp: 35 };
+      const cleanKey = getMoveKey(mKey);
+      const mData = getMoveData(mKey) || { nameKo: mKey, name: mKey, type: "normal", pp: 35 };
       const mName = isKo ? mData.nameKo : mData.name;
       const typeName = isKo ? (TYPE_NAMES_KO[mData.type.toLowerCase()] || mData.type) : mData.type.toUpperCase();
       row2.addComponents(

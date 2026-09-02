@@ -4,7 +4,7 @@ import { getPokemonSprite, drawFittedBattleSprite, drawPokemonSilhouetteShadow }
 import { getArenaAssets, getPbInfoAssets, POKEROGUE_TYPE_COLORS, TYPE_COLORS, TYPE_NAMES_KO, BIOME_NAMES_KO } from "../common/assetLoader.js";
 import { drawShinySparkle, drawShinyTierSparkles } from "../common/vectorIcons.js";
 import { formatMoney, wrapDialogueText, getPokemonDisplayName, drawInGameMessageBox } from "../common/textHelpers.js";
-import { MOVES_DATA } from "../../data/movesKo.js";
+import { MOVES_DATA, getMoveData, getMoveKey } from "../../data/movesKo.js";
 import { POKEMON_SPECIES_DATA } from "../../data/pokemonStats.js";
 import { renderMoveEffect } from "../../utils/moveEffectRenderer.js";
 
@@ -738,8 +738,7 @@ function drawBattleFightMovesGrid(ctx: any, combatMon: any, isKo: boolean, categ
     const cY = startY + row * (rowH + gapY);
 
     const mKey = moves[i];
-    const cleanKey = mKey ? mKey.toLowerCase().replace(/[\s_]+/g, "-") : null;
-    const mData = cleanKey ? MOVES_DATA[cleanKey] || { name: mKey, nameKo: mKey, type: "normal", power: 40, accuracy: 100, pp: 35, category: "physical" as const, id: 0, description: "" } : null;
+    const mData = mKey ? getMoveData(mKey) || { name: mKey, nameKo: mKey, type: "normal", power: 40, accuracy: 100, pp: 35, category: "physical" as const, id: 0, description: "" } : null;
 
     if (!mData) {
       // Empty slot card
