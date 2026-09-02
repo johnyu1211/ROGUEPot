@@ -102,7 +102,7 @@ export function renderMoveEffect(
 
   // Attacker & Target Anchor Points (Logical 560x380 coordinates)
   const playerPos: MovePoint = { x: 175, y: 220 };
-  const enemyPos: MovePoint = { x: 418, y: 135 };
+  const enemyPos: MovePoint = { x: 418, y: 152 };
 
   const startPos = isPlayer ? playerPos : enemyPos;
   const targetPos = isPlayer ? enemyPos : playerPos;
