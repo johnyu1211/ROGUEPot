@@ -71,7 +71,7 @@ function createEffectivenessFlickerFrames(
     return [
       {
         delay: 420,
-        pOffset: isP ? { x: 6, y: -3 } : { x: 0, y: 0 },
+        pOffset: (usePlayerFront && isP) ? { x: 0, y: 0 } : (isP ? { x: 6, y: -3 } : { x: 0, y: 0 }),
         eOffset: !isP ? { x: -6, y: 3 } : { x: 0, y: 0 },
         showEffect: false,
         hitFlash: false,
@@ -94,7 +94,7 @@ function createEffectivenessFlickerFrames(
     // 1. Semi-transparent blink
     frames.push({
       delay: durationPerHalf,
-      pOffset: isP ? { x: Math.max(0, 6 - i * 2), y: Math.min(0, -3 + i) } : { x: 4 - (i % 2) * 8, y: -2 },
+      pOffset: (usePlayerFront && isP) ? { x: 0, y: 0 } : (isP ? { x: Math.max(0, 6 - i * 2), y: Math.min(0, -3 + i) } : { x: 4 - (i % 2) * 8, y: -2 }),
       eOffset: !isP ? { x: Math.min(0, -6 + i * 2), y: Math.max(0, 3 - i) } : { x: 4 - (i % 2) * 8, y: -2 },
       showEffect: false,
       hitFlash: false,
@@ -110,7 +110,7 @@ function createEffectivenessFlickerFrames(
     // 2. Visible normal half-blink
     frames.push({
       delay: isLast ? durationPerHalf + 80 : durationPerHalf,
-      pOffset: isP ? { x: Math.max(0, 4 - i * 2), y: Math.min(0, -2 + i) } : { x: 0, y: 0 },
+      pOffset: (usePlayerFront && isP) ? { x: 0, y: 0 } : (isP ? { x: Math.max(0, 4 - i * 2), y: Math.min(0, -2 + i) } : { x: 0, y: 0 }),
       eOffset: !isP ? { x: Math.min(0, -4 + i * 2), y: Math.max(0, 2 - i) } : { x: 0, y: 0 },
       showEffect: false,
       hitFlash: false,
