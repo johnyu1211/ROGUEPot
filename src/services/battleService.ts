@@ -123,6 +123,7 @@ export interface TurnActionInfo {
   isSuperEffective?: boolean;
   damage?: number;
   isHit?: boolean;
+  wasDescentFromAir?: boolean;
 }
 
 export interface BattleState {
@@ -155,6 +156,7 @@ export interface BattleState {
       target: "player" | "enemy";
       direction: "up" | "down";
     }[];
+    wasDescentFromAir?: boolean;
   } | null;
 }
 
@@ -588,7 +590,7 @@ export class BattleService {
     if (!playerMon || playerMon.hp <= 0 || (!isTestSandbox && enemyMon.hp <= 0)) return battle;
 
     const isKo = lang === "ko";
-    const pMoveKey = playerMon.chargingMove ? playerMon.chargingMove : getMoveKey(moveKey);
+    const pMoveKey = getMoveKey(moveKey);
     const pMove = getMoveData(pMoveKey) || {
       id: 0,
       name: pMoveKey,
@@ -670,6 +672,9 @@ export class BattleService {
     const secondMove = playerGoesFirst ? eMove : pMove;
     const isFirstPlayer = playerGoesFirst;
 
+    const firstActorWasAir = (firstActor as any).semiInvulnerableState === "air" || (firstActor as any).chargingMove === "fly";
+    const secondActorWasAir = (secondActor as any).semiInvulnerableState === "air" || (secondActor as any).chargingMove === "fly";
+
     // Set Move Effect info for 1st action
     const statChanges1: { target: "player" | "enemy"; direction: "up" | "down" }[] = [];
     battle.lastMoveEffect = {
@@ -679,6 +684,7 @@ export class BattleService {
       isSpecial: firstMove.category === "special",
       isPlayerAttacking: isFirstPlayer,
       statChanges: statChanges1,
+      wasDescentFromAir: firstActorWasAir,
     };
 
     // EXECUTE 1ST ACTION
@@ -701,6 +707,7 @@ export class BattleService {
       isSuperEffective: res1.isSuperEffective,
       damage: res1.damage,
       isHit: isHit1,
+      wasDescentFromAir: firstActorWasAir,
     });
 
     // CHECK IF 2ND ACTOR CAN COUNTER-ATTACK
@@ -713,6 +720,7 @@ export class BattleService {
         isSpecial: secondMove.category === "special",
         isPlayerAttacking: !isFirstPlayer,
         statChanges: statChanges2,
+        wasDescentFromAir: secondActorWasAir,
       };
 
       // EXECUTE 2ND ACTION
@@ -735,6 +743,7 @@ export class BattleService {
         isSuperEffective: res2.isSuperEffective,
         damage: res2.damage,
         isHit: isHit2,
+        wasDescentFromAir: secondActorWasAir,
       });
     } else if (secondActor.isFlinched && secondActor.hp > 0) {
       const monName = isFirstPlayer ? (isKo ? enemyMon.nameKo : enemyMon.name) : playerMon.name;
