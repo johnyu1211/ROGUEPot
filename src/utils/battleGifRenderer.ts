@@ -1208,8 +1208,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             eOffset: !isP1 ? { x: 0, y: 2 } : { x: 0, y: 0 },
             pScale: isP1 ? { x: 1.10, y: 0.92 } : undefined,
             eScale: !isP1 ? { x: 1.10, y: 0.92 } : undefined,
-            cameraZoom: 1.30,
-            cameraPan: { x: 0, y: 0 },
+            cameraZoom: 1.45,
+            cameraTrackAttacker: true,
             isAttackerPlayer: isP1,
             pWhite: false,
             eWhite: false,
@@ -1228,8 +1228,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             eOffset: !isP1 ? { x: 0, y: 6 } : { x: 0, y: 0 },
             pScale: isP1 ? { x: 1.25, y: 0.80 } : undefined,
             eScale: !isP1 ? { x: 1.25, y: 0.80 } : undefined,
-            cameraZoom: 1.50,
-            cameraPan: { x: 0, y: 0 },
+            cameraZoom: 1.60,
+            cameraTrackAttacker: true,
             isAttackerPlayer: isP1,
             pWhite: false,
             eWhite: false,
@@ -1248,8 +1248,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             eOffset: !isP1 ? { x: 0, y: 8 } : { x: 0, y: 0 },
             pScale: isP1 ? { x: 1.30, y: 0.75 } : undefined,
             eScale: !isP1 ? { x: 1.30, y: 0.75 } : undefined,
-            cameraZoom: 1.60,
-            cameraPan: { x: 0, y: 0 },
+            cameraZoom: 1.70,
+            cameraTrackAttacker: true,
             isAttackerPlayer: isP1,
             pWhite: false,
             eWhite: false,
@@ -1262,15 +1262,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a1,
             moveStep: 1,
           },
-          // 2. Rocket Sky Launch & Camera Upward Tracking (66ms x 3 = 200ms)
+          // 2. Rocket Sky Launch & Camera Dynamic Tracking Upward into Stratosphere! (66ms x 4 = 264ms)
           {
             delay: 66,
-            pOffset: isP1 ? { x: 0, y: -50 } : { x: 0, y: 0 },
-            eOffset: !isP1 ? { x: 0, y: -50 } : { x: 0, y: 0 },
+            pOffset: isP1 ? { x: 0, y: -60 } : { x: 0, y: 0 },
+            eOffset: !isP1 ? { x: 0, y: -60 } : { x: 0, y: 0 },
             pScale: isP1 ? { x: 0.65, y: 1.45 } : undefined,
             eScale: !isP1 ? { x: 0.65, y: 1.45 } : undefined,
-            cameraZoom: 1.50,
-            cameraPan: { x: 0, y: -40 },
+            cameraZoom: 1.60,
+            cameraTrackAttacker: true,
             isAttackerPlayer: isP1,
             pWhite: isP1,
             eWhite: !isP1,
@@ -1285,12 +1285,12 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           },
           {
             delay: 66,
-            pOffset: isP1 ? { x: 0, y: -130 } : { x: 0, y: 0 },
-            eOffset: !isP1 ? { x: 0, y: -130 } : { x: 0, y: 0 },
+            pOffset: isP1 ? { x: 0, y: -140 } : { x: 0, y: 0 },
+            eOffset: !isP1 ? { x: 0, y: -140 } : { x: 0, y: 0 },
             pScale: isP1 ? { x: 0.45, y: 1.85 } : undefined,
             eScale: !isP1 ? { x: 0.45, y: 1.85 } : undefined,
-            cameraZoom: 1.35,
-            cameraPan: { x: 0, y: -80 },
+            cameraZoom: 1.50,
+            cameraTrackAttacker: true,
             isAttackerPlayer: isP1,
             pWhite: isP1,
             eWhite: !isP1,
@@ -1309,28 +1309,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             eOffset: !isP1 ? { x: 0, y: -240 } : { x: 0, y: 0 },
             pScale: isP1 ? { x: 0.35, y: 2.10 } : undefined,
             eScale: !isP1 ? { x: 0.35, y: 2.10 } : undefined,
-            cameraZoom: 1.20,
-            cameraPan: { x: 0, y: -120 },
-            isAttackerPlayer: isP1,
-            pWhite: isP1,
-            eWhite: !isP1,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: enemy.hp,
-            playerHp: playerMon.hp,
-            textLineIdx: 1,
-            isBlur: false,
-            moveEffect: a1,
-          },
-          // 3. Stratosphere Piercing & Neutral Reset (66ms x 3 = 200ms)
-          {
-            delay: 66,
-            pOffset: isP1 ? { x: 0, y: -380 } : { x: 0, y: 0 },
-            eOffset: !isP1 ? { x: 0, y: -380 } : { x: 0, y: 0 },
-            pScale: isP1 ? { x: 0.25, y: 2.30 } : undefined,
-            eScale: !isP1 ? { x: 0.25, y: 2.30 } : undefined,
-            cameraZoom: 1.05,
-            cameraPan: { x: 0, y: -50 },
+            cameraZoom: 1.38,
+            cameraTrackAttacker: true,
             isAttackerPlayer: isP1,
             pWhite: isP1,
             eWhite: !isP1,
@@ -1344,8 +1324,35 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           },
           {
             delay: 66,
-            pOffset: isP1 ? { x: 0, y: -600 } : { x: 0, y: 0 },
-            eOffset: !isP1 ? { x: 0, y: -600 } : { x: 0, y: 0 },
+            pOffset: isP1 ? { x: 0, y: -360 } : { x: 0, y: 0 },
+            eOffset: !isP1 ? { x: 0, y: -360 } : { x: 0, y: 0 },
+            pScale: isP1 ? { x: 0.28, y: 2.30 } : undefined,
+            eScale: !isP1 ? { x: 0.28, y: 2.30 } : undefined,
+            cameraZoom: 1.25,
+            cameraTrackAttacker: true,
+            isAttackerPlayer: isP1,
+            pWhite: isP1,
+            eWhite: !isP1,
+            showEffect: false,
+            hitFlash: false,
+            enemyHp: enemy.hp,
+            playerHp: playerMon.hp,
+            textLineIdx: 1,
+            isBlur: false,
+            moveEffect: a1,
+          },
+          // 3. Stratosphere Piercing & Neutral Reset (66ms x 2 = 132ms)
+          {
+            delay: 66,
+            pOffset: isP1 ? { x: 0, y: -520 } : { x: 0, y: 0 },
+            eOffset: !isP1 ? { x: 0, y: -520 } : { x: 0, y: 0 },
+            pScale: isP1 ? { x: 0.20, y: 2.50 } : undefined,
+            eScale: !isP1 ? { x: 0.20, y: 2.50 } : undefined,
+            cameraZoom: 1.10,
+            cameraTrackAttacker: true,
+            isAttackerPlayer: isP1,
+            pWhite: isP1,
+            eWhite: !isP1,
             showEffect: false,
             hitFlash: false,
             enemyHp: enemy.hp,
@@ -1356,8 +1363,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           },
           {
             delay: 66,
-            pOffset: isP1 ? { x: 0, y: -600 } : { x: 0, y: 0 },
-            eOffset: !isP1 ? { x: 0, y: -600 } : { x: 0, y: 0 },
+            pOffset: isP1 ? { x: 0, y: -9999 } : { x: 0, y: 0 },
+            eOffset: !isP1 ? { x: 0, y: -9999 } : { x: 0, y: 0 },
             showEffect: false,
             hitFlash: false,
             enemyHp: enemy.hp,
@@ -2696,8 +2703,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             eOffset: !isP2 ? { x: 0, y: 2 } : { x: 0, y: 0 },
             pScale: isP2 ? { x: 1.10, y: 0.92 } : undefined,
             eScale: !isP2 ? { x: 1.10, y: 0.92 } : undefined,
-            cameraZoom: 1.30,
-            cameraPan: { x: 0, y: 0 },
+            cameraZoom: 1.45,
+            cameraTrackAttacker: true,
             isAttackerPlayer: isP2,
             pWhite: false,
             eWhite: false,
@@ -2716,8 +2723,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             eOffset: !isP2 ? { x: 0, y: 6 } : { x: 0, y: 0 },
             pScale: isP2 ? { x: 1.25, y: 0.80 } : undefined,
             eScale: !isP2 ? { x: 1.25, y: 0.80 } : undefined,
-            cameraZoom: 1.50,
-            cameraPan: { x: 0, y: 0 },
+            cameraZoom: 1.60,
+            cameraTrackAttacker: true,
             isAttackerPlayer: isP2,
             pWhite: false,
             eWhite: false,
@@ -2736,8 +2743,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             eOffset: !isP2 ? { x: 0, y: 8 } : { x: 0, y: 0 },
             pScale: isP2 ? { x: 1.30, y: 0.75 } : undefined,
             eScale: !isP2 ? { x: 1.30, y: 0.75 } : undefined,
-            cameraZoom: 1.60,
-            cameraPan: { x: 0, y: 0 },
+            cameraZoom: 1.70,
+            cameraTrackAttacker: true,
             isAttackerPlayer: isP2,
             pWhite: false,
             eWhite: false,
@@ -2750,15 +2757,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             moveEffect: a2,
             moveStep: 1,
           },
-          // 2. Rocket Sky Launch & Camera Upward Tracking (66ms x 3 = 200ms)
+          // 2. Rocket Sky Launch & Camera Dynamic Tracking Upward into Stratosphere! (66ms x 4 = 264ms)
           {
             delay: 66,
-            pOffset: isP2 ? { x: 0, y: -50 } : { x: 0, y: 0 },
-            eOffset: !isP2 ? { x: 0, y: -50 } : { x: 0, y: 0 },
+            pOffset: isP2 ? { x: 0, y: -60 } : { x: 0, y: 0 },
+            eOffset: !isP2 ? { x: 0, y: -60 } : { x: 0, y: 0 },
             pScale: isP2 ? { x: 0.65, y: 1.45 } : undefined,
             eScale: !isP2 ? { x: 0.65, y: 1.45 } : undefined,
-            cameraZoom: 1.50,
-            cameraPan: { x: 0, y: -40 },
+            cameraZoom: 1.60,
+            cameraTrackAttacker: true,
             isAttackerPlayer: isP2,
             pWhite: isP2,
             eWhite: !isP2,
@@ -2773,12 +2780,12 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           },
           {
             delay: 66,
-            pOffset: isP2 ? { x: 0, y: -130 } : { x: 0, y: 0 },
-            eOffset: !isP2 ? { x: 0, y: -130 } : { x: 0, y: 0 },
+            pOffset: isP2 ? { x: 0, y: -140 } : { x: 0, y: 0 },
+            eOffset: !isP2 ? { x: 0, y: -140 } : { x: 0, y: 0 },
             pScale: isP2 ? { x: 0.45, y: 1.85 } : undefined,
             eScale: !isP2 ? { x: 0.45, y: 1.85 } : undefined,
-            cameraZoom: 1.35,
-            cameraPan: { x: 0, y: -80 },
+            cameraZoom: 1.50,
+            cameraTrackAttacker: true,
             isAttackerPlayer: isP2,
             pWhite: isP2,
             eWhite: !isP2,
@@ -2797,28 +2804,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             eOffset: !isP2 ? { x: 0, y: -240 } : { x: 0, y: 0 },
             pScale: isP2 ? { x: 0.35, y: 2.10 } : undefined,
             eScale: !isP2 ? { x: 0.35, y: 2.10 } : undefined,
-            cameraZoom: 1.20,
-            cameraPan: { x: 0, y: -120 },
-            isAttackerPlayer: isP2,
-            pWhite: isP2,
-            eWhite: !isP2,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: a1.enemyHpAfter,
-            playerHp: a1.playerHpAfter,
-            textLineIdx: 3,
-            isBlur: false,
-            moveEffect: a2,
-          },
-          // 3. Stratosphere Piercing & Neutral Reset (66ms x 3 = 200ms)
-          {
-            delay: 66,
-            pOffset: isP2 ? { x: 0, y: -380 } : { x: 0, y: 0 },
-            eOffset: !isP2 ? { x: 0, y: -380 } : { x: 0, y: 0 },
-            pScale: isP2 ? { x: 0.25, y: 2.30 } : undefined,
-            eScale: !isP2 ? { x: 0.25, y: 2.30 } : undefined,
-            cameraZoom: 1.05,
-            cameraPan: { x: 0, y: -50 },
+            cameraZoom: 1.38,
+            cameraTrackAttacker: true,
             isAttackerPlayer: isP2,
             pWhite: isP2,
             eWhite: !isP2,
@@ -2832,8 +2819,35 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           },
           {
             delay: 66,
-            pOffset: isP2 ? { x: 0, y: -600 } : { x: 0, y: 0 },
-            eOffset: !isP2 ? { x: 0, y: -600 } : { x: 0, y: 0 },
+            pOffset: isP2 ? { x: 0, y: -360 } : { x: 0, y: 0 },
+            eOffset: !isP2 ? { x: 0, y: -360 } : { x: 0, y: 0 },
+            pScale: isP2 ? { x: 0.28, y: 2.30 } : undefined,
+            eScale: !isP2 ? { x: 0.28, y: 2.30 } : undefined,
+            cameraZoom: 1.25,
+            cameraTrackAttacker: true,
+            isAttackerPlayer: isP2,
+            pWhite: isP2,
+            eWhite: !isP2,
+            showEffect: false,
+            hitFlash: false,
+            enemyHp: a1.enemyHpAfter,
+            playerHp: a1.playerHpAfter,
+            textLineIdx: 3,
+            isBlur: false,
+            moveEffect: a2,
+          },
+          // 3. Stratosphere Piercing & Neutral Reset (66ms x 2 = 132ms)
+          {
+            delay: 66,
+            pOffset: isP2 ? { x: 0, y: -520 } : { x: 0, y: 0 },
+            eOffset: !isP2 ? { x: 0, y: -520 } : { x: 0, y: 0 },
+            pScale: isP2 ? { x: 0.20, y: 2.50 } : undefined,
+            eScale: !isP2 ? { x: 0.20, y: 2.50 } : undefined,
+            cameraZoom: 1.10,
+            cameraTrackAttacker: true,
+            isAttackerPlayer: isP2,
+            pWhite: isP2,
+            eWhite: !isP2,
             showEffect: false,
             hitFlash: false,
             enemyHp: a1.enemyHpAfter,
@@ -2844,8 +2858,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           },
           {
             delay: 66,
-            pOffset: isP2 ? { x: 0, y: -600 } : { x: 0, y: 0 },
-            eOffset: !isP2 ? { x: 0, y: -600 } : { x: 0, y: 0 },
+            pOffset: isP2 ? { x: 0, y: -9999 } : { x: 0, y: 0 },
+            eOffset: !isP2 ? { x: 0, y: -9999 } : { x: 0, y: 0 },
             showEffect: false,
             hitFlash: false,
             enemyHp: a1.enemyHpAfter,
@@ -3706,30 +3720,61 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       const attackerSprite = f.isAttackerPlayer ? playerSprite : enemySprite;
       drawHighSkyCutscene(targetCtx, width, height, f, attackerSprite);
     } else {
-      const hasCamera = Boolean(f.cameraZoom || f.cameraPan);
+      const isTracking = Boolean(f.cameraTrackAttacker);
+      const hasCamera = Boolean(f.cameraZoom || f.cameraPan || isTracking);
       if (hasCamera) {
         targetCtx.save();
         const zoom = f.cameraZoom || 1.0;
-        const panX = f.cameraPan?.x || 0;
-        const panY = f.cameraPan?.y || 0;
-        const focalX = f.isAttackerPlayer ? pm.x : em.x;
-        const focalY = f.isAttackerPlayer ? pm.y : em.y;
+        const isAttackerP = f.isAttackerPlayer !== false;
 
-        targetCtx.translate(focalX, focalY);
-        targetCtx.scale(zoom, zoom);
-        targetCtx.translate(-focalX + panX, -focalY + panY);
+        if (isTracking) {
+          const liveX = isAttackerP ? (pm.x + f.pOffset.x) : (em.x + f.eOffset.x);
+          const liveY = isAttackerP ? (pm.y + f.pOffset.y) : (em.y + f.eOffset.y);
+          // Target position on screen: keep pokemon centered in middle of viewport
+          const screenX = width / 2;
+          const screenY = height / 2 + 20;
+
+          targetCtx.translate(screenX, screenY);
+          targetCtx.scale(zoom, zoom);
+          targetCtx.translate(-liveX, -liveY);
+        } else {
+          const focalX = isAttackerP ? pm.x : em.x;
+          const focalY = isAttackerP ? pm.y : em.y;
+          const panX = f.cameraPan?.x || 0;
+          const panY = f.cameraPan?.y || 0;
+
+          targetCtx.translate(focalX, focalY);
+          targetCtx.scale(zoom, zoom);
+          targetCtx.translate(-focalX + panX, -focalY + panY);
+        }
       }
 
-      // Pre-fill sky atmosphere to prevent black void from ever showing
-      targetCtx.fillStyle = "#38BDF8";
-      targetCtx.fillRect(-width * 2, -height * 2, width * 5, height * 5);
+      // 1. Towering Sky Atmosphere behind everything (Prevents black borders and provides continuous stratosphere sky)
+      const toweringSkyGrad = targetCtx.createLinearGradient(0, -2500, 0, height);
+      toweringSkyGrad.addColorStop(0, "#0B1120"); // Stratosphere space navy
+      toweringSkyGrad.addColorStop(0.35, "#0284C7"); // Sky Blue
+      toweringSkyGrad.addColorStop(0.70, "#38BDF8"); // Atmosphere cyan
+      toweringSkyGrad.addColorStop(1, "#BAE6FD"); // Cloud white base
+      targetCtx.fillStyle = toweringSkyGrad;
+      targetCtx.fillRect(-width * 4, -3000, width * 9, 4500);
 
-      if (arena.bg) {
-        if (hasCamera) {
-          targetCtx.drawImage(arena.bg, -width * 0.8, -height * 0.8, width * 2.6, height * 2.6);
-        } else {
-          targetCtx.drawImage(arena.bg, 0, 0, width, height);
+      // 2. High altitude passing cloud puffs during upward tracking
+      if (isTracking) {
+        targetCtx.save();
+        targetCtx.fillStyle = "rgba(255, 255, 255, 0.60)";
+        for (let cy = -200; cy >= -1200; cy -= 300) {
+          targetCtx.beginPath();
+          targetCtx.arc(pm.x - 120, cy, 60, 0, Math.PI * 2);
+          targetCtx.arc(pm.x - 60, cy - 20, 85, 0, Math.PI * 2);
+          targetCtx.arc(pm.x + 110, cy, 70, 0, Math.PI * 2);
+          targetCtx.fill();
         }
+        targetCtx.restore();
+      }
+
+      // 3. Ground Arena Background
+      if (arena.bg) {
+        targetCtx.drawImage(arena.bg, 0, 0, width, height);
       } else {
         targetCtx.fillStyle = "#487848";
         targetCtx.fillRect(-width, -height, width * 3, height * 3);
