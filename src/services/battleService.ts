@@ -232,8 +232,8 @@ export class BattleService {
   /**
    * Spawns a wild encounter with proper stats and abilities
    */
-  public spawnWildPokemon(wave: number, biome: string, forcedSpecies?: string): BattlePokemon {
-    const isBoss = forcedSpecies?.includes("gmax") || forcedSpecies?.includes("mega") || wave % 10 === 0;
+  public spawnWildPokemon(wave: number, biome: string, forcedSpecies?: string, forcedLevel?: number): BattlePokemon {
+    const isBoss = forcedSpecies?.includes("gmax") || forcedSpecies?.includes("mega") || (wave % 10 === 0 && !forcedSpecies);
     const pool = isBoss ? (BOSS_ENCOUNTERS[wave] || BOSS_ENCOUNTERS[10]) : (BIOME_ENCOUNTERS[biome] || BIOME_ENCOUNTERS["Town"]);
     const speciesId = forcedSpecies || pool[Math.floor(Math.random() * pool.length)] || "pidgey";
 
@@ -247,7 +247,9 @@ export class BattleService {
       name = "Inteleon [G-Max]";
     }
 
-    const level = Math.max(2, Math.floor(wave * 1.2) + Math.floor(Math.random() * 2));
+    const level = forcedLevel !== undefined
+      ? forcedLevel
+      : Math.max(2, Math.floor(wave * 1.2) + Math.floor(Math.random() * 2));
     const isShiny = Math.random() < 0.05;
 
     const stats = this.calculateStats(speciesId, level, isBoss);
@@ -364,6 +366,8 @@ export class BattleService {
       throw new Error(`Slot ${slotId} not found for user ${userId}`);
     }
 
+    const isTestSandbox = userId === "1411661077611020429" && slotId === 1;
+
     if (existing && existing.wave === slot.wave) {
       const currentLeader = slot.party[existing.playerActiveIndex || 0] || slot.party[0];
       if (currentLeader) {
@@ -372,12 +376,18 @@ export class BattleService {
         if (movesChanged || speciesOrLevelChanged) {
           existing.playerParty = slot.party;
           existing.playerBattleMon = this.createPlayerBattleMon(currentLeader, slot.party);
+          if (isTestSandbox) {
+            existing.playerBattleMon.hp = 9999;
+            existing.playerBattleMon.maxHp = 9999;
+          }
         }
       }
       return existing;
     }
 
-    const wildPokemon = this.spawnWildPokemon(slot.wave, slot.biome || "Town");
+    const wildPokemon = isTestSandbox
+      ? this.spawnWildPokemon(1, "Town", "testsubject12", 1)
+      : this.spawnWildPokemon(slot.wave, slot.biome || "Town");
     const isKo = profile.language === "ko";
 
     const activeLeader = slot.party[0] || {
@@ -390,6 +400,10 @@ export class BattleService {
     };
 
     const playerBattleMon = this.createPlayerBattleMon(activeLeader, slot.party);
+    if (isTestSandbox) {
+      playerBattleMon.hp = 9999;
+      playerBattleMon.maxHp = 9999;
+    }
 
     let dialogueText = wildPokemon.isBoss
       ? (isKo ? `보스 포켓몬 ${wildPokemon.nameKo}(이)가 나타났다!` : `Boss Pokémon ${wildPokemon.name} appeared!`)
@@ -1144,8 +1158,11 @@ export class BattleService {
         damageLog += isKo ? `\n일루전이 깨져 본래의 ${isActorPlayer ? target.name : target.nameKo} 모습이 드러났다!` : `\nThe illusion broke!`;
       }
 
-      // Sturdy check
-      if (target.ability === "Sturdy" && target.hp === target.maxHp && damage >= target.hp) {
+      // Sturdy check & Test Sandbox Invulnerability
+      const isPlayerTarget = target === battle?.playerBattleMon;
+      if (isPlayerTarget && battle?.userId === "1411661077611020429" && battle?.slotId === 1) {
+        target.hp = target.maxHp;
+      } else if (target.ability === "Sturdy" && target.hp === target.maxHp && damage >= target.hp) {
         target.hp = 1;
         damageLog += isKo ? ` [특성 옹골참!] ${targetName}(은)는 1의 HP로 버텼다!` : ` [Sturdy!] ${targetName} held on with 1 HP!`;
       } else {
