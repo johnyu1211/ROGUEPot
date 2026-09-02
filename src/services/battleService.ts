@@ -639,6 +639,21 @@ export class BattleService {
       };
     }
 
+    // Deduct PP for Player's move (Skipped on Turn 2 of charging moves like Fly since 1 PP was already consumed on Turn 1!)
+    const isPlayerChargingSame = playerMon.chargingMove && (playerMon.chargingMove === pMoveKey);
+    if (!isPlayerChargingSame) {
+      if (!playerMon.movePps || playerMon.movePps.length !== playerMon.moves.length) {
+        playerMon.movePps = playerMon.moves.map(m => getMoveData(m)?.pp || 20);
+      }
+      const pMoveIdx = playerMon.moves.findIndex(m => getMoveKey(m) === pMoveKey);
+      if (pMoveIdx !== -1 && playerMon.movePps && playerMon.movePps[pMoveIdx] !== undefined) {
+        playerMon.movePps[pMoveIdx] = Math.max(0, playerMon.movePps[pMoveIdx] - 1);
+      }
+      if (battle.playerParty[battle.playerActiveIndex]) {
+        battle.playerParty[battle.playerActiveIndex].movePps = [...playerMon.movePps];
+      }
+    }
+
     // 1. Determine Turn Priority & Speed Order
     const pPriority = this.getMovePriority(pMoveKey);
     const ePriority = this.getMovePriority(eMoveKey);

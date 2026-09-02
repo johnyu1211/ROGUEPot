@@ -253,6 +253,10 @@ export async function renderBattleMessageData(
       ? combatMon.moves
       : ["Tackle", "Scratch", "Growl", "Quick Attack"];
 
+    if (!combatMon.movePps || combatMon.movePps.length !== moves.length) {
+      combatMon.movePps = moves.map(m => getMoveData(m)?.pp || 20);
+    }
+
     const isCharging = Boolean(combatMon?.chargingMove);
     const chargeKey = combatMon?.chargingMove ? getMoveKey(combatMon.chargingMove) : null;
 
@@ -264,6 +268,8 @@ export async function renderBattleMessageData(
       const mData = getMoveData(mKey) || { nameKo: mKey, name: mKey, type: "normal", pp: 35 };
       const mName = isKo ? mData.nameKo : mData.name;
       const typeName = isKo ? (TYPE_NAMES_KO[mData.type.toLowerCase()] || mData.type) : mData.type.toUpperCase();
+      const curPp = combatMon.movePps ? combatMon.movePps[i] : (mData.pp || 20);
+      const maxPp = mData.pp || 20;
 
       const isThisChargingMove = isCharging && (cleanKey === chargeKey);
       const btnStyle = isCharging
@@ -271,14 +277,15 @@ export async function renderBattleMessageData(
         : ButtonStyle.Primary;
 
       const btnLabel = isThisChargingMove
-        ? `${i + 1}. ⚔️ ${mName} 공격! [${typeName}]`
-        : `${i + 1}. ${mName} [${typeName}]`;
+        ? `${i + 1}. ⚔️ ${mName} 공격! [${typeName}] (${curPp}/${maxPp})`
+        : `${i + 1}. ${mName} [${typeName}] (${curPp}/${maxPp})`;
 
       row1.addComponents(
         new ButtonBuilder()
           .setCustomId(`battle_move_${i}_${encodeURIComponent(cleanKey)}_${slotId}_${userId}`)
           .setLabel(btnLabel)
           .setStyle(btnStyle)
+          .setDisabled(!isThisChargingMove && curPp <= 0)
       );
     }
     components.push(row1);
@@ -291,6 +298,8 @@ export async function renderBattleMessageData(
       const mData = getMoveData(mKey) || { nameKo: mKey, name: mKey, type: "normal", pp: 35 };
       const mName = isKo ? mData.nameKo : mData.name;
       const typeName = isKo ? (TYPE_NAMES_KO[mData.type.toLowerCase()] || mData.type) : mData.type.toUpperCase();
+      const curPp = combatMon.movePps ? combatMon.movePps[i] : (mData.pp || 20);
+      const maxPp = mData.pp || 20;
 
       const isThisChargingMove = isCharging && (cleanKey === chargeKey);
       const btnStyle = isCharging
@@ -298,14 +307,15 @@ export async function renderBattleMessageData(
         : ButtonStyle.Primary;
 
       const btnLabel = isThisChargingMove
-        ? `${i + 1}. ⚔️ ${mName} 공격! [${typeName}]`
-        : `${i + 1}. ${mName} [${typeName}]`;
+        ? `${i + 1}. ⚔️ ${mName} 공격! [${typeName}] (${curPp}/${maxPp})`
+        : `${i + 1}. ${mName} [${typeName}] (${curPp}/${maxPp})`;
 
       row2.addComponents(
         new ButtonBuilder()
           .setCustomId(`battle_move_${i}_${encodeURIComponent(cleanKey)}_${slotId}_${userId}`)
           .setLabel(btnLabel)
           .setStyle(btnStyle)
+          .setDisabled(!isThisChargingMove && curPp <= 0)
       );
     }
 
