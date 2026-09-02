@@ -296,20 +296,76 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       },
       // === ACT 1 ===
       ...act1Frames,
-      // Frame 3: Attacker 1 Recoil & Damage Settling (420ms - allows reading action 1 outcome!)
-      {
-        delay: 420,
-        pOffset: isP1 ? { x: 6, y: -3 } : { x: 0, y: 0 },
-        eOffset: !isP1 ? { x: -6, y: 3 } : { x: 0, y: 0 },
-        showEffect: false,
-        hitFlash: false,
-        enemyHp: a1.enemyHpAfter,
-        playerHp: a1.playerHpAfter,
-        textLineIdx: 2,
-        statProgress: undefined,
-        isBlur: false,
-        moveEffect: a1,
-      },
+      // Frame 3: Attacker 1 Recoil & Damage Settling (with Super Effective Sprite Transparency Blinking!)
+      ...(a1.isSuperEffective ? [
+        {
+          delay: 110,
+          pOffset: isP1 ? { x: 6, y: -3 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -6, y: 3 } : { x: 4, y: -2 },
+          showEffect: false,
+          hitFlash: false,
+          targetAlpha: 0.1, // Transparent Blink 1
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 2,
+          isBlur: false,
+          moveEffect: a1,
+        },
+        {
+          delay: 110,
+          pOffset: isP1 ? { x: 4, y: -2 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -4, y: 2 } : { x: -4, y: 2 },
+          showEffect: false,
+          hitFlash: false,
+          targetAlpha: 1.0, // Normal
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 2,
+          isBlur: false,
+          moveEffect: a1,
+        },
+        {
+          delay: 110,
+          pOffset: isP1 ? { x: 2, y: -1 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -2, y: 1 } : { x: 3, y: -1 },
+          showEffect: false,
+          hitFlash: false,
+          targetAlpha: 0.1, // Transparent Blink 2
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 2,
+          isBlur: false,
+          moveEffect: a1,
+        },
+        {
+          delay: 130,
+          pOffset: { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          targetAlpha: 1.0, // Normal settle
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 2,
+          isBlur: false,
+          moveEffect: a1,
+        }
+      ] : [
+        {
+          delay: 420,
+          pOffset: isP1 ? { x: 6, y: -3 } : { x: 0, y: 0 },
+          eOffset: !isP1 ? { x: -6, y: 3 } : { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          targetAlpha: 1.0,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 2,
+          statProgress: undefined,
+          isBlur: false,
+          moveEffect: a1,
+        }
+      ]),
       // Frame 4: Natural Breathing Room Pause between Turns (380ms - comfortable reading pause!)
       {
         delay: 380,
@@ -317,6 +373,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         eOffset: { x: 0, y: 0 },
         showEffect: false,
         hitFlash: false,
+        targetAlpha: 1.0,
         enemyHp: a1.enemyHpAfter,
         playerHp: a1.playerHpAfter,
         textLineIdx: 2,
@@ -326,20 +383,80 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       },
       // === ACT 2 ===
       ...act2Frames,
-      // Frame 7: Attacker 2 Recoil & Stat Changes Start (450ms - allows reading counter attack log!)
-      {
-        delay: 450,
-        pOffset: isP2 ? { x: 6, y: -3 } : { x: 0, y: 0 },
-        eOffset: !isP2 ? { x: -6, y: 3 } : { x: 0, y: 0 },
-        showEffect: false,
-        hitFlash: false,
-        enemyHp: a2.enemyHpAfter,
-        playerHp: a2.playerHpAfter,
-        textLineIdx: 99,
-        statProgress: 0.75,
-        isBlur: false,
-        moveEffect: a2,
-      },
+      // Frame 7: Attacker 2 Recoil & Counter Damage (with Super Effective Sprite Transparency Blinking!)
+      ...(a2.isSuperEffective ? [
+        {
+          delay: 110,
+          pOffset: isP2 ? { x: 6, y: -3 } : { x: 4, y: -2 },
+          eOffset: !isP2 ? { x: -6, y: 3 } : { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          targetAlpha: 0.1, // Transparent Blink 1
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 99,
+          statProgress: 0.75,
+          isBlur: false,
+          moveEffect: a2,
+        },
+        {
+          delay: 110,
+          pOffset: isP2 ? { x: 4, y: -2 } : { x: -4, y: 2 },
+          eOffset: !isP2 ? { x: -4, y: 2 } : { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          targetAlpha: 1.0, // Normal
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 99,
+          statProgress: 0.85,
+          isBlur: false,
+          moveEffect: a2,
+        },
+        {
+          delay: 110,
+          pOffset: isP2 ? { x: 2, y: -1 } : { x: 3, y: -1 },
+          eOffset: !isP2 ? { x: -2, y: 1 } : { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          targetAlpha: 0.1, // Transparent Blink 2
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 99,
+          statProgress: 0.95,
+          isBlur: false,
+          moveEffect: a2,
+        },
+        {
+          delay: 140,
+          pOffset: { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          targetAlpha: 1.0, // Normal settle
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 99,
+          statProgress: 0.95,
+          isBlur: false,
+          moveEffect: a2,
+        }
+      ] : [
+        {
+          delay: 450,
+          pOffset: isP2 ? { x: 6, y: -3 } : { x: 0, y: 0 },
+          eOffset: !isP2 ? { x: -6, y: 3 } : { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          targetAlpha: 1.0,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: 99,
+          statProgress: 0.75,
+          isBlur: false,
+          moveEffect: a2,
+        }
+      ]),
       // Frame 8: Neutral Return & Stat Changes Peak (320ms)
       {
         delay: 320,
@@ -503,8 +620,12 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
 
     if (enemySprite) {
       targetCtx.save();
-      if (f.hitFlash && ((f.moveEffect ? f.moveEffect.actor === "player" : isPlayer))) {
+      const isTarget = (f.moveEffect ? f.moveEffect.actor === "player" : isPlayer);
+      if (f.hitFlash && isTarget) {
         targetCtx.filter = "brightness(1.8) contrast(1.2)";
+      }
+      if (f.targetAlpha !== undefined && isTarget) {
+        targetCtx.globalAlpha = f.targetAlpha;
       }
       drawFittedBattleSprite(targetCtx, enemySprite, em.x + f.eOffset.x, em.y + f.eOffset.y, em.size);
       targetCtx.restore();
@@ -512,8 +633,12 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
 
     if (playerSprite) {
       targetCtx.save();
-      if (f.hitFlash && ((f.moveEffect ? f.moveEffect.actor === "enemy" : !isPlayer))) {
+      const isTarget = (f.moveEffect ? f.moveEffect.actor === "enemy" : !isPlayer);
+      if (f.hitFlash && isTarget) {
         targetCtx.filter = "brightness(1.8) contrast(1.2)";
+      }
+      if (f.targetAlpha !== undefined && isTarget) {
+        targetCtx.globalAlpha = f.targetAlpha;
       }
       drawFittedBattleSprite(targetCtx, playerSprite, pm.x + f.pOffset.x, pm.y + f.pOffset.y, pm.size);
       targetCtx.restore();
