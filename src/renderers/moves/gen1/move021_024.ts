@@ -266,21 +266,11 @@ export function drawVineWhipEffect(
       ctx.bezierCurveTo(tx - 14 * dirSign, ty - 25, tx - 16 * dirSign, ty - 5, tx + 30 * dirSign, ty + 12);
       ctx.stroke();
 
-      // 1타 타격 플래시 (컴팩트한 16px 반경)
-      const hitGrad1 = ctx.createRadialGradient(tx - 4 * dirSign, ty - 8, 1, tx - 4 * dirSign, ty - 8, 16);
-      hitGrad1.addColorStop(0, "#FFFFFF");
-      hitGrad1.addColorStop(0.4, "#22C55E");
-      hitGrad1.addColorStop(1, "rgba(21, 128, 61, 0.0)");
-      ctx.fillStyle = hitGrad1;
-      ctx.beginPath();
-      ctx.arc(tx - 4 * dirSign, ty - 8, 16, 0, Math.PI * 2);
-      ctx.fill();
-
       drawLeaf(tx - 20 * dirSign, ty - 20, -0.6 * dirSign, 5);
       drawLeaf(tx + 10 * dirSign, ty + 6, 0.8 * dirSign, 4);
       ctx.restore();
     } else if (step === 2) {
-      // 2타 타격: 우상단 -> 좌하단 교차 사선 덩굴 채찍 참격 ('X'자 완성) + 절제된 에메랄드 폭발
+      // 2타 타격: 우상단 -> 좌하단 교차 사선 덩굴 채찍 참격 ('X'자 완성)
       ctx.save();
       // 1타 참격선 잔상
       ctx.strokeStyle = "rgba(6, 78, 59, 0.35)";
@@ -306,17 +296,7 @@ export function drawVineWhipEffect(
       ctx.bezierCurveTo(tx + 14 * dirSign, ty - 22, tx + 18 * dirSign, ty + 6, tx - 25 * dirSign, ty + 16);
       ctx.stroke();
 
-      // 교차 지점 타격 플래시 (컴팩트한 20px 반경)
-      const hitGrad2 = ctx.createRadialGradient(tx, ty - 6, 1, tx, ty - 6, 20);
-      hitGrad2.addColorStop(0, "#FFFFFF");
-      hitGrad2.addColorStop(0.4, "#22C55E");
-      hitGrad2.addColorStop(1, "rgba(21, 128, 61, 0.0)");
-      ctx.fillStyle = hitGrad2;
-      ctx.beginPath();
-      ctx.arc(tx, ty - 6, 20, 0, Math.PI * 2);
-      ctx.fill();
-
-      // 폭발하는 나뭇잎 파티클
+      // 흩날리는 나뭇잎 파티클
       drawLeaf(tx + 20 * dirSign, ty - 18, 0.7 * dirSign, 6);
       drawLeaf(tx - 18 * dirSign, ty - 14, -0.5 * dirSign, 5);
       drawLeaf(tx + 14 * dirSign, ty + 12, 1.2 * dirSign, 5);
