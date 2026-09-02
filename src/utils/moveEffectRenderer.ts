@@ -792,11 +792,9 @@ export function drawStatDropEffect(ctx: any, pos: { x: number; y: number }, prog
 
 /**
  * Authentic Gen 5 Karate Chop (태권당수):
- * A distinct, iconic Karate Hand sprite appears floating above the target's head.
- * Motion:
- * Step 1: Hover & iconic rhythmic pre-chop twitch/dip
- * Step 2: High windup tension pull-back
- * Step 3: Fast diagonal SLAM CHOP across target + razor blade cut streak + Gen 5 4-pointed hit stars!
+ * A distinct, iconic blocky Karate Hand sprite matching official Gen 5 geometry:
+ * 4 horizontal blocky fingers with rounded caps extending to the left, thumb folded on top-right,
+ * charging red/orange flash and slamming down with orange/amber impact embers!
  */
 export function drawKarateChopEffect(ctx: any, target: { x: number; y: number }, step: number = 3) {
   ctx.save();
@@ -804,131 +802,111 @@ export function drawKarateChopEffect(ctx: any, target: { x: number; y: number },
   const cx = target.x;
   const cy = target.y - 45;
 
-  let handOy = -65;
-  let rotDeg = -20;
+  let handOy = -55;
+  let rotDeg = 0;
+  let isRedFlash = false;
   let showImpact = false;
 
   if (step === 1) {
-    // Step 1: Hover & Pre-chop twitch/dip
-    handOy = -55;
-    rotDeg = -12;
+    // Step 1: Hover & Pre-chop dip (Black Hand)
+    handOy = -48;
+    rotDeg = -6;
+    isRedFlash = false;
   } else if (step === 2) {
-    // Step 2: High windup tension
-    handOy = -80;
-    rotDeg = -42;
+    // Step 2: High windup tension + Red/Orange Flash charging!
+    handOy = -70;
+    rotDeg = 12;
+    isRedFlash = true;
   } else {
-    // Step 3: DEVASTATING SLAM CHOP
-    handOy = 12;
-    rotDeg = 32;
+    // Step 3: SLAM CHOP DIRECTLY ONTO HEAD! (Solid Black Hand + Orange Embers)
+    handOy = -15;
+    rotDeg = -4;
+    isRedFlash = false;
     showImpact = true;
   }
 
-  // 1. Draw Karate Hand Sprite
+  // 1. Draw Blocky Karate Hand
   ctx.save();
   ctx.translate(cx, cy + handOy);
   ctx.rotate((rotDeg * Math.PI) / 180);
-  ctx.scale(1.25, 1.25);
+  ctx.scale(1.35, 1.35);
 
-  ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
-  ctx.shadowBlur = 6;
+  const fillColor = isRedFlash ? "#DC2626" : "#000000";
+  const strokeColor = "#FFFFFF";
+  const strokeWidth = 3.2;
 
-  // Outer Hand Body (Solid Jet Black + Crisp Pure White Outline)
-  ctx.fillStyle = "#0F172A";
-  ctx.strokeStyle = "#FFFFFF";
-  ctx.lineWidth = 2.0;
+  ctx.fillStyle = fillColor;
+  ctx.strokeStyle = strokeColor;
+  ctx.lineWidth = strokeWidth;
   ctx.lineJoin = "round";
+  ctx.lineCap = "round";
 
+  // Unified Blocky Hand Path matching the official Gen 5 sprite:
   ctx.beginPath();
-  // Wrist on bottom-left
-  ctx.moveTo(-22, 14);
-  ctx.lineTo(-24, 0);
-  // Thumb knuckle
-  ctx.lineTo(-12, -12);
-  ctx.quadraticCurveTo(0, -18, 8, -14);
-  ctx.lineTo(14, -8);
-  // 4 extended fingers pointing up-right (손끝)
-  ctx.lineTo(28, -6);  // Index
-  ctx.lineTo(34, 0);   // Middle
-  ctx.lineTo(32, 6);   // Ring
-  ctx.lineTo(26, 12);  // Pinky
-  // Straight Hand Blade (손날 - Bottom cutting edge)
-  ctx.lineTo(10, 16);
-  ctx.lineTo(-16, 18);
+  // Wrist / right edge
+  ctx.moveTo(18, -4);
+  ctx.lineTo(18, 20);
+  // Bottom finger (Pinky)
+  ctx.lineTo(-24, 20);
+  ctx.arc(-24, 16.5, 3.5, Math.PI / 2, (Math.PI * 3) / 2);
+  ctx.lineTo(2, 13);
+  // Gap 4-3
+  ctx.lineTo(2, 11);
+  ctx.lineTo(-27, 11);
+  ctx.arc(-27, 7.5, 3.5, Math.PI / 2, (Math.PI * 3) / 2);
+  ctx.lineTo(2, 4);
+  // Gap 3-2
+  ctx.lineTo(2, 2);
+  ctx.lineTo(-28, 2);
+  ctx.arc(-28, -1.5, 3.5, Math.PI / 2, (Math.PI * 3) / 2);
+  ctx.lineTo(2, -5);
+  // Gap 2-1
+  ctx.lineTo(2, -7);
+  ctx.lineTo(-25, -7);
+  ctx.arc(-25, -10.5, 3.5, Math.PI / 2, (Math.PI * 3) / 2);
+  ctx.lineTo(0, -14);
+  // Thumb hook on top
+  ctx.lineTo(-12, -14);
+  ctx.arc(-12, -18.5, 4.5, Math.PI / 2, (Math.PI * 3) / 2);
+  ctx.lineTo(8, -23);
+  ctx.quadraticCurveTo(18, -20, 18, -4);
   ctx.closePath();
 
   ctx.fill();
   ctx.stroke();
 
-  // Hand Palm / Glove Highlight (Gen 5 Stylized)
-  ctx.fillStyle = "rgba(255, 255, 255, 0.16)";
-  ctx.beginPath();
-  ctx.moveTo(-10, -10);
-  ctx.lineTo(6, -12);
-  ctx.lineTo(24, -4);
-  ctx.lineTo(10, 8);
-  ctx.closePath();
-  ctx.fill();
-
-  // Crisp Finger Separation Creases
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.75)";
-  ctx.lineWidth = 1.4;
-  ctx.beginPath();
-  ctx.moveTo(12, -2); ctx.lineTo(28, -1);
-  ctx.moveTo(10, 4);  ctx.lineTo(26, 4);
-  ctx.moveTo(8, 10);  ctx.lineTo(20, 10);
-  ctx.stroke();
+  // Internal subtle glow if red flash
+  if (isRedFlash) {
+    ctx.fillStyle = "#F97316";
+    ctx.beginPath();
+    ctx.arc(4, 0, 8, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   ctx.restore();
 
-  // 2. Gen 5 Impact Slash & 4-Point Hit Stars (Step 3)
+  // 2. Orange / Amber Hit Embers on Impact (Step 3)
   if (showImpact) {
     ctx.save();
-    // Diagonal White Blade Cut Streak
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 4.5;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(cx - 35, cy - 45);
-    ctx.lineTo(cx + 35, cy + 35);
-    ctx.stroke();
-
-    // Gold energy edge
-    ctx.strokeStyle = "rgba(251, 191, 36, 0.85)";
-    ctx.lineWidth = 2.0;
-    ctx.beginPath();
-    ctx.moveTo(cx - 38, cy - 42);
-    ctx.lineTo(cx + 32, cy + 38);
-    ctx.stroke();
-
-    // Gen 5 4-Point Hit Stars
-    const stars = [
-      { x: cx, y: cy, size: 14, color: "#FFFFFF" },
-      { x: cx + 18, y: cy - 12, size: 9, color: "#FBBF24" },
-      { x: cx - 18, y: cy + 15, size: 10, color: "#EF4444" },
+    const embers = [
+      { ox: -30, oy: -20, r: 3.5, color: "#EA580C" },
+      { ox: 25, oy: -35, r: 3.0, color: "#F97316" },
+      { ox: 38, oy: -15, r: 4.0, color: "#FBBF24" },
+      { ox: -40, oy: 10, r: 3.5, color: "#F97316" },
+      { ox: -25, oy: 30, r: 3.0, color: "#EA580C" },
+      { ox: 35, oy: 25, r: 4.0, color: "#FBBF24" },
+      { ox: 0, oy: 38, r: 3.5, color: "#EA580C" },
+      { ox: -10, oy: -45, r: 2.5, color: "#FDE047" },
     ];
 
-    for (const st of stars) {
-      ctx.save();
-      ctx.translate(st.x, st.y);
-      ctx.fillStyle = st.color;
+    for (const eb of embers) {
+      const px = cx + eb.ox;
+      const py = cy + handOy + 15 + eb.oy;
+      ctx.fillStyle = eb.color;
       ctx.beginPath();
-      ctx.moveTo(0, -st.size);
-      ctx.quadraticCurveTo(0, 0, st.size, 0);
-      ctx.quadraticCurveTo(0, 0, 0, st.size);
-      ctx.quadraticCurveTo(0, 0, -st.size, 0);
-      ctx.quadraticCurveTo(0, 0, 0, -st.size);
+      ctx.arc(px, py, eb.r, 0, Math.PI * 2);
       ctx.fill();
-      ctx.restore();
     }
-
-    // Kinetic impact speed streaks
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(cx - 15, cy - 20); ctx.lineTo(cx + 45, cy - 25);
-    ctx.moveTo(cx - 35, cy + 10); ctx.lineTo(cx + 25, cy + 5);
-    ctx.stroke();
-
     ctx.restore();
   }
 
