@@ -5744,6 +5744,125 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
 }
 
 /**
+ * 4. Fight Menu Selection Bounce GIF (Authentic DS Gen 4/5 Battle Ready Stance Jump & HUD Bounce)
+ */
+export async function renderBattleFightMenuGif(options: BattleAnimationOptions): Promise<RenderGifResult> {
+  const width = 560;
+  const height = 380;
+  const isKo = options.lang === "ko";
+  const battle = options.battle;
+  const enemy = battle.enemy;
+  const playerMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
+
+  const enemyActiveSpecies = (enemy as any).isTransformed ? ((enemy as any).transformedSpeciesId || enemy.speciesId) : enemy.speciesId;
+  const playerActiveSpecies = (playerMon as any).isTransformed
+    ? ((playerMon as any).transformedSpeciesId || playerMon.speciesId)
+    : ((playerMon as any).hasIllusion && (playerMon as any).illusionTarget ? (playerMon as any).illusionTarget.speciesId : playerMon.speciesId);
+
+  const enemyShinyTier = (enemy as any).shinyTier !== undefined ? (enemy as any).shinyTier : (enemy.isShiny ? 1 : 0);
+  const playerShinyTier = ((playerMon as any).hasIllusion && (playerMon as any).illusionTarget)
+    ? ((playerMon as any).illusionTarget.shinyTier !== undefined ? (playerMon as any).illusionTarget.shinyTier : ((playerMon as any).illusionTarget.isShiny ? 1 : 0))
+    : ((playerMon as any).shinyTier !== undefined ? (playerMon as any).shinyTier : ((playerMon as any).isShiny ? 1 : 0));
+
+  const [arena, pbAssets, enemySprite, playerSprite] = await Promise.all([
+    getArenaAssets(battle.biome || "Town"),
+    getPbInfoAssets(),
+    getPokemonSprite(enemyActiveSpecies, true, enemyShinyTier, false),
+    getPokemonSprite(playerActiveSpecies, true, playerShinyTier, true)
+  ]);
+
+  const encoder = new GIFEncoder(width, height);
+  encoder.setRepeat(0);
+  encoder.setQuality(10);
+  encoder.start();
+
+  const canvas = createCanvas(width, height);
+  const ctx = canvas.getContext("2d");
+  ctx.imageSmoothingEnabled = false;
+
+  const ep = BATTLE_LAYOUT_CONFIG.enemyPlatform;
+  const pp = BATTLE_LAYOUT_CONFIG.playerPlatform;
+  const em = BATTLE_LAYOUT_CONFIG.enemyPokemon;
+  const pm = BATTLE_LAYOUT_CONFIG.playerPokemon;
+
+  const bounceFrames = [
+    // 0. Neutral start (90ms)
+    { delay: 90, pY: 0, pScaleY: 1.0, pScaleX: 1.0, hudY: 0 },
+    // 1. Dip anticipation (90ms)
+    { delay: 90, pY: 4, pScaleY: 0.94, pScaleX: 1.04, hudY: 3 },
+    // 2. Battle Ready Spring Up (110ms)
+    { delay: 110, pY: -12, pScaleY: 1.06, pScaleX: 0.96, hudY: -8 },
+    // 3. Peak Float & Forward (100ms)
+    { delay: 100, pY: -7, pScaleY: 1.02, pScaleX: 0.98, hudY: -5 },
+    // 4. Landing Soft Compression (95ms)
+    { delay: 95, pY: 2, pScaleY: 0.97, pScaleX: 1.03, hudY: 1 },
+    // 5. Settle Back (90ms)
+    { delay: 90, pY: 0, pScaleY: 1.0, pScaleX: 1.0, hudY: 0 },
+    // 6. Hold frame (655,000ms - Maximum GIF89a unsigned 16-bit delay limit)
+    { delay: 655000, pY: 0, pScaleY: 1.0, pScaleX: 1.0, hudY: 0 }
+  ];
+
+  const motionDurationMs = bounceFrames.slice(0, -1).reduce((sum, f) => sum + f.delay, 0);
+
+  const promptText = isKo
+    ? `${getPokemonDisplayName(playerMon, isKo)}은(는) 무엇을 할까?`
+    : `What will ${getPokemonDisplayName(playerMon, isKo)} do?`;
+
+  for (const f of bounceFrames) {
+    ctx.clearRect(0, 0, width, height);
+
+    if (arena.bg) ctx.drawImage(arena.bg, 0, 0, width, height);
+    else { ctx.fillStyle = "#487848"; ctx.fillRect(0, 0, width, height); }
+
+    if (arena.b) {
+      ctx.drawImage(arena.b, ep.x, ep.y, 320 * ep.scale, 132 * ep.scale);
+      ctx.save();
+      ctx.translate(width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(arena.b, pp.x, pp.y, 320 * pp.scale, 132 * pp.scale);
+      ctx.restore();
+    }
+
+    if (enemySprite) {
+      drawPokemonSilhouetteShadow(ctx, enemySprite, em.x, em.y, em.size);
+      drawFittedBattleSprite(ctx, enemySprite, em.x, em.y, em.size);
+    }
+
+    if (playerSprite) {
+      drawPokemonSilhouetteShadow(ctx, playerSprite, pm.x, pm.y, pm.size);
+      ctx.save();
+      ctx.translate(pm.x, pm.y + f.pY);
+      ctx.scale(f.pScaleX, f.pScaleY);
+      drawFittedBattleSprite(ctx, playerSprite, 0, 0, pm.size);
+      ctx.restore();
+    }
+
+    renderBattleHeader(ctx, width, battle, isKo);
+    renderBattleHuds(ctx, battle, isKo, pbAssets, enemy.hp, playerMon.hp, { y: f.hudY });
+
+    // Dialogue Box
+    const boxY = 270;
+    const glassGrad = ctx.createLinearGradient(0, boxY, 0, height);
+    glassGrad.addColorStop(0, "rgba(10, 16, 26, 0.58)");
+    glassGrad.addColorStop(1, "rgba(6, 10, 18, 0.68)");
+    ctx.fillStyle = glassGrad;
+    ctx.fillRect(0, boxY, width, height - boxY);
+
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "bold 15px DungGeunMo";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.fillText(promptText, 24, 290);
+
+    encoder.setDelay(f.delay);
+    encoder.addFrame(ctx);
+  }
+
+  encoder.finish();
+  return { buffer: encoder.out.getData(), motionDurationMs };
+}
+
+/**
  * Shared Header Rendering (Biome - Wave, Money)
  */
 function renderBattleHeader(ctx: any, width: number, battle: BattleState, isKo: boolean) {
@@ -5774,10 +5893,7 @@ function renderBattleHeader(ctx: any, width: number, battle: BattleState, isKo: 
   ctx.fillText(moneyText, textX, moneyY);
 }
 
-/**
- * Shared HUD Boxes Rendering
- */
-function renderBattleHuds(ctx: any, battle: BattleState, isKo: boolean, pbAssets: any, enemyHp: number, playerHp: number) {
+function renderBattleHuds(ctx: any, battle: BattleState, isKo: boolean, pbAssets: any, enemyHp: number, playerHp: number, playerHudOffset?: { x?: number; y?: number }) {
   const enemy = battle.enemy;
   const playerMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
 
@@ -5811,8 +5927,8 @@ function renderBattleHuds(ctx: any, battle: BattleState, isKo: boolean, pbAssets
   const playerTypes = playerMon.types || (playerSpeciesData ? playerSpeciesData.types : ["normal"]);
 
   drawPokeRogueBattleHud(ctx, {
-    x: ph.x,
-    y: ph.y,
+    x: ph.x + (playerHudOffset?.x || 0),
+    y: ph.y + (playerHudOffset?.y || 0),
     w: ph.w,
     h: ph.h,
     name: cleanPlayerName,
