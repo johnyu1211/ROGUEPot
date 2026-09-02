@@ -2970,16 +2970,16 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const eAlpha = (f.targetAlpha !== undefined && eTarget) ? f.targetAlpha : 1.0;
     const pAlpha = (f.targetAlpha !== undefined && pTarget) ? f.targetAlpha : 1.0;
 
-    // Pokémon Silhouette Shadows (cast onto platform ground - suppressed during high-speed mid-air flight or off-screen)
-    const isEnemyAirborne = (f.eOffset && f.eOffset.y <= -50) || f.hideEShadow || Boolean(f.eScale);
-    if (enemySprite && eAlpha > 0.02 && (enemy.hp > 0 || f.enemyHp > 0) && !isEnemyAirborne) {
+    // Pokémon Silhouette Shadows (cast onto platform ground - suppressed during high-speed mid-air flight, underground, or off-screen)
+    const isEnemyHidden = (f.eOffset && (f.eOffset.y <= -50 || f.eOffset.y >= 9000)) || f.hideEShadow || f.hideEnemy || (eAlpha <= 0.02) || Boolean(f.eScale);
+    if (enemySprite && (enemy.hp > 0 || f.enemyHp > 0) && !isEnemyHidden) {
       const eShadowX = em.x + f.eOffset.x;
       const eShadowY = em.y;
       drawPokemonSilhouetteShadow(targetCtx, enemySprite, eShadowX, eShadowY, em.size, false, 0.42 * eAlpha);
     }
 
-    const isPlayerAirborne = (f.pOffset && f.pOffset.y <= -50) || f.hidePShadow || Boolean(f.pScale);
-    if (playerSprite && pAlpha > 0.02 && (playerMon.hp > 0 || f.playerHp > 0) && !isPlayerAirborne) {
+    const isPlayerHidden = (f.pOffset && (f.pOffset.y <= -50 || f.pOffset.y >= 9000)) || f.hidePShadow || f.hidePlayer || (pAlpha <= 0.02) || Boolean(f.pScale);
+    if (playerSprite && (playerMon.hp > 0 || f.playerHp > 0) && !isPlayerHidden) {
       const pShadowX = pm.x + f.pOffset.x;
       const pShadowY = pm.y;
       drawPokemonSilhouetteShadow(targetCtx, playerSprite, pShadowX, pShadowY, pm.size, true, 0.42 * pAlpha);
@@ -2987,7 +2987,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
 
     // Enemy Sprite
     const eSpriteToDraw = f.useEnemyBack ? (enemyBackSprite || enemySprite) : enemySprite;
-    if (eSpriteToDraw && eAlpha > 0.01 && (enemy.hp > 0 || f.enemyHp > 0 || f.targetAlpha !== 0.0)) {
+    const isEnemySpriteHidden = (f.eOffset && (f.eOffset.y <= -500 || f.eOffset.y >= 9000)) || f.hideEnemy || (eAlpha <= 0.01);
+    if (eSpriteToDraw && !isEnemySpriteHidden && (enemy.hp > 0 || f.enemyHp > 0 || f.targetAlpha !== 0.0)) {
       targetCtx.save();
       if (f.eWhite) {
         targetCtx.filter = "brightness(0) invert(1)";
@@ -3012,7 +3013,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
 
     // Player Sprite
     const pSpriteToDraw = f.usePlayerFront ? (playerFrontSprite || playerSprite) : playerSprite;
-    if (pSpriteToDraw && pAlpha > 0.01 && (playerMon.hp > 0 || f.playerHp > 0 || f.targetAlpha !== 0.0)) {
+    const isPlayerSpriteHidden = (f.pOffset && (f.pOffset.y <= -500 || f.pOffset.y >= 9000)) || f.hidePlayer || (pAlpha <= 0.01);
+    if (pSpriteToDraw && !isPlayerSpriteHidden && (playerMon.hp > 0 || f.playerHp > 0 || f.targetAlpha !== 0.0)) {
       targetCtx.save();
       if (f.pWhite) {
         targetCtx.filter = "brightness(0) invert(1)";
