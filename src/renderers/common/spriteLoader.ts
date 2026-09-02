@@ -80,17 +80,17 @@ export async function getPokemonSprite(
     let lookupKey = isTestSubject ? "ditto" : clean;
 
     let dexNo: number | null = null;
-    if (!isTestSubject) {
-      if (/^\d+$/.test(clean)) {
-        dexNo = parseInt(clean, 10);
+    if (isTestSubject) {
+      dexNo = 132;
+    } else if (/^\d+$/.test(clean)) {
+      dexNo = parseInt(clean, 10);
+    } else {
+      const spec = POKEMON_SPECIES_DATA[clean] || POKEMON_SPECIES_DATA[clean.replace(/-/g, "")];
+      if (spec && spec.num > 0) {
+        dexNo = spec.num;
       } else {
-        const spec = POKEMON_SPECIES_DATA[clean] || POKEMON_SPECIES_DATA[clean.replace(/-/g, "")];
-        if (spec && spec.num > 0) {
-          dexNo = spec.num;
-        } else {
-          const matchStarter = STARTER_DATABASE.find((s) => s.speciesId === clean);
-          if (matchStarter && matchStarter.dexNumber > 0) dexNo = matchStarter.dexNumber;
-        }
+        const matchStarter = STARTER_DATABASE.find((s) => s.speciesId === clean);
+        if (matchStarter && matchStarter.dexNumber > 0) dexNo = matchStarter.dexNumber;
       }
     }
 
