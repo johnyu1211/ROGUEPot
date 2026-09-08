@@ -13,30 +13,50 @@ import { Command } from "../types/index.js";
 import { COLORS, POKEROGUE_VERSION } from "../utils/embed.js";
 import { renderTitleScreen } from "../utils/canvasRenderer.js";
 import { saveService } from "../services/saveService.js";
+import { renderBattleMessageData } from "../events/interactionCreate.js";
 
 export const command: Command = {
   data: new SlashCommandBuilder()
     .setName("open")
-    .setDescription("Open a dedicated PokéRogue game thread and title screen."),
+    .setDescription("Open a dedicated PokéRogue game thread or recover an existing battle session."),
   async execute(interaction: ChatInputCommandInteraction) {
+    await interaction.deferReply({ ephemeral: true }).catch(() => null);
+
     if (!interaction.guild || !interaction.channel) {
-      await interaction.reply({
+      await interaction.editReply({
         content: "You can only open a game thread within a server text channel.",
-        ephemeral: true,
-      });
+      }).catch(() => null);
       return;
     }
 
     const channel = interaction.channel;
     if (channel.isThread()) {
-      await interaction.reply({
-        content: "You are already inside a thread! Please use /open in a standard text channel.",
-        ephemeral: true,
-      });
+      const profile = saveService.getProfile(interaction.user.id);
+      const isKo = profile.language === "ko";
+      const activeSlotId = profile.activeSlotId || 1;
+      const slot = profile.slots[activeSlotId];
+
+      if (slot) {
+        try {
+          const battleData = await renderBattleMessageData(interaction.user.id, activeSlotId, "MAIN");
+          await interaction.deleteReply().catch(() => null);
+          const sent = await (channel as any).send(battleData);
+          sent?.react("pokeball_1:1545110604912529498")
+            .catch(() => sent.react("1545110604912529498"))
+            .catch(() => null);
+          return;
+        } catch (recoverErr) {
+          console.error("[OPEN THREAD RECOVER ERROR]", recoverErr);
+        }
+      }
+
+      await interaction.editReply({
+        content: isKo
+          ? "⚠️ 현재 쓰레드 내부입니다. 세션을 새로 시작하려면 일반 텍스트 채널에서 `/open`을 입력해주세요."
+          : "⚠️ You are inside a thread. Please use `/open` in a standard text channel to start a new session.",
+      }).catch(() => null);
       return;
     }
-
-    await interaction.deferReply({ ephemeral: true });
 
     try {
       const threadName = `${interaction.user.username}'s PokéRogue`;

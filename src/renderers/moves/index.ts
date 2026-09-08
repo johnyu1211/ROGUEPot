@@ -1,3 +1,15 @@
+// ============================================================================
+// ⚠️ [기술 이펙트 제작 지침 - 256색 팔레트 최적화(Octree Optimizer) 기준]
+// 1. 배틀 GIF 렌더러는 Octree Quantizer + useOptimizer (threshold: 85) 기반의
+//    256색 팔레트 재사용 표준을 채택하고 있음.
+// 2. 신규 기술 구현 시 불필요한 과도한 그라디언트 난사를 지양하고, 256색 팔레트 환경에서
+//    선명하게 돋보이는 핵심 고채도 단색/네온 색상 체계 및 30 FPS 규격을 기준으로 제작할 것.
+// 3. 주요 연출 위상 전환(발사 -> 타격 -> 폭발 등) 시에는 phaseId 또는 moveStep을
+//    명확히 구분 지정하여 팔레트 자동 리셋(isVisualStateShift)이 완벽히 동작하도록 구성할 것.
+// 4. 프레임별 이미지 추출 및 시각적 검증은 유저가 웹 뷰어(http://localhost:3456)에서
+//    직접 확인하므로, 작업 시 에이전트가 매번 프레임을 일일이 추출/조회하지 말 것!
+// ============================================================================
+
 import { MoveEffectInfo, MovePoint } from "./types.js";
 import {
   preloadMoveAssets,
@@ -88,6 +100,14 @@ export * from "./gen1/move009_012.js";
 export * from "./gen1/move013_016.js";
 export * from "./gen1/move017_020.js";
 export * from "./gen1/move021_024.js";
+export * from "./gen1/move025_028.js";
+export * from "./gen1/move029_032.js";
+export * from "./gen1/move033_036.js";
+export * from "./gen1/move037_040.js";
+export * from "./gen1/move041_044.js";
+export * from "./gen1/move045_048.js";
+export * from "./gen1/move049_052.js";
+export * from "./gen1/move053_056.js";
 
 /**
  * Central Dispatcher for rendering Pokémon move visual effects onto the battle canvas

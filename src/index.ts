@@ -1,4 +1,4 @@
-﻿import { config, validateConfig } from "./config/index.js";
+import { config, validateConfig } from "./config/index.js";
 import { createBotClient } from "./core/bot.js";
 import { pokerogueService } from "./services/pokerogueService.js";
 
@@ -20,14 +20,27 @@ async function main() {
     console.log("[SERVICE] PokeRogue Service initialized.");
   }
 
-  // Create and login Discord client
+  // Create and login Discord client with retry handling for temporary 503 / network blips
   const client = createBotClient();
 
-  try {
-    await client.login(config.discordToken);
-  } catch (error) {
-    console.error("[FATAL] Failed to login to Discord:", error);
-    process.exit(1);
+  let loggedIn = false;
+  let attempts = 0;
+  const maxAttempts = 5;
+
+  while (!loggedIn && attempts < maxAttempts) {
+    attempts++;
+    try {
+      await client.login(config.discordToken);
+      loggedIn = true;
+    } catch (error: any) {
+      console.warn(`[LOGIN WARNING] Login attempt ${attempts}/${maxAttempts} failed:`, error?.message || error);
+      if (attempts >= maxAttempts) {
+        console.error("[FATAL] Failed to login to Discord after maximum attempts:", error);
+        process.exit(1);
+      }
+      console.log(`[RETRY] Waiting 3 seconds before retrying Discord login...`);
+      await new Promise((res) => setTimeout(res, 3000));
+    }
   }
 }
 

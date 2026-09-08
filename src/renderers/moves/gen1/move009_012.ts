@@ -105,66 +105,56 @@ export function drawThunderPunchEffect(ctx: any, target: { x: number; y: number 
   const targetX = target.x;
   const targetY = target.y - 12;
 
-  let startDist = 2;
-  let endDist = 46;
-  let alpha = 1.0;
-  let fistAlpha = 1.0;
-
-  if (step === 2) {
-    startDist = 24;
-    endDist = 60;
-    alpha = 0.70;
-    fistAlpha = 0.35;
-  } else if (step >= 3) {
-    startDist = 54;
-    endDist = 68;
-    alpha = 0.22;
-    fistAlpha = 0.0;
-  }
-
-  if (step <= 2) {
+  // 1. Dark electric contrast flash (카메라 줌/팬 상관없이 화면 전체 100% 완전 커버)
+  if (step === 3 || step === 1) {
     ctx.save();
-    ctx.fillStyle = step === 1 ? "rgba(10, 15, 30, 0.42)" : "rgba(10, 15, 30, 0.22)";
-    ctx.fillRect(0, 0, 560, 380);
+    ctx.fillStyle = "rgba(10, 15, 30, 0.45)";
+    ctx.fillRect(-2000, -2000, 5000, 5000);
     ctx.restore();
   }
 
-  if (step <= 2) {
-    const eleGrad = ctx.createRadialGradient(
-      targetX,
-      targetY - 14,
-      4,
-      targetX,
-      targetY - 14,
-      step === 1 ? 48 : 60
-    );
-    eleGrad.addColorStop(0, "rgba(255, 255, 255, 0.90)");
-    eleGrad.addColorStop(0.35, "rgba(254, 240, 138, 0.80)");
-    eleGrad.addColorStop(0.75, "rgba(234, 179, 8, 0.45)");
-    eleGrad.addColorStop(1, "rgba(234, 179, 8, 0)");
-    ctx.fillStyle = eleGrad;
-    ctx.globalAlpha = step === 1 ? 0.90 : 0.45;
-    ctx.beginPath();
-    ctx.arc(targetX, targetY - 14, step === 1 ? 48 : 60, 0, Math.PI * 2);
-    ctx.fill();
-  }
+  // 2. Electric Radial Glow
+  const eleGrad = ctx.createRadialGradient(
+    targetX,
+    targetY - 14,
+    4,
+    targetX,
+    targetY - 14,
+    step === 3 ? 66 : 54
+  );
+  eleGrad.addColorStop(0, "rgba(255, 255, 255, 0.95)");
+  eleGrad.addColorStop(0.35, "rgba(254, 240, 138, 0.85)");
+  eleGrad.addColorStop(0.75, "rgba(234, 179, 8, 0.45)");
+  eleGrad.addColorStop(1, "rgba(234, 179, 8, 0)");
+  ctx.fillStyle = eleGrad;
+  ctx.globalAlpha = (step === 3 || step === 1) ? 0.95 : 0.50;
+  ctx.beginPath();
+  ctx.arc(targetX, targetY - 14, step === 3 ? 66 : 54, 0, Math.PI * 2);
+  ctx.fill();
 
-  if (fistAlpha > 0.02) {
-    ctx.save();
-    ctx.translate(targetX, targetY - 14);
-    ctx.scale(step === 1 ? 0.68 : 0.72, step === 1 ? 0.68 : 0.72);
-    ctx.globalAlpha = fistAlpha;
+  // 3. THE THUNDER PUNCH FIST (황금빛 전격 주먹 스프라이트 확실히 렌더링!)
+  const fistAlpha = (step === 3 || step === 1) ? 1.0 : (step === 4 ? 0.50 : 0.75);
+  const fistScale = step === 3 ? 0.88 : (step === 4 ? 0.92 : 0.78);
 
-    const fistSprite = getThunderPunchFistCanvas();
-    if (fistSprite) {
-      const fw = fistSprite.width;
-      const fh = fistSprite.height;
-      ctx.drawImage(fistSprite, -fw / 2, -fh / 2, fw, fh);
-    } else {
-      drawFrontStraightPunchFistSvg(ctx, 0, 0, 2.2, 1.0);
-    }
-    ctx.restore();
+  ctx.save();
+  ctx.translate(targetX, targetY - 14);
+  ctx.scale(fistScale, fistScale);
+  ctx.globalAlpha = fistAlpha;
+
+  const fistSprite = getThunderPunchFistCanvas();
+  if (fistSprite) {
+    const fw = fistSprite.width;
+    const fh = fistSprite.height;
+    ctx.drawImage(fistSprite, -fw / 2, -fh / 2, fw, fh);
+  } else {
+    drawFrontStraightPunchFistSvg(ctx, 0, 0, 2.5, 1.0);
   }
+  ctx.restore();
+
+  // 4. Writhing Lightning Bolts exploding outward
+  let startDist = step === 3 ? 6 : (step === 4 ? 32 : 4);
+  let endDist = step === 3 ? 56 : (step === 4 ? 74 : 48);
+  let alpha = step === 3 ? 1.0 : (step === 4 ? 0.45 : 0.70);
 
   const boltAngles = [
     -Math.PI / 2,
@@ -190,8 +180,9 @@ export function drawThunderPunchEffect(ctx: any, target: { x: number; y: number 
     );
   }
 
-  if (step <= 2) {
-    drawMiniRetroStar(ctx, targetX, targetY - 14, step === 1 ? 26 : 16, "#FEF08A");
+  // 5. Star burst
+  if (step === 3 || step === 1) {
+    drawMiniRetroStar(ctx, targetX, targetY - 14, 26, "#FEF08A");
   }
 
   ctx.restore();
@@ -400,37 +391,75 @@ export function drawSingleScissorBlade(
 }
 
 /**
+ * Helper: Very Long Black X Straight Lines across the screen (아주 길게)
+ */
+export function drawLongBlackXLines(ctx: any, cx: number, cy: number, lineWidth: number = 4.5) {
+  ctx.save();
+  ctx.strokeStyle = "#000000";
+  ctx.lineWidth = lineWidth;
+  ctx.lineCap = "round";
+
+  const span = 600; // Total 1200px length, extending far beyond the 560x380 screen
+  const d = Math.round(span * 0.7071); // ~424px
+
+  // Line 1: / (bottom-left to top-right)
+  ctx.beginPath();
+  ctx.moveTo(cx - d, cy + d);
+  ctx.lineTo(cx + d, cy - d);
+  ctx.stroke();
+
+  // Line 2: \ (top-left to bottom-right)
+  ctx.beginPath();
+  ctx.moveTo(cx - d, cy - d);
+  ctx.lineTo(cx + d, cy + d);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+/**
  * 012 가위자르기 (Guillotine): Pure Scissor Blade Execution Engine
  */
-export function drawGuillotineEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
+export function drawGuillotineEffect(
+  ctx: any,
+  target: { x: number; y: number },
+  step: number = 1,
+  isBlackout: boolean = false
+) {
   ctx.save();
 
   const targetX = target.x;
   const targetY = target.y - 12;
+  const centerY = targetY - 14;
 
-  ctx.save();
-  if (step === 3) {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.82)";
-    ctx.fillRect(0, 0, 560, 380);
-  } else if (step === 1 || step === 2) {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.42)";
-    ctx.fillRect(0, 0, 560, 380);
-  } else if (step >= 4) {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.48)";
-    ctx.fillRect(0, 0, 560, 380);
+  // Step 1~3 background atmosphere (Blackout frames use engine blackoutScreen)
+  if (step <= 3 && !isBlackout) {
+    ctx.save();
+    ctx.fillStyle = (step === 3) ? "rgba(0, 0, 0, 0.65)" : "rgba(0, 0, 0, 0.35)";
+    ctx.fillRect(-2000, -2000, 5000, 5000);
+    ctx.restore();
   }
-  ctx.restore();
 
   if (step === 1) {
-    drawSingleScissorBlade(ctx, targetX, targetY - 14, -Math.PI / 4, 145, 8.5, 1.0, 1.0);
+    // 1단계: 첫 번째 가위날 사선 진입 (/)
+    drawSingleScissorBlade(ctx, targetX, centerY, -Math.PI / 4, 150, 9.5, 1.0, 1.0);
   } else if (step === 2) {
-    drawSingleScissorBlade(ctx, targetX, targetY - 14, Math.PI / 4, 145, 8.5, 1.0, 1.0);
+    // 2단계: 첫 번째 가위날(/)이 유지된 채로, 두 번째 가위날(\)이 교차하여 자연스러운 X자 형성!
+    drawSingleScissorBlade(ctx, targetX, centerY, -Math.PI / 4, 150, 9.5, 1.0, 0.90);
+    drawSingleScissorBlade(ctx, targetX, centerY, Math.PI / 4, 150, 9.5, 1.0, 1.0);
   } else if (step === 3) {
-    drawSingleScissorBlade(ctx, targetX, targetY - 14, -Math.PI / 4, 160, 12.0, 1.0, 1.0);
-    drawSingleScissorBlade(ctx, targetX, targetY - 14, Math.PI / 4, 160, 12.0, 1.0, 1.0);
-  } else if (step >= 4) {
-    drawSingleScissorBlade(ctx, targetX, targetY - 14, -Math.PI / 4, 172, 6.0, 0.8, 0.25);
-    drawSingleScissorBlade(ctx, targetX, targetY - 14, Math.PI / 4, 172, 6.0, 0.8, 0.25);
+    // 3단계: 완성된 붉은 X자 참격 발광 (흰색 사각형 완전 제거! 검은 X 없음!)
+    drawSingleScissorBlade(ctx, targetX, centerY, -Math.PI / 4, 168, 12.5, 1.0, 1.0);
+    drawSingleScissorBlade(ctx, targetX, centerY, Math.PI / 4, 168, 12.5, 1.0, 1.0);
+    // 중심부 미세 붉은 코어 점 (흰색 사각형 없음)
+    ctx.fillStyle = "#FF6B6B";
+    ctx.beginPath();
+    ctx.arc(targetX, centerY, 4, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (step === 5 && isBlackout) {
+    // [유저 요구사항] 암전 후 흰색 적 스프라이트 보이고 나서 '다음 프레임'에만 검정 X 출현!
+    // 그리고 암전 사라지기 전에 소멸되어야 하므로 반드시 isBlackout일 때만 렌더링!
+    drawLongBlackXLines(ctx, targetX, centerY, 4.5);
   }
 
   ctx.restore();

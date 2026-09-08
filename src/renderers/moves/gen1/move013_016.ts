@@ -518,11 +518,11 @@ export function drawGustEffect(
   const tx = target.x;
   const ty = target.y + 6; // Shifted slightly lower towards body/feet baseline
 
-  // 1. Subtle Battlefield White Veil Filter (화면 전체 아주 약간의 투명한 흰색 필터, 대화창 및 UI 제외)
+  // 1. Subtle Battlefield White Veil Filter (화면 전체 아주 약간의 투명한 흰색 필터, 대화창 및 UI 제외 - 카메라 줌/팬 시에도 여백 잘림 방지)
   ctx.save();
   const filterAlpha = step === 1 ? 0.07 : (step === 2 ? 0.14 : 0.06);
   ctx.fillStyle = `rgba(255, 255, 255, ${filterAlpha})`;
-  ctx.fillRect(0, 0, 560, 270);
+  ctx.fillRect(-800, -800, 2400, 2400);
   ctx.restore();
 
   // Helper: Draw compact billowy multi-circle sand dust puff cluster

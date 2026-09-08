@@ -23,6 +23,7 @@ import { getPokemonByQuery, getPokemonByDexNumber, getPokemonPage, getAbilityKor
 import { STARTER_DATABASE, GENERATION_INFO, getStartersByGen, getStarterByDexNumber, DEFAULT_MAX_COST, StarterEntry } from "../data/starterCosts.js";
 import { getUserStarters, getUserStarter, unlockPassiveAbility, reduceStarterCost } from "../services/starterService.js";
 import { pullEggs, getUserEggs, advanceEggHatching } from "../services/eggService.js";
+import { ensureClickItReaction, clearAllPerkReactions, deleteActivePerkBannerMessage } from "./messageReactionAdd.js";
 
 function createStarterSelectMenu(slotId: number, userId: string, fromSource: "title" | "slots" = "title") {
   const profile = saveService.getProfile(userId);
@@ -180,6 +181,31 @@ export async function safeInteractionUpdate(interaction: any, data: any) {
     } else {
       await interaction.update(data);
     }
+
+    // [유저 요구사항] ClickIt(pokeball_1) 리액션은 배틀 메시지에 상시 유지
+    try {
+      const targetMsg = interaction.message || await interaction.fetchReply?.().catch(() => null);
+      if (targetMsg) {
+        const comps = (data.components || targetMsg.components || []) as any[];
+        const isBattleMsg = comps.some((row: any) =>
+          (row.components || []).some((c: any) => {
+            const cid = c.customId || c.data?.custom_id || "";
+            return cid.startsWith("battle_");
+          })
+        );
+        if (isBattleMsg) {
+          await ensureClickItReaction(targetMsg, interaction.client?.user);
+          if (interaction.user?.id) {
+            try {
+              const b = battleService.getOrCreateBattle(interaction.user.id, 1);
+              if (b) b.messageId = targetMsg.id;
+            } catch {}
+          }
+        }
+      }
+    } catch {
+      // Ignore reaction errors
+    }
   } catch (err: any) {
     if (err.code === 40060 || err.code === 10062) {
       // 40060: Interaction has already been acknowledged (double-click / rapid response)
@@ -189,6 +215,76 @@ export async function safeInteractionUpdate(interaction: any, data: any) {
     throw err;
   }
 }
+
+export function getDisabledMessageComponents(interaction: any): ActionRowBuilder<ButtonBuilder>[] {
+  if (!interaction.message?.components) return [];
+  return disableComponentsList(interaction.message.components);
+}
+
+export function disableComponentsList(components: any[]): ActionRowBuilder<ButtonBuilder>[] {
+  if (!components || !Array.isArray(components)) return [];
+  return components.map((row: any) => {
+    const newRow = new ActionRowBuilder<ButtonBuilder>();
+    const rowComps = row.components || [];
+    for (const component of rowComps) {
+      const cId = component.data?.custom_id || component.customId || "";
+      const isBallDummy = cId.startsWith("battle_ball_icon_");
+      newRow.addComponents(ButtonBuilder.from(component).setDisabled(isBallDummy ? false : true));
+    }
+    return newRow;
+  });
+}
+
+const activeBattleTimers = new Map<string, NodeJS.Timeout>();
+
+export function clearBattleStaticization(userId: string, slotId: number) {
+  const timerKey = `${userId}_${slotId}`;
+  if (activeBattleTimers.has(timerKey)) {
+    clearTimeout(activeBattleTimers.get(timerKey)!);
+    activeBattleTimers.delete(timerKey);
+  }
+}
+
+export function scheduleBattleButtonUnlock(
+  interaction: any,
+  userId: string,
+  slotId: number,
+  motionDurationMs: number,
+  enabledComponents?: ActionRowBuilder<ButtonBuilder>[]
+) {
+  clearBattleStaticization(userId, slotId);
+
+  if (!motionDurationMs || motionDurationMs <= 0 || !enabledComponents || enabledComponents.length === 0) return;
+
+  const timerKey = `${userId}_${slotId}`;
+  // 150ms buffer for Discord network transfer latency
+  const effectiveDelay = motionDurationMs + 150;
+
+  const timer = setTimeout(async () => {
+    activeBattleTimers.delete(timerKey);
+    try {
+      // ONLY unlock buttons on Discord! Do NOT convert GIF to static PNG!
+      const targetMsg = interaction.message || await interaction.fetchReply?.().catch(() => null);
+      if (targetMsg) {
+        if (targetMsg.edit) {
+          await targetMsg.edit({ components: enabledComponents }).catch(() => null);
+        } else if (interaction.editReply) {
+          await interaction.editReply({ components: enabledComponents }).catch(() => null);
+        }
+        // Clear used perk reactions from message once turn finishes
+        clearAllPerkReactions(targetMsg, interaction.client?.user).catch(() => null);
+        ensureClickItReaction(targetMsg, interaction.client?.user).catch(() => null);
+      }
+    } catch (e) {
+      console.error("[scheduleBattleButtonUnlock error]:", e);
+    }
+  }, effectiveDelay);
+
+  activeBattleTimers.set(timerKey, timer);
+}
+
+// Alias for backward compatibility
+export const scheduleBattleStaticization = scheduleBattleButtonUnlock;
 
 export async function renderBattleMessageData(
   userId: string,
@@ -306,12 +402,12 @@ export async function renderBattleMessageData(
           .setCustomId(`battle_move_${i}_${encodeURIComponent(cleanKey)}_${slotId}_${userId}`)
           .setLabel(btnLabel)
           .setStyle(btnStyle)
-          .setDisabled(!isThisChargingMove && curPp <= 0)
+          .setDisabled(isCharging ? !isThisChargingMove : curPp <= 0)
       );
     }
     components.push(row1);
 
-    // Row 2: Moves 3, 4 + Back
+    // Row 2: Moves 3, 4
     const row2 = new ActionRowBuilder<ButtonBuilder>();
     for (let i = 2; i < Math.min(4, moves.length); i++) {
       const mKey = moves[i];
@@ -336,19 +432,21 @@ export async function renderBattleMessageData(
           .setCustomId(`battle_move_${i}_${encodeURIComponent(cleanKey)}_${slotId}_${userId}`)
           .setLabel(btnLabel)
           .setStyle(btnStyle)
-          .setDisabled(!isThisChargingMove && curPp <= 0)
+          .setDisabled(isCharging ? !isThisChargingMove : curPp <= 0)
       );
     }
+    components.push(row2);
 
+    // Row 3: Back button (한 줄 아래로 내림)
     if (!isCharging) {
-      row2.addComponents(
+      const row3 = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
           .setCustomId(`battle_cancel_${slotId}_${userId}`)
           .setLabel(isKo ? "↩️ 뒤로" : "↩️ Back")
           .setStyle(ButtonStyle.Secondary)
       );
+      components.push(row3);
     }
-    components.push(row2);
   } else if (battle.phase === "BAG") {
     const profile = saveService.getProfile(userId);
     const slot = profile.slots[slotId];
@@ -417,18 +515,26 @@ export async function renderBattleMessageData(
     );
     components.push(partyRow);
   } else {
-    // MAIN Action Row
+    // MAIN Action Rows
     const isCharging = Boolean(combatMon?.chargingMove);
-    const mainRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+
+    // Row 1: [⚔️ 싸운다] + [⚪ 몬스터볼] + [⚪] (같은 더미 버튼)
+    const mainRow1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
         .setCustomId(`battle_menu_fight_${slotId}_${userId}`)
         .setLabel(isKo ? "⚔️ 싸운다 (Fight)" : "⚔️ Fight")
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setCustomId(`battle_menu_bag_${slotId}_${userId}`)
-        .setLabel(isKo ? "⚪ 몬스터볼 (Ball)" : "⚪ PokéBall")
+        .setLabel(isKo ? "몬스터볼 (Ball)" : "PokéBall")
+        .setEmoji("1545110604912529498")
         .setStyle(ButtonStyle.Success)
-        .setDisabled(isCharging),
+        .setDisabled(isCharging)
+    );
+    components.push(mainRow1);
+
+    // Row 2: [🔄 교체] + [🏃 도망치기] (한 줄 아래로 내림)
+    const mainRow2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
         .setCustomId(`battle_menu_party_${slotId}_${userId}`)
         .setLabel(isKo ? "🔄 교체 (Party)" : "🔄 Party")
@@ -440,7 +546,7 @@ export async function renderBattleMessageData(
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(isCharging)
     );
-    components.push(mainRow);
+    components.push(mainRow2);
   }
 
   return { embeds: [], files: [attachment], attachments: [], components, motionDurationMs };
@@ -2067,7 +2173,11 @@ export const interactionCreateEvent: BotEvent = {
 
       try {
         await command.execute(interaction);
-      } catch (error) {
+      } catch (error: any) {
+        if (error?.code === 10062 || error?.code === 40060) {
+          // Interaction token expired (over 3s delay or network latency)
+          return;
+        }
         console.error(`[ERROR] Error executing command ${interaction.commandName}:`, error);
         const errorMessage = {
           content: "An error occurred while executing this command.",
@@ -2075,9 +2185,9 @@ export const interactionCreateEvent: BotEvent = {
         };
 
         if (interaction.replied || interaction.deferred) {
-          await interaction.followUp(errorMessage);
+          await interaction.followUp(errorMessage).catch(() => null);
         } else {
-          await interaction.reply(errorMessage);
+          await interaction.reply(errorMessage).catch(() => null);
         }
       }
       return;
@@ -3602,8 +3712,22 @@ export const interactionCreateEvent: BotEvent = {
         } else {
           saveService.setActiveSlot(interaction.user.id, slotNum);
           const battleData = await renderBattleMessageData(interaction.user.id, slotNum, undefined, true);
-          await interaction.update(battleData);
+          if (battleData.motionDurationMs && battleData.motionDurationMs > 0) {
+            const disabledComponents = disableComponentsList(battleData.components);
+            await interaction.update({ ...battleData, components: disabledComponents });
+            scheduleBattleStaticization(interaction, interaction.user.id, slotNum, battleData.motionDurationMs, battleData.components);
+          } else {
+            await interaction.update(battleData);
+          }
         }
+        return;
+      }
+
+      // Dummy Pokéball icon button (instant ACK with UPDATE_MESSAGE so NO "..." thinking dots appear!)
+      if (customId.startsWith("battle_ball_icon_")) {
+        await interaction.update({ components: interaction.message.components }).catch(async () => {
+          await interaction.deferUpdate().catch(() => null);
+        });
         return;
       }
 
@@ -3619,6 +3743,7 @@ export const interactionCreateEvent: BotEvent = {
         // 2-7-A. Fight Menu Selected
         if (customId.startsWith("battle_menu_fight_")) {
           const slotId = parseInt(parts[3], 10) || 1;
+          clearBattleStaticization(interaction.user.id, slotId);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId, "FIGHT");
           await safeInteractionUpdate(interaction, battleData);
           return;
@@ -3627,6 +3752,7 @@ export const interactionCreateEvent: BotEvent = {
         // 2-7-B. Bag Menu Selected
         if (customId.startsWith("battle_menu_bag_")) {
           const slotId = parseInt(parts[3], 10) || 1;
+          clearBattleStaticization(interaction.user.id, slotId);
           const battle = battleService.getOrCreateBattle(interaction.user.id, slotId);
           const combatMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
           if (combatMon?.chargingMove) {
@@ -3643,6 +3769,7 @@ export const interactionCreateEvent: BotEvent = {
         // 2-7-C. Party Menu Selected
         if (customId.startsWith("battle_menu_party_")) {
           const slotId = parseInt(parts[3], 10) || 1;
+          clearBattleStaticization(interaction.user.id, slotId);
           const battle = battleService.getOrCreateBattle(interaction.user.id, slotId);
           const combatMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
           if (combatMon?.chargingMove) {
@@ -3659,6 +3786,7 @@ export const interactionCreateEvent: BotEvent = {
         // 2-7-D. Run Away (Back to Title)
         if (customId.startsWith("battle_menu_run_")) {
           const slotId = parseInt(parts[3], 10) || 1;
+          clearBattleStaticization(interaction.user.id, slotId);
           const battle = battleService.getOrCreateBattle(interaction.user.id, slotId);
           const combatMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
           if (combatMon?.chargingMove) {
@@ -3675,6 +3803,7 @@ export const interactionCreateEvent: BotEvent = {
         // 2-7-E. Cancel / Back to Main Battle Menu
         if (customId.startsWith("battle_cancel_")) {
           const slotId = parseInt(parts[2], 10) || 1;
+          clearBattleStaticization(interaction.user.id, slotId);
           const battle = battleService.getOrCreateBattle(interaction.user.id, slotId);
           const combatMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
           if (combatMon?.chargingMove) {
@@ -3690,58 +3819,136 @@ export const interactionCreateEvent: BotEvent = {
 
         // 2-7-F. Move Selected (Attack)
         if (customId.startsWith("battle_move_")) {
-          await interaction.deferUpdate().catch(() => null);
+          const disabledRows = getDisabledMessageComponents(interaction);
+          if (disabledRows.length > 0) {
+            await interaction.update({ components: disabledRows }).catch(() => null);
+          } else {
+            await interaction.deferUpdate().catch(() => null);
+          }
+          if (interaction.message) {
+            // Clear previous turn's perk reactions right when new move begins
+            clearAllPerkReactions(interaction.message, interaction.client?.user).catch(() => null);
+            ensureClickItReaction(interaction.message, interaction.client?.user).catch(() => null);
+          }
           const moveKey = decodeURIComponent(parts[3] || "tackle");
           const slotId = parseInt(parts[4], 10) || 1;
+          // 1회 사용 완료 -> 이전 턴의 특수 효과 알림 메시지 삭제!
+          deleteActivePerkBannerMessage(`${interaction.user.id}_${slotId}`).catch(() => null);
           const profile = saveService.getProfile(interaction.user.id);
-          battleService.executePlayerMove(interaction.user.id, slotId, moveKey, profile.language);
-          const battleData = await renderBattleMessageData(interaction.user.id, slotId);
-          await safeInteractionUpdate(interaction, battleData);
+          try {
+            battleService.executePlayerMove(interaction.user.id, slotId, moveKey, profile.language);
+            const battleData = await renderBattleMessageData(interaction.user.id, slotId);
+            if (battleData.motionDurationMs && battleData.motionDurationMs > 0) {
+              const disabledComponents = disableComponentsList(battleData.components);
+              await safeInteractionUpdate(interaction, { ...battleData, components: disabledComponents });
+              scheduleBattleStaticization(interaction, interaction.user.id, slotId, battleData.motionDurationMs, battleData.components);
+            } else {
+              await safeInteractionUpdate(interaction, battleData);
+            }
+          } catch (moveErr) {
+            console.error("[BATTLE MOVE ERROR - AUTO RECOVERY]", moveErr);
+            const recoverData = await renderBattleMessageData(interaction.user.id, slotId, "MAIN").catch(() => null);
+            if (recoverData) {
+              await safeInteractionUpdate(interaction, recoverData).catch(() => null);
+            }
+          }
           return;
         }
 
         // 2-7-G. Throw Ball
         if (customId.startsWith("battle_throwball_")) {
-          await interaction.deferUpdate().catch(() => null);
+          const disabledRows = getDisabledMessageComponents(interaction);
+          if (disabledRows.length > 0) {
+            await interaction.update({ components: disabledRows }).catch(() => null);
+          } else {
+            await interaction.deferUpdate().catch(() => null);
+          }
           const ballType = parts[2] || "poke-ball";
           const slotId = parseInt(parts[3], 10) || 1;
           const profile = saveService.getProfile(interaction.user.id);
           battleService.attemptCatch(interaction.user.id, slotId, ballType, profile.language);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId);
-          await safeInteractionUpdate(interaction, battleData);
+          if (battleData.motionDurationMs && battleData.motionDurationMs > 0) {
+            const disabledComponents = disableComponentsList(battleData.components);
+            await safeInteractionUpdate(interaction, { ...battleData, components: disabledComponents });
+            scheduleBattleStaticization(interaction, interaction.user.id, slotId, battleData.motionDurationMs, battleData.components);
+          } else {
+            await safeInteractionUpdate(interaction, battleData);
+          }
           return;
         }
 
         // 2-7-H. Switch Active Pokémon
         if (customId.startsWith("battle_switch_")) {
-          await interaction.deferUpdate().catch(() => null);
+          const disabledRows = getDisabledMessageComponents(interaction);
+          if (disabledRows.length > 0) {
+            await interaction.update({ components: disabledRows }).catch(() => null);
+          } else {
+            await interaction.deferUpdate().catch(() => null);
+          }
           const targetIdx = parseInt(parts[2], 10) || 0;
           const slotId = parseInt(parts[3], 10) || 1;
           const profile = saveService.getProfile(interaction.user.id);
           battleService.switchPlayerPokemon(interaction.user.id, slotId, targetIdx, profile.language);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId);
-          await safeInteractionUpdate(interaction, battleData);
+          if (battleData.motionDurationMs && battleData.motionDurationMs > 0) {
+            const disabledComponents = disableComponentsList(battleData.components);
+            await safeInteractionUpdate(interaction, { ...battleData, components: disabledComponents });
+            scheduleBattleStaticization(interaction, interaction.user.id, slotId, battleData.motionDurationMs, battleData.components);
+          } else {
+            await safeInteractionUpdate(interaction, battleData);
+          }
           return;
         }
 
         // 2-7-I. Next Wave
         if (customId.startsWith("battle_nextwave_")) {
-          await interaction.deferUpdate().catch(() => null);
+          const disabledRows = getDisabledMessageComponents(interaction);
+          if (disabledRows.length > 0) {
+            await interaction.update({ components: disabledRows }).catch(() => null);
+          } else {
+            await interaction.deferUpdate().catch(() => null);
+          }
+          if (interaction.message) {
+            clearAllPerkReactions(interaction.message, interaction.client?.user).catch(() => null);
+            ensureClickItReaction(interaction.message, interaction.client?.user).catch(() => null);
+          }
           const slotId = parseInt(parts[2], 10) || 1;
           battleService.advanceToNextWave(interaction.user.id, slotId);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId, undefined, true);
-          await safeInteractionUpdate(interaction, battleData);
+          if (battleData.motionDurationMs && battleData.motionDurationMs > 0) {
+            const disabledComponents = disableComponentsList(battleData.components);
+            await safeInteractionUpdate(interaction, { ...battleData, components: disabledComponents });
+            scheduleBattleStaticization(interaction, interaction.user.id, slotId, battleData.motionDurationMs, battleData.components);
+          } else {
+            await safeInteractionUpdate(interaction, battleData);
+          }
           return;
         }
 
         // 2-7-J. Retry / Continue After Defeat
         if (customId.startsWith("battle_retry_")) {
-          await interaction.deferUpdate().catch(() => null);
+          const disabledRows = getDisabledMessageComponents(interaction);
+          if (disabledRows.length > 0) {
+            await interaction.update({ components: disabledRows }).catch(() => null);
+          } else {
+            await interaction.deferUpdate().catch(() => null);
+          }
+          if (interaction.message) {
+            clearAllPerkReactions(interaction.message, interaction.client?.user).catch(() => null);
+            ensureClickItReaction(interaction.message, interaction.client?.user).catch(() => null);
+          }
           const slotId = parseInt(parts[2], 10) || 1;
           const profile = saveService.getProfile(interaction.user.id);
           battleService.restartRunFromDefeat(interaction.user.id, slotId, profile.language);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId);
-          await safeInteractionUpdate(interaction, battleData);
+          if (battleData.motionDurationMs && battleData.motionDurationMs > 0) {
+            const disabledComponents = disableComponentsList(battleData.components);
+            await safeInteractionUpdate(interaction, { ...battleData, components: disabledComponents });
+            scheduleBattleStaticization(interaction, interaction.user.id, slotId, battleData.motionDurationMs, battleData.components);
+          } else {
+            await safeInteractionUpdate(interaction, battleData);
+          }
           return;
         }
       } finally {

@@ -1,2401 +1,1160 @@
 /**
- * Battle Move Animation Registry
+ * Battle Move Animation Central Registry
  *
- * Objectified move animations with explicit camera rules and phased frame generators.
- * All offsets, timings, and frames are preserved with 100% loss-free precision.
+ * ⚠️ [개발/작업 지침 - AI 필독]
+ * 1. 프레임별 이미지 추출 및 시각적 검증(3번 단계)은 유저가 웹 뷰어(http://localhost:3456)에서
+ *    직접 확인하므로, 작업 시 에이전트가 매번 프레임을 일일이 추출/조회하여 턴 시간을 낭비하지 말 것!
+ *    코드 수정 -> 빌드 -> 뷰어 캐시 갱신 확인 후 즉시 유저에게 보고할 것.
+ * 2. [256색 팔레트 최적화(Octree Optimizer) 기준 제작 지침]:
+ *    - 배틀 GIF 렌더러는 Octree Quantizer + useOptimizer (threshold: 85) 기반의 256색 팔레트 재사용 표준을 사용함.
+ *    - 신규 기술 구현 시 과도한 반투명 그라디언트 난사를 지양하고, 256색 환경에서 선명하게 돋보이는 고채도 단색/네온 색상 체계와 30 FPS 규격 준수.
+ *    - 발사 -> 타격 -> 폭발 등 주요 연출 전환 시 phaseId 또는 moveStep을 명확히 지정하여 팔레트 자동 리셋(isVisualStateShift)이 완벽히 동작하도록 구성할 것.
+ *
+ * Central index that imports individual modular move definitions from `definitions/`.
+ * Each move is completely self-contained with its camera rules, frames, and drawEffect.
  */
 
-import { BattleMoveAnimation, MoveContext, BattleFrame } from './types.js';
-
-export const statusAnimation: BattleMoveAnimation = {
-  key: 'status',
-  camera: { type: "self" },
-  buildFrames: (ctx: MoveContext): BattleFrame[] => {
-    const { isPlayer: isP, isHit, isMiss, action: a, enemyHp, playerHp, textLineIdx, usePlayerFront, useEnemyBack } = ctx;
-    const isTurn1Launch = (a as any).isTurn1Launch || ((a.damage ?? 0) === 0 && ((a as any).chargingMove === 'fly' || a.moveKey === 'fly'));
-    const hits = (a as any).hits || 2;
-    return [
-      // 1. Caster gathers energy on home platform (66ms x 2 = 132ms)
-      {
-        delay: 66,
-        pOffset: isP ? { x: 0, y: -4 } : { x: 0, y: 0 },
-        eOffset: !isP ? { x: 0, y: -4 } : { x: 0, y: 0 },
-        pScale: isP ? { x: 1.06, y: 0.94 } : undefined,
-        eScale: !isP ? { x: 1.06, y: 0.94 } : undefined,
-        showEffect: false,
-        hitFlash: false,
-        enemyHp: enemyHp,
-        playerHp: playerHp,
-        textLineIdx: textLineIdx,
-        isBlur: false,
-        moveEffect: a,
-      },
-      {
-        delay: 66,
-        pOffset: isP ? { x: 0, y: -8 } : { x: 0, y: 0 },
-        eOffset: !isP ? { x: 0, y: -8 } : { x: 0, y: 0 },
-        pScale: isP ? { x: 1.12, y: 0.90 } : undefined,
-        eScale: !isP ? { x: 1.12, y: 0.90 } : undefined,
-        showEffect: false,
-        hitFlash: false,
-        enemyHp: enemyHp,
-        playerHp: playerHp,
-        textLineIdx: textLineIdx,
-        isBlur: false,
-        moveEffect: a,
-      },
-      // 2. Status pulse & settle on home platform (66ms x 2 = 132ms)
-      {
-        delay: 66,
-        pOffset: isP ? { x: 0, y: -4 } : { x: 0, y: 0 },
-        eOffset: !isP ? { x: 0, y: -4 } : { x: 0, y: 0 },
-        pScale: isP ? { x: 0.96, y: 1.06 } : undefined,
-        eScale: !isP ? { x: 0.96, y: 1.06 } : undefined,
-        showEffect: false,
-        hitFlash: false,
-        enemyHp: a.enemyHpAfter,
-        playerHp: a.playerHpAfter,
-        textLineIdx: textLineIdx,
-        isBlur: false,
-        moveEffect: a,
-      },
-      {
-        delay: 66,
-        pOffset: { x: 0, y: 0 },
-        eOffset: { x: 0, y: 0 },
-        showEffect: false,
-        hitFlash: false,
-        enemyHp: a.enemyHpAfter,
-        playerHp: a.playerHpAfter,
-        textLineIdx: textLineIdx,
-        isBlur: false,
-        moveEffect: a,
-      }
-    ];
-  }
-};
-
-export const karateChopAnimation: BattleMoveAnimation = {
-  key: 'karate-chop',
-  camera: { type: "target", zoom: 1.35 },
-  buildFrames: (ctx: MoveContext): BattleFrame[] => {
-    const { isPlayer: isP, isHit, isMiss, action: a, enemyHp, playerHp, textLineIdx, usePlayerFront, useEnemyBack } = ctx;
-    const isTurn1Launch = (a as any).isTurn1Launch || ((a.damage ?? 0) === 0 && ((a as any).chargingMove === 'fly' || a.moveKey === 'fly'));
-    const hits = (a as any).hits || 2;
-    return [
-        // 1A: Hand appears hovering above target head (130ms)
-        {
-          delay: 130,
-          pOffset: isP ? { x: 12, y: -5 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: -12, y: 5 } : { x: 0, y: 0 },
-          showEffect: false,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 1,
-        },
-        // 1B: 살짝 아래로 틱 내려감 (140ms)
-        {
-          delay: 140,
-          pOffset: isP ? { x: 16, y: -6 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: -16, y: 6 } : { x: 0, y: 0 },
-          showEffect: false,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 2,
-        },
-        // 1C: 위로 살짝 올라갔다가 멈칫 장전 (150ms)
-        {
-          delay: 150,
-          pOffset: isP ? { x: 18, y: -8 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: -18, y: 8 } : { x: 0, y: 0 },
-          showEffect: false,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 3,
-        },
-        // 1D: 팍! 하고 내려침 (240ms)
-        {
-          delay: 240,
-          pOffset: isP ? { x: 20, y: -10 } : { x: -8, y: 4 },
-          eOffset: isP ? { x: 8, y: -2 } : { x: -20, y: 10 },
-          showEffect: true,
-          hitFlash: true,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          statProgress: undefined,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 4,
-        }
-      ];
-  }
-};
-
-export const doubleSlapAnimation: BattleMoveAnimation = {
-  key: 'double-slap',
-  camera: { type: "target", zoom: 1.35 },
-  buildFrames: (ctx: MoveContext): BattleFrame[] => {
-    const { isPlayer: isP, isHit, isMiss, action: a, enemyHp, playerHp, textLineIdx, usePlayerFront, useEnemyBack } = ctx;
-    const isTurn1Launch = (a as any).isTurn1Launch || ((a.damage ?? 0) === 0 && ((a as any).chargingMove === 'fly' || a.moveKey === 'fly'));
-    const hits = (a as any).hits || 2;
-    return [
-        // Windup lunge
-        {
-          delay: 150,
-          pOffset: isP ? { x: 14, y: -6 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: -14, y: 6 } : { x: 0, y: 0 },
-          showEffect: false,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 1,
-        },
-        // Alternating Left / Right Cheek Slaps (Strike Impact -> Follow-through Fade Out)
-        ...Array.from({ length: hits }).flatMap((_, idx) => [
-          // Sub-frame A: Strike Impact (Full Opacity + Hit Flash)
-          {
-            delay: 140,
-            pOffset: isP ? { x: 22, y: -8 } : { x: -6, y: 3 },
-            eOffset: isP
-              ? { x: (idx % 2 === 0 ? 10 : -8), y: (idx % 2 === 0 ? -3 : 3) }
-              : { x: -22, y: 8 },
-            showEffect: true,
-            hitFlash: true,
-            enemyHp: a.enemyHpAfter,
-            playerHp: a.playerHpAfter,
-            textLineIdx: textLineIdx,
-            statProgress: undefined,
-            isBlur: false,
-            moveEffect: a,
-            moveStep: idx * 2 + 1,
-          },
-          // Sub-frame B: Follow-through Fade Out (Gradual Transparency)
-          {
-            delay: 130,
-            pOffset: isP ? { x: 16, y: -6 } : { x: -3, y: 1 },
-            eOffset: isP
-              ? { x: (idx % 2 === 0 ? 4 : -4), y: 0 }
-              : { x: -16, y: 6 },
-            showEffect: true,
-            hitFlash: false,
-            enemyHp: a.enemyHpAfter,
-            playerHp: a.playerHpAfter,
-            textLineIdx: textLineIdx,
-            statProgress: undefined,
-            isBlur: false,
-            moveEffect: a,
-            moveStep: idx * 2 + 2,
-          }
-        ])
-      ];
-  }
-};
-
-export const cometPunchAnimation: BattleMoveAnimation = {
-  key: 'comet-punch',
-  camera: { type: "target", zoom: 1.35 },
-  buildFrames: (ctx: MoveContext): BattleFrame[] => {
-    const { isPlayer: isP, isHit, isMiss, action: a, enemyHp, playerHp, textLineIdx, usePlayerFront, useEnemyBack } = ctx;
-    const isTurn1Launch = (a as any).isTurn1Launch || ((a.damage ?? 0) === 0 && ((a as any).chargingMove === 'fly' || a.moveKey === 'fly'));
-    const hits = (a as any).hits || 2;
-    return [
-        // Windup dash lunge
-        {
-          delay: 150,
-          pOffset: isP ? { x: 16, y: -8 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: -16, y: 8 } : { x: 0, y: 0 },
-          showEffect: false,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 1,
-        },
-        // 3-Punch Barrage (Strike Impact -> Follow-through Fade Out)
-        ...Array.from({ length: hits }).flatMap((_, idx) => [
-          // Sub-frame A: Strike Impact (Full Opacity + Hit Flash)
-          {
-            delay: 140,
-            pOffset: isP ? { x: 22, y: -8 } : { x: -6, y: 3 },
-            eOffset: isP
-              ? { x: (idx % 2 === 0 ? 10 : -8), y: (idx % 2 === 0 ? -3 : 3) }
-              : { x: -22, y: 8 },
-            showEffect: true,
-            hitFlash: true,
-            enemyHp: a.enemyHpAfter,
-            playerHp: a.playerHpAfter,
-            textLineIdx: textLineIdx,
-            statProgress: undefined,
-            isBlur: false,
-            moveEffect: a,
-            moveStep: idx * 2 + 1,
-          },
-          // Sub-frame B: Follow-through Fade Out (Gradual Transparency)
-          {
-            delay: 130,
-            pOffset: isP ? { x: 16, y: -6 } : { x: -3, y: 1 },
-            eOffset: isP
-              ? { x: (idx % 2 === 0 ? 4 : -4), y: 0 }
-              : { x: -16, y: 6 },
-            showEffect: true,
-            hitFlash: false,
-            enemyHp: a.enemyHpAfter,
-            playerHp: a.playerHpAfter,
-            textLineIdx: textLineIdx,
-            statProgress: undefined,
-            isBlur: false,
-            moveEffect: a,
-            moveStep: idx * 2 + 2,
-          }
-        ])
-      ];
-  }
-};
-
-export const megaPunchAnimation: BattleMoveAnimation = {
-  key: 'mega-punch',
-  camera: { type: "target", zoom: 1.35 },
-  buildFrames: (ctx: MoveContext): BattleFrame[] => {
-    const { isPlayer: isP, isHit, isMiss, action: a, enemyHp, playerHp, textLineIdx, usePlayerFront, useEnemyBack } = ctx;
-    const isTurn1Launch = (a as any).isTurn1Launch || ((a.damage ?? 0) === 0 && ((a as any).chargingMove === 'fly' || a.moveKey === 'fly'));
-    const hits = (a as any).hits || 2;
-    return [
-        // Step 1: Big Yellow Ring appears around target (130ms)
-        {
-          delay: 130,
-          pOffset: isP ? { x: 12, y: -5 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: -12, y: 5 } : { x: 0, y: 0 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 1,
-        },
-        // Step 2: Yellow Ring rapidly contracts/shrinks towards target (130ms)
-        {
-          delay: 130,
-          pOffset: isP ? { x: 16, y: -7 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: -16, y: 7 } : { x: 0, y: 0 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 2,
-        },
-        // Step 3: Ring shrunk tiny + Heavy Punch Strikes + Hit Flash (220ms)
-        {
-          delay: 220,
-          pOffset: isP ? { x: 22, y: -9 } : { x: -6, y: 3 },
-          eOffset: isP ? { x: 10, y: -3 } : { x: -22, y: 9 },
-          showEffect: true,
-          hitFlash: true,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          statProgress: undefined,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 3,
-        },
-        // Step 4: Ring expands outward like a ripple wave (130ms)
-        {
-          delay: 130,
-          pOffset: isP ? { x: 16, y: -6 } : { x: -3, y: 1 },
-          eOffset: isP ? { x: 5, y: -1 } : { x: -16, y: 6 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          statProgress: undefined,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 4,
-        },
-        // Step 5: Wave expands further and dissipates (120ms)
-        {
-          delay: 120,
-          pOffset: isP ? { x: 10, y: -3 } : { x: 0, y: 0 },
-          eOffset: isP ? { x: 2, y: 0 } : { x: -10, y: 3 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          statProgress: undefined,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 5,
-        }
-      ];
-  }
-};
-
-export const payDayAnimation: BattleMoveAnimation = {
-  key: 'pay-day',
-  camera: { type: "target", zoom: 1.35 },
-  buildFrames: (ctx: MoveContext): BattleFrame[] => {
-    const { isPlayer: isP, isHit, isMiss, action: a, enemyHp, playerHp, textLineIdx, usePlayerFront, useEnemyBack } = ctx;
-    const isTurn1Launch = (a as any).isTurn1Launch || ((a.damage ?? 0) === 0 && ((a as any).chargingMove === 'fly' || a.moveKey === 'fly'));
-    const hits = (a as any).hits || 2;
-    return [
-        // 1. Windup lunge (150ms)
-        {
-          delay: 150,
-          pOffset: isP ? { x: 16, y: -8 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: -16, y: 8 } : { x: 0, y: 0 },
-          showEffect: false,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-        },
-        // 2. Step 1: Coins impact cluster + Hit Flash (200ms)
-        {
-          delay: 200,
-          pOffset: isP ? { x: 22, y: -9 } : { x: -6, y: 3 },
-          eOffset: isP ? { x: 10, y: -3 } : { x: -22, y: 9 },
-          showEffect: true,
-          hitFlash: true,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          statProgress: undefined,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 1,
-        },
-        // 3. Step 2: Coins scatter outward (140ms)
-        {
-          delay: 140,
-          pOffset: isP ? { x: 16, y: -6 } : { x: -3, y: 1 },
-          eOffset: isP ? { x: 5, y: -1 } : { x: -16, y: 6 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          statProgress: undefined,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 2,
-        },
-        // 4. Step 3: Coins disperse far & fade transparently (130ms)
-        {
-          delay: 130,
-          pOffset: isP ? { x: 10, y: -3 } : { x: 0, y: 0 },
-          eOffset: isP ? { x: 2, y: 0 } : { x: -10, y: 3 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          statProgress: undefined,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 3,
-        }
-      ];
-  }
-};
-
-export const firePunchAnimation: BattleMoveAnimation = {
-  key: 'fire-punch',
-  camera: { type: "target", zoom: 1.35 },
-  buildFrames: (ctx: MoveContext): BattleFrame[] => {
-    const { isPlayer: isP, isHit, isMiss, action: a, enemyHp, playerHp, textLineIdx, usePlayerFront, useEnemyBack } = ctx;
-    const isTurn1Launch = (a as any).isTurn1Launch || ((a.damage ?? 0) === 0 && ((a as any).chargingMove === 'fly' || a.moveKey === 'fly'));
-    const hits = (a as any).hits || 2;
-    return [
-        // 1. Windup lunge (150ms)
-        {
-          delay: 150,
-          pOffset: isP ? { x: 16, y: -8 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: -16, y: 8 } : { x: 0, y: 0 },
-          showEffect: false,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-        },
-        // 2. Step 1: Direct Fire Punch Impact (200ms) with Hit Flash
-        {
-          delay: 200,
-          pOffset: isP ? { x: 22, y: -9 } : { x: -6, y: 3 },
-          eOffset: isP ? { x: 10, y: -3 } : { x: -22, y: 9 },
-          showEffect: true,
-          hitFlash: true,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          statProgress: undefined,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 1,
-        },
-        // 3. Step 2: Flames Burst & Scatter Outward (140ms)
-        {
-          delay: 140,
-          pOffset: isP ? { x: 16, y: -6 } : { x: -3, y: 1 },
-          eOffset: isP ? { x: 5, y: -1 } : { x: -16, y: 6 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          statProgress: undefined,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 2,
-        },
-        // 4. Step 3: Flames Disperse Far & Dissipate (130ms)
-        {
-          delay: 130,
-          pOffset: isP ? { x: 10, y: -3 } : { x: 0, y: 0 },
-          eOffset: isP ? { x: 2, y: 0 } : { x: -10, y: 3 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          statProgress: undefined,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 3,
-        }
-      ];
-  }
-};
-
-export const icePunchAnimation: BattleMoveAnimation = {
-  key: 'ice-punch',
-  camera: { type: "target", zoom: 1.35 },
-  buildFrames: (ctx: MoveContext): BattleFrame[] => {
-    const { isPlayer: isP, isHit, isMiss, action: a, enemyHp, playerHp, textLineIdx, usePlayerFront, useEnemyBack } = ctx;
-    const isTurn1Launch = (a as any).isTurn1Launch || ((a.damage ?? 0) === 0 && ((a as any).chargingMove === 'fly' || a.moveKey === 'fly'));
-    const hits = (a as any).hits || 2;
-    return [
-        // 1. Windup lunge (150ms)
-        {
-          delay: 150,
-          pOffset: isP ? { x: 16, y: -8 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: -16, y: 8 } : { x: 0, y: 0 },
-          showEffect: false,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-        },
-        // 2. Step 1: Direct Glacial Strike + 6 Ice Crystals Form + Hit Flash (200ms)
-        {
-          delay: 200,
-          pOffset: isP ? { x: 22, y: -9 } : { x: -6, y: 3 },
-          eOffset: isP ? { x: 10, y: -3 } : { x: -22, y: 9 },
-          showEffect: true,
-          hitFlash: true,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          statProgress: undefined,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 1,
-        },
-        // 3. Step 2: Ice Crystals Shatter & Expand Radially (140ms)
-        {
-          delay: 140,
-          pOffset: isP ? { x: 16, y: -6 } : { x: -3, y: 1 },
-          eOffset: isP ? { x: 5, y: -1 } : { x: -16, y: 6 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          statProgress: undefined,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 2,
-        },
-        // 4. Step 3: Crystals Disperse Far & Dissipate (130ms)
-        {
-          delay: 130,
-          pOffset: isP ? { x: 10, y: -3 } : { x: 0, y: 0 },
-          eOffset: isP ? { x: 2, y: 0 } : { x: -10, y: 3 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          statProgress: undefined,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 3,
-        }
-      ];
-  }
-};
-
-export const guillotineAnimation: BattleMoveAnimation = {
-  key: 'guillotine',
-  camera: { type: "target", zoom: 1.38 },
-  buildFrames: (ctx: MoveContext): BattleFrame[] => {
-    const { isPlayer: isP, isHit, isMiss, action: a, enemyHp, playerHp, textLineIdx, usePlayerFront, useEnemyBack } = ctx;
-    const isTurn1Launch = (a as any).isTurn1Launch || ((a.damage ?? 0) === 0 && ((a as any).chargingMove === 'fly' || a.moveKey === 'fly'));
-    const hits = (a as any).hits || 2;
-    return [
-        // 1. Windup stance - In place (120ms)
-        {
-          delay: 120,
-          pOffset: { x: 0, y: 0 },
-          eOffset: { x: 0, y: 0 },
-          showEffect: false,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-        },
-        // 2. Step 1: First Diagonal Slash [/] (160ms)
-        {
-          delay: 160,
-          pOffset: isP ? { x: 0, y: 0 } : (isMiss ? { x: 26, y: 4 } : { x: -4, y: 2 }),
-          eOffset: isP ? (isMiss ? { x: 26, y: -4 } : { x: 6, y: -2 }) : { x: 0, y: 0 },
-          showEffect: true,
-          hitFlash: false,
-          usePlayerFront: isP,
-          useEnemyBack: !isP,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          statProgress: undefined,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 1,
-        },
-        // 3. Step 2: Second Diagonal Slash [\] (160ms)
-        {
-          delay: 160,
-          pOffset: isP ? { x: 0, y: 0 } : (isMiss ? { x: 24, y: 3 } : { x: -6, y: 3 }),
-          eOffset: isP ? (isMiss ? { x: 24, y: -3 } : { x: 8, y: -3 }) : { x: 0, y: 0 },
-          showEffect: true,
-          hitFlash: false,
-          usePlayerFront: isP,
-          useEnemyBack: !isP,
-          enemyHp: isHit ? enemyHp : a.enemyHpAfter,
-          playerHp: isHit ? playerHp : a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          statProgress: undefined,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 2,
-        },
-        ...(isHit ? [
-          // 4. Step 3: FATAL FULL [X] SCISSOR EXECUTION CRASH (260ms)
-          {
-            delay: 260,
-            pOffset: isP ? { x: 0, y: 0 } : { x: -12, y: 4 },
-            eOffset: isP ? { x: 12, y: -4 } : { x: 0, y: 0 },
-            showEffect: true,
-            hitFlash: true,
-            usePlayerFront: isP,
-            useEnemyBack: !isP,
-            enemyHp: a.enemyHpAfter,
-            playerHp: a.playerHpAfter,
-            textLineIdx: textLineIdx,
-            statProgress: undefined,
-            isBlur: false,
-            moveEffect: a,
-            moveStep: 3,
-          },
-          // 5. Step 4: Red [X] Dissipation (140ms)
-          {
-            delay: 140,
-            pOffset: isP ? { x: 0, y: 0 } : { x: -4, y: 1 },
-            eOffset: isP ? { x: 4, y: 0 } : { x: 0, y: 0 },
-            showEffect: true,
-            hitFlash: false,
-            usePlayerFront: isP,
-            useEnemyBack: !isP,
-            enemyHp: a.enemyHpAfter,
-            playerHp: a.playerHpAfter,
-            textLineIdx: textLineIdx,
-            statProgress: undefined,
-            isBlur: false,
-            moveEffect: a,
-            moveStep: 4,
-          }
-        ] : [
-          // On Miss: Defender slides smoothly back to center (180ms)
-          {
-            delay: 180,
-            pOffset: !isP ? { x: 8, y: 1 } : { x: 0, y: 0 },
-            eOffset: isP ? { x: 8, y: -1 } : { x: 0, y: 0 },
-            showEffect: false,
-            hitFlash: false,
-            usePlayerFront: isP,
-            useEnemyBack: !isP,
-            enemyHp: a.enemyHpAfter,
-            playerHp: a.playerHpAfter,
-            textLineIdx: textLineIdx,
-            statProgress: undefined,
-            isBlur: false,
-            moveEffect: a,
-          }
-        ])
-      ];
-  }
-};
-
-export const swordsDanceAnimation: BattleMoveAnimation = {
-  key: 'swords-dance',
-  camera: { type: "self" },
-  buildFrames: (ctx: MoveContext): BattleFrame[] => {
-    const { isPlayer: isP, isHit, isMiss, action: a, enemyHp, playerHp, textLineIdx, usePlayerFront, useEnemyBack } = ctx;
-    const isTurn1Launch = (a as any).isTurn1Launch || ((a.damage ?? 0) === 0 && ((a as any).chargingMove === 'fly' || a.moveKey === 'fly'));
-    const hits = (a as any).hits || 2;
-    return [
-        // 1. Low 3D Orbit around Waist (120ms)
-        {
-          delay: 120,
-          pOffset: isP ? { x: 0, y: -2 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: 0, y: -2 } : { x: 0, y: 0 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 1,
-        },
-        // 2. Ascending 3D Orbit - 1st Spin (120ms)
-        {
-          delay: 120,
-          pOffset: isP ? { x: 0, y: -4 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: 0, y: -4 } : { x: 0, y: 0 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 2,
-        },
-        // 3. Mid-High 3D Orbit - 2nd Spin (120ms)
-        {
-          delay: 120,
-          pOffset: isP ? { x: 0, y: -6 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: 0, y: -6 } : { x: 0, y: 0 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 3,
-        },
-        // 4. High 3D Orbit & Inward Tilt toward Apex (130ms)
-        {
-          delay: 130,
-          pOffset: isP ? { x: 0, y: -7 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: 0, y: -7 } : { x: 0, y: 0 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 4,
-        },
-        // 5. Swords Clash & Tips Touch at ONE Point above Head (240ms)
-        {
-          delay: 240,
-          pOffset: isP ? { x: 0, y: -8 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: 0, y: -8 } : { x: 0, y: 0 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          statProgress: undefined,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 5,
-        },
-        // 6. Power Dispersal & Aura Rise (140ms)
-        {
-          delay: 140,
-          pOffset: { x: 0, y: 0 },
-          eOffset: { x: 0, y: 0 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          statProgress: undefined,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 6,
-        }
-      ];
-  }
-};
-
-export const flyAnimation: BattleMoveAnimation = {
-  key: 'fly',
-  camera: { type: "sky" },
-  buildFrames: (ctx: MoveContext): BattleFrame[] => {
-    const { isPlayer: isP, isHit, isMiss, action: a, enemyHp, playerHp, textLineIdx, usePlayerFront, useEnemyBack } = ctx;
-    const isTurn1Launch = (a as any).isTurn1Launch || ((a.damage ?? 0) === 0 && ((a as any).chargingMove === 'fly' || a.moveKey === 'fly'));
-    const hits = (a as any).hits || 2;
-    if (isTurn1Launch) {
-        // Turn 1: 15 FPS Cinematic Launch (Zoom-in close-up -> Rocket Liftoff -> Stratosphere Ascent -> Vanish)
-        return [
-          // 1. Dynamic Close-Up on Attacker & Deep Crouch Preparation (66ms x 3 = 200ms)
-          {
-            delay: 66,
-            pOffset: isP ? { x: 0, y: 2 } : { x: 0, y: 0 },
-            eOffset: !isP ? { x: 0, y: 2 } : { x: 0, y: 0 },
-            pScale: isP ? { x: 1.10, y: 0.92 } : undefined,
-            eScale: !isP ? { x: 1.10, y: 0.92 } : undefined,
-            cameraZoom: 1.45,
-            cameraTrackAttacker: true,
-            isAttackerPlayer: isP,
-            pWhite: false,
-            eWhite: false,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: enemyHp,
-            playerHp: playerHp,
-            textLineIdx: textLineIdx,
-            isBlur: false,
-            moveEffect: a,
-          },
-          {
-            delay: 66,
-            pOffset: isP ? { x: 0, y: 6 } : { x: 0, y: 0 },
-            eOffset: !isP ? { x: 0, y: 6 } : { x: 0, y: 0 },
-            pScale: isP ? { x: 1.25, y: 0.80 } : undefined,
-            eScale: !isP ? { x: 1.25, y: 0.80 } : undefined,
-            cameraZoom: 1.60,
-            cameraTrackAttacker: true,
-            isAttackerPlayer: isP,
-            pWhite: false,
-            eWhite: false,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: enemyHp,
-            playerHp: playerHp,
-            textLineIdx: textLineIdx,
-            isBlur: false,
-            moveEffect: a,
-          },
-          {
-            delay: 66,
-            pOffset: isP ? { x: 0, y: 8 } : { x: 0, y: 0 },
-            eOffset: !isP ? { x: 0, y: 8 } : { x: 0, y: 0 },
-            pScale: isP ? { x: 1.30, y: 0.75 } : undefined,
-            eScale: !isP ? { x: 1.30, y: 0.75 } : undefined,
-            cameraZoom: 1.70,
-            cameraTrackAttacker: true,
-            isAttackerPlayer: isP,
-            pWhite: false,
-            eWhite: false,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: enemyHp,
-            playerHp: playerHp,
-            textLineIdx: textLineIdx,
-            isBlur: false,
-            moveEffect: a,
-          },
-          // 2. Rocket Sky Launch & Camera Dynamic Tracking Upward into Stratosphere! (66ms x 4 = 264ms)
-          {
-            delay: 66,
-            pOffset: isP ? { x: 0, y: -60 } : { x: 0, y: 0 },
-            eOffset: !isP ? { x: 0, y: -60 } : { x: 0, y: 0 },
-            pScale: isP ? { x: 0.65, y: 1.45 } : undefined,
-            eScale: !isP ? { x: 0.65, y: 1.45 } : undefined,
-            cameraZoom: 1.60,
-            cameraTrackAttacker: true,
-            isAttackerPlayer: isP,
-            pWhite: isP,
-            eWhite: !isP,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: enemyHp,
-            playerHp: playerHp,
-            textLineIdx: textLineIdx,
-            isBlur: false,
-            moveEffect: a,
-          },
-          {
-            delay: 66,
-            pOffset: isP ? { x: 0, y: -140 } : { x: 0, y: 0 },
-            eOffset: !isP ? { x: 0, y: -140 } : { x: 0, y: 0 },
-            pScale: isP ? { x: 0.45, y: 1.85 } : undefined,
-            eScale: !isP ? { x: 0.45, y: 1.85 } : undefined,
-            cameraZoom: 1.50,
-            cameraTrackAttacker: true,
-            isAttackerPlayer: isP,
-            pWhite: isP,
-            eWhite: !isP,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: enemyHp,
-            playerHp: playerHp,
-            textLineIdx: textLineIdx,
-            isBlur: false,
-            moveEffect: a,
-          },
-          {
-            delay: 66,
-            pOffset: isP ? { x: 0, y: -240 } : { x: 0, y: 0 },
-            eOffset: !isP ? { x: 0, y: -240 } : { x: 0, y: 0 },
-            pScale: isP ? { x: 0.35, y: 2.10 } : undefined,
-            eScale: !isP ? { x: 0.35, y: 2.10 } : undefined,
-            cameraZoom: 1.38,
-            cameraTrackAttacker: true,
-            isAttackerPlayer: isP,
-            pWhite: isP,
-            eWhite: !isP,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: enemyHp,
-            playerHp: playerHp,
-            textLineIdx: textLineIdx,
-            isBlur: false,
-            moveEffect: a,
-          },
-          {
-            delay: 66,
-            pOffset: isP ? { x: 0, y: -360 } : { x: 0, y: 0 },
-            eOffset: !isP ? { x: 0, y: -360 } : { x: 0, y: 0 },
-            pScale: isP ? { x: 0.28, y: 2.30 } : undefined,
-            eScale: !isP ? { x: 0.28, y: 2.30 } : undefined,
-            cameraZoom: 1.25,
-            cameraTrackAttacker: true,
-            isAttackerPlayer: isP,
-            pWhite: isP,
-            eWhite: !isP,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: enemyHp,
-            playerHp: playerHp,
-            textLineIdx: textLineIdx,
-            isBlur: false,
-            moveEffect: a,
-          },
-          // 3. Stratosphere Piercing & Neutral Reset (66ms x 2 = 132ms)
-          {
-            delay: 66,
-            pOffset: isP ? { x: 0, y: -520 } : { x: 0, y: 0 },
-            eOffset: !isP ? { x: 0, y: -520 } : { x: 0, y: 0 },
-            pScale: isP ? { x: 0.20, y: 2.50 } : undefined,
-            eScale: !isP ? { x: 0.20, y: 2.50 } : undefined,
-            cameraZoom: 1.10,
-            cameraTrackAttacker: true,
-            isAttackerPlayer: isP,
-            pWhite: isP,
-            eWhite: !isP,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: enemyHp,
-            playerHp: playerHp,
-            textLineIdx: textLineIdx,
-            isBlur: false,
-            moveEffect: a,
-          },
-          {
-            delay: 66,
-            pOffset: isP ? { x: 0, y: -9999 } : { x: 0, y: 0 },
-            eOffset: !isP ? { x: 0, y: -9999 } : { x: 0, y: 0 },
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: enemyHp,
-            playerHp: playerHp,
-            textLineIdx: textLineIdx,
-            isBlur: false,
-            moveEffect: a,
-          }
-        ];
-      } else {
-        // Turn 2: Straight-Line Soar -> Diagonal Camera Bank -> Field Vertical Plunge & Slam
-        return [
-          // 1. High Sky Straight-Line Soar (위/아래 명확한 대기 색구분 직선 활공 66ms x 3 = 200ms)
-          {
-            delay: 66,
-            diveStep: 1,
-            skyCameraTilt: 0.0,
-            pOffset: { x: -20, y: -10 },
-            eOffset: { x: -20, y: -10 },
-            pScale: isP ? { x: 1.05, y: 0.95 } : undefined,
-            eScale: !isP ? { x: 1.05, y: 0.95 } : undefined,
-            pRot: 0,
-            eRot: 0,
-            isHighSkyCutscene: true,
-            isAttackerPlayer: isP,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: enemyHp,
-            playerHp: playerHp,
-            textLineIdx: textLineIdx,
-            isBlur: false,
-            moveEffect: a,
-          },
-          {
-            delay: 66,
-            diveStep: 2,
-            skyCameraTilt: 0.0,
-            pOffset: { x: 0, y: -12 },
-            eOffset: { x: 0, y: -12 },
-            pScale: isP ? { x: 1.08, y: 0.92 } : undefined,
-            eScale: !isP ? { x: 1.08, y: 0.92 } : undefined,
-            pRot: isP ? -0.02 : 0,
-            eRot: !isP ? -0.02 : 0,
-            isHighSkyCutscene: true,
-            isAttackerPlayer: isP,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: enemyHp,
-            playerHp: playerHp,
-            textLineIdx: textLineIdx,
-            isBlur: false,
-            moveEffect: a,
-          },
-          {
-            delay: 66,
-            diveStep: 3,
-            skyCameraTilt: 0.0,
-            pOffset: { x: 20, y: -8 },
-            eOffset: { x: 20, y: -8 },
-            pScale: isP ? { x: 1.12, y: 0.90 } : undefined,
-            eScale: !isP ? { x: 1.12, y: 0.90 } : undefined,
-            pRot: isP ? 0.01 : 0,
-            eRot: !isP ? 0.01 : 0,
-            isHighSkyCutscene: true,
-            isAttackerPlayer: isP,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: enemyHp,
-            playerHp: playerHp,
-            textLineIdx: textLineIdx,
-            isBlur: false,
-            moveEffect: a,
-          },
-
-          // 2. Dynamic Diagonal Camera Bank (대각선으로 기울어지는 카메라 뱅킹 전환 66ms x 3 = 200ms)
-          {
-            delay: 66,
-            diveStep: 4,
-            skyCameraTilt: isP ? 0.32 : -0.32,
-            pOffset: { x: 10, y: 5 },
-            eOffset: { x: 10, y: 5 },
-            pScale: isP ? { x: 0.95, y: 1.10 } : undefined,
-            eScale: !isP ? { x: 0.95, y: 1.10 } : undefined,
-            pRot: isP ? 0.18 : -0.18,
-            eRot: !isP ? 0.18 : -0.18,
-            isHighSkyCutscene: true,
-            isAttackerPlayer: isP,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: enemyHp,
-            playerHp: playerHp,
-            textLineIdx: textLineIdx,
-            isBlur: false,
-            moveEffect: a,
-          },
-          {
-            delay: 66,
-            diveStep: 5,
-            skyCameraTilt: isP ? 0.60 : -0.60,
-            pOffset: { x: 0, y: 15 },
-            eOffset: { x: 0, y: 15 },
-            pScale: isP ? { x: 0.80, y: 1.30 } : undefined,
-            eScale: !isP ? { x: 0.80, y: 1.30 } : undefined,
-            pRot: isP ? 0.38 : -0.38,
-            eRot: !isP ? 0.38 : -0.38,
-            isHighSkyCutscene: true,
-            isAttackerPlayer: isP,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: enemyHp,
-            playerHp: playerHp,
-            textLineIdx: textLineIdx,
-            isBlur: false,
-            moveEffect: a,
-          },
-          {
-            delay: 66,
-            diveStep: 6,
-            skyCameraTilt: isP ? 0.88 : -0.88,
-            pOffset: { x: -10, y: 30 },
-            eOffset: { x: -10, y: 30 },
-            pScale: isP ? { x: 0.65, y: 1.60 } : undefined,
-            eScale: !isP ? { x: 0.65, y: 1.60 } : undefined,
-            pRot: isP ? 0.58 : -0.58,
-            eRot: !isP ? 0.58 : -0.58,
-            isHighSkyCutscene: true,
-            isAttackerPlayer: isP,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: enemyHp,
-            playerHp: playerHp,
-            textLineIdx: textLineIdx,
-            isBlur: false,
-            moveEffect: a,
-          },
-
-          // 3. Battlefield Arena Vertical Plunge (필드 수직낙하 66ms x 2 = 132ms)
-          {
-            delay: 66,
-            pOffset: isP ? { x: 268, y: -360 } : { x: 0, y: 0 },
-            eOffset: !isP ? { x: -268, y: -160 } : { x: 0, y: 0 },
-            pScale: isP ? { x: 0.40, y: 2.00 } : undefined,
-            eScale: !isP ? { x: 0.40, y: 2.00 } : undefined,
-            pRot: 0,
-            eRot: 0,
-            loomingShadow: { offsetY: 0, w: 28, h: 9, alpha: 0.85 },
-            isHighSkyCutscene: false,
-            isAttackerPlayer: isP,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: enemyHp,
-            playerHp: playerHp,
-            textLineIdx: textLineIdx,
-            isBlur: false,
-            moveEffect: a,
-          },
-          {
-            delay: 66,
-            pOffset: isP ? { x: 268, y: -180 } : { x: 0, y: 0 },
-            eOffset: !isP ? { x: -268, y: 40 } : { x: 0, y: 0 },
-            pScale: isP ? { x: 0.30, y: 2.40 } : undefined,
-            eScale: !isP ? { x: 0.30, y: 2.40 } : undefined,
-            pRot: 0,
-            eRot: 0,
-            loomingShadow: { offsetY: 0, w: 34, h: 11, alpha: 1.0 },
-            isHighSkyCutscene: false,
-            isAttackerPlayer: isP,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: enemyHp,
-            playerHp: playerHp,
-            textLineIdx: textLineIdx,
-            isBlur: false,
-            moveEffect: a,
-          },
-
-          // 4. Ground Arena Vertical Dive-Bomb Impact Slam (66ms x 3 = 200ms)
-          {
-            delay: 66,
-            pOffset: isP ? { x: 268, y: -139 } : (isMiss ? { x: 20, y: 4 } : { x: -8, y: 4 }),
-            eOffset: isP ? (isMiss ? { x: 20, y: -4 } : { x: 8, y: -4 }) : { x: -268, y: 149 },
-            pScale: isP ? { x: 1.35, y: 0.65 } : undefined,
-            eScale: !isP ? { x: 1.35, y: 0.65 } : undefined,
-            pRot: 0,
-            eRot: 0,
-            pWhite: false,
-            eWhite: false,
-            isHighSkyCutscene: false,
-            showEffect: true,
-            hitFlash: isHit,
-            enemyHp: a.enemyHpAfter,
-            playerHp: a.playerHpAfter,
-            textLineIdx: textLineIdx,
-            isBlur: false,
-            moveEffect: a,
-            moveStep: 3,
-          },
-          {
-            delay: 66,
-            pOffset: isP ? { x: 134, y: -30 } : { x: 0, y: 0 },
-            eOffset: !isP ? { x: -134, y: 30 } : { x: 0, y: 0 },
-            pScale: isP ? { x: 1.10, y: 0.92 } : undefined,
-            eScale: !isP ? { x: 1.10, y: 0.92 } : undefined,
-            isHighSkyCutscene: false,
-            showEffect: true,
-            hitFlash: false,
-            enemyHp: a.enemyHpAfter,
-            playerHp: a.playerHpAfter,
-            textLineIdx: textLineIdx,
-            isBlur: false,
-            moveEffect: a,
-            moveStep: 4,
-          },
-          {
-            delay: 66,
-            pOffset: { x: 0, y: 0 },
-            eOffset: { x: 0, y: 0 },
-            isHighSkyCutscene: false,
-            showEffect: false,
-            hitFlash: false,
-            enemyHp: a.enemyHpAfter,
-            playerHp: a.playerHpAfter,
-            textLineIdx: textLineIdx,
-            isBlur: false,
-            moveEffect: a,
-          }
-        ];
-    }
-  }
-};
-
-export const razorWindAnimation: BattleMoveAnimation = {
-  key: 'razor-wind',
-  camera: { type: "target", zoom: 1.35 },
-  buildFrames: (ctx: MoveContext): BattleFrame[] => {
-    const { isPlayer: isP, isHit, isMiss, action: a, enemyHp, playerHp, textLineIdx, usePlayerFront, useEnemyBack } = ctx;
-    const isTurn1Launch = (a as any).isTurn1Launch || ((a.damage ?? 0) === 0 && ((a as any).chargingMove === 'fly' || a.moveKey === 'fly'));
-    const hits = (a as any).hits || 2;
-    return [
-        // 1. Helical Spiral Orbit around Attacker (150ms)
-        {
-          delay: 150,
-          pOffset: isP ? { x: 4, y: -2 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: -4, y: 2 } : { x: 0, y: 0 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 1,
-        },
-        // 2. Swirl Dissolving & Fading Out at Attacker (150ms)
-        {
-          delay: 150,
-          pOffset: isP ? { x: 6, y: -3 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: -6, y: 3 } : { x: 0, y: 0 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 2,
-        },
-        // 3. Faint Translucent Opposite Pairs Spawning at Defender (150ms)
-        {
-          delay: 150,
-          pOffset: isP ? { x: 8, y: -4 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: -8, y: 4 } : { x: 0, y: 0 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 3,
-        },
-        // 4. Blades Closing In & Becoming Denser from All Opposing Sides (170ms)
-        {
-          delay: 170,
-          pOffset: isP ? { x: 12, y: -6 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: -12, y: 6 } : { x: 0, y: 0 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 4,
-        },
-        // 5. Full Omnidirectional 8-Way Cleave Storm Impact (240ms)
-        {
-          delay: 240,
-          pOffset: isP ? { x: 14, y: -7 } : (isMiss ? { x: 26, y: 4 } : { x: -6, y: 3 }),
-          eOffset: isP ? (isMiss ? { x: 26, y: -4 } : { x: 10, y: -3 }) : { x: -14, y: 7 },
-          showEffect: true,
-          hitFlash: isHit,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 5,
-        },
-        // 6. Gentle Shard Fade-Out Dispersal (140ms)
-        {
-          delay: 140,
-          pOffset: isP ? { x: 4, y: -2 } : { x: 0, y: 0 },
-          eOffset: isP ? { x: 2, y: 0 } : { x: -4, y: 2 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 6,
-        }
-      ];
-  }
-};
-
-export const wingAttackAnimation: BattleMoveAnimation = {
-  key: 'wing-attack',
-  camera: { type: "target", zoom: 1.35 },
-  buildFrames: (ctx: MoveContext): BattleFrame[] => {
-    const { isPlayer: isP, isHit, isMiss, action: a, enemyHp, playerHp, textLineIdx, usePlayerFront, useEnemyBack } = ctx;
-    const isTurn1Launch = (a as any).isTurn1Launch || ((a.damage ?? 0) === 0 && ((a as any).chargingMove === 'fly' || a.moveKey === 'fly'));
-    const hits = (a as any).hits || 2;
-    return [
-        // 1. Dive Lunge (100ms)
-        {
-          delay: 100,
-          pOffset: isP ? { x: 180, y: -90 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: -180, y: 90 } : { x: 0, y: 0 },
-          pScale: isP ? { x: 1.40, y: 0.45 } : undefined,
-          eScale: !isP ? { x: 1.40, y: 0.45 } : undefined,
-          pRot: isP ? -0.22 : undefined,
-          eRot: !isP ? 0.22 : undefined,
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 1,
-        },
-        // 2. Direct Contact Strike & Feather Burst (100ms)
-        {
-          delay: 100,
-          pOffset: isP ? { x: 260, y: -138 } : (isMiss ? { x: 26, y: 4 } : { x: -8, y: 4 }),
-          eOffset: isP ? (isMiss ? { x: 26, y: -4 } : { x: 12, y: -4 }) : { x: -260, y: 138 },
-          pScale: isP ? { x: 1.35, y: 0.48 } : undefined,
-          eScale: !isP ? { x: 1.35, y: 0.48 } : undefined,
-          pRot: isP ? -0.22 : undefined,
-          eRot: !isP ? 0.22 : undefined,
-          showEffect: true,
-          hitFlash: isHit,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 2,
-        },
-        // 3. Piercing Fly-Through Off-Screen (100ms)
-        {
-          delay: 100,
-          pOffset: isP ? { x: 450, y: -245 } : (isMiss ? { x: 16, y: 2 } : { x: -4, y: 2 }),
-          eOffset: isP ? (isMiss ? { x: 16, y: -2 } : { x: 6, y: -2 }) : { x: -450, y: 245 },
-          pScale: isP ? { x: 1.45, y: 0.38 } : undefined,
-          eScale: !isP ? { x: 1.45, y: 0.38 } : undefined,
-          pRot: isP ? -0.25 : undefined,
-          eRot: !isP ? 0.25 : undefined,
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 3,
-        },
-        // 4. Swooping Re-entry from Bottom-Left (100ms)
-        {
-          delay: 100,
-          pOffset: isP ? { x: -50, y: 24 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: 50, y: -24 } : { x: 0, y: 0 },
-          pScale: isP ? { x: 1.20, y: 0.70 } : undefined,
-          eScale: !isP ? { x: 1.20, y: 0.70 } : undefined,
-          pRot: isP ? -0.12 : undefined,
-          eRot: !isP ? 0.12 : undefined,
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 4,
-        },
-        // 5. Clean Landing Touchdown (100ms)
-        {
-          delay: 100,
-          pOffset: { x: 0, y: 0 },
-          eOffset: { x: 0, y: 0 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 4,
-        }
-      ];
-  }
-};
-
-export const whirlwindAnimation: BattleMoveAnimation = {
-  key: 'whirlwind',
-  camera: { type: "target", zoom: 1.30 },
-  buildFrames: (ctx: MoveContext): BattleFrame[] => {
-    const { isPlayer: isP, isHit, isMiss, action: a, enemyHp, playerHp, textLineIdx, usePlayerFront, useEnemyBack } = ctx;
-    const isTurn1Launch = (a as any).isTurn1Launch || ((a.damage ?? 0) === 0 && ((a as any).chargingMove === 'fly' || a.moveKey === 'fly'));
-    const hits = (a as any).hits || 2;
-    return [
-        // 1. Cyclone Inception & Initial Lift (90ms)
-        {
-          delay: 90,
-          pOffset: isP ? { x: 12, y: -4 } : (isMiss ? { x: -26, y: 4 } : { x: 0, y: -25 }),
-          eOffset: isP ? (isMiss ? { x: 26, y: -4 } : { x: 0, y: -25 }) : { x: -12, y: 4 },
-          pRot: isP ? undefined : (isMiss ? undefined : -0.50),
-          eRot: isP ? (isMiss ? undefined : 0.50) : undefined,
-          pScale: isP ? undefined : (isMiss ? undefined : { x: 0.95, y: 1.05 }),
-          eScale: isP ? (isMiss ? undefined : { x: 0.95, y: 1.05 }) : undefined,
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 1,
-        },
-        // 2. Towering Cyclone Surge & Mid-Air Rapid Spin (90ms)
-        {
-          delay: 90,
-          pOffset: isP ? { x: 16, y: -6 } : (isMiss ? { x: -26, y: 4 } : { x: 8, y: -90 }),
-          eOffset: isP ? (isMiss ? { x: 26, y: -4 } : { x: -8, y: -90 }) : { x: -16, y: 6 },
-          pRot: isP ? undefined : (isMiss ? undefined : -2.5),
-          eRot: isP ? (isMiss ? undefined : 2.5) : undefined,
-          pScale: isP ? undefined : (isMiss ? undefined : { x: 0.78, y: 0.78 }),
-          eScale: isP ? (isMiss ? undefined : { x: 0.78, y: 0.78 }) : undefined,
-          showEffect: true,
-          hitFlash: isHit,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 2,
-        },
-        // 3. High Vortex Ascent & Shrinking (90ms)
-        {
-          delay: 90,
-          pOffset: isP ? { x: 10, y: -3 } : (isMiss ? { x: -16, y: 2 } : { x: -15, y: -180 }),
-          eOffset: isP ? (isMiss ? { x: 16, y: -2 } : { x: 15, y: -180 }) : { x: -10, y: 3 },
-          pRot: isP ? undefined : (isMiss ? undefined : -5.8),
-          eRot: isP ? (isMiss ? undefined : 5.8) : undefined,
-          pScale: isP ? undefined : (isMiss ? undefined : { x: 0.52, y: 0.52 }),
-          eScale: isP ? (isMiss ? undefined : { x: 0.52, y: 0.52 }) : undefined,
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 3,
-        },
-        // 4. Supersonic Ejection Launch into Deep Sky (90ms)
-        {
-          delay: 90,
-          pOffset: isP ? { x: 6, y: -2 } : (isMiss ? { x: -8, y: 1 } : { x: -75, y: -260 }),
-          eOffset: isP ? (isMiss ? { x: 8, y: -1 } : { x: 75, y: -260 }) : { x: -6, y: 2 },
-          pRot: isP ? undefined : (isMiss ? undefined : -9.5),
-          eRot: isP ? (isMiss ? undefined : 9.5) : undefined,
-          pScale: isP ? undefined : (isMiss ? undefined : { x: 0.28, y: 0.28 }),
-          eScale: isP ? (isMiss ? undefined : { x: 0.28, y: 0.28 }) : undefined,
-          pAlpha: isP ? 1.0 : (isMiss ? 1.0 : 0.90),
-          eAlpha: isP ? (isMiss ? 1.0 : 0.90) : 1.0,
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 4,
-        },
-        // 5. Far Horizon Tiny Speck with Star Twinkle Sparkle (110ms)
-        {
-          delay: 110,
-          pOffset: isP ? { x: 2, y: 0 } : (isMiss ? { x: 0, y: 0 } : { x: -140, y: -340 }),
-          eOffset: isP ? (isMiss ? { x: 0, y: 0 } : { x: 140, y: -340 }) : { x: -2, y: 0 },
-          pRot: isP ? undefined : (isMiss ? undefined : -14.0),
-          eRot: isP ? (isMiss ? undefined : 14.0) : undefined,
-          pScale: isP ? undefined : (isMiss ? undefined : { x: 0.08, y: 0.08 }),
-          eScale: isP ? (isMiss ? undefined : { x: 0.08, y: 0.08 }) : undefined,
-          pAlpha: isP ? 1.0 : (isMiss ? 1.0 : 0.50),
-          eAlpha: isP ? (isMiss ? 1.0 : 0.50) : 1.0,
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 5,
-        },
-        // 6. Vanished Beyond Horizon & Lingering Breeze (100ms)
-        {
-          delay: 100,
-          pOffset: isP ? { x: 0, y: 0 } : (isMiss ? { x: 0, y: 0 } : { x: 0, y: -9999 }),
-          eOffset: isP ? (isMiss ? { x: 0, y: 0 } : { x: 0, y: -9999 }) : { x: 0, y: 0 },
-          pAlpha: isP ? 1.0 : (isMiss ? 1.0 : 0.0),
-          eAlpha: isP ? (isMiss ? 1.0 : 0.0) : 1.0,
-          hidePlayer: isP ? false : (isMiss ? false : true),
-          hidePShadow: isP ? false : (isMiss ? false : true),
-          hideEnemy: isP ? (isMiss ? false : true) : false,
-          hideEShadow: isP ? (isMiss ? false : true) : false,
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 6,
-        },
-        // 7. Clean Final Settle on Arena (100ms)
-        {
-          delay: 100,
-          pOffset: { x: 0, y: 0 },
-          eOffset: isP ? (isMiss ? { x: 0, y: 0 } : { x: 0, y: -9999 }) : { x: 0, y: 0 },
-          pAlpha: isP ? 1.0 : (isMiss ? 1.0 : 0.0),
-          eAlpha: isP ? (isMiss ? 1.0 : 0.0) : 1.0,
-          hidePlayer: isP ? false : (isMiss ? false : true),
-          hidePShadow: isP ? false : (isMiss ? false : true),
-          hideEnemy: isP ? (isMiss ? false : true) : false,
-          hideEShadow: isP ? (isMiss ? false : true) : false,
-          showEffect: false,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 6,
-        }
-      ];
-  }
-};
-
-export const bindAnimation: BattleMoveAnimation = {
-  key: 'bind',
-  camera: { type: "target", zoom: 1.35 },
-  buildFrames: (ctx: MoveContext): BattleFrame[] => {
-    const { isPlayer: isP, isHit, isMiss, action: a, enemyHp, playerHp, textLineIdx, usePlayerFront, useEnemyBack } = ctx;
-    const isTurn1Launch = (a as any).isTurn1Launch || ((a.damage ?? 0) === 0 && ((a as any).chargingMove === 'fly' || a.moveKey === 'fly'));
-    const hits = (a as any).hits || 2;
-    return [
-        // 1. Enter Left Foot (9 o'clock) (60ms)
-        {
-          delay: 60,
-          pOffset: isP ? { x: 195, y: -62 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: -195, y: 114 } : { x: 0, y: 0 },
-          pScale: isP ? { x: 0.74, y: 0.74 } : undefined,
-          eScale: !isP ? { x: 1.36, y: 1.36 } : undefined,
-          pRot: isP ? -0.12 : undefined,
-          eRot: !isP ? 0.12 : undefined,
-          usePlayerFront: isP,
-          useEnemyBack: !isP,
-          drawEnemyOnTop: !isP,
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 1,
-        },
-        // 2. Glide Front Bottom Foot (6 o'clock) (60ms)
-        {
-          delay: 60,
-          pOffset: isP ? { x: 230, y: -54 } : (isMiss ? { x: 14, y: 3 } : { x: -5, y: 3 }),
-          eOffset: isP ? (isMiss ? { x: 14, y: -3 } : { x: 5, y: -3 }) : { x: -230, y: 118 },
-          pScale: isP ? { x: 0.74, y: 0.74 } : undefined,
-          eScale: !isP ? { x: 1.36, y: 1.36 } : undefined,
-          pRot: isP ? -0.06 : undefined,
-          eRot: !isP ? 0.06 : undefined,
-          usePlayerFront: isP,
-          useEnemyBack: !isP,
-          drawEnemyOnTop: !isP,
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 2,
-        },
-        // 3. Curve Bottom-Right Ankle (4 o'clock) (60ms)
-        {
-          delay: 60,
-          pOffset: isP ? { x: 272, y: -62 } : (isMiss ? { x: 18, y: 4 } : { x: -7, y: 4 }),
-          eOffset: isP ? (isMiss ? { x: 18, y: -4 } : { x: 7, y: -4 }) : { x: -272, y: 110 },
-          pScale: isP ? { x: 0.74, y: 0.74 } : undefined,
-          eScale: !isP ? { x: 1.36, y: 1.36 } : undefined,
-          pRot: isP ? 0.06 : undefined,
-          eRot: !isP ? -0.06 : undefined,
-          usePlayerFront: !isP,
-          useEnemyBack: isP,
-          drawEnemyOnTop: !isP,
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 2,
-        },
-        // 4. Ascend Right Flank Behind (3 o'clock) (60ms)
-        {
-          delay: 60,
-          pOffset: isP ? { x: 290, y: -76 } : (isMiss ? { x: 20, y: 4 } : { x: -8, y: 4 }),
-          eOffset: isP ? (isMiss ? { x: 20, y: -4 } : { x: 8, y: -4 }) : { x: -290, y: 96 },
-          pScale: isP ? { x: 0.74, y: 0.74 } : undefined,
-          eScale: !isP ? { x: 1.36, y: 1.36 } : undefined,
-          pRot: isP ? 0.12 : undefined,
-          eRot: !isP ? -0.12 : undefined,
-          usePlayerFront: !isP,
-          useEnemyBack: isP,
-          drawEnemyOnTop: isP, // Behind defender
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 3,
-        },
-        // 5. Wrap Waist Behind (12 o'clock) (60ms)
-        {
-          delay: 60,
-          pOffset: isP ? { x: 260, y: -94 } : (isMiss ? { x: 22, y: 4 } : { x: -8, y: 4 }),
-          eOffset: isP ? (isMiss ? { x: 22, y: -4 } : { x: 8, y: -4 }) : { x: -260, y: 78 },
-          pScale: isP ? { x: 0.74, y: 0.74 } : undefined,
-          eScale: !isP ? { x: 1.36, y: 1.36 } : undefined,
-          pRot: isP ? 0.08 : undefined,
-          eRot: !isP ? -0.08 : undefined,
-          usePlayerFront: !isP,
-          useEnemyBack: isP,
-          drawEnemyOnTop: isP, // Behind defender
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 4,
-        },
-        // 6. Emerge Upper Left Chest (9 o'clock) (60ms)
-        {
-          delay: 60,
-          pOffset: isP ? { x: 215, y: -102 } : (isMiss ? { x: 24, y: 4 } : { x: -9, y: 4 }),
-          eOffset: isP ? (isMiss ? { x: 24, y: -4 } : { x: 9, y: -4 }) : { x: -215, y: 70 },
-          pScale: isP ? { x: 0.74, y: 0.74 } : undefined,
-          eScale: !isP ? { x: 1.36, y: 1.36 } : undefined,
-          pRot: isP ? -0.08 : undefined,
-          eRot: !isP ? 0.08 : undefined,
-          usePlayerFront: isP,
-          useEnemyBack: !isP,
-          drawEnemyOnTop: !isP, // In front of upper chest
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 5,
-        },
-        // 7. Lock Upper Front Torso (60ms)
-        {
-          delay: 60,
-          pOffset: isP ? { x: 235, y: -104 } : (isMiss ? { x: 25, y: 4 } : { x: -9, y: 4 }),
-          eOffset: isP ? (isMiss ? { x: 25, y: -4 } : { x: 9, y: -4 }) : { x: -235, y: 68 },
-          pScale: isP ? { x: 0.74, y: 0.74 } : undefined,
-          eScale: !isP ? { x: 1.36, y: 1.36 } : undefined,
-          pRot: isP ? -0.04 : undefined,
-          eRot: !isP ? 0.04 : undefined,
-          usePlayerFront: isP,
-          useEnemyBack: !isP,
-          drawEnemyOnTop: !isP,
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 6,
-        },
-        // 8. Full Constriction Squeeze Clamp & Impact Burst (160ms)
-        {
-          delay: 160,
-          pOffset: isP ? { x: 245, y: -86 } : (isMiss ? { x: 26, y: 4 } : { x: -10, y: 4 }),
-          eOffset: isP ? (isMiss ? { x: 26, y: -4 } : { x: 10, y: -4 }) : { x: -245, y: 86 },
-          pScale: isP ? { x: 0.76, y: 0.76 } : { x: 0.65, y: 1.40 },
-          eScale: isP ? { x: 0.65, y: 1.40 } : { x: 1.40, y: 1.40 },
-          pRot: 0,
-          eRot: 0,
-          usePlayerFront: !isP,
-          useEnemyBack: isP,
-          drawEnemyOnTop: !isP,
-          showEffect: true,
-          hitFlash: isHit,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 7, // Max Squeeze Clamp
-        },
-        // 9. Pulse Squeeze Lock (90ms)
-        {
-          delay: 90,
-          pOffset: isP ? { x: 245, y: -86 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: -245, y: 86 } : { x: 0, y: 0 },
-          pScale: isP ? { x: 0.74, y: 0.74 } : { x: 0.80, y: 1.20 },
-          eScale: isP ? { x: 0.80, y: 1.20 } : { x: 1.36, y: 1.36 },
-          usePlayerFront: isP,
-          useEnemyBack: !isP,
-          drawEnemyOnTop: !isP,
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 8, // Pulse
-        },
-        // 10. Smooth Spring Back Leap 1 (55ms)
-        {
-          delay: 55,
-          pOffset: isP ? { x: 155, y: -65 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: -155, y: 65 } : { x: 0, y: 0 },
-          pScale: isP ? { x: 0.84, y: 0.84 } : { x: 0.92, y: 1.08 },
-          eScale: isP ? { x: 0.92, y: 1.08 } : { x: 1.26, y: 1.26 },
-          drawEnemyOnTop: !isP,
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 9,
-        },
-        // 11. Smooth Spring Back Leap 2 (55ms)
-        {
-          delay: 55,
-          pOffset: isP ? { x: 75, y: -32 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: -75, y: 32 } : { x: 0, y: 0 },
-          pScale: isP ? { x: 0.92, y: 0.92 } : { x: 0.98, y: 1.02 },
-          eScale: isP ? { x: 0.98, y: 1.02 } : { x: 1.12, y: 1.12 },
-          drawEnemyOnTop: !isP,
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 9,
-        },
-        // 12. Touchdown Landing (60ms)
-        {
-          delay: 60,
-          pOffset: { x: 0, y: 0 },
-          eOffset: { x: 0, y: 0 },
-          pScale: undefined,
-          eScale: undefined,
-          showEffect: false,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-        }
-      ];
-  }
-};
-
-export const slamAnimation: BattleMoveAnimation = {
-  key: 'slam',
-  camera: { type: "target", zoom: 1.35 },
-  buildFrames: (ctx: MoveContext): BattleFrame[] => {
-    const { isPlayer: isP, isHit, isMiss, action: a, enemyHp, playerHp, textLineIdx, usePlayerFront, useEnemyBack } = ctx;
-    const isTurn1Launch = (a as any).isTurn1Launch || ((a.damage ?? 0) === 0 && ((a as any).chargingMove === 'fly' || a.moveKey === 'fly'));
-    const hits = (a as any).hits || 2;
-    return [
-        // 1. 가만히 정지 (Still pause - 80ms)
-        {
-          delay: 80,
-          pOffset: { x: 0, y: 0 },
-          eOffset: { x: 0, y: 0 },
-          showEffect: false,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 1,
-        },
-        // 2. 스프라이트 살짝 뒤로 빠지며 힘 모으기 (Pull back / coil windup - 90ms)
-        {
-          delay: 90,
-          pOffset: isP ? { x: -22, y: 4 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: 22, y: -4 } : { x: 0, y: 0 },
-          pScale: isP ? { x: 0.92, y: 1.08 } : undefined,
-          eScale: !isP ? { x: 0.92, y: 1.08 } : undefined,
-          pRot: isP ? -0.08 : undefined,
-          eRot: !isP ? 0.08 : undefined,
-          showEffect: false,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 1,
-        },
-        // 3. 팍! 전방 급발진 돌진 강타 & 이펙트 폭발! (BAM! Explosive Forward Slam - 100ms)
-        {
-          delay: 100,
-          pOffset: isP ? { x: 38, y: -12 } : (isMiss ? { x: 26, y: 4 } : { x: -14, y: 4 }),
-          eOffset: isP ? (isMiss ? { x: 26, y: -4 } : { x: 22, y: -8 }) : { x: -38, y: 12 },
-          pScale: isP ? { x: 1.25, y: 0.82 } : undefined,
-          eScale: isP ? { x: 0.85, y: 1.15 } : { x: 1.25, y: 0.82 },
-          pRot: isP ? 0.12 : undefined,
-          eRot: !isP ? -0.12 : undefined,
-          showEffect: true,
-          hitFlash: isHit,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 2,
-        },
-        // 4. 강타 반동 & 충격파 여파 (Recoil shake - 90ms)
-        {
-          delay: 90,
-          pOffset: isP ? { x: 16, y: -4 } : (isMiss ? { x: 12, y: 2 } : { x: -6, y: 2 }),
-          eOffset: isP ? (isMiss ? { x: 12, y: -2 } : { x: 12, y: -2 }) : { x: -16, y: 4 },
-          pScale: isP ? { x: 1.05, y: 0.95 } : undefined,
-          eScale: !isP ? { x: 1.05, y: 0.95 } : undefined,
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 3,
-        },
-        // 5. 복귀 원위치 (Recovery - 80ms)
-        {
-          delay: 80,
-          pOffset: { x: 0, y: 0 },
-          eOffset: { x: 0, y: 0 },
-          showEffect: false,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-        }
-      ];
-  }
-};
-
-export const vineWhipAnimation: BattleMoveAnimation = {
-  key: 'vine-whip',
-  camera: { type: "target", zoom: 1.35 },
-  buildFrames: (ctx: MoveContext): BattleFrame[] => {
-    const { isPlayer: isP, isHit, isMiss, action: a, enemyHp, playerHp, textLineIdx, usePlayerFront, useEnemyBack } = ctx;
-    const isTurn1Launch = (a as any).isTurn1Launch || ((a.damage ?? 0) === 0 && ((a as any).chargingMove === 'fly' || a.moveKey === 'fly'));
-    const hits = (a as any).hits || 2;
-    return [
-        // 1A. 1차 덩굴 발사 진입 (Vine 1 Shoots - 75ms)
-        {
-          delay: 75,
-          pOffset: isP ? { x: 6, y: -2 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: -6, y: 2 } : { x: 0, y: 0 },
-          pRot: isP ? 0.03 : undefined,
-          eRot: !isP ? -0.03 : undefined,
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 1,
-        },
-        // 1B. 1타: 왼쪽에서 오른쪽으로 채찍 강타! (Left-to-Right Lash - 95ms)
-        {
-          delay: 95,
-          pOffset: isP ? { x: 14, y: -4 } : { x: 0, y: 0 },
-          eOffset: isP ? (isMiss ? { x: 14, y: -2 } : { x: 14, y: -4 }) : { x: -14, y: 4 },
-          pRot: isP ? 0.05 : undefined,
-          eRot: !isP ? -0.05 : undefined,
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 1,
-        },
-        // 1C. 1차 채찍 잔상 지속 & 2차 덩굴 준비 (Trail Holds & 2nd Vine Ready - 80ms)
-        {
-          delay: 80,
-          pOffset: isP ? { x: 10, y: -3 } : { x: 0, y: 0 },
-          eOffset: isP ? (isMiss ? { x: 10, y: -2 } : { x: 10, y: -3 }) : { x: -10, y: 3 },
-          pRot: isP ? -0.01 : undefined,
-          eRot: !isP ? 0.01 : undefined,
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 1,
-        },
-        // 2A. 2차 덩굴 진입 휘두르기 (Vine 2 Swings - 75ms)
-        {
-          delay: 75,
-          pOffset: isP ? { x: 12, y: -5 } : (isMiss ? { x: 16, y: 2 } : { x: -8, y: 2 }),
-          eOffset: isP ? (isMiss ? { x: 16, y: -2 } : { x: 16, y: -5 }) : { x: -12, y: 5 },
-          pRot: isP ? -0.03 : undefined,
-          eRot: !isP ? 0.03 : undefined,
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 2,
-        },
-        // 2B. 2타: 오른쪽에서 왼쪽으로 교차 참격 강타! ('X' Cross Strike - 105ms)
-        {
-          delay: 105,
-          pOffset: isP ? { x: 18, y: -6 } : (isMiss ? { x: 20, y: 4 } : { x: -12, y: 4 }),
-          eOffset: isP ? (isMiss ? { x: 20, y: -4 } : { x: 22, y: -8 }) : { x: -18, y: 6 },
-          pRot: isP ? -0.06 : undefined,
-          eRot: !isP ? 0.06 : undefined,
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 2,
-        },
-        // 3A. 채찍 듀얼 잔상 및 흩날리는 잎새 (Trails Fade & Leaves Scatter - 85ms)
-        {
-          delay: 85,
-          pOffset: isP ? { x: 10, y: -3 } : (isMiss ? { x: 12, y: 2 } : { x: -6, y: 2 }),
-          eOffset: isP ? (isMiss ? { x: 12, y: -2 } : { x: 12, y: -4 }) : { x: -10, y: 3 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 3,
-        },
-        // 3B. 덩굴 회수 (Vines Retract - 80ms)
-        {
-          delay: 80,
-          pOffset: isP ? { x: 4, y: -1 } : { x: 0, y: 0 },
-          eOffset: isP ? (isMiss ? { x: 4, y: 0 } : { x: 4, y: -1 }) : { x: -4, y: 1 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 3,
-        },
-        // 4. 완전 복귀 (Neutral - 75ms)
-        {
-          delay: 75,
-          pOffset: { x: 0, y: 0 },
-          eOffset: { x: 0, y: 0 },
-          showEffect: false,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-        }
-      ];
-  }
-};
-
-export const stompAnimation: BattleMoveAnimation = {
-  key: 'stomp',
-  camera: { type: "target", zoom: 1.35 },
-  buildFrames: (ctx: MoveContext): BattleFrame[] => {
-    const { isPlayer: isP, isHit, isMiss, action: a, enemyHp, playerHp, textLineIdx, usePlayerFront, useEnemyBack } = ctx;
-    const isTurn1Launch = (a as any).isTurn1Launch || ((a.damage ?? 0) === 0 && ((a as any).chargingMove === 'fly' || a.moveKey === 'fly'));
-    const hits = (a as any).hits || 2;
-    return [
-        // 1. 적의 좌상단으로 접근 & 앞쪽으로 살짝 기울임 (원근법 축소/확대 적용 - 100ms)
-        {
-          delay: 100,
-          pOffset: isP ? { x: 217, y: -86 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: -217, y: 50 } : { x: 0, y: 0 },
-          pRot: isP ? 0.18 : undefined,
-          eRot: !isP ? -0.18 : undefined,
-          pScale: isP ? { x: 0.82, y: 0.82 } : undefined,
-          eScale: !isP ? { x: 1.25, y: 1.25 } : undefined,
-          hidePShadow: isP,
-          hideEShadow: !isP,
-          drawEnemyOnTop: !isP,
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 1,
-        },
-        // 2. 검은 타원 쿵! 누름 + 상대 가로로 넓어지며 납작해짐 (원근감 비례 짓누르기 - 130ms)
-        {
-          delay: 130,
-          pOffset: isP ? { x: 219, y: -78 } : (isMiss ? { x: 20, y: 0 } : { x: 0, y: 8 }),
-          eOffset: isP ? (isMiss ? { x: 20, y: 0 } : { x: 0, y: 8 }) : { x: -219, y: 58 },
-          pRot: isP ? 0.22 : undefined,
-          eRot: !isP ? -0.22 : undefined,
-          pScale: isP ? { x: 0.92, y: 0.70 } : (isMiss ? undefined : { x: 1.25, y: 0.70 }),
-          eScale: isP ? (isMiss ? undefined : { x: 1.25, y: 0.70 }) : { x: 1.40, y: 1.05 },
-          hidePShadow: isP,
-          hideEShadow: !isP,
-          drawEnemyOnTop: !isP,
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 2,
-        },
-        // 3. 꾹 누르고 버티기 & 지면 먼지 (원근감 비례 유지 - 110ms)
-        {
-          delay: 110,
-          pOffset: isP ? { x: 219, y: -78 } : (isMiss ? { x: 20, y: 0 } : { x: 0, y: 6 }),
-          eOffset: isP ? (isMiss ? { x: 20, y: 0 } : { x: 0, y: 6 }) : { x: -219, y: 58 },
-          pRot: isP ? 0.20 : undefined,
-          eRot: !isP ? -0.20 : undefined,
-          pScale: isP ? { x: 0.86, y: 0.74 } : (isMiss ? undefined : { x: 1.20, y: 0.75 }),
-          eScale: isP ? (isMiss ? undefined : { x: 1.20, y: 0.75 }) : { x: 1.32, y: 1.12 },
-          hidePShadow: isP,
-          hideEShadow: !isP,
-          drawEnemyOnTop: !isP,
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 3,
-        },
-        // 4. 원위치 복귀 (Recovery Leap Back - 90ms)
-        {
-          delay: 90,
-          pOffset: { x: 0, y: 0 },
-          eOffset: { x: 0, y: 0 },
-          pScale: isP ? undefined : (isMiss ? undefined : { x: 0.97, y: 1.05 }),
-          eScale: isP ? (isMiss ? undefined : { x: 0.97, y: 1.05 }) : undefined,
-          showEffect: false,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-        }
-      ];
-  }
-};
-
-export const doubleKickAnimation: BattleMoveAnimation = {
-  key: 'double-kick',
-  camera: { type: "target", zoom: 1.35 },
-  buildFrames: (ctx: MoveContext): BattleFrame[] => {
-    const { isPlayer: isP, isHit, isMiss, action: a, enemyHp, playerHp, textLineIdx, usePlayerFront, useEnemyBack } = ctx;
-    const isTurn1Launch = (a as any).isTurn1Launch || ((a.damage ?? 0) === 0 && ((a as any).chargingMove === 'fly' || a.moveKey === 'fly'));
-    const hits = (a as any).hits || 2;
-    return [
-        // 1A. 도약 전진 (Windup Leap - 75ms)
-        {
-          delay: 75,
-          pOffset: isP ? { x: 12, y: -6 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: -12, y: 6 } : { x: 0, y: 0 },
-          pRot: isP ? -0.04 : undefined,
-          eRot: !isP ? 0.04 : undefined,
-          showEffect: false,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-        },
-        // 1B. 1타: 좌상단 대각선 강타 (Top-Left Strike - 95ms)
-        {
-          delay: 95,
-          pOffset: isP ? { x: 22, y: -14 } : (isMiss ? { x: 24, y: 4 } : { x: -14, y: 6 }),
-          eOffset: isP ? (isMiss ? { x: 24, y: -4 } : { x: 14, y: 8 }) : { x: -22, y: 14 },
-          pRot: isP ? -0.07 : undefined,
-          eRot: !isP ? 0.07 : undefined,
-          showEffect: true,
-          hitFlash: isHit,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 1,
-        },
-        // 1C. 1타 반동 및 공중 회전 피벗 (Recoil & Aerial Pivot - 80ms)
-        {
-          delay: 80,
-          pOffset: isP ? { x: 16, y: -10 } : (isMiss ? { x: 20, y: 3 } : { x: -10, y: 4 }),
-          eOffset: isP ? (isMiss ? { x: 20, y: -3 } : { x: 9, y: 5 }) : { x: -16, y: 10 },
-          pRot: isP ? 0.01 : undefined,
-          eRot: !isP ? -0.01 : undefined,
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 1,
-        },
-        // 2A. 2타 하향 다이브 준비 (Dive Approach - 75ms)
-        {
-          delay: 75,
-          pOffset: isP ? { x: 22, y: -3 } : (isMiss ? { x: 24, y: 3 } : { x: -14, y: -2 }),
-          eOffset: isP ? (isMiss ? { x: 24, y: -3 } : { x: 12, y: -2 }) : { x: -22, y: 3 },
-          pRot: isP ? 0.05 : undefined,
-          eRot: !isP ? -0.05 : undefined,
-          showEffect: false,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 2,
-        },
-        // 2B. 2타: 우하단 대각선 강타 (Bottom-Right Strike - 105ms)
-        {
-          delay: 105,
-          pOffset: isP ? { x: 28, y: -3 } : (isMiss ? { x: 28, y: 4 } : { x: -18, y: -4 }),
-          eOffset: isP ? (isMiss ? { x: 28, y: -4 } : { x: 18, y: -6 }) : { x: -28, y: 3 },
-          pRot: isP ? 0.09 : undefined,
-          eRot: !isP ? -0.09 : undefined,
-          showEffect: true,
-          hitFlash: isHit,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 2,
-        },
-        // 3A. 듀얼 잔상 및 공중 반동 (Dual Afterglow - 85ms)
-        {
-          delay: 85,
-          pOffset: isP ? { x: 14, y: -6 } : (isMiss ? { x: 14, y: 2 } : { x: -8, y: 2 }),
-          eOffset: isP ? (isMiss ? { x: 14, y: -2 } : { x: 8, y: -2 }) : { x: -14, y: 6 },
-          pRot: isP ? 0.04 : undefined,
-          eRot: !isP ? -0.04 : undefined,
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 3,
-        },
-        // 3B. 착지 복귀 (Landing - 80ms)
-        {
-          delay: 80,
-          pOffset: isP ? { x: 5, y: -1 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: -5, y: 1 } : { x: 0, y: 0 },
-          showEffect: false,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-        },
-        // 4. 완전 원위치 (Neutral - 75ms)
-        {
-          delay: 75,
-          pOffset: { x: 0, y: 0 },
-          eOffset: { x: 0, y: 0 },
-          showEffect: false,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-        }
-      ];
-  }
-};
-
-export const singleStrikeSpecialAnimation: BattleMoveAnimation = {
-  key: 'single-strike-special',
-  camera: { type: "target", zoom: 1.35 },
-  buildFrames: (ctx: MoveContext): BattleFrame[] => {
-    const { isPlayer: isP, isHit, isMiss, action: a, enemyHp, playerHp, textLineIdx, usePlayerFront, useEnemyBack } = ctx;
-    const isTurn1Launch = (a as any).isTurn1Launch || ((a.damage ?? 0) === 0 && ((a as any).chargingMove === 'fly' || a.moveKey === 'fly'));
-    const hits = (a as any).hits || 2;
-    return [
-        // 1. Windup Lunge (100ms)
-        {
-          delay: 100,
-          pOffset: isP ? { x: 18, y: -8 } : { x: 0, y: 0 },
-          eOffset: !isP ? { x: -18, y: 8 } : { x: 0, y: 0 },
-          showEffect: false,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-        },
-        // 2. Direct Strike Impact (100ms)
-        {
-          delay: 100,
-          pOffset: isP ? { x: 22, y: -9 } : (isMiss ? { x: 26, y: 4 } : { x: -14, y: 4 }),
-          eOffset: isP ? (isMiss ? { x: 26, y: -4 } : { x: 14, y: -4 }) : { x: -22, y: 9 },
-          showEffect: true,
-          hitFlash: isHit,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 1,
-        },
-        // 3. Effect Action (100ms)
-        {
-          delay: 100,
-          pOffset: isP ? { x: 14, y: -5 } : (isMiss ? { x: 16, y: 2 } : { x: -8, y: 2 }),
-          eOffset: isP ? (isMiss ? { x: 16, y: -2 } : { x: 8, y: -2 }) : { x: -14, y: 5 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 2,
-        },
-        // 4. Recovery (100ms)
-        {
-          delay: 100,
-          pOffset: { x: 0, y: 0 },
-          eOffset: { x: 0, y: 0 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 3,
-        }
-      ];
-  }
-};
-
-export const defaultAnimation: BattleMoveAnimation = {
-  key: 'default',
-  camera: { type: "target", zoom: 1.35 },
-  buildFrames: (ctx: MoveContext): BattleFrame[] => {
-    const { isPlayer: isP, isHit, isMiss, action: a, enemyHp, playerHp, textLineIdx, usePlayerFront, useEnemyBack } = ctx;
-    const isTurn1Launch = (a as any).isTurn1Launch || ((a.damage ?? 0) === 0 && ((a as any).chargingMove === 'fly' || a.moveKey === 'fly'));
-    const hits = (a as any).hits || 2;
-    return [
-        // 1. Standard Windup (100ms)
-        {
-          delay: 100,
-          pOffset: isP ? (a.isSpecial ? { x: 0, y: -6 } : { x: 18, y: -8 }) : { x: 0, y: 0 },
-          eOffset: !isP ? (a.isSpecial ? { x: 0, y: -6 } : { x: -18, y: 8 }) : { x: 0, y: 0 },
-          showEffect: false,
-          hitFlash: false,
-          enemyHp: enemyHp,
-          playerHp: playerHp,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 1,
-        },
-        // 2. Standard Strike Impact (100ms)
-        {
-          delay: 100,
-          pOffset: isP ? { x: 22, y: -9 } : (isMiss ? { x: 26, y: 4 } : { x: -14, y: 4 }),
-          eOffset: isP ? (isMiss ? { x: 26, y: -4 } : { x: 14, y: -4 }) : { x: -22, y: 9 },
-          showEffect: true,
-          hitFlash: isHit,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 2,
-        },
-        // 3. Recoil Shake (100ms)
-        {
-          delay: 100,
-          pOffset: isP ? { x: 12, y: -4 } : (isMiss ? { x: 12, y: 2 } : { x: -6, y: 2 }),
-          eOffset: isP ? (isMiss ? { x: 12, y: -2 } : { x: 6, y: -2 }) : { x: -12, y: 4 },
-          showEffect: true,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-          moveStep: 3,
-        },
-        // 4. Recovery (100ms)
-        {
-          delay: 100,
-          pOffset: { x: 0, y: 0 },
-          eOffset: { x: 0, y: 0 },
-          showEffect: false,
-          hitFlash: false,
-          enemyHp: a.enemyHpAfter,
-          playerHp: a.playerHpAfter,
-          textLineIdx: textLineIdx,
-          isBlur: false,
-          moveEffect: a,
-        }
-      ];
-  }
-};
-
+import { BattleMoveAnimation } from "./types.js";
+import { poundMove } from "./definitions/001_pound.js";
+import { karateChopMove } from "./definitions/002_karate_chop.js";
+import { doubleSlapMove } from "./definitions/003_double_slap.js";
+import { cometPunchMove } from "./definitions/004_comet_punch.js";
+import { megaPunchMove } from "./definitions/005_mega_punch.js";
+import { payDayMove } from "./definitions/006_pay_day.js";
+import { firePunchMove } from "./definitions/007_fire_punch.js";
+import { icePunchMove } from "./definitions/008_ice_punch.js";
+import { thunderPunchMove } from "./definitions/009_thunder_punch.js";
+import { scratchMove } from "./definitions/010_scratch.js";
+import { viceGripMove } from "./definitions/011_vice_grip.js";
+import { guillotineMove } from "./definitions/012_guillotine.js";
+import { razorWindMove } from "./definitions/013_razor_wind.js";
+import { swordsDanceMove } from "./definitions/014_swords_dance.js";
+import { cutMove } from "./definitions/015_cut.js";
+import { gustMove } from "./definitions/016_gust.js";
+import { wingAttackMove } from "./definitions/017_wing_attack.js";
+import { whirlwindMove } from "./definitions/018_whirlwind.js";
+import { flyMove } from "./definitions/019_fly.js";
+import { bindMove } from "./definitions/020_bind.js";
+import { slamMove } from "./definitions/021_slam.js";
+import { vineWhipMove } from "./definitions/022_vine_whip.js";
+import { stompMove } from "./definitions/023_stomp.js";
+import { doubleKickMove } from "./definitions/024_double_kick.js";
+import { megaKickMove } from "./definitions/025_mega_kick.js";
+import { jumpKickMove } from "./definitions/026_jump_kick.js";
+import { rollingKickMove } from "./definitions/027_rolling_kick.js";
+import { sandAttackMove } from "./definitions/028_sand_attack.js";
+import { headbuttMove } from "./definitions/029_headbutt.js";
+import { hornAttackMove } from "./definitions/030_horn_attack.js";
+import { furyAttackMove } from "./definitions/031_fury_attack.js";
+import { hornDrillMove } from "./definitions/032_horn_drill.js";
+import { tackleMove } from "./definitions/033_tackle.js";
+import { bodySlamMove } from "./definitions/034_body_slam.js";
+import { wrapMove } from "./definitions/035_wrap.js";
+import { takeDownMove } from "./definitions/036_take_down.js";
+import { thrashMove } from "./definitions/037_thrash.js";
+import { doubleEdgeMove } from "./definitions/038_double_edge.js";
+import { tailWhipMove } from "./definitions/039_tail_whip.js";
+import { poisonStingMove } from "./definitions/040_poison_sting.js";
+import { twineedleMove } from "./definitions/041_twineedle.js";
+import { pinMissileMove } from "./definitions/042_pin_missile.js";
+import { leerMove } from "./definitions/043_leer.js";
+import { biteMove } from "./definitions/044_bite.js";
+import { growlMove } from "./definitions/045_growl.js";
+import { roarMove } from "./definitions/046_roar.js";
+import { singMove } from "./definitions/047_sing.js";
+import { supersonicMove } from "./definitions/048_supersonic.js";
+import { sonicBoomMove } from "./definitions/049_sonic_boom.js";
+import { disableMove } from "./definitions/050_disable.js";
+import { acidMove } from "./definitions/051_acid.js";
+import { emberMove } from "./definitions/052_ember.js";
+import { flamethrowerMove } from "./definitions/053_flamethrower.js";
+import { mistMove } from "./definitions/054_mist.js";
+import { waterGunMove } from "./definitions/055_water_gun.js";
+import { hydroPumpMove } from "./definitions/056_hydro_pump.js";
+import { surfMove } from "./definitions/057_surf.js";
+import { iceBeamMove } from "./definitions/058_ice_beam.js";
+import { blizzardMove } from "./definitions/059_blizzard.js";
+import { psybeamMove } from "./definitions/060_psybeam.js";
+import { bubbleBeamMove } from "./definitions/061_bubble_beam.js";
+import { auroraBeamMove } from "./definitions/062_aurora_beam.js";
+import { statusMove } from "./definitions/status.js";
+import { defaultMove } from "./definitions/default.js";
+import { hugMove } from "./definitions/hug.js";
 
 export const MOVE_REGISTRY: Record<string, BattleMoveAnimation> = {
-  'status': statusAnimation,
-  'karate-chop': karateChopAnimation,
-  'karatechop': karateChopAnimation,
-  'double-slap': doubleSlapAnimation,
-  'doubleslap': doubleSlapAnimation,
-  'comet-punch': cometPunchAnimation,
-  'cometpunch': cometPunchAnimation,
-  'mega-punch': megaPunchAnimation,
-  'megapunch': megaPunchAnimation,
-  'pay-day': payDayAnimation,
-  'payday': payDayAnimation,
-  'fire-punch': firePunchAnimation,
-  'firepunch': firePunchAnimation,
-  'ice-punch': icePunchAnimation,
-  'icepunch': icePunchAnimation,
-  'guillotine': guillotineAnimation,
-  'swords-dance': swordsDanceAnimation,
-  'swordsdance': swordsDanceAnimation,
-  'fly': flyAnimation,
-  'razor-wind': razorWindAnimation,
-  'razorwind': razorWindAnimation,
-  'wing-attack': wingAttackAnimation,
-  'wingattack': wingAttackAnimation,
-  'whirlwind': whirlwindAnimation,
-  'bind': bindAnimation,
-  'wrap': bindAnimation,
-  'clamp': bindAnimation,
-  'sand-tomb': bindAnimation,
-  'whirlpool': bindAnimation,
-  'fire-spin': bindAnimation,
-  'infestation': bindAnimation,
-  'snap-trap': bindAnimation,
-  'slam': slamAnimation,
-  'vine-whip': vineWhipAnimation,
-  'vinewhip': vineWhipAnimation,
-  'stomp': stompAnimation,
-  'double-kick': doubleKickAnimation,
-  'doublekick': doubleKickAnimation,
-  'thunder-punch': singleStrikeSpecialAnimation,
-  'thunderpunch': singleStrikeSpecialAnimation,
-  'scratch': singleStrikeSpecialAnimation,
-  'vice-grip': singleStrikeSpecialAnimation,
-  'vicegrip': singleStrikeSpecialAnimation,
-  'cut': singleStrikeSpecialAnimation,
-  'gust': singleStrikeSpecialAnimation,
-  'default': defaultAnimation,
+  "body-slam": bodySlamMove,
+  "bodyslam": bodySlamMove,
+  "pound": poundMove,
+  "karate-chop": karateChopMove,
+  "karatechop": karateChopMove,
+  "double-slap": doubleSlapMove,
+  "doubleslap": doubleSlapMove,
+  "comet-punch": cometPunchMove,
+  "cometpunch": cometPunchMove,
+  "mega-punch": megaPunchMove,
+  "megapunch": megaPunchMove,
+  "pay-day": payDayMove,
+  "payday": payDayMove,
+  "fire-punch": firePunchMove,
+  "firepunch": firePunchMove,
+  "ice-punch": icePunchMove,
+  "icepunch": icePunchMove,
+  "thunder-punch": thunderPunchMove,
+  "thunderpunch": thunderPunchMove,
+  "scratch": scratchMove,
+  "vice-grip": viceGripMove,
+  "vicegrip": viceGripMove,
+  "guillotine": guillotineMove,
+  "razor-wind": razorWindMove,
+  "razorwind": razorWindMove,
+  "swords-dance": swordsDanceMove,
+  "swordsdance": swordsDanceMove,
+  "cut": cutMove,
+  "gust": gustMove,
+  "wing-attack": wingAttackMove,
+  "wingattack": wingAttackMove,
+  "whirlwind": whirlwindMove,
+  "fly": flyMove,
+  "bind": bindMove,
+  "wrap": wrapMove,
+  "clamp": bindMove,
+  "sand-tomb": bindMove,
+  "whirlpool": bindMove,
+  "fire-spin": bindMove,
+  "infestation": bindMove,
+  "snap-trap": bindMove,
+  "slam": slamMove,
+  "vine-whip": vineWhipMove,
+  "vinewhip": vineWhipMove,
+  "stomp": stompMove,
+  "double-kick": doubleKickMove,
+  "doublekick": doubleKickMove,
+  "mega-kick": megaKickMove,
+  "megakick": megaKickMove,
+  "jump-kick": jumpKickMove,
+  "jumpkick": jumpKickMove,
+  "rolling-kick": rollingKickMove,
+  "rollingkick": rollingKickMove,
+  "sand-attack": sandAttackMove,
+  "sandattack": sandAttackMove,
+  "headbutt": headbuttMove,
+  "horn-attack": hornAttackMove,
+  "hornattack": hornAttackMove,
+  "fury-attack": furyAttackMove,
+  "furyattack": furyAttackMove,
+  "horn-drill": hornDrillMove,
+  "horndrill": hornDrillMove,
+  "tackle": tackleMove,
+  "take-down": takeDownMove,
+  "takedown": takeDownMove,
+  "thrash": thrashMove,
+  "double-edge": doubleEdgeMove,
+  "doubleedge": doubleEdgeMove,
+  "tail-whip": tailWhipMove,
+  "tailwhip": tailWhipMove,
+  "poison-sting": poisonStingMove,
+  "poisonsting": poisonStingMove,
+  "twineedle": twineedleMove,
+  "twi-needle": twineedleMove,
+  "pin-missile": pinMissileMove,
+  "pinmissile": pinMissileMove,
+  "needle-missile": pinMissileMove,
+  "leer": leerMove,
+  "bite": biteMove,
+  "growl": growlMove,
+  "roar": roarMove,
+  "sing": singMove,
+  "supersonic": supersonicMove,
+  "sonic-boom": sonicBoomMove,
+  "sonicboom": sonicBoomMove,
+  "disable": disableMove,
+  "acid": acidMove,
+  "ember": emberMove,
+  "flamethrower": flamethrowerMove,
+  "mist": mistMove,
+  "water-gun": waterGunMove,
+  "watergun": waterGunMove,
+  "hydro-pump": hydroPumpMove,
+  "hydropump": hydroPumpMove,
+  "surf": surfMove,
+  "057": surfMove,
+  "파도타기": surfMove,
+  "ice-beam": iceBeamMove,
+  "icebeam": iceBeamMove,
+  "058": iceBeamMove,
+  "냉동빔": iceBeamMove,
+  "blizzard": blizzardMove,
+  "059": blizzardMove,
+  "눈보라": blizzardMove,
+  "psybeam": psybeamMove,
+  "060": psybeamMove,
+  "환상빔": psybeamMove,
+  "bubble-beam": bubbleBeamMove,
+  "bubblebeam": bubbleBeamMove,
+  "061": bubbleBeamMove,
+  "거품광선": bubbleBeamMove,
+  "aurora-beam": auroraBeamMove,
+  "aurorabeam": auroraBeamMove,
+  "062": auroraBeamMove,
+  "오로라빔": auroraBeamMove,
+  "status": statusMove,
+  "default": defaultMove,
+  "perk-hug": hugMove,
+  "hug": hugMove,
 };
 
-export function getMoveAnimation(moveKey: string, isStatus: boolean = false): BattleMoveAnimation {
-  if (isStatus) return statusAnimation;
-  const key = (moveKey || '').toLowerCase().replace(/[\s_]+/g, '-');
-  return MOVE_REGISTRY[key] || defaultAnimation;
+import { getMoveData, MoveData } from "../../data/movesKo.js";
+import { MoveContext, BattleFrame, EffectDrawContext } from "./types.js";
+import {
+  drawFireEffect,
+  drawWaterEffect,
+  drawElectricEffect,
+  drawIceEffect,
+  drawGrassEffect,
+  drawPsychicEffect,
+  drawPoisonEffect,
+  drawRockGroundEffect,
+  drawFlyingEffect,
+  drawGhostDarkEffect,
+  drawDragonEffect,
+  drawSteelEffect,
+  drawFairyEffect,
+  drawPhysicalImpactEffect,
+  drawSlashEffect,
+  drawDrainEffect,
+  drawSolarBeamEffect,
+  drawHyperBeamEffect,
+  drawShadowBallEffect,
+  drawBiteEffect,
+  drawNeedleBarrageEffect,
+  drawSurfWaveEffect,
+  drawEarthquakeFissureEffect,
+  drawPunchImpactEffect,
+  drawKickImpactEffect,
+  drawLeerGlareEffect,
+  drawSoundWaveEffect,
+} from "../../renderers/moves/common/genericTypeEffects.js";
+import {
+  drawStatBoostEffect,
+  drawStatDropEffect,
+} from "../../renderers/moves/common/helpers.js";
+
+/**
+ * Intelligent Move Archetype Parser that analyzes the official move description,
+ * Korean name, and English slug to determine the exact 5th Generation battle staging.
+ */
+function parseMoveArchetype(moveKey: string, moveData: MoveData) {
+  const desc = (moveData.description || "").toLowerCase();
+  const nameKo = (moveData.nameKo || "").toLowerCase();
+  const nameEn = (moveData.name || "").toLowerCase();
+  const cat = moveData.category || "physical";
+
+  const isMultiHit = desc.includes("2회") || desc.includes("연속") || desc.includes("2-5회") || desc.includes("2~5회") || desc.includes("두 번") || desc.includes("여러 번") || nameKo.includes("연속") || nameKo.includes("두번");
+  const isDrain = desc.includes("흡수") || desc.includes("빨아") || desc.includes("체력을 회복") || nameKo.includes("드레인") || nameKo.includes("흡수") || nameKo.includes("흡혈");
+  const isBeam = (desc.includes("광선") || desc.includes("빔") || desc.includes("레이저") || desc.includes("포를") || desc.includes("파동") || nameKo.includes("빔") || nameKo.includes("광선") || nameKo.includes("캐논") || nameKo.includes("펄스") || nameKo.includes("파동") || nameEn.includes("beam") || nameEn.includes("cannon") || nameEn.includes("pulse")) && !nameKo.includes("물대포");
+  const isSlash = desc.includes("벤다") || desc.includes("베어") || desc.includes("가른") || desc.includes("발톱") || desc.includes("손톱") || desc.includes("자른") || nameKo.includes("베기") || nameKo.includes("가르기") || nameKo.includes("클로") || nameKo.includes("슬래시") || nameKo.includes("커터") || nameKo.includes("시저") || nameEn.includes("slash") || nameEn.includes("claw") || nameEn.includes("blade") || nameEn.includes("cutter");
+  const isBite = desc.includes("문다") || desc.includes("물어") || desc.includes("깨물") || desc.includes("이빨") || desc.includes("송곳니") || nameKo.includes("엄니") || nameKo.includes("물기") || nameKo.includes("바이트") || nameKo.includes("팽") || nameEn.includes("bite") || nameEn.includes("fang");
+  const isPunch = desc.includes("주먹") || desc.includes("펀치") || nameKo.includes("펀치") || nameKo.includes("촙") || nameKo.includes("슬랩") || nameEn.includes("punch");
+  const isKick = desc.includes("발로") || desc.includes("발차기") || desc.includes("킥") || desc.includes("짓밟") || nameKo.includes("킥") || nameKo.includes("짓밟기") || nameKo.includes("스톰프") || nameEn.includes("kick") || nameEn.includes("stomp");
+  const isBall = desc.includes("구체") || desc.includes("구슬") || desc.includes("폭탄") || desc.includes("탄을") || nameKo.includes("볼") || nameKo.includes("봄") || nameKo.includes("블래스트") || nameKo.includes("스피어") || nameEn.includes("ball") || nameEn.includes("bomb") || nameEn.includes("sphere");
+  const isNeedle = desc.includes("침") || desc.includes("바늘") || desc.includes("가시") || desc.includes("씨") || nameKo.includes("니들") || nameKo.includes("스팅") || nameKo.includes("가시") || nameEn.includes("needle") || nameEn.includes("sting") || nameEn.includes("pin");
+  const isSurf = desc.includes("파도") || desc.includes("해일") || nameKo.includes("파도") || nameKo.includes("웨이브") || nameEn.includes("surf") || nameEn.includes("wave");
+  const isQuake = desc.includes("지진") || desc.includes("대지") || desc.includes("땅을 흔들") || nameKo.includes("지진") || nameEn.includes("earthquake") || nameEn.includes("fissure");
+  const isTackle = desc.includes("돌진") || desc.includes("부딪쳐") || desc.includes("몸통") || desc.includes("태클") || desc.includes("박치기") || desc.includes("뿔로") || nameKo.includes("태클") || nameKo.includes("돌진") || nameEn.includes("tackle") || nameEn.includes("rush");
+  const isLeer = desc.includes("째려") || desc.includes("눈빛") || nameKo.includes("째려보기") || nameKo.includes("눈빛") || nameKo.includes("뱀눈초리") || nameEn.includes("leer") || nameEn.includes("glare");
+  const isSound = desc.includes("소리") || desc.includes("울음") || desc.includes("음파") || desc.includes("노래") || desc.includes("외침") || nameKo.includes("소리") || nameKo.includes("울음") || nameKo.includes("보이스") || nameKo.includes("하이퍼보이스") || nameEn.includes("growl") || nameEn.includes("roar") || nameEn.includes("screech") || nameEn.includes("voice");
+
+  const isDebuff = cat === "status" && (desc.includes("상대의") || desc.includes("상대를") || desc.includes("떨어뜨") || desc.includes("낮춘") || desc.includes("감소") || desc.includes("마비") || desc.includes("독") || desc.includes("잠듦") || desc.includes("혼란") || desc.includes("화상") || desc.includes("얼어"));
+  const isBuff = cat === "status" && !isDebuff;
+
+  return {
+    isMultiHit,
+    isDrain,
+    isBeam,
+    isSlash,
+    isBite,
+    isPunch,
+    isKick,
+    isBall,
+    isNeedle,
+    isSurf,
+    isQuake,
+    isTackle,
+    isLeer,
+    isSound,
+    isDebuff,
+    isBuff,
+  };
 }
+
+/**
+ * Creates authentic 5th Generation (Black/White) battle animations compliant with memoforme.txt rules
+ * and tailored to each move's official description.
+ */
+function createDynamicMoveAnimation(moveKey: string, moveData: MoveData): BattleMoveAnimation {
+  const type = moveData.type || "normal";
+  const category = moveData.category || "physical";
+  const arch = parseMoveArchetype(moveKey, moveData);
+
+  // Determine Gen 5 Camera based on archetype
+  let camera: any = { type: "target", zoom: 1.35 };
+  if (arch.isBuff) {
+    camera = { type: "self", zoom: 1.24 };
+  } else if (arch.isDebuff || category === "status") {
+    camera = { type: "none" };
+  } else if (arch.isTackle || arch.isPunch || arch.isKick || arch.isMultiHit) {
+    camera = { type: "rush", zoom: 1.38 };
+  } else if (arch.isBeam) {
+    camera = { type: "target", zoom: 1.34 };
+  } else if (arch.isSurf || arch.isQuake) {
+    camera = { type: "target", zoom: 1.26 };
+  } else if (category === "special") {
+    camera = { type: "target", zoom: 1.32 };
+  } else {
+    camera = { type: "rush", zoom: 1.36 };
+  }
+
+  return {
+    key: moveKey,
+    num: moveData.id,
+    nameKo: moveData.nameKo,
+    nameEn: moveData.name,
+    type: moveData.type,
+    category: moveData.category,
+    camera,
+    buildFrames: (ctx: MoveContext): BattleFrame[] => {
+      const { isPlayer: isP, isHit, action: a, enemyHp, playerHp, textLineIdx } = ctx;
+
+      // 1. BUFF (자신 능력치 상승 / 회복)
+      if (arch.isBuff) {
+        return [
+          {
+            delay: 100,
+            pOffset: isP ? { x: 0, y: -6 } : { x: 0, y: 0 },
+            eOffset: !isP ? { x: 0, y: -6 } : { x: 0, y: 0 },
+            pScale: isP ? { x: 0.90, y: 1.12 } : undefined,
+            eScale: !isP ? { x: 0.90, y: 1.12 } : undefined,
+            showEffect: false,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            phaseId: "gen5-buff-inhale",
+            phaseName: "1. 5세대 호흡 축적",
+          },
+          {
+            delay: 120,
+            pOffset: isP ? { x: 0, y: 4 } : { x: 0, y: 0 },
+            eOffset: !isP ? { x: 0, y: 4 } : { x: 0, y: 0 },
+            pScale: isP ? { x: 1.18, y: 0.84 } : undefined,
+            eScale: !isP ? { x: 1.18, y: 0.84 } : undefined,
+            showEffect: true,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            moveStep: 1,
+            statProgress: 0.35,
+            phaseId: "gen5-buff-pulse1",
+            phaseName: "2. 1차 에너지 파동",
+          },
+          {
+            delay: 160,
+            pOffset: isP ? { x: 0, y: -8 } : { x: 0, y: 0 },
+            eOffset: !isP ? { x: 0, y: -8 } : { x: 0, y: 0 },
+            pScale: isP ? { x: 1.06, y: 0.94 } : undefined,
+            eScale: !isP ? { x: 1.06, y: 0.94 } : undefined,
+            showEffect: true,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            moveStep: 2,
+            statProgress: 0.75,
+            phaseId: "gen5-buff-pulse2",
+            phaseName: "3. 2차 오라 정점 방출",
+          },
+          {
+            delay: 120,
+            pOffset: { x: 0, y: 0 },
+            eOffset: { x: 0, y: 0 },
+            showEffect: true,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            statProgress: 1.0,
+            phaseId: "gen5-buff-radiate",
+            phaseName: "4. 전신 잔향 광채",
+          },
+          {
+            delay: 80,
+            pOffset: { x: 0, y: 0 },
+            eOffset: { x: 0, y: 0 },
+            showEffect: false,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            phaseId: "gen5-buff-finish",
+            phaseName: "5. 자세 복귀",
+          },
+        ];
+      }
+
+      // 2. DEBUFF / STATUS (상대 능력치 하락 / 상태이상)
+      if (arch.isDebuff || category === "status") {
+        return [
+          {
+            delay: 100,
+            pScale: isP ? { x: 1.14, y: 0.88 } : undefined,
+            eScale: !isP ? { x: 1.14, y: 0.88 } : undefined,
+            pOffset: isP ? { x: 8, y: -2 } : { x: 0, y: 0 },
+            eOffset: !isP ? { x: -8, y: 2 } : { x: 0, y: 0 },
+            showEffect: false,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            phaseId: "gen5-debuff-stare",
+            phaseName: "1. 5세대 눈빛/기운 방출",
+          },
+          {
+            delay: 120,
+            pOffset: { x: 0, y: 0 },
+            eOffset: { x: 0, y: 0 },
+            showEffect: true,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            statProgress: 0.35,
+            phaseId: "gen5-debuff-wave",
+            phaseName: "2. 디버프 파동 접근",
+          },
+          {
+            delay: 160,
+            eOffset: isHit ? (isP ? { x: 0, y: 6 } : { x: 0, y: -6 }) : { x: 0, y: 0 },
+            pOffset: { x: 0, y: 0 },
+            showEffect: true,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            statProgress: 0.75,
+            phaseId: "gen5-debuff-inflict",
+            phaseName: "3. 랭크 하락/상태이상 침투",
+          },
+          {
+            delay: 120,
+            eOffset: isHit ? (isP ? { x: 0, y: 2 } : { x: 0, y: -2 }) : { x: 0, y: 0 },
+            pOffset: { x: 0, y: 0 },
+            showEffect: true,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            statProgress: 1.0,
+            phaseId: "gen5-debuff-radiate",
+            phaseName: "4. 디버프 잔향",
+          },
+          {
+            delay: 80,
+            pOffset: { x: 0, y: 0 },
+            eOffset: { x: 0, y: 0 },
+            showEffect: false,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            phaseId: "gen5-debuff-finish",
+            phaseName: "5. 자세 정돈",
+          },
+        ];
+      }
+
+      // 3. MULTI-HIT MOVES (2회 연속, 2-5회 등)
+      if (arch.isMultiHit) {
+        return [
+          {
+            delay: 90,
+            pOffset: isP ? { x: 22, y: -8 } : { x: 0, y: 0 },
+            eOffset: !isP ? { x: -22, y: 8 } : { x: 0, y: 0 },
+            pScale: isP ? { x: 0.90, y: 1.15 } : undefined,
+            eScale: !isP ? { x: 0.90, y: 1.15 } : undefined,
+            showEffect: false,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            moveStep: 1,
+            phaseId: "gen5-multi-dash",
+            phaseName: "1. 5세대 전방 가속 대시",
+          },
+          {
+            delay: 120,
+            pOffset: isP ? { x: 38, y: -14 } : (isHit ? { x: -10, y: 4 } : { x: 0, y: 0 }),
+            eOffset: !isP ? { x: -38, y: 14 } : (isHit ? { x: 12, y: -5 } : { x: 0, y: 0 }),
+            showEffect: isHit,
+            hitFlash: isHit,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            moveStep: 1,
+            phaseId: "gen5-multi-hit1",
+            phaseName: "2. 1타 적중 & 1차 넉백",
+          },
+          {
+            delay: 80,
+            pOffset: isP ? { x: 16, y: -4 } : { x: 0, y: 0 },
+            eOffset: !isP ? { x: -16, y: 4 } : { x: 0, y: 0 },
+            showEffect: false,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            moveStep: 2,
+            phaseId: "gen5-multi-pivot",
+            phaseName: "3. 2타 전환",
+          },
+          {
+            delay: 150,
+            pOffset: isP ? { x: 44, y: -16 } : (isHit ? { x: -14, y: 6 } : { x: 0, y: 0 }),
+            eOffset: !isP ? { x: -44, y: 16 } : (isHit ? { x: 18, y: -7 } : { x: 0, y: 0 }),
+            showEffect: isHit,
+            hitFlash: isHit,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            moveStep: 2,
+            phaseId: "gen5-multi-hit2",
+            phaseName: "4. 2타 피니시 격돌 & 2차 넉백",
+          },
+          {
+            delay: 100,
+            pOffset: isP ? { x: 16, y: -5 } : { x: 0, y: 0 },
+            eOffset: isHit ? (!isP ? { x: 6, y: -2 } : { x: -6, y: 2 }) : { x: 0, y: 0 },
+            showEffect: isHit,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            moveStep: 3,
+            phaseId: "gen5-multi-flinch",
+            phaseName: "5. 피격자 진동 셰이크",
+          },
+          {
+            delay: 80,
+            pOffset: { x: 0, y: 0 },
+            eOffset: { x: 0, y: 0 },
+            showEffect: false,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            phaseId: "gen5-multi-finish",
+            phaseName: "6. 복귀 완료",
+          },
+        ];
+      }
+
+      // 4. BEAM / RAY / CANNON (광선 / 빔 / 레이저)
+      if (arch.isBeam) {
+        return [
+          {
+            delay: 110,
+            pOffset: isP ? { x: -12, y: 5 } : { x: 0, y: 0 },
+            eOffset: !isP ? { x: 12, y: -5 } : { x: 0, y: 0 },
+            pScale: isP ? { x: 1.18, y: 0.82 } : undefined,
+            eScale: !isP ? { x: 1.18, y: 0.82 } : undefined,
+            showEffect: false,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            moveStep: 1,
+            phaseId: "gen5-beam-gather",
+            phaseName: "1. 5세대 초고에너지 응축",
+          },
+          {
+            delay: 130,
+            pOffset: isP ? { x: 18, y: -7 } : { x: 0, y: 0 },
+            eOffset: !isP ? { x: -18, y: 7 } : { x: 0, y: 0 },
+            pScale: isP ? { x: 0.88, y: 1.16 } : undefined,
+            eScale: !isP ? { x: 0.88, y: 1.16 } : undefined,
+            showEffect: true,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            moveStep: 2,
+            effectProgress: 0.60,
+            phaseId: "gen5-beam-fire",
+            phaseName: "2. 광선 빔 일제 발사",
+          },
+          {
+            delay: 180,
+            pOffset: { x: 0, y: 0 },
+            eOffset: isHit ? (!isP ? { x: -18, y: 7 } : { x: 18, y: -7 }) : { x: 0, y: 0 },
+            showEffect: isHit,
+            hitFlash: isHit,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            moveStep: 3,
+            effectProgress: 1.0,
+            phaseId: "gen5-beam-impact",
+            phaseName: "3. 관통 직격 대폭발 & 넉백",
+          },
+          {
+            delay: 110,
+            pOffset: { x: 0, y: 0 },
+            eOffset: isHit ? (!isP ? { x: 8, y: -3 } : { x: -8, y: 3 }) : { x: 0, y: 0 },
+            showEffect: isHit,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            moveStep: 3,
+            effectProgress: 1.0,
+            phaseId: "gen5-beam-aftershock",
+            phaseName: "4. 빔 압박 진동 셰이크",
+          },
+          {
+            delay: 80,
+            pOffset: { x: 0, y: 0 },
+            eOffset: { x: 0, y: 0 },
+            showEffect: false,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            phaseId: "gen5-beam-finish",
+            phaseName: "5. 복귀 완료",
+          },
+        ];
+      }
+
+      // 5. PROJECTILE / NEEDLE / BALL (투사체 / 침 / 바늘 / 탄 / 구슬)
+      if (arch.isNeedle || arch.isBall || (category === "special" && !arch.isSurf && !arch.isQuake)) {
+        return [
+          {
+            delay: 100,
+            pOffset: isP ? { x: -10, y: 4 } : { x: 0, y: 0 },
+            eOffset: !isP ? { x: 10, y: -4 } : { x: 0, y: 0 },
+            pScale: isP ? { x: 1.14, y: 0.86 } : undefined,
+            eScale: !isP ? { x: 1.14, y: 0.86 } : undefined,
+            showEffect: false,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            moveStep: 1,
+            phaseId: "gen5-proj-aim",
+            phaseName: "1. 5세대 투사체 조준/장전",
+          },
+          {
+            delay: 90,
+            pOffset: isP ? { x: 20, y: -8 } : { x: 0, y: 0 },
+            eOffset: !isP ? { x: -20, y: 8 } : { x: 0, y: 0 },
+            pScale: isP ? { x: 0.90, y: 1.12 } : undefined,
+            eScale: !isP ? { x: 0.90, y: 1.12 } : undefined,
+            showEffect: true,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            moveStep: 2,
+            effectProgress: 0.35,
+            phaseId: "gen5-proj-fly1",
+            phaseName: "2. 투사체 고속 사출 (초기)",
+          },
+          {
+            delay: 90,
+            pOffset: isP ? { x: 8, y: -3 } : { x: 0, y: 0 },
+            eOffset: !isP ? { x: -8, y: 3 } : { x: 0, y: 0 },
+            showEffect: true,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            moveStep: 2,
+            effectProgress: 0.75,
+            phaseId: "gen5-proj-fly2",
+            phaseName: "3. 상대방 앞 고속 쇄도",
+          },
+          {
+            delay: 160,
+            pOffset: { x: 0, y: 0 },
+            eOffset: isHit ? (!isP ? { x: -16, y: 6 } : { x: 16, y: -6 }) : { x: 0, y: 0 },
+            showEffect: isHit,
+            hitFlash: isHit,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            moveStep: 3,
+            effectProgress: 1.0,
+            phaseId: "gen5-proj-impact",
+            phaseName: "4. 착탄 관통 대폭발 & 넉백",
+          },
+          {
+            delay: 110,
+            pOffset: { x: 0, y: 0 },
+            eOffset: isHit ? (!isP ? { x: 6, y: -2 } : { x: -6, y: 2 }) : { x: 0, y: 0 },
+            showEffect: isHit,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            moveStep: 3,
+            effectProgress: 1.0,
+            phaseId: "gen5-proj-flinch",
+            phaseName: "5. 피격 진동 & 파편 잔향",
+          },
+          {
+            delay: 80,
+            pOffset: { x: 0, y: 0 },
+            eOffset: { x: 0, y: 0 },
+            showEffect: false,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            phaseId: "gen5-proj-finish",
+            phaseName: "6. 복귀 완료",
+          },
+        ];
+      }
+
+      // 6. SURF / QUAKE (광역 환경 격변)
+      if (arch.isSurf || arch.isQuake) {
+        return [
+          {
+            delay: 110,
+            pOffset: { x: 0, y: 0 },
+            eOffset: { x: 0, y: 0 },
+            pScale: isP ? { x: 1.20, y: 0.80 } : undefined,
+            eScale: !isP ? { x: 1.20, y: 0.80 } : undefined,
+            showEffect: false,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            phaseId: "gen5-env-charge",
+            phaseName: "1. 5세대 전장 격변 각성",
+          },
+          {
+            delay: 130,
+            pOffset: { x: 0, y: 0 },
+            eOffset: { x: 0, y: 0 },
+            showEffect: true,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            effectProgress: 0.40,
+            phaseId: "gen5-env-surge",
+            phaseName: "2. 파도/지진 전장 쇄도",
+          },
+          {
+            delay: 190,
+            pOffset: { x: 0, y: 0 },
+            eOffset: isHit ? (!isP ? { x: -16, y: 8 } : { x: 16, y: -8 }) : { x: 0, y: 0 },
+            showEffect: isHit,
+            hitFlash: isHit,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            effectProgress: 1.0,
+            phaseId: "gen5-env-cataclysm",
+            phaseName: "3. 전장 대격변 강타 & 넉백",
+          },
+          {
+            delay: 110,
+            pOffset: { x: 0, y: 0 },
+            eOffset: isHit ? (!isP ? { x: 8, y: -4 } : { x: -8, y: 4 }) : { x: 0, y: 0 },
+            showEffect: isHit,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            effectProgress: 1.0,
+            phaseId: "gen5-env-aftershock",
+            phaseName: "4. 전신 진동 셰이크",
+          },
+          {
+            delay: 80,
+            pOffset: { x: 0, y: 0 },
+            eOffset: { x: 0, y: 0 },
+            showEffect: false,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            phaseId: "gen5-env-finish",
+            phaseName: "5. 전장 정돈",
+          },
+        ];
+      }
+
+      // 7. SLASH / CLAW (참격 / 베기 / 발톱)
+      if (arch.isSlash) {
+        return [
+          {
+            delay: 90,
+            pOffset: isP ? { x: -14, y: 5 } : { x: 0, y: 0 },
+            eOffset: !isP ? { x: 14, y: -5 } : { x: 0, y: 0 },
+            pScale: isP ? { x: 1.14, y: 0.86 } : undefined,
+            eScale: !isP ? { x: 1.14, y: 0.86 } : undefined,
+            showEffect: false,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            moveStep: 1,
+            phaseId: "gen5-slash-draw",
+            phaseName: "1. 5세대 발도/도약 준비",
+          },
+          {
+            delay: 90,
+            pOffset: isP ? { x: 28, y: -10 } : { x: 0, y: 0 },
+            eOffset: !isP ? { x: -28, y: 10 } : { x: 0, y: 0 },
+            showEffect: false,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            moveStep: 1,
+            phaseId: "gen5-slash-approach",
+            phaseName: "2. 순간 돌파 접근",
+          },
+          {
+            delay: 160,
+            pOffset: isP ? { x: 38, y: -14 } : (isHit ? { x: -12, y: 5 } : { x: 0, y: 0 }),
+            eOffset: !isP ? { x: -38, y: 14 } : (isHit ? { x: 16, y: -6 } : { x: 0, y: 0 }),
+            showEffect: isHit,
+            hitFlash: isHit,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            moveStep: 2,
+            phaseId: "gen5-slash-strike",
+            phaseName: "3. 속성 참격 작렬 & 넉백",
+          },
+          {
+            delay: 110,
+            pOffset: isP ? { x: 16, y: -5 } : { x: 0, y: 0 },
+            eOffset: isHit ? (!isP ? { x: 8, y: -3 } : { x: -8, y: 3 }) : { x: 0, y: 0 },
+            showEffect: isHit,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            moveStep: 3,
+            phaseId: "gen5-slash-flinch",
+            phaseName: "4. 피격자 진동 & 참격 잔향",
+          },
+          {
+            delay: 80,
+            pOffset: { x: 0, y: 0 },
+            eOffset: { x: 0, y: 0 },
+            showEffect: false,
+            hitFlash: false,
+            enemyHp,
+            playerHp,
+            textLineIdx,
+            moveEffect: a,
+            phaseId: "gen5-slash-finish",
+            phaseName: "5. 복귀 완료",
+          },
+        ];
+      }
+
+      // 8. GENERAL MELEE PHYSICAL (돌진 / 태클 / 펀치 / 킥 / 물기 / 일반 물리)
+      return [
+        {
+          delay: 100,
+          pOffset: isP ? { x: -18, y: 7 } : { x: 0, y: 0 },
+          eOffset: !isP ? { x: 18, y: -7 } : { x: 0, y: 0 },
+          pScale: isP ? { x: 1.16, y: 0.84 } : undefined,
+          eScale: !isP ? { x: 1.16, y: 0.84 } : undefined,
+          showEffect: false,
+          hitFlash: false,
+          enemyHp,
+          playerHp,
+          textLineIdx,
+          moveEffect: a,
+          moveStep: 1,
+          phaseId: "gen5-phys-crouch",
+          phaseName: "1. 5세대 도움닫기 웅크림",
+        },
+        {
+          delay: 90,
+          pOffset: isP ? { x: 20, y: -9 } : { x: 0, y: 0 },
+          eOffset: !isP ? { x: -20, y: 9 } : { x: 0, y: 0 },
+          pScale: isP ? { x: 0.88, y: 1.18 } : undefined,
+          eScale: !isP ? { x: 0.88, y: 1.18 } : undefined,
+          showEffect: true,
+          hitFlash: false,
+          enemyHp,
+          playerHp,
+          textLineIdx,
+          moveEffect: a,
+          moveStep: 2,
+          effectProgress: 0.35,
+          phaseId: "gen5-phys-leap",
+          phaseName: "2. 초고속 탄성 도약 & 이펙트 전개",
+        },
+        {
+          delay: 160,
+          pOffset: isP ? { x: 42, y: -16 } : (isHit ? { x: -14, y: 6 } : { x: 0, y: 0 }),
+          eOffset: !isP ? { x: -42, y: 16 } : (isHit ? { x: 18, y: -7 } : { x: 0, y: 0 }),
+          showEffect: isHit,
+          hitFlash: isHit,
+          enemyHp,
+          playerHp,
+          textLineIdx,
+          moveEffect: a,
+          moveStep: 3,
+          effectProgress: 0.80,
+          phaseId: "gen5-phys-impact",
+          phaseName: "3. 5세대 격돌 타격 & 넉백",
+        },
+        {
+          delay: 110,
+          pOffset: isP ? { x: 20, y: -6 } : { x: 0, y: 0 },
+          eOffset: isHit ? (!isP ? { x: 8, y: -3 } : { x: -8, y: 3 }) : { x: 0, y: 0 },
+          showEffect: isHit,
+          hitFlash: false,
+          enemyHp,
+          playerHp,
+          textLineIdx,
+          moveEffect: a,
+          moveStep: 4,
+          effectProgress: 1.0,
+          phaseId: "gen5-phys-flinch1",
+          phaseName: "4. 피격자 넉백 진동 & 이펙트 비산",
+        },
+        {
+          delay: 80,
+          pOffset: isP ? { x: 6, y: -2 } : { x: 0, y: 0 },
+          eOffset: isHit ? (!isP ? { x: -4, y: 2 } : { x: 4, y: -2 }) : { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          enemyHp,
+          playerHp,
+          textLineIdx,
+          moveEffect: a,
+          moveStep: 4,
+          phaseId: "gen5-phys-flinch2",
+          phaseName: "5. 피격자 진동 셰이크 2",
+        },
+        {
+          delay: 80,
+          pOffset: { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
+          showEffect: false,
+          hitFlash: false,
+          enemyHp,
+          playerHp,
+          textLineIdx,
+          moveEffect: a,
+          phaseId: "gen5-phys-finish",
+          phaseName: "6. 착지 및 복귀 완료",
+        },
+      ];
+    },
+    drawEffect: (targetCtx: any, frame: BattleFrame, drawCtx: EffectDrawContext) => {
+      if (!frame.showEffect) return;
+      const { attackerPos, targetPos } = drawCtx;
+
+      // Dynamic progress calculation (0.0 to 1.0)
+      const progress = frame.effectProgress ?? (frame.statProgress ?? (frame.moveStep ? frame.moveStep / 4 : 0.8));
+
+      // Status Moves
+      if (arch.isBuff) {
+        drawStatBoostEffect(targetCtx, attackerPos, progress);
+        return;
+      }
+      if (arch.isLeer) {
+        drawLeerGlareEffect(targetCtx, attackerPos, targetPos, progress);
+        return;
+      }
+      if (arch.isSound) {
+        drawSoundWaveEffect(targetCtx, attackerPos, targetPos, progress);
+        return;
+      }
+      if (arch.isDebuff || category === "status") {
+        drawStatDropEffect(targetCtx, targetPos, progress);
+        return;
+      }
+
+      // Archetype Specific Visuals based on description keywords
+      if (arch.isDrain) {
+        drawDrainEffect(targetCtx, attackerPos, targetPos, type, progress);
+        return;
+      }
+
+      if (arch.isBite) {
+        drawBiteEffect(targetCtx, targetPos, type, progress);
+        return;
+      }
+
+      if (arch.isPunch) {
+        drawPunchImpactEffect(targetCtx, targetPos, type, progress);
+        return;
+      }
+
+      if (arch.isKick) {
+        drawKickImpactEffect(targetCtx, targetPos, type, progress);
+        return;
+      }
+
+      if (arch.isSlash) {
+        drawSlashEffect(targetCtx, targetPos, type, progress);
+        return;
+      }
+
+      if (arch.isNeedle) {
+        drawNeedleBarrageEffect(
+          targetCtx,
+          attackerPos,
+          targetPos,
+          progress,
+          type === "poison" ? "#A855F7" : (type === "grass" ? "#4ADE80" : "#FACC15")
+        );
+        return;
+      }
+
+      if (arch.isSurf) {
+        drawSurfWaveEffect(targetCtx, targetPos, progress);
+        return;
+      }
+
+      if (arch.isQuake) {
+        drawEarthquakeFissureEffect(targetCtx, targetPos, progress);
+        return;
+      }
+
+      if (arch.isBeam) {
+        const dx = targetPos.x - attackerPos.x;
+        const dy = targetPos.y - attackerPos.y;
+        const angle = Math.atan2(dy, dx);
+        if (moveKey === "solar-beam" || type === "grass") {
+          drawSolarBeamEffect(targetCtx, attackerPos, targetPos, angle, dx, dy, progress);
+        } else {
+          drawHyperBeamEffect(targetCtx, attackerPos, targetPos, angle, dx, dy, progress);
+        }
+        return;
+      }
+
+      if (arch.isBall) {
+        const dx = targetPos.x - attackerPos.x;
+        const dy = targetPos.y - attackerPos.y;
+        const angle = Math.atan2(dy, dx);
+        drawShadowBallEffect(targetCtx, attackerPos, targetPos, angle, progress);
+        return;
+      }
+
+      // Elemental Type Effects
+      switch (type) {
+        case "fire":
+          drawFireEffect(targetCtx, attackerPos, targetPos, category === "special", progress);
+          break;
+        case "water":
+          drawWaterEffect(targetCtx, attackerPos, targetPos, category === "special", progress);
+          break;
+        case "electric":
+          drawElectricEffect(targetCtx, attackerPos, targetPos, category === "special", progress);
+          break;
+        case "ice":
+          drawIceEffect(targetCtx, attackerPos, targetPos, category === "special", progress);
+          break;
+        case "grass":
+          drawGrassEffect(targetCtx, attackerPos, targetPos, progress);
+          break;
+        case "psychic":
+          drawPsychicEffect(targetCtx, targetPos, progress);
+          break;
+        case "poison":
+          drawPoisonEffect(targetCtx, attackerPos, targetPos, progress);
+          break;
+        case "ground":
+        case "rock":
+          drawRockGroundEffect(targetCtx, targetPos, progress);
+          break;
+        case "flying":
+          drawFlyingEffect(targetCtx, targetPos, progress);
+          break;
+        case "ghost":
+        case "dark":
+          drawGhostDarkEffect(targetCtx, targetPos, progress);
+          break;
+        case "dragon":
+          drawDragonEffect(targetCtx, attackerPos, targetPos, progress);
+          break;
+        case "steel":
+          drawSteelEffect(targetCtx, targetPos, progress);
+          break;
+        case "fairy":
+          drawFairyEffect(targetCtx, targetPos, progress);
+          break;
+        default:
+          drawPhysicalImpactEffect(targetCtx, targetPos, progress);
+          break;
+      }
+    },
+  };
+}
+
+export function getMoveAnimation(moveKey: string, isStatus: boolean = false): BattleMoveAnimation {
+  const key = (moveKey || "").toLowerCase().replace(/[\s_]+/g, "-");
+  if (MOVE_REGISTRY[key]) return MOVE_REGISTRY[key];
+
+  const moveData = getMoveData(key);
+  if (moveData) {
+    const dynamicAnim = createDynamicMoveAnimation(key, moveData);
+    MOVE_REGISTRY[key] = dynamicAnim;
+    return dynamicAnim;
+  }
+
+  if (isStatus) return statusMove;
+  return defaultMove;
+}
+

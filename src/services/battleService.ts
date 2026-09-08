@@ -4,6 +4,7 @@ import { STARTER_DATABASE, StarterEntry } from "../data/starterCosts.js";
 import { POKEMON_SPECIES_DATA, SpeciesBaseData } from "../data/pokemonStats.js";
 import { POKEMON_NAMES_KO } from "../data/pokemonNamesKo.js";
 import { ITEMS_DATA } from "../data/itemsKo.js";
+import { BallPerkId, BallPerkDefinition, BALL_PERK_DEFINITIONS, getAvailablePerksForTypes } from "../utils/perkSvgIcons.js";
 
 export const TYPE_CHART: Record<string, Record<string, number>> = {
   normal: { rock: 0.5, ghost: 0, steel: 0.5 },
@@ -67,6 +68,10 @@ export interface BattlePokemon {
   confusionTurns?: number;
   substituteHp?: number;
   isProtected?: boolean;
+  isTaunted?: boolean;
+  tauntTurns?: number;
+  isAttracted?: boolean;
+  cannotEscape?: boolean;
 
   // Special Mechanic: Transform (변신 / 괴짜)
   isTransformed?: boolean;
@@ -103,6 +108,7 @@ export interface BattlePokemon {
   isBoss?: boolean;
   bossShields?: number;
   bossMaxShields?: number;
+  hasEndurePerk?: boolean;
 }
 
 export interface TurnActionInfo {
@@ -124,6 +130,8 @@ export interface TurnActionInfo {
   damage?: number;
   isHit?: boolean;
   wasDescentFromAir?: boolean;
+  isTurn1Launch?: boolean;
+  chargingMove?: string | null;
 }
 
 export interface BattleState {
@@ -157,9 +165,19 @@ export interface BattleState {
       direction: "up" | "down";
     }[];
     wasDescentFromAir?: boolean;
+    hugTriggered?: boolean;
   } | null;
-  debugPlayerSpecies?: string;
-  debugEnemySpecies?: string;
+  pendingBallPerk?: BallPerkId | null;
+  activeBallPerk?: BallPerkId | null;
+  stickyWebTurns?: number;
+  rockSolidTurns?: number;
+  chillyTurns?: number;
+  dinosaurTurns?: number;
+  heatTimer?: number;
+  overchargeTurnCount?: number;
+  downfallTurnCount?: number;
+  hugTriggered?: boolean;
+  messageId?: string;
 }
 
 const BIOME_ENCOUNTERS: Record<string, string[]> = {
@@ -210,6 +228,113 @@ export class BattleService {
 
   private getBattleKey(userId: string, slotId: number): string {
     return `${userId}_${slotId}`;
+  }
+
+  /**
+   * 5% Probability PokeBall Reaction Perk Trigger
+   * Can only trigger during move casting waiting state (when buttons are disabled)
+   */
+  public triggerBallPerk(
+    userId: string,
+    slotId: number
+  ): { success: boolean; perk?: BallPerkDefinition; reason?: string } {
+    const battle = this.getOrCreateBattle(userId, slotId);
+    if (!battle) {
+      return { success: false, reason: "no_battle" };
+    }
+
+    // Only 1 perk can be active / pending per turn
+    if (battle.pendingBallPerk) {
+      return { success: false, reason: "already_active" };
+    }
+
+    // 5% probability roll
+    const roll = Math.random();
+    console.log(`[BALL PERK ROLL] user: ${userId}, slot: ${slotId}, roll: ${(roll * 100).toFixed(2)}% (Target: < 5.00%)`);
+    if (roll >= 0.05) {
+      return { success: false, reason: "roll_failed" };
+    }
+
+    const combatMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
+    const types = combatMon?.types || ["normal"];
+    const availablePerks = getAvailablePerksForTypes(types);
+
+    if (availablePerks.length === 0) {
+      return { success: false, reason: "no_available_perks" };
+    }
+
+    const chosen = availablePerks[Math.floor(Math.random() * availablePerks.length)];
+    battle.pendingBallPerk = chosen.id;
+
+    // Apply immediate field/status debuffs or setup:
+    const enemy = battle.enemy;
+    if (chosen.id === "confuse") {
+      enemy.isConfused = true;
+      enemy.confusionTurns = 3;
+    } else if (chosen.id === "flinch") {
+      enemy.isFlinched = true;
+    } else if (chosen.id === "taunt") {
+      enemy.isTaunted = true;
+      enemy.tauntTurns = 3;
+    } else if (chosen.id === "surveillance") {
+      enemy.cannotEscape = true;
+    } else if (chosen.id === "acid_dissolve") {
+      // Clear all positive stat stages on enemy
+      const statsList: (keyof StatStages)[] = ["atk", "def", "spa", "spd", "spe", "acc", "eva"];
+      for (const k of statsList) {
+        if (enemy.stages[k] > 0) {
+          enemy.stages[k] = 0;
+        }
+      }
+    } else if (chosen.id === "attract") {
+      enemy.isAttracted = true;
+    } else if (chosen.id === "sticky_web") {
+      battle.stickyWebTurns = 5;
+      enemy.stages.spe = Math.max(-6, enemy.stages.spe - 1);
+      if (combatMon?.types.map((t) => t.toLowerCase()).includes("bug")) {
+        combatMon.stages.spe = Math.min(6, combatMon.stages.spe + 1);
+      }
+    } else if (chosen.id === "rock_solid") {
+      battle.rockSolidTurns = 3;
+    } else if (chosen.id === "chilly") {
+      battle.chillyTurns = 5;
+      const enemyTypes = (enemy.types || []).map(t => t.toLowerCase());
+      if (!enemyTypes.includes("ice")) {
+        enemy.stages.spe = Math.max(-6, enemy.stages.spe - 1);
+      }
+      if (combatMon) {
+        combatMon.stages.spe = Math.min(6, combatMon.stages.spe + 1);
+      }
+    } else if (chosen.id === "dinosaur") {
+      battle.dinosaurTurns = 3;
+    } else if (chosen.id === "heat") {
+      if (combatMon) {
+        combatMon.stages.atk = Math.min(6, combatMon.stages.atk + 2);
+        combatMon.stages.spa = Math.min(6, combatMon.stages.spa + 2);
+      }
+      battle.heatTimer = 2;
+    } else if (chosen.id === "overcharge") {
+      if (combatMon) {
+        combatMon.stages.spe = Math.min(6, combatMon.stages.spe + 2);
+        combatMon.stages.atk = Math.min(6, combatMon.stages.atk + 1);
+        combatMon.stages.spa = Math.min(6, combatMon.stages.spa + 1);
+      }
+      battle.overchargeTurnCount = 0;
+    } else if (chosen.id === "downfall") {
+      if (combatMon) {
+        combatMon.stages.spa = Math.min(6, combatMon.stages.spa + 4);
+        combatMon.stages.spe = Math.min(6, combatMon.stages.spe + 2);
+      }
+      battle.downfallTurnCount = 0;
+    } else if (chosen.id === "willpower") {
+      if (combatMon) {
+        combatMon.hasEndurePerk = true;
+      }
+    } else if (chosen.id === "hug") {
+      battle.hugTriggered = true;
+    }
+
+    return { success: true, perk: chosen };
   }
 
   /**
@@ -408,16 +533,7 @@ export class BattleService {
       throw new Error(`Slot ${slotId} not found for user ${userId}`);
     }
 
-    const isTestSandbox = slotId === 1 || userId === "1411661077611020429";
-
     if (existing && existing.wave === slot.wave) {
-      if (isTestSandbox) {
-        existing.enemy.ability = "Sturdy";
-        existing.enemy.passiveAbility = undefined;
-        if (existing.enemy.hp <= 1) {
-          existing.enemy.hp = existing.enemy.maxHp;
-        }
-      }
       const currentLeader = slot.party[existing.playerActiveIndex || 0] || slot.party[0];
       if (currentLeader) {
         const movesChanged = JSON.stringify(existing.playerBattleMon.moves) !== JSON.stringify(currentLeader.moves);
@@ -425,18 +541,12 @@ export class BattleService {
         if (movesChanged || speciesOrLevelChanged) {
           existing.playerParty = slot.party;
           existing.playerBattleMon = this.createPlayerBattleMon(currentLeader, slot.party);
-          if (isTestSandbox) {
-            existing.playerBattleMon.hp = 9999;
-            existing.playerBattleMon.maxHp = 9999;
-          }
         }
       }
       return existing;
     }
 
-    const wildPokemon = isTestSandbox
-      ? this.spawnWildPokemon(1, "Town", "testsubject12", 1, "Sturdy")
-      : this.spawnWildPokemon(slot.wave, slot.biome || "Town");
+    const wildPokemon = this.spawnWildPokemon(slot.wave, slot.biome || "Town");
     const isKo = profile.language === "ko";
 
     const activeIndex = (preservedActiveIndex !== undefined && slot.party[preservedActiveIndex])
@@ -455,10 +565,6 @@ export class BattleService {
     const playerBattleMon = this.createPlayerBattleMon(activeLeader, slot.party);
     if (preservedStages) {
       playerBattleMon.stages = { ...preservedStages };
-    }
-    if (isTestSandbox) {
-      playerBattleMon.hp = 9999;
-      playerBattleMon.maxHp = 9999;
     }
 
     let dialogueText = wildPokemon.isBoss
@@ -578,32 +684,7 @@ export class BattleService {
     const playerMon = battle.playerBattleMon;
     const enemyMon = battle.enemy;
 
-    const isTestSandbox = slotId === 1 || userId === "1411661077611020429";
-    if (isTestSandbox) {
-      if (enemyMon.hp <= 1) {
-        enemyMon.hp = enemyMon.maxHp;
-        enemyMon.status = null;
-      }
-      if (playerMon.hp <= 0) {
-        playerMon.hp = playerMon.maxHp;
-      }
-    }
-
-    if (!playerMon || playerMon.hp <= 0 || (!isTestSandbox && enemyMon.hp <= 0)) return battle;
-
-    // TEMPORARY VISUAL TESTING: Change Pokémon sprite every turn to test animations across diverse Pokémon!
-    const ROTATING_TEST_SPECIES = [
-      "bulbasaur", "charizard", "blastoise", "pikachu", "snorlax",
-      "machamp", "gengar", "onix", "gyarados", "eevee",
-      "arcanine", "lucario", "mewtwo", "pidgeot", "venusaur",
-      "lapras", "diglett", "gardevoir", "garchomp", "tyranitar",
-      "scyther", "dragonite", "wobbuffet", "rayquaza", "slowpoke"
-    ];
-    const pIdx = Math.floor(Math.random() * ROTATING_TEST_SPECIES.length);
-    let eIdx = Math.floor(Math.random() * ROTATING_TEST_SPECIES.length);
-    if (eIdx === pIdx) eIdx = (eIdx + 1) % ROTATING_TEST_SPECIES.length;
-    battle.debugPlayerSpecies = ROTATING_TEST_SPECIES[pIdx];
-    battle.debugEnemySpecies = ROTATING_TEST_SPECIES[eIdx];
+    if (!playerMon || playerMon.hp <= 0 || enemyMon.hp <= 0) return battle;
 
     const isKo = lang === "ko";
     const pMoveKey = getMoveKey(moveKey);
@@ -635,10 +716,6 @@ export class BattleService {
         category: "physical",
         description: "기본 공격 기술",
       };
-    } else if (isTestSandbox) {
-      // TEST12 Mirror Move: Copies player's chosen move to test both player and enemy perspectives in 1 turn!
-      eMoveKey = pMoveKey;
-      eMove = getMoveData(eMoveKey) || pMove;
     } else {
       const eMoveRaw = enemyMon.moves[Math.floor(Math.random() * enemyMon.moves.length)] || "Tackle";
       eMoveKey = getMoveKey(eMoveRaw);
@@ -678,7 +755,9 @@ export class BattleService {
     const eSpeed = enemyMon.speed * getStageMultiplier(enemyMon.stages.spe) * (enemyMon.status === "par" ? 0.5 : 1.0);
 
     let playerGoesFirst = true;
-    if (pPriority > ePriority) {
+    if (battle.pendingBallPerk === "sky_flight" && (pMove.type || "").toLowerCase() === "flying") {
+      playerGoesFirst = true;
+    } else if (pPriority > ePriority) {
       playerGoesFirst = true;
     } else if (pPriority < ePriority) {
       playerGoesFirst = false;
@@ -688,11 +767,46 @@ export class BattleService {
 
     let turnLogs: string[] = [];
 
-    // Reset single-turn flags
+    // Reset single-turn flags (preserve perk flinch if triggered)
     playerMon.isProtected = false;
     enemyMon.isProtected = false;
     playerMon.isFlinched = false;
-    enemyMon.isFlinched = false;
+
+    // Announce field / immediate perks in dialogue ONCE if triggered
+    if (battle.pendingBallPerk) {
+      const pId = battle.pendingBallPerk;
+      const def = BALL_PERK_DEFINITIONS[pId];
+      if (def && ["surveillance", "acid_dissolve", "sticky_web", "rock_solid", "chilly", "dinosaur", "heat", "overcharge", "downfall"].includes(pId)) {
+        const msg = isKo
+          ? (pId === "acid_dissolve" ? "[PERK:acid_dissolve] 용액으로 상대의 랭크업을 모두 제거했다!"
+             : pId === "surveillance" ? "[PERK:surveillance] 감시 효과로 상대는 교체할 수 없다!"
+             : pId === "sticky_web" ? "[PERK:sticky_web] 바닥에 끈적끈적한 실을 깔았다!"
+             : pId === "rock_solid" ? "[PERK:rock_solid] 단단한 돌멩이의 가호로 3턴간 받는 피해가 50% 감소한다!"
+             : pId === "chilly" ? "[PERK:chilly] 얼어붙은 한기가 전장을 뒤덮어 상대 스피드가 1랭크 하락했다!"
+             : pId === "dinosaur" ? "[PERK:dinosaur] 고대 공룡의 기운으로 3턴간 드래곤 외 기술 위력이 약화된다!"
+             : pId === "heat" ? "[PERK:heat] 작열하는 열기로 2턴간 공격과 특수공격이 2랭크 상승했다!"
+             : pId === "overcharge" ? "[PERK:overcharge] 과충전 상태가 되어 스피드+2, 공격+1, 특공+1 상승했다!"
+             : "[PERK:downfall] 몰락의 힘으로 특수공격+4, 스피드+2 대폭 상승했다!")
+          : (pId === "acid_dissolve" ? "[PERK:acid_dissolve] Dissolved all stat boosts of the opponent!"
+             : pId === "surveillance" ? "[PERK:surveillance] Trapped the opponent with Surveillance!"
+             : pId === "sticky_web" ? "[PERK:sticky_web] Laid down a Sticky Web!"
+             : pId === "rock_solid" ? "[PERK:rock_solid] Pebble protection reduces damage by 50% for 3 turns!"
+             : pId === "chilly" ? "[PERK:chilly] Freezing chill engulfed the field, lowering foe's Speed by 1 stage!"
+             : pId === "dinosaur" ? "[PERK:dinosaur] Ancient dinosaur presence weakens non-Dragon moves for 3 turns!"
+             : pId === "heat" ? "[PERK:heat] Blazing heat boosted Atk and Sp.Atk by 2 stages for 2 turns!"
+             : pId === "overcharge" ? "[PERK:overcharge] Overcharge boosted Speed +2, Atk +1, Sp.Atk +1!"
+             : "[PERK:downfall] Downfall sharply boosted Sp.Atk +4 and Speed +2!");
+        turnLogs.push(msg);
+        battle.pendingBallPerk = null;
+      } else if (pId === "hug") {
+        turnLogs.push(isKo ? `[PERK:hug] ${playerMon.nameKo || playerMon.name}(은)는 당신을 포옹하고 돌아갔다.` : `[PERK:hug] ${playerMon.name} hugged you and returned.`);
+        battle.hugTriggered = true;
+        battle.pendingBallPerk = null;
+      } else if (["confuse", "flinch", "taunt", "attract", "willpower"].includes(pId)) {
+        // These already have their own dedicated action execution logs
+        battle.pendingBallPerk = null;
+      }
+    }
 
     const turnActions: TurnActionInfo[] = [];
 
@@ -719,30 +833,66 @@ export class BattleService {
     };
 
     // EXECUTE 1ST ACTION
-    const res1 = this.executeSingleAction(firstActor, secondActor, firstMove, isFirstPlayer, isKo, battle);
-    turnLogs.push(res1.log);
+    if (firstActor.isFlinched) {
+      firstActor.isFlinched = false;
+      const fName = isFirstPlayer ? firstActor.name : (isKo ? firstActor.nameKo : firstActor.name);
+      turnLogs.push(isKo ? `[PERK:flinch] ${fName}(은)는 압도되어 풀이 죽어 움직일 수 없다!` : `[PERK:flinch] ${fName} flinched!`);
+      turnActions.push({
+        actor: isFirstPlayer ? "player" : "enemy",
+        moveKey: isFirstPlayer ? pMoveKey : eMoveKey,
+        moveName: firstMove.name,
+        type: firstMove.type || "normal",
+        isSpecial: false,
+        log: isKo ? `[PERK:flinch] ${fName}(은)는 풀이 죽어 움직일 수 없다!` : `[PERK:flinch] ${fName} flinched!`,
+        enemyHpAfter: enemyMon.hp,
+        playerHpAfter: playerMon.hp,
+        damage: 0,
+        isHit: false,
+      });
+    } else {
+      const res1 = this.executeSingleAction(firstActor, secondActor, firstMove, isFirstPlayer, isKo, battle);
+      turnLogs.push(res1.log);
 
-    const isHit1 = (res1.damage ?? 0) > 0 || (res1.hitCount ?? 0) > 0 || (!res1.log.includes("빗나갔다") && !res1.log.includes("missed") && !res1.log.includes("효과가 없는") && !res1.log.includes("닿지 않았다"));
-    turnActions.push({
-      actor: isFirstPlayer ? "player" : "enemy",
-      moveKey: isFirstPlayer ? pMoveKey : eMoveKey,
-      moveName: firstMove.name,
-      type: firstMove.type || "normal",
-      isSpecial: firstMove.category === "special",
-      log: res1.log,
-      enemyHpAfter: enemyMon.hp,
-      playerHpAfter: playerMon.hp,
-      statChanges: battle.lastMoveEffect?.statChanges ? [...battle.lastMoveEffect.statChanges] : [],
-      typeMod: res1.typeMod,
-      hitCount: res1.hitCount,
-      isSuperEffective: res1.isSuperEffective,
-      damage: res1.damage,
-      isHit: isHit1,
-      wasDescentFromAir: firstActorWasAir,
-    });
+      const isHit1 = (res1.damage ?? 0) > 0 || (res1.hitCount ?? 0) > 0 || (!res1.log.includes("빗나갔다") && !res1.log.includes("missed") && !res1.log.includes("효과가 없는") && !res1.log.includes("닿지 않았다"));
+      const isTurn1Launch1 = (res1.damage ?? 0) === 0 && Boolean(
+        res1.log.includes("날아올랐다") || res1.log.includes("flew up") ||
+        res1.log.includes("파고들었다") || res1.log.includes("burrowed") ||
+        res1.log.includes("잠수했다") || res1.log.includes("underwater") ||
+        res1.log.includes("모습을 감췄다") || res1.log.includes("vanished") ||
+        res1.log.includes("튀어올랐다") || res1.log.includes("bounced") ||
+        res1.log.includes("빛을 흡수") || res1.log.includes("sunlight") ||
+        res1.log.includes("칼바람을 일으켰다") || res1.log.includes("whirlwind") ||
+        firstActor.chargingMove
+      );
+
+      turnActions.push({
+        actor: isFirstPlayer ? "player" : "enemy",
+        moveKey: isFirstPlayer ? pMoveKey : eMoveKey,
+        moveName: firstMove.name,
+        type: firstMove.type || "normal",
+        isSpecial: firstMove.category === "special",
+        log: res1.log,
+        enemyHpAfter: enemyMon.hp,
+        playerHpAfter: playerMon.hp,
+        statChanges: battle.lastMoveEffect?.statChanges ? [...battle.lastMoveEffect.statChanges] : [],
+        typeMod: res1.typeMod,
+        hitCount: res1.hitCount,
+        isSuperEffective: res1.isSuperEffective,
+        damage: res1.damage,
+        isHit: isHit1,
+        wasDescentFromAir: firstActorWasAir,
+        isTurn1Launch: isTurn1Launch1,
+        chargingMove: firstActor.chargingMove || undefined,
+      });
+    }
 
     // CHECK IF 2ND ACTOR CAN COUNTER-ATTACK
-    if (secondActor.hp > 0 && !secondActor.isFlinched && battle.phase !== "VICTORY" && battle.phase !== "DEFEAT") {
+    if (secondActor.hp > 0 && battle.phase !== "VICTORY" && battle.phase !== "DEFEAT") {
+      if (secondActor.isFlinched) {
+        secondActor.isFlinched = false;
+        const sName = !isFirstPlayer ? secondActor.name : (isKo ? secondActor.nameKo : secondActor.name);
+        turnLogs.push(isKo ? `[PERK:flinch] ${sName}(은)는 압도되어 풀이 죽어 움직일 수 없다!` : `[PERK:flinch] ${sName} flinched!`);
+      } else {
       const statChanges2: { target: "player" | "enemy"; direction: "up" | "down" }[] = [];
       battle.lastMoveEffect = {
         moveKey: !isFirstPlayer ? pMoveKey : eMoveKey,
@@ -759,6 +909,17 @@ export class BattleService {
       turnLogs.push(res2.log);
 
       const isHit2 = (res2.damage ?? 0) > 0 || (res2.hitCount ?? 0) > 0 || (!res2.log.includes("빗나갔다") && !res2.log.includes("missed") && !res2.log.includes("효과가 없는") && !res2.log.includes("닿지 않았다"));
+      const isTurn1Launch2 = (res2.damage ?? 0) === 0 && Boolean(
+        res2.log.includes("날아올랐다") || res2.log.includes("flew up") ||
+        res2.log.includes("파고들었다") || res2.log.includes("burrowed") ||
+        res2.log.includes("잠수했다") || res2.log.includes("underwater") ||
+        res2.log.includes("모습을 감췄다") || res2.log.includes("vanished") ||
+        res2.log.includes("튀어올랐다") || res2.log.includes("bounced") ||
+        res2.log.includes("빛을 흡수") || res2.log.includes("sunlight") ||
+        res2.log.includes("칼바람을 일으켰다") || res2.log.includes("whirlwind") ||
+        secondActor.chargingMove
+      );
+
       turnActions.push({
         actor: !isFirstPlayer ? "player" : "enemy",
         moveKey: !isFirstPlayer ? pMoveKey : eMoveKey,
@@ -775,11 +936,11 @@ export class BattleService {
         damage: res2.damage,
         isHit: isHit2,
         wasDescentFromAir: secondActorWasAir,
+        isTurn1Launch: isTurn1Launch2,
+        chargingMove: secondActor.chargingMove || undefined,
       });
-    } else if (secondActor.isFlinched && secondActor.hp > 0) {
-      const monName = isFirstPlayer ? (isKo ? enemyMon.nameKo : enemyMon.name) : playerMon.name;
-      turnLogs.push(isKo ? `${monName}(은)는 풀이 죽어 기술을 쓸 수 없었다!` : `${monName} flinched and couldn't move!`);
     }
+  }
 
     battle.turnActions = turnActions;
 
@@ -859,6 +1020,69 @@ export class BattleService {
       }
     }
 
+    // Update sticky web & taunt turns at turn end
+    if (battle.stickyWebTurns && battle.stickyWebTurns > 0) {
+      battle.stickyWebTurns -= 1;
+      if (battle.stickyWebTurns === 0) {
+        turnLogs.push(isKo ? "[PERK:sticky_web] 바닥에 깔려있던 끈적끈적한 실이 사라졌다." : "[PERK:sticky_web] The sticky web dissipated.");
+      }
+    }
+    if (battle.rockSolidTurns && battle.rockSolidTurns > 0) {
+      battle.rockSolidTurns -= 1;
+      if (battle.rockSolidTurns === 0) {
+        turnLogs.push(isKo ? "[PERK:rock_solid] 돌멩이의 방어 효과가 끝났다." : "[PERK:rock_solid] The pebble protection wore off.");
+      }
+    }
+    if (battle.chillyTurns && battle.chillyTurns > 0) {
+      battle.chillyTurns -= 1;
+      if (battle.chillyTurns === 0) {
+        turnLogs.push(isKo ? "[PERK:chilly] 얼어붙은 한기가 가라앉았다." : "[PERK:chilly] The freezing chill settled down.");
+      }
+    }
+    if (battle.dinosaurTurns && battle.dinosaurTurns > 0) {
+      battle.dinosaurTurns -= 1;
+      if (battle.dinosaurTurns === 0) {
+        turnLogs.push(isKo ? "[PERK:dinosaur] 고대 공룡의 기운이 사라졌다." : "[PERK:dinosaur] The ancient dinosaur presence faded.");
+      }
+    }
+    if (battle.heatTimer && battle.heatTimer > 0) {
+      battle.heatTimer -= 1;
+      if (battle.heatTimer === 0) {
+        playerMon.stages.atk = Math.max(-6, playerMon.stages.atk - 1);
+        playerMon.stages.spa = Math.max(-6, playerMon.stages.spa - 1);
+        turnLogs.push(isKo ? "[PERK:heat] 열기가 식으며 공격과 특수공격이 1랭크 하락했다!" : "[PERK:heat] Heat cooled down, lowering Atk and Sp.Atk by 1 stage!");
+      }
+    }
+    if (battle.overchargeTurnCount !== undefined) {
+      battle.overchargeTurnCount += 1;
+      if (battle.overchargeTurnCount === 1) {
+        playerMon.stages.spa = Math.min(6, playerMon.stages.spa + 1);
+        turnLogs.push(isKo ? "[PERK:overcharge] 과충전의 여파로 특수공격이 1랭크 추가 상승했다!" : "[PERK:overcharge] Overcharge surge increased Sp.Atk by 1 stage!");
+      } else if (battle.overchargeTurnCount >= 3) {
+        playerMon.stages.spe = Math.max(-6, playerMon.stages.spe - 4);
+        battle.overchargeTurnCount = undefined;
+        turnLogs.push(isKo ? "[PERK:overcharge] 과충전 방전으로 스피드가 4랭크 급격히 하락했다!" : "[PERK:overcharge] Overcharge discharge severely lowered Speed by 4 stages!");
+      }
+    }
+    if (battle.downfallTurnCount !== undefined) {
+      battle.downfallTurnCount += 1;
+      if (battle.downfallTurnCount === 1) {
+        playerMon.stages.spe = Math.max(-6, playerMon.stages.spe - 3);
+        turnLogs.push(isKo ? "[PERK:downfall] 몰락의 대가로 스피드가 3랭크 하락했다!" : "[PERK:downfall] Downfall effect lowered Speed by 3 stages!");
+      } else if (battle.downfallTurnCount >= 4) {
+        playerMon.stages.spa = Math.max(-6, playerMon.stages.spa - 6);
+        battle.downfallTurnCount = undefined;
+        turnLogs.push(isKo ? "[PERK:downfall] 완전한 몰락으로 특수공격이 6랭크 급락했다!" : "[PERK:downfall] Utter downfall sharply plummeted Sp.Atk by 6 stages!");
+      }
+    }
+    if (enemyMon.isTaunted && enemyMon.tauntTurns) {
+      enemyMon.tauntTurns -= 1;
+      if (enemyMon.tauntTurns <= 0) {
+        enemyMon.isTaunted = false;
+        enemyMon.tauntTurns = 0;
+      }
+    }
+
     battle.dialogueText = turnLogs.join("\n");
     battle.turnCount += 1;
 
@@ -920,12 +1144,50 @@ export class BattleService {
       return { log: isKo ? `${actorName}(은)는 몸이 저려서 움직일 수 없다!` : `${actorName} is fully paralyzed!`, damage: 0 };
     }
 
+    // 1.1 Attract (매혹) Check
+    if (actor.isAttracted && Math.random() < 0.5) {
+      return {
+        log: isKo
+          ? `[PERK:attract] ${actorName}(은)는 헤롱헤롱 상태에 빠져 몸을 움직일 수 없다!`
+          : `[PERK:attract] ${actorName} is immobilized by love!`,
+        damage: 0,
+      };
+    }
+
+    // 1.2 Confusion (혼란) Check
+    if (actor.isConfused) {
+      actor.confusionTurns = (actor.confusionTurns || 3) - 1;
+      if (actor.confusionTurns <= 0) {
+        actor.isConfused = false;
+        actor.confusionTurns = 0;
+      } else if (Math.random() < 0.33) {
+        const confDmg = Math.max(1, Math.floor((((2 * actor.level / 5 + 2) * 40 * actor.atk / Math.max(1, actor.def)) / 50) + 2));
+        actor.hp = Math.max(0, actor.hp - confDmg);
+        return {
+          log: isKo
+            ? `[PERK:confuse] ${actorName}(은)는 혼란에 빠져 있다!\n혼란으로 인해 자신을 공격했다! (-${confDmg})`
+            : `[PERK:confuse] ${actorName} is confused!\nIt hurt itself in confusion! (-${confDmg})`,
+          damage: 0,
+        };
+      }
+    }
+
     // 2. Metronome (손가락흔들기)
     let activeMove = move;
     if (move.name === "metronome" || move.nameKo === "손가락흔들기") {
       const allMoveKeys = Object.keys(MOVES_DATA);
       const randomKey = allMoveKeys[Math.floor(Math.random() * allMoveKeys.length)];
       activeMove = MOVES_DATA[randomKey] || move;
+    }
+
+    // 1.3 Taunt (도발) Check
+    if (actor.isTaunted && activeMove.category === "status") {
+      return {
+        log: isKo
+          ? `[PERK:taunt] ${actorName}(은)는 도발당해서 변화기를 쓸 수 없다!`
+          : `[PERK:taunt] ${actorName} cannot use status moves due to Taunt!`,
+        damage: 0,
+      };
     }
 
     // 3. Status Move Processing
@@ -1027,6 +1289,15 @@ export class BattleService {
         actor.chargingMove = moveNameLower;
         return {
           log: isKo ? `${actorName}(은)는 눈부신 빛에 휩싸였다!` : `${actorName} became cloaked in a harsh light!`,
+          damage: 0,
+        };
+      }
+      actor.chargingMove = null;
+    } else if (moveNameLower === "razor-wind") {
+      if (actor.chargingMove !== moveNameLower) {
+        actor.chargingMove = moveNameLower;
+        return {
+          log: isKo ? `${actorName}(은)는 칼바람을 일으켰다!` : `${actorName} whipped up a whirlwind!`,
           damage: 0,
         };
       }
@@ -1168,8 +1439,26 @@ export class BattleService {
       return { log: isKo ? `${actorName}의 ${moveName}! ${targetName}의 HP를 자신의 HP와 같게 맞췄다! (-${damage})` : `${actorName}'s ${moveName}! Matched ${targetName}'s HP! (-${damage})`, damage };
     }
 
-    // 4. Accuracy Check (Weather Modifications)
+    // 4. Accuracy Check (Weather & Perk Modifications)
     let acc = activeMove.accuracy || 100;
+    if (isActorPlayer && battle?.pendingBallPerk === "clear_eye") {
+      acc = Math.min(100, acc + 20);
+      battle.pendingBallPerk = null;
+    }
+
+    if (!isActorPlayer && battle?.pendingBallPerk === "dodge") {
+      const isNeverMiss = (activeMove.accuracy as any) === true || activeMove.accuracy === 0;
+      if (!isNeverMiss) {
+        battle.pendingBallPerk = null;
+        return {
+          log: isKo
+            ? `${actorName}의 ${moveName}!\n[PERK:dodge] ${targetName}(은)는 회피기동으로 적의 공격을 완벽히 피했다!`
+            : `${actorName}'s ${moveName}!\n[PERK:dodge] ${targetName} skillfully dodged the attack!`,
+          damage: 0,
+        };
+      }
+    }
+
     if (battle?.weather === "rain" && (moveNameLower === "thunder" || moveNameLower === "hurricane")) {
       acc = 1000; // Perfect accuracy in rain
     } else if (battle?.weather === "snow" && moveNameLower === "blizzard") {
@@ -1269,7 +1558,18 @@ export class BattleService {
     const stabMod = isStab ? 1.5 : 1.0;
     const typeMod = this.getTypeEffectiveness(activeMove.type, target.types);
 
-    const isCrit = Math.random() < 0.08;
+    const isHighCrit = [
+      "razor-wind", "slash", "karate-chop", "razor-leaf", "crabhammer",
+      "cross-poison", "shadow-claw", "night-slash", "stone-edge",
+      "air-cutter", "psycho-cut", "drill-run", "blaze-kick"
+    ].includes(moveNameLower);
+    let isCrit = Math.random() < (isHighCrit ? 0.25 : 0.08);
+    let critPerkLog = "";
+    if (isActorPlayer && battle?.pendingBallPerk === "crit") {
+      isCrit = true;
+      critPerkLog = isKo ? "\n[PERK:crit] 집중 효과로 급소에 작렬했다!" : "\n[PERK:crit] Critical hit by Focus!";
+      battle.pendingBallPerk = null;
+    }
     const critMod = isCrit ? 1.5 : 1.0;
     const randomMod = 0.85 + Math.random() * 0.15;
 
@@ -1279,14 +1579,49 @@ export class BattleService {
     );
     damage = Math.max(typeMod > 0 ? 1 : 0, damage);
 
+    // [PERK] Sky Flight: 1.5x power during flight
+    if (isActorPlayer && (battle?.pendingBallPerk === "sky_flight" || battle?.activeBallPerk === "sky_flight")) {
+      const wasInAir = (actor as any).semiInvulnerableState === "air" || (actor as any).chargingMove === "fly" || battle?.lastMoveEffect?.wasDescentFromAir;
+      if (wasInAir) {
+        damage = Math.floor(damage * 1.5);
+        critPerkLog += isKo ? "\n[PERK:sky_flight] 창공의 힘으로 활공 공격 위력이 1.5배 상승했다!" : "\n[PERK:sky_flight] Firmament boosted flight attack power by 1.5x!";
+      }
+    }
+
+    // [PERK] Dinosaur: 30% damage reduction for non-Dragon moves
+    if (battle?.dinosaurTurns && battle.dinosaurTurns > 0) {
+      if (activeMove.type.toLowerCase() !== "dragon") {
+        damage = Math.max(1, Math.floor(damage * 0.7));
+      }
+    }
+
+    // [PERK] Rock Solid: 50% damage reduction for player against enemy attacks
+    if (!isActorPlayer && battle?.rockSolidTurns && battle.rockSolidTurns > 0) {
+      damage = Math.max(1, Math.floor(damage * 0.5));
+    }
+
     // Multi-hit moves
     const hitCount = this.getMultiHitCount(activeMove.name);
     if (hitCount > 1) {
       damage *= hitCount;
     }
 
+    // [PERK] Wave: 100% lifesteal for water-type moves
+    if (isActorPlayer && activeMove.type.toLowerCase() === "water" && damage > 0) {
+      if (battle?.pendingBallPerk === "wave" || battle?.activeBallPerk === "wave") {
+        const heal = Math.min(actor.maxHp - actor.hp, damage);
+        if (heal > 0) {
+          actor.hp += heal;
+          critPerkLog += isKo ? `\n[PERK:wave] 파도의 힘으로 입힌 피해만큼 체력을 흡수했다! (+${heal} HP)` : `\n[PERK:wave] Surging Wave absorbed ${heal} HP!`;
+        }
+      }
+    }
+
     // 7. Apply Damage (Substitute vs Main Body)
     let damageLog = "";
+    if (!isActorPlayer && battle?.rockSolidTurns && battle.rockSolidTurns > 0) {
+      damageLog += isKo ? "\n[PERK:rock_solid] 돌멩이 효과로 받는 피해를 50% 경감했다!" : "\n[PERK:rock_solid] Pebble reduced damage by 50%!";
+    }
     if (target.substituteHp && target.substituteHp > 0) {
       target.substituteHp = Math.max(0, target.substituteHp - damage);
       if (target.substituteHp === 0) {
@@ -1302,11 +1637,13 @@ export class BattleService {
         damageLog += isKo ? `\n일루전이 깨져 본래의 ${isActorPlayer ? target.name : target.nameKo} 모습이 드러났다!` : `\nThe illusion broke!`;
       }
 
-      // Sturdy check & Test Sandbox Invulnerability
-      const isPlayerTarget = target === battle?.playerBattleMon;
-      if (isPlayerTarget && (battle?.slotId === 1 || battle?.userId === "1411661077611020429")) {
-        target.hp = target.maxHp;
+      // [PERK] Willpower: Endure with 1 HP
+      if (!isActorPlayer && target.hasEndurePerk && damage >= target.hp) {
+        target.hp = 1;
+        target.hasEndurePerk = false;
+        damageLog += isKo ? `\n[PERK:willpower] ${targetName}(은)는 의지의 힘으로 HP 1로 공격을 견뎌냈다!` : `\n[PERK:willpower] ${targetName} endured the attack with 1 HP!`;
       } else if (target.ability === "Sturdy" && target.hp === target.maxHp && damage >= target.hp) {
+        // Sturdy check
         target.hp = 1;
         damageLog += isKo ? ` [특성 옹골참!] ${targetName}(은)는 1의 HP로 버텼다!` : ` [Sturdy!] ${targetName} held on with 1 HP!`;
       } else {
@@ -1320,8 +1657,11 @@ export class BattleService {
       damageLog += isKo ? `\n${actorName}(은)는 폭발하여 스스로 쓰러졌다!` : `\n${actorName} self-destructed and fainted!`;
     }
 
-    // 8. Secondary Effects (Drain, Recoil, Status Infliction, Stat Stages)
-    const extraEffects = this.applySecondaryAttackEffects(actor, target, activeMove, damage, isKo);
+    // 8. Secondary Effects (Drain, Recoil, Status Infliction, Stat Stages, Trapping)
+    // 효과가 없거나 데미지가 0인 경우 특수효과 (김밥말이/조이기 속박, 상태이상, 랭크변화 등) 발동 금지!
+    const extraEffects = (typeMod > 0 && damage > 0)
+      ? this.applySecondaryAttackEffects(actor, target, activeMove, damage, isKo)
+      : "";
 
     // 9. Effectiveness & Crit Log Construction
     let effLog = "";
@@ -1329,7 +1669,9 @@ export class BattleService {
     else if (typeMod === 0) effLog = isKo ? " 효과가 없는 것 같다..." : " It had no effect...";
     else if (typeMod <= 0.5) effLog = isKo ? " 효과가 별로인 듯하다..." : " It's not very effective...";
 
-    if (isCrit && typeMod > 0) effLog += isKo ? " 급소에 맞았다!" : " A critical hit!";
+    if (isCrit && typeMod > 0) {
+      effLog += critPerkLog ? critPerkLog : (isKo ? " 급소에 맞았다!" : " A critical hit!");
+    }
     if (hitCount > 1) effLog += isKo ? ` (${hitCount}회 명중!)` : ` (Hit ${hitCount} times!)`;
 
     // Set recharge turn requirement for Hyper Beam / Giga Impact family
@@ -1353,6 +1695,7 @@ export class BattleService {
     damageDealt: number,
     isKo: boolean
   ): string {
+    if (damageDealt <= 0) return "";
     let log = "";
     const mName = move.name.toLowerCase().replace(/[\s_]+/g, "-");
 
@@ -1402,20 +1745,58 @@ export class BattleService {
 
     // Status Inflicting Attacks
     if (target.hp > 0 && !target.status) {
-      if ((mName === "flamethrower" || mName === "fire-blast" || mName === "scald") && Math.random() < 0.3) {
-        if (!target.types.includes("fire")) {
+      if ((mName === "flamethrower" || mName === "fire-blast" || mName === "scald" || mName === "ember" || mName === "fire-punch") && Math.random() < (mName === "scald" ? 0.3 : 0.1)) {
+        if (!target.types.map(t => t.toLowerCase()).includes("fire")) {
           target.status = "brn";
           log += isKo ? `\n${target.name}(은)는 화상을 입었다!` : `\n${target.name} was burned!`;
         }
-      } else if ((mName === "thunderbolt" || mName === "discharge" || mName === "spark") && Math.random() < 0.3) {
-        if (!target.types.includes("electric")) {
+      } else if ((mName === "ice-beam" || mName === "blizzard" || mName === "ice-punch" || mName === "powder-snow") && Math.random() < 0.1) {
+        if (!target.types.map(t => t.toLowerCase()).includes("ice")) {
+          target.status = "frz";
+          log += isKo ? `\n${target.name}(은)는 꽁꽁 얼어붙었다!` : `\n${target.name} was frozen solid!`;
+        }
+      } else if ((mName === "thunderbolt" || mName === "discharge" || mName === "spark" || mName === "thunder" || mName === "thunder-punch" || mName === "body-slam") && Math.random() < (mName === "thunder" || mName === "body-slam" ? 0.3 : 0.1)) {
+        if (!target.types.map(t => t.toLowerCase()).includes("electric")) {
           target.status = "par";
           log += isKo ? `\n${target.name}(은)는 마비되어 저려왔다!` : `\n${target.name} is paralyzed!`;
         }
-      } else if ((mName === "sludge-bomb" || mName === "poison-jab") && Math.random() < 0.3) {
-        if (!target.types.includes("poison") && !target.types.includes("steel")) {
+      } else if ((mName === "poison-sting" || mName === "twineedle" || mName === "sludge-bomb" || mName === "poison-jab" || mName === "smog" || mName === "sludge") && Math.random() < (mName === "poison-sting" ? 0.3 : (mName === "twineedle" ? 0.2 : 0.3))) {
+        if (!target.types.map(t => t.toLowerCase()).includes("poison") && !target.types.map(t => t.toLowerCase()).includes("steel")) {
           target.status = "psn";
           log += isKo ? `\n${target.name}(은)는 독에 걸렸다!` : `\n${target.name} was poisoned!`;
+        }
+      }
+    }
+
+    // Confusion Inflicting Attacks (환상빔 10% 혼란, 이상한빛 등)
+    if (target.hp > 0 && (!target.confusionTurns || target.confusionTurns <= 0)) {
+      if ((mName === "psybeam" || mName === "confusion" || mName === "water-pulse" || mName === "dizzy-punch" || mName === "dynamic-punch") && Math.random() < (mName === "dynamic-punch" ? 1.0 : (mName === "water-pulse" || mName === "dizzy-punch" ? 0.2 : 0.1))) {
+        target.confusionTurns = Math.floor(Math.random() * 4) + 2;
+        log += isKo ? `\n${target.name}(은)는 혼란에 빠졌다!` : `\n${target.name} became confused!`;
+      }
+    }
+
+    // Stat Drops on Target (거품광선 스피드 -1 10%, 오로라빔 공격 -1 10%, 용해액 방어 -1 10% 등)
+    if (target.hp > 0) {
+      if ((mName === "bubble-beam" || mName === "bubble" || mName === "constrict" || mName === "icy-wind") && Math.random() < (mName === "icy-wind" ? 1.0 : 0.1)) {
+        if (target.stages.spe > -6) {
+          target.stages.spe = Math.max(-6, target.stages.spe - 1);
+          log += isKo ? `\n${target.name}의 스피드가 떨어졌다! (-1)` : `\n${target.name}'s Speed fell! (-1)`;
+        }
+      } else if ((mName === "aurora-beam" || mName === "play-rough") && Math.random() < 0.1) {
+        if (target.stages.atk > -6) {
+          target.stages.atk = Math.max(-6, target.stages.atk - 1);
+          log += isKo ? `\n${target.name}의 공격이 떨어졌다! (-1)` : `\n${target.name}'s Attack fell! (-1)`;
+        }
+      } else if ((mName === "acid" || mName === "iron-tail" || mName === "crunch" || mName === "rock-smash") && Math.random() < (mName === "rock-smash" ? 0.5 : 0.2)) {
+        if (target.stages.def > -6) {
+          target.stages.def = Math.max(-6, target.stages.def - 1);
+          log += isKo ? `\n${target.name}의 방어가 떨어졌다! (-1)` : `\n${target.name}'s Defense fell! (-1)`;
+        }
+      } else if ((mName === "psychic" || mName === "shadow-ball" || mName === "bug-buzz" || mName === "earth-power" || mName === "focus-blast") && Math.random() < (mName === "psychic" ? 0.1 : 0.2)) {
+        if (target.stages.spd > -6) {
+          target.stages.spd = Math.max(-6, target.stages.spd - 1);
+          log += isKo ? `\n${target.name}의 특수방어가 떨어졌다! (-1)` : `\n${target.name}'s Sp. Def fell! (-1)`;
         }
       }
     }

@@ -2,7 +2,7 @@
 import GIFEncoder from "gif-encoder-2";
 import { createCanvas } from "@napi-rs/canvas";
 import { BattleState, TurnActionInfo } from "../services/battleService.js";
-import { renderMoveEffect, drawStatBoostEffect, drawStatDropEffect } from "./moveEffectRenderer.js";
+import { renderMoveEffect, drawStatBoostEffect, drawStatDropEffect } from "../renderers/moves/index.js";
 import { POKEMON_SPECIES_DATA } from "../data/pokemonStats.js";
 import { getMoveKey, getMoveData, MOVES_DATA } from "../data/movesKo.js";
 import {
@@ -20,7 +20,10 @@ import {
   BIOME_NAMES_KO,
 } from "./canvasRenderer.js";
 import { getMoveAnimation } from "../battle/moves/moveRegistry.js";
-import { directBattleCamera } from "./battleCamera.js";
+import { applyMoveCameraToFrames } from "./battleCamera.js";
+import { interpolateBattleFramesTo30Fps } from "./frameInterpolator.js";
+import { applyDamageBlinkFrames } from "./damageBlink.js";
+import { getPerkSvgImageSync, BallPerkId } from "./perkSvgIcons.js";
 
 export interface BattleAnimationOptions {
   battle: BattleState;
@@ -30,11 +33,36 @@ export interface BattleAnimationOptions {
   isSpecial?: boolean;
   isPlayerAttacking?: boolean;
   dialogueLines?: string[];
+  includeFramePreviews?: boolean;
+}
+
+export interface FramePreviewItem {
+  index: number;
+  delay: number;
+  phaseId: string;
+  phaseName: string;
+  dataUrl: string;
+  cameraZoom: number;
+  pOffset: { x: number; y: number };
+  eOffset: { x: number; y: number };
+}
+
+export interface PhaseInfoItem {
+  phaseId: string;
+  phaseName: string;
+  frameIndex: number;
+  delay?: number;
+  pOffset?: { x: number; y: number };
+  eOffset?: { x: number; y: number };
+  cameraZoom?: number;
+  dataUrl: string;
 }
 
 export interface RenderGifResult {
   buffer: Buffer;
   motionDurationMs: number;
+  frames?: FramePreviewItem[];
+  phases?: PhaseInfoItem[];
 }
 
 const edgeColorCache = new WeakMap<any, { top: string; bottom: string }>();
@@ -88,86 +116,9 @@ function createEffectivenessFlickerFrames(
   usePlayerFront: boolean = false,
   useEnemyBack: boolean = false
 ): any[] {
-  if (!action) return [];
-
-  // Skip flicker / recoil settling completely for 0-damage actions (charging moves, misses, immunities)
-  const moveNameLower = (action.moveKey || "").toLowerCase().replace(/[\s_]+/g, "-");
-  const isCharging = ["fly", "dig", "dive", "bounce", "shadow-force", "phantom-force", "solar-beam", "solar-blade", "skull-bash", "meteor-beam", "sky-attack"].includes(moveNameLower) && (action.damage ?? 0) === 0;
-  if (isCharging || (action.damage ?? 0) === 0) {
-    return [];
-  }
-
-  const typeMod = action.typeMod !== undefined ? action.typeMod : (action.isSuperEffective ? 2.0 : 1.0);
-  
-  let blinkCount = 0; // Default: 0 blinks for normal hits (1.0x) and not very effective (<= 0.5x)
-  if (typeMod >= 4.0) blinkCount = 4; // Double super effective (>= 4.0x) -> 4 blinks
-  else if (typeMod >= 2.0) blinkCount = 3; // Super effective (2.0x) -> 3 blinks
-
-  const isP = isAttackerPlayer;
-  const textIdx = isAct1 ? 2 : 99;
-
-  if (blinkCount === 0) {
-    return [
-      {
-        delay: 140,
-        pOffset: { x: 0, y: 0 },
-        eOffset: { x: 0, y: 0 },
-        showEffect: false,
-        hitFlash: false,
-        usePlayerFront: usePlayerFront,
-        useEnemyBack: useEnemyBack,
-        targetAlpha: 1.0,
-        enemyHp: action.enemyHpAfter,
-        playerHp: action.playerHpAfter,
-        textLineIdx: textIdx,
-        statProgress: undefined,
-        isBlur: false,
-        moveEffect: action,
-      }
-    ];
-  }
-
-  const durationPerHalf = blinkCount >= 4 ? 55 : (blinkCount === 3 ? 65 : 100);
-  const frames: any[] = [];
-  for (let i = 0; i < blinkCount; i++) {
-    const isLast = (i === blinkCount - 1);
-    // 1. Semi-transparent blink & subtle defender flinch
-    frames.push({
-      delay: durationPerHalf,
-      pOffset: (usePlayerFront && isP) ? { x: 0, y: 0 } : (isP ? { x: 0, y: 0 } : { x: 4 - (i % 2) * 8, y: -2 }),
-      eOffset: (useEnemyBack && !isP) ? { x: 0, y: 0 } : (!isP ? { x: 0, y: 0 } : { x: 4 - (i % 2) * 8, y: -2 }),
-      showEffect: false,
-      hitFlash: false,
-      usePlayerFront: usePlayerFront,
-      useEnemyBack: useEnemyBack,
-      targetAlpha: 0.15,
-      enemyHp: action.enemyHpAfter,
-      playerHp: action.playerHpAfter,
-      textLineIdx: textIdx,
-      statProgress: undefined,
-      isBlur: false,
-      moveEffect: action,
-    });
-    // 2. Visible normal half-blink
-    frames.push({
-      delay: isLast ? durationPerHalf + 80 : durationPerHalf,
-      pOffset: { x: 0, y: 0 },
-      eOffset: { x: 0, y: 0 },
-      showEffect: false,
-      hitFlash: false,
-      usePlayerFront: usePlayerFront,
-      useEnemyBack: useEnemyBack,
-      targetAlpha: 1.0,
-      enemyHp: action.enemyHpAfter,
-      playerHp: action.playerHpAfter,
-      textLineIdx: textIdx,
-      statProgress: undefined,
-      isBlur: false,
-      moveEffect: action,
-    });
-  }
-
-  return frames;
+  // 깜빡임(점멸) 및 깜빡임 직후 체력 게이지 감소 애니메이션은
+  // applyDamageBlinkFrames에서 공식 포켓몬 타이밍에 맞추어 단일 통합 처리됩니다.
+  return [];
 }
 
 /**
@@ -203,6 +154,10 @@ function createStatChangeFrames(
       statProgress: 0.18,
       isBlur: false,
       moveEffect: action,
+      cameraZoom: 1.0,
+      cameraFocal: null,
+      _gen5Camera: false,
+      afterCameraReturn: true,
     },
     // Step 2: Wave 1 fading, Wave 2 soaring up from ground (150ms)
     {
@@ -220,6 +175,10 @@ function createStatChangeFrames(
       statProgress: 0.45,
       isBlur: false,
       moveEffect: action,
+      cameraZoom: 1.0,
+      cameraFocal: null,
+      _gen5Camera: false,
+      afterCameraReturn: true,
     },
     // Step 3: Wave 2 fading, Wave 3 soaring up from ground (160ms)
     {
@@ -237,6 +196,10 @@ function createStatChangeFrames(
       statProgress: 0.72,
       isBlur: false,
       moveEffect: action,
+      cameraZoom: 1.0,
+      cameraFocal: null,
+      _gen5Camera: false,
+      afterCameraReturn: true,
     },
     // Step 4: Wave 3 reaching apex and cleanly dissolving (180ms)
     {
@@ -254,6 +217,10 @@ function createStatChangeFrames(
       statProgress: 0.95,
       isBlur: false,
       moveEffect: action,
+      cameraZoom: 1.0,
+      cameraFocal: null,
+      _gen5Camera: false,
+      afterCameraReturn: true,
     },
   ];
 }
@@ -348,6 +315,332 @@ function createFaintingFrames(
   ];
 }
 
+/**
+ * Creates the adorable Hug animation cutscene:
+ * 1. Switches player Pokémon to front-sprite view, hops towards camera (moving left & downward, growing via perspective).
+ * 2. Tilts forward slightly to embrace for 1 second (1000ms).
+ * 3. Switches back to rear view and hops back to original position and scale.
+ */
+function createHugAnimationFrames(
+  currentEnemyHp: number,
+  currentPlayerHp: number,
+  dialogueTextIdx: number = 1,
+  extraDownOffset: number = 0
+): any[] {
+  const d1 = Math.round(extraDownOffset * 0.20);
+  const d2 = Math.round(extraDownOffset * 0.45);
+  const d3 = Math.round(extraDownOffset * 0.75);
+  const dFull = extraDownOffset;
+
+  return [
+    // 1. Approach towards camera: 3 bouncy hops moving substantially downwards into foreground (up to 5.0x)
+    // --- HOP 1: First leap forward ---
+    {
+      delay: 100,
+      pOffset: { x: 0, y: 15 + d1 },
+      eOffset: { x: 0, y: 0 },
+      pScale: { x: 1.70, y: 1.70 },
+      showEffect: false,
+      hitFlash: false,
+      usePlayerFront: true,
+      useEnemyBack: false,
+      hidePShadow: true,
+      targetAlpha: 1.0,
+      enemyHp: currentEnemyHp,
+      playerHp: currentPlayerHp,
+      textLineIdx: dialogueTextIdx,
+      isBlur: false,
+      cameraZoom: 1.0,
+      cameraPan: { x: 0, y: 0 },
+      cameraFocal: null,
+      _gen5Camera: false,
+      phaseId: "hug-approach",
+      phaseName: "포옹 다가오기 (1단 도약, 1.70배)",
+    },
+    {
+      delay: 90,
+      pOffset: { x: 0, y: 70 + d1 },
+      eOffset: { x: 0, y: 0 },
+      pScale: { x: 2.30, y: 2.15 }, // 착지 스쿼시
+      showEffect: false,
+      hitFlash: false,
+      usePlayerFront: true,
+      useEnemyBack: false,
+      hidePShadow: true,
+      targetAlpha: 1.0,
+      enemyHp: currentEnemyHp,
+      playerHp: currentPlayerHp,
+      textLineIdx: dialogueTextIdx,
+      isBlur: false,
+      cameraZoom: 1.0,
+      cameraPan: { x: 0, y: 0 },
+      cameraFocal: null,
+      _gen5Camera: false,
+      phaseId: "hug-approach",
+      phaseName: "포옹 다가오기 (1단 착지, 2.30배)",
+    },
+
+    // --- HOP 2: Second leap forward closer ---
+    {
+      delay: 100,
+      pOffset: { x: 0, y: 55 + d2 },
+      eOffset: { x: 0, y: 0 },
+      pScale: { x: 3.10, y: 3.10 },
+      showEffect: false,
+      hitFlash: false,
+      usePlayerFront: true,
+      useEnemyBack: false,
+      hidePShadow: true,
+      targetAlpha: 1.0,
+      enemyHp: currentEnemyHp,
+      playerHp: currentPlayerHp,
+      textLineIdx: dialogueTextIdx,
+      isBlur: false,
+      cameraZoom: 1.0,
+      cameraPan: { x: 0, y: 0 },
+      cameraFocal: null,
+      _gen5Camera: false,
+      phaseId: "hug-approach",
+      phaseName: "포옹 다가오기 (2단 도약, 3.10배)",
+    },
+    {
+      delay: 90,
+      pOffset: { x: 0, y: 135 + d2 },
+      eOffset: { x: 0, y: 0 },
+      pScale: { x: 3.80, y: 3.60 },
+      showEffect: false,
+      hitFlash: false,
+      usePlayerFront: true,
+      useEnemyBack: false,
+      hidePShadow: true,
+      targetAlpha: 1.0,
+      enemyHp: currentEnemyHp,
+      playerHp: currentPlayerHp,
+      textLineIdx: dialogueTextIdx,
+      isBlur: false,
+      cameraZoom: 1.0,
+      cameraPan: { x: 0, y: 0 },
+      cameraFocal: null,
+      _gen5Camera: false,
+      phaseId: "hug-approach",
+      phaseName: "포옹 다가오기 (2단 착지, 3.80배)",
+    },
+
+    // --- HOP 3: Third leap directly in front of camera/screen ---
+    {
+      delay: 100,
+      pOffset: { x: 0, y: 115 + d3 },
+      eOffset: { x: 0, y: 0 },
+      pScale: { x: 4.30, y: 4.30 },
+      showEffect: false,
+      hitFlash: false,
+      usePlayerFront: true,
+      useEnemyBack: false,
+      hidePShadow: true,
+      targetAlpha: 1.0,
+      enemyHp: currentEnemyHp,
+      playerHp: currentPlayerHp,
+      textLineIdx: dialogueTextIdx,
+      isBlur: false,
+      cameraZoom: 1.0,
+      cameraPan: { x: 0, y: 0 },
+      cameraFocal: null,
+      _gen5Camera: false,
+      phaseId: "hug-approach",
+      phaseName: "포옹 다가오기 (3단 도약, 4.30배)",
+    },
+    // 마지막 가까이다가오는 1프레임: 메시지창 & 텍스트 Z축보다 위에 렌더링 (아래로 깊게 이동)
+    {
+      delay: 100,
+      pOffset: { x: 0, y: 220 + dFull },
+      eOffset: { x: 0, y: 0 },
+      pScale: { x: 4.80, y: 4.70 },
+      showEffect: false,
+      hitFlash: false,
+      usePlayerFront: true,
+      useEnemyBack: false,
+      hidePShadow: true,
+      drawPlayerAboveHud: true, // 메시지창 및 텍스트보다 Z축 위에 렌더링!
+      targetAlpha: 1.0,
+      enemyHp: currentEnemyHp,
+      playerHp: currentPlayerHp,
+      textLineIdx: dialogueTextIdx,
+      isBlur: false,
+      cameraZoom: 1.0,
+      cameraPan: { x: 0, y: 0 },
+      cameraFocal: null,
+      _gen5Camera: false,
+      phaseId: "hug-approach",
+      phaseName: "포옹 도착 (4.8배 초대형, 화면 하단 밀착)",
+    },
+
+    // 2. Hug phase: Leaning forward towards camera for 1 second (1000ms), 5.0x super close-up hug!
+    {
+      delay: 1000,
+      pOffset: { x: 0, y: 235 + dFull },
+      eOffset: { x: 0, y: 0 },
+      pScale: { x: 5.00, y: 5.00 }, // 화면 가득 5배 크기 포옹!
+      pRot: -0.06, // 앞쪽으로 살짝 기울여 안아주기
+      showEffect: false,
+      hitFlash: false,
+      usePlayerFront: true,
+      useEnemyBack: false,
+      hidePShadow: true,
+      drawPlayerAboveHud: true, // 메시지창 및 텍스트보다 Z축 위에 렌더링!
+      targetAlpha: 1.0,
+      enemyHp: currentEnemyHp,
+      playerHp: currentPlayerHp,
+      textLineIdx: dialogueTextIdx,
+      isBlur: false,
+      cameraZoom: 1.0,
+      cameraPan: { x: 0, y: 0 },
+      cameraFocal: null,
+      _gen5Camera: false,
+      phaseId: "hug-embrace",
+      phaseName: "포옹 (1초간 안아주기, 5배 초대형, 화면 하단 밀착)",
+    },
+
+    // 3. Return phase: Switch back to rear sprite, 3 bouncy hops back to platform
+    // --- HOP 1 back ---
+    {
+      delay: 90,
+      pOffset: { x: 0, y: 150 + d3 },
+      eOffset: { x: 0, y: 0 },
+      pScale: { x: 4.10, y: 4.10 },
+      showEffect: false,
+      hitFlash: false,
+      usePlayerFront: false,
+      useEnemyBack: false,
+      hidePShadow: true,
+      targetAlpha: 1.0,
+      enemyHp: currentEnemyHp,
+      playerHp: currentPlayerHp,
+      textLineIdx: dialogueTextIdx,
+      isBlur: false,
+      cameraZoom: 1.0,
+      cameraPan: { x: 0, y: 0 },
+      cameraFocal: null,
+      _gen5Camera: false,
+      phaseId: "hug-return",
+      phaseName: "포옹 복귀 (후면 전환 후 1단 도약)",
+    },
+    {
+      delay: 90,
+      pOffset: { x: 0, y: 115 + d2 },
+      eOffset: { x: 0, y: 0 },
+      pScale: { x: 3.30, y: 3.30 },
+      showEffect: false,
+      hitFlash: false,
+      usePlayerFront: false,
+      useEnemyBack: false,
+      hidePShadow: true,
+      targetAlpha: 1.0,
+      enemyHp: currentEnemyHp,
+      playerHp: currentPlayerHp,
+      textLineIdx: dialogueTextIdx,
+      isBlur: false,
+      cameraZoom: 1.0,
+      cameraPan: { x: 0, y: 0 },
+      cameraFocal: null,
+      _gen5Camera: false,
+      phaseId: "hug-return",
+      phaseName: "포옹 복귀 (1단 착지, 3.3배)",
+    },
+
+    // --- HOP 2 back ---
+    {
+      delay: 90,
+      pOffset: { x: 0, y: 50 + d2 },
+      eOffset: { x: 0, y: 0 },
+      pScale: { x: 2.50, y: 2.50 },
+      showEffect: false,
+      hitFlash: false,
+      usePlayerFront: false,
+      useEnemyBack: false,
+      hidePShadow: true,
+      targetAlpha: 1.0,
+      enemyHp: currentEnemyHp,
+      playerHp: currentPlayerHp,
+      textLineIdx: dialogueTextIdx,
+      isBlur: false,
+      cameraZoom: 1.0,
+      cameraPan: { x: 0, y: 0 },
+      cameraFocal: null,
+      _gen5Camera: false,
+      phaseId: "hug-return",
+      phaseName: "포옹 복귀 (2단 도약, 2.5배)",
+    },
+    {
+      delay: 90,
+      pOffset: { x: 0, y: 65 + d1 },
+      eOffset: { x: 0, y: 0 },
+      pScale: { x: 1.80, y: 1.80 },
+      showEffect: false,
+      hitFlash: false,
+      usePlayerFront: false,
+      useEnemyBack: false,
+      hidePShadow: true,
+      targetAlpha: 1.0,
+      enemyHp: currentEnemyHp,
+      playerHp: currentPlayerHp,
+      textLineIdx: dialogueTextIdx,
+      isBlur: false,
+      cameraZoom: 1.0,
+      cameraPan: { x: 0, y: 0 },
+      cameraFocal: null,
+      _gen5Camera: false,
+      phaseId: "hug-return",
+      phaseName: "포옹 복귀 (2단 착지, 1.8배)",
+    },
+
+    // --- HOP 3 back ---
+    {
+      delay: 90,
+      pOffset: { x: 0, y: -10 },
+      eOffset: { x: 0, y: 0 },
+      pScale: { x: 1.30, y: 1.30 },
+      showEffect: false,
+      hitFlash: false,
+      usePlayerFront: false,
+      useEnemyBack: false,
+      hidePShadow: true,
+      targetAlpha: 1.0,
+      enemyHp: currentEnemyHp,
+      playerHp: currentPlayerHp,
+      textLineIdx: dialogueTextIdx,
+      isBlur: false,
+      cameraZoom: 1.0,
+      cameraPan: { x: 0, y: 0 },
+      cameraFocal: null,
+      _gen5Camera: false,
+      phaseId: "hug-return",
+      phaseName: "포옹 복귀 (3단 도약)",
+    },
+    {
+      delay: 120,
+      pOffset: { x: 0, y: 0 },
+      eOffset: { x: 0, y: 0 },
+      pScale: { x: 1.0, y: 1.0 },
+      showEffect: false,
+      hitFlash: false,
+      usePlayerFront: false,
+      useEnemyBack: false,
+      hidePShadow: false,
+      targetAlpha: 1.0,
+      enemyHp: currentEnemyHp,
+      playerHp: currentPlayerHp,
+      textLineIdx: dialogueTextIdx,
+      isBlur: false,
+      cameraZoom: 1.0,
+      cameraPan: { x: 0, y: 0 },
+      cameraFocal: null,
+      _gen5Camera: false,
+      phaseId: "hug-return",
+      phaseName: "포옹 복귀 완료 (제자리 원래크기)",
+    },
+  ];
+}
+
 function isEvasionLaunch(action?: TurnActionInfo | null): boolean {
   if (!action) return false;
   const k = (action.moveKey || "").toLowerCase().replace(/[\s_]+/g, "-");
@@ -387,6 +680,7 @@ function createAirGlideDescentFrames(
       pRot: 0,
       eRot: 0,
       isHighSkyCutscene: true,
+      hideUI: true,
       isAttackerPlayer: isP,
       showEffect: false,
       hitFlash: false,
@@ -403,11 +697,12 @@ function createAirGlideDescentFrames(
       skyCameraTilt: isP ? 0.35 : -0.35,
       pOffset: { x: 0, y: 15 },
       eOffset: { x: 0, y: 15 },
-      pScale: isP ? { x: 0.95, y: 1.10 } : undefined,
-      eScale: !isP ? { x: 0.95, y: 1.10 } : undefined,
-      pRot: isP ? 0.20 : -0.20,
-      eRot: !isP ? 0.20 : -0.20,
+      pScale: isP ? { x: 1.80, y: 0.45 } : undefined,
+      eScale: !isP ? { x: 1.80, y: 0.45 } : undefined,
+      pRot: 0,
+      eRot: 0,
       isHighSkyCutscene: true,
+      hideUI: true,
       isAttackerPlayer: isP,
       showEffect: false,
       hitFlash: false,
@@ -427,6 +722,7 @@ function createAirGlideDescentFrames(
       pRot: 0,
       eRot: 0,
       isHighSkyCutscene: false,
+      hideUI: false,
       isAttackerPlayer: isP,
       showEffect: false,
       hitFlash: false,
@@ -521,8 +817,11 @@ function drawHighSkyCutscene(
  * and glides smoothly back out when the turn ends.
  */
 export async function renderBattleMoveGif(options: BattleAnimationOptions): Promise<RenderGifResult> {
-  const width = 560;
-  const height = 380;
+  const logicalWidth = 560;
+  const logicalHeight = 380;
+  const renderScale = 0.75; // 420x285 (44% pixel reduction, 2.3x faster encoding!)
+  const width = Math.round(logicalWidth * renderScale);   // 420
+  const height = Math.round(logicalHeight * renderScale); // 285
   const isKo = options.lang === "ko";
   const battle = options.battle;
   const enemy = battle.enemy;
@@ -533,12 +832,20 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   const isSpecial = options.isSpecial !== undefined ? options.isSpecial : (battle.lastMoveEffect?.isSpecial ?? false);
   const isPlayer = options.isPlayerAttacking !== undefined ? options.isPlayerAttacking : (battle.lastMoveEffect?.isPlayerAttacking ?? true);
 
-  const dialogueLines = options.dialogueLines || (battle.dialogueText || "").replace(/\\n/g, "\n").split("\n");
+  const fallbackDialogue = (battle.dialogueText && battle.dialogueText.trim().length > 0)
+    ? battle.dialogueText
+    : ((battle.turnActions && battle.turnActions.length > 0)
+      ? battle.turnActions.map((a: any) => a.log).filter(Boolean).join("\n")
+      : "");
+  const dialogueLines = options.dialogueLines || fallbackDialogue.replace(/\\n/g, "\n").split("\n");
 
-  const enemyActiveSpecies = battle.debugEnemySpecies || ((enemy as any).isTransformed ? ((enemy as any).transformedSpeciesId || enemy.speciesId) : enemy.speciesId);
-  const playerActiveSpecies = battle.debugPlayerSpecies || ((playerMon as any).isTransformed
-    ? ((playerMon as any).transformedSpeciesId || playerMon.speciesId)
-    : ((playerMon as any).hasIllusion && (playerMon as any).illusionTarget ? (playerMon as any).illusionTarget.speciesId : playerMon.speciesId));
+  const em = BATTLE_LAYOUT_CONFIG.enemyPokemon;
+  const pm = BATTLE_LAYOUT_CONFIG.playerPokemon;
+
+  const enemyActiveSpecies = (enemy as any).isTransformed ? ((enemy as any).transformedSpeciesId || enemy.speciesId || (enemy as any).species) : (enemy.speciesId || (enemy as any).species);
+  const playerActiveSpecies = (playerMon as any).isTransformed
+    ? ((playerMon as any).transformedSpeciesId || playerMon.speciesId || (playerMon as any).species)
+    : ((playerMon as any).hasIllusion && (playerMon as any).illusionTarget ? ((playerMon as any).illusionTarget.speciesId || (playerMon as any).illusionTarget.species) : (playerMon.speciesId || (playerMon as any).species));
 
   const enemyShinyTier = (enemy as any).shinyTier !== undefined ? (enemy as any).shinyTier : (enemy.isShiny ? 1 : 0);
   const playerShinyTier = ((playerMon as any).hasIllusion && (playerMon as any).illusionTarget)
@@ -554,7 +861,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     getPokemonSprite(enemyActiveSpecies, true, enemyShinyTier, true),
   ]);
 
+  // ============================================================================
+  // 🎨 [GIF 렌더링 표준 지침 - 256색 팔레트 최적화(Octree Optimizer) 기준]
+  // - 인코더: Octree 양자화 + useOptimizer 활성화 (useOptimizer = true)
+  // - 유사도 임계치: threshold = 85 (화면 85% 이상 유사 시 256색 팔레트 재사용)
+  // - 기술 제작 기준: 256색 팔레트 재사용 환경을 표준으로 제작하며,
+  //   30 FPS 부드러운 애니메이션과 반투명 이펙트를 온전히 유지하면서 고속 렌더링 지원
+  // ============================================================================
   const encoder = new GIFEncoder(width, height, "octree", true);
+  encoder.setThreshold(85);
   encoder.setRepeat(-1);
   encoder.start();
 
@@ -590,7 +905,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   const isPayDay1 = (mKey1 === "pay-day" || mKey1 === "payday");
   const isFirePunch1 = (mKey1 === "fire-punch" || mKey1 === "firepunch");
   const isIcePunch1 = (mKey1 === "ice-punch" || mKey1 === "icepunch");
-  const isGuillotine1 = (mKey1 === "guillotine");
+  const isGuillotine1 = (mKey1 === "guillotine" || mKey1 === "horn-drill" || mKey1 === "horndrill");
   const isSwordsDance1 = (mKey1 === "swords-dance" || mKey1 === "swordsdance");
   const isFly1 = (mKey1 === "fly");
   const isRazorWind1 = (mKey1 === "razor-wind" || mKey1 === "razorwind");
@@ -638,6 +953,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       ];
     }
 
+  // [유저 요구사항] 상성/데미지에 따른 대상 스프라이트 깜빡임(Blink) 프레임 적용
+  act1Frames = applyDamageBlinkFrames(act1Frames, a1, isP1);
+
   let framesConfig: any[] = [];
 
   if (hasMultipleActions) {
@@ -651,7 +969,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const isPayDay2 = (mKey2 === "pay-day" || mKey2 === "payday");
     const isFirePunch2 = (mKey2 === "fire-punch" || mKey2 === "firepunch");
     const isIcePunch2 = (mKey2 === "ice-punch" || mKey2 === "icepunch");
-    const isGuillotine2 = (mKey2 === "guillotine");
+    const isGuillotine2 = (mKey2 === "guillotine" || mKey2 === "horn-drill" || mKey2 === "horndrill");
     const isSwordsDance2 = (mKey2 === "swords-dance" || mKey2 === "swordsdance");
     const isFly2 = (mKey2 === "fly");
     const isRazorWind2 = (mKey2 === "razor-wind" || mKey2 === "razorwind");
@@ -699,14 +1017,17 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       ];
     }
 
+    // [유저 요구사항] 상성/데미지에 따른 대상 스프라이트 깜빡임(Blink) 프레임 적용
+    act2Frames = applyDamageBlinkFrames(act2Frames, a2, isP2);
+
     const a1Fainted = a1.enemyHpAfter <= 0 || a1.playerHpAfter <= 0;
     const a2Fainted = a2 && (a2.enemyHpAfter <= 0 || a2.playerHpAfter <= 0);
 
-    // Turn-around victory pose ONLY persists if the Guillotine attack actually scored a lethal KO!
-    const isP1GuillotineKill = isP1 && isGuillotine1 && (a1.enemyHpAfter <= 0);
-    const isP2GuillotineKill = isP2 && isGuillotine2 && (a2 ? a2.enemyHpAfter <= 0 : false);
-    const isE1GuillotineKill = !isP1 && isGuillotine1 && (a1.playerHpAfter <= 0);
-    const isE2GuillotineKill = !isP2 && isGuillotine2 && (a2 ? a2.playerHpAfter <= 0 : false);
+    // Turn-around victory pose persists whenever Guillotine successfully hits!
+    const isP1GuillotineKill = isP1 && isGuillotine1 && (a1.enemyHpAfter <= 0 || isHit1);
+    const isP2GuillotineKill = isP2 && isGuillotine2 && ((a2 ? a2.enemyHpAfter <= 0 : false) || isHit2);
+    const isE1GuillotineKill = !isP1 && isGuillotine1 && (a1.playerHpAfter <= 0 || isHit1);
+    const isE2GuillotineKill = !isP2 && isGuillotine2 && ((a2 ? a2.playerHpAfter <= 0 : false) || isHit2);
 
     const playerFrontHold = isP1GuillotineKill || isP2GuillotineKill;
     const enemyBackHold = isE1GuillotineKill || isE2GuillotineKill;
@@ -732,12 +1053,44 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const a2IsEvasionLaunch = isEvasionLaunch(a2);
     const a2IsEvasionStrike = isEvasionStrike(a2);
 
-    // Evasion state at START of turn (before Act 1 starts) - ONLY true if unleashing an evasion strike, opponent missed into empty air, or gliding descent
+    const hasPlayerSemiInvulnerable = Boolean(
+      (playerMon as any)?.semiInvulnerableState ||
+      (playerMon as any)?.isSemiInvulnerable ||
+      playerMon?.chargingMove === "fly" ||
+      playerMon?.chargingMove === "dig" ||
+      playerMon?.chargingMove === "dive" ||
+      playerMon?.chargingMove === "bounce" ||
+      playerMon?.chargingMove === "shadow-force" ||
+      playerMon?.chargingMove === "phantom-force"
+    );
+
+    const hasEnemySemiInvulnerable = Boolean(
+      (enemy as any)?.semiInvulnerableState ||
+      (enemy as any)?.isSemiInvulnerable ||
+      enemy?.chargingMove === "fly" ||
+      enemy?.chargingMove === "dig" ||
+      enemy?.chargingMove === "dive" ||
+      enemy?.chargingMove === "bounce" ||
+      enemy?.chargingMove === "shadow-force" ||
+      enemy?.chargingMove === "phantom-force"
+    );
+
+    // Evasion state at START of turn (before Act 1 starts) - true if semi-invulnerable in air, unleashing evasion strike, or opponent missed into empty air
     const isPlayerStartingEvading = !a1IsEvasionLaunch && !a2IsEvasionLaunch && (
-      (a1IsEvasionStrike && isP1) || (a2IsEvasionStrike && isP2) || (Boolean(a1 && a1.log?.includes("닿지 않았다") && !isP1)) || Boolean(a1?.wasDescentFromAir && isP1) || Boolean(a2?.wasDescentFromAir && isP2)
+      hasPlayerSemiInvulnerable ||
+      (a1IsEvasionStrike && isP1) ||
+      (a2IsEvasionStrike && isP2) ||
+      Boolean(a1 && (a1.log?.includes("닿지 않았다") || a1.log?.includes("couldn't reach") || a1.log?.includes("couldn't hit")) && !isP1) ||
+      Boolean(a1?.wasDescentFromAir && isP1) ||
+      Boolean(a2?.wasDescentFromAir && isP2)
     );
     const isEnemyStartingEvading = !a1IsEvasionLaunch && !a2IsEvasionLaunch && (
-      (a1IsEvasionStrike && !isP1) || (a2IsEvasionStrike && !isP2) || (Boolean(a1 && a1.log?.includes("닿지 않았다") && isP1)) || Boolean(a1?.wasDescentFromAir && !isP1) || Boolean(a2?.wasDescentFromAir && !isP2)
+      hasEnemySemiInvulnerable ||
+      (a1IsEvasionStrike && !isP1) ||
+      (a2IsEvasionStrike && !isP2) ||
+      Boolean(a1 && (a1.log?.includes("닿지 않았다") || a1.log?.includes("couldn't reach") || a1.log?.includes("couldn't hit")) && isP1) ||
+      Boolean(a1?.wasDescentFromAir && !isP1) ||
+      Boolean(a2?.wasDescentFromAir && !isP2)
     );
 
     // Evasion state during Act 1 (for non-acting Pokemon)
@@ -748,28 +1101,58 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const isPlayerEvadingDuringAct2 = !isP2 && ((a1IsEvasionLaunch && isP1) || (isPlayerStartingEvading && !isP1 && !a1IsEvasionStrike));
     const isEnemyEvadingDuringAct2 = isP2 && ((a1IsEvasionLaunch && !isP1) || (isEnemyStartingEvading && isP1 && !a1IsEvasionStrike));
 
+    // Evasion state during Mid-Turn Pause (between Act 1 and Act 2)
+    const isPlayerMidTurnEvading = (a1IsEvasionLaunch && isP1) || (isPlayerStartingEvading && !a1IsEvasionStrike) || isPlayerEvadingDuringAct2;
+    const isEnemyMidTurnEvading = (a1IsEvasionLaunch && !isP1) || (isEnemyStartingEvading && !a1IsEvasionStrike) || isEnemyEvadingDuringAct2;
+
     // Evasion state at END of turn (final hold frame)
-    const isPlayerEndingEvading = (a1IsEvasionLaunch && isP1 && !a2) || (a2IsEvasionLaunch && isP2) || (Boolean(playerMon.semiInvulnerableState || playerMon.chargingMove));
-    const isEnemyEndingEvading = (a1IsEvasionLaunch && !isP1 && !a2) || (a2IsEvasionLaunch && !isP2) || (Boolean(enemy.semiInvulnerableState || enemy.chargingMove));
+    const isPlayerEndingEvading = (a1IsEvasionLaunch && isP1 && !a2) || (a2IsEvasionLaunch && isP2) || (hasPlayerSemiInvulnerable && !a1IsEvasionStrike && !a2IsEvasionStrike);
+    const isEnemyEndingEvading = (a1IsEvasionLaunch && !isP1 && !a2) || (a2IsEvasionLaunch && !isP2) || (hasEnemySemiInvulnerable && !a1IsEvasionStrike && !a2IsEvasionStrike);
 
-    let processedAct1Frames = act1Frames;
+    let processedAct1Frames = act1Frames.map(f => ({
+      ...f,
+      isAttackerPlayer: isP1,
+      hideUI: f.hideUI !== undefined ? f.hideUI : (!f.afterCameraReturn && (f.delay === undefined || f.delay < 10000)),
+    }));
     if (isEnemyEvadingDuringAct1) {
-      processedAct1Frames = act1Frames.map(f => f.isHighSkyCutscene ? f : ({ ...f, eOffset: { x: 0, y: -9999 }, hideEShadow: true, hideEnemy: true, eAlpha: 0.0 }));
+      processedAct1Frames = processedAct1Frames.map(f => f.isHighSkyCutscene ? f : ({ ...f, eOffset: { x: 0, y: -9999 }, hideEShadow: true, hideEnemy: true, eAlpha: 0.0 }));
     } else if (isPlayerEvadingDuringAct1) {
-      processedAct1Frames = act1Frames.map(f => f.isHighSkyCutscene ? f : ({ ...f, pOffset: { x: 0, y: -9999 }, hidePShadow: true, hidePlayer: true, pAlpha: 0.0 }));
+      processedAct1Frames = processedAct1Frames.map(f => f.isHighSkyCutscene ? f : ({ ...f, pOffset: { x: 0, y: -9999 }, hidePShadow: true, hidePlayer: true, pAlpha: 0.0 }));
     }
 
-    let processedAct2Frames = act2Frames;
+    let processedAct2Frames = act2Frames.map(f => ({
+      ...f,
+      isAttackerPlayer: isP2,
+      hideUI: f.hideUI !== undefined ? f.hideUI : (!f.afterCameraReturn && (f.delay === undefined || f.delay < 10000)),
+    }));
     if (isPlayerEvadingDuringAct2) {
-      processedAct2Frames = act2Frames.map(f => f.isHighSkyCutscene ? f : ({ ...f, pOffset: { x: 0, y: -9999 }, hidePShadow: true, hidePlayer: true, pAlpha: 0.0 }));
+      processedAct2Frames = processedAct2Frames.map(f => f.isHighSkyCutscene ? f : ({ ...f, pOffset: { x: 0, y: -9999 }, hidePShadow: true, hidePlayer: true, pAlpha: 0.0 }));
     } else if (isEnemyEvadingDuringAct2) {
-      processedAct2Frames = act2Frames.map(f => f.isHighSkyCutscene ? f : ({ ...f, eOffset: { x: 0, y: -9999 }, hideEShadow: true, hideEnemy: true, eAlpha: 0.0 }));
+      processedAct2Frames = processedAct2Frames.map(f => f.isHighSkyCutscene ? f : ({ ...f, eOffset: { x: 0, y: -9999 }, hideEShadow: true, hideEnemy: true, eAlpha: 0.0 }));
     }
+
+    const emBody = { x: em.x, y: em.y - 36 };
+    const pmBody = { x: pm.x, y: pm.y - 36 };
+
+    applyMoveCameraToFrames(processedAct1Frames, moveAnim1, isP1, emBody, pmBody, true);
+    applyMoveCameraToFrames(processedAct2Frames, moveAnim2, isP2, emBody, pmBody, false);
+
+    const isFlyGlide1 = (mKey1 === "fly" && !isEvasionLaunch(a1));
+    const leadingBlurDelay = isFlyGlide1 ? 1000 : 800;
+
+    const isHugTurn = Boolean(battle.hugTriggered || (battle.lastMoveEffect as any)?.hugTriggered);
+    const pSpriteHug = playerFrontSprite || playerSprite;
+    const pDimHug = Math.max(pSpriteHug?.width || 70, pSpriteHug?.height || 70);
+    const extraDownOffsetHug = Math.max(0, Math.round((pDimHug - 65) * 0.75));
+    const hugFrames = isHugTurn ? createHugAnimationFrames(enemy.hp, playerMon.hp, 1, extraDownOffsetHug) : [];
+
+    const act1HasStatFrames = processedAct1Frames.some(f => f.statProgress !== undefined);
+    const act2HasStatFrames = processedAct2Frames.some(f => f.statProgress !== undefined);
 
     framesConfig = [
-      // Frame 0: Leading Cinematic Soft-Blur Loading Frame (800ms / 0.8s)
+      // Frame 0: Leading Cinematic Soft-Blur Loading Frame (1000ms for Fly glide, 800ms for others) - Field Blur
       {
-        delay: 800,
+        delay: leadingBlurDelay,
         pOffset: isPlayerStartingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
         eOffset: isEnemyStartingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
         pAlpha: isPlayerStartingEvading ? 0.0 : 1.0,
@@ -786,6 +1169,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         statProgress: undefined,
         isBlur: true,
       },
+      // === HUG CUTSCENE (If triggered!) ===
+      ...hugFrames,
       // === ACT 1 ===
       ...processedAct1Frames,
       // Frame 3: Attacker 1 Recoil & Damage Settling (with Dynamic Effectiveness Blinking!)
@@ -793,22 +1178,25 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         isPlayerEvadingDuringAct1 ? { ...f, pOffset: { x: 0, y: -9999 }, hidePlayer: true, hidePShadow: true, pAlpha: 0.0 }
         : (isEnemyEvadingDuringAct1 ? { ...f, eOffset: { x: 0, y: -9999 }, hideEnemy: true, hideEShadow: true, eAlpha: 0.0 } : f)
       )),
-      // Dedicated Post-Move Stat Change Phase for Action 1 (if stat changes exist!)
-      ...(createStatChangeFrames(a1, isP1, 2, isP1GuillotineKill, isE1GuillotineKill).map(f =>
+      // Dedicated Post-Move Stat Change Phase for Action 1 (if stat changes exist and not already in act1 frames!)
+      ...(!act1HasStatFrames ? (createStatChangeFrames(a1, isP1, 2, isP1GuillotineKill, isE1GuillotineKill).map(f =>
         isPlayerEvadingDuringAct1 ? { ...f, pOffset: { x: 0, y: -9999 }, hidePlayer: true, hidePShadow: true, pAlpha: 0.0 }
         : (isEnemyEvadingDuringAct1 ? { ...f, eOffset: { x: 0, y: -9999 }, hideEnemy: true, hideEShadow: true, eAlpha: 0.0 } : f)
-      )),
+      )) : []),
       // Frame 4: Natural Breathing Room Pause between Turns (320ms - comfortable reading pause!)
       {
         delay: 320,
-        pOffset: (a1IsEvasionLaunch && isP1) || isPlayerEvadingDuringAct2 ? { x: 0, y: -9999 } : { x: 0, y: 0 },
-        eOffset: (a1IsEvasionLaunch && !isP1) || isEnemyEvadingDuringAct2 ? { x: 0, y: -9999 } : { x: 0, y: 0 },
-        pAlpha: (a1IsEvasionLaunch && isP1) || isPlayerEvadingDuringAct2 ? 0.0 : 1.0,
-        eAlpha: (a1IsEvasionLaunch && !isP1) || isEnemyEvadingDuringAct2 ? 0.0 : 1.0,
-        hidePShadow: (a1IsEvasionLaunch && isP1) || isPlayerEvadingDuringAct2,
-        hideEShadow: (a1IsEvasionLaunch && !isP1) || isEnemyEvadingDuringAct2,
-        hidePlayer: (a1IsEvasionLaunch && isP1) || isPlayerEvadingDuringAct2,
-        hideEnemy: (a1IsEvasionLaunch && !isP1) || isEnemyEvadingDuringAct2,
+        pOffset: isPlayerMidTurnEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
+        eOffset: isEnemyMidTurnEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
+        pAlpha: isPlayerMidTurnEvading ? 0.0 : 1.0,
+        eAlpha: isEnemyMidTurnEvading ? 0.0 : 1.0,
+        hidePShadow: isPlayerMidTurnEvading,
+        hideEShadow: isEnemyMidTurnEvading,
+        hidePlayer: isPlayerMidTurnEvading,
+        hideEnemy: isEnemyMidTurnEvading,
+        hideUI: false,
+        hideHud: false,
+        hideDialogue: false,
         showEffect: false,
         hitFlash: false,
         usePlayerFront: isP1GuillotineKill,
@@ -828,11 +1216,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         isPlayerEvadingDuringAct2 ? { ...f, pOffset: { x: 0, y: -9999 }, hidePlayer: true, hidePShadow: true, pAlpha: 0.0 }
         : (isEnemyEvadingDuringAct2 ? { ...f, eOffset: { x: 0, y: -9999 }, hideEnemy: true, hideEShadow: true, eAlpha: 0.0 } : f)
       )),
-      // Dedicated Post-Move Stat Change Phase for Action 2 (if stat changes exist!)
-      ...(createStatChangeFrames(a2, isP2, 4, playerFrontHold, enemyBackHold).map(f =>
+      // Dedicated Post-Move Stat Change Phase for Action 2 (if stat changes exist and not already in act2 frames!)
+      ...(!act2HasStatFrames ? (createStatChangeFrames(a2, isP2, 4, playerFrontHold, enemyBackHold).map(f =>
         isPlayerEvadingDuringAct2 ? { ...f, pOffset: { x: 0, y: -9999 }, hidePlayer: true, hidePShadow: true, pAlpha: 0.0 }
         : (isEnemyEvadingDuringAct2 ? { ...f, eOffset: { x: 0, y: -9999 }, hideEnemy: true, hideEShadow: true, eAlpha: 0.0 } : f)
-      )),
+      )) : []),
       // Sinking Faint Collapse Animation (if someone fainted)
       ...faintFrames,
       // Final 11-Minute Static Hold Frame (655,000ms) - completely neutral with NO statProgress
@@ -846,6 +1234,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         hideEShadow: isEnemyEndingEvading || isEnemyFainted || (isP2 && isWhirlwindHit2) || (isP1 && isWhirlwindHit1),
         hidePlayer: isPlayerEndingEvading || isPlayerFainted || (!isP2 && isWhirlwindHit2) || (!isP1 && isWhirlwindHit1),
         hideEnemy: isEnemyEndingEvading || isEnemyFainted || (isP2 && isWhirlwindHit2) || (isP1 && isWhirlwindHit1),
+        hideUI: false,
+        hideHud: false,
+        hideDialogue: false,
         showEffect: false,
         hitFlash: false,
         usePlayerFront: playerFrontHold,
@@ -873,7 +1264,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       playerHpAfter: playerHp,
     };
 
-    const isGuillotineSingle = (eff.moveKey || moveKey).toLowerCase().replace(/[\s_]+/g, "-") === "guillotine";
+    const isGuillotineSingle = (eff.moveKey || moveKey).toLowerCase().replace(/[\s_]+/g, "-") === "guillotine" || (eff.moveKey || moveKey).toLowerCase().replace(/[\s_]+/g, "-").includes("horn-drill");
     const isWhirlwindSingle = (eff.moveKey || moveKey).toLowerCase().replace(/[\s_]+/g, "-") === "whirlwind";
     const isWhirlwindSuccess = isWhirlwindSingle && (eff.isHit !== false && !eff.log?.includes("통하지 않았다") && !eff.log?.includes("실패했다"));
 
@@ -883,8 +1274,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const isPlayerFainted = (finalPlayerHp <= 0 || (playerMon.hp <= 0 && !isWhirlwindSuccess) || (battle.phase === "DEFEAT" && !isWhirlwindSuccess));
     const isFainted = isEnemyFainted || isPlayerFainted;
 
-    const playerFrontHold = isP1 && isGuillotineSingle && isEnemyFainted;
-    const enemyBackHold = !isP1 && isGuillotineSingle && isPlayerFainted;
+    const playerFrontHold = isP1 && isGuillotineSingle && (isEnemyFainted || isHit1);
+    const enemyBackHold = !isP1 && isGuillotineSingle && (isPlayerFainted || isHit1);
 
     const faintFrames = isFainted
       ? createFaintingFrames(eff, isPlayerFainted, 99, playerFrontHold, enemyBackHold)
@@ -893,23 +1284,72 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const a1IsEvasionLaunch = isEvasionLaunch(a1);
     const a1IsEvasionStrike = isEvasionStrike(a1);
 
-    const isPlayerStartingEvading = !a1IsEvasionLaunch && ((a1IsEvasionStrike && isP1) || (Boolean(a1 && a1.log?.includes("닿지 않았다") && !isP1)) || Boolean(eff?.wasDescentFromAir && isP1));
-    const isEnemyStartingEvading = !a1IsEvasionLaunch && ((a1IsEvasionStrike && !isP1) || (Boolean(a1 && a1.log?.includes("닿지 않았다") && isP1)) || Boolean(eff?.wasDescentFromAir && !isP1));
+    const hasPlayerSemiInvulnerable = Boolean(
+      (playerMon as any)?.semiInvulnerableState ||
+      (playerMon as any)?.isSemiInvulnerable ||
+      playerMon?.chargingMove === "fly" ||
+      playerMon?.chargingMove === "dig" ||
+      playerMon?.chargingMove === "dive" ||
+      playerMon?.chargingMove === "bounce" ||
+      playerMon?.chargingMove === "shadow-force" ||
+      playerMon?.chargingMove === "phantom-force"
+    );
 
-    const isPlayerEndingEvading = (a1IsEvasionLaunch && isP1) || Boolean(playerMon.semiInvulnerableState || playerMon.chargingMove);
-    const isEnemyEndingEvading = (a1IsEvasionLaunch && !isP1) || Boolean(enemy.semiInvulnerableState || enemy.chargingMove);
+    const hasEnemySemiInvulnerable = Boolean(
+      (enemy as any)?.semiInvulnerableState ||
+      (enemy as any)?.isSemiInvulnerable ||
+      enemy?.chargingMove === "fly" ||
+      enemy?.chargingMove === "dig" ||
+      enemy?.chargingMove === "dive" ||
+      enemy?.chargingMove === "bounce" ||
+      enemy?.chargingMove === "shadow-force" ||
+      enemy?.chargingMove === "phantom-force"
+    );
 
-    let processedSingleActFrames = act1Frames;
+    const isPlayerStartingEvading = !a1IsEvasionLaunch && (
+      hasPlayerSemiInvulnerable ||
+      (a1IsEvasionStrike && isP1) ||
+      Boolean(a1 && (a1.log?.includes("닿지 않았다") || a1.log?.includes("couldn't reach") || a1.log?.includes("couldn't hit")) && !isP1) ||
+      Boolean(eff?.wasDescentFromAir && isP1)
+    );
+    const isEnemyStartingEvading = !a1IsEvasionLaunch && (
+      hasEnemySemiInvulnerable ||
+      (a1IsEvasionStrike && !isP1) ||
+      Boolean(a1 && (a1.log?.includes("닿지 않았다") || a1.log?.includes("couldn't reach") || a1.log?.includes("couldn't hit")) && isP1) ||
+      Boolean(eff?.wasDescentFromAir && !isP1)
+    );
+
+    const isPlayerEndingEvading = (a1IsEvasionLaunch && isP1) || (hasPlayerSemiInvulnerable && !a1IsEvasionStrike);
+    const isEnemyEndingEvading = (a1IsEvasionLaunch && !isP1) || (hasEnemySemiInvulnerable && !a1IsEvasionStrike);
+
+    let processedSingleActFrames = act1Frames.map(f => ({
+      ...f,
+      isAttackerPlayer: isP1,
+      hideUI: f.hideUI !== undefined ? f.hideUI : (!f.afterCameraReturn && (f.delay === undefined || f.delay < 10000)),
+    }));
     if (isEnemyStartingEvading && isP1) {
-      processedSingleActFrames = act1Frames.map(f => f.isHighSkyCutscene ? f : ({ ...f, eOffset: { x: 0, y: -9999 }, hideEShadow: true, hideEnemy: true, eAlpha: 0.0 }));
+      processedSingleActFrames = processedSingleActFrames.map(f => f.isHighSkyCutscene ? f : ({ ...f, eOffset: { x: 0, y: -9999 }, hideEShadow: true, hideEnemy: true, eAlpha: 0.0 }));
     } else if (isPlayerStartingEvading && !isP1) {
       processedSingleActFrames = act1Frames.map(f => f.isHighSkyCutscene ? f : ({ ...f, pOffset: { x: 0, y: -9999 }, hidePShadow: true, hidePlayer: true, pAlpha: 0.0 }));
     }
 
+    applyMoveCameraToFrames(processedSingleActFrames, moveAnim1, isP1, em, pm);
+
+    const isFlyGlideSingle = (mKey1 === "fly" && !isEvasionLaunch(a1));
+    const singleLeadingBlurDelay = isFlyGlideSingle ? 1000 : 800;
+
+    const isHugTurnSingle = Boolean(battle.hugTriggered || (battle.lastMoveEffect as any)?.hugTriggered);
+    const pSpriteSingle = playerFrontSprite || playerSprite;
+    const pDimSingle = Math.max(pSpriteSingle?.width || 70, pSpriteSingle?.height || 70);
+    const extraDownOffsetSingle = Math.max(0, Math.round((pDimSingle - 65) * 0.75));
+    const hugFramesSingle = isHugTurnSingle ? createHugAnimationFrames(enemy.hp, playerMon.hp, 1, extraDownOffsetSingle) : [];
+
+    const singleHasStatFrames = processedSingleActFrames.some(f => f.statProgress !== undefined);
+
     framesConfig = [
-      // Frame 0: Leading Cinematic Soft-Blur Loading Frame (800ms / 0.8s)
+      // Frame 0: Leading Cinematic Soft-Blur Loading Frame (1000ms for Fly glide, 800ms for others) - Field Blur
       {
-        delay: 800,
+        delay: singleLeadingBlurDelay,
         pOffset: isPlayerStartingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
         eOffset: isEnemyStartingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
         pAlpha: isPlayerStartingEvading ? 0.0 : 1.0,
@@ -926,6 +1366,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         statProgress: undefined,
         isBlur: true,
       },
+      // === HUG CUTSCENE (If triggered!) ===
+      ...hugFramesSingle,
       // Act 1 Move Animation (Fully executed with all sub-frames!)
       ...processedSingleActFrames,
       // Frame 3: Recoil & Damage Settling (with Dynamic Effectiveness Blinking!)
@@ -933,11 +1375,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         isPlayerStartingEvading && !isP1 ? { ...f, pOffset: { x: 0, y: -9999 }, hidePlayer: true, hidePShadow: true, pAlpha: 0.0 }
         : (isEnemyStartingEvading && isP1 ? { ...f, eOffset: { x: 0, y: -9999 }, hideEnemy: true, hideEShadow: true, eAlpha: 0.0 } : f)
       )),
-      // Dedicated Post-Move Stat Change Phase (if stat changes exist!)
-      ...(createStatChangeFrames(eff, isP1, 2, playerFrontHold, enemyBackHold).map(f =>
+      // Dedicated Post-Move Stat Change Phase (if stat changes exist and not already in single act frames!)
+      ...(!singleHasStatFrames ? (createStatChangeFrames(eff, isP1, 2, playerFrontHold, enemyBackHold).map(f =>
         isPlayerStartingEvading && !isP1 ? { ...f, pOffset: { x: 0, y: -9999 }, hidePlayer: true, hidePShadow: true, pAlpha: 0.0 }
         : (isEnemyStartingEvading && isP1 ? { ...f, eOffset: { x: 0, y: -9999 }, hideEnemy: true, hideEShadow: true, eAlpha: 0.0 } : f)
-      )),
+      )) : []),
       // Sinking Faint Collapse Animation (if fainted)
       ...faintFrames,
       // Final 11-Minute Static Hold Frame (655,000ms) - completely neutral with NO statProgress
@@ -951,6 +1393,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         hideEShadow: isEnemyEndingEvading || isEnemyFainted || (isP1 && isWhirlwindSuccess),
         hidePlayer: isPlayerEndingEvading || isPlayerFainted || (!isP1 && isWhirlwindSuccess),
         hideEnemy: isEnemyEndingEvading || isEnemyFainted || (isP1 && isWhirlwindSuccess),
+        hideUI: false,
+        hideHud: false,
+        hideDialogue: false,
         showEffect: false,
         hitFlash: false,
         usePlayerFront: playerFrontHold,
@@ -965,6 +1410,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     ];
   }
 
+  if (battle.hugTriggered) {
+    battle.hugTriggered = false;
+  }
+
+  // Resample all battle keyframes with rhythmic pacing (25 FPS dashes, hit-stop, weighty flinch)
+  framesConfig = interpolateBattleFramesTo30Fps(framesConfig);
+
   const motionDurationMs = framesConfig.slice(0, -1).reduce((sum, f) => sum + f.delay, 0);
 
   const ep = BATTLE_LAYOUT_CONFIG.enemyPlatform;
@@ -974,25 +1426,30 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   const playerPlatW = 320 * pp.scale;
   const playerPlatH = 132 * pp.scale;
 
-  const em = BATTLE_LAYOUT_CONFIG.enemyPokemon;
-  const pm = BATTLE_LAYOUT_CONFIG.playerPokemon;
-
-  // Apply 5th Generation (Black/White) style smooth continuous camera tracking towards defending Pokémon
-  directBattleCamera(framesConfig, isPlayer, em, pm);
+  // Camera already applied cleanly per-act using modular camera strategy!
 
   const offCanvas = createCanvas(width, height);
   const offCtx = offCanvas.getContext("2d");
   offCtx.imageSmoothingEnabled = false;
 
+  const seenPhases = new Set<string>();
+  const phases: PhaseInfoItem[] = [];
+  let frameIdx = 0;
+  let prevBattleFrame: any = null;
+
   for (const f of framesConfig) {
+    let drawPlayerSpriteFn: (() => void) | null = null;
     const targetCtx = f.isBlur ? offCtx : ctx;
     targetCtx.clearRect(0, 0, width, height);
+
+    targetCtx.save();
+    targetCtx.scale(renderScale, renderScale);
 
     if (f.isHighSkyCutscene) {
       const attackerSprite = (f.isAttackerPlayer !== false)
         ? (playerSprite || playerFrontSprite)
         : (enemySprite || enemyBackSprite);
-      drawHighSkyCutscene(targetCtx, width, height, f, attackerSprite);
+      drawHighSkyCutscene(targetCtx, logicalWidth, logicalHeight, f, attackerSprite);
     } else {
       const isTracking = Boolean(f.cameraTrackAttacker);
       const hasCamera = Boolean(f.cameraZoom || f.cameraPan || isTracking || f.cameraFocal);
@@ -1002,85 +1459,84 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         const isAttackerP = f.isAttackerPlayer !== false;
 
         if (isTracking) {
-          // Pure 100% vertical tracking: X is strictly centered at width / 2 (280) so left and right margins never expose!
+          // Pure 100% vertical tracking: X is strictly centered at logicalWidth / 2 (280) so left and right margins never expose!
           const liveY = isAttackerP ? (pm.y + f.pOffset.y) : (em.y + f.eOffset.y);
           const screenY = isAttackerP ? pm.y : em.y;
 
-          targetCtx.translate(width / 2, screenY);
+          targetCtx.translate(logicalWidth / 2, screenY);
           targetCtx.scale(zoom, zoom);
-          targetCtx.translate(-width / 2, -liveY);
+          targetCtx.translate(-logicalWidth / 2, -liveY);
         } else if (f.cameraFocal) {
-          // Smooth Gen 5 style camera glide focused towards defending Pokémon getting hit
-          // Clamped within arena bounds so 100% of the arena background stays visible with zero edge artifacts
-          const halfW = width / (2 * zoom);
-          const halfH = height / (2 * zoom);
-          const minX = halfW;
-          const maxX = width - halfW;
-          const minY = halfH;
-          const maxY = height - halfH;
-
-          const clampedX = Math.max(minX, Math.min(maxX, f.cameraFocal.x));
-          const clampedY = Math.max(minY, Math.min(maxY, f.cameraFocal.y));
-
-          targetCtx.translate(width / 2, height / 2);
+          // Exactly center target Pokémon in the camera viewport with cameraPan screen shake support!
+          const panX = f.cameraPan?.x || 0;
+          const panY = f.cameraPan?.y || 0;
+          targetCtx.translate(logicalWidth / 2 + panX, logicalHeight / 2 + panY);
           targetCtx.scale(zoom, zoom);
-          targetCtx.translate(-clampedX, -clampedY);
+          targetCtx.translate(-f.cameraFocal.x, -f.cameraFocal.y);
         } else {
           const focalY = isAttackerP ? pm.y : em.y;
+          const panX = f.cameraPan?.x || 0;
           const panY = f.cameraPan?.y || 0;
 
-          targetCtx.translate(width / 2, focalY + panY);
+          targetCtx.translate(logicalWidth / 2 + panX, focalY + panY);
           targetCtx.scale(zoom, zoom);
-          targetCtx.translate(-width / 2, -focalY);
+          targetCtx.translate(-logicalWidth / 2, -focalY);
         }
       }
 
-      // Sample exact top and bottom edge colors from the arena background image
-      const edgeColors = getArenaEdgeColors(arena.bg);
-
-      // 1. Top Sky Fill (for y <= 0 extending upwards to -3000px):
-      if (isTracking) {
-        // Stratosphere space navy gradient transitioning into biome's top edge color at y = 0
-        const skyAscentGrad = targetCtx.createLinearGradient(0, -2500, 0, 0);
-        skyAscentGrad.addColorStop(0, "#0B1120"); // Deep Stratosphere space navy
-        skyAscentGrad.addColorStop(0.35, "#0284C7"); // Sky Blue
-        skyAscentGrad.addColorStop(0.70, "#38BDF8"); // Atmosphere cyan
-        skyAscentGrad.addColorStop(1, edgeColors.top); // Seamless connection to top of arena background!
-        targetCtx.fillStyle = skyAscentGrad;
-        targetCtx.fillRect(-width * 4, -3000, width * 9, 3000);
+      if (f.blackoutScreen) {
+        // Pure 100% Solid Blackout for Guillotine Execution Freeze!
+        targetCtx.fillStyle = "#000000";
+        targetCtx.fillRect(-logicalWidth * 4, -3000, logicalWidth * 9, 6000);
       } else {
-        targetCtx.fillStyle = edgeColors.top;
-        targetCtx.fillRect(-width * 4, -3000, width * 9, 3000);
-      }
+        // Sample exact top and bottom edge colors from the arena background image
+        const edgeColors = getArenaEdgeColors(arena.bg);
 
-      // 2. Bottom Ground Fill (for y >= height extending downwards to +3000px):
-      // Guaranteed seamless ground color matching the biome floor (grass, soil, sand, rock)
-      targetCtx.fillStyle = edgeColors.bottom;
-      targetCtx.fillRect(-width * 4, height, width * 9, 3000);
+        // 1. Top Sky Fill (for y <= 0 extending upwards to -3000px):
+        if (isTracking) {
+          // Stratosphere space navy gradient transitioning into biome's top edge color at y = 0
+          const skyAscentGrad = targetCtx.createLinearGradient(0, -2500, 0, 0);
+          skyAscentGrad.addColorStop(0, "#0B1120"); // Deep Stratosphere space navy
+          skyAscentGrad.addColorStop(0.35, "#0284C7"); // Sky Blue
+          skyAscentGrad.addColorStop(0.70, "#38BDF8"); // Atmosphere cyan
+          skyAscentGrad.addColorStop(1, edgeColors.top); // Seamless connection to top of arena background!
+          targetCtx.fillStyle = skyAscentGrad;
+          targetCtx.fillRect(-logicalWidth * 4, -3000, logicalWidth * 9, 3000);
+        } else {
+          targetCtx.fillStyle = edgeColors.top;
+          targetCtx.fillRect(-logicalWidth * 4, -3000, logicalWidth * 9, 3000);
+        }
 
-      // 3. Side Margins (for x < 0 and x > width):
-      const sideGrad = targetCtx.createLinearGradient(0, 0, 0, height);
-      sideGrad.addColorStop(0, edgeColors.top);
-      sideGrad.addColorStop(1, edgeColors.bottom);
-      targetCtx.fillStyle = sideGrad;
-      targetCtx.fillRect(-width * 4, 0, width * 4, height);
-      targetCtx.fillRect(width, 0, width * 4, height);
+        // 2. Bottom Ground Fill (for y >= logicalHeight extending downwards to +3000px):
+        targetCtx.fillStyle = edgeColors.bottom;
+        targetCtx.fillRect(-logicalWidth * 4, logicalHeight, logicalWidth * 9, 3000);
 
-      // 4. Ground Arena Background Image
-      if (arena.bg) {
-        targetCtx.drawImage(arena.bg, 0, 0, width, height);
-      } else {
-        targetCtx.fillStyle = "#487848";
-        targetCtx.fillRect(0, 0, width, height);
-      }
+        // 3. Side Margins (for x < -logicalWidth and x > logicalWidth * 2):
+        const sideGrad = targetCtx.createLinearGradient(0, 0, 0, logicalHeight);
+        sideGrad.addColorStop(0, edgeColors.top);
+        sideGrad.addColorStop(1, edgeColors.bottom);
+        targetCtx.fillStyle = sideGrad;
+        targetCtx.fillRect(-logicalWidth * 4, 0, logicalWidth * 3, logicalHeight);
+        targetCtx.fillRect(logicalWidth * 2, 0, logicalWidth * 3, logicalHeight);
 
-      if (arena.b) {
-        targetCtx.drawImage(arena.b, ep.x, ep.y, enemyPlatW, enemyPlatH);
-        targetCtx.save();
-        targetCtx.translate(width, 0);
-        targetCtx.scale(-1, 1);
-        targetCtx.drawImage(arena.b, pp.x, pp.y, playerPlatW, playerPlatH);
-        targetCtx.restore();
+        // 4. Ground Arena Background Image (Seamless 3-panel coverage so camera can center anywhere)
+        if (arena.bg) {
+          targetCtx.drawImage(arena.bg, 0, 0, logicalWidth, logicalHeight);
+          targetCtx.drawImage(arena.bg, -logicalWidth, 0, logicalWidth, logicalHeight);
+          targetCtx.drawImage(arena.bg, logicalWidth, 0, logicalWidth, logicalHeight);
+        } else {
+          targetCtx.fillStyle = "#487848";
+          targetCtx.fillRect(-logicalWidth, 0, logicalWidth * 3, logicalHeight);
+        }
+
+        if (arena.b) {
+          targetCtx.drawImage(arena.b, ep.x, ep.y, enemyPlatW, enemyPlatH);
+          targetCtx.save();
+          targetCtx.translate(logicalWidth, 0);
+          targetCtx.scale(-1, 1);
+          targetCtx.drawImage(arena.b, pp.x, pp.y, playerPlatW, playerPlatH);
+          targetCtx.restore();
+        }
       }
 
       // Looming Descending Sky Shadow on Target Platform (e.g. Fly Turn 2 targeting & descent phase)
@@ -1104,6 +1560,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       // Determine target entity for hitFlash & filter styling
       const eTarget = (f.moveEffect ? f.moveEffect.actor === "player" : isPlayer);
       const pTarget = (f.moveEffect ? f.moveEffect.actor === "enemy" : !isPlayer);
+      let isAttackingPlayer = (f.moveEffect ? f.moveEffect.actor === "player" : (f.moveEffect?.isPlayerAttacking ?? isPlayer));
 
       const eAlpha = f.eAlpha !== undefined
         ? f.eAlpha
@@ -1112,15 +1569,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         ? f.pAlpha
         : ((f.targetAlpha !== undefined && pTarget) ? f.targetAlpha : 1.0);
 
-      // Pokémon Silhouette Shadows (cast onto platform ground - suppressed during high-speed mid-air flight, underground, or off-screen)
-      const isEnemyHidden = (f.eOffset && (f.eOffset.y <= -50 || f.eOffset.y >= 9000)) || f.hideEShadow || f.hideEnemy || (eAlpha <= 0.02);
+      // Pokémon Silhouette Shadows (cast onto platform ground - cleanly suppressed when Pokemon rushes away, leaps into mid-air, or goes off-screen)
+      const isEnemyHidden = (f.eOffset && (Math.abs(f.eOffset.x) > 35 || f.eOffset.y <= -30 || f.eOffset.y >= 9000)) || f.hideEShadow || f.hideEnemy || (eAlpha <= 0.02) || f.blackoutScreen;
       if (enemySprite && !isEnemyHidden) {
         const eShadowX = em.x + (f.eOffset?.x || 0);
         const eShadowY = em.y;
         drawPokemonSilhouetteShadow(targetCtx, enemySprite, eShadowX, eShadowY, em.size, false, 0.42 * eAlpha);
       }
 
-      const isPlayerHidden = (f.pOffset && (f.pOffset.y <= -50 || f.pOffset.y >= 9000)) || f.hidePShadow || f.hidePlayer || (pAlpha <= 0.02);
+      const isPlayerHidden = (f.pOffset && (Math.abs(f.pOffset.x) > 35 || f.pOffset.y <= -30 || f.pOffset.y >= 9000)) || f.hidePShadow || f.hidePlayer || (pAlpha <= 0.02) || f.blackoutScreen;
       if (playerSprite && !isPlayerHidden) {
         const pShadowX = pm.x + (f.pOffset?.x || 0);
         const pShadowY = pm.y;
@@ -1134,14 +1591,27 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           targetCtx.save();
           if (f.eWhite) {
             targetCtx.filter = "brightness(0) invert(1)";
-          } else if (f.hitFlash && eTarget) {
+          } else if (f.hitFlash && eTarget && !(f.targetPurpleLevel !== undefined && f.targetPurpleLevel > 0) && !f.targetRedTint && !f.eRedTint && !f.targetBlueTint && !f.eBlueTint) {
             targetCtx.filter = "brightness(1.35)";
+          } else if (f.eYellowAura || (f.casterYellowAura && !isAttackingPlayer)) {
+            targetCtx.filter = "drop-shadow(0px 0px 8px #FACC15) drop-shadow(0px 0px 16px #EAB308) brightness(1.2)";
+          } else if ((f.targetPurpleLevel !== undefined && f.targetPurpleLevel > 0 && eTarget) || f.ePurpleTint) {
+            const lvl = Math.max(0, Math.min(1, f.targetPurpleLevel !== undefined ? f.targetPurpleLevel : 1.0));
+            const sep = (0.35 + 0.35 * lvl).toFixed(2);
+            const rot = Math.round(245 + 15 * lvl);
+            const sat = (1.5 + 2.0 * lvl).toFixed(1);
+            const bri = (1.0 - 0.15 * lvl).toFixed(2);
+            targetCtx.filter = `sepia(${sep}) hue-rotate(${rot}deg) saturate(${sat}) brightness(${bri})`;
+          } else if ((f.targetRedTint && eTarget) || f.eRedTint) {
+            targetCtx.filter = "sepia(0.65) hue-rotate(320deg) saturate(2.8) brightness(1.05)";
+          } else if ((f.targetBlueTint && eTarget) || f.eBlueTint) {
+            targetCtx.filter = "sepia(0.60) hue-rotate(180deg) saturate(2.5) brightness(1.1)";
           }
           if (eAlpha < 0.99) {
             targetCtx.globalAlpha = eAlpha;
           }
-          const ex = em.x + f.eOffset.x;
-          const ey = em.y + f.eOffset.y;
+          const ex = em.x + (f.eOffset?.x ?? 0);
+          const ey = em.y + (f.eOffset?.y ?? 0);
           if (f.eScale || f.eRot) {
             targetCtx.translate(ex, ey);
             if (f.eRot) targetCtx.rotate(f.eRot);
@@ -1161,14 +1631,27 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           targetCtx.save();
           if (f.pWhite) {
             targetCtx.filter = "brightness(0) invert(1)";
-          } else if (f.hitFlash && pTarget) {
+          } else if (f.hitFlash && pTarget && !(f.targetPurpleLevel !== undefined && f.targetPurpleLevel > 0) && !f.targetRedTint && !f.pRedTint && !f.targetBlueTint && !f.pBlueTint) {
             targetCtx.filter = "brightness(1.35)";
+          } else if (f.pYellowAura || (f.casterYellowAura && isAttackingPlayer)) {
+            targetCtx.filter = "drop-shadow(0px 0px 8px #FACC15) drop-shadow(0px 0px 16px #EAB308) brightness(1.2)";
+          } else if ((f.targetPurpleLevel !== undefined && f.targetPurpleLevel > 0 && pTarget) || f.pPurpleTint) {
+            const lvl = Math.max(0, Math.min(1, f.targetPurpleLevel !== undefined ? f.targetPurpleLevel : 1.0));
+            const sep = (0.35 + 0.35 * lvl).toFixed(2);
+            const rot = Math.round(245 + 15 * lvl);
+            const sat = (1.5 + 2.0 * lvl).toFixed(1);
+            const bri = (1.0 - 0.15 * lvl).toFixed(2);
+            targetCtx.filter = `sepia(${sep}) hue-rotate(${rot}deg) saturate(${sat}) brightness(${bri})`;
+          } else if ((f.targetRedTint && pTarget) || f.pRedTint) {
+            targetCtx.filter = "sepia(0.65) hue-rotate(320deg) saturate(2.8) brightness(1.05)";
+          } else if ((f.targetBlueTint && pTarget) || f.pBlueTint) {
+            targetCtx.filter = "sepia(0.60) hue-rotate(180deg) saturate(2.5) brightness(1.1)";
           }
           if (pAlpha < 0.99) {
             targetCtx.globalAlpha = pAlpha;
           }
-          const px = pm.x + f.pOffset.x;
-          const py = pm.y + f.pOffset.y;
+          const px = pm.x + (f.pOffset?.x ?? 0);
+          const py = pm.y + (f.pOffset?.y ?? 0);
           if (f.pScale || f.pRot) {
             targetCtx.translate(px, py);
             if (f.pRot) targetCtx.rotate(f.pRot);
@@ -1180,22 +1663,47 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           targetCtx.restore();
         }
       };
+      drawPlayerSpriteFn = drawPlayerSprite;
 
-      // Behind-Sprite Move Effect Layer (e.g. Vine Whip vines emerging from behind attacker's body)
+      const activeEffect = f.moveEffect || battle.lastMoveEffect || {
+        moveKey,
+        type,
+        isSpecial,
+        isPlayerAttacking: isPlayer,
+      };
+      const activeKey = (activeEffect.moveKey || moveKey).toLowerCase().replace(/[\s_]+/g, "-");
+      isAttackingPlayer = activeEffect.actor ? (activeEffect.actor === "player") : (activeEffect.isPlayerAttacking ?? isPlayer);
+      const targetBase = isAttackingPlayer ? em : pm;
+      const attackerBase = isAttackingPlayer ? pm : em;
+      // Center effect on Pokémon's torso/body (36px above platform surface)
+      const targetPos = { x: targetBase.x, y: targetBase.y - 36 };
+      const attackerPos = { x: attackerBase.x, y: attackerBase.y - 36 };
+
+      const currentMoveAnim = getMoveAnimation(activeKey);
+
+      // Behind-Sprite Move Effect Layer (e.g. Disable chains behind target, Vine Whip vines)
       if (f.showEffect || f.moveStep) {
-        const activeEffect = f.moveEffect || battle.lastMoveEffect || {
-          moveKey,
-          type,
-          isSpecial,
-          isPlayerAttacking: isPlayer,
-        };
-        const activeKey = (activeEffect.moveKey || moveKey).toLowerCase().replace(/[\s_]+/g, "-");
-        if (activeKey === "vine-whip" || activeKey === "vinewhip" || activeKey === "stomp") {
+        if (currentMoveAnim?.drawBehindEffect) {
+          const casterOffset = isAttackingPlayer ? (f.pOffset ?? { x: 0, y: 0 }) : (f.eOffset ?? { x: 0, y: 0 });
+          const casterPos = { x: attackerPos.x + casterOffset.x, y: attackerPos.y + casterOffset.y };
+
+          currentMoveAnim.drawBehindEffect(targetCtx, f, {
+            targetPos,
+            attackerPos,
+            casterPos,
+            isPlayer: isAttackingPlayer,
+            isHit: Boolean(activeEffect.isHit ?? true),
+            width: logicalWidth,
+            height: logicalHeight,
+            em,
+            pm,
+          });
+        } else if (activeKey === "vine-whip" || activeKey === "vinewhip" || activeKey === "stomp") {
           renderMoveEffect(targetCtx, {
             moveKey: activeEffect.moveKey || moveKey,
             type: activeEffect.type || type,
             isSpecial: activeEffect.isSpecial !== undefined ? activeEffect.isSpecial : isSpecial,
-            isPlayerAttacking: activeEffect.actor ? (activeEffect.actor === "player") : (activeEffect.isPlayerAttacking ?? isPlayer),
+            isPlayerAttacking: isAttackingPlayer,
             step: f.moveStep ?? (f.showEffect ? 2 : 1),
             layer: "behind",
           });
@@ -1203,31 +1711,76 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       }
 
       if (f.drawEnemyOnTop) {
-        drawPlayerSprite();
+        if (!f.drawPlayerAboveHud) drawPlayerSprite();
         drawEnemySprite();
       } else {
         drawEnemySprite();
-        drawPlayerSprite();
+        if (!f.drawPlayerAboveHud) drawPlayerSprite();
       }
 
-      // Front-Sprite Move Effect Layer (Target strike flash, impact bursts, leaf particles)
+      // Front-Sprite Move Effect Layer:
+      // Uses the move's own self-contained drawEffect method
       if (f.showEffect || f.moveStep) {
-        const activeEffect = f.moveEffect || battle.lastMoveEffect || {
-          moveKey,
-          type,
-          isSpecial,
-          isPlayerAttacking: isPlayer,
-        };
-        const activeKey = (activeEffect.moveKey || moveKey).toLowerCase().replace(/[\s_]+/g, "-");
-        if (f.showEffect || activeKey === "karate-chop" || activeKey === "karatechop") {
+        if (currentMoveAnim.drawEffect) {
+          const casterOffset = isAttackingPlayer ? (f.pOffset ?? { x: 0, y: 0 }) : (f.eOffset ?? { x: 0, y: 0 });
+          const casterPos = { x: attackerPos.x + casterOffset.x, y: attackerPos.y + casterOffset.y };
+
+          currentMoveAnim.drawEffect(targetCtx, f, {
+            targetPos,
+            attackerPos,
+            casterPos,
+            isPlayer: isAttackingPlayer,
+            isHit: Boolean(activeEffect.isHit ?? true),
+            width: logicalWidth,
+            height: logicalHeight,
+            em,
+            pm,
+          });
+        } else {
           renderMoveEffect(targetCtx, {
             moveKey: activeEffect.moveKey || moveKey,
             type: activeEffect.type || type,
             isSpecial: activeEffect.isSpecial !== undefined ? activeEffect.isSpecial : isSpecial,
-            isPlayerAttacking: activeEffect.actor ? (activeEffect.actor === "player") : (activeEffect.isPlayerAttacking ?? isPlayer),
+            isPlayerAttacking: isAttackingPlayer,
             step: f.moveStep ?? (f.showEffect ? 3 : 1),
             layer: (activeKey === "vine-whip" || activeKey === "vinewhip" || activeKey === "stomp") ? "front" : "all",
           });
+        }
+      }
+
+      if (f.blackFadeAlpha !== undefined && f.blackFadeAlpha > 0) {
+        targetCtx.save();
+        targetCtx.globalAlpha = f.blackFadeAlpha;
+        targetCtx.fillStyle = "#000000";
+        targetCtx.fillRect(-logicalWidth * 4, -3000, logicalWidth * 9, 6000);
+        targetCtx.restore();
+      }
+
+      // Stat Boost / Drop Arrow Particles (Rendered within Pokémon coordinate space so they always attach perfectly!)
+      if (f.statProgress !== undefined) {
+        const activeEffect = f.moveEffect || battle.lastMoveEffect;
+        let statChanges = activeEffect?.statChanges || battle.lastMoveEffect?.statChanges;
+        if (!statChanges || statChanges.length === 0) {
+          const moveKey = (activeEffect?.moveKey || (f.moveEffect as any)?.moveKey || "").toLowerCase().replace(/[\s_]+/g, "-");
+          const isDebuffMove = moveKey.includes("growl") || moveKey.includes("tail-whip") || moveKey.includes("tailwhip") || moveKey.includes("leer") || moveKey.includes("screech") || moveKey.includes("charm") || moveKey.includes("fake-tears") || moveKey.includes("string-shot") || moveKey.includes("sand-attack");
+          if (isDebuffMove) {
+            statChanges = [{ target: isAttackingPlayer ? "enemy" : "player", direction: "down" }];
+          } else if (moveKey.includes("swords-dance") || moveKey.includes("swordsdance") || moveKey.includes("growth") || moveKey.includes("dragon-dance")) {
+            statChanges = [{ target: isAttackingPlayer ? "player" : "enemy", direction: "up" }];
+          }
+        }
+        if (statChanges && statChanges.length > 0) {
+          for (const change of statChanges) {
+            const targetPos = change.target === "player"
+              ? { x: pm.x + (f.pOffset?.x ?? 0), y: pm.y + (f.pOffset?.y ?? 0) }
+              : { x: em.x + (f.eOffset?.x ?? 0), y: em.y + (f.eOffset?.y ?? 0) };
+
+            if (change.direction === "up") {
+              drawStatBoostEffect(targetCtx, targetPos, f.statProgress);
+            } else {
+              drawStatDropEffect(targetCtx, targetPos, f.statProgress);
+            }
+          }
         }
       }
 
@@ -1236,41 +1789,33 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       }
     }
 
-    // Stat Boost / Drop Arrow Particles
-    if (f.statProgress !== undefined) {
-      const activeEffect = f.moveEffect || battle.lastMoveEffect;
-      const statChanges = activeEffect?.statChanges || battle.lastMoveEffect?.statChanges;
-      if (statChanges && statChanges.length > 0) {
-        for (const change of statChanges) {
-          const targetPos = change.target === "player"
-            ? { x: pm.x + f.pOffset.x, y: pm.y + f.pOffset.y }
-            : { x: em.x + f.eOffset.x, y: em.y + f.eOffset.y };
-
-          if (change.direction === "up") {
-            drawStatBoostEffect(targetCtx, targetPos, f.statProgress);
-          } else {
-            drawStatDropEffect(targetCtx, targetPos, f.statProgress);
-          }
-        }
+    if (!f.isBlur && !f.blackoutScreen && !f.blackFadeAlpha) {
+      renderBattleHeader(targetCtx, logicalWidth, battle, isKo);
+      if (!f.hideHud && !f.hideUI) {
+        renderBattleHuds(targetCtx, battle, isKo, pbAssets, f.enemyHp !== undefined ? f.enemyHp : enemyHp, f.playerHp !== undefined ? f.playerHp : playerHp);
       }
-    }
-
-    if (!f.isBlur) {
-      renderBattleHeader(targetCtx, width, battle, isKo);
-      renderBattleHuds(targetCtx, battle, isKo, pbAssets, f.enemyHp !== undefined ? f.enemyHp : enemyHp, f.playerHp !== undefined ? f.playerHp : playerHp);
-      renderBattleDialogue(targetCtx, width, height, dialogueLines, f.textLineIdx);
-    } else {
+      if (!f.hideDialogue && !f.hideUI) {
+        renderBattleDialogue(targetCtx, logicalWidth, logicalHeight, dialogueLines, f.textLineIdx);
+      }
+      if (f.drawPlayerAboveHud && drawPlayerSpriteFn) {
+        drawPlayerSpriteFn();
+      }
+    } else if (f.isBlur) {
       // Base empty dialogue box drawn on offCanvas before full-frame blur
       const boxY = 270;
-      const glassGrad = targetCtx.createLinearGradient(0, boxY, 0, height);
+      const glassGrad = targetCtx.createLinearGradient(0, boxY, 0, logicalHeight);
       glassGrad.addColorStop(0, "rgba(10, 16, 26, 0.58)");
       glassGrad.addColorStop(1, "rgba(6, 10, 18, 0.68)");
       targetCtx.fillStyle = glassGrad;
-      targetCtx.fillRect(0, boxY, width, height - boxY);
+      targetCtx.fillRect(0, boxY, logicalWidth, logicalHeight - boxY);
+    }
 
-      // Apply UNIFIED 100% Full-Screen Blur to the main canvas
+    targetCtx.restore();
+
+    if (f.isBlur) {
+      // Apply UNIFIED 100% Full-Screen Deep Soft-Blur to the main canvas
       ctx.clearRect(0, 0, width, height);
-      ctx.filter = "blur(6px) brightness(0.88)";
+      ctx.filter = "blur(12px) brightness(0.88)";
       ctx.drawImage(offCanvas, 0, 0, width, height);
       ctx.filter = "none";
     }
@@ -1279,30 +1824,71 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     if (f.delay >= 10000) {
       effectiveDelay = f.delay;
     } else if (f.isBlur) {
-      // 600ms leading cinematic soft-blur loading transition
-      effectiveDelay = 600;
-    } else if (f.hitFlash || f.showEffect) {
-      // Impact & effect frames: Deliberate 135ms+ holding time so the camera zoom & hit burst are clearly felt!
-      effectiveDelay = Math.max(135, Math.round(f.delay * 1.35));
+      // Full cinematic blur delay (default 800ms)
+      effectiveDelay = f.delay || 800;
     } else {
-      // Fluid, smooth 8~10 FPS animation timing (1.25x) - crisp, dynamic, and free of stutter/lag
-      effectiveDelay = Math.max(70, Math.round(f.delay * 1.25));
+      // 30 FPS uniform fluid timing (33ms)
+      effectiveDelay = f.delay || 33;
+    }
+
+    // 🎨 [256색 팔레트 최적화]: 시각적 급변 프레임(블러 종료, 타격 섬광, 상성 틴트 On/Off, 이펙트 시작/종료, 위상 변경 등)에서는
+    // 팔레트 재사용을 리셋하여 256색 팔레트가 신규 색상을 정확하고 풍성하게 담도록 보장
+    const isVisualStateShift = Boolean(
+      (frameIdx === 1) ||
+      (prevBattleFrame && Boolean(f.isBlur) !== Boolean(prevBattleFrame.isBlur)) ||
+      (prevBattleFrame && Boolean(f.hitFlash) !== Boolean(prevBattleFrame.hitFlash)) ||
+      (prevBattleFrame && Boolean(f.whiteFlash) !== Boolean(prevBattleFrame.whiteFlash)) ||
+      (prevBattleFrame && Boolean(f.targetBlueTint) !== Boolean(prevBattleFrame.targetBlueTint)) ||
+      (prevBattleFrame && Boolean(f.targetRedTint) !== Boolean(prevBattleFrame.targetRedTint)) ||
+      (prevBattleFrame && Boolean(f.targetPurpleLevel) !== Boolean(prevBattleFrame.targetPurpleLevel)) ||
+      (prevBattleFrame && Boolean(f.eWhite) !== Boolean(prevBattleFrame.eWhite)) ||
+      (prevBattleFrame && Boolean(f.pWhite) !== Boolean(prevBattleFrame.pWhite)) ||
+      (prevBattleFrame && Boolean(f.showEffect) !== Boolean(prevBattleFrame.showEffect)) ||
+      (prevBattleFrame && Boolean(f.blackoutScreen) !== Boolean(prevBattleFrame.blackoutScreen)) ||
+      (prevBattleFrame && Boolean(f.blackFadeAlpha) !== Boolean(prevBattleFrame.blackFadeAlpha)) ||
+      (prevBattleFrame && Boolean(f.bgFilterAlpha) !== Boolean(prevBattleFrame.bgFilterAlpha)) ||
+      (prevBattleFrame && Boolean(f.whiteoutAlpha) !== Boolean(prevBattleFrame.whiteoutAlpha)) ||
+      (prevBattleFrame && Boolean(f.eYellowAura || f.pYellowAura || f.casterYellowAura) !== Boolean(prevBattleFrame.eYellowAura || prevBattleFrame.pYellowAura || prevBattleFrame.casterYellowAura)) ||
+      (prevBattleFrame && f.phaseId && prevBattleFrame.phaseId && f.phaseId !== prevBattleFrame.phaseId) ||
+      (prevBattleFrame && f.moveStep !== undefined && prevBattleFrame.moveStep !== undefined && f.moveStep !== prevBattleFrame.moveStep)
+    );
+
+    if (isVisualStateShift) {
+      (encoder as any).reuseTab = false;
+      (encoder as any).prevImage = null;
     }
 
     encoder.setDelay(effectiveDelay);
     encoder.addFrame(ctx);
+    prevBattleFrame = f;
+
+    if (options.includeFramePreviews) {
+      const phaseId = f.phaseId || (f.isBlur ? "blur" : (f.hitFlash ? "strike" : (f.showEffect ? "effect" : "neutral")));
+      const phaseName = f.phaseName || (f.isBlur ? "초기 로딩 (블러)" : (f.hitFlash ? "타격 작렬" : (f.showEffect ? "기술 이펙트" : "중립 대기")));
+      phases.push({
+        phaseId,
+        phaseName,
+        frameIndex: frameIdx,
+        delay: effectiveDelay,
+        pOffset: f.pOffset,
+        eOffset: f.eOffset,
+        cameraZoom: f.cameraZoom,
+        dataUrl: ctx.canvas.toDataURL("image/jpeg", 0.85),
+      });
+    }
+    frameIdx++;
   }
 
   const totalMotionMs = framesConfig
     .filter(f => f.delay < 10000)
-    .reduce((sum, f) => {
-      if (f.isBlur) return sum + 600;
-      if (f.hitFlash || f.showEffect) return sum + Math.max(135, Math.round(f.delay * 1.35));
-      return sum + Math.max(70, Math.round(f.delay * 1.25));
-    }, 0);
+    .reduce((sum, f) => sum + (f.isBlur ? (f.delay || 800) : (f.delay || 33)), 0);
 
   encoder.finish();
-  return { buffer: encoder.out.getData(), motionDurationMs: totalMotionMs };
+  return {
+    buffer: encoder.out.getData(),
+    motionDurationMs: totalMotionMs,
+    phases: options.includeFramePreviews ? phases : undefined,
+  };
 }
 
 /**
@@ -1314,31 +1900,37 @@ export async function renderBattleFaintGif(options: BattleAnimationOptions): Pro
 
 /**
  * 3. Wild Encounter Entry GIF:
- * Frame 1: Far Slide-in (180ms)
- * Frame 2: Mid-way Approach (200ms)
- * Frame 3: Near Landing & HUD appears (200ms)
- * Frame 4: Grounded on Platform (220ms)
- * Frame 5: 11-Minute Static Hold Frame (655,000ms - Maximum GIF89a unsigned 16-bit delay limit)
  */
 export async function renderBattleEntryGif(options: BattleAnimationOptions): Promise<RenderGifResult> {
-  const width = 560;
-  const height = 380;
+  const logicalWidth = 560;
+  const logicalHeight = 380;
+  const renderScale = 0.75; // 420x285 경량화 규격 (배틀 애니메이션 규격과 1:1 통일!)
+  const width = Math.round(logicalWidth * renderScale);   // 420
+  const height = Math.round(logicalHeight * renderScale); // 285
   const isKo = options.lang === "ko";
   const battle = options.battle;
   const enemy = battle.enemy;
   const playerMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
 
-  const dialogueLines = options.dialogueLines || (battle.dialogueText || "").replace(/\\n/g, "\n").split("\n");
+  const defaultEntryDialogue = isKo
+    ? (enemy.isBoss ? `보스 포켓몬 ${enemy.nameKo || enemy.name}(이)가 나타났다!` : `야생의 ${enemy.nameKo || enemy.name}(이)가 나타났다!`)
+    : (enemy.isBoss ? `Boss Pokémon ${enemy.name} appeared!` : `Wild ${enemy.name} appeared!`);
+  const rawDialogue = battle.dialogueText || defaultEntryDialogue;
+  const dialogueLines = options.dialogueLines || rawDialogue.replace(/\\n/g, "\n").split("\n");
 
-  const enemyActiveSpecies = (enemy as any).isTransformed ? ((enemy as any).transformedSpeciesId || enemy.speciesId) : enemy.speciesId;
-  const playerActiveSpecies = (playerMon as any).isTransformed
-    ? ((playerMon as any).transformedSpeciesId || playerMon.speciesId)
-    : ((playerMon as any).hasIllusion && (playerMon as any).illusionTarget ? (playerMon as any).illusionTarget.speciesId : playerMon.speciesId);
+  const enemyActiveSpecies = (enemy as any).isTransformed
+    ? ((enemy as any).transformedSpeciesId || enemy.speciesId || (enemy as any).species)
+    : (enemy.speciesId || (enemy as any).species || "onix");
+  const playerActiveSpecies = (playerMon as any)?.isTransformed
+    ? ((playerMon as any).transformedSpeciesId || playerMon.speciesId || (playerMon as any).species)
+    : ((playerMon as any)?.hasIllusion && (playerMon as any).illusionTarget
+      ? ((playerMon as any).illusionTarget.speciesId || (playerMon as any).illusionTarget.species)
+      : (playerMon?.speciesId || (playerMon as any)?.species || "bulbasaur"));
 
   const enemyShinyTier = (enemy as any).shinyTier !== undefined ? (enemy as any).shinyTier : (enemy.isShiny ? 1 : 0);
-  const playerShinyTier = ((playerMon as any).hasIllusion && (playerMon as any).illusionTarget)
+  const playerShinyTier = ((playerMon as any)?.hasIllusion && (playerMon as any).illusionTarget)
     ? ((playerMon as any).illusionTarget.shinyTier !== undefined ? (playerMon as any).illusionTarget.shinyTier : ((playerMon as any).illusionTarget.isShiny ? 1 : 0))
-    : ((playerMon as any).shinyTier !== undefined ? (playerMon as any).shinyTier : ((playerMon as any).isShiny ? 1 : 0));
+    : ((playerMon as any)?.shinyTier !== undefined ? (playerMon as any).shinyTier : ((playerMon as any)?.isShiny ? 1 : 0));
 
   const [arena, pbAssets, enemySprite, playerSprite] = await Promise.all([
     getArenaAssets(battle.biome || "Town"),
@@ -1347,7 +1939,9 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
     getPokemonSprite(playerActiveSpecies, true, playerShinyTier, true),
   ]);
 
+  // 🎨 [GIF 렌더링 표준 지침 - 256색 팔레트 최적화(Octree Optimizer, threshold: 85)]
   const encoder = new GIFEncoder(width, height, "octree", true);
+  encoder.setThreshold(85);
   encoder.setRepeat(-1);
   encoder.start();
 
@@ -1356,22 +1950,28 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
   ctx.imageSmoothingEnabled = false;
 
   const entryFrames = [
-    // Frame 0: Leading Cinematic Soft-Blur Loading Frame (800ms / 0.8s) - Unified full-screen blur without text!
-    { delay: 800, pPlatX: 0, ePlatX: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, showHud: false, textLineIdx: 0, isBlur: true, cryWave: 0 },
-    // Frame 1: Far Slide-in (160ms)
-    { delay: 160, pPlatX: -160, ePlatX: 160, pMonX: -200, pMonY: 0, eMonX: 200, eMonY: 0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
-    // Frame 2: Touchdown Landing on Platform (150ms)
-    { delay: 150, pPlatX: 0, ePlatX: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
-    // Frame 3: DS Cry Vibration Phase 1 - Shake Left & Cry Soundwave (110ms)
-    { delay: 110, pPlatX: 0, ePlatX: 0, pMonX: 0, pMonY: 0, eMonX: -7, eMonY: -3, showHud: true, textLineIdx: 1, isBlur: false, cryWave: 1 },
-    // Frame 4: DS Cry Vibration Phase 2 - Shake Right & Expanding Ring (110ms)
-    { delay: 110, pPlatX: 0, ePlatX: 0, pMonX: 0, pMonY: 0, eMonX: 7, eMonY: -2, showHud: true, textLineIdx: 1, isBlur: false, cryWave: 2 },
-    // Frame 5: DS Cry Vibration Phase 3 - Settle & Micro-Bounce (120ms)
-    { delay: 120, pPlatX: 0, ePlatX: 0, pMonX: 0, pMonY: 0, eMonX: -2, eMonY: 0, showHud: true, textLineIdx: 2, isBlur: false, cryWave: 3 },
-    // Frame 6: Battle Ready Stance (160ms)
-    { delay: 160, pPlatX: 0, ePlatX: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, showHud: true, textLineIdx: 2, isBlur: false, cryWave: 0 },
-    // Frame 7: 11-Minute Static Hold Frame (655,000ms - Maximum GIF89a unsigned 16-bit delay limit)
-    { delay: 655000, pPlatX: 0, ePlatX: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, showHud: true, textLineIdx: 99, isBlur: false, cryWave: 0 }
+    // Frame 0: Leading Cinematic Soft-Blur Loading Frame (800ms / 0.8s) - Unified full-screen blur without text
+    { delay: 800, pPlatX: 0, ePlatX: 24, ePlatY: -15, pMonX: 0, pMonY: 0, eMonX: 24, eMonY: -15, enemyOpacity: 0.0, showHud: false, textLineIdx: 0, isBlur: true, cryWave: 0 },
+    // Frame 1: Fade-in Step 1 (120ms) - At (+24px, -15px) standing completely still, 35% translucent
+    { delay: 120, pPlatX: 0, ePlatX: 24, ePlatY: -15, pMonX: 0, pMonY: 0, eMonX: 24, eMonY: -15, enemyOpacity: 0.35, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
+    // Frame 2: Fade-in Step 2 (120ms) - STILL at (+24px, -15px) standing completely still, 75% opacity
+    { delay: 120, pPlatX: 0, ePlatX: 24, ePlatY: -15, pMonX: 0, pMonY: 0, eMonX: 24, eMonY: -15, enemyOpacity: 0.75, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
+    // Frame 3: Fade-in Hold (280ms) - STILL at (+24px, -15px) standing completely still, 100% FULLY OPAQUE (Visible pause!)
+    { delay: 280, pPlatX: 0, ePlatX: 24, ePlatY: -15, pMonX: 0, pMonY: 0, eMonX: 24, eMonY: -15, enemyOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
+    // Frame 4: Movement Step 1 (140ms) - ONLY NOW after 100% complete appearance, moves down-left to (+10px, -6px)
+    { delay: 140, pPlatX: 0, ePlatX: 10, ePlatY: -6, pMonX: 0, pMonY: 0, eMonX: 10, eMonY: -6, enemyOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
+    // Frame 5: Movement Step 2 (140ms) - Settles onto Stage at (0, 0)
+    { delay: 140, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
+    // Frame 6: Enemy Battler DS Cry Callout (Vibration Step 1: 150ms)
+    { delay: 150, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: -2, eMonY: -3, enemyOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 1 },
+    // Frame 7: Enemy Battler DS Cry Callout (Vibration Step 2: 150ms)
+    { delay: 150, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 3, eMonY: 2, enemyOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 2 },
+    // Frame 8: HUD Status Slates Slide In & Appear (300ms) - HUD 슬라이드 인 및 등장 대사 타이핑/표시
+    { delay: 300, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, showHud: true, textLineIdx: 99, isBlur: false, cryWave: 0 },
+    // Frame 9: [유저 요구사항] "야생의 OO(이)가 나타났다!" 대사 정독 프레임 (1,200ms) - GIF 후반부에 대사 확실하게 노출!
+    { delay: 1200, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, showHud: true, textLineIdx: 99, isBlur: false, cryWave: 0 },
+    // Frame 10: 11-Minute Static Hold Frame (655,000ms - Maximum GIF89a unsigned 16-bit delay limit) - 유저 버튼 입력 대기
+    { delay: 655000, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, showHud: true, textLineIdx: 99, isBlur: false, cryWave: 0 }
   ];
 
   const motionDurationMs = entryFrames.slice(0, -1).reduce((sum, f) => sum + f.delay, 0);
@@ -1390,57 +1990,91 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
   const offEntryCtx = offEntryCanvas.getContext("2d");
   offEntryCtx.imageSmoothingEnabled = false;
 
+  let entryFrameIdx = 0;
+  let prevEntryFrame: any = null;
+
   for (const f of entryFrames) {
     const targetCtx = f.isBlur ? offEntryCtx : ctx;
     targetCtx.clearRect(0, 0, width, height);
 
-    if (arena.bg) targetCtx.drawImage(arena.bg, 0, 0, width, height);
-    else { targetCtx.fillStyle = "#487848"; targetCtx.fillRect(0, 0, width, height); }
+    targetCtx.save();
+    targetCtx.scale(renderScale, renderScale);
 
-    // Sliding Platforms
+    if (arena.bg) targetCtx.drawImage(arena.bg, 0, 0, logicalWidth, logicalHeight);
+    else { targetCtx.fillStyle = "#487848"; targetCtx.fillRect(0, 0, logicalWidth, logicalHeight); }
+
+    const eOpacity = f.enemyOpacity !== undefined ? f.enemyOpacity : 1.0;
+
+    // Sliding / Fading Platforms
     if (arena.b) {
-      // Enemy Platform sliding from right
-      targetCtx.drawImage(arena.b, ep.x + f.ePlatX, ep.y, enemyPlatW, enemyPlatH);
-      // Player Platform sliding from left
+      // Enemy Platform: with enemyOpacity and (ePlatX, ePlatY)
+      if (eOpacity > 0) {
+        targetCtx.save();
+        targetCtx.globalAlpha = eOpacity;
+        targetCtx.drawImage(arena.b, ep.x + (f.ePlatX || 0), ep.y + ((f as any).ePlatY || 0), enemyPlatW, enemyPlatH);
+        targetCtx.restore();
+      }
+      // Player Platform: always static at pp.x, pp.y with 100% opacity
       targetCtx.save();
-      targetCtx.translate(width, 0);
+      targetCtx.translate(logicalWidth, 0);
       targetCtx.scale(-1, 1);
       targetCtx.drawImage(arena.b, pp.x + f.pPlatX, pp.y, playerPlatW, playerPlatH);
       targetCtx.restore();
     }
 
-    // Battler Sprites (with DS Cry vibration offsets)
-    if (enemySprite) {
+    // Battler Sprites (with DS Cry vibration offsets and enemy fade-in)
+    if (enemySprite && eOpacity > 0) {
+      targetCtx.save();
+      targetCtx.globalAlpha = eOpacity;
       drawFittedBattleSprite(targetCtx, enemySprite, em.x + (f.eMonX || 0), em.y + (f.eMonY || 0), em.size);
+      targetCtx.restore();
     }
     if (playerSprite) {
       drawFittedBattleSprite(targetCtx, playerSprite, pm.x + (f.pMonX || 0), pm.y + (f.pMonY || 0), pm.size);
     }
 
     if (!f.isBlur) {
-      renderBattleHeader(targetCtx, width, battle, isKo);
+      renderBattleHeader(targetCtx, logicalWidth, battle, isKo);
       if (f.showHud) {
         renderBattleHuds(targetCtx, battle, isKo, pbAssets, enemy.hp, playerMon.hp);
       }
-      renderBattleDialogue(targetCtx, width, height, dialogueLines, f.textLineIdx);
+      renderBattleDialogue(targetCtx, logicalWidth, logicalHeight, dialogueLines, f.textLineIdx);
     } else {
       // Base empty dialogue box drawn on offEntryCanvas before full-frame blur
       const boxY = 270;
-      const glassGrad = targetCtx.createLinearGradient(0, boxY, 0, height);
+      const glassGrad = targetCtx.createLinearGradient(0, boxY, 0, logicalHeight);
       glassGrad.addColorStop(0, "rgba(10, 16, 26, 0.58)");
       glassGrad.addColorStop(1, "rgba(6, 10, 18, 0.68)");
       targetCtx.fillStyle = glassGrad;
-      targetCtx.fillRect(0, boxY, width, height - boxY);
+      targetCtx.fillRect(0, boxY, logicalWidth, logicalHeight - boxY);
+    }
 
-      // Apply UNIFIED 100% Full-Screen Blur to main canvas
+    targetCtx.restore();
+
+    if (f.isBlur) {
+      // Apply UNIFIED 100% Full-Screen Deep Soft-Blur to main canvas
       ctx.clearRect(0, 0, width, height);
-      ctx.filter = "blur(6px) brightness(0.88)";
+      ctx.filter = "blur(12px) brightness(0.88)";
       ctx.drawImage(offEntryCanvas, 0, 0, width, height);
       ctx.filter = "none";
     }
 
+    const isEntryVisualShift = Boolean(
+      (entryFrameIdx === 1) ||
+      (prevEntryFrame && Boolean(f.isBlur) !== Boolean(prevEntryFrame.isBlur)) ||
+      (prevEntryFrame && Boolean(f.showHud) !== Boolean(prevEntryFrame.showHud)) ||
+      (prevEntryFrame && Boolean(f.enemyOpacity > 0) !== Boolean(prevEntryFrame.enemyOpacity > 0))
+    );
+
+    if (isEntryVisualShift) {
+      (encoder as any).reuseTab = false;
+      (encoder as any).prevImage = null;
+    }
+
     encoder.setDelay(f.delay);
     encoder.addFrame(ctx);
+    prevEntryFrame = f;
+    entryFrameIdx++;
   }
 
   encoder.finish();
@@ -1534,13 +2168,15 @@ function renderBattleHuds(ctx: any, battle: BattleState, isKo: boolean, pbAssets
 /**
  * Shared Dialogue Box Rendering
  */
-function renderBattleDialogue(ctx: any, width: number, height: number, dialogueLines: string[], textLineIdx: number) {
+function renderBattleDialogue(ctx: any, width: number, height: number, dialogueLines: string[], textLineIdx: number, textOnly: boolean = false) {
   const boxY = 270;
-  const glassGrad = ctx.createLinearGradient(0, boxY, 0, height);
-  glassGrad.addColorStop(0, "rgba(10, 16, 26, 0.58)");
-  glassGrad.addColorStop(1, "rgba(6, 10, 18, 0.68)");
-  ctx.fillStyle = glassGrad;
-  ctx.fillRect(0, boxY, width, height - boxY);
+  if (!textOnly) {
+    const glassGrad = ctx.createLinearGradient(0, boxY, 0, height);
+    glassGrad.addColorStop(0, "rgba(10, 16, 26, 0.58)");
+    glassGrad.addColorStop(1, "rgba(6, 10, 18, 0.68)");
+    ctx.fillStyle = glassGrad;
+    ctx.fillRect(0, boxY, width, height - boxY);
+  }
 
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
@@ -1555,9 +2191,24 @@ function renderBattleDialogue(ctx: any, width: number, height: number, dialogueL
       const textY = boxY + 16 + lIdx * 26;
       ctx.strokeStyle = "rgba(0, 0, 0, 0.85)";
       ctx.lineWidth = 3.5;
-      ctx.strokeText(line, 24, textY);
-      ctx.fillStyle = "#FFFFFF";
-      ctx.fillText(line, 24, textY);
+
+      const perkMatch = line.match(/^\[PERK:([a-z_]+)\]\s*(.*)$/);
+      if (perkMatch) {
+        const perkId = perkMatch[1] as BallPerkId;
+        const cleanLine = perkMatch[2];
+        const svgImg = getPerkSvgImageSync(perkId);
+        if (svgImg) {
+          ctx.drawImage(svgImg, 24, textY - 1, 18, 18);
+        }
+        const textX = svgImg ? (24 + 22) : 24;
+        ctx.strokeText(cleanLine, textX, textY);
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillText(cleanLine, textX, textY);
+      } else {
+        ctx.strokeText(line, 24, textY);
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillText(line, 24, textY);
+      }
     });
   }
 }

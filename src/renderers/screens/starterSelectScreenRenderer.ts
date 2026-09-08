@@ -2020,8 +2020,8 @@ function renderPartyCustomizationPanel(ctx: any, args: PartyCustomizationPanelAr
 export async function renderStarterSelectScreen(options: StarterSelectScreenOptions): Promise<Buffer> {
   const width = 560;
   const height = 380;
-  const scale = 2;
-  const canvas = createCanvas(width * scale, height * scale);
+  const scale = 0.75; // 420x285 경량화 규격
+  const canvas = createCanvas(Math.round(width * scale), Math.round(height * scale));
   const ctx = canvas.getContext("2d");
   ctx.scale(scale, scale);
 
@@ -2363,8 +2363,10 @@ export async function renderStarterSelectScreen(options: StarterSelectScreenOpti
 export async function renderGenSelectScreen(options: GenSelectScreenOptions): Promise<Buffer> {
   const width = 560;
   const height = 380;
-  const canvas = createCanvas(width, height);
+  const scale = 0.75; // 420x285 경량화 규격
+  const canvas = createCanvas(Math.round(width * scale), Math.round(height * scale));
   const ctx = canvas.getContext("2d");
+  ctx.scale(scale, scale);
 
   ctx.imageSmoothingEnabled = false;
   ctx.textRendering = "optimizeSpeed";
