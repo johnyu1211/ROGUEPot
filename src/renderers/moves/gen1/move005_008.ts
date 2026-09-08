@@ -35,7 +35,7 @@ export function drawMegaPunchEffect(ctx: any, target: { x: number; y: number }, 
     ctx.translate(targetX, targetY - 18);
     ctx.rotate(-1.35);
     ctx.scale(0.70, 0.70);
-    ctx.globalAlpha = 0.20;
+    ctx.globalAlpha = 0.35;
     if (cometPunchFistImg) {
       const fw = cometPunchFistImg.width;
       const fh = cometPunchFistImg.height;
@@ -62,8 +62,8 @@ export function drawMegaPunchEffect(ctx: any, target: { x: number; y: number }, 
     ctx.save();
     ctx.translate(targetX, targetY - 18);
     ctx.rotate(-2.90);
-    ctx.scale(0.75, 0.75);
-    ctx.globalAlpha = 0.22;
+    ctx.scale(0.78, 0.78);
+    ctx.globalAlpha = 0.60;
     if (cometPunchFistImg) {
       const fw = cometPunchFistImg.width;
       const fh = cometPunchFistImg.height;
@@ -349,86 +349,77 @@ export function drawFirePunchEffect(ctx: any, target: { x: number; y: number }, 
   const targetX = target.x;
   const targetY = target.y - 12;
 
-  if (step <= 2) {
-    const fireGrad = ctx.createRadialGradient(
-      targetX,
-      targetY - 14,
-      4,
-      targetX,
-      targetY - 14,
-      step === 1 ? 46 : 56
-    );
-    fireGrad.addColorStop(0, "rgba(254, 240, 138, 0.75)");
-    fireGrad.addColorStop(0.4, "rgba(249, 115, 22, 0.65)");
-    fireGrad.addColorStop(0.75, "rgba(220, 38, 38, 0.40)");
-    fireGrad.addColorStop(1, "rgba(220, 38, 38, 0)");
-    ctx.fillStyle = fireGrad;
-    ctx.globalAlpha = step === 1 ? 0.90 : 0.50;
-    ctx.beginPath();
-    ctx.arc(targetX, targetY - 14, step === 1 ? 46 : 56, 0, Math.PI * 2);
-    ctx.fill();
+  // 1. Fiery radial glow behind fist
+  const fireGrad = ctx.createRadialGradient(
+    targetX,
+    targetY - 14,
+    4,
+    targetX,
+    targetY - 14,
+    step === 3 ? 64 : 52
+  );
+  fireGrad.addColorStop(0, "rgba(254, 240, 138, 0.85)");
+  fireGrad.addColorStop(0.35, "rgba(249, 115, 22, 0.70)");
+  fireGrad.addColorStop(0.75, "rgba(220, 38, 38, 0.40)");
+  fireGrad.addColorStop(1, "rgba(220, 38, 38, 0)");
+  ctx.fillStyle = fireGrad;
+  ctx.globalAlpha = (step === 3 || step === 1) ? 0.95 : 0.55;
+  ctx.beginPath();
+  ctx.arc(targetX, targetY - 14, step === 3 ? 64 : 52, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 2. THE FIRE PUNCH FIST (주먹 스프라이트 확실히 렌더링!)
+  const fistAlpha = (step === 3 || step === 1) ? 1.0 : (step === 4 ? 0.50 : 0.75);
+  const fistScale = step === 3 ? 0.88 : (step === 4 ? 0.92 : 0.78);
+
+  ctx.save();
+  ctx.translate(targetX, targetY - 14);
+  ctx.scale(fistScale, fistScale);
+  ctx.globalAlpha = fistAlpha;
+
+  const fistSprite = getFirePunchFistCanvas();
+  if (fistSprite) {
+    const fw = fistSprite.width;
+    const fh = fistSprite.height;
+    ctx.drawImage(fistSprite, -fw / 2, -fh / 2, fw, fh);
+  } else {
+    drawFrontStraightPunchFistSvg(ctx, 0, 0, 2.5, 1.0);
   }
+  ctx.restore();
 
-  if (step <= 2) {
-    ctx.save();
-    ctx.translate(targetX, targetY - 14);
-    ctx.scale(step === 1 ? 0.68 : 0.72, step === 1 ? 0.68 : 0.72);
-    ctx.globalAlpha = step === 1 ? 1.0 : 0.35;
+  // 3. Flame Tongues leaping from the fist
+  let riseY = step === 3 ? -10 : (step === 4 ? -26 : 0);
+  let flameScale = step === 3 ? 1.25 : (step === 4 ? 1.40 : 1.0);
+  let flameAlpha = step === 3 ? 1.0 : (step === 4 ? 0.45 : 0.80);
 
-    const fistSprite = getFirePunchFistCanvas();
-    if (fistSprite) {
-      const fw = fistSprite.width;
-      const fh = fistSprite.height;
-      ctx.drawImage(fistSprite, -fw / 2, -fh / 2, fw, fh);
-    } else {
-      drawFrontStraightPunchFistSvg(ctx, 0, 0, 2.2, 1.0);
-    }
-    ctx.restore();
-  }
+  drawFlameTongue(ctx, targetX - 24 * flameScale, targetY + riseY + 2, 16 * flameScale, 32 * flameScale, -0.55, flameAlpha, -5);
+  drawFlameTongue(ctx, targetX - 14 * flameScale, targetY + riseY - 14, 18 * flameScale, 40 * flameScale, -0.22, flameAlpha, -3);
+  drawFlameTongue(ctx, targetX, targetY + riseY - 22, 22 * flameScale, 48 * flameScale, 0.0, flameAlpha, 0);
+  drawFlameTongue(ctx, targetX + 14 * flameScale, targetY + riseY - 14, 18 * flameScale, 40 * flameScale, 0.22, flameAlpha, 3);
+  drawFlameTongue(ctx, targetX + 24 * flameScale, targetY + riseY + 2, 16 * flameScale, 32 * flameScale, 0.55, flameAlpha, 5);
 
-  let riseY = 0;
-  let flameScale = 1.0;
-  let flameAlpha = 1.0;
-
-  if (step === 2) {
-    riseY = -14;
-    flameScale = 1.15;
-    flameAlpha = 0.70;
-  } else if (step >= 3) {
-    riseY = -28;
-    flameScale = 1.25;
-    flameAlpha = 0.30;
-  }
-
-  drawFlameTongue(ctx, targetX - 22 * flameScale, targetY + riseY + 2, 14 * flameScale, 28 * flameScale, -0.55, flameAlpha, -5);
-  drawFlameTongue(ctx, targetX - 13 * flameScale, targetY + riseY - 14, 16 * flameScale, 36 * flameScale, -0.22, flameAlpha, -3);
-  drawFlameTongue(ctx, targetX, targetY + riseY - 20, 18 * flameScale, 42 * flameScale, 0.0, flameAlpha, 0);
-  drawFlameTongue(ctx, targetX + 13 * flameScale, targetY + riseY - 14, 16 * flameScale, 36 * flameScale, 0.22, flameAlpha, 3);
-  drawFlameTongue(ctx, targetX + 22 * flameScale, targetY + riseY + 2, 14 * flameScale, 28 * flameScale, 0.55, flameAlpha, 5);
-
-  if (step === 1) {
-    drawMiniRetroStar(ctx, targetX, targetY - 14, 22, "#FDE047");
-  } else if (step === 2) {
-    drawMiniRetroStar(ctx, targetX, targetY - 24, 14, "rgba(253, 224, 71, 0.60)");
+  // 4. Impact star and fiery sparks
+  if (step === 3 || step === 1) {
+    drawMiniRetroStar(ctx, targetX, targetY - 14, 26, "#FDE047");
   }
 
   ctx.save();
-  ctx.globalAlpha = step === 1 ? 0.9 : (step === 2 ? 0.7 : 0.35);
-  const emberOffsetY = (step - 1) * -16;
+  ctx.globalAlpha = step === 3 ? 0.95 : 0.50;
+  const emberOffsetY = (step - 1) * -12;
   const embers = [
-    { ox: -26, oy: -20 + emberOffsetY, r: 2.8, c: "#FEF08A" },
-    { ox: 28, oy: -18 + emberOffsetY, r: 3.0, c: "#F97316" },
-    { ox: -18, oy: 10 + emberOffsetY, r: 2.5, c: "#EF4444" },
-    { ox: 22, oy: 12 + emberOffsetY, r: 2.8, c: "#FDE047" },
-    { ox: 0, oy: -36 + emberOffsetY, r: 3.0, c: "#FEF08A" },
-    { ox: 32, oy: 2 + emberOffsetY, r: 2.6, c: "#F97316" },
-    { ox: -30, oy: 2 + emberOffsetY, r: 2.6, c: "#FDE047" },
+    { ox: -26, oy: -20 + emberOffsetY, r: 3.2, c: "#FEF08A" },
+    { ox: 28, oy: -18 + emberOffsetY, r: 3.5, c: "#F97316" },
+    { ox: -18, oy: 10 + emberOffsetY, r: 2.8, c: "#EF4444" },
+    { ox: 22, oy: 12 + emberOffsetY, r: 3.2, c: "#FDE047" },
+    { ox: 0, oy: -36 + emberOffsetY, r: 3.5, c: "#FEF08A" },
+    { ox: 32, oy: 2 + emberOffsetY, r: 3.0, c: "#F97316" },
+    { ox: -30, oy: 2 + emberOffsetY, r: 3.0, c: "#FDE047" },
   ];
 
   for (const eb of embers) {
     ctx.fillStyle = eb.c;
     ctx.beginPath();
-    ctx.arc(targetX + eb.ox, targetY - 14 + eb.oy, step >= 3 ? eb.r * 0.7 : eb.r, 0, Math.PI * 2);
+    ctx.arc(targetX + eb.ox, targetY - 14 + eb.oy, eb.r, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();
@@ -445,75 +436,66 @@ export function drawIcePunchEffect(ctx: any, target: { x: number; y: number }, s
   const targetX = target.x;
   const targetY = target.y - 12;
 
-  let spread = 0.85;
-  let alpha = 1.0;
-  let fistAlpha = 1.0;
-  let spinOffset = 0.0;
+  // 1. Cryo Ice radial glow
+  const iceGrad = ctx.createRadialGradient(
+    targetX,
+    targetY - 14,
+    4,
+    targetX,
+    targetY - 14,
+    step === 3 ? 64 : 52
+  );
+  iceGrad.addColorStop(0, "rgba(255, 255, 255, 0.90)");
+  iceGrad.addColorStop(0.35, "rgba(125, 211, 252, 0.75)");
+  iceGrad.addColorStop(0.75, "rgba(2, 132, 199, 0.40)");
+  iceGrad.addColorStop(1, "rgba(2, 132, 199, 0)");
+  ctx.fillStyle = iceGrad;
+  ctx.globalAlpha = (step === 3 || step === 1) ? 0.95 : 0.50;
+  ctx.beginPath();
+  ctx.arc(targetX, targetY - 14, step === 3 ? 64 : 52, 0, Math.PI * 2);
+  ctx.fill();
 
-  if (step === 2) {
-    spread = 1.55;
-    alpha = 0.65;
-    fistAlpha = 0.35;
-    spinOffset = Math.PI / 6;
-  } else if (step >= 3) {
-    spread = 2.25;
-    alpha = 0.25;
-    fistAlpha = 0.0;
-    spinOffset = Math.PI / 3;
-  }
-
-  if (step <= 2) {
-    const iceGrad = ctx.createRadialGradient(
-      targetX,
-      targetY - 14,
-      4,
-      targetX,
-      targetY - 14,
-      step === 1 ? 46 : 56
-    );
-    iceGrad.addColorStop(0, "rgba(255, 255, 255, 0.85)");
-    iceGrad.addColorStop(0.4, "rgba(125, 211, 252, 0.70)");
-    iceGrad.addColorStop(0.75, "rgba(2, 132, 199, 0.40)");
-    iceGrad.addColorStop(1, "rgba(2, 132, 199, 0)");
-    ctx.fillStyle = iceGrad;
-    ctx.globalAlpha = step === 1 ? 0.90 : 0.45;
-    ctx.beginPath();
-    ctx.arc(targetX, targetY - 14, step === 1 ? 46 : 56, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  if (fistAlpha > 0.02) {
-    ctx.save();
-    ctx.translate(targetX, targetY - 14);
-    ctx.scale(step === 1 ? 0.68 : 0.72, step === 1 ? 0.68 : 0.72);
-    ctx.globalAlpha = fistAlpha;
-
-    const fistSprite = getIcePunchFistCanvas();
-    if (fistSprite) {
-      const fw = fistSprite.width;
-      const fh = fistSprite.height;
-      ctx.drawImage(fistSprite, -fw / 2, -fh / 2, fw, fh);
-    } else {
-      drawFrontStraightPunchFistSvg(ctx, 0, 0, 2.2, 1.0);
-    }
-    ctx.restore();
-  }
+  // 2. THE ICE PUNCH FIST (얼음 주먹 스프라이트 확실히 렌더링!)
+  const fistAlpha = (step === 3 || step === 1) ? 1.0 : (step === 4 ? 0.50 : 0.75);
+  const fistScale = step === 3 ? 0.88 : (step === 4 ? 0.92 : 0.78);
 
   ctx.save();
-  ctx.globalAlpha = alpha;
+  ctx.translate(targetX, targetY - 14);
+  ctx.scale(fistScale, fistScale);
+  ctx.globalAlpha = fistAlpha;
+
+  const fistSprite = getIcePunchFistCanvas();
+  if (fistSprite) {
+    const fw = fistSprite.width;
+    const fh = fistSprite.height;
+    ctx.drawImage(fistSprite, -fw / 2, -fh / 2, fw, fh);
+  } else {
+    drawFrontStraightPunchFistSvg(ctx, 0, 0, 2.5, 1.0);
+  }
+  ctx.restore();
+
+  // 3. Ice Crystal Shards exploding outward
+  let spread = step === 3 ? 1.15 : (step === 4 ? 2.10 : 0.85);
+  let shardAlpha = step === 3 ? 1.0 : (step === 4 ? 0.40 : 0.75);
+  let spinOffset = step === 4 ? Math.PI / 4 : 0;
+
+  ctx.save();
+  ctx.globalAlpha = shardAlpha;
   const baseShards = [
-    { vx: 0, vy: -34, w: 8, h: 16, rot: 0 },
-    { vx: 28, vy: -20, w: 7, h: 14, rot: Math.PI / 3 },
-    { vx: 28, vy: 16, w: 7, h: 14, rot: (2 * Math.PI) / 3 },
-    { vx: 0, vy: 30, w: 8, h: 16, rot: Math.PI },
-    { vx: -28, vy: 16, w: 7, h: 14, rot: (4 * Math.PI) / 3 },
-    { vx: -28, vy: -20, w: 7, h: 14, rot: (5 * Math.PI) / 3 },
+    { vx: 0, vy: -36, w: 9, h: 18, rot: 0 },
+    { vx: 30, vy: -22, w: 8, h: 16, rot: Math.PI / 3 },
+    { vx: 30, vy: 18, w: 8, h: 16, rot: (2 * Math.PI) / 3 },
+    { vx: 0, vy: 34, w: 9, h: 18, rot: Math.PI },
+    { vx: -30, vy: 18, w: 8, h: 16, rot: (4 * Math.PI) / 3 },
+    { vx: -30, vy: -22, w: 8, h: 16, rot: (5 * Math.PI) / 3 },
   ];
 
   for (const sh of baseShards) {
     ctx.save();
     ctx.translate(targetX + sh.vx * spread, targetY - 14 + sh.vy * spread);
     ctx.rotate(sh.rot + spinOffset);
+
+    // Diamond shard path
     ctx.fillStyle = "#E0F2FE";
     ctx.strokeStyle = "#0284C7";
     ctx.lineWidth = 1.6;
@@ -526,44 +508,23 @@ export function drawIcePunchEffect(ctx: any, target: { x: number; y: number }, s
     ctx.fill();
     ctx.stroke();
 
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 1.0;
+    ctx.fillStyle = "#FFFFFF";
     ctx.beginPath();
     ctx.moveTo(0, -sh.h / 2);
-    ctx.lineTo(0, sh.h / 2);
-    ctx.stroke();
+    ctx.lineTo(sh.w / 4, 0);
+    ctx.lineTo(0, sh.h / 4);
+    ctx.closePath();
+    ctx.fill();
+
     ctx.restore();
   }
   ctx.restore();
 
-  if (step <= 2) {
-    drawMiniRetroStar(ctx, targetX, targetY - 14, step === 1 ? 22 : 14, "#BAE6FD");
+  // 4. Center Cryo Star
+  if (step === 3 || step === 1) {
+    drawMiniRetroStar(ctx, targetX, targetY - 14, 24, "#BAE6FD");
   }
-
-  ctx.save();
-  ctx.globalAlpha = alpha;
-  const glints = [
-    { vx: -24, vy: -26, r: 2.8, c: "#FFFFFF" },
-    { vx: 26, vy: -24, r: 3.0, c: "#E0F2FE" },
-    { vx: -20, vy: 20, r: 2.4, c: "#38BDF8" },
-    { vx: 22, vy: 22, r: 2.8, c: "#FFFFFF" },
-    { vx: 0, vy: -40, r: 3.0, c: "#BAE6FD" },
-    { vx: 32, vy: 0, r: 2.6, c: "#38BDF8" },
-    { vx: -32, vy: 0, r: 2.6, c: "#E0F2FE" },
-  ];
-  for (const gl of glints) {
-    ctx.fillStyle = gl.c;
-    ctx.beginPath();
-    ctx.arc(
-      targetX + gl.vx * spread,
-      targetY - 14 + gl.vy * spread,
-      step >= 3 ? gl.r * 0.7 : gl.r,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
-  }
-  ctx.restore();
 
   ctx.restore();
 }
+

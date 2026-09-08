@@ -8,8 +8,10 @@ import { drawPartyRightPanel } from "../common/vectorIcons.js";
 export async function renderMultiplayerScreen(options?: MultiplayerScreenOptions): Promise<Buffer> {
   const width = 560;
   const height = 380;
-  const canvas = createCanvas(width, height);
+  const scale = 0.75; // 420x285 경량화 규격
+  const canvas = createCanvas(Math.round(width * scale), Math.round(height * scale));
   const ctx = canvas.getContext("2d");
+  ctx.scale(scale, scale);
 
   ctx.imageSmoothingEnabled = false;
   ctx.textRendering = "optimizeSpeed";

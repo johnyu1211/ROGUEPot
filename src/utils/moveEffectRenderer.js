@@ -722,77 +722,106 @@ function drawStatBoostEffect(ctx, pos, progress) {
 function drawStatDropEffect(ctx, pos, progress) {
     if (progress === void 0) { progress = 0.5; }
     ctx.save();
-    var clampedProgress = Math.min(1.0, Math.max(0.0, progress));
-    // Dark cold blue ambient aura
-    var auraGrad = ctx.createRadialGradient(pos.x, pos.y, 10, pos.x, pos.y + 15, 65);
-    auraGrad.addColorStop(0, "rgba(59, 130, 246, 0.35)");
-    auraGrad.addColorStop(0.5, "rgba(99, 102, 241, 0.20)");
-    auraGrad.addColorStop(1, "rgba(59, 130, 246, 0)");
-    ctx.fillStyle = auraGrad;
-    ctx.beginPath();
-    ctx.arc(pos.x, pos.y + 10, 65, 0, Math.PI * 2);
-    ctx.fill();
-    // 5 Descending Glowing Arrows (Downwards v )
+    var clampedProgress = Math.min(0.999, Math.max(0.001, progress));
+    var auraAlpha = Math.sin(clampedProgress * Math.PI) * 0.35;
+    if (auraAlpha > 0.01) {
+        var auraGrad = ctx.createRadialGradient(pos.x, pos.y, 8, pos.x, pos.y + 10, 60);
+        auraGrad.addColorStop(0, "rgba(59, 130, 246, " + auraAlpha + ")");
+        auraGrad.addColorStop(0.6, "rgba(37, 99, 235, " + (auraAlpha * 0.5) + ")");
+        auraGrad.addColorStop(1, "rgba(59, 130, 246, 0)");
+        ctx.fillStyle = auraGrad;
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y + 10, 60, 0, Math.PI * 2);
+        ctx.fill();
+    }
     var arrowConfigs = [
-        { offsetX: -32, baseY: -35, speed: 65, size: 11, delay: 0.0, color: "#3B82F6" },
-        { offsetX: -14, baseY: -45, speed: 75, size: 14, delay: 0.15, color: "#60A5FA" },
-        { offsetX: 0, baseY: -55, speed: 85, size: 16, delay: 0.05, color: "#818CF8" },
-        { offsetX: 16, baseY: -45, speed: 75, size: 13, delay: 0.2, color: "#60A5FA" },
-        { offsetX: 34, baseY: -35, speed: 65, size: 10, delay: 0.1, color: "#3B82F6" },
+        { baseX: -28, spawn: 0.00, duration: 0.55, fallDist: 95,  size: 12, color: "#3B82F6" },
+        { baseX: -12, spawn: 0.06, duration: 0.55, fallDist: 100, size: 14, color: "#60A5FA" },
+        { baseX: 0,   spawn: 0.02, duration: 0.55, fallDist: 105, size: 16, color: "#93C5FD" },
+        { baseX: 14,  spawn: 0.08, duration: 0.55, fallDist: 100, size: 14, color: "#60A5FA" },
+        { baseX: 28,  spawn: 0.04, duration: 0.55, fallDist: 95,  size: 12, color: "#3B82F6" },
+        { baseX: -36, spawn: 0.28, duration: 0.55, fallDist: 92,  size: 11, color: "#3B82F6" },
+        { baseX: -20, spawn: 0.34, duration: 0.55, fallDist: 98,  size: 13, color: "#60A5FA" },
+        { baseX: -6,  spawn: 0.38, duration: 0.55, fallDist: 104, size: 15, color: "#93C5FD" },
+        { baseX: 8,   spawn: 0.32, duration: 0.55, fallDist: 104, size: 15, color: "#93C5FD" },
+        { baseX: 22,  spawn: 0.36, duration: 0.55, fallDist: 98,  size: 13, color: "#60A5FA" },
+        { baseX: 36,  spawn: 0.30, duration: 0.55, fallDist: 92,  size: 11, color: "#3B82F6" },
     ];
-    for (var _i = 0, arrowConfigs_2 = arrowConfigs; _i < arrowConfigs_2.length; _i++) {
-        var cfg = arrowConfigs_2[_i];
-        var localProgress = (clampedProgress + cfg.delay) % 1.0;
-        var arrowY = pos.y + cfg.baseY + (localProgress * cfg.speed);
-        var arrowX = pos.x + cfg.offsetX;
-        var alpha = Math.sin(localProgress * Math.PI);
-        if (alpha <= 0.05)
-            continue;
+    for (var _i = 0, arrowConfigs_1 = arrowConfigs; _i < arrowConfigs_1.length; _i++) {
+        var cfg = arrowConfigs_1[_i];
+        if (clampedProgress < cfg.spawn || clampedProgress > cfg.spawn + cfg.duration) continue;
+        var t = (clampedProgress - cfg.spawn) / cfg.duration;
+        var alpha = Math.sin(t * Math.PI) * 0.96;
+        if (alpha <= 0.03) continue;
+        var arrowX = pos.x + cfg.baseX;
+        var startY = pos.y - 78;
+        var arrowY = startY + t * cfg.fallDist;
+        var s = cfg.size;
         ctx.save();
         ctx.globalAlpha = alpha;
         ctx.shadowColor = cfg.color;
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 8;
         ctx.strokeStyle = cfg.color;
-        ctx.lineWidth = 3.5;
+        ctx.lineWidth = 3.6;
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
-        // Draw Chevron Arrow pointing DOWN ( v )
-        var s = cfg.size;
         ctx.beginPath();
         ctx.moveTo(arrowX - s, arrowY - s * 0.55);
         ctx.lineTo(arrowX, arrowY + s * 0.45);
         ctx.lineTo(arrowX + s, arrowY - s * 0.55);
         ctx.stroke();
-        // Inner bright core
+        ctx.shadowBlur = 0;
         ctx.strokeStyle = "#FFFFFF";
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 1.6;
         ctx.beginPath();
-        ctx.moveTo(arrowX - s * 0.7, arrowY - s * 0.45);
-        ctx.lineTo(arrowX, arrowY + s * 0.35);
-        ctx.lineTo(arrowX + s * 0.7, arrowY - s * 0.45);
+        ctx.moveTo(arrowX - s * 0.72, arrowY - s * 0.44);
+        ctx.lineTo(arrowX, arrowY + s * 0.32);
+        ctx.lineTo(arrowX + s * 0.72, arrowY - s * 0.44);
         ctx.stroke();
-        // Trailing droplet dot above each falling arrow
+        var streakGrad = ctx.createLinearGradient(arrowX, arrowY - s * 0.6, arrowX, arrowY - s * 1.5);
+        streakGrad.addColorStop(0, cfg.color);
+        streakGrad.addColorStop(1, "rgba(59, 130, 246, 0)");
+        ctx.strokeStyle = streakGrad;
+        ctx.lineWidth = 2.0;
+        ctx.beginPath();
+        ctx.moveTo(arrowX, arrowY - s * 0.6);
+        ctx.lineTo(arrowX, arrowY - s * 1.5);
+        ctx.stroke();
         ctx.fillStyle = cfg.color;
         ctx.beginPath();
-        ctx.arc(arrowX, arrowY - s * 1.1, 2.5, 0, Math.PI * 2);
+        ctx.arc(arrowX, arrowY - s * 1.7, 2.2, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
     }
-    // Descending droplet particles
     var droplets = [
-        { ox: -20, oy: 5, r: 2.5, color: "#60A5FA" },
-        { ox: 15, oy: 20, r: 3.0, color: "#3B82F6" },
-        { ox: -5, oy: 35, r: 2.0, color: "#818CF8" },
-        { ox: 25, oy: -2, r: 2.2, color: "#60A5FA" },
+        { ox: -26, spawn: 0.05, life: 0.45, speed: 80, r: 2.2, color: "#60A5FA" },
+        { ox: -10, spawn: 0.18, life: 0.45, speed: 90, r: 2.8, color: "#93C5FD" },
+        { ox: 12,  spawn: 0.10, life: 0.45, speed: 85, r: 2.5, color: "#3B82F6" },
+        { ox: 28,  spawn: 0.28, life: 0.45, speed: 80, r: 2.0, color: "#60A5FA" },
+        { ox: -18, spawn: 0.42, life: 0.42, speed: 90, r: 2.5, color: "#93C5FD" },
+        { ox: 8,   spawn: 0.48, life: 0.42, speed: 85, r: 2.8, color: "#3B82F6" },
+        { ox: 22,  spawn: 0.52, life: 0.42, speed: 80, r: 2.2, color: "#60A5FA" },
+        { ox: -2,  spawn: 0.35, life: 0.42, speed: 95, r: 3.0, color: "#BFDBFE" },
     ];
     for (var _a = 0, droplets_1 = droplets; _a < droplets_1.length; _a++) {
         var dp = droplets_1[_a];
-        var py = pos.y + dp.oy + clampedProgress * 30;
-        var px = pos.x + dp.ox;
+        if (clampedProgress < dp.spawn || clampedProgress > dp.spawn + dp.life) continue;
+        var dt = (clampedProgress - dp.spawn) / dp.life;
+        var dAlpha = Math.sin(dt * Math.PI) * 0.85;
+        if (dAlpha <= 0.02) continue;
+        var dY = (pos.y - 60) + dt * dp.speed;
+        var dX = pos.x + dp.ox;
+        ctx.save();
+        ctx.globalAlpha = dAlpha;
         ctx.fillStyle = dp.color;
         ctx.beginPath();
-        ctx.arc(px, py, dp.r, 0, Math.PI * 2);
+        ctx.arc(dX, dY, dp.r, 0, Math.PI * 2);
         ctx.fill();
+        ctx.fillStyle = "#FFFFFF";
+        ctx.beginPath();
+        ctx.arc(dX, dY, dp.r * 0.4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
     }
     ctx.restore();
 }

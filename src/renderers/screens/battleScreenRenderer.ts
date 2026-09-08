@@ -6,7 +6,8 @@ import { drawShinySparkle, drawShinyTierSparkles } from "../common/vectorIcons.j
 import { formatMoney, wrapDialogueText, getPokemonDisplayName, drawInGameMessageBox } from "../common/textHelpers.js";
 import { MOVES_DATA, getMoveData, getMoveKey } from "../../data/movesKo.js";
 import { POKEMON_SPECIES_DATA } from "../../data/pokemonStats.js";
-import { renderMoveEffect } from "../../utils/moveEffectRenderer.js";
+import { renderMoveEffect } from "../moves/index.js";
+import { getPerkSvgImageSync, BallPerkId } from "../../utils/perkSvgIcons.js";
 
 export const BATTLE_LAYOUT_CONFIG = {
   enemyPlatform: { scale: 1.5, x: 95, y: 42 },
@@ -495,8 +496,8 @@ function drawBattlePlatforms(ctx: any, biome: string) {
 export async function renderBattleScreen(options: BattleScreenOptions): Promise<Buffer> {
   const width = 560;
   const height = 380;
-  const scale = 2;
-  const canvas = createCanvas(width * scale, height * scale);
+  const scale = 0.75; // 420x285 경량화 규격 (배틀 애니메이션과 1:1 완벽 일치, 렌더링 부하 대폭 절감)
+  const canvas = createCanvas(Math.round(width * scale), Math.round(height * scale));
   const ctx = canvas.getContext("2d");
   ctx.scale(scale, scale);
 
@@ -550,10 +551,10 @@ export async function renderBattleScreen(options: BattleScreenOptions): Promise<
   }
 
   // 3. Preload & Draw Pokémon Sprites (Transform, Illusion, and Accurate Shiny Tier Front & Back support)
-  const enemyActiveSpecies = battle.debugEnemySpecies || ((enemy as any).isTransformed ? ((enemy as any).transformedSpeciesId || enemy.speciesId) : enemy.speciesId);
-  const playerActiveSpecies = battle.debugPlayerSpecies || ((playerMon as any).isTransformed
+  const enemyActiveSpecies = (enemy as any).isTransformed ? ((enemy as any).transformedSpeciesId || enemy.speciesId) : enemy.speciesId;
+  const playerActiveSpecies = (playerMon as any).isTransformed
     ? ((playerMon as any).transformedSpeciesId || playerMon.speciesId)
-    : ((playerMon as any).hasIllusion && (playerMon as any).illusionTarget ? (playerMon as any).illusionTarget.speciesId : playerMon.speciesId));
+    : ((playerMon as any).hasIllusion && (playerMon as any).illusionTarget ? (playerMon as any).illusionTarget.speciesId : playerMon.speciesId);
 
   const enemyShinyTier = (enemy as any).shinyTier !== undefined
     ? (enemy as any).shinyTier
@@ -895,9 +896,24 @@ function drawBattleFightMovesGrid(ctx: any, combatMon: any, isKo: boolean, categ
       const textY = boxY + 16 + lIdx * 26;
       ctx.strokeStyle = "rgba(0, 0, 0, 0.85)";
       ctx.lineWidth = 3.5;
-      ctx.strokeText(line, 24, textY);
-      ctx.fillStyle = "#FFFFFF";
-      ctx.fillText(line, 24, textY);
+
+      const perkMatch = line.match(/^\[PERK:([a-z_]+)\]\s*(.*)$/);
+      if (perkMatch) {
+        const perkId = perkMatch[1] as BallPerkId;
+        const cleanLine = perkMatch[2];
+        const svgImg = getPerkSvgImageSync(perkId);
+        if (svgImg) {
+          ctx.drawImage(svgImg, 24, textY - 1, 18, 18);
+        }
+        const textX = svgImg ? (24 + 22) : 24;
+        ctx.strokeText(cleanLine, textX, textY);
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillText(cleanLine, textX, textY);
+      } else {
+        ctx.strokeText(line, 24, textY);
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillText(line, 24, textY);
+      }
     });
   }
 

@@ -88,30 +88,56 @@ export function drawKarateChopEffect(ctx: any, target: { x: number; y: number },
   ctx.save();
 
   const cx = target.x;
-  const cy = target.y - 45;
+  // target.y는 이미 대상 포켓몬 스프라이트의 수직 중앙(targetBase.y - 36)입니다.
+  const cy = target.y;
 
-  let handOy = -55;
+  let handOy = -52;
   let isRedFlash = false;
   let showImpact = false;
+  let handAlpha = 1.0;
+  let emberMult = 1.0;
+  let emberAlpha = 1.0;
 
   if (step === 1) {
-    handOy = -58;
+    handOy = -52;
     isRedFlash = false;
   } else if (step === 2) {
-    handOy = -44;
+    handOy = -38;
     isRedFlash = false;
   } else if (step === 3) {
-    handOy = -76;
+    handOy = -64;
     isRedFlash = true;
-  } else {
-    handOy = -15;
+  } else if (step === 4) {
+    // 4단계(내려찍기 타격): 대상 포켓몬 스프라이트 정중앙(handOy = 0)으로 정확히 안착!
+    handOy = 0;
     isRedFlash = false;
     showImpact = true;
+    handAlpha = 1.0;
+  } else if (step === 5) {
+    // 5단계: 머리 찍고 나서 서서히 투명해짐 (60% 불투명도)
+    handOy = 2;
+    isRedFlash = false;
+    showImpact = true;
+    handAlpha = 0.60;
+    emberMult = 1.35;
+    emberAlpha = 0.70;
+  } else if (step === 6) {
+    // 6단계: 서서히 더 투명해지며 소멸 (25% 불투명도 잔상)
+    handOy = 4;
+    isRedFlash = false;
+    showImpact = true;
+    handAlpha = 0.25;
+    emberMult = 1.70;
+    emberAlpha = 0.35;
+  } else {
+    // 7단계 이후: 손 완전히 소멸
+    handAlpha = 0;
   }
 
   const sprite = isRedFlash ? getKarateRedImg() : getKarateBlackImg();
-  if (sprite) {
+  if (sprite && handAlpha > 0) {
     ctx.save();
+    ctx.globalAlpha = handAlpha;
     ctx.translate(cx, cy + handOy);
     const sw = 80 * 1.15;
     const sh = 60 * 1.15;
@@ -119,8 +145,9 @@ export function drawKarateChopEffect(ctx: any, target: { x: number; y: number },
     ctx.restore();
   }
 
-  if (showImpact) {
+  if (showImpact && emberAlpha > 0) {
     ctx.save();
+    ctx.globalAlpha = emberAlpha;
     const embers = [
       { ox: -30, oy: -20, r: 3.5, color: "#EA580C" },
       { ox: 25, oy: -35, r: 3.0, color: "#F97316" },
@@ -133,8 +160,8 @@ export function drawKarateChopEffect(ctx: any, target: { x: number; y: number },
     ];
 
     for (const eb of embers) {
-      const px = cx + eb.ox;
-      const py = cy + handOy + 15 + eb.oy;
+      const px = cx + eb.ox * emberMult;
+      const py = cy + handOy + eb.oy * emberMult;
       ctx.fillStyle = eb.color;
       ctx.beginPath();
       ctx.arc(px, py, eb.r, 0, Math.PI * 2);
@@ -233,13 +260,14 @@ export function drawCometPunchEffect(ctx: any, target: { x: number; y: number },
   ctx.save();
 
   const isFade = (step % 2 === 0);
-  const hitIndex = Math.floor((step - 1) / 2) % 3;
-
   const configs = [
-    { ox: -12, oy: -20, scale: 0.55 },
-    { ox: 12, oy: -26, scale: 0.58 },
-    { ox: 0, oy: -24, scale: 0.62 },
+    { ox: -26, oy: -18, scale: 0.56 }, // 1타: 좌측 바디/훅
+    { ox: 26, oy: -28, scale: 0.58 },  // 2타: 우측 상단 안면
+    { ox: -18, oy: -32, scale: 0.56 }, // 3타: 좌측 상단 어퍼
+    { ox: 20, oy: -16, scale: 0.58 },  // 4타: 우측 중하단 복부
+    { ox: 0, oy: -24, scale: 0.62 },   // 5타: 정중앙 결정타
   ];
+  const hitIndex = Math.floor((step - 1) / 2) % configs.length;
   const cfg = configs[hitIndex];
 
   const fistX = target.x + cfg.ox;

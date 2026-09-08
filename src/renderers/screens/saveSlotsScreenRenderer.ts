@@ -73,8 +73,8 @@ function drawSmallHeart(ctx: any, x: number, y: number, size: number = 5.5, colo
 export async function renderSaveSlotsScreen(options: SaveSlotsScreenOptions): Promise<Buffer> {
   const width = 560;
   const height = 380;
-  const scale = 2;
-  const canvas = createCanvas(width * scale, height * scale);
+  const scale = 0.75; // 420x285 경량화 규격
+  const canvas = createCanvas(Math.round(width * scale), Math.round(height * scale));
   const ctx = canvas.getContext("2d");
   ctx.scale(scale, scale);
 

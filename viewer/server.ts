@@ -1,3 +1,10 @@
+// ============================================================================
+// ⚠️ [개발/작업 지침 - AI 필독]
+// 프레임별 이미지 추출 및 시각적 검증(3번 단계)은 유저가 웹 뷰어(http://localhost:3456)에서
+// 직접 확인하므로, 작업 시 에이전트가 매번 프레임을 일일이 추출/조회하지 말 것!
+// 코드 수정 -> 증분 빌드(npm run build) -> 뷰어 캐시 갱신 후 즉시 보고할 것.
+// ============================================================================
+
 import http from "http";
 import fs from "fs";
 import path from "path";
@@ -21,6 +28,11 @@ import { PartyViewTab } from "../src/utils/canvasRenderer.js";
 import { getStartersByGen } from "../src/data/starterCosts.js";
 import { getUserStarters } from "../src/services/starterService.js";
 import { getPokemonByDexNumber } from "../src/services/pokeApiService.js";
+import { VERIFIED_MOVES } from "./movesData.js";
+import { renderBattleMoveGif, renderBattleEntryGif } from "../src/utils/battleGifRenderer.js";
+import { getMoveData } from "../src/data/movesKo.js";
+import { POKEMON_SPECIES_DATA } from "../src/data/pokemonStats.js";
+import sharp from "sharp";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -49,15 +61,29 @@ initSimulatedUser();
 
 // SSE Clients for Live Reload
 const sseClients: http.ServerResponse[] = [];
+const moveGifMemoryCache = new Map<string, any>();
+const bulbapediaCoreSeriesCache = new Map<string, any>();
+
 const rendererPath = path.resolve(__dirname, "../src/utils/canvasRenderer.ts");
 const interactionPath = path.resolve(__dirname, "../src/events/interactionCreate.ts");
+const movesRendererDir = path.resolve(__dirname, "../src/renderers/moves");
+const movesDefsDir = path.resolve(__dirname, "../src/battle/moves");
 
-[rendererPath, interactionPath].forEach((file) => {
-  if (fs.existsSync(file)) {
-    fs.watch(file, () => {
-      console.log(`[VIEWER] ${path.basename(file)} changed, triggering live reload...`);
-      sseClients.forEach((client) => client.write("data: reload\n\n"));
-    });
+[rendererPath, interactionPath, movesRendererDir, movesDefsDir].forEach((targetPath) => {
+  if (fs.existsSync(targetPath)) {
+    try {
+      fs.watch(targetPath, { recursive: true }, () => {
+        console.log(`[VIEWER] ${path.basename(targetPath)} changed, clearing move cache and triggering live reload...`);
+        moveGifMemoryCache.clear();
+        sseClients.forEach((client) => client.write("data: reload\n\n"));
+      });
+    } catch {
+      // Fallback non-recursive
+      fs.watch(targetPath, () => {
+        moveGifMemoryCache.clear();
+        sseClients.forEach((client) => client.write("data: reload\n\n"));
+      });
+    }
   }
 });
 
@@ -89,6 +115,84 @@ function serializeDiscordMessagePayload(result: any) {
     embed: embedData,
     rows: rows,
   };
+}
+
+
+function parseBulbapediaGenInfo(fileName: string) {
+  const upper = fileName.toUpperCase();
+  const isAlt2 = upper.includes("_2.") || upper.includes("-2.");
+  const altSuffix = isAlt2 ? " (반동/후속)" : "";
+
+  if (upper.includes("_I.") || upper.includes("_RB.") || upper.includes("_RG.")) return { order: 1, badge: "GEN I", label: `1세대 (RGBY)${altSuffix}` };
+  if (upper.includes("_II.") || upper.includes("_GS.") || upper.includes("_C.")) return { order: 2, badge: "GEN II", label: `2세대 (GSC)${altSuffix}` };
+  if (upper.includes("_III.") || upper.includes("_RS.") || upper.includes("_E.") || upper.includes("_FRLG.") || upper.includes("_COLO.") || upper.includes("_XD.")) return { order: 3, badge: "GEN III", label: `3세대 (RSE/FRLG)${altSuffix}` };
+  if (upper.includes("_IV.") || upper.includes("_DP.") || upper.includes("_PT.") || upper.includes("_HGSS.")) return { order: 4, badge: "GEN IV", label: `4세대 (DPPt/HGSS)${altSuffix}` };
+  if (upper.includes("_V.") || upper.includes("_BW.") || upper.includes("_B2W2.")) return { order: 5, badge: "GEN V", label: `5세대 (BW/B2W2)${altSuffix}` };
+  if (upper.includes("_VI.") || upper.includes("_XY.") || upper.includes("_ORAS.")) return { order: 6 + (isAlt2 ? 0.1 : 0), badge: "GEN VI", label: `6세대 (XY/ORAS)${altSuffix}` };
+  if (upper.includes("_VII.") || upper.includes("_SM.") || upper.includes("_USUM.")) return { order: 7 + (isAlt2 ? 0.1 : 0), badge: "GEN VII", label: `7세대 (SM/USUM)${altSuffix}` };
+  if (upper.includes("_PE.") || upper.includes("_LGPE.")) return { order: 8 + (isAlt2 ? 0.1 : 0), badge: "LET'S GO", label: `레츠고 (LGPE)${altSuffix}` };
+  if (upper.includes("_VIII.") || upper.includes("_SWSH.")) return { order: 9 + (isAlt2 ? 0.1 : 0), badge: "GEN VIII", label: `8세대 (소드/실드)${altSuffix}` };
+  if (upper.includes("_BDSP.")) return { order: 10 + (isAlt2 ? 0.1 : 0), badge: "BDSP", label: `8세대 (BDSP)${altSuffix}` };
+  if (upper.includes("_LA.") || upper.includes("_PLA.")) return { order: 11 + (isAlt2 ? 0.1 : 0), badge: "PLA", label: `LEGENDS 아르세우스${altSuffix}` };
+  if (upper.includes("_IX.") || upper.includes("_SV.")) return { order: 12 + (isAlt2 ? 0.1 : 0), badge: "GEN IX", label: `9세대 (SV)${altSuffix}` };
+  if (upper.includes("_ZA.") || upper.includes("_PLZA.")) return { order: 13 + (isAlt2 ? 0.1 : 0), badge: "PLZA", label: `LEGENDS Z-A${altSuffix}` };
+  return { order: 99, badge: "OTHER", label: fileName.replace(/\.[^/.]+$/, "") };
+}
+
+async function scrapeBulbapediaCoreSeries(rawTitle: string) {
+  const pageTitle = rawTitle.trim().replace(/\s+/g, "_");
+  const wikiUrl = `https://bulbapedia.bulbagarden.net/wiki/${encodeURIComponent(pageTitle)}_(move)`;
+  try {
+    const res = await fetch(wikiUrl, {
+      redirect: "follow",
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      },
+    });
+    if (!res.ok) {
+      return { ok: false, error: `Bulbapedia returned HTTP ${res.status}`, wikiUrl, items: [] };
+    }
+    const html = await res.text();
+    const coreIdx = html.lastIndexOf("Core series games");
+    if (coreIdx === -1) {
+      return { ok: true, wikiUrl, items: [] };
+    }
+
+    let endIdx = html.indexOf("Side series games", coreIdx);
+    if (endIdx === -1) endIdx = html.indexOf("In spin-off games", coreIdx);
+    if (endIdx === -1) endIdx = html.indexOf("<h3>", coreIdx + 100);
+    if (endIdx === -1) endIdx = coreIdx + 100000;
+
+    const section = html.slice(coreIdx, endIdx);
+    const regex = /<a href="(\/wiki\/File:[^"]+)"[^>]*>[\s\S]*?<img[^>]+(?:src|data-src)="([^">]+)"/gi;
+    let match: RegExpExecArray | null;
+    const items: any[] = [];
+    const seenFiles = new Set<string>();
+
+    while ((match = regex.exec(section)) !== null) {
+      const filePageRel = match[1];
+      let imgUrl = match[2];
+      if (imgUrl.startsWith("//")) imgUrl = "https:" + imgUrl;
+
+      const fileName = decodeURIComponent(filePageRel.replace("/wiki/File:", ""));
+      if (seenFiles.has(fileName)) continue;
+      seenFiles.add(fileName);
+
+      const genInfo = parseBulbapediaGenInfo(fileName);
+      items.push({
+        fileName,
+        filePage: `https://bulbapedia.bulbagarden.net${filePageRel}`,
+        imgUrl,
+        proxyUrl: `/api/image-proxy?url=${encodeURIComponent(imgUrl)}`,
+        ...genInfo,
+      });
+    }
+
+    items.sort((a, b) => a.order - b.order);
+    return { ok: true, wikiUrl, items };
+  } catch (err: any) {
+    return { ok: false, error: err.message, wikiUrl, items: [] };
+  }
 }
 
 const server = http.createServer(async (req, res) => {
@@ -129,6 +233,575 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
       res.end(data);
     });
+    return;
+  }
+
+  // 2-B. Move Viewer - List all verified moves
+  if (req.method === "GET" && req.url === "/api/moves") {
+    res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+    res.end(JSON.stringify(VERIFIED_MOVES));
+    return;
+  }
+
+  // 2-B-2. Move Viewer - Fetch Bulbapedia Core series images (Gen 1 ~ Legends Z-A)
+  if (req.method === "GET" && req.url?.startsWith("/api/move-core-series")) {
+    try {
+      const url = new URL(req.url, `http://${req.headers.host}`);
+      const rawMoveKey = url.searchParams.get("moveKey") || "";
+      const isEnemyCaster = rawMoveKey.endsWith("-enemy");
+      const cleanKey = isEnemyCaster ? rawMoveKey.replace(/-enemy$/, "") : rawMoveKey;
+
+      if (cleanKey === "encounter-entry" || cleanKey === "perk-hug") {
+        res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({ ok: true, wikiUrl: null, items: [], customNote: "공식 본가 기술이 아닙니다." }));
+        return;
+      }
+
+      const moveObj = VERIFIED_MOVES.find(m => m.id === cleanKey);
+      const moveData = getMoveData(cleanKey);
+      const pageTitle = url.searchParams.get("nameEn") || moveObj?.nameEn || moveData?.nameEn || cleanKey;
+
+      const cached = bulbapediaCoreSeriesCache.get(cleanKey);
+      if (cached) {
+        res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({ ...cached, fromCache: true }));
+        return;
+      }
+
+      const result = await scrapeBulbapediaCoreSeries(pageTitle);
+      if (result.ok && result.items && result.items.length > 0) {
+        bulbapediaCoreSeriesCache.set(cleanKey, result);
+      }
+      res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify(result));
+    } catch (err: any) {
+      res.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify({ ok: false, error: err.message }));
+    }
+    return;
+  }
+
+  // 2-B-3. Move Viewer - Image Proxy for external CDN images
+  if (req.method === "GET" && req.url?.startsWith("/api/image-proxy")) {
+    try {
+      const url = new URL(req.url, `http://${req.headers.host}`);
+      const targetUrl = url.searchParams.get("url");
+      if (!targetUrl || (!targetUrl.startsWith("https://archives.bulbagarden.net/") && !targetUrl.startsWith("https://bulbapedia.bulbagarden.net/"))) {
+        res.writeHead(400, { "Content-Type": "text/plain" });
+        res.end("Invalid URL");
+        return;
+      }
+      const fetchRes = await fetch(targetUrl, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        },
+      });
+      if (!fetchRes.ok) {
+        res.writeHead(fetchRes.status);
+        res.end();
+        return;
+      }
+      const contentType = fetchRes.headers.get("content-type") || "image/png";
+      const buffer = Buffer.from(await fetchRes.arrayBuffer());
+      res.writeHead(200, {
+        "Content-Type": contentType,
+        "Cache-Control": "public, max-age=86400",
+      });
+      res.end(buffer);
+    } catch (err: any) {
+      res.writeHead(500);
+      res.end();
+    }
+    return;
+  }
+
+
+  // 2-C. Move Viewer - Render Move GIF (A attacks with move, then B counterattacks with same move!)
+  if (req.method === "GET" && req.url?.startsWith("/api/render-move")) {
+    try {
+      const url = new URL(req.url, `http://${req.headers.host}`);
+      const rawMoveKey = url.searchParams.get("moveKey") || "double-kick";
+      const isEnemyCaster = rawMoveKey.endsWith("-enemy");
+      const moveKey = isEnemyCaster ? rawMoveKey.replace(/-enemy$/, "") : rawMoveKey;
+      const playerSpecies = url.searchParams.get("playerSpecies") || "bulbasaur";
+      const enemySpecies = url.searchParams.get("enemySpecies") || "onix";
+      const hitMode = url.searchParams.get("hitMode") || "normal"; // "normal" | "super" | "miss"
+      const flyPhase = url.searchParams.get("flyPhase") || "2"; // "2": 2턴 활공 후 내려찍기 | "1": 1턴 도약 및 은신 | "full": 전체 연속 재생
+      const actMode = url.searchParams.get("actMode") || "dual"; // "dual" (기본: 1막+2막 맞시전) | "single" (1막 단독)
+      console.log(`[VIEWER MOVE] moveKey=${rawMoveKey}, hitMode=${hitMode}, actMode=${actMode}`);
+
+      const cacheKey = `${rawMoveKey}_${playerSpecies}_${enemySpecies}_${hitMode}_${flyPhase}_${actMode}`;
+      const noCache = url.searchParams.get("nocache") === "1" || !!url.searchParams.get("t");
+      const cached = noCache ? null : moveGifMemoryCache.get(cacheKey);
+      if (cached) {
+        res.writeHead(200, {
+          "Content-Type": "application/json; charset=utf-8",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+        });
+        res.end(JSON.stringify({ ...cached, fromCache: true, renderTimeMs: cached.renderTimeMs }));
+        return;
+      }
+
+      const moveData = getMoveData(moveKey);
+      const moveKo = moveKey === "encounter-entry" ? "야생 포켓몬 조우 (등장)" : (moveKey === "perk-hug" ? "포옹 (🫂 특수 연출)" : (moveData?.nameKo || moveKey));
+      const playerInfo = POKEMON_SPECIES_DATA[playerSpecies];
+      const enemyInfo = POKEMON_SPECIES_DATA[enemySpecies];
+      const playerDisplayName = playerInfo?.nameKo || playerSpecies;
+      const enemyDisplayName = enemyInfo?.nameKo || enemySpecies;
+
+      const isStatus = moveData?.category === "status" || moveKey === "swords-dance" || moveKey === "whirlwind" || moveKey === "perk-hug";
+      const isOHKO = moveKey === "guillotine" || moveKey === "horn-drill" || moveKey === "fissure" || moveKey === "sheer-cold";
+      const isMiss = hitMode === "miss";
+      const isImmune = hitMode === "immune";
+      const isQuarter = hitMode === "quarter";   // 효과가 매우 별로 (0.25x - 50% 반투명 1회)
+      const isNotVery = hitMode === "not-very"; // 효과가 별로 (0.5x - 1회)
+      const isSuper = hitMode === "super";       // 효과가 굉장하다 (2.0x - 4회)
+      const isUltra = hitMode === "ultra";       // 효과가 매우 굉장하다 (4.0x - 5회)
+
+      let typeMod = 1.0;
+      if (isMiss || isImmune) typeMod = 0.0;
+      else if (isQuarter) typeMod = 0.25;
+      else if (isNotVery) typeMod = 0.5;
+      else if (isSuper) typeMod = 2.0;
+      else if (isUltra) typeMod = 4.0;
+      else typeMod = 1.0;
+
+      const isHit = !isMiss;
+      const actualDamage = isStatus ? 0 : (isMiss || isImmune ? 0 : (isOHKO ? 150 : Math.max(1, Math.round(35 * typeMod))));
+      const act1EnemyHpAfter = isStatus ? 150 : (isMiss || isImmune ? 150 : (isOHKO ? 0 : Math.max(0, 150 - actualDamage)));
+
+      const isBuff = moveKey === "swords-dance" || moveKey === "growth" || moveKey === "dragon-dance" || moveKey === "calm-mind" || moveKey === "bulk-up" || moveKey === "agility";
+      const isNotDebuff = moveKey === "mist" || moveKey === "haze" || moveKey === "safeguard";
+      const isDebuff = !isNotDebuff && (
+        moveKey === "growl" || moveKey === "tail-whip" || moveKey === "leer" || moveKey === "sand-attack" ||
+        moveKey === "screech" || moveKey === "charm" || moveKey === "fake-tears" || moveKey === "metal-sound" ||
+        moveKey === "string-shot" || moveKey === "smokescreen" || moveKey === "kinesis" || moveKey === "flash" ||
+        Boolean(moveData?.description && (
+          !moveData.description.includes("떨어지지") &&
+          (moveData.description.includes("떨어뜨") || moveData.description.includes("낮춘") || moveData.description.includes("감소") || moveData.description.includes("하락"))
+        ))
+      );
+
+      const pStatChanges: { target: "player" | "enemy"; direction: "up" | "down" }[] | undefined = isBuff
+        ? [{ target: "player", direction: "up" }]
+        : (isDebuff ? [{ target: "enemy", direction: "down" }] : undefined);
+
+      const eStatChanges: { target: "player" | "enemy"; direction: "up" | "down" }[] | undefined = isBuff
+        ? [{ target: "enemy", direction: "up" }]
+        : (isDebuff ? [{ target: "player", direction: "down" }] : undefined);
+
+      const mockBattle = {
+        userId: "viewer_user",
+        slotId: 1,
+        stage: 1,
+        biome: "town",
+        phase: (isOHKO && !isMiss) ? (isEnemyCaster ? "DEFEAT" : "VICTORY") : "ACTION",
+        dialogueText: moveKey === "perk-hug" ? `[PERK:hug] ${playerDisplayName}(은)는 당신을 포옹하고 돌아갔다.` : "",
+        hugTriggered: moveKey === "perk-hug",
+        playerParty: [{
+          id: "p1",
+          speciesId: playerSpecies,
+          dexNumber: playerInfo?.dexNumber || 1,
+          species: playerSpecies,
+          name: playerDisplayName,
+          level: 25,
+          hp: (isEnemyCaster && isOHKO && !isMiss) ? 0 : 150,
+          maxHp: 150,
+          stats: { hp: 150, attack: 100, defense: 100, spAtk: 100, spDef: 100, speed: 100 },
+          moves: [moveKey, "surf", "ice-beam", "blizzard", "psybeam"].filter((m, i, arr) => arr.indexOf(m) === i).slice(0, 4),
+          types: playerInfo?.types || ["grass"]
+        }],
+        playerBattleMon: {
+          id: "p1",
+          speciesId: playerSpecies,
+          dexNumber: playerInfo?.dexNumber || 1,
+          species: playerSpecies,
+          name: playerDisplayName,
+          level: 25,
+          hp: (isEnemyCaster && isOHKO && !isMiss) ? 0 : 150,
+          maxHp: 150,
+          stats: { hp: 150, attack: 100, defense: 100, spAtk: 100, spDef: 100, speed: 100 },
+          moves: [moveKey, "surf", "ice-beam", "blizzard", "psybeam"].filter((m, i, arr) => arr.indexOf(m) === i).slice(0, 4),
+          types: playerInfo?.types || ["grass"],
+          semiInvulnerableState: (moveKey === "fly" && flyPhase === "2") ? "air" : null,
+          chargingMove: (moveKey === "fly" && flyPhase === "2") ? "fly" : null,
+        },
+        enemy: {
+          id: "e1",
+          speciesId: enemySpecies,
+          dexNumber: enemyInfo?.dexNumber || 95,
+          species: enemySpecies,
+          name: enemyDisplayName,
+          level: 25,
+          hp: (!isEnemyCaster && isOHKO && !isMiss) ? 0 : 150,
+          maxHp: 150,
+          stats: { hp: 150, attack: 100, defense: 100, spAtk: 100, spDef: 100, speed: 100 },
+          moves: [moveKey],
+          types: enemyInfo?.types || ["rock"]
+        },
+        turnActions: isEnemyCaster ? [
+          // 적 시점 단독 시전: 적이 내 포켓몬을 향해 일격필살/기술 시전
+          {
+            actor: "enemy",
+            moveKey: moveKey,
+            moveName: moveKo,
+            damage: actualDamage,
+            isHit: isHit,
+            isSuperEffective: false,
+            typeMod: 1.0,
+            statChanges: eStatChanges,
+            playerHpAfter: (isOHKO && !isMiss) ? 0 : 150,
+            enemyHpAfter: 150,
+            effectiveness: 1.0,
+            log: isMiss
+              ? `적 ${enemyDisplayName}의 ${moveKo}!\n하지만 상대에게 빗나갔다!`
+              : `적 ${enemyDisplayName}의 ${moveKo}!\n일격필살! 아군 ${playerDisplayName}(은)는 쓰러졌다!`
+          }
+        ] : (moveKey === "fly" && flyPhase === "1") ? [
+          // 1턴: 날아오르기 (하늘 높이 날아올랐다) + 적 공격 빗나감 (상공 은신 상태)
+          {
+            actor: "player",
+            moveKey: "fly",
+            moveName: "공중날기",
+            damage: 0,
+            isHit: true,
+            isTurn1Launch: true,
+            chargingMove: "fly",
+            playerHpAfter: 150,
+            enemyHpAfter: 150,
+            effectiveness: 1.0,
+            log: `아군 ${playerDisplayName}(은)는 하늘 높이 날아올랐다!`
+          },
+          {
+            actor: "enemy",
+            moveKey: "tackle",
+            moveName: "몸통박치기",
+            damage: 0,
+            isHit: false,
+            playerHpAfter: 150,
+            enemyHpAfter: 150,
+            effectiveness: 1.0,
+            log: `적 ${enemyDisplayName}의 몸통박치기!\n하지만 상대에게 닿지 않았다!`
+          }
+        ] : (moveKey === "fly" && flyPhase === "full") ? [
+          // 전체 풀 시퀀스: 1턴 도약 ➔ 2턴 활공 후 급강하 내려찍기
+          {
+            actor: "player",
+            moveKey: "fly",
+            moveName: "공중날기",
+            damage: 0,
+            isHit: true,
+            isTurn1Launch: true,
+            chargingMove: "fly",
+            playerHpAfter: 150,
+            enemyHpAfter: 150,
+            effectiveness: 1.0,
+            log: `아군 ${playerDisplayName}(은)는 하늘 높이 날아올랐다!`
+          },
+          {
+            actor: "player",
+            moveKey: "fly",
+            moveName: "공중날기",
+            damage: actualDamage,
+            isHit: isHit,
+            isTurn1Launch: false,
+            wasDescentFromAir: true,
+            isSuperEffective: isSuper,
+            typeMod: typeMod,
+            playerHpAfter: 150,
+            enemyHpAfter: isMiss ? 150 : (isSuper ? 80 : 115),
+            effectiveness: typeMod,
+            log: isMiss
+              ? `아군 ${playerDisplayName}의 공중날기!\n하지만 상대에게 빗나갔다!`
+              : (isSuper
+                ? `아군 ${playerDisplayName}의 공중날기! 효과가 굉장했다! ${actualDamage} 데미지!`
+                : `아군 ${playerDisplayName}의 공중날기! ${actualDamage} 데미지!`)
+          }
+        ] : (moveKey === "fly") ? [
+          // 2턴 (기본값): 활공 후 급강하 내려찍기 + 적 반격
+          {
+            actor: "player",
+            moveKey: "fly",
+            moveName: "공중날기",
+            damage: actualDamage,
+            isHit: isHit,
+            isTurn1Launch: false,
+            wasDescentFromAir: true,
+            isSuperEffective: isSuper,
+            typeMod: typeMod,
+            playerHpAfter: 150,
+            enemyHpAfter: isMiss ? 150 : (isSuper ? 80 : 115),
+            effectiveness: typeMod,
+            log: isMiss
+              ? `아군 ${playerDisplayName}의 공중날기!\n하지만 상대에게 빗나갔다!`
+              : (isSuper
+                ? `아군 ${playerDisplayName}의 공중날기! 효과가 굉장했다! ${actualDamage} 데미지!`
+                : `아군 ${playerDisplayName}의 공중날기! ${actualDamage} 데미지!`)
+          },
+          {
+            actor: "enemy",
+            moveKey: "tackle",
+            moveName: "몸통박치기",
+            damage: 25,
+            isHit: true,
+            isSuperEffective: false,
+            typeMod: 1.0,
+            playerHpAfter: 125,
+            enemyHpAfter: isMiss ? 150 : (isSuper ? 80 : 115),
+            effectiveness: 1.0,
+            log: `적 ${enemyDisplayName}의 몸통박치기! 25 데미지!`
+          }
+        ] : (moveKey === "razor-wind" && flyPhase === "1") ? [
+          // 1턴: 바람 일으키기 (소용돌이 장전) + 적 반격
+          {
+            actor: "player",
+            moveKey: "razor-wind",
+            moveName: "칼바람",
+            damage: 0,
+            isHit: true,
+            isTurn1Launch: true,
+            chargingMove: "razor-wind",
+            playerHpAfter: 150,
+            enemyHpAfter: 150,
+            effectiveness: 1.0,
+            log: `아군 ${playerDisplayName}(은)는 칼바람을 일으켰다!`
+          },
+          {
+            actor: "enemy",
+            moveKey: "tackle",
+            moveName: "몸통박치기",
+            damage: 20,
+            isHit: true,
+            playerHpAfter: 130,
+            enemyHpAfter: 150,
+            effectiveness: 1.0,
+            log: `적 ${enemyDisplayName}의 몸통박치기! 20 데미지!`
+          }
+        ] : (moveKey === "razor-wind" && flyPhase === "full") ? [
+          // 전체 풀 시퀀스: 1턴 소용돌이 장전 ➔ 2턴 베기 폭풍 격돌
+          {
+            actor: "player",
+            moveKey: "razor-wind",
+            moveName: "칼바람",
+            damage: 0,
+            isHit: true,
+            isTurn1Launch: true,
+            chargingMove: "razor-wind",
+            playerHpAfter: 150,
+            enemyHpAfter: 150,
+            effectiveness: 1.0,
+            log: `아군 ${playerDisplayName}(은)는 칼바람을 일으켰다!`
+          },
+          {
+            actor: "player",
+            moveKey: "razor-wind",
+            moveName: "칼바람",
+            damage: actualDamage,
+            isHit: isHit,
+            isTurn1Launch: false,
+            isSuperEffective: isSuper,
+            typeMod: typeMod,
+            playerHpAfter: 150,
+            enemyHpAfter: isMiss ? 150 : (isSuper ? 80 : 115),
+            effectiveness: typeMod,
+            log: isMiss
+              ? `아군 ${playerDisplayName}의 칼바람!\n하지만 상대에게 빗나갔다!`
+              : (isSuper
+                ? `아군 ${playerDisplayName}의 칼바람! 효과가 굉장했다! 급소에 맞았다! ${actualDamage} 데미지!`
+                : `아군 ${playerDisplayName}의 칼바람! 급소에 맞았다! ${actualDamage} 데미지!`)
+          }
+        ] : (moveKey === "razor-wind") ? [
+          // 2턴 (기본값): 칼바람 베기 공격 + 적 반격
+          {
+            actor: "player",
+            moveKey: "razor-wind",
+            moveName: "칼바람",
+            damage: actualDamage,
+            isHit: isHit,
+            isTurn1Launch: false,
+            isSuperEffective: isSuper,
+            typeMod: typeMod,
+            playerHpAfter: 150,
+            enemyHpAfter: isMiss ? 150 : (isSuper ? 80 : 115),
+            effectiveness: typeMod,
+            log: isMiss
+              ? `아군 ${playerDisplayName}의 칼바람!\n하지만 상대에게 빗나갔다!`
+              : (isSuper
+                ? `아군 ${playerDisplayName}의 칼바람! 효과가 굉장했다! 급소에 맞았다! ${actualDamage} 데미지!`
+                : `아군 ${playerDisplayName}의 칼바람! 급소에 맞았다! ${actualDamage} 데미지!`)
+          },
+          {
+            actor: "enemy",
+            moveKey: "tackle",
+            moveName: "몸통박치기",
+            damage: 20,
+            isHit: true,
+            isSuperEffective: false,
+            typeMod: 1.0,
+            playerHpAfter: 130,
+            enemyHpAfter: isMiss ? 150 : (isSuper ? 80 : 115),
+            effectiveness: 1.0,
+            log: `적 ${enemyDisplayName}의 몸통박치기! 20 데미지!`
+          }
+        ] : (moveKey === "perk-hug") ? [
+          // 🫂 포옹 특수 연출 (내 포켓몬이 다가와 1초간 포옹 후 복귀)
+          {
+            actor: "player",
+            moveKey: "perk-hug",
+            moveName: "포옹",
+            damage: 0,
+            isHit: true,
+            isSuperEffective: false,
+            typeMod: 1.0,
+            playerHpAfter: 150,
+            enemyHpAfter: 150,
+            effectiveness: 1.0,
+            log: `[PERK:hug] ${playerDisplayName}(은)는 당신을 포옹하고 돌아갔다.`
+          }
+        ] : (isOHKO && !isMiss) ? [
+          // 1막: 일격필살 즉사 처형 (적 사망으로 2막 반격 없음)
+          {
+            actor: "player",
+            moveKey: moveKey,
+            moveName: moveKo,
+            damage: actualDamage,
+            isHit: isHit,
+            isSuperEffective: false,
+            typeMod: 1.0,
+            playerHpAfter: 150,
+            enemyHpAfter: 0,
+            effectiveness: 1.0,
+            log: `아군 ${playerDisplayName}의 ${moveKo}!\n일격필살! 상대 ${enemyDisplayName}(은)는 쓰러졌다!`
+          }
+        ] : (actMode === "dual" ? [
+          // 1막: A(내 포켓몬)가 기술 시전
+          {
+            actor: "player",
+            moveKey: moveKey,
+            moveName: moveKo,
+            damage: actualDamage,
+            isHit: isHit,
+            isSuperEffective: isSuper,
+            typeMod: typeMod,
+            statChanges: pStatChanges,
+            playerHpAfter: (moveKey === "take-down" || moveKey === "double-edge") ? 135 : 150,
+            enemyHpAfter: act1EnemyHpAfter,
+            effectiveness: typeMod,
+            log: isMiss
+              ? `아군 ${playerDisplayName}의 ${moveKo}!\n하지만 상대에게 빗나갔다!`
+              : (isImmune
+                ? `아군 ${playerDisplayName}의 ${moveKo}!\n상대에게 효과가 없는 것 같다...`
+                : (isQuarter || isNotVery
+                  ? `아군 ${playerDisplayName}의 ${moveKo}!\n효과가 별로인 듯하다...`
+                  : (isSuper || isUltra
+                    ? `아군 ${playerDisplayName}의 ${moveKo}!\n효과가 굉장했다!`
+                    : `아군 ${playerDisplayName}의 ${moveKo}!`)))
+          },
+          // 2막: B(적대 포켓몬)가 해당 같은 기술 시전
+          {
+            actor: "enemy",
+            moveKey: moveKey,
+            moveName: moveKo,
+            damage: actualDamage,
+            isHit: isHit,
+            isSuperEffective: isSuper,
+            typeMod: typeMod,
+            statChanges: eStatChanges,
+            playerHpAfter: isStatus ? 150 : (isMiss || isImmune ? 150 : Math.max(0, 150 - actualDamage)),
+            enemyHpAfter: (moveKey === "take-down" || moveKey === "double-edge")
+              ? 135
+              : (isStatus ? 150 : (isMiss || isImmune ? 150 : Math.max(0, 150 - actualDamage))),
+            effectiveness: typeMod,
+            log: isMiss
+              ? `적 ${enemyDisplayName}의 ${moveKo}!\n하지만 상대에게 빗나갔다!`
+              : (isImmune
+                ? `적 ${enemyDisplayName}의 ${moveKo}!\n상대에게 효과가 없는 것 같다...`
+                : (isQuarter || isNotVery
+                  ? `적 ${enemyDisplayName}의 ${moveKo}!\n효과가 별로인 듯하다...`
+                  : (isSuper || isUltra
+                    ? `적 ${enemyDisplayName}의 ${moveKo}!\n효과가 굉장했다!`
+                    : `적 ${enemyDisplayName}의 ${moveKo}!`)))
+          }
+        ] : [
+          // 기본 쾌속 모드: 1막 단독 시전 (로딩 속도 2~3배 대폭 단축!)
+          {
+            actor: "player",
+            moveKey: moveKey,
+            moveName: moveKo,
+            damage: actualDamage,
+            isHit: isHit,
+            isSuperEffective: isSuper,
+            typeMod: typeMod,
+            statChanges: pStatChanges,
+            playerHpAfter: (moveKey === "take-down" || moveKey === "double-edge") ? 135 : 150,
+            enemyHpAfter: act1EnemyHpAfter,
+            effectiveness: typeMod,
+            log: isMiss
+              ? `아군 ${playerDisplayName}의 ${moveKo}!\n하지만 상대에게 빗나갔다!`
+              : (isImmune
+                ? `아군 ${playerDisplayName}의 ${moveKo}!\n상대에게 효과가 없는 것 같다...`
+                : (isQuarter || isNotVery
+                  ? `아군 ${playerDisplayName}의 ${moveKo}!\n효과가 별로인 듯하다...`
+                  : (isSuper || isUltra
+                    ? `아군 ${playerDisplayName}의 ${moveKo}!\n효과가 굉장했다!`
+                    : `아군 ${playerDisplayName}의 ${moveKo}!`)))
+          }
+        ])
+      };
+
+      const t0 = Date.now();
+      let gifResult: any;
+      if (moveKey === "encounter-entry") {
+        gifResult = await renderBattleEntryGif({
+          battle: {
+            ...mockBattle,
+            dialogueText: `야생의 ${enemyDisplayName}(이)가 나타났다!`,
+          } as any,
+          lang: "ko",
+        });
+      } else {
+        if (!mockBattle.dialogueText && mockBattle.turnActions?.length) {
+          mockBattle.dialogueText = mockBattle.turnActions.map((a: any) => a.log).filter(Boolean).join("\n");
+        }
+        gifResult = await renderBattleMoveGif({
+          battle: mockBattle as any,
+          lang: "ko",
+          includeFramePreviews: true,
+        });
+      }
+      const t1 = Date.now();
+
+      let pageCount = gifResult.frames ? gifResult.frames.length : 25;
+      try {
+        const meta = await sharp(gifResult.buffer, { animated: true }).metadata();
+        pageCount = meta.pages || pageCount;
+      } catch {}
+
+      const responseData = {
+        gif: `data:image/gif;base64,${gifResult.buffer.toString("base64")}`,
+        renderTimeMs: t1 - t0,
+        motionDurationMs: gifResult.motionDurationMs,
+        frameCount: pageCount,
+        moveKey: rawMoveKey,
+        moveName: isEnemyCaster ? `${moveKo} (상대 시전)` : moveKo,
+        phases: gifResult.phases || [],
+        frames: gifResult.frames || [],
+      };
+
+      moveGifMemoryCache.set(cacheKey, responseData);
+
+      res.writeHead(200, {
+        "Content-Type": "application/json; charset=utf-8",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0"
+      });
+      res.end(JSON.stringify(responseData));
+    } catch (err: any) {
+      console.error("[VIEWER MOVE ERROR]", err);
+      res.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify({ error: err.message }));
+    }
     return;
   }
 
@@ -694,6 +1367,18 @@ const server = http.createServer(async (req, res) => {
 
   res.writeHead(404);
   res.end("Not Found");
+});
+
+server.on("error", (err: any) => {
+  if (err.code === "EADDRINUSE") {
+    console.warn(`[SERVER] Port ${PORT} in use, retrying in 1000ms...`);
+    setTimeout(() => {
+      try { server.close(); } catch {}
+      server.listen(PORT);
+    }, 1000);
+  } else {
+    console.error("[SERVER ERROR]", err);
+  }
 });
 
 server.listen(PORT, () => {
