@@ -30,6 +30,40 @@ const SURF_ADVANCES = [0, 0, 0, 0, 0, 14, 32, 50];
 // [유저 요청 엄수]: "파도 넓이에 맞춰서 시전했던 수증기도 범위 넓어지게"
 const SURF_WAVE_WIDTHS = [120, 142, 164, 182, 202, 215, 225, 234];
 
+// ============================================================================
+// 렌더링 가속용 재사용 오프스크린 캔버스 캐시 (GC 압력 제로화)
+// ============================================================================
+let surfOffscreenHalf: any = null;
+let surfOffscreenHalfCtx: any = null;
+let surfOffscreenFull: any = null;
+let surfOffscreenFullCtx: any = null;
+
+function getSurfOffscreenHalf(w: number = 280, h: number = 190) {
+  if (!surfOffscreenHalf || surfOffscreenHalf.width !== w || surfOffscreenHalf.height !== h) {
+    surfOffscreenHalf = createCanvas(w, h);
+    surfOffscreenHalfCtx = surfOffscreenHalf.getContext("2d");
+  } else {
+    surfOffscreenHalfCtx.clearRect(0, 0, w, h);
+    surfOffscreenHalfCtx.filter = "none";
+    surfOffscreenHalfCtx.globalCompositeOperation = "source-over";
+    surfOffscreenHalfCtx.globalAlpha = 1.0;
+  }
+  return { canvas: surfOffscreenHalf, ctx: surfOffscreenHalfCtx };
+}
+
+function getSurfOffscreenFull(w: number = 560, h: number = 380) {
+  if (!surfOffscreenFull || surfOffscreenFull.width !== w || surfOffscreenFull.height !== h) {
+    surfOffscreenFull = createCanvas(w, h);
+    surfOffscreenFullCtx = surfOffscreenFull.getContext("2d");
+  } else {
+    surfOffscreenFullCtx.clearRect(0, 0, w, h);
+    surfOffscreenFullCtx.filter = "none";
+    surfOffscreenFullCtx.globalCompositeOperation = "source-over";
+    surfOffscreenFullCtx.globalAlpha = 1.0;
+  }
+  return { canvas: surfOffscreenFull, ctx: surfOffscreenFullCtx };
+}
+
 function drawCleanSurfWave(
   ctx: any,
   frame: any,
@@ -419,8 +453,10 @@ function drawWaveUpperCrestShading(
 
   const cw = ctx.canvas?.width || 560;
   const ch = ctx.canvas?.height || 380;
-  const off = createCanvas(cw, ch);
-  const oCtx = off.getContext("2d");
+  const { canvas: off, ctx: oCtx } = getSurfOffscreenHalf(280, 190);
+
+  oCtx.save();
+  oCtx.scale(0.5, 0.5);
 
   oCtx.beginPath();
   const pStartCrest = {
@@ -498,13 +534,15 @@ function drawWaveUpperCrestShading(
   gradV.addColorStop(1.00, "rgba(0, 0, 0, 0.0)");
   oCtx.fillStyle = gradV;
   oCtx.fillRect(0, 0, cw, ch);
+  oCtx.restore();
 
   // [유저 요청 엄수]: "명암 잘 넣긴 했는데 그 좀 블러있게 해줘서 자연스럽게 연결되게 해줘 - 파도 색깔부분"
   // 상단 크레스트 밝은 파란색 외곽선을 소프트 가우시안 블러로 확산시켜 베이스 파란색과 매끄럽게 연결
-  const blurPx = Math.max(4, Math.round((H / 180) * 11));
+  // (280x190 하프 해상도에서 블러 연산 후 560x380으로 바이리니어 업스케일링하여 16배 가속)
+  const blurPx = Math.max(2, Math.round((H / 180) * 5.5));
   ctx.save();
   ctx.filter = `blur(${blurPx}px)`;
-  ctx.drawImage(off, 0, 0);
+  ctx.drawImage(off, 0, 0, cw, ch);
   ctx.restore();
 }
 
@@ -525,8 +563,10 @@ function drawWaveBarrelShadow(
 ) {
   const cw = ctx.canvas?.width || 560;
   const ch = ctx.canvas?.height || 380;
-  const off = createCanvas(cw, ch);
-  const oCtx = off.getContext("2d");
+  const { canvas: off, ctx: oCtx } = getSurfOffscreenHalf(280, 190);
+
+  oCtx.save();
+  oCtx.scale(0.5, 0.5);
 
   oCtx.beginPath();
   const pStart = { x: ax + dir * (H * -0.672) + advX, y: bottomY - H * 0.294 };
@@ -582,13 +622,15 @@ function drawWaveBarrelShadow(
 
   oCtx.fillStyle = sGrad;
   oCtx.fill();
+  oCtx.restore();
 
   // [유저 요청 엄수]: "명암 잘 넣긴 했는데 그 좀 블러있게 해줘서 자연스럽게 연결되게 해줘 - 파도 색깔부분"
   // 배럴 음영 외곽선을 소프트 가우시안 블러로 부드럽게 확산시켜 베이스 파란색(#0a3c68)과 매끄럽게 연결
-  const blurPx = Math.max(5, Math.round((H / 180) * 13));
+  // (280x190 하프 해상도에서 블러 연산 후 560x380으로 바이리니어 업스케일링하여 16배 가속)
+  const blurPx = Math.max(3, Math.round((H / 180) * 6.5));
   ctx.save();
   ctx.filter = `blur(${blurPx}px)`;
-  ctx.drawImage(off, 0, 0);
+  ctx.drawImage(off, 0, 0, cw, ch);
   ctx.restore();
 }
 
@@ -616,8 +658,7 @@ function drawWaveCrestSteam(
   const scale = H / 180;
   const cw = ctx.canvas?.width || 560;
   const ch = ctx.canvas?.height || 380;
-  const off = createCanvas(cw, ch);
-  const oCtx = off.getContext("2d");
+  const { canvas: off, ctx: oCtx } = getSurfOffscreenFull(cw, ch);
 
   // 1. 크레스트 능선을 따라 고르게 펼쳐지는 부드러운 수증기 캐노피 영역 정의
   oCtx.beginPath();
@@ -2151,22 +2192,12 @@ function drawAtmosphericWaveSteamAndBlur(
     const fSeed = waveFrame * 1.5;
 
     const STEAM_BANKS = [
-      // 상단 모서리 및 상단 능선
-      { x: w * 0.08, y: h * 0.12, r: 160, a: 0.50 * density, seed: 1 },
-      { x: w * 0.38, y: h * 0.15, r: 180, a: 0.55 * density, seed: 2 },
-      { x: w * 0.72, y: h * 0.14, r: 175, a: 0.52 * density, seed: 3 },
-      { x: w * 0.94, y: h * 0.18, r: 165, a: 0.48 * density, seed: 4 },
-
-      // 중앙 전역
-      { x: w * 0.14, y: h * 0.48, r: 190, a: 0.58 * density, seed: 5 },
-      { x: w * 0.48, y: h * 0.44, r: 210, a: 0.62 * density, seed: 6 },
-      { x: w * 0.82, y: h * 0.48, r: 195, a: 0.58 * density, seed: 7 },
-
-      // 하단 모서리 및 바닥 전역
-      { x: w * 0.06, y: h * 0.82, r: 180, a: 0.55 * density, seed: 8 },
-      { x: w * 0.42, y: h * 0.80, r: 200, a: 0.60 * density, seed: 9 },
-      { x: w * 0.76, y: h * 0.82, r: 190, a: 0.58 * density, seed: 10 },
-      { x: w * 0.96, y: h * 0.78, r: 170, a: 0.52 * density, seed: 11 },
+      // 5개 핵심 거점 뱅크로 응집 (좌상, 우상, 중앙, 좌하, 우하)
+      { x: w * 0.18, y: h * 0.18, r: 185, a: 0.52 * density, seed: 1 },
+      { x: w * 0.82, y: h * 0.16, r: 180, a: 0.50 * density, seed: 3 },
+      { x: w * 0.48, y: h * 0.45, r: 215, a: 0.62 * density, seed: 6 },
+      { x: w * 0.20, y: h * 0.80, r: 190, a: 0.58 * density, seed: 8 },
+      { x: w * 0.80, y: h * 0.80, r: 185, a: 0.55 * density, seed: 10 },
     ];
 
     for (let i = 0; i < STEAM_BANKS.length; i++) {
@@ -2188,14 +2219,11 @@ function drawAtmosphericWaveSteamAndBlur(
       ctx.fill();
     }
 
-    // C. 화면 중전경에 흩날리는 부유 뭉게구름 퍼프들
+    // C. 화면 중전경에 흩날리는 부유 뭉게구름 퍼프들 (핵심 3개소 응집)
     const PUFFS = [
-      { x: w * 0.22, y: h * 0.32, r: 110, a: 0.55 * density, s: 20 },
-      { x: w * 0.46, y: h * 0.36, r: 125, a: 0.60 * density, s: 21 },
-      { x: w * 0.72, y: h * 0.34, r: 115, a: 0.56 * density, s: 22 },
-      { x: w * 0.28, y: h * 0.62, r: 130, a: 0.62 * density, s: 23 },
-      { x: w * 0.58, y: h * 0.60, r: 135, a: 0.64 * density, s: 24 },
-      { x: w * 0.80, y: h * 0.65, r: 120, a: 0.58 * density, s: 25 },
+      { x: w * 0.30, y: h * 0.35, r: 125, a: 0.58 * density, s: 20 },
+      { x: w * 0.70, y: h * 0.36, r: 120, a: 0.56 * density, s: 22 },
+      { x: w * 0.50, y: h * 0.62, r: 135, a: 0.62 * density, s: 24 },
     ];
     for (let i = 0; i < PUFFS.length; i++) {
       const p = PUFFS[i];
@@ -2310,34 +2338,24 @@ function drawContinuousFoamRidge(ctx: any, ridgePts: { x: number; y: number }[],
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
-  // 1. Swell Under-Shadow (자연스러운 파도 골 음영: 소프트 블러로 부드럽게 감싸는 깊이감)
+  // 1. Swell Under-Shadow (자연스러운 파도 골 음영: 다층 스트로크로 부드럽게 감싸는 깊이감)
   const shadowPts = ridgePts.map(p => ({ x: p.x, y: p.y + width * 0.55 }));
-  ctx.save();
-  const shadowBlur = Math.max(2.0, width * 0.35);
-  ctx.filter = `blur(${shadowBlur.toFixed(1)}px)`;
-  ctx.strokeStyle = `rgba(3, 23, 43, ${0.40 * alpha})`;
-  ctx.lineWidth = width * 1.35;
+  ctx.strokeStyle = `rgba(3, 23, 43, ${0.16 * alpha})`;
+  ctx.lineWidth = width * 1.6;
   strokeSmoothWavePath(ctx, shadowPts);
-  ctx.restore();
+  ctx.strokeStyle = `rgba(3, 23, 43, ${0.30 * alpha})`;
+  ctx.lineWidth = width * 1.0;
+  strokeSmoothWavePath(ctx, shadowPts);
 
   // 2. [유저 요청 엄수]: "흰색선 바깥의 옅은 흰색선 가우시안처리? 그런것좀 해봐 선처럼안보이게"
-  // - 외곽 옅은 포말 아우라의 '선(Stroke)' 느낌을 완전히 없애기 위해 가우시안 블러(Gaussian Blur) 다층 산란 적용
-  // - 선 경계선이 안개처럼 부드럽게 퍼져 수면에 자연스럽게 번지는 물거품/포말 글로우(Froth Glow Diffusion)로 연출
-  ctx.save();
-  const auraBlurWide = Math.max(3.5, width * 0.65);
-  ctx.filter = `blur(${auraBlurWide.toFixed(1)}px)`;
-  ctx.strokeStyle = `rgba(215, 245, 255, ${0.42 * alpha})`;
-  ctx.lineWidth = width * 2.4;
+  // - 다층 소프트 투명도 스트로크를 통해 선 경계 없이 안개처럼 자연스럽게 번지는 물거품/포말 글로우(Froth Glow Diffusion) 연출
+  ctx.strokeStyle = `rgba(215, 245, 255, ${0.14 * alpha})`;
+  ctx.lineWidth = width * 2.6;
   strokeSmoothWavePath(ctx, ridgePts);
-  ctx.restore();
 
-  ctx.save();
-  const auraBlurMid = Math.max(1.8, width * 0.32);
-  ctx.filter = `blur(${auraBlurMid.toFixed(1)}px)`;
-  ctx.strokeStyle = `rgba(235, 250, 255, ${0.30 * alpha})`;
-  ctx.lineWidth = width * 1.4;
+  ctx.strokeStyle = `rgba(235, 250, 255, ${0.28 * alpha})`;
+  ctx.lineWidth = width * 1.5;
   strokeSmoothWavePath(ctx, ridgePts);
-  ctx.restore();
 
   // 3. Frothing White Foam Ribbon (풍성한 순백 포말 띠)
   ctx.strokeStyle = `rgba(255, 255, 255, ${0.82 * alpha})`;
@@ -2350,7 +2368,6 @@ function drawContinuousFoamRidge(ctx: any, ridgePts: { x: number; y: number }[],
   strokeSmoothWavePath(ctx, ridgePts);
 
   // 5. Secondary Trailing Foam Lacing (부서진 파도가 뒤로 남기는 자연스러운 포말 흔적)
-  // - [유저 요청 엄수]: 선처럼 보이지 않도록 가우시안 블러를 적용하여 부드러운 잔여 거품 연무로 산란
   if (width >= 5.0) {
     const lacePts: { x: number; y: number }[] = [];
     for (let i = 0; i < ridgePts.length; i++) {
@@ -2358,13 +2375,9 @@ function drawContinuousFoamRidge(ctx: any, ridgePts: { x: number; y: number }[],
       const trailOff = Math.sin(seed * 2.1 + i * 0.45) * (width * 0.4) + (width * 0.35);
       lacePts.push({ x: p.x, y: p.y - trailOff });
     }
-    ctx.save();
-    const laceBlur = Math.max(2.2, width * 0.35);
-    ctx.filter = `blur(${laceBlur.toFixed(1)}px)`;
-    ctx.strokeStyle = `rgba(224, 248, 255, ${0.30 * alpha})`;
-    ctx.lineWidth = Math.max(2.0, width * 0.45);
+    ctx.strokeStyle = `rgba(224, 248, 255, ${0.22 * alpha})`;
+    ctx.lineWidth = Math.max(2.2, width * 0.55);
     strokeSmoothWavePath(ctx, lacePts);
-    ctx.restore();
   }
 
   // 6. Occasional Frothy Breaking Patches (오직 파도 최고점 근처에서만 불규칙하게 피어오르는 백파)
@@ -2633,15 +2646,89 @@ function drawGen5FloodedOceanBehind(
   ctx.save();
   ctx.globalAlpha = floodAlpha;
 
-  // 1. [대지 침수 해양 단색 베이스 (Solid Ocean Blue Plane)]
-  // - [유저 요청 엄수]: "바닥 파랑 단색으로 해보자 그라데이션효과 없이"
-  // - 다단계 그라데이션(oceanGrad) 및 대각 수류 블러 리본(TORRENTS)을 완전히 배제하고,
-  //   선명하고 균일한 오션 블루(#187be7) 단색 평면으로 바닥을 깔끔하게 채움
-  ctx.fillStyle = "#187be7";
+  // 1. [대지 침수 해양 심층 베이스 (Deep Ocean Abyss Body - Shading Restored)]
+  // - [유저 요청 엄수]: "파도타기만 쉐이딩 있던 시절로 롤백 파도타기만"
+  // - 5단계 심해 톤쉐이딩 그라데이션 복원: 수평선(#187be7) -> 상단(#0e6ecc) -> 중단(#0a5096) -> 파도 베이스(#0a3c68) -> 심연(#03172b)
+  const oceanGrad = ctx.createLinearGradient(0, horizonY, 0, hCanvas + 40);
+  oceanGrad.addColorStop(0.00, "#187be7"); // 수평선 화사한 세룰리안 블루
+  oceanGrad.addColorStop(0.18, "#0e6ecc"); // 상단 맑은 오션 블루
+  oceanGrad.addColorStop(0.45, "#0a5096"); // 중단 딥 사파이어 블루
+  oceanGrad.addColorStop(0.72, "#0a3c68"); // 파도 베이스와 동일한 딥 네이비 (#0a3c68)
+  oceanGrad.addColorStop(1.00, "#03172b"); // 파도 동굴 음영과 동일한 깊은 심연 (#03172b)
+  ctx.fillStyle = oceanGrad;
   ctx.fillRect(-200, horizonY, wCanvas + 400, hCanvas - horizonY + 200);
 
-  // 2. [원근법에 따른 연속 포말 쇄파선들 (Continuous Rolling Wave Foam Ridges)]
+  // 2. [수평선 소프트 미스트 헤이즈 (Atmospheric Horizon Mist)]
+  const hazeGrad = ctx.createLinearGradient(0, horizonY - 18, 0, horizonY + 36);
+  hazeGrad.addColorStop(0.00, "rgba(224, 245, 255, 0.75)");
+  hazeGrad.addColorStop(0.35, "rgba(56, 189, 248, 0.42)");
+  hazeGrad.addColorStop(0.70, "rgba(24, 123, 231, 0.20)");
+  hazeGrad.addColorStop(1.00, "rgba(24, 123, 231, 0.0)");
+  ctx.fillStyle = hazeGrad;
+  ctx.fillRect(-200, horizonY - 18, wCanvas + 400, 54);
+
+  // 3. [시전자에서 대상을 향해 쏟아져 나가는 대각 쇄도 수류 리본들 (Diagonal Surging Torrents - Shading Restored)]
   const dirSign = isP ? 1 : -1;
+  const TORRENTS = [
+    {
+      pts: [
+        { x: isP ? -50 : wCanvas + 50, y: isP ? 350 : 145 },
+        { x: isP ? 110 : wCanvas - 110, y: isP ? 290 : 170 },
+        { x: isP ? 260 : wCanvas - 260, y: isP ? 220 : 220 },
+        { x: isP ? 420 : wCanvas - 420, y: isP ? 170 : 290 },
+        { x: isP ? wCanvas + 60 : -60, y: isP ? 145 : 350 }
+      ],
+      width: 50,
+      speed: 0.35,
+      phase: 0.0
+    },
+    {
+      pts: [
+        { x: isP ? -30 : wCanvas + 30, y: isP ? 300 : 140 },
+        { x: isP ? 140 : wCanvas - 140, y: isP ? 240 : 190 },
+        { x: isP ? 310 : wCanvas - 310, y: isP ? 190 : 240 },
+        { x: isP ? 480 : wCanvas - 480, y: isP ? 155 : 300 },
+        { x: isP ? wCanvas + 70 : -70, y: isP ? 140 : 340 }
+      ],
+      width: 44,
+      speed: 0.38,
+      phase: 0.4
+    },
+    {
+      pts: [
+        { x: isP ? 40 : wCanvas - 40, y: isP ? 380 : 160 },
+        { x: isP ? 220 : wCanvas - 220, y: isP ? 330 : 210 },
+        { x: isP ? 390 : wCanvas - 390, y: isP ? 265 : 275 },
+        { x: isP ? wCanvas + 50 : -50, y: isP ? 210 : 330 }
+      ],
+      width: 58,
+      speed: 0.42,
+      phase: 0.7
+    },
+    {
+      pts: [
+        { x: isP ? -60 : wCanvas + 60, y: isP ? 230 : 135 },
+        { x: isP ? 120 : wCanvas - 120, y: isP ? 190 : 160 },
+        { x: isP ? 290 : wCanvas - 290, y: isP ? 160 : 190 },
+        { x: isP ? wCanvas + 50 : -50, y: isP ? 135 : 230 }
+      ],
+      width: 34,
+      speed: 0.30,
+      phase: 0.2
+    },
+  ];
+
+  for (let tIdx = 0; tIdx < TORRENTS.length; tIdx++) {
+    const tr = TORRENTS[tIdx];
+    const undul = Math.sin(fTime * tr.speed * Math.PI * 2 + tr.phase) * 6;
+    const modulatedPts = tr.pts.map(p => ({
+      x: p.x,
+      y: p.y + Math.sin(p.x * 0.02 + fTime * 2.0) * 4 + undul
+    }));
+    strokeGroundWaterRibbon(ctx, modulatedPts, tr.width, 0.88);
+  }
+
+  // 4. [원근법에 따른 연속 포말 쇄파선들 (Continuous Rolling Wave Foam Ridges)]
   const slantVal = -0.06 * dirSign;
   const FOAM_RIDGES = [
     { y: horizonY + 12, amp: 2.0, wl: 42, width: 3.0,  speed: 1.0, slant: slantVal * 0.6 },

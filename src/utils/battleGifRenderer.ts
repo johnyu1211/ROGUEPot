@@ -869,7 +869,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   //   30 FPS 부드러운 애니메이션과 반투명 이펙트를 온전히 유지하면서 고속 렌더링 지원
   // ============================================================================
   const encoder = new GIFEncoder(width, height, "octree", true);
-  encoder.setThreshold(85);
+  encoder.setThreshold(30);
   encoder.setRepeat(-1);
   encoder.start();
 
@@ -897,7 +897,10 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     hitCount: (battle.lastMoveEffect as any)?.hitCount,
   };
   const isP1 = a1.actor === "player";
-  const mKey1 = getMoveKey(a1.moveKey || a1.moveName);
+  let mKey1 = getMoveKey(a1.moveKey || a1.moveName);
+  if (mKey1 === "solar-beam" && (a1.isTurn1Launch || a1.chargingMove === "solar-beam" || a1.log?.includes("빛을 흡수") || a1.log?.includes("sunlight"))) {
+    mKey1 = "solar-beam-charge";
+  }
   const isChop1 = (mKey1 === "karate-chop" || mKey1 === "karatechop");
   const isSlap1 = (mKey1 === "double-slap" || mKey1 === "doubleslap");
   const isPunch1 = (mKey1 === "comet-punch" || mKey1 === "cometpunch");
@@ -961,7 +964,10 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   if (hasMultipleActions) {
     const a2 = turnActions[1];
     const isP2 = a2.actor === "player";
-    const mKey2 = getMoveKey(a2.moveKey || a2.moveName);
+    let mKey2 = getMoveKey(a2.moveKey || a2.moveName);
+    if (mKey2 === "solar-beam" && (a2.isTurn1Launch || a2.chargingMove === "solar-beam" || a2.log?.includes("빛을 흡수") || a2.log?.includes("sunlight"))) {
+      mKey2 = "solar-beam-charge";
+    }
     const isChop2 = (mKey2 === "karate-chop" || mKey2 === "karatechop");
     const isSlap2 = (mKey2 === "double-slap" || mKey2 === "doubleslap");
     const isPunch2 = (mKey2 === "comet-punch" || mKey2 === "cometpunch");
@@ -1591,6 +1597,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           targetCtx.save();
           if (f.eWhite) {
             targetCtx.filter = "brightness(0) invert(1)";
+          } else if (f.eWhiteTint) {
+            targetCtx.filter = "brightness(1.55) drop-shadow(0px 0px 8px rgba(255,255,255,0.85))";
           } else if (f.hitFlash && eTarget && !(f.targetPurpleLevel !== undefined && f.targetPurpleLevel > 0) && !f.targetRedTint && !f.eRedTint && !f.targetBlueTint && !f.eBlueTint) {
             targetCtx.filter = "brightness(1.35)";
           } else if (f.eYellowAura || (f.casterYellowAura && !isAttackingPlayer)) {
@@ -1603,7 +1611,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             const bri = (1.0 - 0.15 * lvl).toFixed(2);
             targetCtx.filter = `sepia(${sep}) hue-rotate(${rot}deg) saturate(${sat}) brightness(${bri})`;
           } else if ((f.targetRedTint && eTarget) || f.eRedTint) {
-            targetCtx.filter = "sepia(0.65) hue-rotate(320deg) saturate(2.8) brightness(1.05)";
+            targetCtx.filter = "sepia(1) hue-rotate(314deg) saturate(9) brightness(1.05) drop-shadow(0px 0px 6px #ef4444)";
           } else if ((f.targetBlueTint && eTarget) || f.eBlueTint) {
             targetCtx.filter = "sepia(0.60) hue-rotate(180deg) saturate(2.5) brightness(1.1)";
           }
@@ -1631,6 +1639,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           targetCtx.save();
           if (f.pWhite) {
             targetCtx.filter = "brightness(0) invert(1)";
+          } else if (f.pWhiteTint) {
+            targetCtx.filter = "brightness(1.55) drop-shadow(0px 0px 8px rgba(255,255,255,0.85))";
           } else if (f.hitFlash && pTarget && !(f.targetPurpleLevel !== undefined && f.targetPurpleLevel > 0) && !f.targetRedTint && !f.pRedTint && !f.targetBlueTint && !f.pBlueTint) {
             targetCtx.filter = "brightness(1.35)";
           } else if (f.pYellowAura || (f.casterYellowAura && isAttackingPlayer)) {
@@ -1643,7 +1653,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             const bri = (1.0 - 0.15 * lvl).toFixed(2);
             targetCtx.filter = `sepia(${sep}) hue-rotate(${rot}deg) saturate(${sat}) brightness(${bri})`;
           } else if ((f.targetRedTint && pTarget) || f.pRedTint) {
-            targetCtx.filter = "sepia(0.65) hue-rotate(320deg) saturate(2.8) brightness(1.05)";
+            targetCtx.filter = "sepia(1) hue-rotate(314deg) saturate(9) brightness(1.05) drop-shadow(0px 0px 6px #ef4444)";
           } else if ((f.targetBlueTint && pTarget) || f.pBlueTint) {
             targetCtx.filter = "sepia(0.60) hue-rotate(180deg) saturate(2.5) brightness(1.1)";
           }
@@ -1757,7 +1767,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       }
 
       // Stat Boost / Drop Arrow Particles (Rendered within Pokémon coordinate space so they always attach perfectly!)
-      if (f.statProgress !== undefined) {
+      // ⚠️ 커스텀 기술(customStatParticles)이 자체 drawEffect에서 스탯 연출을 그리는 경우, 기본 파티클은 스킵하여 시각적 중복을 방지.
+      //    (배틀 로직의 statProgress 값/흐름은 그대로 유지 — 순수 렌더링 분기)
+      if (f.statProgress !== undefined && !currentMoveAnim?.customStatParticles) {
         const activeEffect = f.moveEffect || battle.lastMoveEffect;
         let statChanges = activeEffect?.statChanges || battle.lastMoveEffect?.statChanges;
         if (!statChanges || statChanges.length === 0) {
@@ -1790,7 +1802,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     }
 
     if (!f.isBlur && !f.blackoutScreen && !f.blackFadeAlpha) {
-      renderBattleHeader(targetCtx, logicalWidth, battle, isKo);
+      if (!f.hideUI) {
+        renderBattleHeader(targetCtx, logicalWidth, battle, isKo);
+      }
       if (!f.hideHud && !f.hideUI) {
         renderBattleHuds(targetCtx, battle, isKo, pbAssets, f.enemyHp !== undefined ? f.enemyHp : enemyHp, f.playerHp !== undefined ? f.playerHp : playerHp);
       }
@@ -1849,8 +1863,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       (prevBattleFrame && Boolean(f.bgFilterAlpha) !== Boolean(prevBattleFrame.bgFilterAlpha)) ||
       (prevBattleFrame && Boolean(f.whiteoutAlpha) !== Boolean(prevBattleFrame.whiteoutAlpha)) ||
       (prevBattleFrame && Boolean(f.eYellowAura || f.pYellowAura || f.casterYellowAura) !== Boolean(prevBattleFrame.eYellowAura || prevBattleFrame.pYellowAura || prevBattleFrame.casterYellowAura)) ||
-      (prevBattleFrame && f.phaseId && prevBattleFrame.phaseId && f.phaseId !== prevBattleFrame.phaseId) ||
-      (prevBattleFrame && f.moveStep !== undefined && prevBattleFrame.moveStep !== undefined && f.moveStep !== prevBattleFrame.moveStep)
+      (prevBattleFrame && f.phaseId && prevBattleFrame.phaseId ? f.phaseId !== prevBattleFrame.phaseId : (prevBattleFrame && f.moveStep !== undefined && prevBattleFrame.moveStep !== undefined && f.moveStep !== prevBattleFrame.moveStep))
     );
 
     if (isVisualStateShift) {

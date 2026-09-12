@@ -16,6 +16,7 @@ export interface VerifiedMoveItem {
   descriptionEn?: string;
   makesContact?: boolean;
   isVerified?: boolean;
+  status?: "complete" | "visual_done" | "testing";
 }
 
 function toTitleCase(slug: string): string {
@@ -118,6 +119,14 @@ const HANDCRAFTED_MAP: Record<string, VerifiedMoveItem> = {
   "psybeam": { num: 60, id: "psybeam", nameKo: "환상빔", nameEn: "Psybeam", type: "psychic", category: "special", camera: "beam", desc: "초음파 기반 다채로운 사이키델릭 링 연출 (핑크, 시안, 옐로우, 바이올렛, 민트, 마젠타 3D 링 발사 및 동심원 적재 ➔ 사이킥 충격파 2중 확산 작렬 ➔ 다이내믹 빔 카메라 워크)", isVerified: true },
   "bubble-beam": { num: 61, id: "bubble-beam", nameKo: "거품광선", nameEn: "Bubble Beam", type: "water", category: "special", camera: "target", desc: "독침 기반 선명한 워터 비눗방울 6발 고속 순차 사출 ➔ 뒤쪽으로 갈수록 100% 투명해지는 파란색 빔 잔상 (제트 스트림) ➔ 대상 피격 시 연속 파열 물보라 난타 & 잔여 수면 파문", isVerified: true },
   "aurora-beam": { num: 62, id: "aurora-beam", nameKo: "오로라빔", nameEn: "Aurora Beam", type: "ice", category: "special", camera: "beam", desc: "화면 암전 필터 전개 ➔ 3색 넥서스 차징 후 다각도로 뒤틀린 8발의 오로라 링 사출 ➔ 대상 도달 시 급감속(느려짐)되며 대상을 3D 포위 감싸기 ➔ 2중 오로라 충격파 & 다이아몬드 얼음 결정 대폭발 (10% 공격력 감소)", isVerified: false },
+  "string-shot": { num: 81, id: "string-shot", nameKo: "실뿜기", nameEn: "String Shot", type: "bug", category: "status", camera: "target", desc: "암전 페이드 ➔ 독립된 2가닥 예리한 직선 실 발사 ➔ 대상 결박 및 압박 수축/팽창 ➔ 스피드 2랭크 하락 디버프", isVerified: true, status: "complete" },
+  "dragon-rage": { num: 82, id: "dragon-rage", nameKo: "용의분노", nameEn: "Dragon Rage", type: "dragon", category: "special", camera: "target", desc: "분노 응축 플레어 ➔ S자 굽이치는 딥 인디고-바이올렛 롤링 화염 스트림 ➔ 적 직격 후 관통 질주 & 대형 팽창 페이드아웃 (고정 40 데미지)", isVerified: true, status: "complete" },
+  "fire-spin": { num: 83, id: "fire-spin", nameKo: "회오리불꽃", nameEn: "Fire Spin", type: "fire", category: "special", camera: "target", desc: "나선 불씨 사출 ➔ 대상을 360도 포위하며 솟구쳐 오르는 3D 화염 토네이도 기둥 및 지속 바인드 구속", isVerified: false, status: "testing" },
+  "thunder-shock": { num: 84, id: "thunder-shock", nameKo: "전기쇼크", nameEn: "Thunder Shock", type: "electric", category: "special", camera: "target", desc: "시전자 정전기 응축 ➔ 3중 지그재그 뇌격 사출 ➔ 순백 플래시 & 대상을 감싸는 감전 아크 방전 케이지 작렬", isVerified: false, status: "testing" },
+  "thunderbolt": { num: 85, id: "thunderbolt", nameKo: "10만볼트", nameEn: "Thunderbolt", type: "electric", category: "special", camera: "target", desc: "암전 속 전기 충전 ➔ 전방 투명 그라데이션 및 바깥쪽 투명/안쪽 순백 황금 번개가닥 고속 발사 ➔ 직격 시 날카로운 번개 텐드릴, 그라데이션 충격 링 및 황금빛 조명 대전환 페이드아웃", isVerified: true, status: "complete" },
+  "thunder-wave": { num: 86, id: "thunder-wave", nameKo: "전기자석파", nameEn: "Thunder Wave", type: "electric", category: "status", camera: "target", desc: "암전 ➔ 적 스프라이트 중심 밖으로 퍼지는 다중 원형 노란 링 (커지면서 투명화 & 고속 전자기 진동) & 원을 따라 회전하는 바깥쪽 뾰족한 곡선 아크 ➔ 암전 자연 페이드아웃 & 마비 상태이상 각인", isVerified: true, status: "complete" },
+  "thunder": { num: 87, id: "thunder", nameKo: "번개", nameEn: "Thunder", type: "electric", category: "special", camera: "target", desc: "상공 거대 뇌운 집결 ➔ 화면 전체 섬광과 함께 하늘을 가르는 초대형 수직 뇌격 강타 ➔ 대지 파열 및 초고압 방전 폭풍", isVerified: false, status: "testing" },
+  "rock-throw": { num: 88, id: "rock-throw", nameKo: "돌떨구기", nameEn: "Rock Throw", type: "rock", category: "physical", camera: "target", desc: "적 머리 위 거대한 암석 소환 및 급강하 낙하 ➔ 지면 격돌 강타 및 파편 암석 비산", isVerified: false, status: "testing" },
   "perk-hug": { num: 999, id: "perk-hug", nameKo: "포옹 (🫂 특수 연출)", nameEn: "Embrace / Hug", type: "normal", category: "status", camera: "self", desc: "내 포켓몬이 전면 상태로 카메라 앞까지 통통 뛰어와 1초간 안아준 뒤 복귀", isVerified: false },
 };
 
@@ -143,10 +152,16 @@ function buildAllMovesList(): VerifiedMoveItem[] {
     const rawOfficial = MOVES_DATA[m.name];
     const contact = getMoveContact(m.category, m.name);
 
+    const isCompleted = m.id <= 80;
+
     if (HANDCRAFTED_MAP[m.name]) {
       const hc = HANDCRAFTED_MAP[m.name];
+      const finalVerified = hc.isVerified !== undefined ? hc.isVerified : isCompleted;
+      const finalStatus = hc.status || (isCompleted ? "complete" : (finalVerified ? "visual_done" : "testing"));
       result.push({
         ...hc,
+        isVerified: finalVerified,
+        status: finalStatus,
         power: rawOfficial?.power ?? null,
         accuracy: rawOfficial?.accuracy ?? null,
         pp: rawOfficial?.pp ?? null,
@@ -155,7 +170,6 @@ function buildAllMovesList(): VerifiedMoveItem[] {
         makesContact: getMoveContact(hc.category, m.name),
       });
     } else {
-      // 37번 이후 모든 신규 기술은 100% 검수중(isVerified: false)
       const isStatus = m.category === "status";
       const isDebuff = m.description.includes("떨어") || m.description.includes("낮춘") || m.description.includes("감소");
       const camera = isStatus ? (isDebuff ? "none" : "self") : "target";
@@ -175,7 +189,8 @@ function buildAllMovesList(): VerifiedMoveItem[] {
         description: rawOfficial?.description || m.description,
         descriptionEn: rawOfficial?.descriptionEn || "",
         makesContact: contact,
-        isVerified: false,
+        isVerified: isCompleted,
+        status: isCompleted ? "complete" : "testing",
       });
     }
 
@@ -184,6 +199,7 @@ function buildAllMovesList(): VerifiedMoveItem[] {
       const hc = HANDCRAFTED_MAP["guillotine-enemy"];
       result.push({
         ...hc,
+        status: "complete",
         power: null, // 일격필살
         accuracy: 30,
         pp: 5,
@@ -197,12 +213,27 @@ function buildAllMovesList(): VerifiedMoveItem[] {
       const hc = HANDCRAFTED_MAP["horn-drill-enemy"];
       result.push({
         ...hc,
+        status: "complete",
         power: null, // 일격필살
         accuracy: 30,
         pp: 5,
         description: rawOfficial?.description || hc.desc,
         descriptionEn: rawOfficial?.descriptionEn || "",
         makesContact: true,
+      });
+    }
+    // 76번 솔라빔 바로 뒤에 1턴 충전 버전 삽입
+    if (m.id === 76 && HANDCRAFTED_MAP["solar-beam-charge"]) {
+      const hc = HANDCRAFTED_MAP["solar-beam-charge"];
+      result.push({
+        ...hc,
+        status: "complete",
+        power: null,
+        accuracy: null,
+        pp: 10,
+        description: "1턴째에 빛을 가득 모아 2턴째에 빛의 다발을 발사하여 공격한다. (1턴 충전 연출)",
+        descriptionEn: "Charges sunlight on turn 1 before unleashing the beam on turn 2.",
+        makesContact: false,
       });
     }
   }

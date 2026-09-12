@@ -1,13 +1,11 @@
 // ============================================================================
-// ⚠️ [기술 이펙트 제작 지침 - 256색 팔레트 최적화(Octree Optimizer) 기준]
-// 1. 배틀 GIF 렌더러는 Octree Quantizer + useOptimizer (threshold: 85) 기반의
-//    256색 팔레트 재사용 표준을 채택하고 있음.
-// 2. 신규 기술 구현 시 불필요한 과도한 그라디언트 난사를 지양하고, 256색 팔레트 환경에서
-//    선명하게 돋보이는 핵심 고채도 단색/네온 색상 체계 및 30 FPS 규격을 기준으로 제작할 것.
-// 3. 주요 연출 위상 전환(발사 -> 타격 -> 폭발 등) 시에는 phaseId 또는 moveStep을
-//    명확히 구분 지정하여 팔레트 자동 리셋(isVisualStateShift)이 완벽히 동작하도록 구성할 것.
-// 4. 프레임별 이미지 추출 및 시각적 검증은 유저가 웹 뷰어(http://localhost:3456)에서
-//    직접 확인하므로, 작업 시 에이전트가 매번 프레임을 일일이 추출/조회하지 말 것!
+// ?좑툘 [湲곗닠 ?댄럺???쒖옉 吏移?- 256???붾젅??理쒖쟻??Octree Optimizer) 湲곗?]
+// 1. 諛고? GIF ?뚮뜑?щ뒗 Octree Quantizer + useOptimizer (threshold: 85) 湲곕컲??//    256???붾젅???ъ궗???쒖???梨꾪깮?섍퀬 ?덉쓬.
+// 2. ?좉퇋 湲곗닠 援ы쁽 ??遺덊븘?뷀븳 怨쇰룄??洹몃씪?붿뼵???쒖궗瑜?吏?묓븯怨? 256???붾젅???섍꼍?먯꽌
+//    ?좊챸?섍쾶 ?뗫낫?대뒗 ?듭떖 怨좎콈???⑥깋/?ㅼ삩 ?됱긽 泥닿퀎 諛?30 FPS 洹쒓꺽??湲곗??쇰줈 ?쒖옉??寃?
+// 3. 二쇱슂 ?곗텧 ?꾩긽 ?꾪솚(諛쒖궗 -> ?寃?-> ??컻 ?? ?쒖뿉??phaseId ?먮뒗 moveStep??//    紐낇솗??援щ텇 吏?뺥븯???붾젅???먮룞 由ъ뀑(isVisualStateShift)???꾨꼍???숈옉?섎룄濡?援ъ꽦??寃?
+// 4. ?꾨젅?꾨퀎 ?대?吏 異붿텧 諛??쒓컖??寃利앹? ?좎?媛 ??酉곗뼱(http://localhost:3456)?먯꽌
+//    吏곸젒 ?뺤씤?섎?濡? ?묒뾽 ???먯씠?꾪듃媛 留ㅻ쾲 ?꾨젅?꾩쓣 ?쇱씪??異붿텧/議고쉶?섏? 留?寃?
 // ============================================================================
 
 import { MoveEffectInfo, MovePoint } from "./types.js";
@@ -21,7 +19,7 @@ import {
 import {
   drawSolarBeamEffect,
   drawDrainEffect,
-  drawHyperBeamEffect,
+  drawHyperBeamEffect as drawGenericHyperBeamEffect,
   drawElectricEffect,
   drawFireEffect,
   drawWaterEffect,
@@ -93,7 +91,26 @@ import { getMoveKey, MOVES_DATA } from "../../data/movesKo.js";
 // Re-export everything for modules and backward compatibility
 export * from "./types.js";
 export * from "./common/helpers.js";
-export * from "./common/genericTypeEffects.js";
+export {
+  drawSolarBeamEffect,
+  drawDrainEffect,
+  drawElectricEffect,
+  drawFireEffect,
+  drawWaterEffect,
+  drawIceEffect,
+  drawSlashEffect,
+  drawShadowBallEffect,
+  drawGrassEffect,
+  drawPsychicEffect,
+  drawPoisonEffect,
+  drawRockGroundEffect,
+  drawFlyingEffect,
+  drawGhostDarkEffect,
+  drawDragonEffect,
+  drawSteelEffect,
+  drawFairyEffect,
+  drawPhysicalImpactEffect,
+} from "./common/genericTypeEffects.js";
 export * from "./gen1/move001_004.js";
 export * from "./gen1/move005_008.js";
 export * from "./gen1/move009_012.js";
@@ -108,9 +125,18 @@ export * from "./gen1/move041_044.js";
 export * from "./gen1/move045_048.js";
 export * from "./gen1/move049_052.js";
 export * from "./gen1/move053_056.js";
+export * from "./gen1/move057_060.js";
+export * from "./gen1/move061_064.js";
+export * from "./gen1/move065_068.js";
+export * from "./gen1/move069_072.js";
+export * from "./gen1/move073_076.js";
+export * from "./gen1/move077_080.js";
+export * from "./gen1/move081_084.js";
+export * from "./gen1/move085_088.js";
+
 
 /**
- * Central Dispatcher for rendering Pokémon move visual effects onto the battle canvas
+ * Central Dispatcher for rendering Pok챕mon move visual effects onto the battle canvas
  */
 export function renderMoveEffect(
   ctx: any,
@@ -120,7 +146,6 @@ export function renderMoveEffect(
   const moveKey = getMoveKey(info.moveKey || info.moveName);
   const type = (info.type || "normal").toLowerCase();
 
-  // Attacker & Target Anchor Points (Logical 560x380 coordinates)
   const playerPos: MovePoint = { x: 175, y: 220 };
   const enemyPos: MovePoint = { x: 418, y: 152 };
 
@@ -133,7 +158,6 @@ export function renderMoveEffect(
 
   ctx.save();
 
-  // Check if move is a Status / Non-damaging move (Never draw physical impact onto opponent!)
   const moveData = MOVES_DATA[moveKey];
   const isStatus = moveData?.category === "status" || (info as any).category === "status";
   if (isStatus && moveKey !== "swords-dance" && moveKey !== "swordsdance" && moveKey !== "whirlwind") {
@@ -141,7 +165,6 @@ export function renderMoveEffect(
     return;
   }
 
-  // 1. SPECIFIC SIGNATURE MOVES (Gen 1: Moves 001 ~ 024)
   if (moveKey === "pound") {
     drawPoundEffect(ctx, targetPos, info.step ?? 1);
   } else if (moveKey === "karate-chop" || moveKey === "karatechop") {
@@ -190,14 +213,12 @@ export function renderMoveEffect(
     drawStompEffect(ctx, targetPos, info.step ?? 1, info.layer ?? "all");
   } else if (moveKey === "double-kick" || moveKey === "doublekick") {
     drawDoubleKickEffect(ctx, startPos, targetPos, info.step ?? 1);
-  }
-  // 2. ICONIC SPECIAL & ELEMENTAL MOVES
-  else if (moveKey === "solar-beam" || moveKey === "solar-blade") {
+  } else if (moveKey === "solar-beam" || moveKey === "solar-blade") {
     drawSolarBeamEffect(ctx, startPos, targetPos, angle, dx, dy);
   } else if (moveKey === "mega-drain" || moveKey === "giga-drain" || moveKey === "absorb" || moveKey === "leech-life" || moveKey === "draining-kiss") {
     drawDrainEffect(ctx, startPos, targetPos, type);
   } else if (moveKey === "hyper-beam" || moveKey === "giga-impact") {
-    drawHyperBeamEffect(ctx, startPos, targetPos, angle, dx, dy);
+    drawGenericHyperBeamEffect(ctx, startPos, targetPos, angle, dx, dy);
   } else if (moveKey === "shadow-ball" || moveKey === "dark-pulse") {
     drawShadowBallEffect(ctx, startPos, targetPos, angle);
   } else if (moveKey === "thunderbolt" || moveKey === "thunder" || moveKey === "spark" || type === "electric") {
@@ -229,7 +250,6 @@ export function renderMoveEffect(
   } else if (type === "fairy") {
     drawFairyEffect(ctx, targetPos);
   } else {
-    // Default Physical Strike fallback
     drawPhysicalImpactEffect(ctx, targetPos);
   }
 

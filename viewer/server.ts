@@ -8,6 +8,7 @@
 import http from "http";
 import fs from "fs";
 import path from "path";
+import { spawn } from "child_process";
 import { fileURLToPath } from "url";
 import {
   renderTitleMessageData,
@@ -116,7 +117,6 @@ function serializeDiscordMessagePayload(result: any) {
     rows: rows,
   };
 }
-
 
 function parseBulbapediaGenInfo(fileName: string) {
   const upper = fileName.toUpperCase();
@@ -236,6 +236,45 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // 2-A-1. Move Viewer - Clear In-Memory Render Cache
+  if (req.method === "POST" && req.url === "/api/clear-cache") {
+    const count = moveGifMemoryCache.size;
+    moveGifMemoryCache.clear();
+    console.log(`[VIEWER CACHE] Cleared ${count} cached GIF items.`);
+    res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+    res.end(JSON.stringify({ ok: true, clearedCount: count }));
+    return;
+  }
+
+  // 2-A-2. Move Viewer - Restart Server (with cache wipe)
+  if (req.method === "POST" && req.url === "/api/restart-server") {
+    const count = moveGifMemoryCache.size;
+    moveGifMemoryCache.clear();
+    bulbapediaCoreSeriesCache.clear();
+    console.log(`[VIEWER RESTART] Cleared caches (${count} GIF items) and triggering server restart...`);
+    res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+    res.end(JSON.stringify({ ok: true, clearedCount: count }));
+
+    setTimeout(() => {
+      const isWin = process.platform === "win32";
+      const cmd = isWin ? "cmd.exe" : "npm";
+      const args = isWin ? ["/c", "npm", "run", "viewer"] : ["run", "viewer"];
+      try {
+        const child = spawn(cmd, args, {
+          detached: true,
+          stdio: "ignore",
+          cwd: process.cwd(),
+          env: process.env,
+        });
+        child.unref();
+      } catch (err) {
+        console.error("[VIEWER RESTART ERROR]", err);
+      }
+      process.exit(0);
+    }, 200);
+    return;
+  }
+
   // 2-B. Move Viewer - List all verified moves
   if (req.method === "GET" && req.url === "/api/moves") {
     res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
@@ -315,7 +354,6 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-
   // 2-C. Move Viewer - Render Move GIF (A attacks with move, then B counterattacks with same move!)
   if (req.method === "GET" && req.url?.startsWith("/api/render-move")) {
     try {
@@ -325,9 +363,9 @@ const server = http.createServer(async (req, res) => {
       const moveKey = isEnemyCaster ? rawMoveKey.replace(/-enemy$/, "") : rawMoveKey;
       const playerSpecies = url.searchParams.get("playerSpecies") || "bulbasaur";
       const enemySpecies = url.searchParams.get("enemySpecies") || "onix";
-      const hitMode = url.searchParams.get("hitMode") || "normal"; // "normal" | "super" | "miss"
-      const flyPhase = url.searchParams.get("flyPhase") || "2"; // "2": 2턴 활공 후 내려찍기 | "1": 1턴 도약 및 은신 | "full": 전체 연속 재생
-      const actMode = url.searchParams.get("actMode") || "dual"; // "dual" (기본: 1막+2막 맞시전) | "single" (1막 단독)
+      const hitMode = url.searchParams.get("hitMode") || "normal";
+      const flyPhase = url.searchParams.get("flyPhase") || "2";
+      const actMode = url.searchParams.get("actMode") || "dual";
       console.log(`[VIEWER MOVE] moveKey=${rawMoveKey}, hitMode=${hitMode}, actMode=${actMode}`);
 
       const cacheKey = `${rawMoveKey}_${playerSpecies}_${enemySpecies}_${hitMode}_${flyPhase}_${actMode}`;
@@ -353,10 +391,10 @@ const server = http.createServer(async (req, res) => {
       const isOHKO = moveKey === "guillotine" || moveKey === "horn-drill" || moveKey === "fissure" || moveKey === "sheer-cold";
       const isMiss = hitMode === "miss";
       const isImmune = hitMode === "immune";
-      const isQuarter = hitMode === "quarter";   // 효과가 매우 별로 (0.25x - 50% 반투명 1회)
-      const isNotVery = hitMode === "not-very"; // 효과가 별로 (0.5x - 1회)
-      const isSuper = hitMode === "super";       // 효과가 굉장하다 (2.0x - 4회)
-      const isUltra = hitMode === "ultra";       // 효과가 매우 굉장하다 (4.0x - 5회)
+      const isQuarter = hitMode === "quarter";
+      const isNotVery = hitMode === "not-very";
+      const isSuper = hitMode === "super";
+      const isUltra = hitMode === "ultra";
 
       let typeMod = 1.0;
       if (isMiss || isImmune) typeMod = 0.0;
@@ -440,7 +478,6 @@ const server = http.createServer(async (req, res) => {
           types: enemyInfo?.types || ["rock"]
         },
         turnActions: isEnemyCaster ? [
-          // 적 시점 단독 시전: 적이 내 포켓몬을 향해 일격필살/기술 시전
           {
             actor: "enemy",
             moveKey: moveKey,
@@ -458,7 +495,6 @@ const server = http.createServer(async (req, res) => {
               : `적 ${enemyDisplayName}의 ${moveKo}!\n일격필살! 아군 ${playerDisplayName}(은)는 쓰러졌다!`
           }
         ] : (moveKey === "fly" && flyPhase === "1") ? [
-          // 1턴: 날아오르기 (하늘 높이 날아올랐다) + 적 공격 빗나감 (상공 은신 상태)
           {
             actor: "player",
             moveKey: "fly",
@@ -484,7 +520,6 @@ const server = http.createServer(async (req, res) => {
             log: `적 ${enemyDisplayName}의 몸통박치기!\n하지만 상대에게 닿지 않았다!`
           }
         ] : (moveKey === "fly" && flyPhase === "full") ? [
-          // 전체 풀 시퀀스: 1턴 도약 ➔ 2턴 활공 후 급강하 내려찍기
           {
             actor: "player",
             moveKey: "fly",
@@ -518,7 +553,6 @@ const server = http.createServer(async (req, res) => {
                 : `아군 ${playerDisplayName}의 공중날기! ${actualDamage} 데미지!`)
           }
         ] : (moveKey === "fly") ? [
-          // 2턴 (기본값): 활공 후 급강하 내려찍기 + 적 반격
           {
             actor: "player",
             moveKey: "fly",
@@ -552,7 +586,6 @@ const server = http.createServer(async (req, res) => {
             log: `적 ${enemyDisplayName}의 몸통박치기! 25 데미지!`
           }
         ] : (moveKey === "razor-wind" && flyPhase === "1") ? [
-          // 1턴: 바람 일으키기 (소용돌이 장전) + 적 반격
           {
             actor: "player",
             moveKey: "razor-wind",
@@ -578,7 +611,6 @@ const server = http.createServer(async (req, res) => {
             log: `적 ${enemyDisplayName}의 몸통박치기! 20 데미지!`
           }
         ] : (moveKey === "razor-wind" && flyPhase === "full") ? [
-          // 전체 풀 시퀀스: 1턴 소용돌이 장전 ➔ 2턴 베기 폭풍 격돌
           {
             actor: "player",
             moveKey: "razor-wind",
@@ -611,7 +643,6 @@ const server = http.createServer(async (req, res) => {
                 : `아군 ${playerDisplayName}의 칼바람! 급소에 맞았다! ${actualDamage} 데미지!`)
           }
         ] : (moveKey === "razor-wind") ? [
-          // 2턴 (기본값): 칼바람 베기 공격 + 적 반격
           {
             actor: "player",
             moveKey: "razor-wind",
@@ -644,7 +675,6 @@ const server = http.createServer(async (req, res) => {
             log: `적 ${enemyDisplayName}의 몸통박치기! 20 데미지!`
           }
         ] : (moveKey === "perk-hug") ? [
-          // 🫂 포옹 특수 연출 (내 포켓몬이 다가와 1초간 포옹 후 복귀)
           {
             actor: "player",
             moveKey: "perk-hug",
@@ -659,7 +689,6 @@ const server = http.createServer(async (req, res) => {
             log: `[PERK:hug] ${playerDisplayName}(은)는 당신을 포옹하고 돌아갔다.`
           }
         ] : (isOHKO && !isMiss) ? [
-          // 1막: 일격필살 즉사 처형 (적 사망으로 2막 반격 없음)
           {
             actor: "player",
             moveKey: moveKey,
@@ -674,7 +703,6 @@ const server = http.createServer(async (req, res) => {
             log: `아군 ${playerDisplayName}의 ${moveKo}!\n일격필살! 상대 ${enemyDisplayName}(은)는 쓰러졌다!`
           }
         ] : (actMode === "dual" ? [
-          // 1막: A(내 포켓몬)가 기술 시전
           {
             actor: "player",
             moveKey: moveKey,
@@ -697,7 +725,6 @@ const server = http.createServer(async (req, res) => {
                     ? `아군 ${playerDisplayName}의 ${moveKo}!\n효과가 굉장했다!`
                     : `아군 ${playerDisplayName}의 ${moveKo}!`)))
           },
-          // 2막: B(적대 포켓몬)가 해당 같은 기술 시전
           {
             actor: "enemy",
             moveKey: moveKey,
@@ -723,7 +750,6 @@ const server = http.createServer(async (req, res) => {
                     : `적 ${enemyDisplayName}의 ${moveKo}!`)))
           }
         ] : [
-          // 기본 쾌속 모드: 1막 단독 시전 (로딩 속도 2~3배 대폭 단축!)
           {
             actor: "player",
             moveKey: moveKey,
@@ -820,11 +846,11 @@ const server = http.createServer(async (req, res) => {
         result = await renderStarterSelectMessageData(
           null as any,
           SIMULATED_USER_ID,
-          1, // slotId
-          0, // gen 0 (All)
-          1, // page 1
-          1, // selectedDexNo (Bulbasaur)
-          [], // partyDexList
+          1,
+          0,
+          1,
+          1,
+          [],
           false,
           false,
           false
@@ -837,7 +863,7 @@ const server = http.createServer(async (req, res) => {
           0,
           1,
           1,
-          "1:2:1:1-4:1:0:1-7:0:1:0", // Sample 3 Pokemon Party
+          "1:2:1:1-4:1:0:1-7:0:1:0",
           false,
           false,
           false,
@@ -867,7 +893,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 4. Click Interaction Dispatcher (100% 1:1 match with interactionCreate.ts button events)
+  // 4. Click Interaction Dispatcher
   if (req.method === "POST" && req.url === "/api/click") {
     let body = "";
     req.on("data", (chunk) => (body += chunk));
@@ -881,65 +907,38 @@ const server = http.createServer(async (req, res) => {
         const parts = customId.split("_");
         let result: any;
 
-        // 3-0. Back to Title Menu
         if (customId.startsWith("menu_back_to_title_") || customId.startsWith("starter_back_title_")) {
           result = await renderTitleMessageData(null as any, SIMULATED_USER_ID);
-        }
-
-        // 3-0-1. Inventory Bag Button Clicked
-        else if (customId.startsWith("menu_inventory_") || customId.startsWith("bag_tab_")) {
+        } else if (customId.startsWith("menu_inventory_") || customId.startsWith("bag_tab_")) {
           if (customId.includes("pokedex")) {
             result = await renderPokedexMessageData(null as any, SIMULATED_USER_ID, 1, 1, "inventory");
           } else {
             const tab = customId.includes("records") ? "records" : "pokemon";
             result = await renderBagMessageData(null as any, SIMULATED_USER_ID, tab);
           }
-        }
-
-        // 3-0-2. Settings Button Clicked (⚙️)
-        else if (customId.startsWith("menu_settings_")) {
+        } else if (customId.startsWith("menu_settings_")) {
           result = renderSettingsMessageData(SIMULATED_USER_ID);
-        }
-
-        // 3-0-3. Switch Language (English / 한국어)
-        else if (customId.startsWith("settings_lang_")) {
+        } else if (customId.startsWith("settings_lang_")) {
           const lang = parts[2] as "en" | "ko";
           saveService.setLanguage(SIMULATED_USER_ID, lang);
           result = renderSettingsMessageData(SIMULATED_USER_ID);
-        }
-
-        // 3-0-4. Multiplay Button Clicked
-        else if (customId.startsWith("menu_multiplay_")) {
+        } else if (customId.startsWith("menu_multiplay_")) {
           result = await renderMultiplayerMessageData(null as any, SIMULATED_USER_ID);
-        }
-
-        // 3-0-6. Multiplayer Pokédex Button Clicked (interactionCreate.ts:1531)
-        else if (customId.startsWith("multi_pokedex_btn_")) {
+        } else if (customId.startsWith("multi_pokedex_btn_")) {
           result = await renderPokedexMessageData(null as any, SIMULATED_USER_ID, 1, 1, "multiplay");
-        }
-
-        // 3-0-6-B. Pokédex Ability Info Button Clicked (interactionCreate.ts:1537)
-        else if (customId.startsWith("pokedex_ability_")) {
+        } else if (customId.startsWith("pokedex_ability_")) {
           const rawAbilityParam = parts[2] || "none";
           const rawAbility = rawAbilityParam === "none" ? undefined : decodeURIComponent(rawAbilityParam);
           const dexNo = parseInt(parts[3], 10) || 1;
           const page = parseInt(parts[4], 10) || 1;
           const fromScreen = (parts[5] || "title") as "multiplay" | "inventory" | "title";
-
           result = await renderPokedexMessageData(null as any, SIMULATED_USER_ID, dexNo, page, fromScreen, rawAbility);
-        }
-
-        // 3-0-7. Pokédex Select Pokémon (interactionCreate.ts:1549)
-        else if (customId.startsWith("pokedex_select_")) {
+        } else if (customId.startsWith("pokedex_select_")) {
           const dexNo = parseInt(parts[2], 10) || 1;
           const page = parseInt(parts[3], 10) || 1;
           const fromScreen = (parts[4] || "title") as "multiplay" | "inventory" | "title";
-
           result = await renderPokedexMessageData(null as any, SIMULATED_USER_ID, dexNo, page, fromScreen, undefined);
-        }
-
-        // 3-0-8. Pokédex Page Navigation (interactionCreate.ts:1559)
-        else if (
+        } else if (
           customId.startsWith("pokedex_page_") ||
           customId.startsWith("pokedex_pageprev_") ||
           customId.startsWith("pokedex_pagenext_") ||
@@ -949,12 +948,8 @@ const server = http.createServer(async (req, res) => {
           const targetPage = parseInt(parts[2], 10) || 1;
           const currentDexNo = parseInt(parts[3], 10) || ((targetPage - 1) * 8 + 1);
           const fromScreen = (parts[4] || "title") as "multiplay" | "inventory" | "title";
-
           result = await renderPokedexMessageData(null as any, SIMULATED_USER_ID, currentDexNo, targetPage, fromScreen, undefined);
-        }
-
-        // 3-0-8-Back. Pokédex Back Button (pokedex_back_${fromScreen}_${userId})
-        else if (customId.startsWith("pokedex_back_")) {
+        } else if (customId.startsWith("pokedex_back_")) {
           const fromScreen = parts[2] as "multiplay" | "inventory" | "title";
           if (fromScreen === "multiplay") {
             result = await renderMultiplayerMessageData(null as any, SIMULATED_USER_ID);
@@ -963,10 +958,7 @@ const server = http.createServer(async (req, res) => {
           } else {
             result = await renderTitleMessageData(null as any, SIMULATED_USER_ID);
           }
-        }
-
-        // 3-0-8-A. Pokédex Add to Multiplayer Team
-        else if (customId.startsWith("pokedex_add_multi_")) {
+        } else if (customId.startsWith("pokedex_add_multi_")) {
           const dexNo = parseInt(parts[3], 10) || 1;
           const page = parseInt(parts[4], 10) || 1;
           const fromScreen = (parts[5] || "multiplay") as "multiplay" | "inventory" | "title";
@@ -983,10 +975,7 @@ const server = http.createServer(async (req, res) => {
             saveService.addMultiplayerPokemon(SIMULATED_USER_ID, partyPoke);
           }
           result = await renderPokedexMessageData(null as any, SIMULATED_USER_ID, dexNo, page, fromScreen);
-        }
-
-        // 3-0-8-B. Pokédex Add to Adventure Party
-        else if (customId.startsWith("pokedex_add_bag_")) {
+        } else if (customId.startsWith("pokedex_add_bag_")) {
           const dexNo = parseInt(parts[3], 10) || 1;
           const page = parseInt(parts[4], 10) || 1;
           const fromScreen = (parts[5] || "inventory") as "multiplay" | "inventory" | "title";
@@ -1003,37 +992,22 @@ const server = http.createServer(async (req, res) => {
             saveService.addBagPokemon(SIMULATED_USER_ID, partyPoke);
           }
           result = await renderPokedexMessageData(null as any, SIMULATED_USER_ID, dexNo, page, fromScreen);
-        }
-
-        // 2-1. New Game Button Clicked from Title (interactionCreate.ts:1746 -> renderStarterSelectMessageData directly!)
-        else if (customId.startsWith("menu_newgame_")) {
+        } else if (customId.startsWith("menu_newgame_")) {
           const targetSlot = saveService.getFirstAvailableSlot(SIMULATED_USER_ID);
           result = await renderStarterSelectMessageData(null as any, SIMULATED_USER_ID, targetSlot, 0, 1, 1, [], false, false, false);
-        }
-
-        // 2-0. Load Game Button Clicked from Title
-        else if (customId.startsWith("menu_loadgame_")) {
+        } else if (customId.startsWith("menu_loadgame_")) {
           result = renderSlotsScreenData(SIMULATED_USER_ID);
-        }
-
-        // Slot Select
-        else if (customId.startsWith("slot_select_")) {
+        } else if (customId.startsWith("slot_select_")) {
           const slotId = parseInt(parts[2], 10) || 1;
           result = await renderStarterSelectMessageData(null as any, SIMULATED_USER_ID, slotId, 0, 1, 1, [], false, false, false);
-        }
-
-        // 2-1-G. Open Generation Selection Menu
-        else if (customId.startsWith("starter_open_gen_menu_") || customId.startsWith("starter_genmenu_")) {
+        } else if (customId.startsWith("starter_open_gen_menu_") || customId.startsWith("starter_genmenu_")) {
           const rawGen = parseInt(parts[2], 10);
           const currentGen = isNaN(rawGen) ? 0 : rawGen;
           const slotId = parseInt(parts[3], 10) || 1;
           const partyParam = parts[4] || "empty";
           const flagsParam = parts[5] || "0_0_0";
           result = await renderGenSelectMessageData(null as any, SIMULATED_USER_ID, currentGen, slotId, partyParam, flagsParam);
-        }
-
-        // 2-1-H. Pick Specific Generation from Gen Menu or Back Button
-        else if (customId.startsWith("starter_pickgen_") || customId.startsWith("starter_genback_")) {
+        } else if (customId.startsWith("starter_pickgen_") || customId.startsWith("starter_genback_")) {
           const isBack = customId.startsWith("starter_genback_");
           const chosenGen = parseInt(parts[2], 10) || 0;
           const prevGen = parseInt(parts[3], 10) || 0;
@@ -1049,10 +1023,7 @@ const server = http.createServer(async (req, res) => {
           const firstStarterDex = genStarters[0]?.dexNumber || 1;
 
           result = await renderStarterSelectMessageData(null as any, SIMULATED_USER_ID, slotId, nextGen, 1, firstStarterDex, partyDexList, isShiny, isHa, isPassive);
-        }
-
-        // 2-1-A. Starter Select Pokemon Item Clicked (interactionCreate.ts:1790)
-        else if (customId.startsWith("starter_sel_") || customId.startsWith("starter_slot_")) {
+        } else if (customId.startsWith("starter_sel_") || customId.startsWith("starter_slot_")) {
           const dexNo = parseInt(parts[2], 10) || 1;
           const gen = parseInt(parts[3], 10) || 0;
           const page = parseInt(parts[4], 10) || 1;
@@ -1064,10 +1035,7 @@ const server = http.createServer(async (req, res) => {
           const isPassive = parts[9] === "1";
 
           result = await renderStarterSelectMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, partyDexList, isShiny, isHa, isPassive);
-        }
-
-        // 2-1-B. Starter Page Navigation (interactionCreate.ts:1807)
-        else if (
+        } else if (
           customId.startsWith("starter_page_prev_") ||
           customId.startsWith("starter_page_next_") ||
           customId.startsWith("starter_page_jumpfirst_") ||
@@ -1100,10 +1068,7 @@ const server = http.createServer(async (req, res) => {
           else if (action === "jumplast") targetPage = totalPages;
 
           result = await renderStarterSelectMessageData(null as any, SIMULATED_USER_ID, slotId, gen, targetPage, currentDexNo, partyDexList, isShiny, isHa, isPassive);
-        }
-
-        // 2-1-T1. Starter Toggle Shiny (interactionCreate.ts:1844)
-        else if (customId.startsWith("starter_toggleshiny_")) {
+        } else if (customId.startsWith("starter_toggleshiny_")) {
           const gen = parseInt(parts[2], 10) || 0;
           const page = parseInt(parts[3], 10) || 1;
           const dexNo = parseInt(parts[4], 10) || 1;
@@ -1115,10 +1080,7 @@ const server = http.createServer(async (req, res) => {
           const isPassive = parts[9] === "1";
 
           result = await renderStarterSelectMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, partyDexList, !isShiny, isHa, isPassive);
-        }
-
-        // 2-1-T2. Starter Toggle Passive (interactionCreate.ts:1861)
-        else if (customId.startsWith("starter_togglepass_")) {
+        } else if (customId.startsWith("starter_togglepass_")) {
           const gen = parseInt(parts[2], 10) || 0;
           const page = parseInt(parts[3], 10) || 1;
           const dexNo = parseInt(parts[4], 10) || 1;
@@ -1130,10 +1092,7 @@ const server = http.createServer(async (req, res) => {
           const isPassive = parts[9] === "1";
 
           result = await renderStarterSelectMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, partyDexList, isShiny, isHa, !isPassive);
-        }
-
-        // 2-1-T3. Starter Toggle Hidden Ability (interactionCreate.ts:1878)
-        else if (customId.startsWith("starter_toggleha_")) {
+        } else if (customId.startsWith("starter_toggleha_")) {
           const gen = parseInt(parts[2], 10) || 0;
           const page = parseInt(parts[3], 10) || 1;
           const dexNo = parseInt(parts[4], 10) || 1;
@@ -1145,10 +1104,7 @@ const server = http.createServer(async (req, res) => {
           const isPassive = parts[9] === "1";
 
           result = await renderStarterSelectMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, partyDexList, isShiny, !isHa, isPassive);
-        }
-
-        // 2-1-C. Starter Add to Party (interactionCreate.ts:1895)
-        else if (customId.startsWith("starter_add_")) {
+        } else if (customId.startsWith("starter_add_")) {
           const dexNo = parseInt(parts[2], 10) || 1;
           const gen = parseInt(parts[3], 10) || 0;
           const page = parseInt(parts[4], 10) || 1;
@@ -1164,10 +1120,7 @@ const server = http.createServer(async (req, res) => {
           }
 
           result = await renderStarterSelectMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, partyDexList, isShiny, isHa, isPassive);
-        }
-
-        // 2-1-P1. Open Party View Screen (interactionCreate.ts:1916)
-        else if (customId.startsWith("starter_openparty_")) {
+        } else if (customId.startsWith("starter_openparty_")) {
           const dexNo = parseInt(parts[2], 10) || 1;
           const gen = parseInt(parts[3], 10) || 0;
           const page = parseInt(parts[4], 10) || 1;
@@ -1178,10 +1131,7 @@ const server = http.createServer(async (req, res) => {
           const isPassive = parts[9] === "1";
 
           result = await renderPartyViewMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, partyRaw, isShiny, isHa, isPassive, 0, "moves", 0);
-        }
-
-        // 2-1-P2. Pick Party Member in Party View Screen (interactionCreate.ts:1932)
-        else if (customId.startsWith("party_pick_")) {
+        } else if (customId.startsWith("party_pick_")) {
           const rawIdx = parseInt(parts[2], 10);
           const targetIdx = isNaN(rawIdx) ? -1 : rawIdx;
           const gen = parseInt(parts[3], 10) || 0;
@@ -1196,10 +1146,7 @@ const server = http.createServer(async (req, res) => {
           const moveIdx = 0;
 
           result = await renderPartyViewMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, partyRaw, isShiny, isHa, isPassive, targetIdx, tab, moveIdx);
-        }
-
-        // 2-1-P2-TAB. Switch Tab in Party View (interactionCreate.ts:1952)
-        else if (customId.startsWith("party_tab_")) {
+        } else if (customId.startsWith("party_tab_")) {
           const targetTab = parts[2] as PartyViewTab;
           const currentIdx = parseInt(parts[3], 10) || 0;
           const gen = parseInt(parts[4], 10) || 0;
@@ -1213,10 +1160,7 @@ const server = http.createServer(async (req, res) => {
           const moveIdx = parseInt(parts[12], 10) || 0;
 
           result = await renderPartyViewMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, partyRaw, isShiny, isHa, isPassive, currentIdx, targetTab, moveIdx);
-        }
-
-        // 2-1-P2-MOVE. Pick Move in Moves Tab (interactionCreate.ts:1971)
-        else if (customId.startsWith("party_movepick_") || customId.startsWith("party_pickmove_")) {
+        } else if (customId.startsWith("party_movepick_") || customId.startsWith("party_pickmove_")) {
           const targetMoveIdx = parseInt(parts[2], 10) || 0;
           const currentIdx = parseInt(parts[3], 10) || 0;
           const gen = parseInt(parts[4], 10) || 0;
@@ -1230,10 +1174,7 @@ const server = http.createServer(async (req, res) => {
           const tab: PartyViewTab = "moves";
 
           result = await renderPartyViewMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, partyRaw, isShiny, isHa, isPassive, currentIdx, tab, targetMoveIdx);
-        }
-
-        // 2-1-P2-SHINY. Set Shiny Tier in Shiny Tab (interactionCreate.ts:1990)
-        else if (customId.startsWith("party_setshiny_")) {
+        } else if (customId.startsWith("party_setshiny_")) {
           const targetShinyTier = parseInt(parts[2], 10) || 0;
           const currentIdx = parseInt(parts[3], 10) || 0;
           const gen = parseInt(parts[4], 10) || 0;
@@ -1255,10 +1196,7 @@ const server = http.createServer(async (req, res) => {
           }
           const newPartyParam = serializePartyParam(partyStates);
           result = await renderPartyViewMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, currentIdx, tab, moveIdx);
-        }
-
-        // 2-1-P2-A. Set or Toggle Hidden Ability (interactionCreate.ts:2019)
-        else if (customId.startsWith("party_setha_") || customId.startsWith("party_toggleha_")) {
+        } else if (customId.startsWith("party_setha_") || customId.startsWith("party_toggleha_")) {
           const isSet = customId.startsWith("party_setha_");
           const targetUseHa = isSet ? parts[2] === "1" : undefined;
           const currentIdx = parseInt(parts[isSet ? 3 : 2], 10) || 0;
@@ -1281,10 +1219,7 @@ const server = http.createServer(async (req, res) => {
           }
           const newPartyParam = serializePartyParam(partyStates);
           result = await renderPartyViewMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, currentIdx, tab, moveIdx);
-        }
-
-        // 2-1-P2-B. Toggle Passive (interactionCreate.ts:2054)
-        else if (customId.startsWith("party_togglepass_")) {
+        } else if (customId.startsWith("party_togglepass_")) {
           const currentIdx = parseInt(parts[2], 10) || 0;
           const gen = parseInt(parts[3], 10) || 0;
           const page = parseInt(parts[4], 10) || 1;
@@ -1305,10 +1240,7 @@ const server = http.createServer(async (req, res) => {
           }
           const newPartyParam = serializePartyParam(partyStates);
           result = await renderPartyViewMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, currentIdx, tab, moveIdx);
-        }
-
-        // 2-1-P2-R. Remove Party Member (interactionCreate.ts:2088)
-        else if (customId.startsWith("party_remove_")) {
+        } else if (customId.startsWith("party_remove_")) {
           const currentIdx = parseInt(parts[2], 10) || 0;
           const removeDex = parseInt(parts[3], 10) || 0;
           const gen = parseInt(parts[4], 10) || 0;
@@ -1329,10 +1261,7 @@ const server = http.createServer(async (req, res) => {
           const nextSelectedIdx = Math.max(0, Math.min(currentIdx, filteredStates.length - 1));
 
           result = await renderPartyViewMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, newPartyParam, isShiny, isHa, isPassive, nextSelectedIdx, tab, moveIdx);
-        }
-
-        // 2-1-P2-B2. Back to Starter Select (interactionCreate.ts:2124)
-        else if (customId.startsWith("party_back_starter_")) {
+        } else if (customId.startsWith("party_back_starter_")) {
           const gen = parseInt(parts[3], 10) || 0;
           const page = parseInt(parts[4], 10) || 1;
           const dexNo = parseInt(parts[5], 10) || 1;
@@ -1347,10 +1276,7 @@ const server = http.createServer(async (req, res) => {
           const partyDexList = partyStates.map((p) => p.dexNumber);
 
           result = await renderStarterSelectMessageData(null as any, SIMULATED_USER_ID, slotId, gen, page, dexNo, partyDexList, isShiny, isHa, isPassive);
-        }
-
-        // Fallback
-        else {
+        } else {
           result = await renderTitleMessageData(null as any, SIMULATED_USER_ID);
         }
 
@@ -1374,16 +1300,17 @@ server.on("error", (err: any) => {
     console.warn(`[SERVER] Port ${PORT} in use, retrying in 1000ms...`);
     setTimeout(() => {
       try { server.close(); } catch {}
-      server.listen(PORT);
+      server.listen(PORT, "0.0.0.0");
     }, 1000);
   } else {
     console.error("[SERVER ERROR]", err);
   }
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, "0.0.0.0", () => {
   console.log(`================================================`);
   console.log(`  🎨 ROGUEPot Canvas UI Viewer Started!`);
   console.log(`  🔗 Open in Browser: http://localhost:${PORT}`);
+  console.log(`  🔗 Alternative IP: http://127.0.0.1:${PORT}`);
   console.log(`================================================`);
 });

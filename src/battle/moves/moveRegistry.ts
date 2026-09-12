@@ -77,6 +77,32 @@ import { blizzardMove } from "./definitions/059_blizzard.js";
 import { psybeamMove } from "./definitions/060_psybeam.js";
 import { bubbleBeamMove } from "./definitions/061_bubble_beam.js";
 import { auroraBeamMove } from "./definitions/062_aurora_beam.js";
+import { hyperBeamMove } from "./definitions/063_hyper_beam.js";
+import { peckMove } from "./definitions/064_peck.js";
+import { drillPeckMove } from "./definitions/065_drill_peck.js";
+import { submissionMove } from "./definitions/066_submission.js";
+import { lowKickMove } from "./definitions/067_low_kick.js";
+import { counterMove } from "./definitions/068_counter.js";
+import { seismicTossMove } from "./definitions/069_seismic_toss.js";
+import { strengthMove } from "./definitions/070_strength.js";
+import { absorbMove } from "./definitions/071_absorb.js";
+import { megaDrainMove } from "./definitions/072_mega_drain.js";
+import { leechSeedMove } from "./definitions/073_leech_seed.js";
+import { growthMove } from "./definitions/074_growth.js";
+import { razorLeafMove } from "./definitions/075_razor_leaf.js";
+import { solarBeamMove, solarBeamChargeMove } from "./definitions/076_solar_beam.js";
+import { poisonPowderMove } from "./definitions/077_poison_powder.js";
+import { stunSporeMove } from "./definitions/078_stun_spore.js";
+import { sleepPowderMove } from "./definitions/079_sleep_powder.js";
+import { petalDanceMove } from "./definitions/080_petal_dance.js";
+import { stringShotMove } from "./definitions/081_string_shot.js";
+import { dragonRageMove } from "./definitions/082_dragon_rage.js";
+import { fireSpinMove } from "./definitions/083_fire_spin.js";
+import { thunderShockMove } from "./definitions/084_thunder_shock.js";
+import { thunderboltMove } from "./definitions/085_thunderbolt.js";
+import { thunderWaveMove } from "./definitions/086_thunder_wave.js";
+import { thunderMove } from "./definitions/087_thunder.js";
+import { rockThrowMove } from "./definitions/088_rock_throw.js";
 import { statusMove } from "./definitions/status.js";
 import { defaultMove } from "./definitions/default.js";
 import { hugMove } from "./definitions/hug.js";
@@ -120,7 +146,6 @@ export const MOVE_REGISTRY: Record<string, BattleMoveAnimation> = {
   "clamp": bindMove,
   "sand-tomb": bindMove,
   "whirlpool": bindMove,
-  "fire-spin": bindMove,
   "infestation": bindMove,
   "snap-trap": bindMove,
   "slam": slamMove,
@@ -197,6 +222,106 @@ export const MOVE_REGISTRY: Record<string, BattleMoveAnimation> = {
   "aurorabeam": auroraBeamMove,
   "062": auroraBeamMove,
   "오로라빔": auroraBeamMove,
+  "hyper-beam": hyperBeamMove,
+  "hyperbeam": hyperBeamMove,
+  "063": hyperBeamMove,
+  "파괴광선": hyperBeamMove,
+  "peck": peckMove,
+  "064": peckMove,
+  "쪼기": peckMove,
+  "drill-peck": drillPeckMove,
+  "drillpeck": drillPeckMove,
+  "065": drillPeckMove,
+  "회전부리": drillPeckMove,
+  "submission": submissionMove,
+  "066": submissionMove,
+  "지옥바퀴": submissionMove,
+  "low-kick": lowKickMove,
+  "lowkick": lowKickMove,
+  "067": lowKickMove,
+  "안다리걸기": lowKickMove,
+  "counter": counterMove,
+  "068": counterMove,
+  "카운터": counterMove,
+  "seismic-toss": seismicTossMove,
+  "seismictoss": seismicTossMove,
+  "069": seismicTossMove,
+  "지구던지기": seismicTossMove,
+  "strength": strengthMove,
+  "070": strengthMove,
+  "괴력": strengthMove,
+  "absorb": absorbMove,
+  "071": absorbMove,
+  "흡수": absorbMove,
+  "mega-drain": megaDrainMove,
+  "megadrain": megaDrainMove,
+  "072": megaDrainMove,
+  "메가드레인": megaDrainMove,
+  "leech-seed": leechSeedMove,
+  "leechseed": leechSeedMove,
+  "073": leechSeedMove,
+  "씨뿌리기": leechSeedMove,
+  "growth": growthMove,
+  "074": growthMove,
+  "성장": growthMove,
+  "razor-leaf": razorLeafMove,
+  "razorleaf": razorLeafMove,
+  "075": razorLeafMove,
+  "잎날가르기": razorLeafMove,
+  "solar-beam": solarBeamMove,
+  "solarbeam": solarBeamMove,
+  "076": solarBeamMove,
+  "솔라빔": solarBeamMove,
+  "solar-beam-charge": solarBeamChargeMove,
+  "solarbeam-charge": solarBeamChargeMove,
+  "solarbeamcharge": solarBeamChargeMove,
+  "솔라빔충전": solarBeamChargeMove,
+  "poison-powder": poisonPowderMove,
+  "poisonpowder": poisonPowderMove,
+  "077": poisonPowderMove,
+  "독가루": poisonPowderMove,
+  "stun-spore": stunSporeMove,
+  "stunspore": stunSporeMove,
+  "078": stunSporeMove,
+  "저리가루": stunSporeMove,
+  "sleep-powder": sleepPowderMove,
+  "sleeppowder": sleepPowderMove,
+  "079": sleepPowderMove,
+  "수면가루": sleepPowderMove,
+  "petal-dance": petalDanceMove,
+  "petaldance": petalDanceMove,
+  "080": petalDanceMove,
+  "꽃잎댄스": petalDanceMove,
+  "string-shot": stringShotMove,
+  "stringshot": stringShotMove,
+  "081": stringShotMove,
+  "실뿜기": stringShotMove,
+  "dragon-rage": dragonRageMove,
+  "dragonrage": dragonRageMove,
+  "082": dragonRageMove,
+  "용의분노": dragonRageMove,
+  "fire-spin": fireSpinMove,
+  "firespin": fireSpinMove,
+  "083": fireSpinMove,
+  "회오리불꽃": fireSpinMove,
+  "thunder-shock": thunderShockMove,
+  "thundershock": thunderShockMove,
+  "084": thunderShockMove,
+  "전기쇼크": thunderShockMove,
+  "thunderbolt": thunderboltMove,
+  "085": thunderboltMove,
+  "10만볼트": thunderboltMove,
+  "thunder-wave": thunderWaveMove,
+  "thunderwave": thunderWaveMove,
+  "086": thunderWaveMove,
+  "전기자석파": thunderWaveMove,
+  "thunder": thunderMove,
+  "087": thunderMove,
+  "번개": thunderMove,
+  "rock-throw": rockThrowMove,
+  "rockthrow": rockThrowMove,
+  "088": rockThrowMove,
+  "돌떨구기": rockThrowMove,
   "status": statusMove,
   "default": defaultMove,
   "perk-hug": hugMove,
