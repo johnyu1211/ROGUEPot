@@ -71,6 +71,53 @@ function createSmoothCameraReturnFrames(
 }
 
 /**
+ * Helper to generate high-FPS smooth camera glide-in frames (Gen 5 smooth dolly-in)
+ */
+function createSmoothCameraGlideInFrames(
+  base: BattleFrame,
+  targetZoom: number,
+  focalPoint: CameraFocalPoint,
+  neutralX: number,
+  neutralY: number,
+  frameCount: number = 5,
+  frameDelayMs: number = 55
+): BattleFrame[] {
+  const result: BattleFrame[] = [];
+  for (let i = 1; i <= frameCount; i++) {
+    const u = i / frameCount;
+    // Quadratic ease-in-out: starts gently, accelerates smoothly, eases into target
+    const factor = u < 0.5
+      ? 2 * u * u
+      : 1 - Math.pow(-2 * u + 2, 2) / 2;
+    const isFinal = i === frameCount;
+    const delay = isFinal ? frameDelayMs + 10 : frameDelayMs;
+
+    result.push({
+      ...base,
+      delay,
+      pOffset: { x: 0, y: 0 },
+      eOffset: { x: 0, y: 0 },
+      showEffect: false,
+      hitFlash: false,
+      statProgress: undefined,
+      cameraZoom: Number((1.0 + (targetZoom - 1.0) * factor).toFixed(4)),
+      cameraFocal: {
+        x: Math.round(neutralX + (focalPoint.x - neutralX) * factor),
+        y: Math.round(neutralY + (focalPoint.y - neutralY) * factor),
+      },
+      _gen5Camera: true,
+      phaseId: "1-camera-zoom",
+      phaseName: isFinal
+        ? "1. 카메라 이동 (안착)"
+        : i === 1
+        ? "1. 카메라 이동 (진입)"
+        : `1. 카메라 이동 (글라이드 ${i}/${frameCount})`,
+    });
+  }
+  return result;
+}
+
+/**
  * 1. Target Camera Handler (Default for Physical/Special attacks)
  * 
  * Strict Chronological Sequencing:
@@ -118,14 +165,84 @@ export const targetCameraHandler: CameraHandler = (
         y: Math.round(neutralY + (targetPos.y - neutralY) * 0.48),
       };
 
+  const inlineGlideCount = cfg.inlineGlideInFrames ?? 0;
+  const delayStep = cfg.delayUntilStep;
+
+  // delayUntilStep이 지정된 경우: 해당 스텝 바로 직전에 부드러운 타겟 포커싱 글라이드 프레임 2장 삽입 ("포커싱 후 발사")
+  if (delayStep !== undefined) {
+    const stepIdx = frames.findIndex(
+      (f) => !f.isBlur && f.delay < 10000 && !f.isHighSkyCutscene && (f.moveStep ?? 1) >= delayStep
+    );
+    if (stepIdx > 0) {
+      const prev = frames[stepIdx - 1];
+      const g1: BattleFrame = {
+        ...prev,
+        delay: 50,
+        cameraZoom: Number((1.0 + (targetZoom - 1.0) * 0.40).toFixed(4)),
+        cameraFocal: {
+          x: Math.round(neutralX + (focalPoint.x - neutralX) * 0.40),
+          y: Math.round(neutralY + (focalPoint.y - neutralY) * 0.40),
+        },
+        _gen5Camera: true,
+        phaseId: "camera-target-glide-1",
+        phaseName: "카메라 타겟 포커싱 (진입)",
+        moveStep: delayStep,
+      };
+      const g2: BattleFrame = {
+        ...prev,
+        delay: 50,
+        cameraZoom: Number((1.0 + (targetZoom - 1.0) * 0.82).toFixed(4)),
+        cameraFocal: {
+          x: Math.round(neutralX + (focalPoint.x - neutralX) * 0.82),
+          y: Math.round(neutralY + (focalPoint.y - neutralY) * 0.82),
+        },
+        _gen5Camera: true,
+        phaseId: "camera-target-glide-2",
+        phaseName: "카메라 타겟 포커싱 (안착)",
+        moveStep: delayStep,
+      };
+      frames.splice(stepIdx, 0, g1, g2);
+    }
+  }
+
   // Tag existing action frames with camera lock and phase metadata
+  let activeStep = 1;
   for (let i = 0; i < frames.length; i++) {
     const f = frames[i];
     if (f.isBlur || f.delay >= 10000 || f.isHighSkyCutscene) continue;
 
-    f.cameraFocal = focalPoint;
-    f.cameraZoom = targetZoom;
-    f._gen5Camera = true;
+    if (f.moveStep !== undefined) {
+      activeStep = f.moveStep;
+    }
+    const currentStep = activeStep;
+
+    // delayUntilStep이 지정된 경우: 해당 스텝 이전에는 포커싱 X (중립 1.0x)
+    if (delayStep !== undefined && currentStep < delayStep) {
+      f.cameraZoom = 1.0;
+      f.cameraFocal = null;
+      f._gen5Camera = false;
+      continue;
+    }
+
+    if (f.cameraFocal && f.cameraZoom && f.cameraZoom !== targetZoom) {
+      // Already set by transition glide (g1, g2)
+      f._gen5Camera = true;
+    } else if (inlineGlideCount > 0 && i < inlineGlideCount && delayStep === undefined) {
+      const u = (i + 1) / inlineGlideCount;
+      const factor = u < 0.5
+        ? 2 * u * u
+        : 1 - Math.pow(-2 * u + 2, 2) / 2;
+      f.cameraZoom = Number((1.0 + (targetZoom - 1.0) * factor).toFixed(4));
+      f.cameraFocal = {
+        x: Math.round(neutralX + (focalPoint.x - neutralX) * factor),
+        y: Math.round(neutralY + (focalPoint.y - neutralY) * factor),
+      };
+      f._gen5Camera = true;
+    } else {
+      f.cameraFocal = focalPoint;
+      f.cameraZoom = targetZoom;
+      f._gen5Camera = true;
+    }
 
     if (!f.phaseId) {
       if (f.hitFlash || f.showEffect) {
@@ -141,62 +258,75 @@ export const targetCameraHandler: CameraHandler = (
     }
   }
 
-  // 1. Smooth 3-Step Cinematic Glide-In (50ms -> 50ms -> 60ms)
-  // Step 1 (t = 0.30)
-  const glide1: BattleFrame = {
-    ...base,
-    delay: 50,
-    pOffset: { x: 0, y: 0 },
-    eOffset: { x: 0, y: 0 },
-    showEffect: false,
-    hitFlash: false,
-    statProgress: undefined,
-    cameraZoom: 1.0 + (targetZoom - 1.0) * 0.25,
-    cameraFocal: {
-      x: Math.round(neutralX + (focalPoint.x - neutralX) * 0.30),
-      y: Math.round(neutralY + (focalPoint.y - neutralY) * 0.30),
-    },
-    _gen5Camera: true,
-    phaseId: "1-camera-zoom",
-    phaseName: "1. 카메라 이동 (진입)",
-  };
+  // 1. Smooth Glide-In (Inline or prepended) - delayUntilStep이 없을 때만 시작 시 진입
+  if (delayStep === undefined) {
+    if (inlineGlideCount > 0) {
+      // [유저 요청 엄수]: "줌인 먼저 한 후 그게 아니라 줌인하면서 기술시전시작하게 해줘"
+      // 빈 진입 프레임 없이 기술 시작과 동시에 인라인으로 줌인 진행
+    } else if (cfg.glideInSpeed === "slow" || (cfg.glideInFrames && cfg.glideInFrames > 3)) {
+      const frameCount = cfg.glideInFrames ?? 5;
+      const baseDelay = cfg.glideInDelay ?? 55;
+      frames.unshift(
+        ...createSmoothCameraGlideInFrames(base, targetZoom, focalPoint, neutralX, neutralY, frameCount, baseDelay)
+      );
+    } else {
+      // Step 1 (t = 0.30)
+      const glide1: BattleFrame = {
+        ...base,
+        delay: 50,
+        pOffset: { x: 0, y: 0 },
+        eOffset: { x: 0, y: 0 },
+        showEffect: false,
+        hitFlash: false,
+        statProgress: undefined,
+        cameraZoom: 1.0 + (targetZoom - 1.0) * 0.25,
+        cameraFocal: {
+          x: Math.round(neutralX + (focalPoint.x - neutralX) * 0.30),
+          y: Math.round(neutralY + (focalPoint.y - neutralY) * 0.30),
+        },
+        _gen5Camera: true,
+        phaseId: "1-camera-zoom",
+        phaseName: "1. 카메라 이동 (진입)",
+      };
 
-  // Step 2 (t = 0.70)
-  const glide2: BattleFrame = {
-    ...base,
-    delay: 50,
-    pOffset: { x: 0, y: 0 },
-    eOffset: { x: 0, y: 0 },
-    showEffect: false,
-    hitFlash: false,
-    statProgress: undefined,
-    cameraZoom: 1.0 + (targetZoom - 1.0) * 0.65,
-    cameraFocal: {
-      x: Math.round(neutralX + (focalPoint.x - neutralX) * 0.70),
-      y: Math.round(neutralY + (focalPoint.y - neutralY) * 0.70),
-    },
-    _gen5Camera: true,
-    phaseId: "1-camera-zoom",
-    phaseName: "1. 카메라 이동 (가속)",
-  };
+      // Step 2 (t = 0.70)
+      const glide2: BattleFrame = {
+        ...base,
+        delay: 50,
+        pOffset: { x: 0, y: 0 },
+        eOffset: { x: 0, y: 0 },
+        showEffect: false,
+        hitFlash: false,
+        statProgress: undefined,
+        cameraZoom: 1.0 + (targetZoom - 1.0) * 0.65,
+        cameraFocal: {
+          x: Math.round(neutralX + (focalPoint.x - neutralX) * 0.70),
+          y: Math.round(neutralY + (focalPoint.y - neutralY) * 0.70),
+        },
+        _gen5Camera: true,
+        phaseId: "1-camera-zoom",
+        phaseName: "1. 카메라 이동 (가속)",
+      };
 
-  // Step 3 (t = 1.00)
-  const glide3: BattleFrame = {
-    ...base,
-    delay: 60,
-    pOffset: { x: 0, y: 0 },
-    eOffset: { x: 0, y: 0 },
-    showEffect: false,
-    hitFlash: false,
-    statProgress: undefined,
-    cameraZoom: targetZoom,
-    cameraFocal: focalPoint,
-    _gen5Camera: true,
-    phaseId: "1-camera-zoom",
-    phaseName: "1. 카메라 이동 (안착)",
-  };
+      // Step 3 (t = 1.00)
+      const glide3: BattleFrame = {
+        ...base,
+        delay: 60,
+        pOffset: { x: 0, y: 0 },
+        eOffset: { x: 0, y: 0 },
+        showEffect: false,
+        hitFlash: false,
+        statProgress: undefined,
+        cameraZoom: targetZoom,
+        cameraFocal: focalPoint,
+        _gen5Camera: true,
+        phaseId: "1-camera-zoom",
+        phaseName: "1. 카메라 이동 (안착)",
+      };
 
-  frames.unshift(glide1, glide2, glide3);
+      frames.unshift(glide1, glide2, glide3);
+    }
+  }
 
   // 6. Camera Return (Glide-Out)
   const lastFrame = frames[frames.length - 1];

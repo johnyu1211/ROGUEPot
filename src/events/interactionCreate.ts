@@ -3847,7 +3847,14 @@ export const interactionCreateEvent: BotEvent = {
             }
           } catch (moveErr) {
             console.error("[BATTLE MOVE ERROR - AUTO RECOVERY]", moveErr);
-            const recoverData = await renderBattleMessageData(interaction.user.id, slotId, "MAIN").catch(() => null);
+            // ⚠️ VICTORY/DEFEAT 상태는 절대 MAIN으로 되돌리지 않는다!
+            // (적 기절 GIF 렌더링 후 예외가 나면, 승리 화면이 MAIN 버튼으로 덮어써지는 버그 방지)
+            const recoverBattle = battleService.getOrCreateBattle(interaction.user.id, slotId);
+            const recoverPhase =
+              (recoverBattle.phase === "VICTORY" || recoverBattle.phase === "DEFEAT")
+                ? undefined
+                : "MAIN";
+            const recoverData = await renderBattleMessageData(interaction.user.id, slotId, recoverPhase).catch(() => null);
             if (recoverData) {
               await safeInteractionUpdate(interaction, recoverData).catch(() => null);
             }

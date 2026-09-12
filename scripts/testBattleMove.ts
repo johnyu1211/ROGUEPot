@@ -1,4 +1,4 @@
-﻿import { battleService } from '../src/services/battleService.js';
+import { battleService } from '../src/services/battleService.js';
 import { saveService } from '../src/services/saveService.js';
 import { renderBattleMoveGif } from '../src/utils/battleGifRenderer.js';
 import sharp from 'sharp';
@@ -13,18 +13,45 @@ const testUserId = `test_cli_${Date.now()}`;
 const slotId = 1;
 saveService.startNewRun(testUserId, slotId, 'bulbasaur');
 const battle = battleService.getOrCreateBattle(testUserId, slotId);
+const isEnemyActor = process.argv.includes('--enemy');
 battle.playerParty[0].moves = [moveKey];
 battle.playerBattleMon.moves = [moveKey];
+battle.enemy.moves = [moveKey];
 battle.enemy.hp = 500;
 battle.enemy.maxHp = 500;
 saveService.updateSlot(testUserId, slotId, { party: battle.playerParty });
 
 const t0 = Date.now();
-const bRes = battleService.executePlayerMove(testUserId, slotId, moveKey);
+let bRes: any;
+if (isEnemyActor) {
+  bRes = {
+    ...battle,
+    turnActions: [{
+      actor: 'enemy',
+      moveKey: moveKey,
+      moveNameKo: moveKey,
+      moveNameEn: moveKey,
+      type: 'fighting',
+      isSpecial: false,
+      isPlayerAttacking: false,
+      enemyHpAfter: battle.enemy.hp,
+      playerHpAfter: Math.max(1, battle.playerBattleMon.hp - 20),
+      isHit: true
+    }],
+    lastMoveEffect: {
+      actor: 'enemy',
+      moveKey: moveKey,
+      isPlayerAttacking: false,
+      isHit: true
+    }
+  };
+} else {
+  bRes = battleService.executePlayerMove(testUserId, slotId, moveKey);
+}
 const gif = await renderBattleMoveGif({ battle: bRes, lang: 'ko' });
 const t1 = Date.now();
 
-const outGifPath = `preview_${moveKey}.gif`;
+const outGifPath = isEnemyActor ? `preview_${moveKey}_enemy.gif` : `preview_${moveKey}.gif`;
 fs.writeFileSync(outGifPath, gif.buffer);
 
 const meta = await sharp(gif.buffer, { animated: true }).metadata();
@@ -47,6 +74,9 @@ const stripFrames: Buffer[] = [];
 for (const p of stepIndices) {
   stripFrames.push(await sharp(gif.buffer, { page: p }).toBuffer());
 }
+
+
+
 
 const strip = await sharp({
   create: {
