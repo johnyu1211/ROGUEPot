@@ -24,7 +24,7 @@ export const glareMove: BattleMoveAnimation = {
   nameEn: "Glare",
   type: "normal",
   category: "status",
-  camera: { type: "target", zoom: 1.30 },
+  camera: { type: "none" },
   drawEffect: (targetCtx: any, frame: BattleFrame, drawCtx: EffectDrawContext) => {
     if (frame.showEffect) {
       drawGlareEffect(targetCtx, frame, drawCtx);
