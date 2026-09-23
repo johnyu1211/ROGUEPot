@@ -36,6 +36,7 @@ export interface GameSlot {
   items: Record<string, number>;
   money: number;
   score: number;
+  enemy?: any | null;
   updatedAt: string;
 }
 
@@ -96,6 +97,7 @@ class SaveService {
         items: JSON.parse(r.items || "{}"),
         money: r.money,
         score: r.score,
+        enemy: r.enemy ? JSON.parse(r.enemy) : null,
         updatedAt: r.updated_at,
       };
     }
@@ -241,7 +243,8 @@ class SaveService {
   public createNewRunWithParty(
     userId: string,
     slotId: number,
-    starterParty: PartyPokemon[]
+    starterParty: PartyPokemon[],
+    enemy?: any
   ): GameSlot {
     const now = new Date().toISOString();
     const starterNames = starterParty.map((p) => p.name).join(", ") || "Starter";
@@ -250,9 +253,9 @@ class SaveService {
 
     // Save into SQLite
     db.prepare(`
-      INSERT OR REPLACE INTO game_slots (user_id, slot_id, game_mode, wave, biome, starter, party, items, money, score, created_at, updated_at)
-      VALUES (?, ?, 'Classic', 1, 'Town', ?, ?, ?, 0, 0, ?, ?)
-    `).run(userId, slotId, starterNames, JSON.stringify(starterParty), JSON.stringify({ "poke-ball": 5 }), now, now);
+      INSERT OR REPLACE INTO game_slots (user_id, slot_id, game_mode, wave, biome, starter, party, items, money, score, enemy, created_at, updated_at)
+      VALUES (?, ?, 'Classic', 1, 'Town', ?, ?, ?, 0, 0, ?, ?, ?)
+    `).run(userId, slotId, starterNames, JSON.stringify(starterParty), JSON.stringify({ "poke-ball": 5 }), enemy ? JSON.stringify(enemy) : null, now, now);
 
     db.prepare(`
       UPDATE users SET active_slot_id = ?, total_runs = total_runs + 1, updated_at = ? WHERE user_id = ?
@@ -268,6 +271,7 @@ class SaveService {
       items: { "poke-ball": 5 },
       money: 0,
       score: 0,
+      enemy: enemy || null,
       updatedAt: now,
     };
   }
@@ -302,10 +306,11 @@ class SaveService {
     const updatedItems = data.items !== undefined ? data.items : existing.items;
     const updatedMoney = data.money !== undefined ? data.money : existing.money;
     const updatedScore = data.score !== undefined ? data.score : existing.score;
+    const updatedEnemy = data.enemy !== undefined ? data.enemy : existing.enemy;
 
     db.prepare(`
       UPDATE game_slots
-      SET wave = ?, biome = ?, party = ?, items = ?, money = ?, score = ?, updated_at = ?
+      SET wave = ?, biome = ?, party = ?, items = ?, money = ?, score = ?, enemy = ?, updated_at = ?
       WHERE user_id = ? AND slot_id = ?
     `).run(
       updatedWave,
@@ -314,6 +319,7 @@ class SaveService {
       JSON.stringify(updatedItems),
       updatedMoney,
       updatedScore,
+      updatedEnemy ? JSON.stringify(updatedEnemy) : null,
       now,
       userId,
       slotId

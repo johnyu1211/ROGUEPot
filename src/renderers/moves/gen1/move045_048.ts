@@ -58,7 +58,7 @@ function drawOrangeCircle(
  * - 아이코닉한 지그재그(⚡) 번개 폴리곤 (Feather/Lucide SVG zap 규격)
  * - 중심지(cx, cy)에서 방사형 방향(angle)으로 dist만큼 나아가며, 뾰족한 끝이 바깥쪽을 향함
  */
-function drawGrowlLightning(
+export function drawGrowlLightning(
   ctx: any,
   cx: number,
   cy: number,
@@ -158,12 +158,29 @@ export function drawGrowlEffect(
       drawGrowlLightning(ctx, cx, cy, dir.angle, 110, 1.35, 1.0);
     }
   } else if (step === 5) {
-    // 5단계: 대형 원 및 5방향 번개 확산 소멸 (페이드아웃)
-    drawOrangeCircle(ctx, cx, cy, 128, 0.25);
-    drawOrangeCircle(ctx, cx, cy, 106, 0.40);
-    drawOrangeCircle(ctx, cx, cy, 84, 0.50);
-    for (const dir of GROWL_LIGHTNING_DIRECTIONS) {
-      drawGrowlLightning(ctx, cx, cy, dir.angle, 138, 1.0, 0.40);
+    // 5단계: 대형 원 및 5방향 번개 확산 소멸 (외곽 확산 & 완전 투명 페이드아웃)
+    // frame.effectProgress: 0.0 (개시) -> ~0.98 (소멸 직전) -> 1.0 (완전 소멸)
+    const prog = Math.min(1.0, Math.max(0, frame.effectProgress ?? 0.0));
+    const fadeAlpha = Math.max(0, 1.0 - prog);
+
+    if (fadeAlpha > 0.005) {
+      // 3겹 원: 중심에서 바깥으로 계속 퍼져나감 (125->215px, 102->175px, 80->140px)
+      const r1 = 125 + 90 * prog;
+      const r2 = 102 + 73 * prog;
+      const r3 = 80 + 60 * prog;
+
+      drawOrangeCircle(ctx, cx, cy, r1, 0.50 * fadeAlpha);
+      drawOrangeCircle(ctx, cx, cy, r2, 0.55 * fadeAlpha);
+      drawOrangeCircle(ctx, cx, cy, r3, 0.50 * fadeAlpha);
+
+      // 5방향 번개: 바깥으로 계속 방사형 확산 (135->225px) 및 크기 축소, 서서히 투명해져 소멸
+      const lightningDist = 135 + 90 * prog;
+      const lightningScale = Math.max(0.2, 1.25 - 0.55 * prog);
+      const lightningAlpha = 0.65 * fadeAlpha;
+
+      for (const dir of GROWL_LIGHTNING_DIRECTIONS) {
+        drawGrowlLightning(ctx, cx, cy, dir.angle, lightningDist, lightningScale, lightningAlpha);
+      }
     }
   }
 
@@ -500,61 +517,9 @@ function drawDoubleMusicNoteSvg(
   ctx.restore();
 }
 
-/**
- * Helper: 대상 머리 위로 피어오르는 공용 잠듦(Sleep) Zzz 수면 연출
- * - z -> z -> Z 3개의 문자가 화면상에 동시에 3개 모두 선명히 보이도록 수명과 스폰 타이밍 최적화
- */
-export function drawSleepZzzEffect(
-  ctx: any,
-  headX: number,
-  headY: number,
-  progress: number // 0.0 ~ 1.0
-) {
-  if (progress <= 0 || progress > 1.2) return;
-  ctx.save();
-
-  // 3개의 z가 동시에 3개 모두 선명히 보이도록 수명(life)과 스폰 간격 최적화
-  const zzzConfigs = [
-    { text: "z", size: 12, spawnT: 0.05, life: 0.95, dx: 10, dy: -18, swayFreq: 2.2, phase: 0.0 },
-    { text: "z", size: 17, spawnT: 0.16, life: 0.84, dx: 23, dy: -36, swayFreq: 2.0, phase: 0.8 },
-    { text: "Z", size: 23, spawnT: 0.28, life: 0.72, dx: 38, dy: -56, swayFreq: 1.8, phase: 1.6 },
-  ];
-
-  for (let i = 0; i < zzzConfigs.length; i++) {
-    const cfg = zzzConfigs[i];
-    if (progress < cfg.spawnT || progress > cfg.spawnT + cfg.life) continue;
-    const t = (progress - cfg.spawnT) / cfg.life;
-
-    // S자 살랑살랑 부유
-    const sway = Math.sin((t * cfg.swayFreq + cfg.phase) * Math.PI) * 6;
-    const curX = headX + cfg.dx + sway;
-    const curY = headY + (cfg.dy * (0.35 + t * 0.65));
-
-    // 페이드인 -> 오래 유지 -> 정점에서 부드럽게 페이드아웃 (3개가 한눈에 동시에 보이도록 유지 구간 확장)
-    const alpha = t < 0.15
-      ? (t / 0.15)
-      : t > 0.75
-      ? Math.max(0, (1.0 - t) / 0.25)
-      : 1.0;
-
-    ctx.save();
-    ctx.globalAlpha = Math.min(1.0, Math.max(0, alpha));
-    ctx.font = `bold ${Math.round(cfg.size)}px DungGeunMo, sans-serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-
-    // 짙은 남색 외곽선으로 또렷하게 강조
-    ctx.strokeStyle = "rgba(15, 23, 42, 0.85)";
-    ctx.lineWidth = 3.2;
-    ctx.strokeText(cfg.text, curX, curY);
-
-    ctx.fillStyle = "#BAE6FD"; // 부드러운 수면 파스텔 하늘색
-    ctx.fillText(cfg.text, curX, curY);
-    ctx.restore();
-  }
-
-  ctx.restore();
-}
+// 공용 잠듦(Sleep) Zzz 수면 연출 헬퍼 가져오기 및 재내보내기 (Single source of truth)
+import { drawSleepZzzEffect } from "../common/helpers.js";
+export { drawSleepZzzEffect };
 
 /**
  * 047: 노래하기 (Sing)
@@ -1010,11 +975,9 @@ export function drawSupersonicEffect(
   const cosM = Math.cos(mainAngle);
   const sinM = Math.sin(mainAngle);
 
-  // 1. 발사되는 3D 링(25px) 및 적에게 도착하여 안쪽(작은 원)에서 바깥쪽(큰 원)으로 커지며 쌓이는 2D 동심원 링
-  // 6개의 링: 발사 시 반경 25px, 도착 후 안쪽(15px) -> 바깥쪽(40px)으로 5px 간격 6중 동심원 적재
+  // 1. 발사되는 3D 링: 날아갈수록 원이 커지고 + 쌓이지 않고 적을 지나서 뒤로 관통 (넓어지면서 투명해짐)
   const RING_COUNT = 6;
-  const FLYING_RADIUS = 25; // 유저 요청: 발사되는 링 25px
-  const RING_SPACING = 0.11; // 링 간 시차
+  const RING_SPACING = 0.12; // 링 간 시차
 
   const leaderT = frame.leaderT ?? ((step - 1) * 0.18 + 0.16);
 
@@ -1023,81 +986,31 @@ export function drawSupersonicEffect(
     const dx = tx - ax;
     const dy = ty - ay;
 
-    const activeRings: Array<{
-      cx: number;
-      cy: number;
-      radius: number;
-      alpha: number;
-      isStacked: boolean;
-      depthRatio: number;
-      angle: number;
-    }> = [];
-
     for (let i = 0; i < RING_COUNT; i++) {
       const ringT = leaderT - i * RING_SPACING;
       if (ringT <= 0) continue; // 아직 발사 전
+      if (ringT > 1.75) continue; // 완전히 지나쳐 투명해져 소멸
 
-      // 도착 후 각 링의 동심원 반경: 안쪽 작은 원(15px)에서 바깥쪽 큰 원(40px)으로 5px 간격 확장
-      const targetStackedR = 15 + i * 5; // i=0: 15px, i=1: 20px, i=2: 25px, i=3: 30px, i=4: 35px, i=5: 40px
+      // 1) 날아갈수록 원이 커지게 (발사 시 20px -> 적 통과 시 52px -> 적 후방으로 빠져나가며 최대 75px까지 확장)
+      const curR = 20 + ringT * 32;
 
-      if (ringT < 1.0) {
-        // [비행 중]: 3차원 원근 틸트(depthRatio: 0.52)를 유지하며 25px 크기로 시전자에서 대상을 향해 비행
-        // 발사 시점 투명(0.15) -> 전진하면서 선명한 반투명(0.85)
-        const curAlpha = 0.15 + ringT * 0.70; // 0.15 ~ 0.85
-        const curX = ax + dx * ringT;
-        const curY = ay + dy * ringT;
+      // 2) 위치: 적에게 쌓이지 않고 직진 관통하여 적 뒤로 통과
+      const curX = ax + dx * ringT;
+      const curY = ay + dy * ringT;
 
-        // 적에게 도달 직전(0.85~1.0) 부드럽게 2D 원형으로 개방 & 해당 링의 동심원 크기로 안착 전환
-        const morph = ringT >= 0.85 ? (ringT - 0.85) / 0.15 : 0;
-        const depthRatio = 0.52 + (1.0 - 0.52) * morph;
-        const angle = mainAngle * (1.0 - morph);
-        const curR = FLYING_RADIUS + (targetStackedR - FLYING_RADIUS) * morph;
-
-        activeRings.push({
-          cx: curX,
-          cy: curY,
-          radius: curR,
-          alpha: curAlpha,
-          isStacked: false,
-          depthRatio,
-          angle,
-        });
+      // 3) 투명도: 적에게 날아가며 선명해지다가, 적을 통과(ringT >= 0.85)하면서 넓어지며 투명해짐
+      let curAlpha = 0;
+      if (ringT <= 0.85) {
+        curAlpha = Math.min(0.88, 0.22 + ringT * 0.70);
       } else {
-        // [적에게 도착하여 중첩]: 안쪽 작은 원에서 바깥쪽으로 커지는 2차원 동심원 링으로 차곡차곡 적재
-        const pulse = Math.sin((leaderT * 12 + i * 1.2) * Math.PI) * 0.8;
-        const curX = tx;
-        const curY = ty;
-        const curR = targetStackedR + pulse;
-        const curAlpha = 0.85;
-
-        activeRings.push({
-          cx: curX,
-          cy: curY,
-          radius: curR,
-          alpha: curAlpha,
-          isStacked: true,
-          depthRatio: 1.0,
-          angle: 0,
-        });
+        const fadeProg = (ringT - 0.85) / 0.75;
+        curAlpha = Math.max(0, 0.88 * (1.0 - fadeProg));
       }
-    }
+      if (curAlpha <= 0.02) continue;
 
-    // 적재된 링은 바깥 큰 원을 먼저 그리고 안쪽 작은 원을 위에 그려 선명도 극대화
-    activeRings.sort((a, b) => {
-      if (a.isStacked && b.isStacked) {
-        return b.radius - a.radius;
-      }
-      return a.cy - b.cy;
-    });
-
-    for (const r of activeRings) {
-      if (r.isStacked || r.depthRatio >= 0.98) {
-        // 도착한 중첩 링은 왜곡 없는 2차원 둥근 원!
-        draw2DSupersonicRing(ctx, r.cx, r.cy, r.radius, r.alpha, 2.6);
-      } else {
-        // 비행 중인 링은 25px 크기 3차원 원근감 유지
-        draw3DSupersonicRing(ctx, r.cx, r.cy, r.angle, r.radius, r.alpha, r.depthRatio, 2.6);
-      }
+      // 4) 3D 진행 축 틸트: 날아가면서 자연스럽게 깊이감 유지
+      const depthRatio = 0.52 + Math.min(0.18, ringT * 0.12);
+      draw3DSupersonicRing(ctx, curX, curY, mainAngle, curR, curAlpha, depthRatio, 2.6);
     }
   }
 

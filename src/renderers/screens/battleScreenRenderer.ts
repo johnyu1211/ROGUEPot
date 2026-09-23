@@ -508,8 +508,8 @@ export async function renderBattleScreen(options: BattleScreenOptions): Promise<
   const enemy = battle.enemy;
   const playerParty = battle.playerParty || [];
   const playerMon = (battle as any).playerBattleMon || playerParty[battle.playerActiveIndex] || playerParty[0] || {
-    speciesId: "bulbasaur",
-    name: "이상해씨",
+    speciesId: "lucario",
+    name: "루카리오",
     level: 5,
     hp: 20,
     maxHp: 20,

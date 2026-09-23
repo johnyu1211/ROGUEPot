@@ -9,6 +9,15 @@
 // ============================================================================
 
 import { drawStarburstImpact, drawStatDropEffect } from "../common/helpers.js";
+import { drawFlamethrowerChargeFlare, drawBillowingFlamePuff } from "./move053_056.js";
+import {
+  createLightningPoints,
+  drawSharpGlowingBolt,
+  drawThunderboltPlasmaSphere,
+  drawShockwaveRing,
+  drawRadiatingTaperedStrands,
+  drawElectricSparkEmbers,
+} from "./move085_088.js";
 
 /**
  * Gen 1 Moves 081 - 084 Renderers
@@ -1083,86 +1092,812 @@ export function drawDragonRageEffect(
 // ============================================================================
 
 /**
- * 회오리불꽃 나선 기둥 좌표 계산 헬퍼
+ * 솟구쳐 오르는 유선형 불꽃 혓바닥 (Rising Flame Tongue)
+ * - 외곽 하드 라인 완전 제거: 100% 투명 페이드 방사형 그라데이션 적용
+ * - 중심 백열황색 코어에서 외곽 적색 투명으로 부드럽게 감쇄
  */
-function getFireSpinPoint(
-  targetPos: { x: number; y: number },
-  u: number, // 0.0 (지면) ~ 1.0 (최상공)
-  rotOffset: number,
-  baseRadiusX: number = 34,
-  baseRadiusY: number = 13,
-  height: number = 72
+function drawRisingFlameTongue(
+  ctx: any,
+  x: number,
+  y: number,
+  size: number,
+  angle: number,
+  alpha: number
 ) {
-  // 위로 갈수록 약간 넓어지는 깔때기형 토네이도
-  const radiusX = baseRadiusX * (0.8 + u * 0.45);
-  const radiusY = baseRadiusY * (0.8 + u * 0.45);
+  if (alpha <= 0.01 || size <= 0.5) return;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
 
-  const angle = u * Math.PI * 6 + rotOffset;
-  const cx = targetPos.x;
-  const cy = targetPos.y + 6; // 발밑 기준
+  const len = size * 2.4;
+  const w = size * 1.1;
 
-  const x = cx + Math.cos(angle) * radiusX;
-  const z = Math.sin(angle); // z > 0: 앞면, z < 0: 뒷면
-  const y = cy - u * height + z * radiusY * 0.35;
+  // 1. 외곽 부드러운 투명도 감쇄 화염 바디 (외곽 100% 투명 페이드)
+  const flameGrad = ctx.createRadialGradient(0, -len * 0.15, 0, 0, -len * 0.15, len * 0.95);
+  flameGrad.addColorStop(0.0, `rgba(255, 255, 255, ${alpha * 0.95})`);
+  flameGrad.addColorStop(0.20, `rgba(254, 240, 138, ${alpha * 0.90})`);
+  flameGrad.addColorStop(0.50, `rgba(249, 115, 22, ${alpha * 0.65})`);
+  flameGrad.addColorStop(0.80, `rgba(239, 68, 68, ${alpha * 0.28})`);
+  flameGrad.addColorStop(1.0, "rgba(239, 68, 68, 0.0)");
 
-  return { x, y, z, angle };
+  ctx.fillStyle = flameGrad;
+  ctx.beginPath();
+  ctx.moveTo(0, -len);
+  ctx.quadraticCurveTo(w * 1.4, -len * 0.25, w * 0.8, len * 0.4);
+  ctx.quadraticCurveTo(0, len * 0.9, -w * 0.8, len * 0.4);
+  ctx.quadraticCurveTo(-w * 1.4, -len * 0.25, 0, -len);
+  ctx.closePath();
+  ctx.fill();
+
+  // 2. 중심 초고열 광채 코어
+  const coreGrad = ctx.createRadialGradient(0, -len * 0.25, 0, 0, -len * 0.25, len * 0.45);
+  coreGrad.addColorStop(0.0, `rgba(255, 255, 255, ${alpha * 0.95})`);
+  coreGrad.addColorStop(0.40, `rgba(254, 240, 138, ${alpha * 0.70})`);
+  coreGrad.addColorStop(1.0, "rgba(254, 240, 138, 0.0)");
+
+  ctx.fillStyle = coreGrad;
+  ctx.beginPath();
+  ctx.arc(0, -len * 0.25, len * 0.45, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
 }
 
 /**
- * 회오리불꽃 뒷면 레이어 (대상 뒤쪽을 회전하는 불꽃 기둥 구간)
+ * 불 발사 투사체 (Fire Spin Projectile)
+ * - [유저 요청: "동그란 불 구체가 중간에 있고 그 근처를 불꽃 세개가 회전하면서 발사하는 형태"]
+ * - 중심에 선명한 원형 불 구체(Central Round Fire Sphere)가 위치
+ * - 그 주변(공전 반경 13px)을 120도 간격의 3개 불꽃(3 Orbiting Flames)이 나선 궤적을 그리며 맹렬히 회전
+ * - 포물선 궤적으로 대상 발밑을 향해 날아가는 화염 회전 투사체
+ */
+function drawFireSpinProjectile(
+  ctx: any,
+  attackerPos: { x: number; y: number },
+  targetPos: { x: number; y: number },
+  progress: number,
+  isPlayer: boolean
+) {
+  const startX = attackerPos.x + (isPlayer ? 10 : -10);
+  const startY = attackerPos.y - 12;
+  const targetX = targetPos.x;
+  const targetY = targetPos.y + 6;
+
+  const p = Math.max(0, Math.min(1.0, progress));
+  const curX = startX + (targetX - startX) * p;
+  const curY = startY + (targetY - startY) * p - Math.sin(p * Math.PI) * 22; // 포물선
+
+  const dx = targetX - startX;
+  const dy = targetY - startY;
+  const dist = Math.hypot(dx, dy) || 1;
+  const ux = dx / dist;
+  const uy = dy / dist;
+
+  ctx.save();
+
+  // 1. 후방으로 흩날리는 불티 꼬리 (Embers Trail along flight path)
+  for (let i = 0; i < 5; i++) {
+    const tp = Math.max(0, p - (i + 1) * 0.05);
+    const tx = startX + (targetX - startX) * tp;
+    const ty = startY + (targetY - startY) * tp - Math.sin(tp * Math.PI) * 22;
+    const tailAlpha = (1.0 - (i / 5)) * 0.80;
+    ctx.fillStyle = (i % 2 === 0) ? `rgba(254, 240, 138, ${tailAlpha})` : `rgba(249, 115, 22, ${tailAlpha})`;
+    const sz = 2.4 - i * 0.35;
+    ctx.fillRect(tx + Math.sin(i * 2 + p * 12) * 2.5 - sz / 2, ty - sz / 2, sz, sz);
+  }
+
+  // 2. 중심 구체 주위를 도는 3개 불꽃의 회전 각도 및 궤도 반경
+  const spinSpeed = p * Math.PI * 10; // 비행 중 약 5회전 회전
+  const orbitR = 13.0; // 중심 구체 외곽을 회전하는 공전 반경
+
+  // 3. 3개 불꽃과 중심을 잇는 나선형 화염 회전 기류 선 (Swirling Vortex Arcs)
+  for (let i = 0; i < 3; i++) {
+    const a1 = spinSpeed + (i * Math.PI * 2) / 3;
+    const a2 = a1 + (Math.PI * 2) / 3;
+    const o1x = curX + Math.cos(a1) * orbitR;
+    const o1y = curY + Math.sin(a1) * (orbitR * 0.85);
+    const midA = a1 + Math.PI / 3;
+    const midR = orbitR * 0.55;
+    const mx = curX + Math.cos(midA) * midR;
+    const my = curY + Math.sin(midA) * (midR * 0.85);
+    const o2x = curX + Math.cos(a2) * orbitR;
+    const o2y = curY + Math.sin(a2) * (orbitR * 0.85);
+
+    ctx.beginPath();
+    ctx.moveTo(o1x, o1y);
+    ctx.quadraticCurveTo(mx, my, o2x, o2y);
+    ctx.strokeStyle = "rgba(249, 115, 22, 0.55)";
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(254, 240, 138, 0.75)";
+    ctx.lineWidth = 0.7;
+    ctx.stroke();
+  }
+
+  // 4. [핵심 1: 동그란 불 구체가 중간에 있고]
+  const centerR = 6.8;
+
+  // A. 중심 구체 외곽 고열 림 글로우
+  ctx.fillStyle = "rgba(239, 68, 68, 0.40)";
+  ctx.beginPath();
+  ctx.arc(curX, curY, centerR * 1.45, 0, Math.PI * 2);
+  ctx.fill();
+
+  // B. 선명한 작열 주황 구체 바디
+  ctx.fillStyle = "#F97316";
+  ctx.beginPath();
+  ctx.arc(curX, curY, centerR, 0, Math.PI * 2);
+  ctx.fill();
+
+  // C. 내부 밝은 황금빛 코어
+  ctx.fillStyle = "#FDE047";
+  ctx.beginPath();
+  ctx.arc(curX, curY, centerR * 0.65, 0, Math.PI * 2);
+  ctx.fill();
+
+  // D. 중심 초고열 순백 하이라이트
+  ctx.fillStyle = "#FFFFFF";
+  ctx.beginPath();
+  ctx.arc(curX, curY, centerR * 0.35, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 5. [핵심 2: 그 근처를 불꽃 세개가 회전하면서 발사]
+  for (let i = 0; i < 3; i++) {
+    const a = spinSpeed + (i * Math.PI * 2) / 3;
+    const ox = curX + Math.cos(a) * orbitR;
+    const oy = curY + Math.sin(a) * (orbitR * 0.85);
+
+    // 공전 궤적 접선 방향 + 전방 진행 벡터로 불꽃 방향(flameAngle) 산출
+    const tanX = -Math.sin(a) * orbitR + ux * 5;
+    const tanY = Math.cos(a) * (orbitR * 0.85) + uy * 5;
+    const flameAngle = Math.atan2(tanY, tanX) + Math.PI / 2;
+
+    // 각 회전 불꽃 뒤편으로 흩날리는 미세 스파크 꼬리 (Orbit Wake Sparks)
+    for (let s = 1; s <= 2; s++) {
+      const tailA = a - s * 0.35;
+      const tailR = orbitR * (1.0 - s * 0.10);
+      const tx = curX + Math.cos(tailA) * tailR - ux * (s * 3.0);
+      const ty = curY + Math.sin(tailA) * (tailR * 0.85) - uy * (s * 3.0);
+      const sz = 2.0 - s * 0.5;
+      ctx.fillStyle = s === 1 ? "#FEF08A" : "#F97316";
+      ctx.fillRect(tx - sz / 2, ty - sz / 2, sz, sz);
+    }
+
+    // 유선형 불꽃 혓바닥 (Flame Tongue) 렌더링
+    drawRisingFlameTongue(ctx, ox, oy, 3.4, flameAngle, 0.95);
+
+    // 불꽃 선두 원형 코어 글로우
+    ctx.fillStyle = "rgba(255, 255, 255, 0.90)";
+    ctx.beginPath();
+    ctx.arc(ox, oy, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+/**
+ * 지면 착탄 화염 버스트 (Fire Spin Ground Impact)
+ * - 투사체가 대상 발밑에 닿아 사방으로 지면 화염과 불꽃 파편이 튀는 연출
+ */
+function drawFireSpinImpact(
+  ctx: any,
+  targetPos: { x: number; y: number },
+  progress: number
+) {
+  const targetX = targetPos.x;
+  const targetY = targetPos.y + 24; // 지면 위치를 포켓몬 발밑 지면(+24)으로 확실히 하향 조정
+  const p = progress;
+
+  ctx.save();
+
+  // 1. 지면을 핥으며 퍼져나가는 6방향 화염 혓바닥 (우측 위쪽 꼬리 방향 반영)
+  const tongueCount = 6;
+  const spreadDist = 8 + p * 24;
+  const alpha = Math.max(0.0, 1.0 - p * 0.9);
+
+  for (let i = 0; i < tongueCount; i++) {
+    const angle = (i / tongueCount) * Math.PI * 2 + p * 0.5;
+    const fx = targetX + Math.cos(angle) * spreadDist;
+    const fy = targetY + Math.sin(angle) * spreadDist * 0.42;
+    const size = (6.0 + (i % 3) * 2.0) * (1.0 - p * 0.5);
+
+    drawFireSpinFlameLobe(ctx, fx, fy, size, true, alpha, i, 0);
+  }
+
+  // 2. 사방으로 튀는 지면 스파크 파편 (12개)
+  for (let s = 0; s < 12; s++) {
+    const sAngle = (s / 12) * Math.PI * 2 + s * 1.3;
+    const sDist = (10 + s * 3) * (0.3 + p * 1.1);
+    const sx = targetX + Math.cos(sAngle) * sDist;
+    const sy = targetY + Math.sin(sAngle) * sDist * 0.42 - p * 16 * (0.6 + (s % 3) * 0.3);
+    const sz = 2.0 * (1.0 - p * 0.6);
+
+    ctx.fillStyle = s % 2 === 0 ? `rgba(254, 240, 138, ${alpha})` : `rgba(249, 115, 22, ${alpha})`;
+    ctx.fillRect(sx - sz / 2, sy - sz / 2, sz, sz);
+  }
+
+  ctx.restore();
+}
+
+/**
+ * 나팔형 깔때기(Trumpet Funnel) 3D 볼텍스 좌표 산출
+ * - 상공으로 갈수록 반경이 나팔형으로 넓어지며 상단을 감쌈
+ * - [위치 하향 조정]: 회오리 베이스 위치를 포켓몬 발밑 지면(targetPos.y + 24)으로 안착
+ */
+function getFireSpinVortexPoint(
+  targetPos: { x: number; y: number },
+  u: number, // 0.0 (지면) ~ 1.0 (최상공)
+  angle: number,
+  baseRadiusX: number = 33,
+  baseRadiusY: number = 13,
+  height: number = 74
+) {
+  // 상단으로 갈수록 나팔형으로 확장 (지면 ~0.84 -> 상공 ~1.52)
+  const expand = 0.84 + Math.pow(u, 1.15) * 0.68;
+  const radiusX = baseRadiusX * expand;
+  const radiusY = baseRadiusY * expand;
+
+  const cx = targetPos.x;
+  const cy = targetPos.y + 24; // 발밑 지면 위치로 확실하게 하향 조정
+
+  const x = cx + Math.cos(angle) * radiusX;
+  const z = Math.sin(angle); // z >= 0: 앞면, z < 0: 뒷면
+  const y = cy - u * height + z * radiusY * 0.35;
+
+  return { x, y, z, angle, radiusX, radiusY };
+}
+
+/**
+ * 화염 꼬리 뒤로 피어오르는 선명한 화염 기체 플룸 (Flame Gas Plume)
+ * - 중심부는 고열의 밝은 레몬/오렌지로 선명하고, 외곽으로 갈수록 부드럽게 투명해지는 화염 가스
+ */
+function drawFireSpinGasPlume(
+  ctx: any,
+  x: number,
+  y: number,
+  radius: number,
+  alpha: number
+) {
+  if (alpha <= 0.01 || radius <= 0.6) return;
+  const grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
+  // [요청 반영]: 투명도를 더 높여 부드럽고 맑은 화염 기체 연기
+  grad.addColorStop(0.0, `rgba(255, 255, 255, ${alpha * 0.52})`);
+  grad.addColorStop(0.22, `rgba(254, 240, 138, ${alpha * 0.62})`);
+  grad.addColorStop(0.55, `rgba(249, 115, 22, ${alpha * 0.48})`);
+  grad.addColorStop(0.82, `rgba(194, 65, 12, ${alpha * 0.22})`);
+  grad.addColorStop(1.0, "rgba(194, 65, 12, 0.0)"); // 외곽 완전투명
+
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+/**
+ * 4단 셀 셰이딩 유기적 화염 로브 (Flame Lobe)
+ * - [핵심 요구사항 1]: 회전 반대방향인 우측 위쪽으로 불의 꼬리가 치솟아 올라가 있음
+ * - [핵심 요구사항 2]: 화염 기체 연기 꼬리쪽 투명도 상향 (좀더 투명하게!)
+ * - [핵심 요구사항 3]: 기체 연기가 나오는 각도를 거의 화면 기준 가로수직(직각 수직 아래!)으로 배출
+ */
+function drawFireSpinFlameLobe(
+  ctx: any,
+  cx: number,
+  cy: number,
+  size: number,
+  isFront: boolean,
+  alpha: number = 1.0,
+  seed: number = 0,
+  wobble: number = 0
+) {
+  if (alpha <= 0.01 || size <= 0.8) return;
+
+  const baseAngle = isFront ? -Math.PI * 0.20 : -Math.PI * 0.80;
+  const angle = baseAngle + wobble;
+  const s = size;
+
+  // -------------------------------------------------------------------------
+  // 1. [핵심]: 꼬리에서 화면 기준 가로수직(직각 수직 아래 +Y)으로 떨어지는 투명 화염 기체
+  // - [요청 반영]: 각도 거의 걍 가로수직(직각 수직 아래)으로 배출!
+  // - [요청 반영]: 꼬리 접점 위치를 투명화 시작 지점(s * 0.70)으로 밀착
+  // -------------------------------------------------------------------------
+  const cosA = Math.cos(angle);
+  const sinA = Math.sin(angle);
+  const tipLocalX = s * 0.70;
+  const tipLocalY = -s * 0.15;
+  const tailWorldX = cx + tipLocalX * cosA - tipLocalY * sinA;
+  const tailWorldY = cy + tipLocalX * sinA + tipLocalY * cosA;
+
+  const wobX = Math.sin(wobble * 2.5 + seed) * s * 0.08;
+  const wobY = Math.cos(wobble * 2.5 + seed * 1.5) * s * 0.08;
+
+  // 꼬리 접점에서부터 화면 수직 아래(+Y)로 6단계 기체 플룸 (투명도 상향 적용)
+  drawFireSpinGasPlume(ctx, tailWorldX + wobX, tailWorldY + s * 0.28 + wobY, s * 0.65, alpha * 0.48);
+  drawFireSpinGasPlume(ctx, tailWorldX + wobX * 1.2, tailWorldY + s * 0.65 + wobY, s * 0.78, alpha * 0.36);
+  drawFireSpinGasPlume(ctx, tailWorldX + wobX * 1.5, tailWorldY + s * 1.08 + wobY, s * 0.92, alpha * 0.26);
+  drawFireSpinGasPlume(ctx, tailWorldX + wobX * 1.8, tailWorldY + s * 1.55 + wobY, s * 1.08, alpha * 0.18);
+  drawFireSpinGasPlume(ctx, tailWorldX + wobX * 2.0, tailWorldY + s * 2.05 + wobY, s * 1.25, alpha * 0.11);
+  drawFireSpinGasPlume(ctx, tailWorldX + wobX * 2.2, tailWorldY + s * 2.58 + wobY, s * 1.40, alpha * 0.05);
+
+  // 수직 아래로 떨어지는 미세 불티 엠버
+  ctx.fillStyle = `rgba(254, 240, 138, ${alpha * 0.50})`;
+  ctx.fillRect(tailWorldX + wobX, tailWorldY + s * 0.55, 1.8, 1.8);
+  ctx.fillStyle = `rgba(249, 115, 22, ${alpha * 0.38})`;
+  ctx.fillRect(tailWorldX + wobX * 1.3, tailWorldY + s * 1.10, 1.6, 1.6);
+  ctx.fillStyle = `rgba(249, 115, 22, ${alpha * 0.22})`;
+  ctx.fillRect(tailWorldX + wobX * 1.6, tailWorldY + s * 1.75, 1.4, 1.4);
+
+  // -------------------------------------------------------------------------
+  // 2. 4단 셀 셰이딩 유기적 화염 바디
+  // -------------------------------------------------------------------------
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(angle);
+
+  // -------------------------------------------------------------------------
+  // 2. 유기적 3갈래 화염 혓바닥 바디 (타오르는 진짜 불꽃 형태)
+  // -------------------------------------------------------------------------
+  const drawFlameBodyPath = (scale: number, forwardShift: number = 0) => {
+    const sc = s * scale;
+    const hx = -forwardShift;
+    ctx.beginPath();
+
+    // 머리 상단
+    ctx.moveTo(hx, -sc * 0.65);
+    // 머리 앞쪽(-X) 유기적 돔 굴곡 (진행방향 코어)
+    ctx.bezierCurveTo(hx - sc * 0.7, -sc * 0.75, hx - sc * 0.95, -sc * 0.3, hx - sc * 0.9, 0);
+    ctx.bezierCurveTo(hx - sc * 0.95, sc * 0.35, hx - sc * 0.7, sc * 0.75, hx, sc * 0.65);
+
+    // 꼬리 하단 -> 하단 보조 혓바닥
+    ctx.quadraticCurveTo(hx + sc * 0.6, sc * 0.62, hx + sc * 1.25, sc * 0.42);
+    ctx.quadraticCurveTo(hx + sc * 0.85, sc * 0.18, hx + sc * 1.15, sc * 0.05);
+
+    // 메인 꼬리 팁 (우측 위쪽으로 가장 길게 뻗어나가는 뾰족한 화염 혀)
+    const mainTipX = hx + sc * 2.35;
+    const mainTipY = -sc * 0.28;
+    ctx.quadraticCurveTo(hx + sc * 1.55, -sc * 0.10, mainTipX, mainTipY);
+
+    // 상단 보조 혓바닥 (갈라지며 타오르는 결)
+    ctx.quadraticCurveTo(hx + sc * 1.5, -sc * 0.45, hx + sc * 1.7, -sc * 0.65);
+    ctx.quadraticCurveTo(hx + sc * 1.2, -sc * 0.55, hx, -sc * 0.65);
+    ctx.closePath();
+  };
+
+  const gradX0 = -s * 0.9;
+  const gradX1 = s * 2.4;
+
+  // [사용자 요구사항]: 불꽃덩어리(뒷부분이 뾰족한 불)의 뒷부분을 좀만 더 투명하게 처리
+  // 머리(-X)는 부드럽게 타오르고, 꼬리/뒷부분(+X)은 0.40 지점부터 100% 완전 투명(0.0) 소멸
+
+  // Layer 1: 외곽 다크 오렌지/진홍 림 (#C2410C) - 꼬리/뒷부분 완전투명(0.0)
+  const grad1 = ctx.createLinearGradient(gradX0, 0, gradX1, 0);
+  grad1.addColorStop(0.0, `rgba(194, 65, 12, ${alpha * 0.82})`);
+  grad1.addColorStop(0.18, `rgba(194, 65, 12, ${alpha * 0.62})`);
+  grad1.addColorStop(0.30, `rgba(194, 65, 12, ${alpha * 0.18})`);
+  grad1.addColorStop(0.40, `rgba(194, 65, 12, 0.0)`);
+  grad1.addColorStop(1.0, `rgba(194, 65, 12, 0.0)`);
+  drawFlameBodyPath(1.0, 0);
+  ctx.fillStyle = grad1;
+  ctx.fill();
+
+  // Layer 2: 작열 주황 메인 바디 (#F97316) - 꼬리/뒷부분 완전투명(0.0)
+  const grad2 = ctx.createLinearGradient(gradX0, 0, gradX1, 0);
+  grad2.addColorStop(0.0, `rgba(249, 115, 22, ${alpha * 0.85})`);
+  grad2.addColorStop(0.16, `rgba(249, 115, 22, ${alpha * 0.55})`);
+  grad2.addColorStop(0.26, `rgba(249, 115, 22, ${alpha * 0.12})`);
+  grad2.addColorStop(0.34, `rgba(249, 115, 22, 0.0)`);
+  grad2.addColorStop(1.0, `rgba(249, 115, 22, 0.0)`);
+  drawFlameBodyPath(0.76, s * 0.12);
+  ctx.fillStyle = grad2;
+  ctx.fill();
+
+  // Layer 3: 고열 레몬 옐로우 코어 (#FEF08A) - 중심부만 작열, 뒷부분 조기 완전투명화
+  const grad3 = ctx.createLinearGradient(gradX0, 0, gradX1, 0);
+  grad3.addColorStop(0.0, `rgba(254, 240, 138, ${alpha * 0.88})`);
+  grad3.addColorStop(0.14, `rgba(254, 240, 138, ${alpha * 0.45})`);
+  grad3.addColorStop(0.24, `rgba(254, 240, 138, 0.0)`);
+  grad3.addColorStop(1.0, `rgba(254, 240, 138, 0.0)`);
+  drawFlameBodyPath(0.48, s * 0.22);
+  ctx.fillStyle = grad3;
+  ctx.fill();
+
+  // Layer 4: 초고열 순백 하이라이트 (#FFFFFF) - 머리 전면부만 작열
+  const grad4 = ctx.createLinearGradient(gradX0, 0, gradX1, 0);
+  grad4.addColorStop(0.0, `rgba(255, 255, 255, ${alpha * 0.80})`);
+  grad4.addColorStop(0.12, `rgba(255, 255, 255, 0.0)`);
+  grad4.addColorStop(1.0, `rgba(255, 255, 255, 0.0)`);
+  drawFlameBodyPath(0.24, s * 0.28);
+  ctx.fillStyle = grad4;
+  ctx.fill();
+
+  ctx.restore();
+}
+
+/**
+ * 모션 스위핑 트레일 (Sweeping Motion Trail)
+ * - [핵심 요구사항]: 선명한 선이 아니라, 진행방향 쪽은 반투명, 진행방향과 반대방향은 완전투명!
+ * - 불꽃 머리(Head)의 뒤쪽으로 이어지는 잔상으로, 꼬리 끝으로 갈수록 완전히 투명해짐 (fade-out to 0)
+ */
+function drawFireSpinSweepingTrail(
+  ctx: any,
+  targetPos: { x: number; y: number },
+  headU: number,
+  headAngle: number,
+  isFront: boolean,
+  overallAlpha: number,
+  trailSpanAngle: number = Math.PI * 0.52
+) {
+  if (overallAlpha <= 0.01) return;
+
+  const numTrailSteps = 12;
+  // 머리 뒤쪽(진행 반대방향)으로 뻗어나가는 각도 샘플링
+  // dU: 트레일 끝은 머리보다 살짝 아래 높이
+  const trailSpanU = 0.08;
+
+  let prevPt: any = null;
+
+  for (let step = 0; step <= numTrailSteps; step++) {
+    // t: 0.0 (꼬리 끝 = 진행 반대방향) ~ 1.0 (머리 = 진행방향)
+    const t = step / numTrailSteps;
+    const u = Math.max(0.0, headU - (1.0 - t) * trailSpanU);
+    // 진행 반대방향(과거 위치) 각도: headAngle - (1.0 - t) * trailSpanAngle
+    const angle = headAngle - (1.0 - t) * trailSpanAngle;
+    const currPt = getFireSpinVortexPoint(targetPos, u, angle);
+
+    if (prevPt) {
+      const p1Front = prevPt.z >= -0.06;
+      const p2Front = currPt.z >= -0.06;
+
+      // 앞/뒤 레이어 클리핑
+      if ((isFront && (p1Front || p2Front)) || (!isFront && (!p1Front || !p2Front))) {
+        // [핵심]: 진행방향(t=1.0) 쪽은 반투명 (0.32), 진행 반대방향(t=0.0) 쪽은 완전투명 (0.0)!
+        const tAlpha = Math.pow(t, 1.45) * overallAlpha * 0.32;
+
+        if (tAlpha > 0.01) {
+          const w = (6.5 + u * 3.5) * (0.2 + t * 0.8);
+
+          ctx.save();
+          ctx.lineCap = "round";
+
+          // 1) 외곽 반투명 다크 오렌지 잔상
+          ctx.strokeStyle = `rgba(194, 65, 12, ${tAlpha * 0.72})`;
+          ctx.lineWidth = w;
+          ctx.beginPath();
+          ctx.moveTo(prevPt.x, prevPt.y);
+          ctx.lineTo(currPt.x, currPt.y);
+          ctx.stroke();
+
+          // 2) 내부 작열 주황 잔상
+          ctx.strokeStyle = `rgba(249, 115, 22, ${tAlpha * 0.92})`;
+          ctx.lineWidth = w * 0.62;
+          ctx.beginPath();
+          ctx.moveTo(prevPt.x, prevPt.y);
+          ctx.lineTo(currPt.x, currPt.y);
+          ctx.stroke();
+
+          // 3) 머리 근처 고열 밝은 잔상 (t > 0.45 구간에만 은은하게)
+          if (t > 0.45) {
+            ctx.strokeStyle = `rgba(254, 240, 138, ${tAlpha * 1.05})`;
+            ctx.lineWidth = w * 0.28;
+            ctx.beginPath();
+            ctx.moveTo(prevPt.x, prevPt.y);
+            ctx.lineTo(currPt.x, currPt.y);
+            ctx.stroke();
+          }
+
+          ctx.restore();
+        }
+      }
+    }
+
+    prevPt = currPt;
+  }
+}
+
+/**
+ * 최상단 치솟는 대형 화염 크레스트 (Trumpet Funnel Top Crest)
+ * - 우측 위쪽으로 강렬하게 뻗어 올라가는 3갈래 화염 스파이크 (끝부분 투명 기체 플룸 포함)
+ */
+function drawFireSpinTopCrest(
+  ctx: any,
+  cx: number,
+  cy: number,
+  size: number,
+  isFront: boolean,
+  alpha: number = 1.0,
+  seed: number = 0
+) {
+  if (alpha <= 0.01 || size <= 1.0) return;
+
+  const baseAngle = isFront ? -Math.PI * 0.22 : -Math.PI * 0.78;
+  const s = size;
+
+  // 크레스트 뒷부분 투명화 시작 지점의 월드 좌표 계산 (로컬 s * 0.90, -s * 0.1)
+  const cosA = Math.cos(baseAngle);
+  const sinA = Math.sin(baseAngle);
+  const tipX = cx + s * 0.90 * cosA - (-s * 0.1) * sinA;
+  const tipY = cy + s * 0.90 * sinA + (-s * 0.1) * cosA;
+
+  // 화면 수직 아래(+Y)로 떨어지는 선명한 기체 플룸 (투명도 상향)
+  drawFireSpinGasPlume(ctx, tipX, tipY + s * 0.30, s * 0.70, alpha * 0.45);
+  drawFireSpinGasPlume(ctx, tipX, tipY + s * 0.75, s * 0.95, alpha * 0.30);
+  drawFireSpinGasPlume(ctx, tipX, tipY + s * 1.30, s * 1.25, alpha * 0.16);
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(baseAngle);
+
+  // 3갈래로 갈라지는 뾰족한 화염 스파이크 형상 (+X 방향으로 뻗음)
+  const drawCrestPath = (scale: number) => {
+    const sc = s * scale;
+    ctx.beginPath();
+    ctx.moveTo(0, -sc * 0.5);
+    // 상단 서브 스파이크
+    ctx.quadraticCurveTo(sc * 0.6, -sc * 0.65, sc * 1.35, -sc * 0.75);
+    ctx.quadraticCurveTo(sc * 0.9, -sc * 0.35, sc * 1.1, -sc * 0.2);
+    // 중앙 메인 스파이크 (가장 길게 치솟음)
+    ctx.quadraticCurveTo(sc * 1.6, -sc * 0.15, sc * 2.4, -sc * 0.1);
+    ctx.quadraticCurveTo(sc * 1.6, sc * 0.15, sc * 1.1, sc * 0.25);
+    // 하단 서브 스파이크
+    ctx.quadraticCurveTo(sc * 0.9, sc * 0.55, sc * 1.4, sc * 0.7);
+    ctx.quadraticCurveTo(sc * 0.5, sc * 0.5, 0, sc * 0.5);
+    ctx.closePath();
+  };
+
+  // 4단 셀 셰이딩 (스파이크/뒷부분 완전투명화 0.0)
+  const crestGrad1 = ctx.createLinearGradient(0, 0, s * 2.4, 0);
+  crestGrad1.addColorStop(0.0, `rgba(194, 65, 12, ${alpha * 0.80})`);
+  crestGrad1.addColorStop(0.18, `rgba(194, 65, 12, ${alpha * 0.48})`);
+  crestGrad1.addColorStop(0.30, `rgba(194, 65, 12, ${alpha * 0.12})`);
+  crestGrad1.addColorStop(0.40, `rgba(194, 65, 12, 0.0)`);
+  crestGrad1.addColorStop(1.0, `rgba(194, 65, 12, 0.0)`);
+  drawCrestPath(1.0);
+  ctx.fillStyle = crestGrad1;
+  ctx.fill();
+
+  const crestGrad2 = ctx.createLinearGradient(0, 0, s * 2.0, 0);
+  crestGrad2.addColorStop(0.0, `rgba(249, 115, 22, ${alpha * 0.85})`);
+  crestGrad2.addColorStop(0.16, `rgba(249, 115, 22, ${alpha * 0.42})`);
+  crestGrad2.addColorStop(0.28, `rgba(249, 115, 22, 0.0)`);
+  crestGrad2.addColorStop(1.0, `rgba(249, 115, 22, 0.0)`);
+  drawCrestPath(0.74);
+  ctx.fillStyle = crestGrad2;
+  ctx.fill();
+
+  const crestGrad3 = ctx.createLinearGradient(0, 0, s * 1.4, 0);
+  crestGrad3.addColorStop(0.0, `rgba(254, 240, 138, ${alpha * 0.88})`);
+  crestGrad3.addColorStop(0.15, `rgba(254, 240, 138, ${alpha * 0.25})`);
+  crestGrad3.addColorStop(0.24, `rgba(254, 240, 138, 0.0)`);
+  crestGrad3.addColorStop(1.0, `rgba(254, 240, 138, 0.0)`);
+  drawCrestPath(0.48);
+  ctx.fillStyle = crestGrad3;
+  ctx.fill();
+
+  const crestGrad4 = ctx.createLinearGradient(0, 0, s * 0.8, 0);
+  crestGrad4.addColorStop(0.0, `rgba(255, 255, 255, ${alpha * 0.80})`);
+  crestGrad4.addColorStop(0.14, `rgba(255, 255, 255, 0.0)`);
+  crestGrad4.addColorStop(1.0, `rgba(255, 255, 255, 0.0)`);
+  drawCrestPath(0.24);
+  ctx.fillStyle = crestGrad4;
+  ctx.fill();
+
+  ctx.restore();
+}
+
+/**
+ * 비산하는 쐐기형 화염 조각 (Floating Flame Flake)
+ */
+function drawFireSpinFlake(
+  ctx: any,
+  x: number,
+  y: number,
+  size: number,
+  angle: number,
+  alpha: number
+) {
+  if (alpha <= 0.01) return;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+
+  // 뾰족한 유선형 불꽃 조각
+  ctx.beginPath();
+  ctx.moveTo(0, -size);
+  ctx.quadraticCurveTo(size * 0.5, 0, 0, size * 0.8);
+  ctx.quadraticCurveTo(-size * 0.5, 0, 0, -size);
+  ctx.closePath();
+
+  ctx.fillStyle = `rgba(249, 115, 22, ${alpha * 0.9})`;
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(0, -size * 0.6);
+  ctx.quadraticCurveTo(size * 0.25, 0, 0, size * 0.4);
+  ctx.quadraticCurveTo(-size * 0.25, 0, 0, -size * 0.6);
+  ctx.closePath();
+
+  ctx.fillStyle = `rgba(254, 240, 138, ${alpha * 0.95})`;
+  ctx.fill();
+
+  ctx.restore();
+}
+
+/**
+ * 5세대 B/W 레퍼런스 스타일 3D 화염 볼텍스 (앞/뒤 분할 렌더러)
+ * - [사용자 요구사항 반영]:
+ *   1) 회전 방향과 반대방향인 우측 위쪽으로 불의 꼬리가 올라가 있음
+ *   2) 선명한 선 제거 ➔ 진행방향 쪽은 반투명, 진행방향과 반대방향은 완전투명한 스위핑 트레일
+ *   3) 캐릭터가 자연스럽게 화염 사이로 보이는 풍성하고 유기적인 3줄기 볼텍스
+ */
+function drawFireSpin3DVortex(
+  ctx: any,
+  targetPos: { x: number; y: number },
+  moveStep: number,
+  effectProgress: number,
+  isFront: boolean
+) {
+  const numRibbons = 3; // 3가닥의 메인 나선 화염 스트림
+  const rot = (moveStep - 3) * 2.3 + effectProgress * 2.3;
+
+  let minU = 0.0;
+  let maxU = 1.0;
+  let alpha = 1.0;
+  let riseLimit = 1.0; // [핵심]: 아래에서 위로 나타나는 전선 높이
+
+  if (moveStep === 3) {
+    // 1단: 바닥 지면(0.0)에서부터 허리 높이(0.50)까지 아래에서 위로 치솟으며 나타남
+    riseLimit = 0.06 + effectProgress * 0.44; // 0.06 ~ 0.50
+    minU = 0.0;
+    maxU = riseLimit;
+    alpha = Math.min(1.0, 0.55 + effectProgress * 0.45);
+  } else if (moveStep === 4) {
+    // 2단: 허리(0.50)에서 머리 위 최상공(1.00)까지 계속해서 위로 솟구치며 볼텍스 완성
+    riseLimit = 0.50 + effectProgress * 0.50; // 0.50 ~ 1.00
+    minU = 0.0;
+    maxU = riseLimit;
+    alpha = 1.0;
+  } else if (moveStep >= 5 && moveStep <= 7) {
+    // 3단: 3D 화염 감옥 풀 볼텍스 구속 지속 (완성된 화염 기둥 유지)
+    riseLimit = 1.0;
+    minU = 0.0;
+    maxU = 1.0;
+    alpha = 1.0;
+  } else if (moveStep === 8) {
+    // 4단: 상공 분산 소멸 (바닥부터 흩어짐)
+    riseLimit = 1.0;
+    minU = effectProgress * 0.55;
+    maxU = 1.0;
+    alpha = Math.max(0.0, 1.0 - effectProgress * 1.15);
+  }
+
+  if (alpha <= 0.01 || minU >= maxU) return;
+
+  // -------------------------------------------------------------
+  // 1. 3가닥의 메인 화염 스트림 렌더링
+  // - [핵심]: 불꽃 덩어리들이 지속적으로 아래에서 위로 솟구쳐 올라가는 상승 모션
+  // - 나타나는 단계(Step 3~4)에서는 riseLimit보다 높은 곳의 불꽃은 아직 안 나타남
+  // -------------------------------------------------------------
+  const headsPerStream = 5;
+  const riseSpeed = 0.35;
+  const climb = (moveStep - 3 + effectProgress) * riseSpeed;
+
+  for (let r = 0; r < numRibbons; r++) {
+    const ribbonOffset = r * ((Math.PI * 2) / numRibbons);
+
+    for (let h = 0; h < headsPerStream; h++) {
+      // 각 헤드가 아래에서 위로 나선을 타고 솟구쳐 오르는 높이
+      const baseH = h / headsPerStream;
+      const headU = (baseH + climb) % 1.0;
+
+      // [핵심]: 아래에서 위로 나타나는 전선(riseLimit)보다 높은 불꽃은 차단하여 아래->위 출현 연출!
+      if (headU > riseLimit || headU < minU) continue;
+
+      // 나선 각도
+      const headAngle = headU * Math.PI * 5.2 + rot + ribbonOffset;
+      const headPt = getFireSpinVortexPoint(targetPos, headU, headAngle);
+
+      // z 판별 (앞면: z >= -0.06, 뒷면: z < 0.06)
+      const isHeadFront = headPt.z >= -0.06;
+
+      // A. [핵심]: 모션 스위핑 트레일 렌더링 (진행방향은 반투명, 반대방향은 완전투명!)
+      drawFireSpinSweepingTrail(ctx, targetPos, headU, headAngle, isFront, alpha);
+
+      // B. [핵심]: 화염 헤드 로브 (꼬리 아래쪽으로 기체 연기 방출)
+      if ((isFront && isHeadFront) || (!isFront && !isHeadFront)) {
+        // 크기는 상공으로 갈수록 나팔형으로 확장
+        const lobeSize = (6.8 + headU * 4.2) * (0.9 + 0.2 * Math.sin(rot * 2 + r * 3 + h));
+        const wobble = Math.sin(rot * 3 + h * 2 + r) * 0.15;
+
+        // 최상단(headU > 0.82)에서는 거대한 3갈래 크레스트, 그 외는 4단 셀 셰이딩 화염 로브
+        if (headU > 0.82) {
+          drawFireSpinTopCrest(ctx, headPt.x, headPt.y, lobeSize * 1.25, isFront, alpha, r * 10 + h);
+        } else {
+          drawFireSpinFlameLobe(ctx, headPt.x, headPt.y, lobeSize, isFront, alpha, r * 10 + h, wobble);
+        }
+      }
+    }
+  }
+
+  // -------------------------------------------------------------
+  // 2. 외곽으로 흩날리는 불꽃 파편 (Flakes) & 맹렬한 스파크 (16개)
+  // -------------------------------------------------------------
+  const flakeCount = 16;
+  const time = (moveStep - 3) * 0.32 + effectProgress * 0.32;
+
+  for (let f = 0; f < flakeCount; f++) {
+    const fSeed = f * 1.618;
+    const fU = (fSeed + time * 0.95) % 1.0;
+
+    if (fU < minU || fU > riseLimit) continue;
+
+    const fAngle = fU * Math.PI * 5.2 + rot * 1.2 + fSeed * Math.PI * 2;
+    const basePt = getFireSpinVortexPoint(targetPos, fU, fAngle);
+    const outwardDist = 4 + (f % 4) * 3.5;
+    const fx = basePt.x + Math.cos(fAngle) * outwardDist;
+    const fy = basePt.y + Math.sin(fAngle) * outwardDist * 0.35 - (fU * 8);
+
+    const isFlakeFront = basePt.z >= -0.05;
+    if ((isFront && !isFlakeFront) || (!isFront && isFlakeFront)) continue;
+
+    const flakeAlpha = Math.min(1.0, fU * 4.0) * Math.max(0.0, 1.0 - fU * 0.9) * alpha;
+
+    if (f % 2 === 0) {
+      // 쐐기형 불꽃 파편 (우측 위쪽 각도로 비산)
+      const fSize = 3.2 + (f % 3) * 1.2;
+      drawFireSpinFlake(ctx, fx, fy, fSize, -Math.PI * 0.25, flakeAlpha);
+    } else {
+      // 고열 사각 스파크 엠버
+      const sSz = 1.8 + (f % 3) * 0.6;
+      ctx.fillStyle = f % 3 === 1 ? `rgba(254, 240, 138, ${flakeAlpha})` : `rgba(249, 115, 22, ${flakeAlpha})`;
+      ctx.fillRect(fx - sSz / 2, fy - sSz / 2, sSz, sSz);
+    }
+  }
+
+  // -------------------------------------------------------------
+  // 3. 발밑 지면 착화 화염 클러스터 (Ground Base Flames)
+  // -------------------------------------------------------------
+  if (minU <= 0.15 && riseLimit >= 0.05) {
+    const baseCount = 5;
+    for (let b = 0; b < baseCount; b++) {
+      const bAngle = (b / baseCount) * Math.PI * 2 + rot * 0.7;
+      const bPt = getFireSpinVortexPoint(targetPos, 0.05, bAngle);
+      const isBaseFront = bPt.z >= -0.05;
+      if ((isFront && !isBaseFront) || (!isFront && isBaseFront)) continue;
+
+      const baseSize = 4.8 + (b % 3) * 1.6;
+      drawFireSpinFlameLobe(
+        ctx,
+        bPt.x,
+        bPt.y,
+        baseSize,
+        isFront,
+        alpha * 0.9,
+        b + 77,
+        0
+      );
+    }
+  }
+}
+
+/**
+ * 회오리불꽃 뒷면 레이어 (대상 뒤쪽을 통과하는 3D 화염 기둥 및 화염 덩어리)
  */
 export function drawBehindFireSpinEffect(
   ctx: any,
   attackerPos: { x: number; y: number },
   targetPos: { x: number; y: number },
   moveStep: number,
-  effectProgress: number = 0.5
+  effectProgress: number = 0.5,
+  isPlayer: boolean = true
 ) {
-  // 3~7단계: 대상을 에워싸는 화염 토네이도 기둥
-  if (moveStep < 3 || moveStep > 7) return;
+  if (moveStep < 3 || moveStep > 8) return;
 
   ctx.save();
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
-  const numRibbons = 4;
-  const stepsPerRibbon = 32;
-  const rot = (moveStep - 3) * 1.5 + effectProgress * 2.0;
-
-  let alpha = 1.0;
-  if (moveStep === 3) alpha = Math.min(1.0, effectProgress * 1.5);
-  if (moveStep === 7) alpha = Math.max(0.0, 1.0 - effectProgress);
-
-  for (let r = 0; r < numRibbons; r++) {
-    const ribbonOffset = r * ((Math.PI * 2) / numRibbons);
-    ctx.beginPath();
-    let drawing = false;
-
-    for (let i = 0; i <= stepsPerRibbon; i++) {
-      const u = i / stepsPerRibbon;
-      const pt = getFireSpinPoint(targetPos, u, rot + ribbonOffset);
-
-      if (pt.z < 0) { // 뒷면
-        if (!drawing) {
-          ctx.moveTo(pt.x, pt.y);
-          drawing = true;
-        } else {
-          ctx.lineTo(pt.x, pt.y);
-        }
-      } else {
-        drawing = false;
-      }
-    }
-
-    // 뒷면 불꽃: 짙은 적색/진홍 (어두운 배경 화염)
-    ctx.strokeStyle = `rgba(220, 38, 38, ${alpha * 0.85})`;
-    ctx.lineWidth = 5.0;
-    ctx.stroke();
-
-    ctx.strokeStyle = `rgba(234, 88, 12, ${alpha * 0.95})`;
-    ctx.lineWidth = 2.6;
-    ctx.stroke();
-  }
+  // 3D 화염 볼텍스 뒷면 렌더링
+  drawFireSpin3DVortex(ctx, targetPos, moveStep, effectProgress, false);
 
   ctx.restore();
 }
@@ -1175,152 +1910,27 @@ export function drawFireSpinEffect(
   attackerPos: { x: number; y: number },
   targetPos: { x: number; y: number },
   moveStep: number,
-  effectProgress: number = 0.5
+  effectProgress: number = 0.5,
+  isPlayer: boolean = true
 ) {
   ctx.save();
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
-  const startX = attackerPos.x;
-  const startY = attackerPos.y - 10;
-  const targetX = targetPos.x;
-  const targetY = targetPos.y + 6; // 발밑
-
-  // Step 1: 시전자에게서 나선형 회전 불씨 탄환 사출
+  // Phase 1: 불 발사 (Step 1) - 중심 구체 + 외곽 회전하는 3개 불꽃
   if (moveStep === 1) {
-    const p = effectProgress;
-    const curX = startX + (targetX - startX) * p;
-    const curY = startY + (targetY - startY) * p - Math.sin(p * Math.PI) * 25; // 포물선
-
-    // 회전하는 꼬리 불꽃
-    for (let i = 0; i < 3; i++) {
-      const a = p * 12 + (i / 3) * Math.PI * 2;
-      const tx = curX + Math.cos(a) * 8;
-      const ty = curY + Math.sin(a) * 6;
-      ctx.fillStyle = i === 0 ? "#FEF08A" : "#F97316";
-      ctx.beginPath();
-      ctx.arc(tx, ty, 3 - i * 0.5, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // 불씨 중심
-    ctx.fillStyle = "#FFFFFF";
-    ctx.beginPath();
-    ctx.arc(curX, curY, 4, 0, Math.PI * 2);
-    ctx.fill();
+    drawFireSpinProjectile(ctx, attackerPos, targetPos, effectProgress, isPlayer);
   }
 
-  // Step 2: 지면 착탄 및 바닥 화염 링 점화
+  // Phase 2: 지면 착탄 (Step 2)
   else if (moveStep === 2) {
-    const p = effectProgress;
-    const rX = 14 + p * 20;
-    const rY = 5 + p * 8;
-
-    // 바닥 타원형 불꽃 링
-    ctx.strokeStyle = "rgba(220, 38, 38, 0.85)";
-    ctx.lineWidth = 4.0;
-    ctx.beginPath();
-    ctx.ellipse(targetX, targetY, rX, rY, 0, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.strokeStyle = "#FEF08A";
-    ctx.lineWidth = 1.8;
-    ctx.beginPath();
-    ctx.ellipse(targetX, targetY, rX * 0.85, rY * 0.85, 0, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // 솟아오르기 시작하는 작은 불티
-    for (let i = 0; i < 5; i++) {
-      const a = (i / 5) * Math.PI * 2 + p * 5;
-      const bx = targetX + Math.cos(a) * (rX * 0.7);
-      const by = targetY + Math.sin(a) * (rY * 0.7) - p * 16;
-      ctx.fillStyle = "#F97316";
-      ctx.fillRect(bx - 1.5, by - 1.5, 3, 3);
-    }
+    drawFireSpinImpact(ctx, targetPos, effectProgress);
   }
 
-  // Step 3 ~ 6: 거대한 3D 화염 토네이도 기둥 (전면 리본 + 불티 파티클)
-  else if (moveStep >= 3 && moveStep <= 7) {
-    const numRibbons = 4;
-    const stepsPerRibbon = 32;
-    const rot = (moveStep - 3) * 1.5 + effectProgress * 2.0;
-
-    let alpha = 1.0;
-    if (moveStep === 3) alpha = Math.min(1.0, effectProgress * 1.5);
-    if (moveStep === 7) alpha = Math.max(0.0, 1.0 - effectProgress);
-
-    // 1. 바닥 화염 베이스 링
-    ctx.strokeStyle = `rgba(234, 88, 12, ${alpha * 0.85})`;
-    ctx.lineWidth = 3.5;
-    ctx.beginPath();
-    ctx.ellipse(targetX, targetY, 32, 12, 0, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // 2. 앞면 나선 불꽃 리본 렌더링 (3중 레이어: 적색 외곽 + 주황 바디 + 순백/황금 코어)
-    for (let r = 0; r < numRibbons; r++) {
-      const ribbonOffset = r * ((Math.PI * 2) / numRibbons);
-      ctx.beginPath();
-      let drawing = false;
-
-      for (let i = 0; i <= stepsPerRibbon; i++) {
-        const u = i / stepsPerRibbon;
-        const pt = getFireSpinPoint(targetPos, u, rot + ribbonOffset);
-
-        if (pt.z >= 0) { // 앞면
-          if (!drawing) {
-            ctx.moveTo(pt.x, pt.y);
-            drawing = true;
-          } else {
-            ctx.lineTo(pt.x, pt.y);
-          }
-        } else {
-          drawing = false;
-        }
-      }
-
-      // 1) 외곽 적색 오라
-      ctx.strokeStyle = `rgba(234, 88, 12, ${alpha * 0.95})`;
-      ctx.lineWidth = 5.2;
-      ctx.stroke();
-
-      // 2) 주황 불꽃 바디
-      ctx.strokeStyle = `rgba(249, 115, 22, ${alpha})`;
-      ctx.lineWidth = 3.2;
-      ctx.stroke();
-
-      // 3) 중심 백열/노랑 코어
-      ctx.strokeStyle = `rgba(254, 240, 138, ${alpha})`;
-      ctx.lineWidth = 1.4;
-      ctx.stroke();
-    }
-
-    // 3. 상공으로 솟구치는 불티/스파크 파티클 (Embers)
-    const emberCount = 10;
-    for (let i = 0; i < emberCount; i++) {
-      const seed = i * 1.7 + rot;
-      const u = (seed % 1.0);
-      const ang = seed * 3.5;
-      const ex = targetX + Math.cos(ang) * (20 + u * 18);
-      const ey = targetY - u * 80;
-
-      ctx.fillStyle = (i % 2 === 0) ? "#FEF08A" : "#F97316";
-      const size = 2 + (i % 3);
-      ctx.fillRect(ex - size / 2, ey - size / 2, size, size);
-    }
-  }
-
-  // Step 8: 잔여 불씨 상승 및 소멸
-  else if (moveStep === 8) {
-    const p = effectProgress;
-    const alpha = Math.max(0.0, 1.0 - p);
-    if (alpha > 0.05) {
-      for (let i = 0; i < 6; i++) {
-        const ex = targetX + (Math.sin(i * 2.3) * 26);
-        const ey = targetY - 40 - p * 35 - i * 5;
-        ctx.fillStyle = `rgba(249, 115, 22, ${alpha * 0.8})`;
-        ctx.fillRect(ex - 1.5, ey - 1.5, 3, 3);
-      }
-    }
+  // Phase 3: 바닥부터 올라오는 3D 불 회오리 및 구속 (Step 3~8)
+  else if (moveStep >= 3 && moveStep <= 8) {
+    // 3D 화염 볼텍스 앞면 렌더링
+    drawFireSpin3DVortex(ctx, targetPos, moveStep, effectProgress, true);
   }
 
   ctx.restore();
@@ -1333,236 +1943,235 @@ export function drawFireSpinEffect(
 /**
  * 지그재그 번개 줄기 생성 헬퍼
  */
-function createLightningBoltPoints(
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number,
-  segments: number = 7,
-  jitter: number = 18,
-  seed: number = 0
-) {
-  const points = [{ x: x1, y: y1 }];
-  const dx = x2 - x1;
-  const dy = y2 - y1;
-  const dist = Math.hypot(dx, dy);
-  const nx = -dy / dist;
-  const ny = dx / dist;
+// ============================================================================
+// 084: 전기쇼크 (Thunder Shock)
+// - [유저 요청: "전기쇼크는 10만볼트 그대로 가져다가 전기가닥이랑 이펙트 약화시킨 형태로 만들어"]
+// - 10만볼트(085)의 고품질 렌더링 파이프라인(날카로운 테이퍼링 볼트, 플라즈마 구체, 충격파 링, 스파클 엠버)을
+//   기본기로서 컴팩트하고 슬림하게 약화 스케일링한 버전.
+// ============================================================================
 
-  for (let i = 1; i < segments; i++) {
-    const t = i / segments;
-    const bx = x1 + dx * t;
-    const by = y1 + dy * t;
-    const offset = Math.sin(seed + i * 2.7) * jitter * (0.5 + 0.5 * Math.sin(t * Math.PI));
-    points.push({
-      x: bx + nx * offset,
-      y: by + ny * offset,
-    });
-  }
-
-  points.push({ x: x2, y: y2 });
-  return points;
-}
-
-/**
- * 전기쇼크 메인 이펙트 렌더러
- */
 export function drawThunderShockEffect(
   ctx: any,
   attackerPos: { x: number; y: number },
   targetPos: { x: number; y: number },
   moveStep: number,
-  effectProgress: number = 0.5
+  effectProgress: number = 0.5,
+  isPlayer: boolean = true
 ) {
   ctx.save();
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
+  ctx.lineCap = "butt";
+  ctx.lineJoin = "miter";
+  ctx.miterLimit = 3.5;
 
-  const startX = attackerPos.x + 6;
+  const startX = attackerPos.x + (isPlayer ? 10 : -10);
   const startY = attackerPos.y - 12;
   const targetX = targetPos.x;
-  const targetY = targetPos.y - 8;
+  const targetY = targetPos.y - 6;
 
-  // Step 1: 시전자 주변에 찌릿찌릿 튀는 정전기 스파크 충전
+  // --------------------------------------------------------------------------
+  // 1. 전체 화면 암전 및 노란빛 대전환 & 페이드아웃 오버레이 (10만볼트 대비 부드럽고 가볍게)
+  // --------------------------------------------------------------------------
+  if (moveStep === 1) {
+    // Step 1: 시전 준비 & 전장 은은한 정전기 암전 (42%)
+    ctx.save();
+    ctx.fillStyle = "rgba(4, 6, 14, 0.42)";
+    ctx.fillRect(-5000, -5000, 12000, 12000);
+    ctx.restore();
+  } else if (moveStep === 2 || moveStep === 3) {
+    // Step 2 & 3: 전기 가닥 발사 & 쇄도 중 암전 (48%)
+    ctx.save();
+    ctx.fillStyle = "rgba(4, 6, 14, 0.48)";
+    ctx.fillRect(-5000, -5000, 12000, 12000);
+    ctx.restore();
+  } else if (moveStep === 4) {
+    // Step 4: 타격 순간 부드러운 황금빛 노란 조명 대전환 (26%)
+    ctx.save();
+    ctx.fillStyle = "rgba(250, 204, 21, 0.26)";
+    ctx.fillRect(-5000, -5000, 12000, 12000);
+    ctx.restore();
+  } else if (moveStep === 5) {
+    // Step 5: 노란빛 조명 1차 페이드아웃 (14%)
+    ctx.save();
+    ctx.fillStyle = "rgba(234, 179, 8, 0.14)";
+    ctx.fillRect(-5000, -5000, 12000, 12000);
+    ctx.restore();
+  } else if (moveStep === 6) {
+    // Step 6: 잔류 노란빛 2차 페이드아웃 (5%)
+    ctx.save();
+    ctx.fillStyle = "rgba(234, 179, 8, 0.05)";
+    ctx.fillRect(-5000, -5000, 12000, 12000);
+    ctx.restore();
+  }
+
+  // --------------------------------------------------------------------------
+  // 2. 스텝별 애니메이션 그래픽 (10만볼트 파이프라인 약화 버전)
+  // --------------------------------------------------------------------------
+
+  // Step 1: 시전자 주변 작은 정전기 스파크 충전
   if (moveStep === 1) {
     const p = effectProgress;
-    for (let i = 0; i < 5; i++) {
-      const a = (i / 5) * Math.PI * 2 + p * 6;
-      const dist = 14 + (i % 3) * 8;
-      const sx = startX + Math.cos(a) * dist;
-      const sy = startY + Math.sin(a) * dist;
 
-      // 미니 지그재그 스파크
-      ctx.strokeStyle = "#FDE047";
-      ctx.lineWidth = 2.0;
-      ctx.beginPath();
-      ctx.moveTo(sx, sy);
-      ctx.lineTo(sx + Math.sin(a * 2) * 6, sy - 6);
-      ctx.lineTo(sx + Math.cos(a * 2) * 8, sy - 12);
-      ctx.stroke();
+    // 시전자 중심 소형 플라즈마 응축구 (반경 9~13px)
+    const coreGrad = ctx.createRadialGradient(startX, startY, 0, startX, startY, 9 + p * 4);
+    coreGrad.addColorStop(0.0, "#FFFFFF");
+    coreGrad.addColorStop(0.35, "#FEF9C3");
+    coreGrad.addColorStop(0.70, "#CCFF00");
+    coreGrad.addColorStop(1.0, "rgba(204, 255, 0, 0)");
+    ctx.fillStyle = coreGrad;
+    ctx.beginPath();
+    ctx.arc(startX, startY, 9 + p * 4, 0, Math.PI * 2);
+    ctx.fill();
 
-      ctx.fillStyle = "#FFFFFF";
-      ctx.fillRect(sx - 1.5, sy - 1.5, 3, 3);
+    // 4방향 미니 고압 전격 스파크 (10만볼트의 8방향 대비 4방향, 두께 1.2px)
+    for (let i = 0; i < 4; i++) {
+      const a = (i / 4) * Math.PI * 2 + p * 5.0;
+      const r = 12 + (i % 2) * 6;
+      const x1 = startX + Math.cos(a) * 4;
+      const y1 = startY + Math.sin(a) * 4;
+      const x2 = startX + Math.cos(a) * r;
+      const y2 = startY + Math.sin(a) * r;
+
+      const pts = createLightningPoints(x1, y1, x2, y2, 3, 6, i * 1.9);
+      drawSharpGlowingBolt(ctx, pts, 1.2, 0.85, true, true, true);
     }
   }
 
-  // Step 2: 지그재그 뇌격 사출 (시전자 -> 대상)
+  // Step 2: 슬림한 2가닥 전격 발사 (0% -> 50% 도달)
   else if (moveStep === 2) {
     const p = effectProgress;
-    const reach = Math.min(1.0, p * 1.25);
-    const curTargetX = startX + (targetX - startX) * reach;
-    const curTargetY = startY + (targetY - startY) * reach;
+    const reach = 0.45 + p * 0.12;
+    const headX = startX + (targetX - startX) * reach;
+    const headY = startY + (targetY - startY) * reach;
 
-    // 메인 볼트 + 분기 서브 볼트 2가닥
+    // 2가닥 슬림 볼트 줄기 (10만볼트의 4가닥 대비 2가닥 & 얇은 두께 w: 2.8, 1.8)
     const bolts = [
-      { start: { x: startX, y: startY }, end: { x: curTargetX, y: curTargetY }, jitter: 16, seed: 1.2, width: 3.2 },
-      { start: { x: startX, y: startY - 4 }, end: { x: curTargetX - 8, y: curTargetY + 6 }, jitter: 22, seed: 3.8, width: 2.2 },
-      { start: { x: startX, y: startY + 4 }, end: { x: curTargetX + 6, y: curTargetY - 8 }, jitter: 20, seed: 6.1, width: 1.8 },
+      { sx: startX, sy: startY, tx: headX, ty: headY, jitter: 14, seed: 1.2, w: 2.8 },
+      { sx: startX, sy: startY - 4, tx: headX - 6, ty: headY + 5, jitter: 18, seed: 3.5, w: 1.8 },
     ];
 
     for (const b of bolts) {
-      const pts = createLightningBoltPoints(b.start.x, b.start.y, b.end.x, b.end.y, 8, b.jitter, b.seed);
-
-      // 1) 외곽 황금빛 앰버 오라
-      ctx.strokeStyle = "#EAB308";
-      ctx.lineWidth = b.width + 3.0;
-      ctx.beginPath();
-      ctx.moveTo(pts[0].x, pts[0].y);
-      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
-      ctx.stroke();
-
-      // 2) 고전압 밝은 레몬 옐로우 바디
-      ctx.strokeStyle = "#FDE047";
-      ctx.lineWidth = b.width + 1.2;
-      ctx.beginPath();
-      ctx.moveTo(pts[0].x, pts[0].y);
-      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
-      ctx.stroke();
-
-      // 3) 눈부신 순백 코어
-      ctx.strokeStyle = "#FFFFFF";
-      ctx.lineWidth = b.width * 0.55;
-      ctx.beginPath();
-      ctx.moveTo(pts[0].x, pts[0].y);
-      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
-      ctx.stroke();
+      const pts = createLightningPoints(b.sx, b.sy, b.tx, b.ty, 6, b.jitter, b.seed);
+      drawSharpGlowingBolt(ctx, pts, b.w, 0.95, true, true, true);
     }
+
+    // 소형 선두 관통 헤드
+    const angle = Math.atan2(targetY - startY, targetX - startX);
+    ctx.save();
+    ctx.translate(headX, headY);
+    ctx.rotate(angle);
+
+    const headGrad = ctx.createLinearGradient(-5, 0, 9, 0);
+    headGrad.addColorStop(0.0, "rgba(255, 255, 255, 0.60)");
+    headGrad.addColorStop(0.4, "rgba(254, 249, 195, 0.40)");
+    headGrad.addColorStop(0.75, "rgba(204, 255, 0, 0.15)");
+    headGrad.addColorStop(1.0, "rgba(204, 255, 0, 0.0)");
+
+    ctx.fillStyle = headGrad;
+    ctx.beginPath();
+    ctx.moveTo(9, 0);
+    ctx.lineTo(-5, -4);
+    ctx.lineTo(-2, 0);
+    ctx.lineTo(-5, 4);
+    ctx.closePath();
+    ctx.fill();
+
+    // 헤드 전방 1줄기 미세 스파크 바늘
+    const needleGrad = ctx.createLinearGradient(4, 0, 12, 0);
+    needleGrad.addColorStop(0.0, "rgba(255, 255, 255, 0.55)");
+    needleGrad.addColorStop(0.6, "rgba(204, 255, 0, 0.25)");
+    needleGrad.addColorStop(1.0, "rgba(204, 255, 0, 0.0)");
+    ctx.strokeStyle = needleGrad;
+    ctx.lineWidth = 1.0;
+    ctx.beginPath();
+    ctx.moveTo(4, 0);
+    ctx.lineTo(12, 0);
+    ctx.stroke();
+
+    ctx.restore();
   }
 
-  // Step 3: 정면 직격 섬광 (1프레임 히트 플래시와 동조)
+  // Step 3: 전격 쇄도 & 표적 직전 도달 (50% -> 100% 관통 격돌)
   else if (moveStep === 3) {
     const p = effectProgress;
-    const r = 26 + p * 14;
 
-    // 순백 + 레몬 스타버스트 임팩트
-    drawStarburstImpact(ctx, targetX, targetY, "#EAB308", "#FDE047", r);
+    // 2가닥 슬림 메인 벼락 줄기 (w: 3.0, 1.9)
+    const bolts = [
+      { sx: startX, sy: startY, tx: targetX, ty: targetY, jitter: 18, seed: 2.3, w: 3.0 },
+      { sx: startX, sy: startY - 4, tx: targetX - 6, ty: targetY + 6, jitter: 22, seed: 4.6, w: 1.9 },
+    ];
 
-    // 중심 순백 섬광구
-    ctx.fillStyle = "#FFFFFF";
-    ctx.beginPath();
-    ctx.arc(targetX, targetY, 12 * (1.0 - p * 0.4), 0, Math.PI * 2);
-    ctx.fill();
+    for (const b of bolts) {
+      const pts = createLightningPoints(b.sx, b.sy, b.tx, b.ty, 8, b.jitter, b.seed);
+      drawSharpGlowingBolt(ctx, pts, b.w, 0.95, true, true);
+    }
+
+    // 착탄점 예비 스파크 2개
+    for (let i = 0; i < 2; i++) {
+      const spAng = i * Math.PI + 0.4;
+      const spLen = 10;
+      const pts = createLightningPoints(targetX, targetY, targetX + Math.cos(spAng) * spLen, targetY + Math.sin(spAng) * spLen, 2, 4, i * 2.5);
+      drawSharpGlowingBolt(ctx, pts, 1.4, 0.85, true, true);
+    }
   }
 
-  // Step 4: 감전 아크 방전 (대상 전신을 감싸는 전격 케이지)
+  // Step 4: 직격 타격 & 소형 플라즈마 임팩트 & 슬림 충격파 링
   else if (moveStep === 4) {
     const p = effectProgress;
-    const cageRadiusX = 26;
-    const cageRadiusY = 32;
 
-    // 대상을 휘감는 타원형 전격 링 2개
-    for (let ring = 0; ring < 2; ring++) {
-      const tilt = (ring === 0 ? 0.35 : -0.35);
-      ctx.save();
-      ctx.translate(targetX, targetY);
-      ctx.rotate(tilt);
+    // 연결 잔류 뇌격 1줄기 (10만볼트의 2줄기 대비 1줄기)
+    const pts = createLightningPoints(startX, startY, targetX, targetY, 7, 14, 3.1);
+    drawSharpGlowingBolt(ctx, pts, 2.2, 0.80, true, true);
 
-      ctx.strokeStyle = "#FDE047";
-      ctx.lineWidth = 2.4;
-      ctx.beginPath();
-      ctx.ellipse(0, 0, cageRadiusX, cageRadiusY * 0.6, 0, 0, Math.PI * 2);
-      ctx.stroke();
+    // 10만볼트 대비 컴팩트해진 플라즈마 구체 (반경 20px vs 38px, 7개 텐드릴 vs 14개)
+    drawThunderboltPlasmaSphere(ctx, targetX, targetY, 20, 0.95, 1.0, 7);
 
-      ctx.strokeStyle = "#FFFFFF";
-      ctx.lineWidth = 1.2;
-      ctx.beginPath();
-      ctx.ellipse(0, 0, cageRadiusX, cageRadiusY * 0.6, 0, 0, Math.PI * 2);
-      ctx.stroke();
-
-      ctx.restore();
-    }
-
-    // 몸체 곳곳을 찌르는 지그재그 감전 아크선
-    for (let i = 0; i < 6; i++) {
-      const a1 = (i / 6) * Math.PI * 2;
-      const a2 = a1 + 0.8;
-      const p1x = targetX + Math.cos(a1) * (cageRadiusX * 0.8);
-      const p1y = targetY + Math.sin(a1) * (cageRadiusY * 0.8);
-      const p2x = targetX + Math.cos(a2) * (cageRadiusX * 0.8);
-      const p2y = targetY + Math.sin(a2) * (cageRadiusY * 0.8);
-
-      const midX = (p1x + p2x) / 2 + (Math.sin(p * 8 + i) * 8);
-      const midY = (p1y + p2y) / 2 + (Math.cos(p * 8 + i) * 8);
-
-      ctx.strokeStyle = "#FFFFFF";
-      ctx.lineWidth = 2.0;
-      ctx.beginPath();
-      ctx.moveTo(p1x, p1y);
-      ctx.lineTo(midX, midY);
-      ctx.lineTo(p2x, p2y);
-      ctx.stroke();
-    }
+    // 슬림 충격파 링 (반경 24~34px vs 44~60px, 두께 8px vs 14px)
+    const ringR = 24 + p * 10;
+    drawShockwaveRing(ctx, targetX, targetY, ringR, 8, 0.45 - p * 0.15);
   }
 
-  // Step 5: 8방향 뇌격 스타버스트 및 방사형 전기 스파크 비산
+  // Step 5: 소형 플라즈마 방전 & 6방향 스파이크 & 1개 전격 루프
   else if (moveStep === 5) {
     const p = effectProgress;
-    const blastRadius = 36 + p * 20;
-    const alpha = Math.max(0.0, 1.0 - p * 0.6);
 
-    // 8방향 뻗어나가는 번개 스파이크
-    for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
-      const len1 = blastRadius * 0.3;
-      const len2 = blastRadius * (0.9 + (a % 2) * 0.35);
-      const x1 = targetX + Math.cos(a) * len1;
-      const y1 = targetY + Math.sin(a) * len1;
-      const x2 = targetX + Math.cos(a) * len2;
-      const y2 = targetY + Math.sin(a) * len2;
+    // 방전 구체 (반경 22px vs 44px, 7개 텐드릴 vs 14개)
+    drawThunderboltPlasmaSphere(ctx, targetX, targetY, 22, 0.80, 3.8, 7);
 
-      ctx.strokeStyle = `rgba(253, 224, 71, ${alpha})`;
-      ctx.lineWidth = 2.4;
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
-    }
+    // 6방향 지그재그 뇌격 스파이크 (10만볼트의 12방향 대비 6방향, 반경 30~42px vs 54~78px)
+    const blastR = 30 + p * 12;
+    drawRadiatingTaperedStrands(ctx, targetX, targetY, 6, 14, blastR, p * 1.5, 0.75);
 
-    // 사방으로 튀는 미세 전기 스파클
-    for (let i = 0; i < 12; i++) {
-      const a = i * 1.5 + p * 4;
-      const dist = 18 + p * 36 + (i % 4) * 6;
-      const sx = targetX + Math.cos(a) * dist;
-      const sy = targetY + Math.sin(a) * dist;
-      ctx.fillStyle = (i % 2 === 0) ? "#FFFFFF" : "#FDE047";
-      ctx.fillRect(sx - 1.5, sy - 1.5, 3, 3);
-    }
+    // 전신 감전 루프 1개 (10만볼트의 2개 대비 1개)
+    ctx.save();
+    ctx.translate(targetX, targetY);
+    ctx.rotate(0.35 + p * 0.4);
+    ctx.strokeStyle = "rgba(204, 255, 0, 0.60)";
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 22, 12, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
   }
 
-  // Step 6 & 7: 잔류 정전기 페이드아웃 및 냉각
-  else if (moveStep === 6 || moveStep === 7) {
-    const p = moveStep === 6 ? effectProgress * 0.5 : 0.5 + effectProgress * 0.5;
+  // Step 6: 뇌격 스파크 비산 (피격 반영)
+  else if (moveStep === 6) {
+    const p = effectProgress;
+    const alpha = Math.max(0.0, 1.0 - p * 0.8);
+
+    // 중심 잔류 구체 소멸 (반경 14px vs 28px)
+    drawThunderboltPlasmaSphere(ctx, targetX, targetY, 14 * (1.0 - p * 0.5), alpha * 0.5, 6.2, 5);
+
+    // 8개의 미세 전기 스파클 엠버 (10만볼트의 18개 대비 8개)
+    drawElectricSparkEmbers(ctx, targetX, targetY, 8, 16, p, 2.0, alpha * 0.85);
+  }
+
+  // Step 7: 잔류 전격 냉각
+  else if (moveStep === 7) {
+    const p = effectProgress;
     const alpha = Math.max(0.0, 1.0 - p);
 
-    if (alpha > 0.05) {
-      for (let i = 0; i < 5; i++) {
-        const a = i * 2.1;
-        const dist = 12 + (i % 3) * 6;
-        const sx = targetX + Math.cos(a) * dist;
-        const sy = targetY + Math.sin(a) * dist;
-        ctx.fillStyle = `rgba(253, 224, 71, ${alpha * 0.85})`;
-        ctx.fillRect(sx - 1, sy - 1, 2.5, 2.5);
-      }
-    }
+    // 잔여 미세 스파클 4개 (10만볼트의 8개 대비 4개)
+    drawElectricSparkEmbers(ctx, targetX, targetY, 4, 10, p, 5.0, alpha * 0.70);
   }
 
   ctx.restore();

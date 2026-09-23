@@ -37,13 +37,24 @@ export const supersonicMove: BattleMoveAnimation = {
       hitFlash: false,
     };
 
+    // 시전자 전용 오프셋 헬퍼 (수비자는 { 0, 0 } 절대 고정)
+    const cOff = (x: number, y: number) => ({
+      pOffset: isP ? { x, y } : { x: 0, y: 0 },
+      eOffset: !isP ? { x: -x, y: -y } : { x: 0, y: 0 },
+    });
+
+    // 피격자(대상) 전용 리액션 오프셋 헬퍼 (시전자는 { 0, 0 } 절대 고정)
+    const targetReact = (x: number, y: number) => ({
+      pOffset: !isP ? { x, y } : { x: 0, y: 0 },
+      eOffset: isP ? { x, y } : { x: 0, y: 0 },
+    });
+
     return [
       // 1. 시전자 초음파 발생 준비 (호흡 가다듬기 & 1차 3D 링 투명 발현)
       {
         ...baseFrame,
         delay: 80,
-        pOffset: isP ? { x: 0, y: -2 } : { x: 0, y: 0 },
-        eOffset: !isP ? { x: 0, y: -2 } : { x: 0, y: 0 },
+        ...cOff(0, -2),
         pScale: isP ? { x: 0.98, y: 1.02 } : undefined,
         eScale: !isP ? { x: 0.98, y: 1.02 } : undefined,
         showEffect: true,
@@ -56,13 +67,12 @@ export const supersonicMove: BattleMoveAnimation = {
       {
         ...baseFrame,
         delay: 80,
-        pOffset: isP ? { x: 0, y: -4 } : { x: 0, y: 0 },
-        eOffset: !isP ? { x: 0, y: -4 } : { x: 0, y: 0 },
+        ...cOff(0, -4),
         pScale: isP ? { x: 0.96, y: 1.04 } : undefined,
         eScale: !isP ? { x: 0.96, y: 1.04 } : undefined,
         showEffect: true,
         moveStep: 2,
-        leaderT: 0.38,
+        leaderT: 0.40,
         phaseId: "supersonic-rings-stream-1",
         phaseName: "2. 3D 노란 링 연속 사출 1",
       },
@@ -70,94 +80,86 @@ export const supersonicMove: BattleMoveAnimation = {
       {
         ...baseFrame,
         delay: 80,
-        pOffset: isP ? { x: 0, y: -2 } : { x: 0, y: 0 },
-        eOffset: !isP ? { x: 0, y: -2 } : { x: 0, y: 0 },
+        ...cOff(0, -2),
         pScale: isP ? { x: 1.02, y: 0.98 } : undefined,
         eScale: !isP ? { x: 1.02, y: 0.98 } : undefined,
         showEffect: true,
         moveStep: 3,
-        leaderT: 0.58,
+        leaderT: 0.65,
         phaseId: "supersonic-rings-stream-2",
         phaseName: "3. 3D 노란 링 연속 사출 2",
       },
-      // 4. 6개 3D 링 완성 대열 & 전방 비행 (반투명 선명도 최고조)
+      // 4. 6개 3D 링 완성 대열 & 전방 비행 (날아갈수록 커짐)
       {
         ...baseFrame,
         delay: 80,
-        pOffset: { x: 0, y: 0 },
-        eOffset: { x: 0, y: 0 },
+        ...cOff(0, 0),
         showEffect: true,
         moveStep: 4,
-        leaderT: 0.78,
+        leaderT: 0.90,
         phaseId: "supersonic-approach",
-        phaseName: "4. 6개 3D 링 일렬 비행",
+        phaseName: "4. 6개 3D 링 확대 비행 및 대상 접근",
       },
-      // 5. 1차 3D 링 대상 도착 & 대상 몸체에 3D 링 적재 시작
+      // 5. 1차 3D 링 대상 관통 & 후방 확산 시작
       {
         ...baseFrame,
         delay: 85,
-        pOffset: { x: 0, y: 0 },
-        eOffset: { x: 0, y: 0 },
+        ...(isHit ? targetReact(1, 0) : cOff(0, 0)),
         showEffect: true,
         moveStep: 5,
-        leaderT: 0.98,
-        phaseId: "supersonic-stack-start",
-        phaseName: "5. 선두 3D 링 적재 시작",
+        leaderT: 1.15,
+        phaseId: "supersonic-pass-1",
+        phaseName: "5. 선두 3D 링 대상 관통 및 후방 확산",
       },
-      // 6. 후속 3D 링들 순차 도착 & 다중 적재 진행
+      // 6. 후속 3D 링들 순차 관통 & 점진적 확대
       {
         ...baseFrame,
         delay: 85,
-        pOffset: { x: 0, y: 0 },
-        eOffset: isP ? { x: 1, y: 0 } : { x: -1, y: 0 },
+        ...(isHit ? targetReact(-2, 0) : cOff(0, 0)),
         showEffect: true,
         moveStep: 6,
-        leaderT: 1.18,
-        phaseId: "supersonic-stack-mid",
-        phaseName: "6. 3D 링 다중 적재",
+        leaderT: 1.40,
+        phaseId: "supersonic-pass-2",
+        phaseName: "6. 초음파 링 연속 관통 및 후방 확대",
       },
-      // 7. 3D 링들 대상 몸체 전신 포위 적재
+      // 7. 3D 링들 전신 관통 통과 & 광역 투명 확산
       {
         ...baseFrame,
         delay: 85,
-        pOffset: { x: 0, y: 0 },
-        eOffset: isP ? { x: -2, y: 0 } : { x: 2, y: 0 },
+        ...(isHit ? targetReact(2, -1) : cOff(0, 0)),
         showEffect: true,
         moveStep: 7,
-        leaderT: 1.38,
-        phaseId: "supersonic-stack-surround",
-        phaseName: "7. 3D 링 전신 포위 적재",
+        leaderT: 1.65,
+        phaseId: "supersonic-pass-3",
+        phaseName: "7. 초음파 링 전신 통과 및 광역 투명 확산",
       },
-      // 8. 6개 3D 링 완전 적재 완료 (3D 원통 케이지 형성)
+      // 8. 6개 3D 링 대상 후방 완전 통과 & 페이드아웃
       {
         ...baseFrame,
         delay: 90,
-        pOffset: { x: 0, y: 0 },
-        eOffset: isP ? { x: 2, y: -1 } : { x: -2, y: 1 },
+        ...(isHit ? targetReact(-3, 1) : cOff(0, 0)),
         showEffect: true,
         moveStep: 8,
-        leaderT: 1.55,
-        phaseId: "supersonic-stack-complete",
-        phaseName: "8. 6개 3D 링 완전 적재 (원통 케이지)",
+        leaderT: 1.85,
+        phaseId: "supersonic-pass-complete",
+        phaseName: "8. 초음파 링 후방 완전 통과 및 페이드아웃",
       },
-      // 9. [6개 3D 링 초음파 공명 진동]: 3D 링들이 대상 주위에서 고속 진동
+      // 9. 대상 피격 직전 음파 잔향 진동
       {
         ...baseFrame,
         delay: 90,
-        pOffset: { x: 0, y: 0 },
-        eOffset: isP ? { x: -3, y: 1 } : { x: 3, y: -1 },
+        ...(isHit ? targetReact(3, -1) : cOff(0, 0)),
         showEffect: true,
         moveStep: 9,
-        leaderT: 1.65,
+        leaderT: 2.05,
         phaseId: "supersonic-resonance",
-        phaseName: "9. 6개 3D 링 초음파 공명 진동",
+        phaseName: "9. 음파 잔향 공명 진동",
       },
       // 10. [노란색 투명 원 1차 확산]: 중심이 투명한 노란색 원이 팽창
       {
         ...baseFrame,
         delay: 95,
-        pOffset: { x: 0, y: 0 },
-        eOffset: isP ? { x: -4, y: 2 } : { x: 4, y: -2 },
+        ...(isHit ? targetReact(-4, 2) : cOff(0, 0)),
         showEffect: true,
         moveStep: 10,
         yellowBurstR: 40,
@@ -169,9 +171,8 @@ export const supersonicMove: BattleMoveAnimation = {
       {
         ...baseFrame,
         delay: 95,
-        pOffset: { x: 0, y: 0 },
-        eOffset: isP ? { x: 5, y: -2 } : { x: -5, y: 2 },
-        hitFlash: true,
+        ...(isHit ? targetReact(5, -2) : cOff(0, 0)),
+        hitFlash: isHit,
         showEffect: true,
         moveStep: 11,
         yellowBurstR: 70,
@@ -183,10 +184,9 @@ export const supersonicMove: BattleMoveAnimation = {
       {
         ...baseFrame,
         delay: 100,
-        pOffset: { x: 0, y: 0 },
-        eOffset: isP ? { x: 2, y: 0 } : { x: -2, y: 0 },
-        pRot: !isP ? 0.05 : 0,
-        eRot: isP ? 0.05 : 0,
+        ...(isHit ? targetReact(2, 0) : cOff(0, 0)),
+        pRot: !isP && isHit ? 0.05 : 0,
+        eRot: isP && isHit ? 0.05 : 0,
         showEffect: true,
         moveStep: 12,
         yellowBurstR: 88,
@@ -199,10 +199,9 @@ export const supersonicMove: BattleMoveAnimation = {
       {
         ...baseFrame,
         delay: 110,
-        pOffset: { x: 0, y: 0 },
-        eOffset: isP ? { x: -3, y: 1 } : { x: 3, y: -1 },
-        pRot: !isP ? -0.07 : 0,
-        eRot: isP ? -0.07 : 0,
+        ...(isHit ? targetReact(-3, 1) : cOff(0, 0)),
+        pRot: !isP && isHit ? -0.07 : 0,
+        eRot: isP && isHit ? -0.07 : 0,
         showEffect: true,
         moveStep: 13,
         confusionProgress: 0.50,
@@ -213,10 +212,9 @@ export const supersonicMove: BattleMoveAnimation = {
       {
         ...baseFrame,
         delay: 120,
-        pOffset: { x: 0, y: 0 },
-        eOffset: isP ? { x: 3, y: -1 } : { x: -3, y: 1 },
-        pRot: !isP ? 0.07 : 0,
-        eRot: isP ? 0.07 : 0,
+        ...(isHit ? targetReact(3, -1) : cOff(0, 0)),
+        pRot: !isP && isHit ? 0.07 : 0,
+        eRot: isP && isHit ? 0.07 : 0,
         showEffect: true,
         moveStep: 14,
         confusionProgress: 0.75,
@@ -227,10 +225,9 @@ export const supersonicMove: BattleMoveAnimation = {
       {
         ...baseFrame,
         delay: 120,
-        pOffset: { x: 0, y: 0 },
-        eOffset: isP ? { x: -2, y: 0 } : { x: 2, y: 0 },
-        pRot: !isP ? -0.05 : 0,
-        eRot: isP ? -0.05 : 0,
+        ...(isHit ? targetReact(-2, 0) : cOff(0, 0)),
+        pRot: !isP && isHit ? -0.05 : 0,
+        eRot: isP && isHit ? -0.05 : 0,
         showEffect: true,
         moveStep: 15,
         confusionProgress: 0.95,
@@ -241,10 +238,9 @@ export const supersonicMove: BattleMoveAnimation = {
       {
         ...baseFrame,
         delay: 130,
-        pOffset: { x: 0, y: 0 },
-        eOffset: { x: 0, y: 0 },
-        pRot: !isP ? 0.03 : 0,
-        eRot: isP ? 0.03 : 0,
+        ...cOff(0, 0),
+        pRot: !isP && isHit ? 0.03 : 0,
+        eRot: isP && isHit ? 0.03 : 0,
         showEffect: true,
         moveStep: 16,
         confusionProgress: 1.05,

@@ -133,10 +133,22 @@ export * from "./gen1/move073_076.js";
 export * from "./gen1/move077_080.js";
 export * from "./gen1/move081_084.js";
 export * from "./gen1/move085_088.js";
+export * from "./gen1/move089_092.js";
+export * from "./gen1/move093_096.js";
+export * from "./gen1/move097_100.js";
+export * from "./gen1/move101_104.js";
+export * from "./gen1/move105_108.js";
+export * from "./gen1/move109_112.js";
+export * from "./gen1/move113_116.js";
+export * from "./gen1/move117_120.js";
+export * from "./gen1/move121_124.js";
+export * from "./gen1/move125_128.js";
+export * from "./gen1/move129_132.js";
+export * from "./gen1/move133_136.js";
 
 
 /**
- * Central Dispatcher for rendering Pok챕mon move visual effects onto the battle canvas
+ * Central Dispatcher for rendering Pokémon move visual effects onto the battle canvas
  */
 export function renderMoveEffect(
   ctx: any,

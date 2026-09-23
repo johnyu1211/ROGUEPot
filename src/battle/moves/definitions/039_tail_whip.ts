@@ -27,6 +27,8 @@ export const tailWhipMove: BattleMoveAnimation = {
   buildFrames: (ctx: MoveContext): BattleFrame[] => {
     const { isPlayer: isP, action: a, enemyHp, playerHp, textLineIdx } = ctx;
 
+    const debuffLineIdx = (a?.log && a.log.includes("\n")) ? (textLineIdx + 1) : textLineIdx;
+
     const baseFrame = {
       enemyHp,
       playerHp,
@@ -37,6 +39,8 @@ export const tailWhipMove: BattleMoveAnimation = {
       cameraZoom: 1.0,
       pRot: 0,
       eRot: 0,
+      afterCameraReturn: true,
+      hideUI: false,
     };
 
     // 시전자가 전면이면 후면, 후면이면 전면으로 전환:
@@ -92,6 +96,7 @@ export const tailWhipMove: BattleMoveAnimation = {
       const pt = swayOffsets[i];
       frames.push({
         ...baseFrame,
+        textLineIdx: debuffLineIdx,
         delay: 75,
         pOffset: isP ? { x: pt.ox, y: pt.oy } : { x: 0, y: 0 },
         eOffset: !isP ? { x: -pt.ox, y: pt.oy } : { x: 0, y: 0 },
@@ -101,6 +106,7 @@ export const tailWhipMove: BattleMoveAnimation = {
         useEnemyBack: activeBack,
         statProgress: statProgSteps[i],
         afterCameraReturn: true,
+        hideUI: false,
         phaseId: `tailwhip-sway2-${i + 1}`,
         phaseName: `3. 2차 살랑 돌기 (${pt.name})`,
       });
@@ -109,6 +115,7 @@ export const tailWhipMove: BattleMoveAnimation = {
     // 4. 중앙 안착 및 잠시 정지
     frames.push({
       ...baseFrame,
+      textLineIdx: debuffLineIdx,
       delay: 90,
       pOffset: { x: 0, y: 0 },
       eOffset: { x: 0, y: 0 },
@@ -118,6 +125,7 @@ export const tailWhipMove: BattleMoveAnimation = {
       useEnemyBack: activeBack,
       statProgress: 0.98,
       afterCameraReturn: true,
+      hideUI: false,
       phaseId: "tailwhip-settle",
       phaseName: "4. 살랑임 정지",
     });
@@ -125,6 +133,7 @@ export const tailWhipMove: BattleMoveAnimation = {
     // 5. 기본 정면/후면 자세 복귀 (원래 시선으로 복귀 완료)
     frames.push({
       ...baseFrame,
+      textLineIdx: debuffLineIdx,
       delay: 130,
       pOffset: { x: 0, y: 0 },
       eOffset: { x: 0, y: 0 },
@@ -132,6 +141,8 @@ export const tailWhipMove: BattleMoveAnimation = {
       eScale: { x: 1.0, y: 1.0 },
       usePlayerFront: false,
       useEnemyBack: false,
+      afterCameraReturn: true,
+      hideUI: false,
       phaseId: "tailwhip-finish",
       phaseName: "5. 원래 자세 복귀",
     });

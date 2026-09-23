@@ -26,20 +26,43 @@ export function applyDamageBlinkFrames(
 
   // 1. Check if attack hits and deals damage
   const isHit = action.isHit !== false && !action.isMiss;
-  const initEnemyHp = frames[0]?.enemyHp ?? action.enemyHpAfter;
-  const initPlayerHp = frames[0]?.playerHp ?? action.playerHpAfter;
+  const initEnemyHp = action.enemyHpBefore !== undefined ? action.enemyHpBefore : (frames[0]?.enemyHp ?? action.enemyHpAfter);
+  const initPlayerHp = action.playerHpBefore !== undefined ? action.playerHpBefore : (frames[0]?.playerHp ?? action.playerHpAfter);
   const afterEnemyHp = action.enemyHpAfter ?? initEnemyHp;
   const afterPlayerHp = action.playerHpAfter ?? initPlayerHp;
 
-  const targetInitialHp = isAttackerPlayer ? initEnemyHp : initPlayerHp;
+  let targetInitialHp = isAttackerPlayer ? initEnemyHp : initPlayerHp;
   const targetFinalHp = isAttackerPlayer ? afterEnemyHp : afterPlayerHp;
-  const hpLoss = targetInitialHp - targetFinalHp;
+  let hpLoss = targetInitialHp - targetFinalHp;
 
   const damage = action.damage ?? (hpLoss > 0 ? hpLoss : 0);
   const typeMod = action.typeMod !== undefined ? action.typeMod : (action.isSuperEffective ? 2.0 : 1.0);
 
-  // 효과가 없는 경우 (0x / 무효 / 미스 / 데미지 0): 깜빡임 및 체력 변동 X
+  // Fallback: If targetInitialHp was equal to targetFinalHp but damage was dealt,
+  // reconstruct targetInitialHp from targetFinalHp + damage so HP drain ALWAYS renders!
+  if (hpLoss <= 0 && damage > 0 && isHit) {
+    targetInitialHp = targetFinalHp + damage;
+    hpLoss = damage;
+  }
+
+  const initEnemyStatus = action.enemyStatusBefore !== undefined ? action.enemyStatusBefore : null;
+  const initPlayerStatus = action.playerStatusBefore !== undefined ? action.playerStatusBefore : null;
+  const afterEnemyStatus = action.enemyStatusAfter !== undefined ? action.enemyStatusAfter : initEnemyStatus;
+  const afterPlayerStatus = action.playerStatusAfter !== undefined ? action.playerStatusAfter : initPlayerStatus;
+
+  let insertIdx = frames.findIndex(f => f.afterCameraReturn);
+  if (insertIdx === -1) {
+    insertIdx = frames.length;
+  }
+
+  // 효과가 없는 경우 (0x / 무효 / 미스 / 데미지 0): 깜빡임 및 체력 변동 X (단, 기술 정의에서 오염된 HP 값은 시작 체력으로 완전 복구)
   if (!isHit || damage <= 0 || typeMod === 0 || hpLoss <= 0) {
+    for (let i = 0; i < frames.length; i++) {
+      if (frames[i].enemyHp !== undefined) frames[i].enemyHp = initEnemyHp;
+      if (frames[i].playerHp !== undefined) frames[i].playerHp = initPlayerHp;
+      frames[i].enemyStatus = (i < insertIdx ? initEnemyStatus : afterEnemyStatus);
+      frames[i].playerStatus = (i < insertIdx ? initPlayerStatus : afterPlayerStatus);
+    }
     return frames;
   }
 
@@ -77,27 +100,28 @@ export function applyDamageBlinkFrames(
 
   if (cycleCount === 0) return frames;
 
-  // 3. [유저 요구사항] 기술 진행 & 카메라 복귀 동안에는 체력바를 이전 체력(피격 전)으로 유지!
-  let insertIdx = frames.findIndex(f => f.afterCameraReturn);
-  if (insertIdx === -1) {
-    insertIdx = frames.length;
-  }
-
-  // 기술 진행 및 카메라 복귀 프레임은 아직 데미지가 체력바에 반영되지 않은 이전 상태로 유지
+  // 3. [유저 요구사항] 기술 진행 & 카메라 복귀 동안에는 체력바를 이전 체력(피격 전)으로 엄격히 유지!
+  // 기술 진행 및 카메라 복귀 프레임은 양쪽 모두 아직 데미지가 체력바에 반영되지 않은 시작 상태로 강제 고정
   for (let i = 0; i < insertIdx; i++) {
-    if (isAttackerPlayer) {
-      frames[i].enemyHp = targetInitialHp;
-    } else {
-      frames[i].playerHp = targetInitialHp;
-    }
+    frames[i].enemyHp = initEnemyHp;
+    frames[i].playerHp = initPlayerHp;
+    frames[i].enemyStatus = initEnemyStatus;
+    frames[i].playerStatus = initPlayerStatus;
   }
 
   // 기술 애니메이션이 끝난 정위치/복귀 상태의 프레임을 베이스로 사용
   const lastActionFrame = frames[insertIdx - 1] || frames[frames.length - 1];
 
   // 4. 깜빡거림(점멸) 프레임: 데미지 피격으로 인한 스프라이트 점멸
-  // ⚠️ [유저 요구사항] 깜빡거리는 동안에는 체력바가 줄어들지 않고 이전 체력(targetInitialHp)을 그대로 유지!
+  // ⚠️ [유저 요구사항] 깜빡거리는 동안에는 체력바가 절대 줄어들지 않고 양쪽 시작 체력을 100% 그대로 유지!
   const blinkFrames: BattleFrame[] = [];
+
+  const isAttackerEvading = isAttackerPlayer
+    ? Boolean(lastActionFrame.pOffset && lastActionFrame.pOffset.y <= -500)
+    : Boolean(lastActionFrame.eOffset && lastActionFrame.eOffset.y <= -500);
+  const isDefenderEvading = !isAttackerPlayer
+    ? Boolean(lastActionFrame.pOffset && lastActionFrame.pOffset.y <= -500)
+    : Boolean(lastActionFrame.eOffset && lastActionFrame.eOffset.y <= -500);
 
   for (let c = 0; c < cycleCount; c++) {
     // Off frame (반투명/투명 점멸 - 피격 충격)
@@ -109,8 +133,14 @@ export function applyDamageBlinkFrames(
       afterCameraReturn: true, // 카메라가 원상태로 돌아온 후에 깜빡임
       hideUI: false, // 피격 중 체력바 및 메시지창 표시
       targetAlpha: alphaLow,
-      enemyHp: isAttackerPlayer ? targetInitialHp : lastActionFrame.enemyHp,
-      playerHp: !isAttackerPlayer ? targetInitialHp : lastActionFrame.playerHp,
+      hidePlayer: isAttackerPlayer ? false : isDefenderEvading,
+      hideEnemy: !isAttackerPlayer ? false : isDefenderEvading,
+      pAlpha: isAttackerPlayer ? 1.0 : undefined,
+      eAlpha: !isAttackerPlayer ? 1.0 : undefined,
+      enemyHp: initEnemyHp,
+      playerHp: initPlayerHp,
+      enemyStatus: afterEnemyStatus,
+      playerStatus: afterPlayerStatus,
       eOffset: isAttackerPlayer ? { x: (c % 2 === 0 ? -3 : 2), y: 1 } : { x: 0, y: 0 },
       pOffset: !isAttackerPlayer ? { x: (c % 2 === 0 ? 3 : -2), y: -1 } : { x: 0, y: 0 },
       phaseId: `damage-blink-${c + 1}-off`,
@@ -126,8 +156,14 @@ export function applyDamageBlinkFrames(
       afterCameraReturn: true,
       hideUI: false, // 피격 중 체력바 및 메시지창 표시
       targetAlpha: 1.0,
-      enemyHp: isAttackerPlayer ? targetInitialHp : lastActionFrame.enemyHp,
-      playerHp: !isAttackerPlayer ? targetInitialHp : lastActionFrame.playerHp,
+      hidePlayer: isAttackerPlayer ? false : isDefenderEvading,
+      hideEnemy: !isAttackerPlayer ? false : isDefenderEvading,
+      pAlpha: isAttackerPlayer ? 1.0 : undefined,
+      eAlpha: !isAttackerPlayer ? 1.0 : undefined,
+      enemyHp: initEnemyHp,
+      playerHp: initPlayerHp,
+      enemyStatus: afterEnemyStatus,
+      playerStatus: afterPlayerStatus,
       eOffset: { x: 0, y: 0 },
       pOffset: { x: 0, y: 0 },
       phaseId: `damage-blink-${c + 1}-on`,
@@ -136,8 +172,9 @@ export function applyDamageBlinkFrames(
   }
 
   // 5. [유저 요구사항 - 핵심] 깜빡거림(점멸)이 완전히 끝난 직후, 체력 게이지 감소 애니메이션(HP Drain) 재생!
+  // 눈으로 체력 게이지가 부드럽게 깎이는 것을 확실히 볼 수 있도록 감속 4단계(스텝당 90ms, 마지막 안착 220ms, 총 490ms)로 여유롭게 진행
   const hpDrainFrames: BattleFrame[] = [];
-  const drainSteps = 4; // 4단계 부드러운 체력 감소 감속 연출
+  const drainSteps = 4;
 
   for (let s = 1; s <= drainSteps; s++) {
     const progress = s / drainSteps;
@@ -148,14 +185,20 @@ export function applyDamageBlinkFrames(
 
     hpDrainFrames.push({
       ...lastActionFrame,
-      delay: isLast ? 130 : 65, // 마지막 안착 프레임은 살짝 머물러 안정감 부여
+      delay: isLast ? 220 : 90, // 단계당 90ms, 마지막 안착 220ms로 편안하게 인지
       showEffect: false,
       hitFlash: false,
       afterCameraReturn: true,
       hideUI: false, // 체력 게이지 감소 애니메이션 재생 중 체력바 및 메시지창 표시
       targetAlpha: 1.0,
-      enemyHp: isAttackerPlayer ? curHp : lastActionFrame.enemyHp,
-      playerHp: !isAttackerPlayer ? curHp : lastActionFrame.playerHp,
+      hidePlayer: isAttackerPlayer ? false : isDefenderEvading,
+      hideEnemy: !isAttackerPlayer ? false : isDefenderEvading,
+      pAlpha: isAttackerPlayer ? 1.0 : undefined,
+      eAlpha: !isAttackerPlayer ? 1.0 : undefined,
+      enemyHp: isAttackerPlayer ? curHp : initEnemyHp,
+      playerHp: !isAttackerPlayer ? curHp : initPlayerHp,
+      enemyStatus: afterEnemyStatus,
+      playerStatus: afterPlayerStatus,
       eOffset: { x: 0, y: 0 },
       pOffset: { x: 0, y: 0 },
       phaseId: `hp-drain-${s}`,
@@ -163,12 +206,20 @@ export function applyDamageBlinkFrames(
     });
   }
 
-  // 6. 깜빡임 및 체력 감소 이후의 후속 프레임(예: 돌진 반동 프레임 등)은 최종 감소된 HP 유지
+  // 6. 깜빡임 및 체력 감소 이후의 후속 프레임(예: 돌진 반동 프레임 등)은 대상은 최종 HP, 시전자는 초기 HP(반동 전) 유지
   for (let i = insertIdx; i < frames.length; i++) {
+    frames[i].enemyStatus = afterEnemyStatus;
+    frames[i].playerStatus = afterPlayerStatus;
     if (isAttackerPlayer) {
       frames[i].enemyHp = targetFinalHp;
+      if (frames[i].playerHp === undefined) {
+        frames[i].playerHp = initPlayerHp;
+      }
     } else {
       frames[i].playerHp = targetFinalHp;
+      if (frames[i].enemyHp === undefined) {
+        frames[i].enemyHp = initEnemyHp;
+      }
     }
   }
 

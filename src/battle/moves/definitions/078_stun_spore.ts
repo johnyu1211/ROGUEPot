@@ -107,7 +107,7 @@ export const stunSporeMove: BattleMoveAnimation = {
         phaseId: "stun-spore-settle",
         phaseName: "#5. 몸체에 분말 쌓임",
       },
-      // #6. 마비 침투 & 전기 스파크 + 노란 틴트
+      // #6. 마비 침투 & 전기 스파크
       {
         ...baseFrame,
         delay: 120,
@@ -117,9 +117,6 @@ export const stunSporeMove: BattleMoveAnimation = {
         hitFlash: false,
         moveStep: 6,
         effectProgress: 0.65,
-        casterYellowAura: false,
-        eYellowAura: isHit && !isP,
-        pYellowAura: isHit && isP,
         phaseId: "stun-spore-paralyze",
         phaseName: "#6. 마비 침투 & 전기 스파크",
       },

@@ -1,4 +1,45 @@
-import { drawStarburstImpact } from "./helpers.js";
+import { drawStarburstImpact, drawMiniRetroStar } from "./helpers.js";
+
+/**
+ * Sharp Comic Impact Starburst Polygon (날카로운 만화풍 충돌 섬광 스타버스트 💥)
+ */
+function drawSharpImpactBurst(
+  ctx: any,
+  cx: number,
+  cy: number,
+  outerRadius: number,
+  innerRadius: number,
+  points: number = 8,
+  fillColor: string = "#FFFFFF",
+  strokeColor: string = "#FEF08A",
+  lineWidth: number = 2.0,
+  rotation: number = 0
+) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  if (rotation !== 0) ctx.rotate(rotation);
+
+  ctx.fillStyle = fillColor;
+  ctx.strokeStyle = strokeColor;
+  ctx.lineWidth = lineWidth;
+  ctx.lineJoin = "miter";
+  ctx.miterLimit = 4;
+
+  ctx.beginPath();
+  const step = Math.PI / points;
+  for (let i = 0; i < points * 2; i++) {
+    const r = i % 2 === 0 ? outerRadius : innerRadius;
+    const a = i * step - Math.PI / 2;
+    const x = Math.cos(a) * r;
+    const y = Math.sin(a) * r;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fill();
+  if (strokeColor && lineWidth > 0) ctx.stroke();
+  ctx.restore();
+}
 
 /**
  * Helper to interpolate linear motion
@@ -1136,11 +1177,99 @@ export function drawSoundWaveEffect(
 
 /**
  * Default Physical Impact (Tackle, Pound, Quick Attack, Slam)
+ * Authentic Gen 5 Normal-Type Physical Strike:
+ * - Pure white flash core with warm cream halo
+ * - Dual stylized manga/anime collision brackets ) (
+ * - Classic 4-pointed diamond hit sparks flying outward
+ * - Expanding compression shockwave ring
+ * - Soft ground dust puffs popping at base level
  */
 export function drawPhysicalImpactEffect(
   ctx: any,
   target: { x: number; y: number },
   progress: number = 0.8
 ) {
-  drawStarburstImpact(ctx, target.x, target.y, "#F59E0B", "#FFFFFF", 24 + progress * 14);
+  const tx = target.x;
+  const ty = target.y;
+  const p = Math.max(0, Math.min(1, progress));
+
+  ctx.save();
+
+  // 1. 순백 중심 섬광 코어 (Central Impact Flash Core)
+  const flashAlpha = Math.max(0, 1.0 - p * 0.75);
+  if (flashAlpha > 0.05) {
+    const coreR = 22 + (1.0 - p) * 14;
+    const grad = ctx.createRadialGradient(tx, ty, 2, tx, ty, coreR);
+    grad.addColorStop(0, `rgba(255, 255, 255, ${flashAlpha})`);
+    grad.addColorStop(0.35, `rgba(254, 240, 138, ${flashAlpha * 0.9})`);
+    grad.addColorStop(0.75, `rgba(253, 224, 71, ${flashAlpha * 0.4})`);
+    grad.addColorStop(1, "rgba(255, 255, 255, 0)");
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(tx, ty, coreR, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 2. 날카로운 정통 충돌 스타버스트 💥 (Sharp Comic Impact Starburst)
+  const burstAlpha = Math.max(0, 1.0 - p * 0.85);
+  if (burstAlpha > 0.05) {
+    const outerR = 18 + p * 16;
+    const innerR = outerR * 0.44;
+    drawSharpImpactBurst(
+      ctx,
+      tx,
+      ty,
+      outerR,
+      innerR,
+      8,
+      `rgba(255, 255, 255, ${burstAlpha})`,
+      `rgba(253, 224, 71, ${burstAlpha * 0.95})`,
+      2.4,
+      p * 0.35
+    );
+  }
+
+  // 3. 순백 고속 팽창 충격파 링 (Expanding Shockwave Ring)
+  const ringAlpha = Math.max(0, 1.0 - p * 0.9);
+  if (ringAlpha > 0.05) {
+    const rx = 14 + p * 26;
+    const ry = rx * 0.72;
+    ctx.strokeStyle = `rgba(255, 255, 255, ${ringAlpha})`;
+    ctx.lineWidth = 2.8 * (1.0 - p * 0.3);
+    ctx.beginPath();
+    ctx.ellipse(tx, ty, rx, ry, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = `rgba(254, 240, 138, ${ringAlpha * 0.6})`;
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.ellipse(tx, ty, rx + 3, ry + 2, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // 4. 사방 비산 4방향 레트로 별빛 스파크 (Flying Mini Retro Hit Stars)
+  const starAlpha = Math.max(0, 1.0 - p * 0.75);
+  if (starAlpha > 0.05) {
+    const starAngles = [-0.65, 0.45, 1.75, 2.85, -2.15, -1.25];
+    for (let i = 0; i < starAngles.length; i++) {
+      const a = starAngles[i];
+      const dist = 10 + p * (22 + (i % 3) * 8);
+      const sx = tx + Math.cos(a) * dist;
+      const sy = ty + Math.sin(a) * (dist * 0.85);
+      const sz = (10 - p * 3) * (i % 2 === 0 ? 1.0 : 0.75);
+      ctx.globalAlpha = starAlpha;
+      drawMiniRetroStar(
+        ctx,
+        sx,
+        sy,
+        sz,
+        i % 2 === 0 ? "#FFFFFF" : "#FEF08A",
+        a + p * 1.5
+      );
+      ctx.globalAlpha = 1.0;
+    }
+  }
+
+  ctx.restore();
 }
+

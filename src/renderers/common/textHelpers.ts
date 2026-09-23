@@ -28,7 +28,8 @@ export function formatMoney(amount: number): string {
  * Splits and wraps dialogue text into clean lines fitting within maxWidth
  */
 export function wrapDialogueText(ctx: any, text: string, maxWidth: number): string[] {
-  const rawLines = text.split("\n");
+  const cleanText = (text || "").replace(/(\p{Extended_Pictographic}|\p{Emoji_Presentation}|\uFE0F)/gu, "").trim();
+  const rawLines = cleanText.split("\n");
   const wrapped: string[] = [];
 
   for (const raw of rawLines) {

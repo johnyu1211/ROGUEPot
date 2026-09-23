@@ -1,5 +1,5 @@
 import { BattleMoveAnimation, MoveContext, BattleFrame, EffectDrawContext } from "../types.js";
-import { drawPhysicalImpactEffect } from "../../../renderers/moves/common/genericTypeEffects.js";
+import { drawTackleEffect, drawTackleBehindEffect } from "../../../renderers/moves/gen1/move033_036.js";
 
 export const headbuttMove: BattleMoveAnimation = {
   num: 29,
@@ -11,55 +11,139 @@ export const headbuttMove: BattleMoveAnimation = {
   camera: { type: "target", zoom: 1.35 },
   buildFrames: (ctx: MoveContext): BattleFrame[] => {
     const { isPlayer: isP, isHit, action: a, enemyHp, playerHp, textLineIdx } = ctx;
-    // 몸통박치기와 100% 완전히 동일한 박력있는 모션
+
+    const baseFrame = {
+      enemyHp,
+      playerHp,
+      textLineIdx,
+      moveEffect: a,
+      cameraZoom: 1.35,
+    };
+
+    const cOff = (x: number, y: number) =>
+      isP ? { pOffset: { x, y } } : { eOffset: { x: -x, y: -y } };
+
+    const cTargetOff = (x: number, y: number) =>
+      isP ? { eOffset: { x, y } } : { pOffset: { x: -x, y: -y } };
+
+    const cTransform = (scaleX: number, scaleY: number, rot: number) => ({
+      pScale: isP ? { x: scaleX, y: scaleY } : undefined,
+      eScale: !isP ? { x: scaleX, y: scaleY } : undefined,
+      pRot: isP ? rot : 0,
+      eRot: !isP ? -rot : 0,
+    });
+
     return [
+      // 1. 박치기 도움닫기 웅크림 (뒤로 상체 젖히며 탄성 축적)
       {
-        delay: 100,
-        pOffset: isP ? { x: -8, y: 3 } : { x: 0, y: 0 },
-        eOffset: !isP ? { x: 8, y: -3 } : { x: 0, y: 0 },
-        showEffect: false,
-        hitFlash: false,
-        enemyHp,
-        playerHp,
-        textLineIdx,
-        moveEffect: a,
-      },
-      {
-        delay: 140,
-        pOffset: isP ? { x: 26, y: -10 } : (isHit ? { x: -8, y: 4 } : { x: 0, y: 0 }),
-        eOffset: !isP ? { x: -26, y: 10 } : (isHit ? { x: 8, y: -4 } : { x: 0, y: 0 }),
+        ...baseFrame,
+        delay: 90,
+        ...cOff(-16, 6),
+        ...cTargetOff(0, 0),
+        ...cTransform(1.14, 0.86, -0.08),
         showEffect: true,
+        hitFlash: false,
+        moveStep: 1,
+        effectProgress: 0.20,
+        phaseId: "headbutt-windup",
+        phaseName: "1. 박치기 도움닫기 웅크림",
+      },
+      // 2. 전방 머리 들이밀기 고속 쇄도
+      {
+        ...baseFrame,
+        delay: 80,
+        ...cOff(46, -17),
+        ...cTargetOff(0, 0),
+        ...cTransform(0.86, 1.16, 0.12),
+        showEffect: true,
+        hitFlash: false,
+        moveStep: 2,
+        effectProgress: 0.50,
+        phaseId: "headbutt-dash",
+        phaseName: "2. 전방 고속 쇄도",
+      },
+      // 3. 정면 박치기 직격 (순백 스타버스트 섬광 & 피격 플래시)
+      {
+        ...baseFrame,
+        delay: 75,
+        ...cOff(66, -24),
+        ...(isHit ? cTargetOff(10, -4) : cTargetOff(0, 0)),
+        ...cTransform(1.20, 0.84, 0.04),
+        showEffect: isHit,
         hitFlash: isHit,
         enemyHp: a.enemyHpAfter,
         playerHp: a.playerHpAfter,
-        textLineIdx,
-        moveEffect: a,
+        moveStep: 3,
+        effectProgress: 0.20,
+        phaseId: "headbutt-impact-hit",
+        phaseName: "3. 정면 박치기 직격 & 스타버스트",
       },
+      // 4. 충돌 폭발 & 최대 넉백 (충격파 링 확산 & 별빛 스파크 비산)
       {
-        delay: 120,
-        pOffset: isP ? { x: 14, y: -5 } : { x: 0, y: 0 },
-        eOffset: !isP ? { x: -14, y: 5 } : { x: 0, y: 0 },
+        ...baseFrame,
+        delay: 85,
+        ...cOff(70, -26),
+        ...(isHit ? cTargetOff(18, -7) : cTargetOff(0, 0)),
+        ...cTransform(1.16, 0.86, 0.02),
+        showEffect: isHit,
+        hitFlash: false,
+        enemyHp: a.enemyHpAfter,
+        playerHp: a.playerHpAfter,
+        moveStep: 3,
+        effectProgress: 0.70,
+        phaseId: "headbutt-impact-burst",
+        phaseName: "4. 충돌 폭발 & 넉백 전개",
+      },
+      // 5. 충돌 반동 및 잔향
+      {
+        ...baseFrame,
+        delay: 95,
+        ...cOff(24, -9),
+        ...(isHit ? cTargetOff(6, -2) : cTargetOff(0, 0)),
+        ...cTransform(0.95, 1.05, 0),
+        showEffect: isHit,
+        hitFlash: false,
+        enemyHp: a.enemyHpAfter,
+        playerHp: a.playerHpAfter,
+        moveStep: 4,
+        effectProgress: 1.0,
+        phaseId: "headbutt-rebound",
+        phaseName: "5. 충돌 반동 & 잔향",
+      },
+      // 6. 정위치 복귀
+      {
+        ...baseFrame,
+        delay: 80,
+        ...cOff(0, 0),
+        ...cTargetOff(0, 0),
+        ...cTransform(1.0, 1.0, 0),
         showEffect: false,
         hitFlash: false,
         enemyHp: a.enemyHpAfter,
         playerHp: a.playerHpAfter,
-        textLineIdx,
-        moveEffect: a,
+        moveStep: 5,
+        effectProgress: 1.0,
+        phaseId: "headbutt-finish",
+        phaseName: "6. 정위치 복귀",
       },
-      {
-        delay: 100,
-        pOffset: { x: 0, y: 0 },
-        eOffset: { x: 0, y: 0 },
-        showEffect: false,
-        hitFlash: false,
-        enemyHp: a.enemyHpAfter,
-        playerHp: a.playerHpAfter,
-        textLineIdx,
-        moveEffect: a,
-      }
     ];
   },
+  drawBehindEffect: (targetCtx: any, frame: BattleFrame, drawCtx: EffectDrawContext) => {
+    if (!frame.showEffect) return;
+    const { attackerPos, targetPos, isPlayer } = drawCtx;
+    const step = frame.moveStep ?? 1;
+    const prog = frame.effectProgress ?? 0.5;
+    const actOff = isPlayer ? (frame.pOffset ?? { x: 0, y: 0 }) : (frame.eOffset ?? { x: 0, y: 0 });
+    const curAttackerPos = { x: attackerPos.x + actOff.x, y: attackerPos.y + actOff.y };
+    drawTackleBehindEffect(targetCtx, curAttackerPos, targetPos, step, prog, isPlayer);
+  },
   drawEffect: (targetCtx: any, frame: BattleFrame, drawCtx: EffectDrawContext) => {
-    drawPhysicalImpactEffect(targetCtx, drawCtx.targetPos);
+    if (!frame.showEffect || !drawCtx.targetPos) return;
+    const { attackerPos, targetPos, isPlayer } = drawCtx;
+    const step = frame.moveStep ?? 3;
+    const prog = frame.effectProgress ?? 0.65;
+    const actOff = isPlayer ? (frame.pOffset ?? { x: 0, y: 0 }) : (frame.eOffset ?? { x: 0, y: 0 });
+    const curAttackerPos = { x: attackerPos.x + actOff.x, y: attackerPos.y + actOff.y };
+    drawTackleEffect(targetCtx, targetPos, curAttackerPos, step, prog, isPlayer);
   }
 };
