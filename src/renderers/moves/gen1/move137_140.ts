@@ -132,27 +132,25 @@ export function drawGlareEffect(
   else if (step === 5) dimA = 0.38;
   drawDimOverlay(targetCtx, dimA, "rgba(12, 10, 10, 0.82)");
 
-  // 2. 눈 중심 위치 계산 (전장 중앙 상공에서 대면)
+  // 2. 눈 중심 위치: 시전 포켓몬(Attacker) 바로 머리 위
   const ax = attackerPos.x + (isP ? (frame.pOffset?.x ?? 0) : (frame.eOffset?.x ?? 0));
   const ay = attackerPos.y + (isP ? (frame.pOffset?.y ?? 0) : (frame.eOffset?.y ?? 0));
-  const tx = targetPos.x + (isP ? (frame.eOffset?.x ?? 0) : (frame.pOffset?.x ?? 0));
-  const ty = targetPos.y + (isP ? (frame.eOffset?.y ?? 0) : (frame.pOffset?.y ?? 0));
 
-  const eyeCenterX = (ax + tx) * 0.5 + (isP ? 10 : -10);
-  const eyeBaseY = Math.min(ay, ty) - 18;
+  const eyeCenterX = ax;
+  const eyeBaseY = ay - 55;
 
-  // 3. 아래에서부터 붉은색 실선 상승 ➔ 눈 개안 시퀀스
+  // 3. 아래(시전자 몸체)에서부터 붉은색 실선 상승 ➔ 머리 위에서 눈 개안
   let riseOffsetY = 0;
   let openProg = 0;
   let eyeAlpha = 1.0;
 
   if (step === 1) {
-    // 1단계: 아래에서 붉은색 실선이 솟아오름
-    riseOffsetY = 40;
+    // 1단계: 시전자 몸체 부근에서 머리 위로 실선이 솟아오름
+    riseOffsetY = 30;
     openProg = 0.0;
     eyeAlpha = 0.85;
   } else if (step === 2) {
-    // 2단계: 실선이 눈 위치에 안착
+    // 2단계: 실선이 시전자 머리 위에 안착
     riseOffsetY = 0;
     openProg = 0.05;
     eyeAlpha = 0.95;
@@ -174,12 +172,12 @@ export function drawGlareEffect(
   }
 
   if (step >= 1 && step <= 5) {
-    const eyeSpacing = 42;
-    const eyeW = 54;
-    const eyeH = 28;
+    const eyeSpacing = 36;
+    const eyeW = 48;
+    const eyeH = 26;
     const curY = eyeBaseY + riseOffsetY;
 
-    // 좌안 & 우안 렌더링
+    // 좌안 & 우안 렌더링 (시전자 머리 위)
     drawSnakeEye(targetCtx, eyeCenterX - eyeSpacing, curY, eyeW, eyeH, openProg, eyeAlpha, true);
     drawSnakeEye(targetCtx, eyeCenterX + eyeSpacing, curY, eyeW, eyeH, openProg, eyeAlpha, false);
   }
