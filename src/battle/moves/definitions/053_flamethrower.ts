@@ -23,7 +23,7 @@ export const flamethrowerMove: BattleMoveAnimation = {
   nameEn: "Flamethrower",
   type: "fire",
   category: "special",
-  camera: { type: "target", zoom: 1.30 },
+  camera: { type: "target", zoom: 1.30, inlineGlideInFrames: 5 },
   drawBehindEffect: drawFlamethrowerBehindEffect,
   drawEffect: drawFlamethrowerEffect,
   buildFrames: (ctx: MoveContext): BattleFrame[] => {
@@ -64,7 +64,7 @@ export const flamethrowerMove: BattleMoveAnimation = {
       {
         ...baseFrame,
         delay: 80,
-        ...attackerShake(-3, 2),
+        ...attackerShake(-3, 1),
         showEffect: true,
         moveStep: 2,
         chargeIntensity: 1.0,
@@ -72,27 +72,27 @@ export const flamethrowerMove: BattleMoveAnimation = {
         phaseId: "flame-charge-2",
         phaseName: "2. 고열 플레어 폭발 및 분사 시작",
       },
-      // 3. 고압 화염 제트 기류 사출 (원추형 팽창 시작, 38% 전진)
+      // 3. 고압 화염 제트 기류 사출 (원추형 팽창 시작, 42% 전진)
       {
         ...baseFrame,
         delay: 75,
-        ...attackerShake(2, -1),
+        ...attackerShake(-1, 0),
         showEffect: true,
         moveStep: 3,
-        streamHead: 0.38,
+        streamHead: 0.42,
         streamTail: 0.0,
         streamAlpha: 1.0,
         phaseId: "flame-jet-start",
         phaseName: "3. 고압 화염 제트 기류 사출",
       },
-      // 4. 화염 스트림 맹렬한 팽창 및 가속 (78% 전진)
+      // 4. 화염 스트림 맹렬한 팽창 및 가속 (84% 전진)
       {
         ...baseFrame,
         delay: 75,
         ...attackerShake(1, 0),
         showEffect: true,
         moveStep: 4,
-        streamHead: 0.78,
+        streamHead: 0.84,
         streamTail: 0.0,
         streamAlpha: 1.0,
         phaseId: "flame-jet-travel",

@@ -1,219 +1,62 @@
-import { saveService, PartyPokemon, GameSlot } from "./saveService.js";
-import { MOVES_DATA, MoveData, getMoveData, getMoveKey } from "../data/movesKo.js";
-import { STARTER_DATABASE, StarterEntry } from "../data/starterCosts.js";
-import { POKEMON_SPECIES_DATA, SpeciesBaseData } from "../data/pokemonStats.js";
-import { POKEMON_NAMES_KO } from "../data/pokemonNamesKo.js";
-import { ITEMS_DATA } from "../data/itemsKo.js";
+import { saveService, PartyPokemon } from "./saveService.js";
 import { BallPerkId, BallPerkDefinition, BALL_PERK_DEFINITIONS, getAvailablePerksForTypes } from "../utils/perkSvgIcons.js";
+import type {
+  StatStages,
+  BattlePokemon,
+  TurnActionInfo,
+  BattleState
+} from "../battle/engine/types.js";
+import { createDefaultStages } from "../battle/engine/types.js";
+import { TYPE_CHART, getTypeEffectiveness } from "../battle/mechanics/typeChart.js";
+import { getStageMultiplier, getAccuracyMultiplier } from "../battle/mechanics/statModifier.js";
+import {
+  BIOME_ENCOUNTERS,
+  BOSS_ENCOUNTERS,
+  BASE_SPECIES_MAP,
+  getSpeciesData,
+  calculateStats,
+  spawnWildPokemon,
+  createPlayerBattleMon
+} from "../battle/entities/pokemonFactory.js";
+import { isSelfTargetStatusMove, applyTransform } from "../battle/moves/traits/specialStatusRegistry.js";
+import { attemptCatchPokemon } from "../battle/entities/catchManager.js";
+import { BattleEngine } from "../battle/engine/BattleEngine.js";
+import { STARTER_DATABASE } from "../data/starterCosts.js";
+import { POKEMON_SPECIES_DATA } from "../data/pokemonStats.js";
+import type { SpeciesBaseData } from "../data/pokemonStats.js";
+import { POKEMON_NAMES_KO } from "../data/pokemonNamesKo.js";
+import { getMoveData } from "../data/movesKo.js";
 
-export const TYPE_CHART: Record<string, Record<string, number>> = {
-  normal: { rock: 0.5, ghost: 0, steel: 0.5 },
-  fire: { fire: 0.5, water: 0.5, grass: 2, ice: 2, bug: 2, rock: 0.5, dragon: 0.5, steel: 2 },
-  water: { fire: 2, water: 0.5, grass: 0.5, ground: 2, rock: 2, dragon: 0.5 },
-  grass: { fire: 0.5, water: 2, grass: 0.5, poison: 0.5, ground: 2, flying: 0.5, bug: 0.5, rock: 2, dragon: 0.5, steel: 0.5 },
-  electric: { water: 2, grass: 0.5, electric: 0.5, ground: 0, flying: 2, dragon: 0.5 },
-  ice: { fire: 0.5, water: 0.5, grass: 2, ice: 0.5, ground: 2, flying: 2, dragon: 2, steel: 0.5 },
-  fighting: { normal: 2, ice: 2, poison: 0.5, flying: 0.5, psychic: 0.5, bug: 0.5, rock: 2, ghost: 0, dark: 2, steel: 2, fairy: 0.5 },
-  poison: { grass: 2, poison: 0.5, ground: 0.5, rock: 0.5, ghost: 0.5, steel: 0, fairy: 2 },
-  ground: { fire: 2, grass: 0.5, electric: 2, poison: 2, flying: 0, bug: 0.5, rock: 2, steel: 2 },
-  flying: { grass: 2, electric: 0.5, fighting: 2, bug: 2, rock: 0.5, steel: 0.5 },
-  psychic: { fighting: 2, poison: 2, psychic: 0.5, dark: 0, steel: 0.5 },
-  bug: { fire: 0.5, grass: 2, fighting: 0.5, poison: 0.5, flying: 0.5, psychic: 2, ghost: 0.5, dark: 2, steel: 0.5, fairy: 0.5 },
-  rock: { fire: 2, ice: 2, fighting: 0.5, ground: 0.5, flying: 2, bug: 2, steel: 0.5 },
-  ghost: { normal: 0, psychic: 2, ghost: 2, dark: 0.5 },
-  dragon: { dragon: 2, steel: 0.5, fairy: 0 },
-  dark: { fighting: 0.5, psychic: 2, ghost: 2, dark: 0.5, fairy: 0.5 },
-  steel: { fire: 0.5, water: 0.5, electric: 0.5, ice: 2, rock: 2, steel: 0.5, fairy: 2 },
-  fairy: { fire: 0.5, fighting: 2, poison: 0.5, dragon: 2, dark: 2, steel: 0.5 },
+// Re-export common types and constants for backwards compatibility
+export type {
+  StatStages,
+  BattlePokemon,
+  TurnActionInfo,
+  BattleState,
+  SpeciesBaseData
 };
 
-export interface StatStages {
-  atk: number;
-  def: number;
-  spa: number;
-  spd: number;
-  spe: number;
-  acc: number;
-  eva: number;
-}
-
-export function createDefaultStages(): StatStages {
-  return { atk: 0, def: 0, spa: 0, spd: 0, spe: 0, acc: 0, eva: 0 };
-}
-
-export interface BattlePokemon {
-  speciesId: string;
-  name: string;
-  nameKo: string;
-  nameEn?: string;
-  level: number;
-  hp: number;
-  maxHp: number;
-  atk: number;
-  def: number;
-  spAtk: number;
-  spDef: number;
-  speed: number;
-  types: string[];
-  moves: string[];
-  movePps?: number[];
-  ability?: string;
-  passiveAbility?: string;
-  stages: StatStages;
-  status?: "par" | "slp" | "psn" | "tox" | "brn" | "frz" | null;
-  sleepTurns?: number;
-  toxicCounter?: number;
-  isFlinched?: boolean;
-  isConfused?: boolean;
-  confusionTurns?: number;
-  substituteHp?: number;
-  isProtected?: boolean;
-  isTaunted?: boolean;
-  tauntTurns?: number;
-  isAttracted?: boolean;
-  cannotEscape?: boolean;
-  lastPhysicalDamageTakenThisTurn?: number;
-  disabledMove?: string | null;
-  disabledTurns?: number;
-  mistTurns?: number;
-
-  isTransformed?: boolean;
-  originalSpeciesId?: string;
-  originalTypes?: string[];
-  originalMoves?: string[];
-  transformedSpeciesId?: string;
-
-  hasIllusion?: boolean;
-  illusionTarget?: {
-    speciesId: string;
-    name: string;
-    nameKo: string;
-    isShiny?: boolean;
-  } | null;
-
-  chargingMove?: string | null;
-  isSemiInvulnerable?: boolean;
-  semiInvulnerableState?: "air" | "underground" | "underwater" | "shadow" | null;
-  mustRecharge?: boolean;
-
-trapState?: {
-    moveKey: string;
-    moveNameKo: string;
-    moveNameEn: string;
-    turnsLeft: number;
-  } | null;
-  isSeeded?: boolean;
-
-  isShiny?: boolean;
-  shinyTier?: number;
-  isBoss?: boolean;
-  bossShields?: number;
-  bossMaxShields?: number;
-  hasEndurePerk?: boolean;
-}
-
-export interface TurnActionInfo {
-  actor: "player" | "enemy";
-  moveKey: string;
-  moveName: string;
-  type: string;
-  isSpecial: boolean;
-  log: string;
-  enemyHpAfter: number;
-  playerHpAfter: number;
-  statChanges?: {
-    target: "player" | "enemy";
-    direction: "up" | "down";
-  }[];
-  typeMod?: number;
-  hitCount?: number;
-  isSuperEffective?: boolean;
-  damage?: number;
-  isHit?: boolean;
-  wasDescentFromAir?: boolean;
-  isTurn1Launch?: boolean;
-  chargingMove?: string | null;
-}
-
-export interface BattleState {
-  userId: string;
-  slotId: number;
-  wave: number;
-  biome: string;
-  gameMode: string;
-  enemy: BattlePokemon;
-  playerActiveIndex: number;
-  playerParty: PartyPokemon[];
-  playerBattleMon: BattlePokemon;
-  dialogueText: string;
-  phase: "MAIN" | "FIGHT" | "BAG" | "PARTY" | "VICTORY" | "DEFEAT";
-  turnCount: number;
-  money: number;
-  score: number;
-  playerExp: number;
-  playerMaxExp: number;
-  weather?: "sun" | "rain" | "sand" | "snow" | null;
-  weatherTurns?: number;
-  turnActions?: TurnActionInfo[];
-  lastMoveEffect?: {
-    moveKey: string;
-    moveName?: string;
-    type: string;
-    isSpecial: boolean;
-    isPlayerAttacking: boolean;
-    statChanges?: {
-      target: "player" | "enemy";
-      direction: "up" | "down";
-    }[];
-    wasDescentFromAir?: boolean;
-    hugTriggered?: boolean;
-  } | null;
-  pendingBallPerk?: BallPerkId | null;
-  activeBallPerk?: BallPerkId | null;
-  stickyWebTurns?: number;
-  rockSolidTurns?: number;
-  chillyTurns?: number;
-  dinosaurTurns?: number;
-  heatTimer?: number;
-  overchargeTurnCount?: number;
-  downfallTurnCount?: number;
-  hugTriggered?: boolean;
-  messageId?: string;
-}
-
-const BIOME_ENCOUNTERS: Record<string, string[]> = {
-  "Town": ["pidgey", "rattata", "zigzagoon", "sentret", "eevee", "meowth", "fletchling", "rookidee", "skwovet", "wooloo"],
-  "Plains": ["scyther", "shinx", "mareep", "taillow", "starly", "lechonk", "growlithe", "ponyta", "blitzle", "electrike"],
-  "Grass": ["oddish", "bellsprout", "budew", "cherubi", "caterpie", "weedle", "wurmple", "hoothoot", "bounsweet", "smoliv"],
-  "Forest": ["spinarak", "ledyba", "pineco", "nincada", "sewaddle", "venipede", "phantump", "pumpkaboo", "foongus", "morelull"],
-  "Cave": ["zubat", "geodude", "diglett", "machop", "roggenrola", "drilbur", "noibat", "gligar", "onix", "carbink"],
-  "Sea": ["magikarp", "tentacool", "poliwag", "psyduck", "marill", "buizel", "wingull", "horsea", "finizen", "chewtle"],
-  "Metropolis": ["magnemite", "voltorb", "porygon", "klink", "elekid", "grimer", "trubbish", "rotom", "charjabug", "varoom"],
-  "Dojo": ["mankey", "tyrogue", "makuhita", "meditite", "riolu", "timburr", "pancham", "crabrawler", "clobbopus", "heracross"],
-  "Volcano": ["slugma", "numel", "torkoal", "magby", "darumaka", "litwick", "salandit", "charcadet", "houndour", "sizzlipede"],
+export {
+  createDefaultStages,
+  TYPE_CHART,
+  getTypeEffectiveness,
+  getStageMultiplier,
+  getAccuracyMultiplier,
+  BIOME_ENCOUNTERS,
+  BOSS_ENCOUNTERS,
+  BASE_SPECIES_MAP,
+  getSpeciesData,
+  calculateStats,
+  spawnWildPokemon,
+  createPlayerBattleMon,
+  isSelfTargetStatusMove,
+  applyTransform
 };
 
-const BOSS_ENCOUNTERS: Record<number, string[]> = {
-  10: ["corviknight", "pidgeot", "raticate", "linoone", "ursaring"],
-  20: ["gyarados", "arcanine", "gengar", "machamp", "alakazam"],
-  30: ["dragonite", "salamence", "garchomp", "tyranitar", "hydreigon"],
-  50: ["zapdos", "articuno", "moltres", "raikou", "entei", "suicune"],
-  100: ["rayquaza", "mewtwo", "kyogre", "groudon"],
-  200: ["eternatus"],
-};
-
-export function getStageMultiplier(stage: number): number {
-  const s = Math.max(-6, Math.min(6, stage));
-  if (s >= 0) return (2 + s) / 2;
-  return 2 / (2 - s);
-}
-
-export function getAccuracyMultiplier(stage: number): number {
-  const s = Math.max(-6, Math.min(6, stage));
-  if (s >= 0) return (3 + s) / 3;
-  return 3 / (3 - s);
-}
-
+/**
+ * High-level Battle Service Facade.
+ * Bridges Discord events, save storage, and the modular BattleEngine.
+ */
 export class BattleService {
   private static instance: BattleService;
   private activeBattles: Map<string, BattleState> = new Map();
@@ -331,165 +174,19 @@ export class BattleService {
   }
 
   public getSpeciesData(speciesId: string): SpeciesBaseData {
-    const cleanId = speciesId.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    const found = POKEMON_SPECIES_DATA[cleanId] || POKEMON_SPECIES_DATA[cleanId.replace(/-/g, "")];
-    if (found) return found;
-
-    const starter = STARTER_DATABASE.find((s) => s.speciesId === speciesId);
-    if (starter) {
-      return {
-        num: starter.dexNumber,
-        name: starter.name,
-        types: starter.types.map((t) => t.charAt(0).toUpperCase() + t.slice(1)),
-        baseStats: { hp: 50, atk: 60, def: 55, spa: 60, spd: 55, spe: 55 },
-        abilities: { "0": starter.ability, "H": starter.hiddenAbility || "" },
-      };
-    }
-
-    return {
-      num: 1,
-      name: speciesId.charAt(0).toUpperCase() + speciesId.slice(1),
-      types: ["Normal"],
-      baseStats: { hp: 50, atk: 50, def: 50, spa: 50, spd: 50, spe: 50 },
-      abilities: { "0": "Run Away" },
-    };
+    return getSpeciesData(speciesId);
   }
 
   public calculateStats(speciesId: string, level: number, isBoss: boolean = false) {
-    const data = this.getSpeciesData(speciesId);
-    const { hp: bHp, atk: bAtk, def: bDef, spa: bSpa, spd: bSpd, spe: bSpe } = data.baseStats;
-
-    const iv = 31;
-    const hpMult = isBoss ? 2.0 : 1.0;
-
-    const maxHp = Math.floor((Math.floor(((2 * bHp + iv) * level) / 100) + level + 10) * hpMult);
-    const atk = Math.floor(((2 * bAtk + iv) * level) / 100) + 5;
-    const def = Math.floor(((2 * bDef + iv) * level) / 100) + 5;
-    const spAtk = Math.floor(((2 * bSpa + iv) * level) / 100) + 5;
-    const spDef = Math.floor(((2 * bSpd + iv) * level) / 100) + 5;
-    const speed = Math.floor(((2 * bSpe + iv) * level) / 100) + 5;
-
-    const types = data.types.map((t) => t.toLowerCase());
-
-    return { maxHp, atk, def, spAtk, spDef, speed, types };
+    return calculateStats(speciesId, level, isBoss);
   }
 
   public spawnWildPokemon(wave: number, biome: string, forcedSpecies?: string, forcedLevel?: number, forcedAbility?: string): BattlePokemon {
-    const isBoss = forcedSpecies?.includes("gmax") || forcedSpecies?.includes("mega") || (wave % 10 === 0 && !forcedSpecies);
-    const pool = isBoss ? (BOSS_ENCOUNTERS[wave] || BOSS_ENCOUNTERS[10]) : (BIOME_ENCOUNTERS[biome] || BIOME_ENCOUNTERS["Town"]);
-    const speciesId = forcedSpecies || pool[Math.floor(Math.random() * pool.length)] || "pidgey";
-
-    const sData = this.getSpeciesData(speciesId);
-    const starter = STARTER_DATABASE.find((s) => s.speciesId === speciesId);
-    let nameKo = POKEMON_NAMES_KO[sData.num] || starter?.nameKo || sData.name;
-    let name = sData.name;
-
-    if (speciesId === "inteleon-gmax" || speciesId === "inteleongmax" || speciesId === "inteleon-mega") {
-      nameKo = "인텔리온 (거다이맥스)";
-      name = "Inteleon [G-Max]";
-    } else if (speciesId.startsWith("testsubject") || speciesId.toLowerCase() === "test12") {
-      nameKo = "TEST12";
-      name = "TEST12";
-    }
-
-    const level = forcedLevel !== undefined
-      ? forcedLevel
-      : Math.max(2, Math.floor(wave * 1.2) + Math.floor(Math.random() * 2));
-    const isShiny = Math.random() < 0.05;
-
-    const stats = this.calculateStats(speciesId, level, isBoss);
-
-    let moves = starter?.starterMoves && starter.starterMoves.length > 0
-      ? starter.starterMoves.slice(0, 4)
-      : ["Tackle", "Growl", "Quick Attack", "Scratch"];
-
-    if (speciesId.includes("inteleon")) {
-      moves = ["Snipe Shot", "Hydro Pump", "Ice Beam", "Dark Pulse"];
-    }
-
-    return {
-      speciesId,
-      name,
-      nameKo,
-      level,
-      hp: stats.maxHp,
-      maxHp: stats.maxHp,
-      atk: stats.atk,
-      def: stats.def,
-      spAtk: stats.spAtk,
-      spDef: stats.spDef,
-      speed: stats.speed,
-      types: stats.types.length > 0 ? stats.types : ["normal"],
-      moves,
-      movePps: moves.map((m) => {
-        const mInfo = MOVES_DATA[m.toLowerCase().replace(/[\s_]+/g, "-")];
-        return mInfo?.pp || 20;
-      }),
-      ability: forcedAbility || sData.abilities["0"] || "Limber",
-      stages: createDefaultStages(),
-      isShiny,
-      isBoss,
-      bossShields: isBoss ? 2 : undefined,
-      bossMaxShields: isBoss ? 2 : undefined,
-    };
+    return spawnWildPokemon(wave, biome, forcedSpecies, forcedLevel, forcedAbility);
   }
 
   public createPlayerBattleMon(partyMon: PartyPokemon, fullParty: PartyPokemon[]): BattlePokemon {
-    const speciesId = partyMon.speciesId;
-    const sData = this.getSpeciesData(speciesId);
-    const starter = STARTER_DATABASE.find((s) => s.speciesId === speciesId);
-    const nameKo = POKEMON_NAMES_KO[sData.num] || starter?.nameKo || partyMon.name.replace(/^✨\s*/, "") || sData.name;
-    const name = sData.name;
-
-    const stats = this.calculateStats(speciesId, partyMon.level);
-    const moves = partyMon.moves && partyMon.moves.length > 0
-      ? partyMon.moves.filter((m) => m && m !== "---")
-      : (starter?.starterMoves || ["Tackle", "Growl"]);
-
-    const ability = partyMon.useHiddenAbility ? (starter?.hiddenAbility || sData.abilities["H"]) : (starter?.ability || sData.abilities["0"]);
-    const passiveAbility = partyMon.usePassive ? (starter?.passiveAbility || "Run Away") : undefined;
-
-    const battleMon: BattlePokemon = {
-      speciesId,
-      name: partyMon.name,
-      nameKo,
-      level: partyMon.level,
-      hp: partyMon.hp > 0 ? partyMon.hp : stats.maxHp,
-      maxHp: stats.maxHp,
-      atk: stats.atk,
-      def: stats.def,
-      spAtk: stats.spAtk,
-      spDef: stats.spDef,
-      speed: stats.speed,
-      types: stats.types,
-      moves,
-      movePps: moves.map((m) => {
-        const mInfo = MOVES_DATA[m.toLowerCase().replace(/[\s_]+/g, "-")];
-        return mInfo?.pp || 20;
-      }),
-      ability,
-      passiveAbility,
-      stages: createDefaultStages(),
-      isShiny: partyMon.isShiny || (partyMon.shinyTier !== undefined && partyMon.shinyTier > 0),
-      shinyTier: partyMon.shinyTier,
-    };
-
-    if (ability === "Illusion" || passiveAbility === "Illusion") {
-      const lastPartyMon = [...fullParty].reverse().find((p) => p.speciesId !== speciesId && p.hp > 0);
-      if (lastPartyMon) {
-        const tData = this.getSpeciesData(lastPartyMon.speciesId);
-        const tStarter = STARTER_DATABASE.find((s) => s.speciesId === lastPartyMon.speciesId);
-        battleMon.hasIllusion = true;
-        battleMon.illusionTarget = {
-          speciesId: lastPartyMon.speciesId,
-          name: lastPartyMon.name,
-          nameKo: POKEMON_NAMES_KO[tData.num] || tStarter?.nameKo || lastPartyMon.name,
-          isShiny: lastPartyMon.isShiny,
-        };
-      }
-    }
-
-    return battleMon;
+    return createPlayerBattleMon(partyMon, fullParty);
   }
 
   public getOrCreateBattle(
@@ -513,15 +210,28 @@ export class BattleService {
       if (currentLeader) {
         const movesChanged = JSON.stringify(existing.playerBattleMon.moves) !== JSON.stringify(currentLeader.moves);
         const speciesOrLevelChanged = existing.playerBattleMon.speciesId !== currentLeader.speciesId || existing.playerBattleMon.level !== currentLeader.level;
-        if (movesChanged || speciesOrLevelChanged) {
+        const ppRestored = currentLeader.movePps && (
+          !existing.playerBattleMon.movePps ||
+          currentLeader.movePps.some((pp: number, idx: number) => pp > (existing!.playerBattleMon.movePps?.[idx] ?? 0))
+        );
+        const hpHealed = currentLeader.hp > existing.playerBattleMon.hp;
+        if (movesChanged || speciesOrLevelChanged || ppRestored || hpHealed) {
+          const oldStages = existing.playerBattleMon.stages;
+          const oldStatus = hpHealed ? null : existing.playerBattleMon.status;
           existing.playerParty = slot.party;
           existing.playerBattleMon = this.createPlayerBattleMon(currentLeader, slot.party);
+          if (!hpHealed && !speciesOrLevelChanged && !movesChanged) {
+            existing.playerBattleMon.stages = oldStages;
+            existing.playerBattleMon.status = oldStatus;
+          }
         }
       }
       return existing;
     }
 
-    const wildPokemon = this.spawnWildPokemon(slot.wave, slot.biome || "Town");
+    const wildPokemon = (slot as any).enemy
+      ? { ...(slot as any).enemy, stages: { ...((slot as any).enemy.stages || createDefaultStages()) } }
+      : this.spawnWildPokemon(slot.wave, slot.biome || "Town");
     const isKo = profile.language === "ko";
 
     const activeIndex = (preservedActiveIndex !== undefined && slot.party[preservedActiveIndex])
@@ -529,12 +239,12 @@ export class BattleService {
       : 0;
 
     const activeLeader = slot.party[activeIndex] || slot.party[0] || {
-      speciesId: "bulbasaur",
-      name: "이상해씨",
+      speciesId: "lucario",
+      name: "루카리오",
       level: 5,
       hp: 20,
       maxHp: 20,
-      moves: ["Tackle", "Growl", "Vine Whip", "Leech Seed"],
+      moves: ["Aura Sphere", "Close Combat", "Extreme Speed", "Meteor Mash"],
     };
 
     const playerBattleMon = this.createPlayerBattleMon(activeLeader, slot.party);
@@ -590,1850 +300,25 @@ export class BattleService {
   }
 
   public applyTransform(user: BattlePokemon, target: BattlePokemon) {
-    user.isTransformed = true;
-    user.originalSpeciesId = user.speciesId;
-    user.originalTypes = [...user.types];
-    user.originalMoves = [...user.moves];
-    user.transformedSpeciesId = target.speciesId;
-
-    user.types = [...target.types];
-    user.atk = target.atk;
-    user.def = target.def;
-    user.spAtk = target.spAtk;
-    user.spDef = target.spDef;
-    user.speed = target.speed;
-    user.stages = { ...target.stages };
-    user.moves = [...target.moves];
-    user.movePps = target.moves.map(() => 5);
+    applyTransform(user, target);
   }
 
   public getTypeEffectiveness(moveType: string, targetTypes: string[]): number {
-    let multiplier = 1.0;
-    const chart = TYPE_CHART[moveType.toLowerCase()];
-    if (!chart) return multiplier;
-
-    for (const t of targetTypes) {
-      const mod = chart[t.toLowerCase()];
-      if (mod !== undefined) {
-        multiplier *= mod;
-      }
-    }
-    return multiplier;
+    return getTypeEffectiveness(moveType, targetTypes);
   }
 
   public isSelfTargetStatusMove(moveName: string): boolean {
-    const k = moveName.toLowerCase().replace(/[\s_]+/g, "-");
-    const selfMoves = new Set([
-      "swords-dance", "dragon-dance", "calm-mind", "nasty-plot", "bulk-up", "quiver-dance",
-      "agility", "rock-polish", "iron-defense", "amnesia", "acid-armor", "barrier", "growth",
-      "tail-glow", "belly-drum", "shell-smash", "shift-gear", "coil", "hone-claws", "work-up",
-      "charge", "autotomize", "sharpen", "meditate", "harden", "withdraw", "defense-curl",
-      "minimize", "double-team", "protect", "detect", "spiky-shield", "baneful-bunker",
-      "substitute", "endure", "quick-guard", "wide-guard", "recover", "roost", "soft-boiled",
-      "slack-off", "milk-drink", "synthesis", "moonlight", "morning-sun", "heal-order",
-      "shore-up", "life-dew", "wish", "rest", "swallow", "stockpile", "ingrain", "aqua-ring",
-      "rain-dance", "sunny-day", "sandstorm", "snowscape", "hail", "electric-terrain",
-      "grassy-terrain", "misty-terrain", "psychic-terrain", "tailwind", "trick-room",
-      "reflect", "light-screen", "aurora-veil", "safeguard", "mist", "haze", "refresh",
-      "heal-bell", "aromatherapy", "splash"
-    ]);
-    return selfMoves.has(k);
+    return isSelfTargetStatusMove(moveName);
   }
 
   public executePlayerMove(userId: string, slotId: number, moveKey: string, lang: "ko" | "en" = "ko"): BattleState {
     const battle = this.getOrCreateBattle(userId, slotId);
-    const playerMon = battle.playerBattleMon;
-    const enemyMon = battle.enemy;
-
-    if (!playerMon || playerMon.hp <= 0 || enemyMon.hp <= 0) return battle;
-
-    const isKo = lang === "ko";
-    const pMoveKey = getMoveKey(moveKey);
-    const pMove = getMoveData(pMoveKey) || {
-      id: 0,
-      name: pMoveKey,
-      nameKo: moveKey,
-      type: "normal",
-      power: 40,
-      accuracy: 100,
-      pp: 35,
-      category: "physical",
-      description: "기본 공격 기술",
-    };
-
-    let eMoveKey: string;
-    let eMove: any;
-    if (enemyMon.chargingMove) {
-      eMoveKey = enemyMon.chargingMove;
-      eMove = getMoveData(eMoveKey) || {
-        id: 0,
-        name: eMoveKey,
-        nameKo: eMoveKey,
-        type: "normal",
-        power: 40,
-        accuracy: 100,
-        pp: 35,
-        category: "physical",
-        description: "기본 공격 기술",
-      };
-    } else {
-      const eMoveRaw = enemyMon.moves[Math.floor(Math.random() * enemyMon.moves.length)] || "Tackle";
-      eMoveKey = getMoveKey(eMoveRaw);
-      eMove = getMoveData(eMoveRaw) || {
-        id: 0,
-        name: eMoveKey,
-        nameKo: eMoveRaw,
-        type: "normal",
-        power: 40,
-        accuracy: 100,
-        pp: 35,
-        category: "physical",
-        description: "기본 공격 기술",
-      };
-    }
-
-    const isPlayerChargingSame = playerMon.chargingMove && (playerMon.chargingMove === pMoveKey);
-    if (!isPlayerChargingSame) {
-      if (!playerMon.movePps || playerMon.movePps.length !== playerMon.moves.length) {
-        playerMon.movePps = playerMon.moves.map(m => getMoveData(m)?.pp || 20);
-      }
-      const pMoveIdx = playerMon.moves.findIndex(m => getMoveKey(m) === pMoveKey);
-      if (pMoveIdx !== -1 && playerMon.movePps && playerMon.movePps[pMoveIdx] !== undefined) {
-        playerMon.movePps[pMoveIdx] = Math.max(0, playerMon.movePps[pMoveIdx] - 1);
-      }
-      if (battle.playerParty[battle.playerActiveIndex]) {
-        battle.playerParty[battle.playerActiveIndex].movePps = [...playerMon.movePps];
-      }
-    }
-
-    const pPriority = this.getMovePriority(pMoveKey);
-    const ePriority = this.getMovePriority(eMoveKey);
-
-    const pSpeed = playerMon.speed * getStageMultiplier(playerMon.stages.spe) * (playerMon.status === "par" ? 0.5 : 1.0);
-    const eSpeed = enemyMon.speed * getStageMultiplier(enemyMon.stages.spe) * (enemyMon.status === "par" ? 0.5 : 1.0);
-
-    let playerGoesFirst = true;
-    if (battle.pendingBallPerk === "sky_flight" && (pMove.type || "").toLowerCase() === "flying") {
-      playerGoesFirst = true;
-    } else if (pPriority > ePriority) {
-      playerGoesFirst = true;
-    } else if (pPriority < ePriority) {
-      playerGoesFirst = false;
-    } else {
-      playerGoesFirst = pSpeed >= eSpeed;
-    }
-
-    let turnLogs: string[] = [];
-
-    playerMon.isProtected = false;
-    enemyMon.isProtected = false;
-    playerMon.isFlinched = false;
-    playerMon.lastPhysicalDamageTakenThisTurn = 0;
-    enemyMon.lastPhysicalDamageTakenThisTurn = 0;
-
-    if (battle.pendingBallPerk) {
-      const pId = battle.pendingBallPerk;
-      const def = BALL_PERK_DEFINITIONS[pId];
-      if (def && ["surveillance", "acid_dissolve", "sticky_web", "rock_solid", "chilly", "dinosaur", "heat", "overcharge", "downfall"].includes(pId)) {
-        const msg = isKo
-          ? (pId === "acid_dissolve" ? "[PERK:acid_dissolve] 용액으로 상대의 랭크업을 모두 제거했다!"
-             : pId === "surveillance" ? "[PERK:surveillance] 감시 효과로 상대는 교체할 수 없다!"
-             : pId === "sticky_web" ? "[PERK:sticky_web] 바닥에 끈적끈적한 실을 깔았다!"
-             : pId === "rock_solid" ? "[PERK:rock_solid] 단단한 돌멩이의 가호로 3턴간 받는 피해가 50% 감소한다!"
-             : pId === "chilly" ? "[PERK:chilly] 얼어붙은 한기가 전장을 뒤덮어 상대 스피드가 1랭크 하락했다!"
-             : pId === "dinosaur" ? "[PERK:dinosaur] 고대 공룡의 기운으로 3턴간 드래곤 외 기술 위력이 약화된다!"
-             : pId === "heat" ? "[PERK:heat] 작열하는 열기로 2턴간 공격과 특수공격이 2랭크 상승했다!"
-             : pId === "overcharge" ? "[PERK:overcharge] 과충전 상태가 되어 스피드+2, 공격+1, 특공+1 상승했다!"
-             : "[PERK:downfall] 몰락의 힘으로 특수공격+4, 스피드+2 대폭 상승했다!")
-          : (pId === "acid_dissolve" ? "[PERK:acid_dissolve] Dissolved all stat boosts of the opponent!"
-             : pId === "surveillance" ? "[PERK:surveillance] Trapped the opponent with Surveillance!"
-             : pId === "sticky_web" ? "[PERK:sticky_web] Laid down a Sticky Web!"
-             : pId === "rock_solid" ? "[PERK:rock_solid] Pebble protection reduces damage by 50% for 3 turns!"
-             : pId === "chilly" ? "[PERK:chilly] Freezing chill engulfed the field, lowering foe's Speed by 1 stage!"
-             : pId === "dinosaur" ? "[PERK:dinosaur] Ancient dinosaur presence weakens non-Dragon moves for 3 turns!"
-             : pId === "heat" ? "[PERK:heat] Blazing heat boosted Atk and Sp.Atk by 2 stages for 2 turns!"
-             : pId === "overcharge" ? "[PERK:overcharge] Overcharge boosted Speed +2, Atk +1, Sp.Atk +1!"
-             : "[PERK:downfall] Downfall sharply boosted Sp.Atk +4 and Speed +2!");
-        turnLogs.push(msg);
-        battle.pendingBallPerk = null;
-      } else if (pId === "hug") {
-        turnLogs.push(isKo ? `[PERK:hug] ${playerMon.nameKo || playerMon.name}(은)는 당신을 포옹하고 돌아갔다.` : `[PERK:hug] ${playerMon.name} hugged you and returned.`);
-        battle.hugTriggered = true;
-        battle.pendingBallPerk = null;
-      } else if (["confuse", "flinch", "taunt", "attract", "willpower"].includes(pId)) {
-        battle.pendingBallPerk = null;
-      }
-    }
-
-    const turnActions: TurnActionInfo[] = [];
-
-    const firstActor = playerGoesFirst ? playerMon : enemyMon;
-    const firstMove = playerGoesFirst ? pMove : eMove;
-    const secondActor = playerGoesFirst ? enemyMon : playerMon;
-    const secondMove = playerGoesFirst ? eMove : pMove;
-    const isFirstPlayer = playerGoesFirst;
-
-    const firstActorWasAir = (firstActor as any).semiInvulnerableState === "air" || (firstActor as any).chargingMove === "fly";
-    const secondActorWasAir = (secondActor as any).semiInvulnerableState === "air" || (secondActor as any).chargingMove === "fly";
-
-    const statChanges1: { target: "player" | "enemy"; direction: "up" | "down" }[] = [];
-    battle.lastMoveEffect = {
-      moveKey: isFirstPlayer ? pMoveKey : eMoveKey,
-      moveName: firstMove.name,
-      type: firstMove.type || "normal",
-      isSpecial: firstMove.category === "special",
-      isPlayerAttacking: isFirstPlayer,
-      statChanges: statChanges1,
-      wasDescentFromAir: firstActorWasAir,
-    };
-
-    if (firstActor.isFlinched) {
-      firstActor.isFlinched = false;
-      const fName = isFirstPlayer ? firstActor.name : (isKo ? firstActor.nameKo : firstActor.name);
-      turnLogs.push(isKo ? `[PERK:flinch] ${fName}(은)는 압도되어 풀이 죽어 움직일 수 없다!` : `[PERK:flinch] ${fName} flinched!`);
-      turnActions.push({
-        actor: isFirstPlayer ? "player" : "enemy",
-        moveKey: isFirstPlayer ? pMoveKey : eMoveKey,
-        moveName: firstMove.name,
-        type: firstMove.type || "normal",
-        isSpecial: false,
-        log: isKo ? `[PERK:flinch] ${fName}(은)는 풀이 죽어 움직일 수 없다!` : `[PERK:flinch] ${fName} flinched!`,
-        enemyHpAfter: enemyMon.hp,
-        playerHpAfter: playerMon.hp,
-        damage: 0,
-        isHit: false,
-      });
-    } else {
-      const res1 = this.executeSingleAction(firstActor, secondActor, firstMove, isFirstPlayer, isKo, battle);
-      turnLogs.push(res1.log);
-
-      const isHit1 = (res1.damage ?? 0) > 0 || (res1.hitCount ?? 0) > 0 || (!res1.log.includes("빗나갔다") && !res1.log.includes("missed") && !res1.log.includes("효과가 없는") && !res1.log.includes("닿지 않았다"));
-      const isTurn1Launch1 = (res1.damage ?? 0) === 0 && Boolean(
-        res1.log.includes("날아올랐다") || res1.log.includes("flew up") ||
-        res1.log.includes("파고들었다") || res1.log.includes("burrowed") ||
-        res1.log.includes("잠수했다") || res1.log.includes("underwater") ||
-        res1.log.includes("모습을 감췄다") || res1.log.includes("vanished") ||
-        res1.log.includes("튀어올랐다") || res1.log.includes("bounced") ||
-        res1.log.includes("빛을 흡수") || res1.log.includes("sunlight") ||
-        res1.log.includes("칼바람을 일으켰다") || res1.log.includes("whirlwind") ||
-        firstActor.chargingMove
-      );
-
-      const rawKey1 = isFirstPlayer ? pMoveKey : eMoveKey;
-      const finalKey1 = (rawKey1 === "solar-beam" && isTurn1Launch1) ? "solar-beam-charge" : rawKey1;
-
-      turnActions.push({
-        actor: isFirstPlayer ? "player" : "enemy",
-        moveKey: finalKey1,
-        moveName: firstMove.name,
-        type: firstMove.type || "normal",
-        isSpecial: firstMove.category === "special",
-        log: res1.log,
-        enemyHpAfter: enemyMon.hp,
-        playerHpAfter: playerMon.hp,
-        statChanges: battle.lastMoveEffect?.statChanges ? [...battle.lastMoveEffect.statChanges] : [],
-        typeMod: res1.typeMod,
-        hitCount: res1.hitCount,
-        isSuperEffective: res1.isSuperEffective,
-        damage: res1.damage,
-        isHit: isHit1,
-        wasDescentFromAir: firstActorWasAir,
-        isTurn1Launch: isTurn1Launch1,
-        chargingMove: firstActor.chargingMove || undefined,
-      });
-    }
-
-    if (secondActor.hp > 0 && battle.phase !== "VICTORY" && battle.phase !== "DEFEAT") {
-      if (secondActor.isFlinched) {
-        secondActor.isFlinched = false;
-        const sName = !isFirstPlayer ? secondActor.name : (isKo ? secondActor.nameKo : secondActor.name);
-        turnLogs.push(isKo ? `[PERK:flinch] ${sName}(은)는 압도되어 풀이 죽어 움직일 수 없다!` : `[PERK:flinch] ${sName} flinched!`);
-      } else {
-        const statChanges2: { target: "player" | "enemy"; direction: "up" | "down" }[] = [];
-        battle.lastMoveEffect = {
-          moveKey: !isFirstPlayer ? pMoveKey : eMoveKey,
-          moveName: secondMove.name,
-          type: secondMove.type || "normal",
-          isSpecial: secondMove.category === "special",
-          isPlayerAttacking: !isFirstPlayer,
-          statChanges: statChanges2,
-          wasDescentFromAir: secondActorWasAir,
-        };
-
-        const res2 = this.executeSingleAction(secondActor, firstActor, secondMove, !isFirstPlayer, isKo, battle);
-        turnLogs.push(res2.log);
-
-        const isHit2 = (res2.damage ?? 0) > 0 || (res2.hitCount ?? 0) > 0 || (!res2.log.includes("빗나갔다") && !res2.log.includes("missed") && !res2.log.includes("효과가 없는") && !res2.log.includes("닿지 않았다"));
-        const isTurn1Launch2 = (res2.damage ?? 0) === 0 && Boolean(
-          res2.log.includes("날아올랐다") || res2.log.includes("flew up") ||
-          res2.log.includes("파고들었다") || res2.log.includes("burrowed") ||
-          res2.log.includes("잠수했다") || res2.log.includes("underwater") ||
-          res2.log.includes("모습을 감췄다") || res2.log.includes("vanished") ||
-          res2.log.includes("튀어올랐다") || res2.log.includes("bounced") ||
-          res2.log.includes("빛을 흡수") || res2.log.includes("sunlight") ||
-          res2.log.includes("칼바람을 일으켰다") || res2.log.includes("whirlwind") ||
-          secondActor.chargingMove
-        );
-
-        const rawKey2 = !isFirstPlayer ? pMoveKey : eMoveKey;
-        const finalKey2 = (rawKey2 === "solar-beam" && isTurn1Launch2) ? "solar-beam-charge" : rawKey2;
-
-        turnActions.push({
-          actor: !isFirstPlayer ? "player" : "enemy",
-          moveKey: finalKey2,
-          moveName: secondMove.name,
-          type: secondMove.type || "normal",
-          isSpecial: secondMove.category === "special",
-          log: res2.log,
-          enemyHpAfter: enemyMon.hp,
-          playerHpAfter: playerMon.hp,
-          statChanges: battle.lastMoveEffect?.statChanges ? [...battle.lastMoveEffect.statChanges] : [],
-          typeMod: res2.typeMod,
-          hitCount: res2.hitCount,
-          isSuperEffective: res2.isSuperEffective,
-          damage: res2.damage,
-          isHit: isHit2,
-          wasDescentFromAir: secondActorWasAir,
-          isTurn1Launch: isTurn1Launch2,
-          chargingMove: secondActor.chargingMove || undefined,
-        });
-      }
-    }
-
-    battle.turnActions = turnActions;
-
-    this.processTurnEndEffects(playerMon, isKo, turnLogs, battle.weather, battle);
-    this.processTurnEndEffects(enemyMon, isKo, turnLogs, battle.weather, battle);
-
-    if (battle.weather && battle.weatherTurns) {
-      battle.weatherTurns -= 1;
-      if (battle.weatherTurns <= 0) {
-        battle.weather = null;
-        battle.weatherTurns = undefined;
-        turnLogs.push(isKo ? `날씨가 원래대로 돌아왔다!` : `The weather returned to normal!`);
-      }
-    }
-
-    battle.playerParty[battle.playerActiveIndex].hp = playerMon.hp;
-
-    if (enemyMon.hp <= 0) {
-      battle.phase = "VICTORY";
-      const expGain = Math.floor(enemyMon.level * 15);
-      const moneyGain = Math.floor(enemyMon.level * 120);
-      battle.money += moneyGain;
-      battle.score += enemyMon.level * 10;
-      battle.playerExp += expGain;
-
-      turnLogs.push(
-        isKo
-          ? `상대 ${enemyMon.nameKo}(이)가 쓰러졌다! 획득: +P ${moneyGain.toLocaleString()} | +${expGain} EXP`
-          : `Foe ${enemyMon.name} fainted! Won: +P ${moneyGain.toLocaleString()} | +${expGain} EXP`
-      );
-
-      if (battle.playerExp >= battle.playerMaxExp) {
-        playerMon.level += 1;
-        const newStats = this.calculateStats(playerMon.speciesId, playerMon.level);
-        playerMon.maxHp = newStats.maxHp;
-        playerMon.hp = Math.min(playerMon.maxHp, playerMon.hp + 5);
-        playerMon.atk = newStats.atk;
-        playerMon.def = newStats.def;
-        playerMon.spAtk = newStats.spAtk;
-        playerMon.spDef = newStats.spDef;
-        playerMon.speed = newStats.speed;
-        battle.playerExp = 0;
-        battle.playerMaxExp = playerMon.level * 15;
-        battle.playerParty[battle.playerActiveIndex].level = playerMon.level;
-        battle.playerParty[battle.playerActiveIndex].hp = playerMon.hp;
-        battle.playerParty[battle.playerActiveIndex].maxHp = playerMon.maxHp;
-        turnLogs.push(isKo ? `${playerMon.name}의 레벨이 ${playerMon.level}(으)로 올랐다!` : `${playerMon.name} grew to Lv. ${playerMon.level}!`);
-      }
-    } else if (playerMon.hp <= 0) {
-      const aliveIdx = battle.playerParty.findIndex((p) => p.hp > 0);
-      if (aliveIdx >= 0) {
-        battle.playerActiveIndex = aliveIdx;
-        battle.playerBattleMon = this.createPlayerBattleMon(battle.playerParty[aliveIdx], battle.playerParty);
-        turnLogs.push(
-          isKo
-            ? `${playerMon.name}(이)가 쓰러졌다! 가랏, ${battle.playerBattleMon.name}!`
-            : `${playerMon.name} fainted! Go, ${battle.playerBattleMon.name}!`
-        );
-      } else {
-        battle.phase = "DEFEAT";
-        turnLogs.push(isKo ? `모든 포켓몬이 쓰러졌다... 눈앞이 캄캄해졌다!` : `All Pokémon fainted... You blacked out!`);
-      }
-    }
-
-    if (battle.phase !== "VICTORY" && battle.phase !== "DEFEAT") {
-      const activeMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
-      if (activeMon?.chargingMove) {
-        battle.phase = "FIGHT";
-      } else {
-        battle.phase = "MAIN";
-      }
-    }
-
-    if (battle.stickyWebTurns && battle.stickyWebTurns > 0) {
-      battle.stickyWebTurns -= 1;
-      if (battle.stickyWebTurns === 0) {
-        turnLogs.push(isKo ? "[PERK:sticky_web] 바닥에 깔려있던 끈적끈적한 실이 사라졌다." : "[PERK:sticky_web] The sticky web dissipated.");
-      }
-    }
-    if (battle.rockSolidTurns && battle.rockSolidTurns > 0) {
-      battle.rockSolidTurns -= 1;
-      if (battle.rockSolidTurns === 0) {
-        turnLogs.push(isKo ? "[PERK:rock_solid] 돌멩이의 방어 효과가 끝났다." : "[PERK:rock_solid] The pebble protection wore off.");
-      }
-    }
-    if (battle.chillyTurns && battle.chillyTurns > 0) {
-      battle.chillyTurns -= 1;
-      if (battle.chillyTurns === 0) {
-        turnLogs.push(isKo ? "[PERK:chilly] 얼어붙은 한기가 가라앉았다." : "[PERK:chilly] The freezing chill settled down.");
-      }
-    }
-    if (battle.dinosaurTurns && battle.dinosaurTurns > 0) {
-      battle.dinosaurTurns -= 1;
-      if (battle.dinosaurTurns === 0) {
-        turnLogs.push(isKo ? "[PERK:dinosaur] 고대 공룡의 기운이 사라졌다." : "[PERK:dinosaur] The ancient dinosaur presence faded.");
-      }
-    }
-    if (battle.heatTimer && battle.heatTimer > 0) {
-      battle.heatTimer -= 1;
-      if (battle.heatTimer === 0) {
-        playerMon.stages.atk = Math.max(-6, playerMon.stages.atk - 1);
-        playerMon.stages.spa = Math.max(-6, playerMon.stages.spa - 1);
-        turnLogs.push(isKo ? "[PERK:heat] 열기가 식으며 공격과 특수공격이 1랭크 하락했다!" : "[PERK:heat] Heat cooled down, lowering Atk and Sp.Atk by 1 stage!");
-      }
-    }
-    if (battle.overchargeTurnCount !== undefined) {
-      battle.overchargeTurnCount += 1;
-      if (battle.overchargeTurnCount === 1) {
-        playerMon.stages.spa = Math.min(6, playerMon.stages.spa + 1);
-        turnLogs.push(isKo ? "[PERK:overcharge] 과충전의 여파로 특수공격이 1랭크 추가 상승했다!" : "[PERK:overcharge] Overcharge surge increased Sp.Atk by 1 stage!");
-      } else if (battle.overchargeTurnCount >= 3) {
-        playerMon.stages.spe = Math.max(-6, playerMon.stages.spe - 4);
-        battle.overchargeTurnCount = undefined;
-        turnLogs.push(isKo ? "[PERK:overcharge] 과충전 방전으로 스피드가 4랭크 급격히 하락했다!" : "[PERK:overcharge] Overcharge discharge severely lowered Speed by 4 stages!");
-      }
-    }
-    if (battle.downfallTurnCount !== undefined) {
-      battle.downfallTurnCount += 1;
-      if (battle.downfallTurnCount === 1) {
-        playerMon.stages.spe = Math.max(-6, playerMon.stages.spe - 3);
-        turnLogs.push(isKo ? "[PERK:downfall] 몰락의 대가로 스피드가 3랭크 하락했다!" : "[PERK:downfall] Downfall effect lowered Speed by 3 stages!");
-      } else if (battle.downfallTurnCount >= 4) {
-        playerMon.stages.spa = Math.max(-6, playerMon.stages.spa - 6);
-        battle.downfallTurnCount = undefined;
-        turnLogs.push(isKo ? "[PERK:downfall] 완전한 몰락으로 특수공격이 6랭크 급락했다!" : "[PERK:downfall] Utter downfall sharply plummeted Sp.Atk by 6 stages!");
-      }
-    }
-    if (enemyMon.isTaunted && enemyMon.tauntTurns) {
-      enemyMon.tauntTurns -= 1;
-      if (enemyMon.tauntTurns <= 0) {
-        enemyMon.isTaunted = false;
-        enemyMon.tauntTurns = 0;
-      }
-    }
-
-    battle.dialogueText = turnLogs.join("\n");
-    battle.turnCount += 1;
-
-    saveService.updateSlot(userId, slotId, {
-      party: battle.playerParty,
-      money: battle.money,
-      score: battle.score,
-    });
-
-    return battle;
-  }
-
-  private executeSingleAction(
-    actor: BattlePokemon,
-    target: BattlePokemon,
-    move: MoveData,
-    isActorPlayer: boolean,
-    isKo: boolean,
-    battle?: BattleState
-  ): { log: string; damage: number; typeMod?: number; hitCount?: number; isSuperEffective?: boolean } {
-    const actorName = isActorPlayer ? actor.name : (isKo ? actor.nameKo : actor.name);
-    const targetName = isActorPlayer ? (isKo ? target.nameKo : target.name) : target.name;
-    const moveName = isKo ? move.nameKo : move.name.toUpperCase();
-
-    if (actor.mustRecharge) {
-      actor.mustRecharge = false;
-      return {
-        log: isKo ? `${actorName}(은)는 반동으로 움직일 수 없다!` : `${actorName} must recharge!`,
-        damage: 0,
-      };
-    }
-
-    if (actor.status === "slp") {
-      actor.sleepTurns = (actor.sleepTurns || 0) + 1;
-      if (actor.sleepTurns >= 3 || Math.random() < 0.33) {
-        actor.status = null;
-        actor.sleepTurns = 0;
-        return { log: isKo ? `${actorName}(은)는 잠에서 깨어났다!` : `${actorName} woke up!`, damage: 0 };
-      } else {
-        return { log: isKo ? `${actorName}(은)는 쿨쿨 잠들어 있다...` : `${actorName} is fast asleep!`, damage: 0 };
-      }
-    }
-
-    if (actor.status === "frz") {
-      if (Math.random() < 0.2) {
-        actor.status = null;
-        return { log: isKo ? `${actorName}의 얼음이 녹았다!` : `${actorName} thawed out!`, damage: 0 };
-      } else {
-        return { log: isKo ? `${actorName}(은)는 얼어붙어서 움직일 수 없다!` : `${actorName} is frozen solid!`, damage: 0 };
-      }
-    }
-
-    if (actor.status === "par" && Math.random() < 0.25) {
-      return { log: isKo ? `${actorName}(은)는 몸이 저려서 움직일 수 없다!` : `${actorName} is fully paralyzed!`, damage: 0 };
-    }
-
-    if (actor.isAttracted && Math.random() < 0.5) {
-      return {
-        log: isKo
-          ? `[PERK:attract] ${actorName}(은)는 헤롱헤롱 상태에 빠져 몸을 움직일 수 없다!`
-          : `[PERK:attract] ${actorName} is immobilized by love!`,
-        damage: 0,
-      };
-    }
-
-    if (actor.isConfused) {
-      actor.confusionTurns = (actor.confusionTurns || 3) - 1;
-      if (actor.confusionTurns <= 0) {
-        actor.isConfused = false;
-        actor.confusionTurns = 0;
-      } else if (Math.random() < 0.33) {
-        const confDmg = Math.max(1, Math.floor((((2 * actor.level / 5 + 2) * 40 * actor.atk / Math.max(1, actor.def)) / 50) + 2));
-        actor.hp = Math.max(0, actor.hp - confDmg);
-        return {
-          log: isKo
-            ? `[PERK:confuse] ${actorName}(은)는 혼란에 빠져 있다!\n혼란으로 인해 자신을 공격했다! (-${confDmg})`
-            : `[PERK:confuse] ${actorName} is confused!\nIt hurt itself in confusion! (-${confDmg})`,
-          damage: 0,
-        };
-      }
-    }
-
-    let activeMove = move;
-    if (move.name === "metronome" || move.nameKo === "손가락흔들기") {
-      const allMoveKeys = Object.keys(MOVES_DATA);
-      const randomKey = allMoveKeys[Math.floor(Math.random() * allMoveKeys.length)];
-      activeMove = MOVES_DATA[randomKey] || move;
-    }
-
-    if (actor.isTaunted && activeMove.category === "status") {
-      return {
-        log: isKo
-          ? `[PERK:taunt] ${actorName}(은)는 도발당해서 변화기를 쓸 수 없다!`
-          : `[PERK:taunt] ${actorName} cannot use status moves due to Taunt!`,
-        damage: 0,
-      };
-    }
-
-    if (actor.disabledMove && actor.disabledMove === activeMove.name.toLowerCase().replace(/[\s_]+/g, "-")) {
-      return {
-        log: isKo
-          ? `${actorName}의 ${moveName}!\n하지만 사슬에 묶여 기술을 쓸 수 없다!`
-          : `${actorName}'s ${moveName}!\nDisabled by chains and cannot be used!`,
-        damage: 0,
-      };
-    }
-
-    if (activeMove.category === "status") {
-      const isSelfTarget = this.isSelfTargetStatusMove(activeMove.name);
-      if (!isSelfTarget && target.isSemiInvulnerable) {
-        const hasNoGuard = actor.ability === "no-guard";
-        const isPoisonToxic = (activeMove.name.toLowerCase().replace(/[\s_]+/g, "-") === "toxic") && actor.types.includes("poison");
-        if (!hasNoGuard && !isPoisonToxic) {
-          return {
-            log: isKo
-              ? `${actorName}의 ${activeMove.nameKo}!\n하지만 ${targetName}에게는 닿지 않았다!`
-              : `${actorName}'s ${activeMove.name.toUpperCase()}!\nBut it couldn't reach ${targetName}!`,
-            damage: 0,
-          };
-        }
-      }
-      const statLog = this.applyStatusMove(actor, target, activeMove, actorName, targetName, isKo, battle);
-      const statusHeader = isKo ? `${actorName}의 ${activeMove.nameKo}!` : `${actorName} used ${activeMove.name.toUpperCase()}!`;
-      return { log: `${statusHeader}\n${statLog}`, damage: 0 };
-    }
-
-    const moveNameLower = activeMove.name.toLowerCase().replace(/[\s_]+/g, "-");
-
-    if (actor.chargingMove && actor.chargingMove !== moveNameLower) {
-      actor.chargingMove = null;
-      actor.isSemiInvulnerable = false;
-      actor.semiInvulnerableState = null;
-    }
-
-    const isSolarMove = moveNameLower === "solar-beam" || moveNameLower === "solar-blade";
-    if (isSolarMove) {
-      if (battle?.weather !== "sun") {
-        if (actor.chargingMove !== moveNameLower) {
-          actor.chargingMove = moveNameLower;
-          return {
-            log: isKo ? `${actorName}(은)는 빛을 흡수하고 있다!` : `${actorName} took in sunlight!`,
-            damage: 0,
-          };
-        }
-        actor.chargingMove = null;
-      }
-    } else if (["fly", "dig", "dive", "bounce", "shadow-force", "phantom-force"].includes(moveNameLower)) {
-      if (actor.chargingMove !== moveNameLower) {
-        actor.chargingMove = moveNameLower;
-        actor.isSemiInvulnerable = true;
-        let chargeText = "";
-        if (moveNameLower === "fly" || moveNameLower === "bounce") {
-          actor.semiInvulnerableState = "air";
-          chargeText = moveNameLower === "fly"
-            ? (isKo ? `${actorName}(은)는 하늘 높이 날아올랐다!` : `${actorName} flew up high!`)
-            : (isKo ? `${actorName}(은)는 높이 튀어올랐다!` : `${actorName} bounced up high!`);
-        } else if (moveNameLower === "dig") {
-          actor.semiInvulnerableState = "underground";
-          chargeText = isKo ? `${actorName}(은)는 땅속으로 파고들었다!` : `${actorName} burrowed underground!`;
-        } else if (moveNameLower === "dive") {
-          actor.semiInvulnerableState = "underwater";
-          chargeText = isKo ? `${actorName}(은)는 물속으로 잠수했다!` : `${actorName} hid underwater!`;
-        } else {
-          actor.semiInvulnerableState = "shadow";
-          chargeText = isKo ? `${actorName}(은)는 그림자 속으로 모습을 감췄다!` : `${actorName} vanished into the shadows!`;
-        }
-        return { log: chargeText, damage: 0 };
-      }
-      actor.chargingMove = null;
-      actor.isSemiInvulnerable = false;
-      actor.semiInvulnerableState = null;
-    } else if (moveNameLower === "skull-bash") {
-      if (actor.chargingMove !== moveNameLower) {
-        actor.chargingMove = moveNameLower;
-        actor.stages.def = Math.min(6, actor.stages.def + 1);
-        return {
-          log: isKo ? `${actorName}(은)는 고개를 숙이고 방어를 올렸다! (+1)` : `${actorName} tucked in its head and its Defense rose! (+1)`,
-          damage: 0,
-        };
-      }
-      actor.chargingMove = null;
-    } else if (moveNameLower === "meteor-beam") {
-      if (actor.chargingMove !== moveNameLower) {
-        actor.chargingMove = moveNameLower;
-        actor.stages.spa = Math.min(6, actor.stages.spa + 1);
-        return {
-          log: isKo ? `${actorName}(은)는 우주의 힘을 모으고 특수공격을 올렸다! (+1)` : `${actorName} gathered space power and its Sp. Atk rose! (+1)`,
-          damage: 0,
-        };
-      }
-      actor.chargingMove = null;
-    } else if (moveNameLower === "sky-attack") {
-      if (actor.chargingMove !== moveNameLower) {
-        actor.chargingMove = moveNameLower;
-        return {
-          log: isKo ? `${actorName}(은)는 눈부신 빛에 휩싸였다!` : `${actorName} became cloaked in a harsh light!`,
-          damage: 0,
-        };
-      }
-      actor.chargingMove = null;
-    } else if (moveNameLower === "razor-wind") {
-      if (actor.chargingMove !== moveNameLower) {
-        actor.chargingMove = moveNameLower;
-        return {
-          log: isKo ? `${actorName}(은)는 칼바람을 일으켰다!` : `${actorName} whipped up a whirlwind!`,
-          damage: 0,
-        };
-      }
-      actor.chargingMove = null;
-    }
-
-    if (target.isSemiInvulnerable) {
-      const targetCharging = target.chargingMove;
-      const canHitFly = targetCharging === "fly" || targetCharging === "bounce";
-      const canHitDig = targetCharging === "dig";
-      const canHitDive = targetCharging === "dive";
-
-      const bypassFly = canHitFly && ["gust", "twister", "thunder", "hurricane", "sky-uppercut", "smack-down"].includes(moveNameLower);
-      const bypassDig = canHitDig && ["earthquake", "magnitude", "fissure"].includes(moveNameLower);
-      const bypassDive = canHitDive && ["surf", "whirlpool"].includes(moveNameLower);
-      const hasNoGuard = actor.ability === "no-guard";
-
-      if (!bypassFly && !bypassDig && !bypassDive && !hasNoGuard) {
-        return {
-          log: isKo ? `${actorName}의 ${moveName}! 하지만 ${targetName}에게는 닿지 않았다!` : `${actorName}'s ${moveName}! But it couldn't hit ${targetName}!`,
-          damage: 0,
-        };
-      }
-    }
-
-    const isOHKO = ["horn-drill", "guillotine", "fissure", "sheer-cold"].includes(moveNameLower);
-    if (isOHKO) {
-      if (actor.level < target.level) {
-        return {
-          log: isKo
-            ? `${actorName}의 ${moveName}! 하지만 레벨이 낮아 상대에게 통하지 않았다!`
-            : `${actorName}'s ${moveName}! But it didn't affect ${targetName} due to lower level!`,
-          damage: 0,
-        };
-      }
-
-      const typeMod = this.getTypeEffectiveness(activeMove.type, target.types);
-      if (typeMod === 0 || (moveNameLower === "sheer-cold" && target.types.map((t) => t.toLowerCase()).includes("ice"))) {
-        return {
-          log: isKo
-            ? `${actorName}의 ${moveName}! 하지만 ${targetName}에게는 효과가 없는 것 같다...`
-            : `${actorName}'s ${moveName}! It doesn't affect ${targetName}...`,
-          damage: 0,
-        };
-      }
-
-      const ohkoAcc = Math.min(100, Math.max(0, 30 + (actor.level - target.level)));
-      if (Math.random() * 100 > ohkoAcc) {
-        return {
-          log: isKo
-            ? `${actorName}의 ${moveName}! 하지만 공격은 빗나갔다!`
-            : `${actorName}'s ${moveName}! But it missed!`,
-          damage: 0,
-        };
-      }
-
-      if (target.isProtected) {
-        return {
-          log: isKo
-            ? `${actorName}의 ${moveName}! 하지만 ${targetName}(은)는 공격을 막아냈다!`
-            : `${actorName}'s ${moveName}! But ${targetName} protected itself!`,
-          damage: 0,
-        };
-      }
-
-      if (target.ability === "Sturdy") {
-        return {
-          log: isKo
-            ? `${actorName}의 ${moveName}!\n[특성 옹골참!] 일격필살 공격을 무효화했다!`
-            : `${actorName}'s ${moveName}!\n[Sturdy!] It was immune to the One-Hit KO!`,
-          damage: 0,
-        };
-      }
-
-      const damage = target.hp;
-      target.hp = 0;
-      return {
-        log: isKo
-          ? `${actorName}의 ${moveName}!\n일격필살! ${targetName}(은)는 쓰러졌다!`
-          : `${actorName}'s ${moveName}!\nIt's a One-Hit KO! ${targetName} fainted!`,
-        damage,
-      };
-    }
-
-    if (moveNameLower === "seismic-toss" || moveNameLower === "night-shade") {
-      const typeMod = this.getTypeEffectiveness(activeMove.type, target.types);
-      if (typeMod === 0) {
-        return { log: isKo ? `${actorName}의 ${moveName}! 하지만 ${targetName}에게는 효과가 없는 것 같다...` : `${actorName}'s ${moveName}! It doesn't affect ${targetName}...`, damage: 0 };
-      }
-      const damage = actor.level;
-      target.hp = Math.max(0, target.hp - damage);
-      return { log: isKo ? `${actorName}의 ${moveName}! ${targetName}에게 ${damage}의 고정 데미지!` : `${actorName}'s ${moveName}! Dealt ${damage} fixed damage!`, damage };
-    }
-
-    if (moveNameLower === "dragon-rage") {
-      const typeMod = this.getTypeEffectiveness(activeMove.type, target.types);
-      if (typeMod === 0) {
-        return { log: isKo ? `${actorName}의 ${moveName}! 하지만 ${targetName}에게는 효과가 없는 것 같다...` : `${actorName}'s ${moveName}! It doesn't affect ${targetName}...`, damage: 0 };
-      }
-      const damage = 40;
-      target.hp = Math.max(0, target.hp - damage);
-      return { log: isKo ? `${actorName}의 ${moveName}! ${targetName}에게 40의 고정 데미지!` : `${actorName}'s ${moveName}! Dealt 40 fixed damage!`, damage };
-    }
-
-    if (moveNameLower === "sonic-boom") {
-      const typeMod = this.getTypeEffectiveness(activeMove.type, target.types);
-      if (typeMod === 0) {
-        return { log: isKo ? `${actorName}의 ${moveName}! 하지만 ${targetName}에게는 효과가 없는 것 같다...` : `${actorName}'s ${moveName}! It doesn't affect ${targetName}...`, damage: 0 };
-      }
-      const damage = 20;
-      target.hp = Math.max(0, target.hp - damage);
-      return { log: isKo ? `${actorName}의 ${moveName}! ${targetName}에게 20의 고정 데미지!` : `${actorName}'s ${moveName}! Dealt 20 fixed damage!`, damage };
-    }
-
-    if (moveNameLower === "super-fang") {
-      const typeMod = this.getTypeEffectiveness(activeMove.type, target.types);
-      if (typeMod === 0) {
-        return { log: isKo ? `${actorName}의 ${moveName}! 하지만 ${targetName}에게는 효과가 없는 것 같다...` : `${actorName}'s ${moveName}! It doesn't affect ${targetName}...`, damage: 0 };
-      }
-      const damage = Math.max(1, Math.floor(target.hp / 2));
-      target.hp = Math.max(0, target.hp - damage);
-      return { log: isKo ? `${actorName}의 ${moveName}! ${targetName}의 현재 HP를 절반으로 깎았다! (-${damage})` : `${actorName}'s ${moveName}! Cut ${targetName}'s HP in half! (-${damage})`, damage };
-    }
-
-    if (moveNameLower === "endeavor") {
-      if (actor.hp >= target.hp) {
-        return { log: isKo ? `${actorName}의 ${moveName}! 하지만 아무 일도 일어나지 않았다!` : `${actorName}'s ${moveName}! But nothing happened!`, damage: 0 };
-      }
-      const damage = target.hp - actor.hp;
-      target.hp = actor.hp;
-      return { log: isKo ? `${actorName}의 ${moveName}! ${targetName}의 HP를 자신의 HP와 같게 맞췄다! (-${damage})` : `${actorName}'s ${moveName}! Matched ${targetName}'s HP! (-${damage})`, damage };
-    }
-
-    if (moveNameLower === "counter") {
-      const typeMod = this.getTypeEffectiveness(activeMove.type, target.types);
-      if (typeMod === 0) {
-        return { log: isKo ? `${actorName}의 ${moveName}! 하지만 ${targetName}에게는 효과가 없는 것 같다...` : `${actorName}'s ${moveName}! It doesn't affect ${targetName}...`, damage: 0 };
-      }
-      const physDmg = actor.lastPhysicalDamageTakenThisTurn || 0;
-      if (physDmg > 0) {
-        const damage = physDmg * 2;
-        target.hp = Math.max(0, target.hp - damage);
-        return {
-          log: isKo
-            ? `${actorName}의 카운터!\n받은 물리 데미지를 2배로 되돌려주었다! (-${damage})`
-            : `${actorName}'s Counter!\nDealt double the physical damage back! (-${damage})`,
-          damage,
-        };
-      }
-      return {
-        log: isKo ? `${actorName}의 카운터! 하지만 기술은 실패했다!` : `${actorName}'s Counter! But it failed!`,
-        damage: 0,
-      };
-    }
-
-    let acc = activeMove.accuracy || 100;
-    if (isActorPlayer && battle?.pendingBallPerk === "clear_eye") {
-      acc = Math.min(100, acc + 20);
-      battle.pendingBallPerk = null;
-    }
-
-    if (!isActorPlayer && battle?.pendingBallPerk === "dodge") {
-      const isNeverMiss = (activeMove.accuracy as any) === true || activeMove.accuracy === 0;
-      if (!isNeverMiss) {
-        battle.pendingBallPerk = null;
-        return {
-          log: isKo
-            ? `${actorName}의 ${moveName}!\n[PERK:dodge] ${targetName}(은)는 회피기동으로 적의 공격을 완벽히 피했다!`
-            : `${actorName}'s ${moveName}!\n[PERK:dodge] ${targetName} skillfully dodged the attack!`,
-          damage: 0,
-        };
-      }
-    }
-
-    if (battle?.weather === "rain" && (moveNameLower === "thunder" || moveNameLower === "hurricane")) {
-      acc = 1000;
-    } else if (battle?.weather === "snow" && moveNameLower === "blizzard") {
-      acc = 1000;
-    } else if (battle?.weather === "sun" && (moveNameLower === "thunder" || moveNameLower === "hurricane")) {
-      acc = 50;
-    }
-
-    const accStage = actor.stages.acc - target.stages.eva;
-    const finalAcc = acc * getAccuracyMultiplier(accStage);
-    if (acc < 100 && Math.random() * 100 > finalAcc) {
-      return { log: isKo ? `${actorName}의 ${moveName}! 하지만 공격은 빗나갔다!` : `${actorName}'s ${moveName}! But the attack missed!`, damage: 0 };
-    }
-
-    if (target.isProtected) {
-      return { log: isKo ? `${actorName}의 ${moveName}! 하지만 ${targetName}(은)는 공격을 막아냈다!` : `${actorName}'s ${moveName}! But ${targetName} protected itself!`, damage: 0 };
-    }
-
-    const isSpecial = activeMove.category === "special";
-    const atkStat = isSpecial
-      ? actor.spAtk * getStageMultiplier(actor.stages.spa)
-      : actor.atk * getStageMultiplier(actor.stages.atk) * (actor.status === "brn" ? 0.5 : 1.0);
-
-    let defStat = isSpecial
-      ? target.spDef * getStageMultiplier(target.stages.spd)
-      : target.def * getStageMultiplier(target.stages.def);
-
-    if (battle?.weather === "sand" && target.types.map((t) => t.toLowerCase()).includes("rock") && isSpecial) {
-      defStat = Math.floor(defStat * 1.5);
-    }
-    if (battle?.weather === "snow" && target.types.map((t) => t.toLowerCase()).includes("ice") && !isSpecial) {
-      defStat = Math.floor(defStat * 1.5);
-    }
-
-    let power = activeMove.power || 40;
-
-    if (moveNameLower === "eruption" || moveNameLower === "water-spout" || moveNameLower === "dragon-energy") {
-      power = Math.max(1, Math.floor(150 * (actor.hp / Math.max(1, actor.maxHp))));
-    }
-
-    if (moveNameLower === "reversal" || moveNameLower === "flail") {
-      const hpRatio = actor.hp / Math.max(1, actor.maxHp);
-      if (hpRatio < 0.0417) power = 200;
-      else if (hpRatio < 0.1042) power = 150;
-      else if (hpRatio < 0.2083) power = 100;
-      else if (hpRatio < 0.3542) power = 80;
-      else if (hpRatio < 0.6875) power = 40;
-      else power = 20;
-    }
-
-    if (moveNameLower === "gyro-ball") {
-      power = Math.min(150, Math.floor(25 * (target.speed / Math.max(1, actor.speed))) + 1);
-    }
-
-    if (moveNameLower === "electro-ball") {
-      const spdRatio = actor.speed / Math.max(1, target.speed);
-      if (spdRatio >= 4) power = 150;
-      else if (spdRatio >= 3) power = 120;
-      else if (spdRatio >= 2) power = 80;
-      else if (spdRatio >= 1) power = 60;
-      else power = 40;
-    }
-
-    if (moveNameLower === "grass-knot" || moveNameLower === "low-kick" || moveNameLower === "heavy-slam" || moveNameLower === "heat-crash") {
-      power = 80;
-    }
-
-    const isSelfDestruct = moveNameLower === "explosion" || moveNameLower === "self-destruct" || moveNameLower === "misty-explosion";
-    if (isSelfDestruct) {
-      power = moveNameLower === "explosion" ? 250 : (moveNameLower === "self-destruct" ? 200 : 100);
-    }
-
-    let weatherMod = 1.0;
-    if (battle?.weather === "sun") {
-      if (activeMove.type.toLowerCase() === "fire") weatherMod = 1.5;
-      else if (activeMove.type.toLowerCase() === "water") weatherMod = 0.5;
-    } else if (battle?.weather === "rain") {
-      if (activeMove.type.toLowerCase() === "water") weatherMod = 1.5;
-      else if (activeMove.type.toLowerCase() === "fire") weatherMod = 0.5;
-      if (moveNameLower === "solar-beam" || moveNameLower === "solar-blade") weatherMod = 0.5;
-    } else if (battle?.weather === "sand" || battle?.weather === "snow") {
-      if (moveNameLower === "solar-beam" || moveNameLower === "solar-blade") weatherMod = 0.5;
-    }
-
-    const isStab = actor.types.map((t) => t.toLowerCase()).includes(activeMove.type.toLowerCase());
-    const stabMod = isStab ? 1.5 : 1.0;
-    const typeMod = this.getTypeEffectiveness(activeMove.type, target.types);
-
-    const isHighCrit = [
-      "razor-wind", "slash", "karate-chop", "razor-leaf", "crabhammer",
-      "cross-poison", "shadow-claw", "night-slash", "stone-edge",
-      "air-cutter", "psycho-cut", "drill-run", "blaze-kick"
-    ].includes(moveNameLower);
-    let isCrit = Math.random() < (isHighCrit ? 0.25 : 0.08);
-    let critPerkLog = "";
-    if (isActorPlayer && battle?.pendingBallPerk === "crit") {
-      isCrit = true;
-      critPerkLog = isKo ? "\n[PERK:crit] 집중 효과로 급소에 작렬했다!" : "\n[PERK:crit] Critical hit by Focus!";
-      battle.pendingBallPerk = null;
-    }
-    const critMod = isCrit ? 1.5 : 1.0;
-    const randomMod = 0.85 + Math.random() * 0.15;
-
-    let damage = Math.floor(
-      (((2 * actor.level / 5 + 2) * power * (atkStat / Math.max(1, defStat))) / 50 + 2) *
-      stabMod * typeMod * critMod * randomMod * weatherMod
-    );
-    damage = Math.max(typeMod > 0 ? 1 : 0, damage);
-
-    if (isActorPlayer && (battle?.pendingBallPerk === "sky_flight" || battle?.activeBallPerk === "sky_flight")) {
-      const wasInAir = (actor as any).semiInvulnerableState === "air" || (actor as any).chargingMove === "fly" || battle?.lastMoveEffect?.wasDescentFromAir;
-      if (wasInAir) {
-        damage = Math.floor(damage * 1.5);
-        critPerkLog += isKo ? "\n[PERK:sky_flight] 창공의 힘으로 활공 공격 위력이 1.5배 상승했다!" : "\n[PERK:sky_flight] Firmament boosted flight attack power by 1.5x!";
-      }
-    }
-
-    if (battle?.dinosaurTurns && battle.dinosaurTurns > 0) {
-      if (activeMove.type.toLowerCase() !== "dragon") {
-        damage = Math.max(1, Math.floor(damage * 0.7));
-      }
-    }
-
-    if (!isActorPlayer && battle?.rockSolidTurns && battle.rockSolidTurns > 0) {
-      damage = Math.max(1, Math.floor(damage * 0.5));
-    }
-
-    const hitCount = this.getMultiHitCount(activeMove.name);
-    if (hitCount > 1) {
-      damage *= hitCount;
-    }
-
-    if (isActorPlayer && activeMove.type.toLowerCase() === "water" && damage > 0) {
-      if (battle?.pendingBallPerk === "wave" || battle?.activeBallPerk === "wave") {
-        const heal = Math.min(actor.maxHp - actor.hp, damage);
-        if (heal > 0) {
-          actor.hp += heal;
-          critPerkLog += isKo ? `\n[PERK:wave] 파도의 힘으로 입힌 피해만큼 체력을 흡수했다! (+${heal} HP)` : `\n[PERK:wave] Surging Wave absorbed ${heal} HP!`;
-        }
-      }
-    }
-
-    let damageLog = "";
-    if (!isActorPlayer && battle?.rockSolidTurns && battle.rockSolidTurns > 0) {
-      damageLog += isKo ? "\n[PERK:rock_solid] 돌멩이 효과로 받는 피해를 50% 경감했다!" : "\n[PERK:rock_solid] Pebble reduced damage by 50%!";
-    }
-    if (target.substituteHp && target.substituteHp > 0) {
-      target.substituteHp = Math.max(0, target.substituteHp - damage);
-      if (target.substituteHp === 0) {
-        damageLog = isKo ? ` 대타출동 분신이 대신 맞고 부서졌다!` : ` The substitute broke!`;
-      } else {
-        damageLog = isKo ? ` 대타출동 분신이 데미지를 흡수했다! (${damage})` : ` The substitute took ${damage} damage!`;
-      }
-    } else {
-      if (target.hasIllusion) {
-        target.hasIllusion = false;
-        target.illusionTarget = null;
-        damageLog += isKo ? `\n일루전이 깨져 본래의 ${isActorPlayer ? target.name : target.nameKo} 모습이 드러났다!` : `\nThe illusion broke!`;
-      }
-
-      if (!isActorPlayer && target.hasEndurePerk && damage >= target.hp) {
-        target.hp = 1;
-        target.hasEndurePerk = false;
-        damageLog += isKo ? `\n[PERK:willpower] ${targetName}(은)는 의지의 힘으로 HP 1로 공격을 견뎌냈다!` : `\n[PERK:willpower] ${targetName} endured the attack with 1 HP!`;
-      } else if (target.ability === "Sturdy" && target.hp === target.maxHp && damage >= target.hp) {
-        target.hp = 1;
-        damageLog += isKo ? ` [특성 옹골참!] ${targetName}(은)는 1의 HP로 버텼다!` : ` [Sturdy!] ${targetName} held on with 1 HP!`;
-      } else {
-        target.hp = Math.max(0, target.hp - damage);
-      }
-      if (!isSpecial && damage > 0) {
-        target.lastPhysicalDamageTakenThisTurn = (target.lastPhysicalDamageTakenThisTurn || 0) + damage;
-      }
-    }
-
-    if (isSelfDestruct) {
-      actor.hp = 0;
-      damageLog += isKo ? `\n${actorName}(은)는 폭발하여 스스로 쓰러졌다!` : `\n${actorName} self-destructed and fainted!`;
-    }
-
-    const extraEffects = (typeMod > 0 && damage > 0)
-      ? this.applySecondaryAttackEffects(actor, target, activeMove, damage, isKo)
-      : "";
-
-    let effLog = "";
-    if (typeMod >= 2.0) effLog = isKo ? " 효과가 굉장했다!" : " It's super effective!";
-    else if (typeMod === 0) effLog = isKo ? " 효과가 없는 것 같다..." : " It had no effect...";
-    else if (typeMod <= 0.5) effLog = isKo ? " 효과가 별로인 듯하다..." : " It's not very effective...";
-
-    if (isCrit && typeMod > 0) {
-      effLog += critPerkLog ? critPerkLog : (isKo ? " 급소에 맞았다!" : " A critical hit!");
-    }
-    if (hitCount > 1) effLog += isKo ? ` (${hitCount}회 명중!)` : ` (Hit ${hitCount} times!)`;
-
-    if (["hyper-beam", "giga-impact", "frenzy-plant", "blast-burn", "hydro-cannon", "rock-wrecker", "roar-of-time"].includes(moveNameLower)) {
-      actor.mustRecharge = true;
-    }
-
-    const mainLog = isKo
-      ? `${actorName}의 ${moveName}! ${damage > 0 ? `${damage} 데미지!` : ""}${effLog}${damageLog}${extraEffects}`
-      : `${actorName}'s ${moveName}! ${damage > 0 ? `${damage} damage!` : ""}${effLog}${damageLog}${extraEffects}`;
-    return { log: mainLog, damage, typeMod, hitCount, isSuperEffective: typeMod >= 2.0 };
-  }
-
-  private applySecondaryAttackEffects(
-    actor: BattlePokemon,
-    target: BattlePokemon,
-    move: MoveData,
-    damageDealt: number,
-    isKo: boolean
-  ): string {
-    if (damageDealt <= 0) return "";
-    let log = "";
-    const mName = move.name.toLowerCase().replace(/[\s_]+/g, "-");
-
-    if (
-      mName === "giga-drain" || mName === "mega-drain" || mName === "absorb" ||
-      mName === "drain-punch" || mName === "horn-leech" || mName === "draining-kiss" ||
-      mName === "bitter-blade" || mName === "oblivion-wing"
-    ) {
-      const drainRatio = mName === "oblivion-wing" ? 0.75 : 0.5;
-      const healAmount = Math.max(1, Math.floor(damageDealt * drainRatio));
-      actor.hp = Math.min(actor.maxHp, actor.hp + healAmount);
-      log += isKo ? `\n상대의 체력을 ${healAmount} 흡수했다!` : `\nRestored ${healAmount} HP!`;
-    }
-
-    if (
-      mName === "take-down" || mName === "double-edge" || mName === "brave-bird" ||
-      mName === "flare-blitz" || mName === "wood-hammer" || mName === "wave-crash" ||
-      mName === "head-smash" || mName === "submission"
-    ) {
-      const recoilRatio = mName === "head-smash" ? 0.5 : (mName === "submission" ? 0.25 : 0.33);
-      const recoilDmg = Math.max(1, Math.floor(damageDealt * recoilRatio));
-      actor.hp = Math.max(0, actor.hp - recoilDmg);
-      log += isKo ? `\n반동으로 ${recoilDmg} 데미지를 입었다!` : `\nHit with ${recoilDmg} recoil damage!`;
-    }
-
-    if (mName === "pay-day" || mName === "payday") {
-      const coinGain = actor.level * 5;
-      log += isKo ? `\n동전을 마구 주워 +P ${coinGain.toLocaleString()}을 획득했다!` : `\nCoins scattered everywhere! Got +P ${coinGain.toLocaleString()}!`;
-    }
-
-    if (mName === "close-combat" || mName === "headlong-rush" || mName === "armor-cannon") {
-      actor.stages.def = Math.max(-6, actor.stages.def - 1);
-      actor.stages.spd = Math.max(-6, actor.stages.spd - 1);
-      log += isKo ? `\n자신의 방어와 특수방어가 떨어졌다! (-1)` : `\nDefense and Sp. Def fell! (-1)`;
-    } else if (mName === "draco-meteor" || mName === "overheat" || mName === "leaf-storm") {
-      actor.stages.spa = Math.max(-6, actor.stages.spa - 2);
-      log += isKo ? `\n자신의 특수공격이 크게 떨어졌다! (-2)` : `\nSp. Atk harshly fell! (-2)`;
-    }
-
-    if (
-      mName === "bite" || mName === "rock-slide" || mName === "iron-head" ||
-      mName === "air-slash" || mName === "headbutt"
-    ) {
-      if (Math.random() < 0.3) {
-        target.isFlinched = true;
-      }
-    }
-
-    if (target.hp > 0 && !target.status) {
-      if ((mName === "flamethrower" || mName === "fire-blast" || mName === "scald" || mName === "ember" || mName === "fire-punch") && Math.random() < (mName === "scald" ? 0.3 : 0.1)) {
-        if (!target.types.map(t => t.toLowerCase()).includes("fire")) {
-          target.status = "brn";
-          log += isKo ? `\n${target.name}(은)는 화상을 입었다!` : `\n${target.name} was burned!`;
-        }
-      } else if ((mName === "ice-beam" || mName === "blizzard" || mName === "ice-punch" || mName === "powder-snow") && Math.random() < 0.1) {
-        if (!target.types.map(t => t.toLowerCase()).includes("ice")) {
-          target.status = "frz";
-          log += isKo ? `\n${target.name}(은)는 꽁꽁 얼어붙었다!` : `\n${target.name} was frozen solid!`;
-        }
-      } else if ((mName === "thunderbolt" || mName === "discharge" || mName === "spark" || mName === "thunder" || mName === "thunder-punch" || mName === "body-slam") && Math.random() < (mName === "thunder" || mName === "body-slam" ? 0.3 : 0.1)) {
-        if (!target.types.map(t => t.toLowerCase()).includes("electric")) {
-          target.status = "par";
-          log += isKo ? `\n${target.name}(은)는 마비되어 저려왔다!` : `\n${target.name} is paralyzed!`;
-        }
-      } else if ((mName === "poison-sting" || mName === "twineedle" || mName === "sludge-bomb" || mName === "poison-jab" || mName === "smog" || mName === "sludge") && Math.random() < (mName === "poison-sting" ? 0.3 : (mName === "twineedle" ? 0.2 : 0.3))) {
-        if (!target.types.map(t => t.toLowerCase()).includes("poison") && !target.types.map(t => t.toLowerCase()).includes("steel")) {
-          target.status = "psn";
-          log += isKo ? `\n${target.name}(은)는 독에 걸렸다!` : `\n${target.name} was poisoned!`;
-        }
-      }
-    }
-
-    if (target.hp > 0 && (!target.confusionTurns || target.confusionTurns <= 0)) {
-      if ((mName === "psybeam" || mName === "confusion" || mName === "water-pulse" || mName === "dizzy-punch" || mName === "dynamic-punch") && Math.random() < (mName === "dynamic-punch" ? 1.0 : (mName === "water-pulse" || mName === "dizzy-punch" ? 0.2 : 0.1))) {
-        target.confusionTurns = Math.floor(Math.random() * 4) + 2;
-        log += isKo ? `\n${target.name}(은)는 혼란에 빠졌다!` : `\n${target.name} became confused!`;
-      }
-    }
-
-    if (target.hp > 0) {
-      if ((mName === "bubble-beam" || mName === "bubble" || mName === "constrict" || mName === "icy-wind") && Math.random() < (mName === "icy-wind" ? 1.0 : 0.1)) {
-        if (target.stages.spe > -6) {
-          target.stages.spe = Math.max(-6, target.stages.spe - 1);
-          log += isKo ? `\n${target.name}의 스피드가 떨어졌다! (-1)` : `\n${target.name}'s Speed fell! (-1)`;
-        }
-      } else if ((mName === "aurora-beam" || mName === "play-rough") && Math.random() < 0.1) {
-        if (target.stages.atk > -6) {
-          target.stages.atk = Math.max(-6, target.stages.atk - 1);
-          log += isKo ? `\n${target.name}의 공격이 떨어졌다! (-1)` : `\n${target.name}'s Attack fell! (-1)`;
-        }
-      } else if ((mName === "acid" || mName === "iron-tail" || mName === "crunch" || mName === "rock-smash") && Math.random() < (mName === "rock-smash" ? 0.5 : 0.2)) {
-        if (target.stages.def > -6) {
-          target.stages.def = Math.max(-6, target.stages.def - 1);
-          log += isKo ? `\n${target.name}의 방어가 떨어졌다! (-1)` : `\n${target.name}'s Defense fell! (-1)`;
-        }
-      } else if ((mName === "psychic" || mName === "shadow-ball" || mName === "bug-buzz" || mName === "earth-power" || mName === "focus-blast") && Math.random() < (mName === "psychic" ? 0.1 : 0.2)) {
-        if (target.stages.spd > -6) {
-          target.stages.spd = Math.max(-6, target.stages.spd - 1);
-          log += isKo ? `\n${target.name}의 특수방어가 떨어졌다! (-1)` : `\n${target.name}'s Sp. Def fell! (-1)`;
-        }
-      }
-    }
-
-    const isTrapMove = [
-      "bind", "wrap", "fire-spin", "sand-tomb", "whirlpool",
-      "clamp", "infestation", "magma-storm", "thunder-cage", "snap-trap"
-    ].includes(mName);
-
-    if (isTrapMove && target.hp > 0 && !target.trapState) {
-      const turns = Math.random() < 0.5 ? 4 : 5;
-      target.trapState = {
-        moveKey: mName,
-        moveNameKo: move.nameKo || move.name,
-        moveNameEn: move.name,
-        turnsLeft: turns,
-      };
-      log += isKo
-        ? `\n${target.name}(은)는 ${move.nameKo || move.name}에 묶여 빠져나올 수 없게 되었다!`
-        : `\n${target.name} was trapped by ${move.name}!`;
-    }
-
-    return log;
-  }
-
-  private applyStatusMove(
-    actor: BattlePokemon,
-    target: BattlePokemon,
-    move: MoveData,
-    actorName: string,
-    targetName: string,
-    isKo: boolean,
-    battle?: BattleState
-  ): string {
-    const mName = move.name.toLowerCase().replace(/[\s_]+/g, "-");
-
-    if (mName === "leech-seed" || move.nameKo === "씨뿌리기") {
-      const isTargetGrass = target.types.some((t) => t.toLowerCase() === "grass");
-      if (isTargetGrass) {
-        return isKo
-          ? `풀타입 포켓몬에게는 씨뿌리기가 통하지 않는다!`
-          : `Leech Seed does not affect Grass-type Pokémon!`;
-      }
-      if (target.isSeeded) {
-        return isKo
-          ? `${targetName}(은)는 이미 씨가 뿌려져 있다!`
-          : `${targetName} is already seeded!`;
-      }
-      target.isSeeded = true;
-      return isKo
-        ? `${targetName}에게 씨를 뿌렸다!`
-        : `${targetName} was seeded!`;
-    }
-
-    if (mName === "transform" || move.nameKo === "변신") {
-      this.applyTransform(actor, target);
-      return isKo ? `${actorName}(은)는 ${targetName}(으)로 변신했다!` : `${actorName} transformed into ${targetName}!`;
-    }
-
-    if (mName === "substitute" || move.nameKo === "대타출동") {
-      const cost = Math.floor(actor.maxHp * 0.25);
-      if (actor.hp > cost && !actor.substituteHp) {
-        actor.hp -= cost;
-        actor.substituteHp = cost;
-        return isKo
-          ? `${actorName}(은)는 자신의 HP를 깎아 대타 분신을 만들었다!`
-          : `${actorName} created a substitute with its own HP!`;
-      }
-      return isKo ? `하지만 기술은 실패했다!` : `But it failed!`;
-    }
-
-    if (mName === "protect" || mName === "detect" || mName === "spiky-shield") {
-      actor.isProtected = true;
-      return isKo ? `${actorName}(은)는 방어 자세를 취했다!` : `${actorName} protected itself!`;
-    }
-
-    if (mName === "recover" || mName === "roost" || mName === "soft-boiled" || mName === "slack-off") {
-      const heal = Math.floor(actor.maxHp * 0.5);
-      actor.hp = Math.min(actor.maxHp, actor.hp + heal);
-      return isKo ? `${actorName}의 HP가 ${heal} 회복되었다!` : `${actorName} restored ${heal} HP!`;
-    }
-
-    if (mName === "disable") {
-      const lastMove = battle?.lastMoveEffect?.moveKey;
-      if (lastMove && !target.disabledMove) {
-        target.disabledMove = lastMove;
-        target.disabledTurns = 4;
-        const targetMoveData = getMoveData(lastMove);
-        const lockedName = isKo ? (targetMoveData?.nameKo || lastMove) : (targetMoveData?.name || lastMove);
-        return isKo
-          ? `${targetName}의 ${lockedName}(을)를 사슬로 묶었다! (4턴간 사용 불가)`
-          : `${targetName}'s ${lockedName} was disabled! (4 turns)`;
-      }
-      return isKo ? `하지만 기술은 실패했다!` : `But it failed!`;
-    }
-
-    if (mName === "mist") {
-      if ((actor.mistTurns || 0) > 0) {
-        return isKo ? `이미 흰안개에 둘러싸여 있다!` : `Already protected by mist!`;
-      }
-      actor.mistTurns = 5;
-      return isKo
-        ? `${actorName}의 주변에 짙은 흰안개가 끼며 능력치 하락을 막는다! (5턴 지속)`
-        : `${actorName} became shrouded in mist! (5 turns)`;
-    }
-
-    if (mName === "whirlwind" || mName === "roar" || move.nameKo === "날려버리기" || move.nameKo === "울부짖기") {
-      if (target.ability === "Suction Cups" || target.passiveAbility === "Suction Cups") {
-        return isKo
-          ? `[특성 흡반!] ${targetName}(은)는 바닥에 단단히 고정되어 날아가지 않았다!`
-          : `[Suction Cups!] ${targetName} anchored itself firmly and was not blown away!`;
-      }
-
-      const isPlayerActor = actor === battle?.playerBattleMon || actor === battle?.playerParty?.[battle?.playerActiveIndex || 0];
-
-      if (isPlayerActor) {
-        if (target.isBoss) {
-          return isKo
-            ? `하지만 거대한 보스 포켓몬에게는 통하지 않았다!`
-            : `But it had no effect on the massive Boss Pokémon!`;
-        }
-        if (battle) {
-          battle.phase = "VICTORY";
-          battle.score += target.level * 5;
-        }
-        return isKo
-          ? `야생 ${targetName}(은)는 거센 돌풍에 날아가버렸다!\n배틀이 종료되었습니다!`
-          : `Wild ${targetName} was blown away by the whirlwind!\nThe battle ended!`;
-      } else {
-        if (battle && battle.playerParty && battle.playerParty.length > 0) {
-          const aliveIndices = battle.playerParty
-            .map((p, idx) => ({ p, idx }))
-            .filter((item) => item.idx !== battle.playerActiveIndex && item.p.hp > 0);
-
-          if (aliveIndices.length > 0) {
-            const randomPick = aliveIndices[Math.floor(Math.random() * aliveIndices.length)];
-            battle.playerParty[battle.playerActiveIndex].hp = target.hp;
-            battle.playerActiveIndex = randomPick.idx;
-            battle.playerBattleMon = this.createPlayerBattleMon(randomPick.p, battle.playerParty);
-            return isKo
-              ? `${targetName}(은)는 돌풍에 날아가 볼로 돌아갔다!\n가랏, ${battle.playerBattleMon.name}!`
-              : `${targetName} was blown away and forced to switch!\nGo, ${battle.playerBattleMon.name}!`;
-          } else {
-            return isKo
-              ? `하지만 교체할 다른 포켓몬이 없어 통하지 않았다!`
-              : `But there was no other Pokémon to switch in!`;
-          }
-        }
-        return isKo ? `하지만 기술은 실패했다!` : `But it failed!`;
-      }
-    }
-
-    const recordStatChange = (targetWho: "actor" | "target", dir: "up" | "down") => {
-      if (battle?.lastMoveEffect) {
-        const isPlayerActor = actor === battle.playerBattleMon || actor === battle.playerParty?.[battle.playerActiveIndex];
-        const isTargetPlayer = targetWho === "actor" ? isPlayerActor : !isPlayerActor;
-        battle.lastMoveEffect.statChanges = battle.lastMoveEffect.statChanges || [];
-        battle.lastMoveEffect.statChanges.push({
-          target: isTargetPlayer ? "player" : "enemy",
-          direction: dir,
-        });
-      }
-    };
-
-    const applyStatStage = (
-      subject: "actor" | "target",
-      statKey: keyof StatStages,
-      statNameKo: string,
-      statNameEn: string,
-      delta: number
-    ): { success: boolean; log: string } => {
-      const mon = subject === "actor" ? actor : target;
-      const monName = subject === "actor" ? actorName : targetName;
-      const current = mon.stages[statKey] || 0;
-
-      if (delta < 0 && subject === "target" && (mon.mistTurns || 0) > 0) {
-        return {
-          success: false,
-          log: isKo ? `[흰안개 효과!] ${monName}의 능력치는 떨어지지 않는다!` : `[Mist!] ${monName}'s stats cannot be lowered!`,
-        };
-      }
-
-      if (delta > 0) {
-        if (current >= 6) {
-          return {
-            success: false,
-            log: isKo ? `${monName}의 ${statNameKo}(은)는 더 이상 올라가지 않는다!` : `${monName}'s ${statNameEn} won't go any higher!`,
-          };
-        }
-        const actualDelta = Math.min(6 - current, delta);
-        mon.stages[statKey] = current + actualDelta;
-        recordStatChange(subject, "up");
-        const sharply = actualDelta >= 2 ? (isKo ? " 크게" : " sharply") : "";
-        const sign = `(+${actualDelta})`;
-        return {
-          success: true,
-          log: isKo ? `${monName}의 ${statNameKo}이${sharply} 올랐다! ${sign}` : `${monName}'s ${statNameEn}${sharply} rose! ${sign}`,
-        };
-      } else {
-        if (current <= -6) {
-          return {
-            success: false,
-            log: isKo ? `${monName}의 ${statNameKo}(은)는 더 이상 떨어지지 않는다!` : `${monName}'s ${statNameEn} won't go any lower!`,
-          };
-        }
-        const actualDelta = Math.max(-6 - current, delta);
-        mon.stages[statKey] = current + actualDelta;
-        recordStatChange(subject, "down");
-        const harshly = Math.abs(actualDelta) >= 2 ? (isKo ? " 크게" : " harshly") : "";
-        const sign = `(${actualDelta})`;
-        return {
-          success: true,
-          log: isKo ? `${monName}의 ${statNameKo}이${harshly} 떨어졌다! ${sign}` : `${monName}'s ${statNameEn}${harshly} fell! ${sign}`,
-        };
-      }
-    };
-
-    if (mName === "belly-drum") {
-      const halfHp = Math.floor(actor.maxHp * 0.5);
-      if (actor.hp > halfHp && actor.stages.atk < 6) {
-        actor.hp -= halfHp;
-        actor.stages.atk = 6;
-        recordStatChange("actor", "up");
-        return isKo
-          ? `자신의 HP를 깎아 공격을 최대치(+6)까지 올렸다!`
-          : `Cut its own HP to max out Attack (+6)!`;
-      }
-      return isKo ? `하지만 공격은 이미 최대치이거나 HP가 부족하다!` : `But it failed!`;
-    }
-
-    if (mName === "shell-smash") {
-      actor.stages.def = Math.max(-6, actor.stages.def - 1);
-      actor.stages.spd = Math.max(-6, actor.stages.spd - 1);
-      actor.stages.atk = Math.min(6, actor.stages.atk + 2);
-      actor.stages.spa = Math.min(6, actor.stages.spa + 2);
-      actor.stages.spe = Math.min(6, actor.stages.spe + 2);
-      recordStatChange("actor", "down");
-      recordStatChange("actor", "up");
-      return isKo
-        ? `방어와 특수방어가 떨어지고 공격, 특수공격, 스피드가 크게 올랐다! (+2)`
-        : `Defense and Sp. Def fell, Attack, Sp. Atk, and Speed sharply rose! (+2)`;
-    }
-
-    if (mName === "haze") {
-      actor.stages = { atk: 0, def: 0, spa: 0, spd: 0, spe: 0, acc: 0, eva: 0 };
-      target.stages = { atk: 0, def: 0, spa: 0, spd: 0, spe: 0, acc: 0, eva: 0 };
-      return isKo
-        ? `모든 포켓몬의 능력치 변화가 초기화되었다!`
-        : `All stat changes were reset!`;
-    }
-
-    if (mName === "memento") {
-      actor.hp = 0;
-      target.stages.atk = Math.max(-6, target.stages.atk - 2);
-      target.stages.spa = Math.max(-6, target.stages.spa - 2);
-      recordStatChange("target", "down");
-      return isKo
-        ? `${actorName}(은)는 쓰러지고 ${targetName}의 공격과 특수공격이 크게 떨어졌다! (-2)`
-        : `${actorName} fainted, and ${targetName}'s Attack and Sp. Atk harshly fell! (-2)`;
-    }
-
-    if (mName === "healing-wish" || mName === "lunar-dance") {
-      actor.hp = 0;
-      return isKo
-        ? `자신을 희생하여 다음 포켓몬을 위한 소원을 빌었다!`
-        : `Sacrificed itself for a healing wish!`;
-    }
-
-    if (mName === "growth") {
-      const r1 = applyStatStage("actor", "atk", "공격", "Attack", 1);
-      const r2 = applyStatStage("actor", "spa", "특수공격", "Sp. Atk", 1);
-      if (!r1.success && !r2.success) {
-        return isKo ? `${actorName}의 공격과 특수공격은 더 이상 올라가지 않는다!` : `${actorName}'s Attack and Sp. Atk won't go any higher!`;
-      }
-      return isKo ? `${actorName}의 공격과 특수공격이 올랐다! (+1)` : `${actorName}'s Attack and Sp. Atk rose! (+1)`;
-    }
-    if (mName === "swords-dance") {
-      return applyStatStage("actor", "atk", "공격", "Attack", 2).log;
-    }
-    if (mName === "nasty-plot" || mName === "tail-glow") {
-      const boost = mName === "tail-glow" ? 3 : 2;
-      return applyStatStage("actor", "spa", "특수공격", "Sp. Atk", boost).log;
-    }
-    if (mName === "dragon-dance") {
-      const r1 = applyStatStage("actor", "atk", "공격", "Attack", 1);
-      const r2 = applyStatStage("actor", "spe", "스피드", "Speed", 1);
-      if (!r1.success && !r2.success) {
-        return isKo ? `${actorName}의 공격과 스피드는 더 이상 올라가지 않는다!` : `${actorName}'s stats won't go any higher!`;
-      }
-      return isKo ? `${actorName}의 공격과 스피드가 올랐다! (+1)` : `${actorName}'s Attack and Speed rose! (+1)`;
-    }
-    if (mName === "quiver-dance") {
-      const r1 = applyStatStage("actor", "spa", "특수공격", "Sp.Atk", 1);
-      const r2 = applyStatStage("actor", "spd", "특수방어", "Sp.Def", 1);
-      const r3 = applyStatStage("actor", "spe", "스피드", "Speed", 1);
-      if (!r1.success && !r2.success && !r3.success) {
-        return isKo ? `${actorName}의 능력치는 더 이상 올라가지 않는다!` : `${actorName}'s stats won't go any higher!`;
-      }
-      return isKo ? `${actorName}의 특공, 특방, 스피드가 올랐다! (+1)` : `${actorName}'s Sp.Atk, Sp.Def, and Speed rose! (+1)`;
-    }
-    if (mName === "shift-gear") {
-      const r1 = applyStatStage("actor", "atk", "공격", "Attack", 1);
-      const r2 = applyStatStage("actor", "spe", "스피드", "Speed", 2);
-      if (!r1.success && !r2.success) {
-        return isKo ? `${actorName}의 능력치는 더 이상 올라가지 않는다!` : `${actorName}'s stats won't go any higher!`;
-      }
-      return isKo ? `${actorName}의 공격(+1)과 스피드가 크게(+2) 올랐다!` : `${actorName}'s Attack (+1) and Speed sharply (+2) rose!`;
-    }
-    if (mName === "geomancy") {
-      const r1 = applyStatStage("actor", "spa", "특수공격", "Sp.Atk", 2);
-      const r2 = applyStatStage("actor", "spd", "특수방어", "Sp.Def", 2);
-      const r3 = applyStatStage("actor", "spe", "스피드", "Speed", 2);
-      if (!r1.success && !r2.success && !r3.success) {
-        return isKo ? `${actorName}의 능력치는 더 이상 올라가지 않는다!` : `${actorName}'s stats won't go any higher!`;
-      }
-      return isKo ? `${actorName}의 특수공격, 특수방어, 스피드가 크게 올랐다! (+2)` : `${actorName}'s Sp. Atk, Sp. Def, and Speed sharply rose! (+2)`;
-    }
-    if (mName === "calm-mind" || mName === "bulk-up" || mName === "coil") {
-      if (mName === "bulk-up") {
-        const r1 = applyStatStage("actor", "atk", "공격", "Attack", 1);
-        const r2 = applyStatStage("actor", "def", "방어", "Defense", 1);
-        if (!r1.success && !r2.success) {
-          return isKo ? `${actorName}의 공격과 방어는 더 이상 올라가지 않는다!` : `${actorName}'s stats won't go any higher!`;
-        }
-        return isKo ? `${actorName}의 공격과 방어가 올랐다! (+1)` : `${actorName}'s Attack and Defense rose! (+1)`;
-      }
-      if (mName === "coil") {
-        const r1 = applyStatStage("actor", "atk", "공격", "Attack", 1);
-        const r2 = applyStatStage("actor", "def", "방어", "Defense", 1);
-        const r3 = applyStatStage("actor", "acc", "명중률", "Accuracy", 1);
-        if (!r1.success && !r2.success && !r3.success) {
-          return isKo ? `${actorName}의 능력치는 더 이상 올라가지 않는다!` : `${actorName}'s stats won't go any higher!`;
-        }
-        return isKo ? `${actorName}의 공격, 방어, 명중률이 올랐다! (+1)` : `${actorName}'s Attack, Defense, and Accuracy rose! (+1)`;
-      }
-      const r1 = applyStatStage("actor", "spa", "특수공격", "Sp. Atk", 1);
-      const r2 = applyStatStage("actor", "spd", "특수방어", "Sp. Def", 1);
-      if (!r1.success && !r2.success) {
-        return isKo ? `${actorName}의 특수공격과 특수방어는 더 이상 올라가지 않는다!` : `${actorName}'s stats won't go any higher!`;
-      }
-      return isKo ? `${actorName}의 특수공격과 특수방어가 올랐다! (+1)` : `${actorName}'s Sp. Atk and Sp. Def rose! (+1)`;
-    }
-    if (mName === "iron-defense" || mName === "acid-armor" || mName === "barrier" || mName === "cotton-guard") {
-      const boost = mName === "cotton-guard" ? 3 : 2;
-      return applyStatStage("actor", "def", "방어", "Defense", boost).log;
-    }
-    if (mName === "amnesia") {
-      return applyStatStage("actor", "spd", "특수방어", "Sp. Def", 2).log;
-    }
-    if (mName === "agility" || mName === "rock-polish" || mName === "autotomize") {
-      return applyStatStage("actor", "spe", "스피드", "Speed", 2).log;
-    }
-    if (mName === "minimize" || mName === "double-team") {
-      const boost = mName === "minimize" ? 2 : 1;
-      return applyStatStage("actor", "eva", "회피율", "Evasiveness", boost).log;
-    }
-
-    if (mName === "growl" || mName === "play-nice") {
-      return applyStatStage("target", "atk", "공격", "Attack", -1).log;
-    }
-    if (mName === "charm" || mName === "feather-dance" || mName === "baby-doll-eyes") {
-      const drop = mName === "baby-doll-eyes" ? 1 : 2;
-      return applyStatStage("target", "atk", "공격", "Attack", -drop).log;
-    }
-    if (mName === "tail-whip" || mName === "leer") {
-      return applyStatStage("target", "def", "방어", "Defense", -1).log;
-    }
-    if (mName === "screech") {
-      return applyStatStage("target", "def", "방어", "Defense", -2).log;
-    }
-    if (mName === "fake-tears" || mName === "metal-sound") {
-      return applyStatStage("target", "spd", "특수방어", "Sp. Def", -2).log;
-    }
-    if (mName === "string-shot" || mName === "scary-face" || mName === "cotton-spore") {
-      return applyStatStage("target", "spe", "스피드", "Speed", -2).log;
-    }
-    if (mName === "flash" || mName === "sand-attack" || mName === "smokescreen" || mName === "kinesis") {
-      return applyStatStage("target", "acc", "명중률", "Accuracy", -1).log;
-    }
-    if (mName === "sweet-scent") {
-      return applyStatStage("target", "eva", "회피율", "Evasiveness", -2).log;
-    }
-
-    if (mName === "thunder-wave" || mName === "glare" || mName === "stun-spore" || mName === "nuzzle") {
-      if (mName === "thunder-wave" && target.types.some((t) => t.toLowerCase() === "ground")) {
-        return isKo ? `하지만 ${targetName}에게는 효과가 없는 것 같다...` : `It doesn't affect ${targetName}...`;
-      }
-      if (!target.types.some((t) => t.toLowerCase() === "electric") && !target.status) {
-        target.status = "par";
-        return isKo ? `${targetName}(은)는 마비되어 기술을 쓰기 어려워졌다!` : `${targetName} is paralyzed!`;
-      }
-      return isKo ? `하지만 효과가 없었다!` : `It had no effect!`;
-    }
-    if (mName === "spore" || mName === "sleep-powder" || mName === "hypnosis" || mName === "sing" || mName === "dark-void" || mName === "grass-whistle" || mName === "lovely-kiss") {
-      if (!target.types.includes("grass") && !target.status) {
-        target.status = "slp";
-        target.sleepTurns = 0;
-        return isKo ? `${targetName}(은)는 깊은 잠에 빠졌다!` : `${targetName} fell fast asleep!`;
-      }
-      return isKo ? `하지만 효과가 없었다!` : `It had no effect!`;
-    }
-    if (mName === "will-o-wisp") {
-      if (!target.types.includes("fire") && !target.status) {
-        target.status = "brn";
-        return isKo ? `${targetName}(은)는 불꽃에 휩싸여 화상을 입었다!` : `${targetName} was burned!`;
-      }
-      return isKo ? `하지만 효과가 없었다!` : `It had no effect!`;
-    }
-    if (mName === "toxic" || mName === "poison-powder" || mName === "poison-gas") {
-      if (!target.types.includes("poison") && !target.types.includes("steel") && !target.status) {
-        target.status = mName === "toxic" ? "tox" : "psn";
-        target.toxicCounter = 1;
-        return isKo ? `${targetName}(은)는 독에 중독되었다!` : `${targetName} was poisoned!`;
-      }
-      return isKo ? `하지만 효과가 없었다!` : `It had no effect!`;
-    }
-
-    if (mName === "sunny-day") {
-      if (battle) { battle.weather = "sun"; battle.weatherTurns = 5; }
-      return isKo ? `${actorName}의 쾌청!\n햇살이 아주 강해졌다! (5턴 지속)` : `${actorName} used Sunny Day!\nThe sunlight turned harsh! (5 turns)`;
-    }
-    if (mName === "rain-dance") {
-      if (battle) { battle.weather = "rain"; battle.weatherTurns = 5; }
-      return isKo ? `${actorName}의 비바라기!\n비가 내리기 시작했다! (5턴 지속)` : `${actorName} used Rain Dance!\nIt started to rain! (5 turns)`;
-    }
-    if (mName === "sandstorm") {
-      if (battle) { battle.weather = "sand"; battle.weatherTurns = 5; }
-      return isKo ? `${actorName}의 모래바람!\n모래바람이 세차게 불기 시작했다! (5턴 지속)` : `${actorName} used Sandstorm!\nA sandstorm kicked up! (5 turns)`;
-    }
-    if (mName === "snowscape" || mName === "hail" || mName === "chilly-reception") {
-      if (battle) { battle.weather = "snow"; battle.weatherTurns = 5; }
-      return isKo ? `${actorName}의 ${move.nameKo}!\n눈이 내리기 시작했다! (5턴 지속)` : `${actorName} used ${move.name.toUpperCase()}!\nSnow started to fall! (5 turns)`;
-    }
-    if (mName === "defog") {
-      if (battle) { battle.weather = null; battle.weatherTurns = undefined; }
-      target.stages.eva = Math.max(-6, target.stages.eva - 1);
-      return isKo ? `${actorName}의 안개제거!\n날씨가 맑아지고 ${targetName}의 회피율이 떨어졌다! (-1)` : `${actorName} used Defog!\nThe weather cleared and ${targetName}'s evasiveness fell!`;
-    }
-    if (mName === "synthesis" || mName === "morning-sun" || mName === "moonlight") {
-      const healRatio = battle?.weather === "sun" ? 0.667 : (battle?.weather ? 0.25 : 0.5);
-      const heal = Math.floor(actor.maxHp * healRatio);
-      actor.hp = Math.min(actor.maxHp, actor.hp + heal);
-      return isKo ? `${actorName}의 HP가 ${heal} 회복되었다!` : `${actorName} restored ${heal} HP!`;
-    }
-
-    return isKo ? `기술의 효과가 발동했다!` : `The move took effect!`;
-  }
-
-  private processTurnEndEffects(mon: BattlePokemon, isKo: boolean, logs: string[], weather?: "sun" | "rain" | "sand" | "snow" | null, battle?: BattleState) {
-    if (mon.hp <= 0) return;
-    const name = isKo ? mon.nameKo : mon.name;
-
-    if (mon.mistTurns && mon.mistTurns > 0) {
-      mon.mistTurns -= 1;
-      if (mon.mistTurns === 0) {
-        logs.push(isKo ? `${name}을(를) 감싸던 흰안개가 걷혔다.` : `The mist surrounding ${name} faded.`);
-      }
-    }
-
-    if (mon.disabledTurns && mon.disabledTurns > 0) {
-      mon.disabledTurns -= 1;
-      if (mon.disabledTurns === 0) {
-        mon.disabledMove = null;
-        logs.push(isKo ? `${name}의 기술을 묶던 사슬이 풀렸다!` : `${name} is no longer disabled!`);
-      }
-    }
-
-    if (weather === "sand") {
-      const isImmune = mon.types.some((t) => ["rock", "ground", "steel"].includes(t.toLowerCase())) ||
-        mon.ability === "Magic Guard" || mon.ability === "Overcoat" || mon.ability === "Sand Force" ||
-        mon.ability === "Sand Rush" || mon.ability === "Sand Veil";
-      if (!isImmune) {
-        const sandDmg = Math.max(1, Math.floor(mon.maxHp / 16));
-        mon.hp = Math.max(0, mon.hp - sandDmg);
-        logs.push(isKo ? `모래바람이 ${name}을(를) 덮쳤다! (-${sandDmg})` : `The sandstorm buffeted ${name}! (-${sandDmg})`);
-      }
-    }
-
-    if (mon.status === "brn") {
-      const burnDmg = Math.max(1, Math.floor(mon.maxHp / 16));
-      mon.hp = Math.max(0, mon.hp - burnDmg);
-      logs.push(isKo ? `${name}(은)는 화상으로 ${burnDmg} 데미지를 입었다!` : `${name} was hurt by its burn! (${burnDmg})`);
-    }
-
-    if (mon.status === "psn") {
-      const psnDmg = Math.max(1, Math.floor(mon.maxHp / 8));
-      mon.hp = Math.max(0, mon.hp - psnDmg);
-      logs.push(isKo ? `${name}(은)는 독으로 ${psnDmg} 데미지를 입었다!` : `${name} was hurt by poison! (${psnDmg})`);
-    } else if (mon.status === "tox") {
-      const counter = mon.toxicCounter || 1;
-      const toxDmg = Math.max(1, Math.floor((mon.maxHp * counter) / 16));
-      mon.hp = Math.max(0, mon.hp - toxDmg);
-      mon.toxicCounter = counter + 1;
-      logs.push(isKo ? `${name}(은)는 맹독으로 ${toxDmg} 데미지를 입었다!` : `${name} was badly hurt by toxic! (${toxDmg})`);
-    }
-
-    if (mon.trapState && mon.trapState.turnsLeft > 0 && mon.hp > 0) {
-      const trapDmg = Math.max(1, Math.floor(mon.maxHp / 8));
-      mon.hp = Math.max(0, mon.hp - trapDmg);
-      mon.trapState.turnsLeft -= 1;
-      const trapMoveName = isKo ? mon.trapState.moveNameKo : mon.trapState.moveNameEn;
-      logs.push(
-        isKo
-          ? `${name}(은)는 ${trapMoveName}의 조임으로 ${trapDmg} 데미지를 입었다!`
-          : `${name} is hurt by ${trapMoveName}! (${trapDmg})`
-      );
-
-      if (mon.trapState.turnsLeft <= 0) {
-        if (mon.hp > 0) {
-          logs.push(
-            isKo
-              ? `${name}(은)는 ${trapMoveName}의 구속에서 풀려났다!`
-              : `${name} was freed from ${trapMoveName}!`
-          );
-        }
-        mon.trapState = null;
-      }
-    }
-
-    if (mon.isSeeded && mon.hp > 0 && battle) {
-      const isPlayerVictim = (mon === battle.playerBattleMon || mon === battle.playerParty[battle.playerActiveIndex]);
-      const leechTarget = isPlayerVictim ? battle.enemy : (battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex]);
-      const drainDmg = Math.max(1, Math.floor(mon.maxHp / 8));
-      mon.hp = Math.max(0, mon.hp - drainDmg);
-
-      const healAmount = Math.min(leechTarget.maxHp - leechTarget.hp, drainDmg);
-      if (healAmount > 0) {
-        leechTarget.hp += healAmount;
-      }
-
-      const leechTargetName = isPlayerVictim
-        ? (isKo ? leechTarget.nameKo : leechTarget.name)
-        : leechTarget.name;
-
-      logs.push(
-        isKo
-          ? `씨뿌리기가 ${name}의 체력을 깎아내렸다! (-${drainDmg})\n${leechTargetName}의 체력이 회복되었다! (+${drainDmg})`
-          : `Leech Seed stole HP from ${name}! (-${drainDmg})\n${leechTargetName} restored HP!`
-      );
-
-      // 씨뿌리기 흡혈 시 071 흡수(Absorb) 이펙트 트리거
-      battle.lastMoveEffect = {
-        moveKey: "absorb",
-        moveName: "Absorb",
-        type: "grass",
-        isSpecial: true,
-        isPlayerAttacking: !isPlayerVictim,
-      };
-
-      if (battle.turnActions) {
-        battle.turnActions.push({
-          actor: !isPlayerVictim ? "player" : "enemy",
-          moveKey: "absorb",
-          moveName: "Absorb",
-          type: "grass",
-          isSpecial: true,
-          log: isKo ? `씨뿌리기가 ${name}의 체력을 흡수했다!` : `Leech Seed absorbed HP from ${name}!`,
-          enemyHpAfter: battle.enemy.hp,
-          playerHpAfter: (battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex]).hp,
-          damage: drainDmg,
-          isHit: true,
-        });
-      }
-    }
-
-    if (mon.ability === "Moody" || mon.passiveAbility === "Moody") {
-      const statsList: (keyof StatStages)[] = ["atk", "def", "spa", "spd", "spe"];
-      const boostStat = statsList[Math.floor(Math.random() * statsList.length)];
-      const dropList = statsList.filter((s) => s !== boostStat);
-      const dropStat = dropList[Math.floor(Math.random() * dropList.length)];
-
-      mon.stages[boostStat] = Math.min(6, mon.stages[boostStat] + 2);
-      mon.stages[dropStat] = Math.max(-6, mon.stages[dropStat] - 1);
-      logs.push(isKo ? `\n[특성 변덕쟁이!] ${name}의 ${boostStat.toUpperCase()} 크게 상승(+2), ${dropStat.toUpperCase()} 하락(-1)` : `\n[Moody!] ${name}'s ${boostStat.toUpperCase()} sharply rose, ${dropStat.toUpperCase()} fell.`);
-
-      if (battle?.lastMoveEffect) {
-        const isPlayerMon = mon === battle.playerBattleMon || mon === battle.playerParty[battle.playerActiveIndex];
-        battle.lastMoveEffect.statChanges = battle.lastMoveEffect.statChanges || [];
-        battle.lastMoveEffect.statChanges.push({ target: isPlayerMon ? "player" : "enemy", direction: "up" });
-        battle.lastMoveEffect.statChanges.push({ target: isPlayerMon ? "player" : "enemy", direction: "down" });
-      }
-    }
-
-    if (mon.ability === "Speed Boost" || mon.passiveAbility === "Speed Boost") {
-      mon.stages.spe = Math.min(6, mon.stages.spe + 1);
-      logs.push(isKo ? `\n[특성 가속!] ${name}의 스피드가 올라갔다! (+1)` : `\n[Speed Boost!] ${name}'s Speed rose! (+1)`);
-
-      if (battle?.lastMoveEffect) {
-        const isPlayerMon = mon === battle.playerBattleMon || mon === battle.playerParty[battle.playerActiveIndex];
-        battle.lastMoveEffect.statChanges = battle.lastMoveEffect.statChanges || [];
-        battle.lastMoveEffect.statChanges.push({ target: isPlayerMon ? "player" : "enemy", direction: "up" });
-      }
-    }
-  }
-
-  private getMovePriority(moveKey: string): number {
-    const k = moveKey.toLowerCase().replace(/[\s_]+/g, "-");
-    if (k === "protect" || k === "detect" || k === "spiky-shield" || k === "burning-bulwark") return 4;
-    if (k === "fake-out" || k === "quick-guard") return 3;
-    if (k === "extreme-speed" || k === "feint") return 2;
-    if (
-      k === "quick-attack" || k === "aqua-jet" || k === "bullet-punch" ||
-      k === "ice-shard" || k === "mach-punch" || k === "shadow-sneak" ||
-      k === "sucker-punch" || k === "vacuum-wave" || k === "water-shuriken" ||
-      k === "jet-punch" || k === "thunderclap" || k === "accelerock"
-    ) return 1;
-    if (k === "counter" || k === "mirror-coat") return -5;
-    if (k === "roar" || k === "whirlwind" || k === "dragon-tail" || k === "circle-throw") return -6;
-    if (k === "trick-room") return -7;
-    return 0;
-  }
-
-  private getMultiHitCount(moveName: string): number {
-    const k = moveName.toLowerCase().replace(/[\s_]+/g, "-");
-    if (k === "double-hit" || k === "dual-wingbeat" || k === "twin-beam" || k === "dragon-darts" || k === "double-kick" || k === "twineedle") return 2;
-    if (k === "surging-strikes" || k === "triple-dive") return 3;
-    if (
-      k === "double-slap" || k === "comet-punch" || k === "fury-swipes" ||
-      k === "fury-attack" || k === "pin-missile" || k === "spike-cannon" ||
-      k === "barrage" || k === "bone-rush" || k === "arm-thrust" ||
-      k === "bullet-seed" || k === "icicle-spear" || k === "rock-blast" ||
-      k === "tail-slap" || k === "scale-shot" || k === "water-shuriken"
-    ) {
-      const rolls = [2, 2, 3, 3, 4, 5];
-      return rolls[Math.floor(Math.random() * rolls.length)];
-    }
-    if (k === "population-bomb") {
-      let hits = 0;
-      for (let i = 0; i < 10; i++) {
-        if (Math.random() < 0.9) hits++;
-        else break;
-      }
-      return Math.max(1, hits);
-    }
-    return 1;
+    return BattleEngine.executeTurn(battle, moveKey, lang);
   }
 
   public attemptCatch(userId: string, slotId: number, ballType: string, lang: "ko" | "en" = "ko"): { success: boolean; battle: BattleState } {
     const battle = this.getOrCreateBattle(userId, slotId);
-    const isKo = lang === "ko";
-    const enemyMonName = isKo ? battle.enemy.nameKo : battle.enemy.name;
-
-    const profile = saveService.getProfile(userId);
-    const slot = profile.slots[slotId];
-    const items = slot?.items || { "poke-ball": 5 };
-    if (items["poke-ball"] === undefined && Object.keys(items).length === 0) {
-      items["poke-ball"] = 5;
-    }
-
-    const currentCount = items[ballType] || 0;
-    battle.lastMoveEffect = null;
-    if (currentCount <= 0) {
-      battle.phase = "MAIN";
-      battle.dialogueText = isKo ? "몬스터볼이 부족합니다!" : "You don't have enough Poké Balls!";
-      return { success: false, battle };
-    }
-
-    items[ballType] = currentCount - 1;
-    if (items[ballType] <= 0) {
-      delete items[ballType];
-    }
-    saveService.updateSlot(userId, slotId, { items });
-
-    let ballMult = 1.0;
-    if (ballType === "great-ball") ballMult = 1.5;
-    else if (ballType === "ultra-ball") ballMult = 2.0;
-    else if (ballType === "rogue-ball") ballMult = 3.0;
-    else if (ballType === "master-ball") ballMult = 999.0;
-
-    const hpRatio = battle.enemy.hp / battle.enemy.maxHp;
-    const catchRate = Math.min(1.0, (1 - hpRatio * 0.6) * 0.45 * ballMult);
-    const roll = Math.random();
-    const isSuccess = roll < catchRate || ballType === "master-ball";
-
-    if (isSuccess) {
-      battle.phase = "VICTORY";
-      battle.dialogueText = isKo
-        ? `신난다! ${enemyMonName}(을)를 잡았다!`
-        : `Gotcha! ${enemyMonName} was caught!`;
-
-      if (battle.playerParty.length < 6) {
-        battle.playerParty.push({
-          speciesId: battle.enemy.speciesId,
-          name: isKo ? (battle.enemy.nameKo || battle.enemy.name) : (battle.enemy.name || battle.enemy.nameKo),
-          nameKo: battle.enemy.nameKo,
-          nameEn: battle.enemy.name,
-          level: battle.enemy.level,
-          hp: battle.enemy.hp,
-          maxHp: battle.enemy.maxHp,
-          moves: battle.enemy.moves,
-          isShiny: battle.enemy.isShiny,
-          shinyTier: battle.enemy.shinyTier || (battle.enemy.isShiny ? 1 : 0),
-        });
-      }
-
-      saveService.updateSlot(userId, slotId, {
-        party: battle.playerParty,
-        money: battle.money + 200,
-        score: battle.score + 50,
-        items,
-      });
-
-      return { success: true, battle };
-    } else {
-      battle.phase = "MAIN";
-      battle.dialogueText = isKo
-        ? `아까워라! ${enemyMonName}(이)가 볼에서 튀어나왔다!`
-        : `Oh no! The Pokémon broke free!`;
-      return { success: false, battle };
-    }
+    return attemptCatchPokemon(userId, slotId, ballType, battle, lang);
   }
 
   public advanceToNextWave(userId: string, slotId: number): BattleState {
@@ -2467,6 +352,140 @@ export class BattleService {
     this.activeBattles.delete(key);
 
     return this.getOrCreateBattle(userId, slotId, preservedStages, preservedActiveIndex);
+  }
+
+  public commitBattleState(userId: string, slotId: number, newState: BattleState): void {
+    const key = this.getBattleKey(userId, slotId);
+    this.activeBattles.set(key, newState);
+    saveService.updateSlot(userId, slotId, {
+      party: newState.playerParty,
+      money: newState.money,
+      score: newState.score,
+    });
+  }
+
+  public createSpeculativeNextWaveBattle(
+    userId: string,
+    slotId: number,
+    currentBattle: BattleState,
+    lang: "ko" | "en" = "ko"
+  ): { nextBattle: BattleState; nextWave: number; nextBiome: string } {
+    const profile = saveService.getProfile(userId);
+    const slot = profile.slots[slotId];
+    const prevWave = currentBattle.wave || slot?.wave || 1;
+    const newWave = prevWave + 1;
+
+    const shouldResetStages = (prevWave % 5 === 0);
+    const preservedStages = (!shouldResetStages && currentBattle.playerBattleMon.hp > 0)
+      ? { ...currentBattle.playerBattleMon.stages }
+      : undefined;
+    const preservedActiveIndex = (!shouldResetStages)
+      ? currentBattle.playerActiveIndex
+      : 0;
+
+    const biomes = Object.keys(BIOME_ENCOUNTERS);
+    const currentBiomeIdx = biomes.indexOf(currentBattle.biome || slot?.biome || "Town");
+    const nextBiome = (newWave % 10 === 1 && newWave > 1)
+      ? biomes[(currentBiomeIdx + 1) % biomes.length]
+      : (currentBattle.biome || slot?.biome || "Town");
+
+    const wildPokemon = this.spawnWildPokemon(newWave, nextBiome);
+    const isKo = lang === "ko";
+
+    const party = (currentBattle.playerParty && currentBattle.playerParty.length > 0)
+      ? currentBattle.playerParty
+      : (slot?.party && slot.party.length > 0)
+        ? slot.party
+        : (currentBattle.playerBattleMon ? [{
+            speciesId: currentBattle.playerBattleMon.speciesId,
+            name: currentBattle.playerBattleMon.name,
+            level: currentBattle.playerBattleMon.level,
+            hp: currentBattle.playerBattleMon.hp,
+            maxHp: currentBattle.playerBattleMon.maxHp,
+            moves: currentBattle.playerBattleMon.moves,
+            movePps: currentBattle.playerBattleMon.movePps,
+          }] : [{
+            speciesId: "lucario",
+            name: "루카리오",
+            level: 5,
+            hp: 20,
+            maxHp: 20,
+            moves: ["Aura Sphere", "Close Combat", "Extreme Speed", "Meteor Mash"],
+          }]);
+
+    const activeIndex = (preservedActiveIndex !== undefined && party[preservedActiveIndex])
+      ? preservedActiveIndex
+      : 0;
+
+    const activeLeader = party[activeIndex] || party[0];
+    const playerBattleMon = this.createPlayerBattleMon(activeLeader, party);
+    if (preservedStages) {
+      playerBattleMon.stages = { ...preservedStages };
+    }
+
+    let dialogueText = wildPokemon.isBoss
+      ? (isKo ? `보스 포켓몬 ${wildPokemon.nameKo}(이)가 나타났다!` : `Boss Pokémon ${wildPokemon.name} appeared!`)
+      : (isKo ? `야생의 ${wildPokemon.nameKo}(이)가 나타났다!` : `Wild ${wildPokemon.name} appeared!`);
+
+    if (playerBattleMon.ability === "Imposter" || playerBattleMon.passiveAbility === "Imposter") {
+      this.applyTransform(playerBattleMon, wildPokemon);
+      dialogueText += isKo
+        ? `\n[특성 괴짜 발동!] ${playerBattleMon.name}(이)가 ${wildPokemon.nameKo}(으)로 변신했다!`
+        : `\n[Imposter!] ${playerBattleMon.name} transformed into ${wildPokemon.name}!`;
+    }
+
+    if (playerBattleMon.ability === "Intimidate" || playerBattleMon.passiveAbility === "Intimidate") {
+      wildPokemon.stages.atk = Math.max(-6, wildPokemon.stages.atk - 1);
+      dialogueText += isKo
+        ? `\n[특성 위협 발동!] ${wildPokemon.nameKo}의 공격이 떨어졌다! (-1)`
+        : `\n[Intimidate!] ${wildPokemon.name}'s Attack fell! (-1)`;
+    }
+    if (wildPokemon.ability === "Intimidate") {
+      playerBattleMon.stages.atk = Math.max(-6, playerBattleMon.stages.atk - 1);
+      dialogueText += isKo
+        ? `\n[상대 위협 발동!] ${playerBattleMon.name}의 공격이 떨어졌다! (-1)`
+        : `\n[Foe Intimidate!] ${playerBattleMon.name}'s Attack fell! (-1)`;
+    }
+
+    const nextBattle: BattleState = {
+      userId,
+      slotId,
+      wave: newWave,
+      biome: nextBiome,
+      gameMode: currentBattle.gameMode || "Classic",
+      enemy: wildPokemon,
+      playerActiveIndex: activeIndex,
+      playerParty: structuredClone(currentBattle.playerParty),
+      playerBattleMon,
+      dialogueText,
+      phase: "MAIN",
+      turnCount: 0,
+      money: currentBattle.money ?? 0,
+      score: currentBattle.score || 0,
+      playerExp: currentBattle.playerExp || 0,
+      playerMaxExp: activeLeader.level * 15,
+    };
+
+    return { nextBattle, nextWave: newWave, nextBiome };
+  }
+
+  public commitSpeculativeNextWave(
+    userId: string,
+    slotId: number,
+    nextBattle: BattleState,
+    nextWave: number,
+    nextBiome: string
+  ): BattleState {
+    const key = this.getBattleKey(userId, slotId);
+    saveService.updateSlot(userId, slotId, {
+      wave: nextWave,
+      biome: nextBiome,
+      party: nextBattle.playerParty,
+      money: nextBattle.money,
+      score: nextBattle.score,
+    });
+    this.activeBattles.set(key, nextBattle);
+    return nextBattle;
   }
 
   public switchPlayerPokemon(userId: string, slotId: number, targetIndex: number, lang: "ko" | "en" = "ko"): BattleState {
@@ -2548,14 +567,14 @@ export class BattleService {
 
     if (resetParty.length === 0) {
       resetParty.push({
-        speciesId: "bulbasaur",
-        name: isKo ? "이상해씨" : "Bulbasaur",
-        nameKo: "이상해씨",
-        nameEn: "Bulbasaur",
+        speciesId: "lucario",
+        name: isKo ? "루카리오" : "Lucario",
+        nameKo: "루카리오",
+        nameEn: "Lucario",
         level: 5,
         hp: 20,
         maxHp: 20,
-        moves: ["Tackle", "Growl", "Vine Whip"],
+        moves: ["Aura Sphere", "Close Combat", "Extreme Speed"],
       });
     }
 
@@ -2578,175 +597,32 @@ export class BattleService {
 
     return newBattle;
   }
+
+  public healActiveBattle(userId: string, slotId: number): void {
+    const key = this.getBattleKey(userId, slotId);
+    const battle = this.activeBattles.get(key);
+    if (battle) {
+      if (battle.playerParty) {
+        for (const mon of battle.playerParty) {
+          mon.hp = mon.maxHp;
+          if (mon.moves) {
+            mon.movePps = mon.moves.map((m) => getMoveData(m)?.pp || 20);
+            mon.maxMovePps = [...mon.movePps];
+          }
+        }
+      }
+      if (battle.playerBattleMon) {
+        battle.playerBattleMon.hp = battle.playerBattleMon.maxHp;
+        battle.playerBattleMon.status = null;
+        battle.playerBattleMon.stages = createDefaultStages();
+        battle.playerBattleMon.isConfused = false;
+        battle.playerBattleMon.confusionTurns = 0;
+        if (battle.playerBattleMon.moves) {
+          battle.playerBattleMon.movePps = battle.playerBattleMon.moves.map((m) => getMoveData(m)?.pp || 20);
+        }
+      }
+    }
+  }
 }
-
-export const BASE_SPECIES_MAP: Record<string, string> = {
-  // Gen 1
-  "ivysaur": "bulbasaur", "venusaur": "bulbasaur", "venusaur-mega": "bulbasaur", "venusaur-gmax": "bulbasaur",
-  "charmeleon": "charmander", "charizard": "charmander", "charizard-megax": "charmander", "charizard-megay": "charmander", "charizard-gmax": "charmander",
-  "wartortle": "squirtle", "blastoise": "squirtle", "blastoise-mega": "squirtle", "blastoise-gmax": "squirtle",
-  "caterpie": "caterpie", "metapod": "caterpie", "butterfree": "caterpie",
-  "weedle": "weedle", "kakuna": "weedle", "beedrill": "weedle",
-  "pidgeotto": "pidgey", "pidgeot": "pidgey", "pidgeot-mega": "pidgey",
-  "raticate": "rattata", "raticate-alola": "rattata",
-  "raichu": "pichu", "raichu-alola": "pichu", "pikachu": "pichu",
-  "arbok": "ekans",
-  "sandslash": "sandshrew", "sandslash-alola": "sandshrew",
-  "nidorina": "nidoranf", "nidoqueen": "nidoranf",
-  "nidorino": "nidoranm", "nidoking": "nidoranm",
-  "clefable": "cleffa", "clefairy": "cleffa",
-  "ninetales": "vulpix", "ninetales-alola": "vulpix",
-  "wigglytuff": "igglybuff", "jigglypuff": "igglybuff",
-  "golbat": "zubat", "crobat": "zubat",
-  "gloom": "oddish", "vileplume": "oddish", "bellossom": "oddish",
-  "parasect": "paras", "venomoth": "venonat",
-  "dugtrio": "diglett", "dugtrio-alola": "diglett",
-  "persian": "meowth", "persian-alola": "meowth", "perrserker": "meowth",
-  "golduck": "psyduck", "primeape": "mankey", "annihilape": "mankey",
-  "arcanine": "growlithe", "arcanine-hisui": "growlithe",
-  "poliwhirl": "poliwag", "poliwrath": "poliwag", "politoed": "poliwag",
-  "kadabra": "abra", "alakazam": "abra", "alakazam-mega": "abra",
-  "machoke": "machop", "machamp": "machop",
-  "weepinbell": "bellsprout", "victreebel": "bellsprout",
-  "tentacruel": "tentacool",
-  "graveler": "geodude", "golem": "geodude", "graveler-alola": "geodude", "golem-alola": "geodude",
-  "rapidash": "ponyta", "rapidash-galar": "ponyta",
-  "slowbro": "slowpoke", "slowking": "slowpoke",
-  "magneton": "magnemite", "magnezone": "magnemite",
-  "dodrio": "doduo", "dewgong": "seel", "muk": "grimer", "muk-alola": "grimer",
-  "cloyster": "shellder", "haunter": "gastly", "gengar": "gastly", "gengar-mega": "gastly",
-  "steelix": "onix", "hypno": "drowzee", "kingler": "krabby", "electrode": "voltorb",
-  "exeggutor": "exeggcute", "marowak": "cubone", "marowak-alola": "cubone",
-  "hitmonlee": "tyrogue", "hitmonchan": "tyrogue", "hitmontop": "tyrogue",
-  "weezing": "koffing", "weezing-galar": "koffing", "rhydon": "rhyhorn", "rhyperior": "rhyhorn",
-  "blissey": "happiny", "chansey": "happiny", "tangrowth": "tangela", "kingdra": "horsea", "seadra": "horsea",
-  "seaking": "goldeen", "starmie": "staryu", "mr-mime": "mime-jr", "mr-rime": "mime-jr", "scizor": "scyther", "kleavor": "scyther",
-  "jynx": "smoochum", "electabuzz": "elekid", "electivire": "elekid", "magmar": "magby", "magmortar": "magby",
-  "gyarados": "magikarp", "vaporeon": "eevee", "jolteon": "eevee", "flareon": "eevee", "espeon": "eevee", "umbreon": "eevee", "leafeon": "eevee", "glaceon": "eevee", "sylveon": "eevee",
-  "porygon2": "porygon", "porygon-z": "porygon", "omastar": "omanyte", "kabutops": "kabuto",
-  "dragonair": "dratini", "dragonite": "dratini",
-
-  // Gen 2
-  "bayleef": "chikorita", "meganium": "chikorita",
-  "quilava": "cyndaquil", "typhlosion": "cyndaquil", "typhlosion-hisui": "cyndaquil",
-  "croconaw": "totodile", "feraligatr": "totodile",
-  "furret": "sentret", "noctowl": "hoothoot", "ledian": "ledyba", "ariados": "spinarak",
-  "lanturn": "chinchou", "togetic": "togepi", "togekiss": "togepi", "xatu": "natu",
-  "ampharos": "mareep", "flaaffy": "mareep", "azumarill": "azurill", "marill": "azurill",
-  "sudowoodo": "bonsly", "jumpluff": "hoppip", "skiploom": "hoppip",
-  "sunflora": "sunkern", "quagsire": "wooper", "clodsire": "wooper",
-  "wobbuffet": "wynaut", "forretress": "pineco", "ursaring": "teddiursa", "ursaluna": "teddiursa",
-  "magcargo": "slugma", "piloswine": "swinub", "mamoswine": "swinub",
-  "octillery": "remoraid", "houndoom": "houndour", "donphan": "phanpy",
-  "pupitar": "larvitar", "tyranitar": "larvitar",
-
-  // Gen 3
-  "grovyle": "treecko", "sceptile": "treecko",
-  "combusken": "torchic", "blaziken": "torchic",
-  "marshtomp": "mudkip", "swampert": "mudkip",
-  "mightyena": "poochyena", "linoone": "zigzagoon", "obstagoon": "zigzagoon",
-  "beautifly": "wurmple", "dustox": "wurmple", "ludicolo": "lotad", "lombre": "lotad",
-  "shiftry": "seedot", "nuzleaf": "seedot", "swellow": "taillow", "pelipper": "wingull",
-  "gardevoir": "ralts", "gallade": "ralts", "kirlia": "ralts",
-  "masquerain": "surskit", "breloom": "shroomish", "ninjask": "nincada", "shedinja": "nincada",
-  "exploud": "whismur", "loudred": "whismur", "hariyama": "makuhita",
-  "delcatty": "skitty", "manectric": "electrike",
-  "swalot": "gulpin", "sharpedo": "carvanha", "wailord": "wailmer", "camerupt": "numel",
-  "grumpig": "spoink", "flygon": "trapinch", "vibrava": "trapinch", "cacturne": "cacnea",
-  "altaria": "swablu", "crawdaunt": "corphish", "claydol": "baltoy", "cradily": "lileep",
-  "armaldo": "anorith", "milotic": "feebas", "banette": "shuppet", "dusclops": "duskull", "dusknoir": "duskull",
-  "chimecho": "chingling", "walrein": "spheal", "sealeo": "spheal", "huntail": "clamperl", "gorebyss": "clamperl",
-  "shelgon": "bagon", "salamence": "bagon", "metang": "beldum", "metagross": "beldum",
-
-  // Gen 4
-  "grotle": "turtwig", "torterra": "turtwig",
-  "monferno": "chimchar", "infernape": "chimchar",
-  "prinplup": "piplup", "empoleon": "piplup",
-  "staravia": "starly", "staraptor": "starly",
-  "bibarel": "bidoof", "kricketune": "kricketot",
-  "luxio": "shinx", "luxray": "shinx", "roserade": "budew", "roselia": "budew",
-  "rampardos": "cranidos", "bastiodon": "shieldon", "wormadam": "burmy", "mothim": "burmy",
-  "vespiquen": "combee", "floatzel": "buizel", "cherrim": "cherubi", "gastrodon": "shellos",
-  "drifblim": "drifloon", "lopunny": "buneary", "mismagius": "misdreavus", "honchkrow": "murkrow",
-  "purugly": "glameow", "skuntank": "stunky", "bronzong": "bronzor", "lucario": "riolu",
-  "hippowdon": "hippopotas", "drapion": "skorupi", "toxicroak": "croagunk", "abomasnow": "snover",
-  "weavile": "sneasel", "sneasler": "sneasel", "gliscor": "gligar",
-  "gabite": "gible", "garchomp": "gible",
-
-  // Gen 5
-  "servine": "snivy", "serperior": "snivy",
-  "pignite": "tepig", "emboar": "tepig",
-  "dewott": "oshawott", "samurott": "oshawott", "samurott-hisui": "oshawott",
-  "watchog": "patrat", "stoutland": "herdier", "herdier": "lillipup",
-  "liepard": "purrloin", "simisage": "pansage", "simisear": "pansear", "simipour": "panpour",
-  "musharna": "munna", "unfezant": "pidove", "tranquill": "pidove", "zebstrika": "blitzle",
-  "gigalith": "roggenrola", "boldore": "roggenrola", "swoobat": "woobat",
-  "excadrill": "drilbur", "conkeldurr": "timburr", "gurdurr": "timburr",
-  "seismitoad": "tympole", "palpitoad": "tympole", "leavanny": "sewaddle", "swadloon": "sewaddle",
-  "scolipede": "venipede", "whirlipede": "venipede", "whimsicott": "cottonee", "lilligant": "petilil", "lilligant-hisui": "petilil",
-  "krookodile": "sandile", "krokorok": "sandile", "darmanitan": "darumaka", "darmanitan-galar": "darumaka",
-  "crustle": "dwebble", "scrafty": "scraggy", "cofagrigus": "yamask", "runerigus": "yamask",
-  "carracosta": "tirtouga", "archeops": "archen", "garbodor": "trubbish", "zoroark": "zorua", "zoroark-hisui": "zorua",
-  "cinccino": "minccino", "gothitelle": "gothita", "gothorita": "gothita", "reuniclus": "solosis", "duosion": "solosis",
-  "swanna": "ducklett", "vanilluxe": "vanillite", "vanillish": "vanillite", "sawsbuck": "deerling",
-  "escavalier": "karrablast", "amoonguss": "foongus", "jellicent": "frillish", "galvantula": "joltik",
-  "ferrothorn": "ferroseed", "klinklang": "klink", "klang": "klink", "eelektross": "tynamo", "eelektrik": "tynamo",
-  "beheeyem": "elgyem", "chandelure": "litwick", "lampent": "litwick", "haxorus": "axew", "fraxure": "axew",
-  "beartic": "cubchoo", "mienshao": "mienfoo", "golurk": "golett", "bisharp": "pawniard", "kingambit": "pawniard",
-  "braviary": "rufflet", "braviary-hisui": "rufflet", "mandibuzz": "vullaby",
-  "hydreigon": "deino", "zweilous": "deino", "volcarona": "larvesta",
-
-  // Gen 6
-  "quilladin": "chespin", "chesnaught": "chespin",
-  "braixen": "fennekin", "delphox": "fennekin",
-  "frogadier": "froakie", "greninja": "froakie",
-  "diggersby": "bunnelby", "talonflame": "fletchling", "fletchinder": "fletchling",
-  "vivillon": "scatterbug", "spewpa": "scatterbug", "pyroar": "litleo", "florges": "flabebe", "floette": "flabebe",
-  "gogoat": "skiddo", "pangoro": "pancham", "meowstic": "espurr", "aegislash": "honedge", "doublade": "honedge",
-  "aromatisse": "spritzee", "slurpuff": "swirlix", "malamar": "inkay", "barbaracle": "binacle",
-  "dragalge": "skrelp", "clawitzer": "clauncher", "heliolisk": "helioptile", "tyrantrum": "tyrunt", "aurorus": "amaura",
-  "goodra": "goomy", "goodra-hisui": "goomy", "sliggoo": "goomy", "trevenant": "phantump", "gourgeist": "pumpkaboo",
-  "avalugg": "bergmite", "avalugg-hisui": "bergmite", "noivern": "noibat",
-
-  // Gen 7
-  "dartrix": "rowlet", "decidueye": "rowlet", "decidueye-hisui": "rowlet",
-  "torracat": "litten", "incineroar": "litten",
-  "brionne": "popplio", "primarina": "popplio",
-  "toucannon": "pikipek", "trumbeak": "pikipek", "gumshoos": "yungoos",
-  "vikavolt": "grubbin", "charjabug": "grubbin", "crabominable": "crabrawler",
-  "ribombee": "cutiefly", "lycanroc": "rockruff", "toxapex": "mareanie",
-  "mudsdale": "mudbray", "araquanid": "dewpider", "lurantis": "fomantis", "shiinotic": "morelull",
-  "salazzle": "salandit", "bewear": "stufful", "tsareena": "bounsweet", "steenee": "bounsweet",
-  "golisopod": "wimpod", "palossand": "sandygast", "silvally": "type-null", "kommo-o": "jangmo-o", "hakamo-o": "jangmo-o",
-
-  // Gen 8
-  "thwackey": "grookey", "rillaboom": "grookey",
-  "raboot": "scorbunny", "cinderace": "scorbunny",
-  "drizzile": "sobble", "inteleon": "sobble",
-  "greedent": "skwovet", "corvisquire": "rookidee", "corviknight": "rookidee",
-  "orbeetle": "blipbug", "dottler": "blipbug", "thievul": "nickit", "eldegoss": "gossifleur",
-  "dubwool": "wooloo", "drednaw": "chewtle", "boltund": "yamper", "coalossal": "rolycoly", "carkol": "rolycoly",
-  "flapple": "applin", "appletun": "applin", "dipplin": "applin", "hydrapple": "applin",
-  "sandaconda": "silicobra", "centiskorch": "sizzlipede", "grapploct": "clobbopus",
-  "polteageist": "sinistea", "sinistcha": "poltchageist", "hatterene": "hatenna", "hattrem": "hatenna",
-  "grimmsnarl": "impidimp", "morgrem": "impidimp", "cursola": "corsola",
-  "sirfetchd": "farfetchd", "alcremie": "milcery",
-  "frosmoth": "snom", "copperajah": "cufant", "dragapult": "dreepy", "drakloak": "dreepy", "urshifu": "kubfu",
-
-  // Gen 9
-  "floragato": "sprigatito", "meowscarada": "sprigatito",
-  "crocalor": "fuecoco", "skeledirge": "fuecoco",
-  "quaxwell": "quaxly", "quaquaval": "quaxly",
-  "oinkologne": "lechonk", "spidops": "tarountula", "lokix": "nymble", "pawmo": "pawmi", "pawmot": "pawmi",
-  "maushold": "tandemaus", "dachsbun": "fidough", "arboliva": "smoliv", "dolliv": "smoliv",
-  "garganacl": "nacli", "naclstack": "nacli", "armarouge": "charcadet", "ceruledge": "charcadet",
-  "bellibolt": "tadbulb", "kilowattrel": "wattrel", "mabosstiff": "maschiff", "grafaiai": "shroodle",
-  "brambleghast": "bramblin", "toedscruel": "toedscool", "scovillain": "capsakid", "rabsca": "rellor",
-  "espathra": "flittle", "tinkaton": "tinkatink", "tinkatuff": "tinkatink", "wugtrio": "wiglett",
-  "palafin": "finizen", "revavroom": "varoom", "glimmora": "glimmet", "houndstone": "greavard",
-  "cetitan": "cetoddle", "farigiraf": "girafarig",
-  "dudunsparce": "dunsparce", "baxcalibur": "frigibax", "arctibax": "frigibax",
-  "archaludon": "duraludon",
-};
 
 export const battleService = BattleService.getInstance();

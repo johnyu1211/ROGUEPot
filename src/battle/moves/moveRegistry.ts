@@ -103,6 +103,58 @@ import { thunderboltMove } from "./definitions/085_thunderbolt.js";
 import { thunderWaveMove } from "./definitions/086_thunder_wave.js";
 import { thunderMove } from "./definitions/087_thunder.js";
 import { rockThrowMove } from "./definitions/088_rock_throw.js";
+import { earthquakeMove } from "./definitions/089_earthquake.js";
+import { fissureMove } from "./definitions/090_fissure.js";
+import { digMove } from "./definitions/091_dig.js";
+import { toxicMove } from "./definitions/092_toxic.js";
+import { confusionMove } from "./definitions/093_confusion.js";
+import { psychicMove } from "./definitions/094_psychic.js";
+import { hypnosisMove } from "./definitions/095_hypnosis.js";
+import { meditateMove } from "./definitions/096_meditate.js";
+import { agilityMove } from "./definitions/097_agility.js";
+import { quickAttackMove } from "./definitions/098_quick_attack.js";
+import { rageMove } from "./definitions/099_rage.js";
+import { teleportMove } from "./definitions/100_teleport.js";
+import { nightShadeMove } from "./definitions/101_night_shade.js";
+import { mimicMove } from "./definitions/102_mimic.js";
+import { screechMove } from "./definitions/103_screech.js";
+import { doubleTeamMove } from "./definitions/104_double_team.js";
+import { recoverMove } from "./definitions/105_recover.js";
+import { hardenMove, ironDefenseMove } from "./definitions/106_harden.js";
+import { minimizeMove } from "./definitions/107_minimize.js";
+import { smokescreenMove } from "./definitions/108_smokescreen.js";
+import { confuseRayMove } from "./definitions/109_confuse_ray.js";
+import { withdrawMove } from "./definitions/110_withdraw.js";
+import { defenseCurlMove } from "./definitions/111_defense_curl.js";
+import { barrierMove } from "./definitions/112_barrier.js";
+import { lightScreenMove } from "./definitions/113_light_screen.js";
+import { hazeMove } from "./definitions/114_haze.js";
+import { reflectMove } from "./definitions/115_reflect.js";
+import { focusEnergyMove } from "./definitions/116_focus_energy.js";
+import { bideMove, bideChargeMove } from "./definitions/117_bide.js";
+import { metronomeMove } from "./definitions/118_metronome.js";
+import { mirrorMove } from "./definitions/119_mirror_move.js";
+import { selfDestructMove } from "./definitions/120_self_destruct.js";
+import { eggBombMove } from "./definitions/121_egg_bomb.js";
+import { lickMove } from "./definitions/122_lick.js";
+import { smogMove } from "./definitions/123_smog.js";
+import { sludgeMove } from "./definitions/124_sludge.js";
+import { boneClubMove } from "./definitions/125_bone_club.js";
+import { fireBlastMove } from "./definitions/126_fire_blast.js";
+import { waterfallMove } from "./definitions/127_waterfall.js";
+import { clampMove } from "./definitions/128_clamp.js";
+import { swiftMove } from "./definitions/129_swift.js";
+import { skullBashMove } from "./definitions/130_skull_bash.js";
+import { spikeCannonMove } from "./definitions/131_spike_cannon.js";
+import { constrictMove } from "./definitions/132_constrict.js";
+import { amnesiaMove } from "./definitions/133_amnesia.js";
+import { kinesisMove } from "./definitions/134_kinesis.js";
+import { softBoiledMove } from "./definitions/135_soft_boiled.js";
+import { highJumpKickMove } from "./definitions/136_high_jump_kick.js";
+import { glareMove } from "./definitions/137_glare.js";
+import { dreamEaterMove } from "./definitions/138_dream_eater.js";
+import { poisonGasMove } from "./definitions/139_poison_gas.js";
+import { barrageMove } from "./definitions/140_barrage.js";
 import { statusMove } from "./definitions/status.js";
 import { defaultMove } from "./definitions/default.js";
 import { hugMove } from "./definitions/hug.js";
@@ -143,7 +195,7 @@ export const MOVE_REGISTRY: Record<string, BattleMoveAnimation> = {
   "fly": flyMove,
   "bind": bindMove,
   "wrap": wrapMove,
-  "clamp": bindMove,
+  "clamp": clampMove,
   "sand-tomb": bindMove,
   "whirlpool": bindMove,
   "infestation": bindMove,
@@ -322,6 +374,190 @@ export const MOVE_REGISTRY: Record<string, BattleMoveAnimation> = {
   "rockthrow": rockThrowMove,
   "088": rockThrowMove,
   "돌떨구기": rockThrowMove,
+  "earthquake": earthquakeMove,
+  "089": earthquakeMove,
+  "지진": earthquakeMove,
+  "fissure": fissureMove,
+  "090": fissureMove,
+  "땅가르기": fissureMove,
+  "dig": digMove,
+  "091": digMove,
+  "구멍파기": digMove,
+  "toxic": toxicMove,
+  "092": toxicMove,
+  "맹독": toxicMove,
+  "confusion": confusionMove,
+  "093": confusionMove,
+  "염동력": confusionMove,
+  "psychic": psychicMove,
+  "094": psychicMove,
+  "사이코키네시스": psychicMove,
+  "hypnosis": hypnosisMove,
+  "095": hypnosisMove,
+  "최면술": hypnosisMove,
+  "meditate": meditateMove,
+  "096": meditateMove,
+  "요가포즈": meditateMove,
+  "agility": agilityMove,
+  "097": agilityMove,
+  "고속이동": agilityMove,
+  "quick-attack": quickAttackMove,
+  "quickattack": quickAttackMove,
+  "098": quickAttackMove,
+  "전광석화": quickAttackMove,
+  "rage": rageMove,
+  "099": rageMove,
+  "분노": rageMove,
+  "teleport": teleportMove,
+  "100": teleportMove,
+  "순간이동": teleportMove,
+  "night-shade": nightShadeMove,
+  "nightshade": nightShadeMove,
+  "101": nightShadeMove,
+  "나이트헤드": nightShadeMove,
+  "mimic": mimicMove,
+  "102": mimicMove,
+  "흉내내기": mimicMove,
+  "copycat": mimicMove,
+  "383": mimicMove,
+  "흉내쟁이": mimicMove,
+  "screech": screechMove,
+  "103": screechMove,
+  "싫은소리": screechMove,
+  "double-team": doubleTeamMove,
+  "doubleteam": doubleTeamMove,
+  "104": doubleTeamMove,
+  "그림자분신": doubleTeamMove,
+  "그림자분신술": doubleTeamMove,
+  "recover": recoverMove,
+  "105": recoverMove,
+  "hp회복": recoverMove,
+  "harden": hardenMove,
+  "106": hardenMove,
+  "단단해지기": hardenMove,
+  "iron-defense": ironDefenseMove,
+  "irondefense": ironDefenseMove,
+  "334": ironDefenseMove,
+  "철벽": ironDefenseMove,
+  "minimize": minimizeMove,
+  "107": minimizeMove,
+  "작아지기": minimizeMove,
+  "smokescreen": smokescreenMove,
+  "108": smokescreenMove,
+  "연막": smokescreenMove,
+  "confuse-ray": confuseRayMove,
+  "confuseray": confuseRayMove,
+  "109": confuseRayMove,
+  "이상한빛": confuseRayMove,
+  "withdraw": withdrawMove,
+  "110": withdrawMove,
+  "껍질에숨기": withdrawMove,
+  "defense-curl": defenseCurlMove,
+  "defensecurl": defenseCurlMove,
+  "111": defenseCurlMove,
+  "웅크리기": defenseCurlMove,
+  "barrier": barrierMove,
+  "112": barrierMove,
+  "배리어": barrierMove,
+  "light-screen": lightScreenMove,
+  "lightscreen": lightScreenMove,
+  "113": lightScreenMove,
+  "빛의장막": lightScreenMove,
+  "haze": hazeMove,
+  "114": hazeMove,
+  "흑안개": hazeMove,
+  "reflect": reflectMove,
+  "115": reflectMove,
+  "리플렉터": reflectMove,
+  "focus-energy": focusEnergyMove,
+  "focusenergy": focusEnergyMove,
+  "116": focusEnergyMove,
+  "기충전": focusEnergyMove,
+  "기에모으기": focusEnergyMove,
+  "bide": bideMove,
+  "bide-charge": bideChargeMove,
+  "117": bideMove,
+  "참기": bideMove,
+  "metronome": metronomeMove,
+  "118": metronomeMove,
+  "손가락흔들기": metronomeMove,
+  "mirror-move": mirrorMove,
+  "mirrormove": mirrorMove,
+  "119": mirrorMove,
+  "따라하기": mirrorMove,
+  "self-destruct": selfDestructMove,
+  "selfdestruct": selfDestructMove,
+  "120": selfDestructMove,
+  "자폭": selfDestructMove,
+  "egg-bomb": eggBombMove,
+  "eggbomb": eggBombMove,
+  "121": eggBombMove,
+  "알폭탄": eggBombMove,
+  "lick": lickMove,
+  "122": lickMove,
+  "핥기": lickMove,
+  "smog": smogMove,
+  "123": smogMove,
+  "스모그": smogMove,
+  "sludge": sludgeMove,
+  "124": sludgeMove,
+  "오물공격": sludgeMove,
+  "bone-club": boneClubMove,
+  "boneclub": boneClubMove,
+  "125": boneClubMove,
+  "뼈다귀치기": boneClubMove,
+  "fire-blast": fireBlastMove,
+  "fireblast": fireBlastMove,
+  "126": fireBlastMove,
+  "불대문자": fireBlastMove,
+  "waterfall": waterfallMove,
+  "127": waterfallMove,
+  "폭포오르기": waterfallMove,
+  "128": clampMove,
+  "껍질에끼우기": clampMove,
+  "껍질끼우기": clampMove,
+  "swift": swiftMove,
+  "129": swiftMove,
+  "스피드스타": swiftMove,
+  "skull-bash": skullBashMove,
+  "skullbash": skullBashMove,
+  "130": skullBashMove,
+  "로켓박치기": skullBashMove,
+  "spike-cannon": spikeCannonMove,
+  "spikecannon": spikeCannonMove,
+  "131": spikeCannonMove,
+  "가시대포": spikeCannonMove,
+  "constrict": constrictMove,
+  "132": constrictMove,
+  "휘감기": constrictMove,
+  "amnesia": amnesiaMove,
+  "133": amnesiaMove,
+  "망각술": amnesiaMove,
+  "kinesis": kinesisMove,
+  "134": kinesisMove,
+  "숟가락휘기": kinesisMove,
+  "soft-boiled": softBoiledMove,
+  "softboiled": softBoiledMove,
+  "135": softBoiledMove,
+  "알낳기": softBoiledMove,
+  "high-jump-kick": highJumpKickMove,
+  "highjumpkick": highJumpKickMove,
+  "136": highJumpKickMove,
+  "무릎차기": highJumpKickMove,
+  "glare": glareMove,
+  "137": glareMove,
+  "뱀눈초리": glareMove,
+  "dream-eater": dreamEaterMove,
+  "dreameater": dreamEaterMove,
+  "138": dreamEaterMove,
+  "꿈먹기": dreamEaterMove,
+  "poison-gas": poisonGasMove,
+  "poisongas": poisonGasMove,
+  "139": poisonGasMove,
+  "독가스": poisonGasMove,
+  "barrage": barrageMove,
+  "140": barrageMove,
+  "구슬던지기": barrageMove,
   "status": statusMove,
   "default": defaultMove,
   "perk-hug": hugMove,

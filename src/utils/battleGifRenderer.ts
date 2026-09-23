@@ -12,6 +12,7 @@ import {
   getPokemonSprite,
   drawPokeRogueBattleHud,
   drawFittedBattleSprite,
+  getStatusTintColor,
   getPokemonDisplayName,
   formatMoney,
   wrapDialogueText,
@@ -20,7 +21,11 @@ import {
   BIOME_NAMES_KO,
 } from "./canvasRenderer.js";
 import { getMoveAnimation } from "../battle/moves/moveRegistry.js";
-import { applyMoveCameraToFrames } from "./battleCamera.js";
+import { applyMoveCameraToFrames, setMoveAnimationResolver } from "./battleCamera.js";
+
+setMoveAnimationResolver(getMoveAnimation);
+(globalThis as any).__getMoveAnimation = getMoveAnimation;
+import { BattleFrame } from "../battle/moves/types.js";
 import { interpolateBattleFramesTo30Fps } from "./frameInterpolator.js";
 import { applyDamageBlinkFrames } from "./damageBlink.js";
 import { getPerkSvgImageSync, BallPerkId } from "./perkSvgIcons.js";
@@ -34,6 +39,7 @@ export interface BattleAnimationOptions {
   isPlayerAttacking?: boolean;
   dialogueLines?: string[];
   includeFramePreviews?: boolean;
+  entryType?: "both" | "enemy" | "player";
 }
 
 export interface FramePreviewItem {
@@ -55,6 +61,8 @@ export interface PhaseInfoItem {
   pOffset?: { x: number; y: number };
   eOffset?: { x: number; y: number };
   cameraZoom?: number;
+  playerHp?: number;
+  enemyHp?: number;
   dataUrl: string;
 }
 
@@ -122,6 +130,118 @@ function createEffectivenessFlickerFrames(
 }
 
 /**
+ * Creates dedicated end-of-turn residual damage animation frames (poison, burn, trap, weather).
+ * Plays before the faint frames and final hold frame so end-of-turn damage has a smooth blink + drain
+ * instead of abruptly jumping on the final hold frame!
+ */
+function createResidualDamageFrames(
+  postEnemyHp: number,
+  finalEnemyHp: number,
+  postPlayerHp: number,
+  finalPlayerHp: number,
+  playerFrontHold: boolean,
+  enemyBackHold: boolean,
+  isPlayerEndingEvading: boolean,
+  isEnemyEndingEvading: boolean,
+  lastAction: any
+): BattleFrame[] {
+  const enemyLoss = postEnemyHp - finalEnemyHp;
+  const playerLoss = postPlayerHp - finalPlayerHp;
+  if (enemyLoss <= 0 && playerLoss <= 0) return [];
+
+  const base: BattleFrame = {
+    delay: 50,
+    pOffset: isPlayerEndingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
+    eOffset: isEnemyEndingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
+    pAlpha: 1.0,
+    eAlpha: 1.0,
+    hidePShadow: isPlayerEndingEvading,
+    hideEShadow: isEnemyEndingEvading,
+    hidePlayer: isPlayerEndingEvading,
+    hideEnemy: isEnemyEndingEvading,
+    hideUI: false,
+    hideHud: false,
+    hideDialogue: false,
+    showEffect: false,
+    hitFlash: false,
+    usePlayerFront: playerFrontHold,
+    useEnemyBack: enemyBackHold,
+    enemyHp: postEnemyHp,
+    playerHp: postPlayerHp,
+    textLineIdx: 99,
+    statProgress: undefined,
+    isBlur: false,
+    moveEffect: lastAction,
+    afterCameraReturn: true,
+  };
+
+  const frames: BattleFrame[] = [];
+
+  // 1. Brief pause before residual damage triggers (350ms)
+  frames.push({
+    ...base,
+    delay: 350,
+    phaseId: "residual-damage-pre",
+    phaseName: "상태이상/구속 데미지 발생",
+  });
+
+  // 2. Sprite Blink (2 cycles, 50ms off / 50ms on)
+  for (let c = 0; c < 2; c++) {
+    // Off frame
+    frames.push({
+      ...base,
+      delay: 50,
+      pAlpha: playerLoss > 0 ? 0.20 : 1.0,
+      eAlpha: enemyLoss > 0 ? 0.20 : 1.0,
+      pOffset: playerLoss > 0 ? { x: (c % 2 === 0 ? 3 : -2), y: 0 } : (isPlayerEndingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 }),
+      eOffset: enemyLoss > 0 ? { x: (c % 2 === 0 ? -3 : 2), y: 0 } : (isEnemyEndingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 }),
+      phaseId: `residual-blink-${c + 1}-off`,
+      phaseName: `상태이상 피격 깜빡임 ${c + 1}`,
+    });
+    // On frame
+    frames.push({
+      ...base,
+      delay: 50,
+      pAlpha: 1.0,
+      eAlpha: 1.0,
+      phaseId: `residual-blink-${c + 1}-on`,
+      phaseName: `상태이상 피격 복귀 ${c + 1}`,
+    });
+  }
+
+  // 3. Smooth HP Drain (4 steps)
+  const steps = 4;
+  for (let s = 1; s <= steps; s++) {
+    const progress = s / steps;
+    const t = Math.sin((progress * Math.PI) / 2);
+    const curEnemyHp = enemyLoss > 0 ? Math.max(finalEnemyHp, Math.round(postEnemyHp - enemyLoss * t)) : postEnemyHp;
+    const curPlayerHp = playerLoss > 0 ? Math.max(finalPlayerHp, Math.round(postPlayerHp - playerLoss * t)) : postPlayerHp;
+    const isLast = (s === steps);
+
+    frames.push({
+      ...base,
+      delay: isLast ? 220 : 90,
+      enemyHp: curEnemyHp,
+      playerHp: curPlayerHp,
+      phaseId: `residual-hp-drain-${s}`,
+      phaseName: `상태이상 체력 감소 (${Math.round(progress * 100)}%)`,
+    });
+  }
+
+  // 4. Settling pause (250ms)
+  frames.push({
+    ...base,
+    delay: 250,
+    enemyHp: finalEnemyHp,
+    playerHp: finalPlayerHp,
+    phaseId: "residual-settle",
+    phaseName: "상태이상 데미지 안착",
+  });
+
+  return frames;
+}
+
+/**
  * Creates dedicated 3-step post-move stat change animation frames.
  * Plays AFTER the move attack finishes, emitting rising/falling particles while dialogue states the stat change.
  */
@@ -137,9 +257,14 @@ function createStatChangeFrames(
   }
 
   const isP = isAttackerPlayer;
+  const isBoost = action.statChanges.some(sc => sc.direction === "up");
+  const statTypeName = isBoost ? "능력치 상승" : "능력치 하락";
+
   return [
     // Step 1: Wave 1 soaring up from ground (150ms)
     {
+      phaseId: "stat-change-1",
+      phaseName: `${statTypeName} 파티클 1단계`,
       delay: 150,
       pOffset: (usePlayerFront && isP) ? { x: 0, y: 0 } : { x: 0, y: 0 },
       eOffset: (useEnemyBack && !isP) ? { x: 0, y: 0 } : { x: 0, y: 0 },
@@ -161,6 +286,8 @@ function createStatChangeFrames(
     },
     // Step 2: Wave 1 fading, Wave 2 soaring up from ground (150ms)
     {
+      phaseId: "stat-change-2",
+      phaseName: `${statTypeName} 파티클 2단계`,
       delay: 150,
       pOffset: (usePlayerFront && isP) ? { x: 0, y: 0 } : { x: 0, y: 0 },
       eOffset: (useEnemyBack && !isP) ? { x: 0, y: 0 } : { x: 0, y: 0 },
@@ -182,6 +309,8 @@ function createStatChangeFrames(
     },
     // Step 3: Wave 2 fading, Wave 3 soaring up from ground (160ms)
     {
+      phaseId: "stat-change-3",
+      phaseName: `${statTypeName} 파티클 3단계`,
       delay: 160,
       pOffset: (usePlayerFront && isP) ? { x: 0, y: 0 } : { x: 0, y: 0 },
       eOffset: (useEnemyBack && !isP) ? { x: 0, y: 0 } : { x: 0, y: 0 },
@@ -203,6 +332,8 @@ function createStatChangeFrames(
     },
     // Step 4: Wave 3 reaching apex and cleanly dissolving (180ms)
     {
+      phaseId: "stat-change-4",
+      phaseName: `${statTypeName} 파티클 클라이맥스`,
       delay: 180,
       pOffset: (usePlayerFront && isP) ? { x: 0, y: 0 } : { x: 0, y: 0 },
       eOffset: (useEnemyBack && !isP) ? { x: 0, y: 0 } : { x: 0, y: 0 },
@@ -230,12 +361,13 @@ function createStatChangeFrames(
  */
 function createFaintingFrames(
   action: TurnActionInfo,
-  isTargetPlayer: boolean,
+  target: "player" | "enemy" | "both" | boolean,
   dialogueTextIdx: number = 99,
   usePlayerFront: boolean = false,
   useEnemyBack: boolean = false
 ): any[] {
-  const isEnemy = !isTargetPlayer;
+  const isTargetPlayer = target === "player" || target === "both" || target === true;
+  const isEnemy = target === "enemy" || target === "both" || (typeof target === "boolean" && !target);
 
   return [
     // Step 1: Initial stumble and start sinking (140ms)
@@ -645,9 +777,11 @@ function isEvasionLaunch(action?: TurnActionInfo | null): boolean {
   if (!action) return false;
   const k = (action.moveKey || "").toLowerCase().replace(/[\s_]+/g, "-");
   if (!["fly", "dig", "dive", "bounce", "shadow-force", "phantom-force"].includes(k)) return false;
+  if (action.isTurn1Launch || action.chargingMove === "dig") return true;
   return (action.damage ?? 0) === 0 && (
     action.log?.includes("날아올랐다") || action.log?.includes("flew up") ||
     action.log?.includes("파고들었다") || action.log?.includes("burrowed") ||
+    action.log?.includes("땅속으로") || action.log?.includes("dug a hole") ||
     action.log?.includes("잠수했다") || action.log?.includes("underwater") ||
     action.log?.includes("모습을 감췄다") || action.log?.includes("vanished") ||
     action.log?.includes("튀어올랐다") || action.log?.includes("bounced")
@@ -877,9 +1011,6 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   const ctx = canvas.getContext("2d");
   ctx.imageSmoothingEnabled = false;
 
-  const enemyHp = enemy.hp;
-  const playerHp = playerMon.hp;
-
   const turnActions = battle.turnActions || [];
   const hasMultipleActions = turnActions.length >= 2;
 
@@ -891,12 +1022,23 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     type,
     isSpecial,
     isPlayerAttacking: isPlayer,
-    enemyHpAfter: enemyHp,
-    playerHpAfter: playerHp,
+    enemyHpAfter: enemy.hp,
+    playerHpAfter: playerMon.hp,
     statChanges: battle.lastMoveEffect?.statChanges,
     hitCount: (battle.lastMoveEffect as any)?.hitCount,
   };
   const isP1 = a1.actor === "player";
+
+  // Pre-action initial HP before ANY damage in this turn occurs!
+  const initialEnemyHp = a1.enemyHpBefore !== undefined
+    ? a1.enemyHpBefore
+    : (isP1 ? (a1.enemyHpAfter + (a1.damage || 0)) : a1.enemyHpAfter);
+  const initialPlayerHp = a1.playerHpBefore !== undefined
+    ? a1.playerHpBefore
+    : (!isP1 ? (a1.playerHpAfter + (a1.damage || 0)) : a1.playerHpAfter);
+
+  const enemyHp = initialEnemyHp;
+  const playerHp = initialPlayerHp;
   let mKey1 = getMoveKey(a1.moveKey || a1.moveName);
   if (mKey1 === "solar-beam" && (a1.isTurn1Launch || a1.chargingMove === "solar-beam" || a1.log?.includes("빛을 흡수") || a1.log?.includes("sunlight"))) {
     mKey1 = "solar-beam-charge";
@@ -908,7 +1050,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   const isPayDay1 = (mKey1 === "pay-day" || mKey1 === "payday");
   const isFirePunch1 = (mKey1 === "fire-punch" || mKey1 === "firepunch");
   const isIcePunch1 = (mKey1 === "ice-punch" || mKey1 === "icepunch");
-  const isGuillotine1 = (mKey1 === "guillotine" || mKey1 === "horn-drill" || mKey1 === "horndrill");
+  const isGuillotine1 = (mKey1 === "guillotine" || mKey1 === "horn-drill" || mKey1 === "horndrill" || mKey1 === "fissure");
   const isSwordsDance1 = (mKey1 === "swords-dance" || mKey1 === "swordsdance");
   const isFly1 = (mKey1 === "fly");
   const isRazorWind1 = (mKey1 === "razor-wind" || mKey1 === "razorwind");
@@ -941,8 +1083,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     isPlayer: isP1,
     isHit: isHit1,
     isMiss: isMiss1,
-    enemyHp: enemy.hp,
-    playerHp: playerMon.hp,
+    enemyHp: initialEnemyHp,
+    playerHp: initialPlayerHp,
     textLineIdx: 1,
     usePlayerFront: false,
     useEnemyBack: false,
@@ -958,6 +1100,32 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
 
   // [유저 요구사항] 상성/데미지에 따른 대상 스프라이트 깜빡임(Blink) 프레임 적용
   act1Frames = applyDamageBlinkFrames(act1Frames, a1, isP1);
+
+  if (a1.canAct === false) {
+    act1Frames = [
+      {
+        delay: 850,
+        pOffset: { x: 0, y: 0 },
+        eOffset: { x: 0, y: 0 },
+        cameraZoom: 1.0,
+        cameraPan: { x: 0, y: 0 },
+        cameraFocal: null,
+        _gen5Camera: false,
+        afterCameraReturn: true,
+        hideUI: false,
+        hideHud: false,
+        hideDialogue: false,
+        phaseId: "cannot-act-1",
+        phaseName: "행동 불가",
+        showEffect: false,
+        hitFlash: false,
+        enemyHp: initialEnemyHp,
+        playerHp: initialPlayerHp,
+        textLineIdx: 1,
+        moveEffect: a1,
+      }
+    ];
+  }
 
   let framesConfig: any[] = [];
 
@@ -975,7 +1143,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const isPayDay2 = (mKey2 === "pay-day" || mKey2 === "payday");
     const isFirePunch2 = (mKey2 === "fire-punch" || mKey2 === "firepunch");
     const isIcePunch2 = (mKey2 === "ice-punch" || mKey2 === "icepunch");
-    const isGuillotine2 = (mKey2 === "guillotine" || mKey2 === "horn-drill" || mKey2 === "horndrill");
+    const isGuillotine2 = (mKey2 === "guillotine" || mKey2 === "horn-drill" || mKey2 === "horndrill" || mKey2 === "fissure");
     const isSwordsDance2 = (mKey2 === "swords-dance" || mKey2 === "swordsdance");
     const isFly2 = (mKey2 === "fly");
     const isRazorWind2 = (mKey2 === "razor-wind" || mKey2 === "razorwind");
@@ -1008,8 +1176,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       isPlayer: isP2,
       isHit: isHit2,
       isMiss: isMiss2,
-      enemyHp: a1.enemyHpAfter,
-      playerHp: a1.playerHpAfter,
+      enemyHp: a2.enemyHpBefore !== undefined ? a2.enemyHpBefore : a1.enemyHpAfter,
+      playerHp: a2.playerHpBefore !== undefined ? a2.playerHpBefore : a1.playerHpAfter,
       textLineIdx: 3,
       usePlayerFront: false,
       useEnemyBack: false,
@@ -1026,6 +1194,32 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     // [유저 요구사항] 상성/데미지에 따른 대상 스프라이트 깜빡임(Blink) 프레임 적용
     act2Frames = applyDamageBlinkFrames(act2Frames, a2, isP2);
 
+    if (a2.canAct === false) {
+      act2Frames = [
+        {
+          delay: 850,
+          pOffset: { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
+          cameraZoom: 1.0,
+          cameraPan: { x: 0, y: 0 },
+          cameraFocal: null,
+          _gen5Camera: false,
+          afterCameraReturn: true,
+          hideUI: false,
+          hideHud: false,
+          hideDialogue: false,
+          phaseId: "cannot-act-2",
+          phaseName: "행동 불가",
+          showEffect: false,
+          hitFlash: false,
+          enemyHp: a1.enemyHpAfter,
+          playerHp: a1.playerHpAfter,
+          textLineIdx: 3,
+          moveEffect: a2,
+        }
+      ];
+    }
+
     const a1Fainted = a1.enemyHpAfter <= 0 || a1.playerHpAfter <= 0;
     const a2Fainted = a2 && (a2.enemyHpAfter <= 0 || a2.playerHpAfter <= 0);
 
@@ -1038,8 +1232,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const playerFrontHold = isP1GuillotineKill || isP2GuillotineKill;
     const enemyBackHold = isE1GuillotineKill || isE2GuillotineKill;
 
-    const finalEnemyHp = Math.min(enemy.hp, a2 ? a2.enemyHpAfter : a1.enemyHpAfter);
-    const finalPlayerHp = Math.min(playerMon.hp, a2 ? a2.playerHpAfter : a1.playerHpAfter);
+    const a3 = turnActions[2];
+    const postActionEnemyHp = a3 ? a3.enemyHpAfter : (a2 ? a2.enemyHpAfter : a1.enemyHpAfter);
+    const postActionPlayerHp = a3 ? a3.playerHpAfter : (a2 ? a2.playerHpAfter : a1.playerHpAfter);
+    const finalEnemyHp = Math.min(enemy.hp, postActionEnemyHp);
+    const finalPlayerHp = Math.min(playerMon.hp, postActionPlayerHp);
 
     const isWhirlwindHit1 = isWhirlwind1 && (a1.isHit !== false && !a1.log?.includes("통하지 않았다") && !a1.log?.includes("실패했다"));
     const isWhirlwindHit2 = isWhirlwind2 && (a2 ? (a2.isHit !== false && !a2.log?.includes("통하지 않았다") && !a2.log?.includes("실패했다")) : false);
@@ -1050,8 +1247,10 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const isAnyFainted = a1Fainted || a2Fainted || isEnemyFainted || isPlayerFainted;
 
     const faintAction = a2 || a1;
-    const faintFrames = (isEnemyFainted || isPlayerFainted)
-      ? createFaintingFrames(faintAction, isPlayerFainted, 99, playerFrontHold, enemyBackHold)
+    const isFissureAction = ((faintAction?.moveKey || "").toLowerCase().replace(/[\s_]+/g, "-") === "fissure");
+    const faintTarget = (isEnemyFainted && isPlayerFainted) ? "both" : (isPlayerFainted ? "player" : "enemy");
+    const faintFrames = (isEnemyFainted || isPlayerFainted) && !isFissureAction
+      ? createFaintingFrames(faintAction, faintTarget, 99, playerFrontHold, enemyBackHold)
       : [];
 
     const a1IsEvasionLaunch = isEvasionLaunch(a1);
@@ -1112,13 +1311,27 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const isEnemyMidTurnEvading = (a1IsEvasionLaunch && !isP1) || (isEnemyStartingEvading && !a1IsEvasionStrike) || isEnemyEvadingDuringAct2;
 
     // Evasion state at END of turn (final hold frame)
-    const isPlayerEndingEvading = (a1IsEvasionLaunch && isP1 && !a2) || (a2IsEvasionLaunch && isP2) || (hasPlayerSemiInvulnerable && !a1IsEvasionStrike && !a2IsEvasionStrike);
-    const isEnemyEndingEvading = (a1IsEvasionLaunch && !isP1 && !a2) || (a2IsEvasionLaunch && !isP2) || (hasEnemySemiInvulnerable && !a1IsEvasionStrike && !a2IsEvasionStrike);
+    const isPlayerEndingEvading = (a1IsEvasionLaunch && isP1 && (!a2 || !isP2)) || (a2IsEvasionLaunch && isP2) || (hasPlayerSemiInvulnerable && !a1IsEvasionStrike && !a2IsEvasionStrike);
+    const isEnemyEndingEvading = (a1IsEvasionLaunch && !isP1 && (!a2 || isP2)) || (a2IsEvasionLaunch && !isP2) || (hasEnemySemiInvulnerable && !a1IsEvasionStrike && !a2IsEvasionStrike);
 
+    // Turn-end residual damage frames (poison, burn, trap, weather)
+    const residualFrames = createResidualDamageFrames(
+      postActionEnemyHp,
+      finalEnemyHp,
+      postActionPlayerHp,
+      finalPlayerHp,
+      playerFrontHold,
+      enemyBackHold,
+      isPlayerEndingEvading,
+      isEnemyEndingEvading,
+      a3 || a2 || a1
+    );
+
+    const isCameraNone1 = moveAnim1?.camera?.type === "none";
     let processedAct1Frames = act1Frames.map(f => ({
       ...f,
       isAttackerPlayer: isP1,
-      hideUI: f.hideUI !== undefined ? f.hideUI : (!f.afterCameraReturn && (f.delay === undefined || f.delay < 10000)),
+      hideUI: f.hideUI !== undefined ? f.hideUI : (isCameraNone1 ? false : (!f.afterCameraReturn && (f.delay === undefined || f.delay < 10000))),
     }));
     if (isEnemyEvadingDuringAct1) {
       processedAct1Frames = processedAct1Frames.map(f => f.isHighSkyCutscene ? f : ({ ...f, eOffset: { x: 0, y: -9999 }, hideEShadow: true, hideEnemy: true, eAlpha: 0.0 }));
@@ -1126,10 +1339,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       processedAct1Frames = processedAct1Frames.map(f => f.isHighSkyCutscene ? f : ({ ...f, pOffset: { x: 0, y: -9999 }, hidePShadow: true, hidePlayer: true, pAlpha: 0.0 }));
     }
 
+    const isCameraNone2 = moveAnim2?.camera?.type === "none";
     let processedAct2Frames = act2Frames.map(f => ({
       ...f,
       isAttackerPlayer: isP2,
-      hideUI: f.hideUI !== undefined ? f.hideUI : (!f.afterCameraReturn && (f.delay === undefined || f.delay < 10000)),
+      hideUI: f.hideUI !== undefined ? f.hideUI : (isCameraNone2 ? false : (!f.afterCameraReturn && (f.delay === undefined || f.delay < 10000))),
     }));
     if (isPlayerEvadingDuringAct2) {
       processedAct2Frames = processedAct2Frames.map(f => f.isHighSkyCutscene ? f : ({ ...f, pOffset: { x: 0, y: -9999 }, hidePShadow: true, hidePlayer: true, pAlpha: 0.0 }));
@@ -1140,8 +1354,57 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const emBody = { x: em.x, y: em.y - 36 };
     const pmBody = { x: pm.x, y: pm.y - 36 };
 
-    applyMoveCameraToFrames(processedAct1Frames, moveAnim1, isP1, emBody, pmBody, true);
-    applyMoveCameraToFrames(processedAct2Frames, moveAnim2, isP2, emBody, pmBody, false);
+    if (a1.canAct !== false) {
+      applyMoveCameraToFrames(processedAct1Frames, moveAnim1, isP1, emBody, pmBody, true);
+    }
+    if (a2.canAct !== false) {
+      applyMoveCameraToFrames(processedAct2Frames, moveAnim2, isP2, emBody, pmBody, false);
+    }
+
+    let processedAct3Frames: any[] = [];
+    let act3FlickerFrames: any[] = [];
+    let act3StatFrames: any[] = [];
+    let isP3 = false;
+    let moveAnim3: any = null;
+
+    if (a3) {
+      isP3 = a3.actor === "player";
+      let mKey3 = getMoveKey(a3.moveKey || a3.moveName);
+      if (mKey3 === "solar-beam" && (a3.isTurn1Launch || a3.chargingMove === "solar-beam" || a3.log?.includes("빛을 흡수") || a3.log?.includes("sunlight"))) {
+        mKey3 = "solar-beam-charge";
+      }
+      const moveData3 = getMoveData(mKey3);
+      const isCharging3 = isEvasionLaunch(a3);
+      const isEvasionHit3 = isEvasionStrike(a3);
+      const isStatusMove3 = (moveData3?.category === "status" || (a3 as any).category === "status" || ((a3.damage ?? 0) === 0 && !isCharging3 && !isEvasionHit3));
+      const isHit3 = a3.isHit !== undefined ? a3.isHit : ((a3.damage ?? 0) > 0 || (!a3.log?.includes("빗나갔다") && !a3.log?.includes("missed") && !a3.log?.includes("빗나가")));
+      const isMiss3 = !isHit3;
+
+      moveAnim3 = getMoveAnimation(mKey3, isStatusMove3);
+      let act3Frames: any[] = moveAnim3.buildFrames({
+        action: a3,
+        isPlayer: isP3,
+        isHit: isHit3,
+        isMiss: isMiss3,
+        enemyHp: a2.enemyHpAfter,
+        playerHp: a2.playerHpAfter,
+        textLineIdx: 5,
+        usePlayerFront: false,
+        useEnemyBack: false,
+      });
+      act3Frames = applyDamageBlinkFrames(act3Frames, a3, isP3);
+      const isCameraNone3 = moveAnim3?.camera?.type === "none";
+      processedAct3Frames = act3Frames.map(f => ({
+        ...f,
+        isAttackerPlayer: isP3,
+        hideUI: f.hideUI !== undefined ? f.hideUI : (isCameraNone3 ? false : (!f.afterCameraReturn && (f.delay === undefined || f.delay < 10000))),
+      }));
+      if (a3.canAct !== false) {
+        applyMoveCameraToFrames(processedAct3Frames, moveAnim3, isP3, emBody, pmBody, false);
+      }
+      act3FlickerFrames = createEffectivenessFlickerFrames(a3, isP3, false, playerFrontHold, enemyBackHold);
+      act3StatFrames = createStatChangeFrames(a3, isP3, 6, playerFrontHold, enemyBackHold);
+    }
 
     const isFlyGlide1 = (mKey1 === "fly" && !isEvasionLaunch(a1));
     const leadingBlurDelay = isFlyGlide1 ? 1000 : 800;
@@ -1152,8 +1415,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const extraDownOffsetHug = Math.max(0, Math.round((pDimHug - 65) * 0.75));
     const hugFrames = isHugTurn ? createHugAnimationFrames(enemy.hp, playerMon.hp, 1, extraDownOffsetHug) : [];
 
-    const act1HasStatFrames = processedAct1Frames.some(f => f.statProgress !== undefined);
-    const act2HasStatFrames = processedAct2Frames.some(f => f.statProgress !== undefined);
+    const act1HasStatFrames = processedAct1Frames.some(f => f.statProgress !== undefined) || Boolean(moveAnim1?.customStatParticles);
+    const act2HasStatFrames = processedAct2Frames.some(f => f.statProgress !== undefined) || Boolean(moveAnim2?.customStatParticles);
 
     framesConfig = [
       // Frame 0: Leading Cinematic Soft-Blur Loading Frame (1000ms for Fly glide, 800ms for others) - Field Blur
@@ -1169,8 +1432,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         hideEnemy: isEnemyStartingEvading,
         showEffect: false,
         hitFlash: false,
-        enemyHp: enemy.hp,
-        playerHp: playerMon.hp,
+        enemyHp: initialEnemyHp,
+        playerHp: initialPlayerHp,
         textLineIdx: 0,
         statProgress: undefined,
         isBlur: true,
@@ -1189,9 +1452,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         isPlayerEvadingDuringAct1 ? { ...f, pOffset: { x: 0, y: -9999 }, hidePlayer: true, hidePShadow: true, pAlpha: 0.0 }
         : (isEnemyEvadingDuringAct1 ? { ...f, eOffset: { x: 0, y: -9999 }, hideEnemy: true, hideEShadow: true, eAlpha: 0.0 } : f)
       )) : []),
-      // Frame 4: Natural Breathing Room Pause between Turns (320ms - comfortable reading pause!)
+      // Frame 4: Natural Breathing Room Pause between Turns (850ms - comfortable reading pause!)
       {
-        delay: 320,
+        delay: 850,
         pOffset: isPlayerMidTurnEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
         eOffset: isEnemyMidTurnEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
         pAlpha: isPlayerMidTurnEvading ? 0.0 : 1.0,
@@ -1210,7 +1473,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         targetAlpha: 1.0,
         enemyHp: a1.enemyHpAfter,
         playerHp: a1.playerHpAfter,
-        textLineIdx: 2,
+        textLineIdx: Math.max(1, (a1.log ? a1.log.replace(/\\n/g, "\n").split("\n").filter(Boolean).length : 2)),
         statProgress: undefined,
         isBlur: false,
         moveEffect: a1,
@@ -1218,15 +1481,49 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       // === ACT 2 ===
       ...processedAct2Frames,
       // Frame 7: Attacker 2 Recoil & Counter Damage (with Dynamic Effectiveness Blinking!)
-      ...(createEffectivenessFlickerFrames(a2, isP2, false, playerFrontHold, enemyBackHold).map(f =>
+      ...(a2.canAct === false ? [] : (createEffectivenessFlickerFrames(a2, isP2, false, playerFrontHold, enemyBackHold).map(f =>
         isPlayerEvadingDuringAct2 ? { ...f, pOffset: { x: 0, y: -9999 }, hidePlayer: true, hidePShadow: true, pAlpha: 0.0 }
         : (isEnemyEvadingDuringAct2 ? { ...f, eOffset: { x: 0, y: -9999 }, hideEnemy: true, hideEShadow: true, eAlpha: 0.0 } : f)
-      )),
+      ))),
       // Dedicated Post-Move Stat Change Phase for Action 2 (if stat changes exist and not already in act2 frames!)
-      ...(!act2HasStatFrames ? (createStatChangeFrames(a2, isP2, 4, playerFrontHold, enemyBackHold).map(f =>
+      ...(!act2HasStatFrames && a2.canAct !== false ? (createStatChangeFrames(a2, isP2, 4, playerFrontHold, enemyBackHold).map(f =>
         isPlayerEvadingDuringAct2 ? { ...f, pOffset: { x: 0, y: -9999 }, hidePlayer: true, hidePShadow: true, pAlpha: 0.0 }
         : (isEnemyEvadingDuringAct2 ? { ...f, eOffset: { x: 0, y: -9999 }, hideEnemy: true, hideEShadow: true, eAlpha: 0.0 } : f)
       )) : []),
+      // === ACT 3 (If present!) ===
+      ...(a3 ? [
+        // Natural Breathing Room Pause between Act 2 and Act 3 (850ms)
+        {
+          delay: 850,
+          pOffset: { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
+          pAlpha: 1.0,
+          eAlpha: 1.0,
+          hidePShadow: false,
+          hideEShadow: false,
+          hidePlayer: false,
+          hideEnemy: false,
+          hideUI: false,
+          hideHud: false,
+          hideDialogue: false,
+          showEffect: false,
+          hitFlash: false,
+          usePlayerFront: false,
+          useEnemyBack: false,
+          targetAlpha: 1.0,
+          enemyHp: a2.enemyHpAfter,
+          playerHp: a2.playerHpAfter,
+          textLineIdx: Math.max(1, (a2.log ? a2.log.replace(/\\n/g, "\n").split("\n").filter(Boolean).length : 3)),
+          statProgress: undefined,
+          isBlur: false,
+          moveEffect: a2,
+        },
+        ...processedAct3Frames,
+        ...(a3.canAct === false ? [] : act3FlickerFrames),
+        ...act3StatFrames,
+      ] : []),
+      // Turn-End Residual Damage (poison, burn, trap, weather)
+      ...residualFrames,
       // Sinking Faint Collapse Animation (if someone fainted)
       ...faintFrames,
       // Final 11-Minute Static Hold Frame (655,000ms) - completely neutral with NO statProgress
@@ -1252,7 +1549,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         textLineIdx: 99,
         statProgress: undefined,
         isBlur: false,
-        moveEffect: a2,
+        moveEffect: a3 || a2,
       }
     ];
   } else {
@@ -1270,12 +1567,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       playerHpAfter: playerHp,
     };
 
-    const isGuillotineSingle = (eff.moveKey || moveKey).toLowerCase().replace(/[\s_]+/g, "-") === "guillotine" || (eff.moveKey || moveKey).toLowerCase().replace(/[\s_]+/g, "-").includes("horn-drill");
+    const isGuillotineSingle = (eff.moveKey || moveKey).toLowerCase().replace(/[\s_]+/g, "-") === "guillotine" || (eff.moveKey || moveKey).toLowerCase().replace(/[\s_]+/g, "-").includes("horn-drill") || (eff.moveKey || moveKey).toLowerCase().replace(/[\s_]+/g, "-") === "fissure";
+    const isFissureSingle = (eff.moveKey || moveKey).toLowerCase().replace(/[\s_]+/g, "-") === "fissure";
     const isWhirlwindSingle = (eff.moveKey || moveKey).toLowerCase().replace(/[\s_]+/g, "-") === "whirlwind";
     const isWhirlwindSuccess = isWhirlwindSingle && (eff.isHit !== false && !eff.log?.includes("통하지 않았다") && !eff.log?.includes("실패했다"));
 
-    const finalEnemyHp = Math.min(enemy.hp, eff.enemyHpAfter !== undefined ? eff.enemyHpAfter : enemyHp);
-    const finalPlayerHp = Math.min(playerMon.hp, eff.playerHpAfter !== undefined ? eff.playerHpAfter : playerHp);
+    const postActionEnemyHp = eff.enemyHpAfter !== undefined ? eff.enemyHpAfter : enemyHp;
+    const postActionPlayerHp = eff.playerHpAfter !== undefined ? eff.playerHpAfter : playerHp;
+    const finalEnemyHp = Math.min(enemy.hp, postActionEnemyHp);
+    const finalPlayerHp = Math.min(playerMon.hp, postActionPlayerHp);
     const isEnemyFainted = (finalEnemyHp <= 0 || (enemy.hp <= 0 && !isWhirlwindSuccess) || (battle.phase === "VICTORY" && !isWhirlwindSuccess));
     const isPlayerFainted = (finalPlayerHp <= 0 || (playerMon.hp <= 0 && !isWhirlwindSuccess) || (battle.phase === "DEFEAT" && !isWhirlwindSuccess));
     const isFainted = isEnemyFainted || isPlayerFainted;
@@ -1283,8 +1583,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const playerFrontHold = isP1 && isGuillotineSingle && (isEnemyFainted || isHit1);
     const enemyBackHold = !isP1 && isGuillotineSingle && (isPlayerFainted || isHit1);
 
-    const faintFrames = isFainted
-      ? createFaintingFrames(eff, isPlayerFainted, 99, playerFrontHold, enemyBackHold)
+    const faintTarget = (isEnemyFainted && isPlayerFainted) ? "both" : (isPlayerFainted ? "player" : "enemy");
+    const faintFrames = (isFainted && !isFissureSingle)
+      ? createFaintingFrames(eff, faintTarget, 99, playerFrontHold, enemyBackHold)
       : [];
 
     const a1IsEvasionLaunch = isEvasionLaunch(a1);
@@ -1328,10 +1629,24 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const isPlayerEndingEvading = (a1IsEvasionLaunch && isP1) || (hasPlayerSemiInvulnerable && !a1IsEvasionStrike);
     const isEnemyEndingEvading = (a1IsEvasionLaunch && !isP1) || (hasEnemySemiInvulnerable && !a1IsEvasionStrike);
 
+    // Turn-end residual damage frames (poison, burn, trap, weather)
+    const residualFramesSingle = createResidualDamageFrames(
+      postActionEnemyHp,
+      finalEnemyHp,
+      postActionPlayerHp,
+      finalPlayerHp,
+      playerFrontHold,
+      enemyBackHold,
+      isPlayerEndingEvading,
+      isEnemyEndingEvading,
+      eff
+    );
+
+    const isCameraNoneSingle = moveAnim1?.camera?.type === "none";
     let processedSingleActFrames = act1Frames.map(f => ({
       ...f,
       isAttackerPlayer: isP1,
-      hideUI: f.hideUI !== undefined ? f.hideUI : (!f.afterCameraReturn && (f.delay === undefined || f.delay < 10000)),
+      hideUI: f.hideUI !== undefined ? f.hideUI : (isCameraNoneSingle ? false : (!f.afterCameraReturn && (f.delay === undefined || f.delay < 10000))),
     }));
     if (isEnemyStartingEvading && isP1) {
       processedSingleActFrames = processedSingleActFrames.map(f => f.isHighSkyCutscene ? f : ({ ...f, eOffset: { x: 0, y: -9999 }, hideEShadow: true, hideEnemy: true, eAlpha: 0.0 }));
@@ -1339,7 +1654,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       processedSingleActFrames = act1Frames.map(f => f.isHighSkyCutscene ? f : ({ ...f, pOffset: { x: 0, y: -9999 }, hidePShadow: true, hidePlayer: true, pAlpha: 0.0 }));
     }
 
-    applyMoveCameraToFrames(processedSingleActFrames, moveAnim1, isP1, em, pm);
+    const emBodySingle = { x: em.x, y: em.y - 36 };
+    const pmBodySingle = { x: pm.x, y: pm.y - 36 };
+    if (a1?.canAct !== false) {
+      applyMoveCameraToFrames(processedSingleActFrames, moveAnim1, isP1, emBodySingle, pmBodySingle);
+    }
 
     const isFlyGlideSingle = (mKey1 === "fly" && !isEvasionLaunch(a1));
     const singleLeadingBlurDelay = isFlyGlideSingle ? 1000 : 800;
@@ -1350,7 +1669,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const extraDownOffsetSingle = Math.max(0, Math.round((pDimSingle - 65) * 0.75));
     const hugFramesSingle = isHugTurnSingle ? createHugAnimationFrames(enemy.hp, playerMon.hp, 1, extraDownOffsetSingle) : [];
 
-    const singleHasStatFrames = processedSingleActFrames.some(f => f.statProgress !== undefined);
+    const singleHasStatFrames = processedSingleActFrames.some(f => f.statProgress !== undefined) || Boolean(moveAnim1?.customStatParticles);
 
     framesConfig = [
       // Frame 0: Leading Cinematic Soft-Blur Loading Frame (1000ms for Fly glide, 800ms for others) - Field Blur
@@ -1366,8 +1685,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         hideEnemy: isEnemyStartingEvading,
         showEffect: false,
         hitFlash: false,
-        enemyHp: enemy.hp,
-        playerHp: playerMon.hp,
+        enemyHp: initialEnemyHp,
+        playerHp: initialPlayerHp,
         textLineIdx: 0,
         statProgress: undefined,
         isBlur: true,
@@ -1386,6 +1705,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         isPlayerStartingEvading && !isP1 ? { ...f, pOffset: { x: 0, y: -9999 }, hidePlayer: true, hidePShadow: true, pAlpha: 0.0 }
         : (isEnemyStartingEvading && isP1 ? { ...f, eOffset: { x: 0, y: -9999 }, hideEnemy: true, hideEShadow: true, eAlpha: 0.0 } : f)
       )) : []),
+      // Turn-End Residual Damage (poison, burn, trap, weather)
+      ...residualFramesSingle,
       // Sinking Faint Collapse Animation (if fainted)
       ...faintFrames,
       // Final 11-Minute Static Hold Frame (655,000ms) - completely neutral with NO statProgress
@@ -1443,9 +1764,24 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   let frameIdx = 0;
   let prevBattleFrame: any = null;
 
+  let curRenderEnemyHp = initialEnemyHp;
+  let curRenderPlayerHp = initialPlayerHp;
+  let curRenderEnemyStatus: string | null = (a1.enemyStatusBefore !== undefined ? a1.enemyStatusBefore : enemy.status) || null;
+  let curRenderPlayerStatus: string | null = (a1.playerStatusBefore !== undefined ? a1.playerStatusBefore : playerMon.status) || null;
+
   for (const f of framesConfig) {
+    if (f.enemyHp !== undefined) curRenderEnemyHp = f.enemyHp;
+    if (f.playerHp !== undefined) curRenderPlayerHp = f.playerHp;
+    if (f.enemyStatus !== undefined) curRenderEnemyStatus = f.enemyStatus;
+    if (f.playerStatus !== undefined) curRenderPlayerStatus = f.playerStatus;
+    f.enemyHp = curRenderEnemyHp;
+    f.playerHp = curRenderPlayerHp;
+    f.enemyStatus = curRenderEnemyStatus;
+    f.playerStatus = curRenderPlayerStatus;
+
     let drawPlayerSpriteFn: (() => void) | null = null;
-    const targetCtx = f.isBlur ? offCtx : ctx;
+    const isAnyBlur = Boolean(f.isBlur || f.cameraBlur);
+    const targetCtx = isAnyBlur ? offCtx : ctx;
     targetCtx.clearRect(0, 0, width, height);
 
     targetCtx.save();
@@ -1458,7 +1794,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       drawHighSkyCutscene(targetCtx, logicalWidth, logicalHeight, f, attackerSprite);
     } else {
       const isTracking = Boolean(f.cameraTrackAttacker);
-      const hasCamera = Boolean(f.cameraZoom || f.cameraPan || isTracking || f.cameraFocal);
+      const hasCamera = Boolean(f.cameraZoom || f.cameraPan || isTracking || f.cameraFocal || f.cameraRoll);
       if (hasCamera) {
         targetCtx.save();
         const zoom = f.cameraZoom || 1.0;
@@ -1471,6 +1807,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
 
           targetCtx.translate(logicalWidth / 2, screenY);
           targetCtx.scale(zoom, zoom);
+          if (f.cameraRoll) targetCtx.rotate(f.cameraRoll);
           targetCtx.translate(-logicalWidth / 2, -liveY);
         } else if (f.cameraFocal) {
           // Exactly center target Pokémon in the camera viewport with cameraPan screen shake support!
@@ -1478,6 +1815,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           const panY = f.cameraPan?.y || 0;
           targetCtx.translate(logicalWidth / 2 + panX, logicalHeight / 2 + panY);
           targetCtx.scale(zoom, zoom);
+          if (f.cameraRoll) targetCtx.rotate(f.cameraRoll);
           targetCtx.translate(-f.cameraFocal.x, -f.cameraFocal.y);
         } else {
           const focalY = isAttackerP ? pm.y : em.y;
@@ -1486,6 +1824,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
 
           targetCtx.translate(logicalWidth / 2 + panX, focalY + panY);
           targetCtx.scale(zoom, zoom);
+          if (f.cameraRoll) targetCtx.rotate(f.cameraRoll);
           targetCtx.translate(-logicalWidth / 2, -focalY);
         }
       }
@@ -1525,23 +1864,61 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         targetCtx.fillRect(-logicalWidth * 4, 0, logicalWidth * 3, logicalHeight);
         targetCtx.fillRect(logicalWidth * 2, 0, logicalWidth * 3, logicalHeight);
 
-        // 4. Ground Arena Background Image (Seamless 3-panel coverage so camera can center anywhere)
+        // 4. Ground Arena Background Image (Seamless multi-panel coverage with bgOffsetX support for Arc Shots & Pan)
         if (arena.bg) {
-          targetCtx.drawImage(arena.bg, 0, 0, logicalWidth, logicalHeight);
-          targetCtx.drawImage(arena.bg, -logicalWidth, 0, logicalWidth, logicalHeight);
-          targetCtx.drawImage(arena.bg, logicalWidth, 0, logicalWidth, logicalHeight);
+          const bgShift = (f.bgOffsetX || 0) % logicalWidth;
+          targetCtx.drawImage(arena.bg, bgShift, 0, logicalWidth, logicalHeight);
+          targetCtx.drawImage(arena.bg, bgShift - logicalWidth, 0, logicalWidth, logicalHeight);
+          targetCtx.drawImage(arena.bg, bgShift + logicalWidth, 0, logicalWidth, logicalHeight);
+          targetCtx.drawImage(arena.bg, bgShift - logicalWidth * 2, 0, logicalWidth, logicalHeight);
+          targetCtx.drawImage(arena.bg, bgShift + logicalWidth * 2, 0, logicalWidth, logicalHeight);
         } else {
           targetCtx.fillStyle = "#487848";
           targetCtx.fillRect(-logicalWidth, 0, logicalWidth * 3, logicalHeight);
         }
 
-        if (arena.b) {
-          targetCtx.drawImage(arena.b, ep.x, ep.y, enemyPlatW, enemyPlatH);
-          targetCtx.save();
-          targetCtx.translate(logicalWidth, 0);
-          targetCtx.scale(-1, 1);
-          targetCtx.drawImage(arena.b, pp.x, pp.y, playerPlatW, playerPlatH);
-          targetCtx.restore();
+        if (arena.b && !f.hidePlatform) {
+          const platAlpha = f.platformAlpha !== undefined ? f.platformAlpha : 1.0;
+          if (platAlpha > 0.01) {
+            targetCtx.save();
+            if (platAlpha < 0.99) targetCtx.globalAlpha = platAlpha;
+
+            const arenaPlatform = arena.b!;
+            const drawEnemyPlat = () => {
+              const se = f.ePlatScale ?? 1.0;
+              const We = enemyPlatW * se;
+              const He = enemyPlatH * se;
+              const ePlatX = f.ePlatOffset?.x ?? (f.ePlatX ?? 0);
+              const ePlatY = f.ePlatOffset?.y ?? ((f as any).ePlatY ?? 0);
+              const drawX = (em.x + ePlatX) - 323 * se;
+              const drawY = (em.y + ePlatY) - 110 * se;
+              targetCtx.drawImage(arenaPlatform, drawX, drawY, We, He);
+            };
+
+            const drawPlayerPlat = () => {
+              const sp = f.pPlatScale ?? 1.0;
+              const Wp = playerPlatW * sp;
+              const Hp = playerPlatH * sp;
+              const pPlatX = f.pPlatOffset?.x ?? (f.pPlatX ?? 0);
+              const pPlatY = f.pPlatOffset?.y ?? 0;
+              const flippedX = 418 - pPlatX - 443 * sp;
+              const drawY = (pm.y + pPlatY) - 150 * sp;
+              targetCtx.save();
+              targetCtx.translate(logicalWidth, 0);
+              targetCtx.scale(-1, 1);
+              targetCtx.drawImage(arenaPlatform, flippedX, drawY, Wp, Hp);
+              targetCtx.restore();
+            };
+
+            if (f.drawEnemyOnTop) {
+              drawPlayerPlat();
+              drawEnemyPlat();
+            } else {
+              drawEnemyPlat();
+              drawPlayerPlat();
+            }
+            targetCtx.restore();
+          }
         }
       }
 
@@ -1576,18 +1953,21 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         : ((f.targetAlpha !== undefined && pTarget) ? f.targetAlpha : 1.0);
 
       // Pokémon Silhouette Shadows (cast onto platform ground - cleanly suppressed when Pokemon rushes away, leaps into mid-air, or goes off-screen)
-      const isEnemyHidden = (f.eOffset && (Math.abs(f.eOffset.x) > 35 || f.eOffset.y <= -30 || f.eOffset.y >= 9000)) || f.hideEShadow || f.hideEnemy || (eAlpha <= 0.02) || f.blackoutScreen;
+      const platShadowMul = f.platformAlpha !== undefined ? f.platformAlpha : (f.hidePlatform ? 0 : 1.0);
+      const isEnemyHidden = (!f.ePlatOffset && f.eOffset && (Math.abs(f.eOffset.x) > 35 || f.eOffset.y <= -30 || f.eOffset.y >= 9000)) || f.hideEShadow || f.hideEnemy || (eAlpha <= 0.02) || f.blackoutScreen || platShadowMul <= 0.01;
       if (enemySprite && !isEnemyHidden) {
-        const eShadowX = em.x + (f.eOffset?.x || 0);
-        const eShadowY = em.y;
-        drawPokemonSilhouetteShadow(targetCtx, enemySprite, eShadowX, eShadowY, em.size, false, 0.42 * eAlpha);
+        const eShadowX = em.x + ((f.targetWhiteAura && eTarget) ? 0 : (f.eOffset?.x || 0));
+        const eShadowY = em.y + (f.ePlatOffset ? (f.eOffset?.y || 0) : 0);
+        const eSize = em.size * (f.eScale?.x ?? 1.0);
+        drawPokemonSilhouetteShadow(targetCtx, enemySprite, eShadowX, eShadowY, eSize, false, 0.42 * eAlpha * platShadowMul);
       }
 
-      const isPlayerHidden = (f.pOffset && (Math.abs(f.pOffset.x) > 35 || f.pOffset.y <= -30 || f.pOffset.y >= 9000)) || f.hidePShadow || f.hidePlayer || (pAlpha <= 0.02) || f.blackoutScreen;
+      const isPlayerHidden = (!f.pPlatOffset && f.pOffset && (Math.abs(f.pOffset.x) > 35 || f.pOffset.y <= -30 || f.pOffset.y >= 9000)) || f.hidePShadow || f.hidePlayer || (pAlpha <= 0.02) || f.blackoutScreen || platShadowMul <= 0.01;
       if (playerSprite && !isPlayerHidden) {
-        const pShadowX = pm.x + (f.pOffset?.x || 0);
-        const pShadowY = pm.y;
-        drawPokemonSilhouetteShadow(targetCtx, playerSprite, pShadowX, pShadowY, pm.size, true, 0.42 * pAlpha);
+        const pShadowX = pm.x + ((f.targetWhiteAura && pTarget) ? 0 : (f.pOffset?.x || 0));
+        const pShadowY = pm.y + (f.pPlatOffset ? (f.pOffset?.y || 0) : 0);
+        const pSize = pm.size * (f.pScale?.x ?? 1.0);
+        drawPokemonSilhouetteShadow(targetCtx, playerSprite, pShadowX, pShadowY, pSize, true, 0.42 * pAlpha * platShadowMul);
       }
 
       const drawEnemySprite = () => {
@@ -1595,13 +1975,27 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         const isEnemySpriteHidden = (f.eOffset && (f.eOffset.y <= -500 || f.eOffset.y >= 9000)) || f.hideEnemy || (eAlpha <= 0.01);
         if (eSpriteToDraw && !isEnemySpriteHidden) {
           targetCtx.save();
-          if (f.eWhite) {
+          if (f.eClipBottomY !== undefined) {
+            targetCtx.beginPath();
+            targetCtx.rect(-9999, -9999, 19999, f.eClipBottomY - (-9999));
+            targetCtx.clip();
+          }
+          const isWhiteAura = (f.targetWhiteAura && eTarget) || f.eWhiteAura;
+          if (f.eWhite || (f.casterWhite && !isAttackingPlayer)) {
             targetCtx.filter = "brightness(0) invert(1)";
           } else if (f.eWhiteTint) {
-            targetCtx.filter = "brightness(1.55) drop-shadow(0px 0px 8px rgba(255,255,255,0.85))";
+            const rad = f.whiteTintRadius ?? 2.5;
+            targetCtx.filter = `brightness(1.50) drop-shadow(0px 0px ${rad}px rgba(255,255,255,0.92))`;
+          } else if (f.eGreyTint || (f.targetGreyTint && eTarget)) {
+            targetCtx.filter = "grayscale(1) brightness(0.98) contrast(1.15)";
+          } else if (f.targetDarkLevel !== undefined && f.targetDarkLevel > 0 && eTarget) {
+            const lvl = Math.min(1.0, f.targetDarkLevel);
+            const bri = Math.max(0.04, 1.0 - lvl * 0.94);
+            const sat = Math.max(0.0, 1.0 - lvl * 0.85);
+            targetCtx.filter = `brightness(${bri.toFixed(2)}) saturate(${sat.toFixed(2)}) drop-shadow(0px 0px ${Math.round(lvl * 6)}px rgba(0, 0, 0, ${lvl.toFixed(2)}))`;
           } else if (f.hitFlash && eTarget && !(f.targetPurpleLevel !== undefined && f.targetPurpleLevel > 0) && !f.targetRedTint && !f.eRedTint && !f.targetBlueTint && !f.eBlueTint) {
             targetCtx.filter = "brightness(1.35)";
-          } else if (f.eYellowAura || (f.casterYellowAura && !isAttackingPlayer)) {
+          } else if ((f.targetYellowAura && eTarget) || f.eYellowAura || (f.casterYellowAura && !isAttackingPlayer)) {
             targetCtx.filter = "drop-shadow(0px 0px 8px #FACC15) drop-shadow(0px 0px 16px #EAB308) brightness(1.2)";
           } else if ((f.targetPurpleLevel !== undefined && f.targetPurpleLevel > 0 && eTarget) || f.ePurpleTint) {
             const lvl = Math.max(0, Math.min(1, f.targetPurpleLevel !== undefined ? f.targetPurpleLevel : 1.0));
@@ -1620,13 +2014,32 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           }
           const ex = em.x + (f.eOffset?.x ?? 0);
           const ey = em.y + (f.eOffset?.y ?? 0);
-          if (f.eScale || f.eRot) {
+          const eTintColor = getStatusTintColor(curRenderEnemyStatus);
+          if (isWhiteAura) {
+            // 1. [아래 레이어] 원본 스프라이트는 제자리에 그대로 유지 (오프셋 0, 스케일 1.0, 원본 색상)
+            drawFittedBattleSprite(targetCtx, eSpriteToDraw, em.x, em.y, em.size, eTintColor);
+
+            // 2. [위 레이어] 반투명 흰색 스프라이트는 위에 뜨며(이동/진동/팽창) 렌더링
+            targetCtx.save();
+            const bAlpha = f.targetWhiteBorderAlpha ?? 0.85;
+            targetCtx.filter = `brightness(0) invert(1) drop-shadow(0px 0px 3px rgba(255, 255, 255, ${bAlpha}))`;
+            targetCtx.globalAlpha = (f.targetWhiteOpacity ?? 0.48) * eAlpha;
+            if (f.eScale || f.eRot || f.eOffset) {
+              targetCtx.translate(ex, ey);
+              if (f.eRot) targetCtx.rotate(f.eRot);
+              if (f.eScale) targetCtx.scale(f.eScale.x, f.eScale.y);
+              drawFittedBattleSprite(targetCtx, eSpriteToDraw, 0, 0, em.size, eTintColor);
+            } else {
+              drawFittedBattleSprite(targetCtx, eSpriteToDraw, ex, ey, em.size, eTintColor);
+            }
+            targetCtx.restore();
+          } else if (f.eScale || f.eRot) {
             targetCtx.translate(ex, ey);
             if (f.eRot) targetCtx.rotate(f.eRot);
             if (f.eScale) targetCtx.scale(f.eScale.x, f.eScale.y);
-            drawFittedBattleSprite(targetCtx, eSpriteToDraw, 0, 0, em.size);
+            drawFittedBattleSprite(targetCtx, eSpriteToDraw, 0, 0, em.size, eTintColor);
           } else {
-            drawFittedBattleSprite(targetCtx, eSpriteToDraw, ex, ey, em.size);
+            drawFittedBattleSprite(targetCtx, eSpriteToDraw, ex, ey, em.size, eTintColor);
           }
           targetCtx.restore();
         }
@@ -1637,13 +2050,27 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         const isPlayerSpriteHidden = (f.pOffset && (f.pOffset.y <= -500 || f.pOffset.y >= 9000)) || f.hidePlayer || (pAlpha <= 0.01);
         if (pSpriteToDraw && !isPlayerSpriteHidden && (playerMon.hp > 0 || f.playerHp > 0 || pAlpha > 0.01)) {
           targetCtx.save();
-          if (f.pWhite) {
+          if (f.pClipBottomY !== undefined) {
+            targetCtx.beginPath();
+            targetCtx.rect(-9999, -9999, 19999, f.pClipBottomY - (-9999));
+            targetCtx.clip();
+          }
+          const isWhiteAura = (f.targetWhiteAura && pTarget) || f.pWhiteAura;
+          if (f.pWhite || (f.casterWhite && isAttackingPlayer)) {
             targetCtx.filter = "brightness(0) invert(1)";
           } else if (f.pWhiteTint) {
-            targetCtx.filter = "brightness(1.55) drop-shadow(0px 0px 8px rgba(255,255,255,0.85))";
+            const rad = f.whiteTintRadius ?? 2.5;
+            targetCtx.filter = `brightness(1.50) drop-shadow(0px 0px ${rad}px rgba(255,255,255,0.92))`;
+          } else if (f.pGreyTint || (f.targetGreyTint && pTarget)) {
+            targetCtx.filter = "grayscale(1) brightness(0.98) contrast(1.15)";
+          } else if (f.targetDarkLevel !== undefined && f.targetDarkLevel > 0 && pTarget) {
+            const lvl = Math.min(1.0, f.targetDarkLevel);
+            const bri = Math.max(0.04, 1.0 - lvl * 0.94);
+            const sat = Math.max(0.0, 1.0 - lvl * 0.85);
+            targetCtx.filter = `brightness(${bri.toFixed(2)}) saturate(${sat.toFixed(2)}) drop-shadow(0px 0px ${Math.round(lvl * 6)}px rgba(0, 0, 0, ${lvl.toFixed(2)}))`;
           } else if (f.hitFlash && pTarget && !(f.targetPurpleLevel !== undefined && f.targetPurpleLevel > 0) && !f.targetRedTint && !f.pRedTint && !f.targetBlueTint && !f.pBlueTint) {
             targetCtx.filter = "brightness(1.35)";
-          } else if (f.pYellowAura || (f.casterYellowAura && isAttackingPlayer)) {
+          } else if ((f.targetYellowAura && pTarget) || f.pYellowAura || (f.casterYellowAura && isAttackingPlayer)) {
             targetCtx.filter = "drop-shadow(0px 0px 8px #FACC15) drop-shadow(0px 0px 16px #EAB308) brightness(1.2)";
           } else if ((f.targetPurpleLevel !== undefined && f.targetPurpleLevel > 0 && pTarget) || f.pPurpleTint) {
             const lvl = Math.max(0, Math.min(1, f.targetPurpleLevel !== undefined ? f.targetPurpleLevel : 1.0));
@@ -1662,13 +2089,32 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           }
           const px = pm.x + (f.pOffset?.x ?? 0);
           const py = pm.y + (f.pOffset?.y ?? 0);
-          if (f.pScale || f.pRot) {
+          const pTintColor = getStatusTintColor(curRenderPlayerStatus);
+          if (isWhiteAura) {
+            // 1. [아래 레이어] 원본 스프라이트는 제자리에 그대로 유지 (오프셋 0, 스케일 1.0, 원본 색상)
+            drawFittedBattleSprite(targetCtx, pSpriteToDraw, pm.x, pm.y, pm.size, pTintColor);
+
+            // 2. [위 레이어] 반투명 흰색 스프라이트는 위에 뜨며(이동/진동/팽창) 렌더링
+            targetCtx.save();
+            const bAlpha = f.targetWhiteBorderAlpha ?? 0.85;
+            targetCtx.filter = `brightness(0) invert(1) drop-shadow(0px 0px 3px rgba(255, 255, 255, ${bAlpha}))`;
+            targetCtx.globalAlpha = (f.targetWhiteOpacity ?? 0.48) * pAlpha;
+            if (f.pScale || f.pRot || f.pOffset) {
+              targetCtx.translate(px, py);
+              if (f.pRot) targetCtx.rotate(f.pRot);
+              if (f.pScale) targetCtx.scale(f.pScale.x, f.pScale.y);
+              drawFittedBattleSprite(targetCtx, pSpriteToDraw, 0, 0, pm.size, pTintColor);
+            } else {
+              drawFittedBattleSprite(targetCtx, pSpriteToDraw, px, py, pm.size, pTintColor);
+            }
+            targetCtx.restore();
+          } else if (f.pScale || f.pRot) {
             targetCtx.translate(px, py);
             if (f.pRot) targetCtx.rotate(f.pRot);
             if (f.pScale) targetCtx.scale(f.pScale.x, f.pScale.y);
-            drawFittedBattleSprite(targetCtx, pSpriteToDraw, 0, 0, pm.size);
+            drawFittedBattleSprite(targetCtx, pSpriteToDraw, 0, 0, pm.size, pTintColor);
           } else {
-            drawFittedBattleSprite(targetCtx, pSpriteToDraw, px, py, pm.size);
+            drawFittedBattleSprite(targetCtx, pSpriteToDraw, px, py, pm.size, pTintColor);
           }
           targetCtx.restore();
         }
@@ -1691,8 +2137,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
 
       const currentMoveAnim = getMoveAnimation(activeKey);
 
-      // Behind-Sprite Move Effect Layer (e.g. Disable chains behind target, Vine Whip vines)
-      if (f.showEffect || f.moveStep) {
+      // Behind-Sprite Move Effect Layer (e.g. Disable chains behind target, Vine Whip vines, ambient background filters)
+      if (f.showBehindEffect ?? (f.showEffect !== false && (f.showEffect || f.moveStep))) {
         if (currentMoveAnim?.drawBehindEffect) {
           const casterOffset = isAttackingPlayer ? (f.pOffset ?? { x: 0, y: 0 }) : (f.eOffset ?? { x: 0, y: 0 });
           const casterPos = { x: attackerPos.x + casterOffset.x, y: attackerPos.y + casterOffset.y };
@@ -1707,6 +2153,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             height: logicalHeight,
             em,
             pm,
+            playerSprite: f.usePlayerFront ? (playerFrontSprite || playerSprite) : playerSprite,
+            enemySprite: f.useEnemyBack ? (enemyBackSprite || enemySprite) : enemySprite,
+            pAlpha,
+            eAlpha,
+            frame: f,
           });
         } else if (activeKey === "vine-whip" || activeKey === "vinewhip" || activeKey === "stomp") {
           renderMoveEffect(targetCtx, {
@@ -1720,17 +2171,42 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         }
       }
 
+      const invokeMiddleEffect = () => {
+        if (currentMoveAnim?.drawMiddleEffect && (f.showEffect || f.moveStep)) {
+          const casterOffset = isAttackingPlayer ? (f.pOffset ?? { x: 0, y: 0 }) : (f.eOffset ?? { x: 0, y: 0 });
+          const casterPos = { x: attackerPos.x + casterOffset.x, y: attackerPos.y + casterOffset.y };
+          currentMoveAnim.drawMiddleEffect(targetCtx, f, {
+            targetPos,
+            attackerPos,
+            casterPos,
+            isPlayer: isAttackingPlayer,
+            isHit: Boolean(activeEffect.isHit ?? true),
+            width: logicalWidth,
+            height: logicalHeight,
+            em,
+            pm,
+            playerSprite: f.usePlayerFront ? (playerFrontSprite || playerSprite) : playerSprite,
+            enemySprite: f.useEnemyBack ? (enemyBackSprite || enemySprite) : enemySprite,
+            pAlpha,
+            eAlpha,
+            frame: f,
+          });
+        }
+      };
+
       if (f.drawEnemyOnTop) {
         if (!f.drawPlayerAboveHud) drawPlayerSprite();
+        invokeMiddleEffect();
         drawEnemySprite();
       } else {
         drawEnemySprite();
+        invokeMiddleEffect();
         if (!f.drawPlayerAboveHud) drawPlayerSprite();
       }
 
       // Front-Sprite Move Effect Layer:
       // Uses the move's own self-contained drawEffect method
-      if (f.showEffect || f.moveStep) {
+      if (f.showEffect !== false && (f.showEffect || f.moveStep)) {
         if (currentMoveAnim.drawEffect) {
           const casterOffset = isAttackingPlayer ? (f.pOffset ?? { x: 0, y: 0 }) : (f.eOffset ?? { x: 0, y: 0 });
           const casterPos = { x: attackerPos.x + casterOffset.x, y: attackerPos.y + casterOffset.y };
@@ -1745,6 +2221,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             height: logicalHeight,
             em,
             pm,
+            playerSprite: f.usePlayerFront ? (playerFrontSprite || playerSprite) : playerSprite,
+            enemySprite: f.useEnemyBack ? (enemyBackSprite || enemySprite) : enemySprite,
+            pAlpha,
+            eAlpha,
+            frame: f,
           });
         } else {
           renderMoveEffect(targetCtx, {
@@ -1774,10 +2255,12 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         let statChanges = activeEffect?.statChanges || battle.lastMoveEffect?.statChanges;
         if (!statChanges || statChanges.length === 0) {
           const moveKey = (activeEffect?.moveKey || (f.moveEffect as any)?.moveKey || "").toLowerCase().replace(/[\s_]+/g, "-");
-          const isDebuffMove = moveKey.includes("growl") || moveKey.includes("tail-whip") || moveKey.includes("tailwhip") || moveKey.includes("leer") || moveKey.includes("screech") || moveKey.includes("charm") || moveKey.includes("fake-tears") || moveKey.includes("string-shot") || moveKey.includes("sand-attack");
+          const moveData = getMoveData(moveKey);
+          const desc = moveData?.description || "";
+          const isDebuffMove = moveKey.includes("growl") || moveKey.includes("tail-whip") || moveKey.includes("tailwhip") || moveKey.includes("leer") || moveKey.includes("screech") || moveKey.includes("charm") || moveKey.includes("fake-tears") || moveKey.includes("string-shot") || moveKey.includes("sand-attack") || desc.includes("떨어뜨") || desc.includes("낮춘") || desc.includes("감소") || desc.includes("하락");
           if (isDebuffMove) {
             statChanges = [{ target: isAttackingPlayer ? "enemy" : "player", direction: "down" }];
-          } else if (moveKey.includes("swords-dance") || moveKey.includes("swordsdance") || moveKey.includes("growth") || moveKey.includes("dragon-dance")) {
+          } else {
             statChanges = [{ target: isAttackingPlayer ? "player" : "enemy", direction: "up" }];
           }
         }
@@ -1801,12 +2284,12 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       }
     }
 
-    if (!f.isBlur && !f.blackoutScreen && !f.blackFadeAlpha) {
+    if (!f.isBlur && !f.cameraBlur && !f.blackoutScreen && !f.blackFadeAlpha) {
       if (!f.hideUI) {
         renderBattleHeader(targetCtx, logicalWidth, battle, isKo);
       }
       if (!f.hideHud && !f.hideUI) {
-        renderBattleHuds(targetCtx, battle, isKo, pbAssets, f.enemyHp !== undefined ? f.enemyHp : enemyHp, f.playerHp !== undefined ? f.playerHp : playerHp);
+        renderBattleHuds(targetCtx, battle, isKo, pbAssets, curRenderEnemyHp, curRenderPlayerHp, undefined, curRenderEnemyStatus, curRenderPlayerStatus);
       }
       if (!f.hideDialogue && !f.hideUI) {
         renderBattleDialogue(targetCtx, logicalWidth, logicalHeight, dialogueLines, f.textLineIdx);
@@ -1832,6 +2315,34 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       ctx.filter = "blur(12px) brightness(0.88)";
       ctx.drawImage(offCanvas, 0, 0, width, height);
       ctx.filter = "none";
+    } else if (f.cameraBlur) {
+      // Apply Temporary Camera Shockwave Blur to the battle scene
+      ctx.clearRect(0, 0, width, height);
+      const blurPx = typeof f.cameraBlur === "number" ? f.cameraBlur : 3.5;
+      const margin = Math.ceil(blurPx * 2);
+      ctx.drawImage(offCanvas, 0, 0, width, height);
+      ctx.filter = `blur(${blurPx}px)`;
+      ctx.drawImage(offCanvas, -margin, -margin, width + margin * 2, height + margin * 2);
+      ctx.filter = "none";
+
+      // Render crisp UI on top of blurred camera scene
+      if (!f.blackoutScreen && !f.blackFadeAlpha) {
+        ctx.save();
+        ctx.scale(renderScale, renderScale);
+        if (!f.hideUI) {
+          renderBattleHeader(ctx, logicalWidth, battle, isKo);
+        }
+        if (!f.hideHud && !f.hideUI) {
+          renderBattleHuds(ctx, battle, isKo, pbAssets, curRenderEnemyHp, curRenderPlayerHp, undefined, curRenderEnemyStatus, curRenderPlayerStatus);
+        }
+        if (!f.hideDialogue && !f.hideUI) {
+          renderBattleDialogue(ctx, logicalWidth, logicalHeight, dialogueLines, f.textLineIdx);
+        }
+        if (f.drawPlayerAboveHud && drawPlayerSpriteFn) {
+          drawPlayerSpriteFn();
+        }
+        ctx.restore();
+      }
     }
 
     let effectiveDelay = f.delay;
@@ -1850,6 +2361,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const isVisualStateShift = Boolean(
       (frameIdx === 1) ||
       (prevBattleFrame && Boolean(f.isBlur) !== Boolean(prevBattleFrame.isBlur)) ||
+      (prevBattleFrame && Boolean(f.cameraBlur) !== Boolean(prevBattleFrame.cameraBlur)) ||
       (prevBattleFrame && Boolean(f.hitFlash) !== Boolean(prevBattleFrame.hitFlash)) ||
       (prevBattleFrame && Boolean(f.whiteFlash) !== Boolean(prevBattleFrame.whiteFlash)) ||
       (prevBattleFrame && Boolean(f.targetBlueTint) !== Boolean(prevBattleFrame.targetBlueTint)) ||
@@ -1862,7 +2374,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       (prevBattleFrame && Boolean(f.blackFadeAlpha) !== Boolean(prevBattleFrame.blackFadeAlpha)) ||
       (prevBattleFrame && Boolean(f.bgFilterAlpha) !== Boolean(prevBattleFrame.bgFilterAlpha)) ||
       (prevBattleFrame && Boolean(f.whiteoutAlpha) !== Boolean(prevBattleFrame.whiteoutAlpha)) ||
-      (prevBattleFrame && Boolean(f.eYellowAura || f.pYellowAura || f.casterYellowAura) !== Boolean(prevBattleFrame.eYellowAura || prevBattleFrame.pYellowAura || prevBattleFrame.casterYellowAura)) ||
+      (prevBattleFrame && Boolean(f.targetYellowAura || f.eYellowAura || f.pYellowAura || f.casterYellowAura) !== Boolean(prevBattleFrame.targetYellowAura || prevBattleFrame.eYellowAura || prevBattleFrame.pYellowAura || prevBattleFrame.casterYellowAura)) ||
+      (prevBattleFrame && Boolean(f.targetWhiteAura || f.eWhiteAura || f.pWhiteAura) !== Boolean(prevBattleFrame.targetWhiteAura || prevBattleFrame.eWhiteAura || prevBattleFrame.pWhiteAura)) ||
+      (prevBattleFrame && (f.targetWhiteOpacity !== prevBattleFrame.targetWhiteOpacity || f.targetWhiteBorderAlpha !== prevBattleFrame.targetWhiteBorderAlpha)) ||
       (prevBattleFrame && f.phaseId && prevBattleFrame.phaseId ? f.phaseId !== prevBattleFrame.phaseId : (prevBattleFrame && f.moveStep !== undefined && prevBattleFrame.moveStep !== undefined && f.moveStep !== prevBattleFrame.moveStep))
     );
 
@@ -1886,6 +2400,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         pOffset: f.pOffset,
         eOffset: f.eOffset,
         cameraZoom: f.cameraZoom,
+        playerHp: f.playerHp,
+        enemyHp: f.enemyHp,
         dataUrl: ctx.canvas.toDataURL("image/jpeg", 0.85),
       });
     }
@@ -1925,9 +2441,21 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
   const enemy = battle.enemy;
   const playerMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
 
+  const entryType = options.entryType || "both";
+
   const defaultEntryDialogue = isKo
-    ? (enemy.isBoss ? `보스 포켓몬 ${enemy.nameKo || enemy.name}(이)가 나타났다!` : `야생의 ${enemy.nameKo || enemy.name}(이)가 나타났다!`)
-    : (enemy.isBoss ? `Boss Pokémon ${enemy.name} appeared!` : `Wild ${enemy.name} appeared!`);
+    ? (entryType === "player"
+      ? `가랏, ${playerMon.nameKo || playerMon.name}!`
+      : (entryType === "enemy"
+        ? `상대는 [${enemy.nameKo || enemy.name}]을(를) 내보냈다!`
+        : (enemy.isBoss ? `보스 포켓몬 ${enemy.nameKo || enemy.name}(이)가 나타났다!` : `야생의 ${enemy.nameKo || enemy.name}(이)가 나타났다!`)
+      ))
+    : (entryType === "player"
+      ? `Go, ${playerMon.name}!`
+      : (entryType === "enemy"
+        ? `Foe sent out ${enemy.name}!`
+        : (enemy.isBoss ? `Boss Pokémon ${enemy.name} appeared!` : `Wild ${enemy.name} appeared!`)
+      ));
   const rawDialogue = battle.dialogueText || defaultEntryDialogue;
   const dialogueLines = options.dialogueLines || rawDialogue.replace(/\\n/g, "\n").split("\n");
 
@@ -1962,29 +2490,54 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
   const ctx = canvas.getContext("2d");
   ctx.imageSmoothingEnabled = false;
 
-  const entryFrames = [
-    // Frame 0: Leading Cinematic Soft-Blur Loading Frame (800ms / 0.8s) - Unified full-screen blur without text
-    { delay: 800, pPlatX: 0, ePlatX: 24, ePlatY: -15, pMonX: 0, pMonY: 0, eMonX: 24, eMonY: -15, enemyOpacity: 0.0, showHud: false, textLineIdx: 0, isBlur: true, cryWave: 0 },
-    // Frame 1: Fade-in Step 1 (120ms) - At (+24px, -15px) standing completely still, 35% translucent
-    { delay: 120, pPlatX: 0, ePlatX: 24, ePlatY: -15, pMonX: 0, pMonY: 0, eMonX: 24, eMonY: -15, enemyOpacity: 0.35, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
-    // Frame 2: Fade-in Step 2 (120ms) - STILL at (+24px, -15px) standing completely still, 75% opacity
-    { delay: 120, pPlatX: 0, ePlatX: 24, ePlatY: -15, pMonX: 0, pMonY: 0, eMonX: 24, eMonY: -15, enemyOpacity: 0.75, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
-    // Frame 3: Fade-in Hold (280ms) - STILL at (+24px, -15px) standing completely still, 100% FULLY OPAQUE (Visible pause!)
-    { delay: 280, pPlatX: 0, ePlatX: 24, ePlatY: -15, pMonX: 0, pMonY: 0, eMonX: 24, eMonY: -15, enemyOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
-    // Frame 4: Movement Step 1 (140ms) - ONLY NOW after 100% complete appearance, moves down-left to (+10px, -6px)
-    { delay: 140, pPlatX: 0, ePlatX: 10, ePlatY: -6, pMonX: 0, pMonY: 0, eMonX: 10, eMonY: -6, enemyOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
+  const entryFrames = entryType === "player" ? [
+    // Player Replacement Entry Frames
+    // Frame 0: Leading Cinematic Soft-Blur Loading Frame (800ms)
+    { delay: 800, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 0.0, showHud: false, textLineIdx: 0, isBlur: true, cryWave: 0 },
+    // Frame 1: Fade-in Step 1 (120ms) - At (-15px, +10px) 35% translucent
+    { delay: 120, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: -15, pMonY: 10, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 0.35, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
+    // Frame 2: Fade-in Step 2 (120ms) - 75% opacity
+    { delay: 120, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: -15, pMonY: 10, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 0.75, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
+    // Frame 3: Fade-in Hold (280ms) - 100% FULLY OPAQUE
+    { delay: 280, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: -15, pMonY: 10, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
+    // Frame 4: Movement Step 1 (140ms) - moves towards center
+    { delay: 140, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: -6, pMonY: 4, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
     // Frame 5: Movement Step 2 (140ms) - Settles onto Stage at (0, 0)
-    { delay: 140, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
+    { delay: 140, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
+    // Frame 6: Player Battler DS Cry Callout (Vibration Step 1: 150ms)
+    { delay: 150, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: -2, pMonY: -3, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 1 },
+    // Frame 7: Player Battler DS Cry Callout (Vibration Step 2: 150ms)
+    { delay: 150, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 3, pMonY: 2, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 2 },
+    // Frame 8: HUD Status Slates Slide In & Appear (300ms)
+    { delay: 300, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: true, textLineIdx: 99, isBlur: false, cryWave: 0 },
+    // Frame 9: Dialogue reading frame (1,200ms)
+    { delay: 1200, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: true, textLineIdx: 99, isBlur: false, cryWave: 0 },
+    // Frame 10: 11-Minute Static Hold Frame (655,000ms)
+    { delay: 655000, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: true, textLineIdx: 99, isBlur: false, cryWave: 0 }
+  ] : [
+    // Wild Encounter or Enemy Entry Frames
+    // Frame 0: Leading Cinematic Soft-Blur Loading Frame (800ms / 0.8s)
+    { delay: 800, pPlatX: 0, ePlatX: 24, ePlatY: -15, pMonX: 0, pMonY: 0, eMonX: 24, eMonY: -15, enemyOpacity: 0.0, playerOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: true, cryWave: 0 },
+    // Frame 1: Fade-in Step 1 (120ms)
+    { delay: 120, pPlatX: 0, ePlatX: 24, ePlatY: -15, pMonX: 0, pMonY: 0, eMonX: 24, eMonY: -15, enemyOpacity: 0.35, playerOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
+    // Frame 2: Fade-in Step 2 (120ms)
+    { delay: 120, pPlatX: 0, ePlatX: 24, ePlatY: -15, pMonX: 0, pMonY: 0, eMonX: 24, eMonY: -15, enemyOpacity: 0.75, playerOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
+    // Frame 3: Fade-in Hold (280ms)
+    { delay: 280, pPlatX: 0, ePlatX: 24, ePlatY: -15, pMonX: 0, pMonY: 0, eMonX: 24, eMonY: -15, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
+    // Frame 4: Movement Step 1 (140ms)
+    { delay: 140, pPlatX: 0, ePlatX: 10, ePlatY: -6, pMonX: 0, pMonY: 0, eMonX: 10, eMonY: -6, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
+    // Frame 5: Movement Step 2 (140ms)
+    { delay: 140, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
     // Frame 6: Enemy Battler DS Cry Callout (Vibration Step 1: 150ms)
-    { delay: 150, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: -2, eMonY: -3, enemyOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 1 },
+    { delay: 150, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: -2, eMonY: -3, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 1 },
     // Frame 7: Enemy Battler DS Cry Callout (Vibration Step 2: 150ms)
-    { delay: 150, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 3, eMonY: 2, enemyOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 2 },
-    // Frame 8: HUD Status Slates Slide In & Appear (300ms) - HUD 슬라이드 인 및 등장 대사 타이핑/표시
-    { delay: 300, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, showHud: true, textLineIdx: 99, isBlur: false, cryWave: 0 },
-    // Frame 9: [유저 요구사항] "야생의 OO(이)가 나타났다!" 대사 정독 프레임 (1,200ms) - GIF 후반부에 대사 확실하게 노출!
-    { delay: 1200, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, showHud: true, textLineIdx: 99, isBlur: false, cryWave: 0 },
-    // Frame 10: 11-Minute Static Hold Frame (655,000ms - Maximum GIF89a unsigned 16-bit delay limit) - 유저 버튼 입력 대기
-    { delay: 655000, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, showHud: true, textLineIdx: 99, isBlur: false, cryWave: 0 }
+    { delay: 150, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 3, eMonY: 2, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 2 },
+    // Frame 8: HUD Status Slates Slide In & Appear (300ms)
+    { delay: 300, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: true, textLineIdx: 99, isBlur: false, cryWave: 0 },
+    // Frame 9: Reading frame (1,200ms)
+    { delay: 1200, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: true, textLineIdx: 99, isBlur: false, cryWave: 0 },
+    // Frame 10: 11-Minute Static Hold Frame (655,000ms)
+    { delay: 655000, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: true, textLineIdx: 99, isBlur: false, cryWave: 0 }
   ];
 
   const motionDurationMs = entryFrames.slice(0, -1).reduce((sum, f) => sum + f.delay, 0);
@@ -2017,13 +2570,14 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
     else { targetCtx.fillStyle = "#487848"; targetCtx.fillRect(0, 0, logicalWidth, logicalHeight); }
 
     const eOpacity = f.enemyOpacity !== undefined ? f.enemyOpacity : 1.0;
+    const pOpacity = (f as any).playerOpacity !== undefined ? (f as any).playerOpacity : 1.0;
 
     // Sliding / Fading Platforms
     if (arena.b) {
       // Enemy Platform: with enemyOpacity and (ePlatX, ePlatY)
-      if (eOpacity > 0) {
+      if (entryType === "player" || eOpacity > 0) {
         targetCtx.save();
-        targetCtx.globalAlpha = eOpacity;
+        if (entryType !== "player") targetCtx.globalAlpha = eOpacity;
         targetCtx.drawImage(arena.b, ep.x + (f.ePlatX || 0), ep.y + ((f as any).ePlatY || 0), enemyPlatW, enemyPlatH);
         targetCtx.restore();
       }
@@ -2039,17 +2593,20 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
     if (enemySprite && eOpacity > 0) {
       targetCtx.save();
       targetCtx.globalAlpha = eOpacity;
-      drawFittedBattleSprite(targetCtx, enemySprite, em.x + (f.eMonX || 0), em.y + (f.eMonY || 0), em.size);
+      drawFittedBattleSprite(targetCtx, enemySprite, em.x + (f.eMonX || 0), em.y + (f.eMonY || 0), em.size, getStatusTintColor(enemy.status));
       targetCtx.restore();
     }
-    if (playerSprite) {
-      drawFittedBattleSprite(targetCtx, playerSprite, pm.x + (f.pMonX || 0), pm.y + (f.pMonY || 0), pm.size);
+    if (playerSprite && pOpacity > 0) {
+      targetCtx.save();
+      targetCtx.globalAlpha = pOpacity;
+      drawFittedBattleSprite(targetCtx, playerSprite, pm.x + (f.pMonX || 0), pm.y + (f.pMonY || 0), pm.size, getStatusTintColor(playerMon.status));
+      targetCtx.restore();
     }
 
     if (!f.isBlur) {
       renderBattleHeader(targetCtx, logicalWidth, battle, isKo);
       if (f.showHud) {
-        renderBattleHuds(targetCtx, battle, isKo, pbAssets, enemy.hp, playerMon.hp);
+        renderBattleHuds(targetCtx, battle, isKo, pbAssets, enemy.hp, playerMon.hp, undefined, enemy.status, playerMon.status);
       }
       renderBattleDialogue(targetCtx, logicalWidth, logicalHeight, dialogueLines, f.textLineIdx);
     } else {
@@ -2076,7 +2633,8 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
       (entryFrameIdx === 1) ||
       (prevEntryFrame && Boolean(f.isBlur) !== Boolean(prevEntryFrame.isBlur)) ||
       (prevEntryFrame && Boolean(f.showHud) !== Boolean(prevEntryFrame.showHud)) ||
-      (prevEntryFrame && Boolean(f.enemyOpacity > 0) !== Boolean(prevEntryFrame.enemyOpacity > 0))
+      (prevEntryFrame && Boolean(f.enemyOpacity > 0) !== Boolean(prevEntryFrame.enemyOpacity > 0)) ||
+      (prevEntryFrame && Boolean((f as any).playerOpacity > 0) !== Boolean((prevEntryFrame as any).playerOpacity > 0))
     );
 
     if (isEntryVisualShift) {
@@ -2125,9 +2683,42 @@ function renderBattleHeader(ctx: any, width: number, battle: BattleState, isKo: 
   ctx.fillText(moneyText, textX, moneyY);
 }
 
-function renderBattleHuds(ctx: any, battle: BattleState, isKo: boolean, pbAssets: any, enemyHp: number, playerHp: number, playerHudOffset?: { x?: number; y?: number }) {
+function getStatusBadge(status: string | null | undefined, isKo: boolean): string {
+  if (!status) return "";
+  switch (status.toLowerCase()) {
+    case "psn":
+      return isKo ? " [독]" : " [PSN]";
+    case "tox":
+      return isKo ? " [맹독]" : " [TOX]";
+    case "par":
+      return isKo ? " [마비]" : " [PAR]";
+    case "brn":
+      return isKo ? " [화상]" : " [BRN]";
+    case "slp":
+      return isKo ? " [수면]" : " [SLP]";
+    case "frz":
+      return isKo ? " [빙결]" : " [FRZ]";
+    default:
+      return "";
+  }
+}
+
+function renderBattleHuds(
+  ctx: any,
+  battle: BattleState,
+  isKo: boolean,
+  pbAssets: any,
+  enemyHp: number,
+  playerHp: number,
+  playerHudOffset?: { x?: number; y?: number },
+  enemyStatus?: string | null,
+  playerStatus?: string | null
+) {
   const enemy = battle.enemy;
   const playerMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
+
+  const eStatus = enemyStatus !== undefined ? enemyStatus : enemy.status;
+  const pStatus = playerStatus !== undefined ? playerStatus : playerMon.status;
 
   const eh = BATTLE_LAYOUT_CONFIG.enemyHud;
   const cleanEnemyName = getPokemonDisplayName(enemy, isKo).replace(/[^\w\s가-힣0-9\(\)\-\.]/g, "").trim();
@@ -2141,13 +2732,13 @@ function renderBattleHuds(ctx: any, battle: BattleState, isKo: boolean, pbAssets
     h: eh.h,
     name: cleanEnemyName,
     level: enemy.level,
-    hp: enemyHp,
+    hp: Math.max(0, Math.round(enemyHp)),
     maxHp: enemy.maxHp,
     isEnemy: true,
     types: enemyTypes,
     isBoss: enemy.isBoss,
     bossShields: enemy.bossShields,
-    statusBadge: "",
+    statusBadge: getStatusBadge(eStatus, isKo),
     isKo,
     hudImage: enemy.isBoss ? pbAssets.bossBox : pbAssets.enemyBox,
     hpLabel: pbAssets.hpLabel,
@@ -2165,11 +2756,11 @@ function renderBattleHuds(ctx: any, battle: BattleState, isKo: boolean, pbAssets
     h: ph.h,
     name: cleanPlayerName,
     level: playerMon.level,
-    hp: playerHp,
+    hp: Math.max(0, Math.round(playerHp)),
     maxHp: playerMon.maxHp,
     isEnemy: false,
     types: playerTypes,
-    statusBadge: "",
+    statusBadge: getStatusBadge(pStatus, isKo),
     exp: battle.playerExp || 0,
     maxExp: battle.playerMaxExp || 100,
     isKo,

@@ -70,7 +70,7 @@ export function drawFlamethrowerChargeFlare(
  * - 단순한 동그라미(단일 원)가 아닌, 5개의 유기적 로브와 소프트 그라데이션으로 뭉쳐진 진짜 불꽃 덩어리
  * - 하드한 원형 테두리 없이 부드럽게 겹쳐져 진짜 타오르는 화염 가스 구름처럼 블렌딩됨
  */
-function drawBillowingFlamePuff(
+export function drawBillowingFlamePuff(
   ctx: any,
   cx: number,
   cy: number,
@@ -78,7 +78,8 @@ function drawBillowingFlamePuff(
   mainAngle: number,
   rollAngle: number,
   alpha: number = 1.0,
-  seed: number = 0
+  seed: number = 0,
+  noYellowCore: boolean = false
 ) {
   if (alpha <= 0.01 || radius <= 2) return;
 
@@ -141,13 +142,19 @@ function drawBillowingFlamePuff(
     ctx.fill();
   }
 
-  // 3. 중심 초고열 백열황색 코어 (부드러운 빛 방출)
+  // 3. 중심 코어: noYellowCore가 true이면 노란색(#FEF08A)과 백색(#FFFFFF) 없이 부드러운 주황/적색 코어 적용
   const coreR = radius * 0.46;
   const coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, coreR);
-  coreGrad.addColorStop(0, "#FFFFFF");
-  coreGrad.addColorStop(0.35, "#FEF08A");
-  coreGrad.addColorStop(0.70, "rgba(249, 115, 22, 0.7)");
-  coreGrad.addColorStop(1.0, "rgba(249, 115, 22, 0)");
+  if (!noYellowCore) {
+    coreGrad.addColorStop(0, "#FFFFFF");
+    coreGrad.addColorStop(0.35, "#FEF08A");
+    coreGrad.addColorStop(0.70, "rgba(249, 115, 22, 0.7)");
+    coreGrad.addColorStop(1.0, "rgba(249, 115, 22, 0)");
+  } else {
+    coreGrad.addColorStop(0, "rgba(249, 115, 22, 0.85)");
+    coreGrad.addColorStop(0.55, "rgba(239, 68, 68, 0.50)");
+    coreGrad.addColorStop(1.0, "rgba(220, 38, 38, 0.0)");
+  }
 
   ctx.fillStyle = coreGrad;
   ctx.beginPath();
@@ -203,15 +210,15 @@ function drawTranslucentThermalFlameStream(
     const s = i / SAMPLES;
     const t = startP + s * (endP - startP);
 
-    // 날아갈수록 위로 올라가는 열기 부력 상승 곡선 (상승 기류)
-    const rise = -Math.pow(Math.max(0, t), 1.35) * 20.0;
+    // 고압 직선 제트 기류: 타겟 중심을 향해 힘차게 직진 (미세 열기 부력 -3px로 완화)
+    const rise = -Math.pow(Math.max(0, t), 1.2) * 3.5;
 
     const cx = ax + ux * (dist * t);
     const cy = ay + uy * (dist * t) + rise;
 
     centerPts.push({ x: cx, y: cy });
 
-    // 폭 확장 (기체 팽창)
+    // 폭 확장 (원추형 고열 분사 기체 팽창)
     const rW = rWStart + s * (rWEnd - rWStart);
     topPtsRed.push({ x: cx - nx * rW, y: cy - ny * rW });
     botPtsRed.push({ x: cx + nx * rW, y: cy + ny * rW });
@@ -223,11 +230,10 @@ function drawTranslucentThermalFlameStream(
 
   const pStart = centerPts[0];
   const pEnd = centerPts[centerPts.length - 1];
-  const tipLen = Math.min(24, dist * (endP - startP) * 0.30);
-  const endRise = -Math.pow(Math.min(1.2, endP + 0.1), 1.35) * 20.0;
+  const tipLen = Math.min(22, dist * (endP - startP) * 0.28);
   const tipPt = {
     x: pEnd.x + ux * tipLen,
-    y: pEnd.y + uy * tipLen + (endRise - (-Math.pow(endP, 1.35) * 20.0)),
+    y: pEnd.y + uy * tipLen - 1.5,
   };
 
   ctx.save();
@@ -360,12 +366,12 @@ export function drawFlamethrowerStream(
     const t = activeEnd - flowAdvance - k * BURST_SPACING;
     if (t < startP - 0.03 || t > endP + 0.02) continue;
 
-    // [열기 부력 상승 곡선: 날아갈수록 위로 올라감]
-    const thermalRise = -Math.pow(Math.max(0, t), 1.35) * 22.0;
+    // 타겟 중심을 향해 힘차게 직진하는 고압 화염 제트 (미세 열기 부력 -3.5px 완화)
+    const thermalRise = -Math.pow(Math.max(0, t), 1.2) * 3.5;
 
-    // 기체 축 주위를 넘나드는 유기적 롤링 미세 난류
-    const sinWave = Math.sin(t * Math.PI * 2.3 - frameStep * 1.4) * (t * 7.5) - Math.pow(t, 1.2) * 2.0;
-    const jiggle = Math.sin(k * 2.5 + frameStep * 1.7) * (1.8 + t * 2.5);
+    // 직진 축선 주위의 안정적인 유기적 롤링 미세 난류
+    const sinWave = Math.sin(t * Math.PI * 3.0 - frameStep * 1.2) * (t * 3.5);
+    const jiggle = Math.sin(k * 2.2 + frameStep * 1.5) * (1.2 + t * 1.8);
 
     const px = ax + ux * (dist * t) + nx * (sinWave + jiggle);
     const py = ay + uy * (dist * t) + ny * (sinWave + jiggle) + thermalRise;
@@ -402,8 +408,8 @@ export function drawFlamethrowerStream(
 
     const isTop = j % 2 === 0;
     const sign = isTop ? 1 : -1;
-    const thermalRise = -Math.pow(Math.max(0, lt), 1.35) * 22.0;
-    const sinWave = Math.sin(lt * Math.PI * 2.3 - frameStep * 1.4) * (lt * 7.5) - Math.pow(lt, 1.2) * 2.0;
+    const thermalRise = -Math.pow(Math.max(0, lt), 1.2) * 4.0;
+    const sinWave = Math.sin(lt * Math.PI * 3.0 - frameStep * 1.2) * (lt * 3.5);
     const halfW = 5.0 + Math.pow(Math.min(1.2, lt), 0.75) * 17.0;
 
     const bx = ax + ux * (dist * lt) + nx * (sinWave + sign * halfW);
@@ -411,7 +417,7 @@ export function drawFlamethrowerStream(
 
     const lickLen = 11 + lt * 11;
     const tipX = bx - ux * (lickLen * 0.75) + nx * (sign * (lickLen * 0.65));
-    const tipY = by - uy * (lickLen * 0.75) + ny * (sign * (lickLen * 0.65)) - 4; // 상승 기류로 팁이 살짝 위로 말려 올라감
+    const tipY = by - uy * (lickLen * 0.75) + ny * (sign * (lickLen * 0.65)) - 2; // 상승 기류로 팁이 살짝 위로 말려 올라감
 
     // 날아갈수록 투명해지는 기체 혓바닥
     const lickDissolve = Math.max(0.15, 1.0 - Math.pow(lt, 1.1) * 0.65);
@@ -438,11 +444,11 @@ export function drawFlamethrowerStream(
     if (pt < 0.15 || pt > 1.05) continue;
 
     const pSign = (p % 2 === 0) ? 1 : -1;
-    const thermalRise = -Math.pow(Math.max(0, pt), 1.35) * 26.0;
-    const sinWave = Math.sin(pt * Math.PI * 2.3 - frameStep * 1.4) * (pt * 7.5) - Math.pow(pt, 1.2) * 2.0;
-    const pDist = (sinWave + (10 + pt * 22) * pSign + Math.sin(p * 2 + frameStep) * 5);
+    const thermalRise = -Math.pow(Math.max(0, pt), 1.2) * 12.0;
+    const sinWave = Math.sin(pt * Math.PI * 3.0 - frameStep * 1.2) * (pt * 4.0);
+    const pDist = (sinWave + (8 + pt * 18) * pSign + Math.sin(p * 2 + frameStep) * 4);
     const spX = ax + ux * (dist * pt) + nx * pDist;
-    const spY = ay + uy * (dist * pt) + ny * pDist + thermalRise - (p % 3) * 5;
+    const spY = ay + uy * (dist * pt) + ny * pDist + thermalRise - (p % 3) * 4;
 
     const sparkDissolve = Math.max(0.2, 1.0 - Math.pow(pt, 1.1) * 0.55);
     ctx.fillStyle = (p % 2 === 0) ? `rgba(254, 240, 138, ${sparkDissolve * alpha})` : `rgba(249, 115, 22, ${sparkDissolve * alpha})`;

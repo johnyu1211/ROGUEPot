@@ -87,7 +87,7 @@ export const growlMove: BattleMoveAnimation = {
         phaseId: "growl-impact1",
         phaseName: "4. 3겹 원 최대 확장 & 번개 최고조",
       },
-      // 5. 원/번개 잔향 소멸
+      // 5. 원/번개 잔향 소멸 (퍼지면서 투명해지는 페이드아웃 시작)
       {
         ...baseFrame,
         delay: 120,
@@ -95,8 +95,10 @@ export const growlMove: BattleMoveAnimation = {
         eOffset: isP ? { x: -4, y: 1 } : { x: 4, y: -1 },
         showEffect: true,
         moveStep: 5,
+        effectProgress: 0.0,
+        fadeEffectOnCameraReturn: true,
         phaseId: "growl-fadeout",
-        phaseName: "5. 포효 음파 확산 소멸",
+        phaseName: "5. 포효 음파 확산 소멸 (페이드아웃 개시)",
       },
       // --- 상대방 공격력 1랭크 하락 디버프 연출 (카메라 중립 복귀 후 재생!) ---
       // 6. 공격력 하락 1단계: 상단에서 파란색 하강 화살표(v) 발생 및 낙하 시작

@@ -11,9 +11,15 @@ console.log(`========================================`);
 
 const testUserId = `test_cli_${Date.now()}`;
 const slotId = 1;
-saveService.startNewRun(testUserId, slotId, 'bulbasaur');
+const speciesArg = process.argv.find(a => a.startsWith('--species='));
+const testSpecies = speciesArg ? speciesArg.split('=')[1] : 'bulbasaur';
+saveService.startNewRun(testUserId, slotId, testSpecies);
 const battle = battleService.getOrCreateBattle(testUserId, slotId);
 const isEnemyActor = process.argv.includes('--enemy');
+if (isEnemyActor && speciesArg) {
+  battle.enemy.species = testSpecies;
+  battle.enemy.speciesId = testSpecies;
+}
 battle.playerParty[0].moves = [moveKey];
 battle.playerBattleMon.moves = [moveKey];
 battle.enemy.moves = [moveKey];

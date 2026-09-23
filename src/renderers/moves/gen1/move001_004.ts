@@ -9,8 +9,8 @@ import { drawPhysicalImpactEffect } from "../common/genericTypeEffects.js";
 /**
  * 001 막치기 (Pound): Default Physical Strike
  */
-export function drawPoundEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
-  drawPhysicalImpactEffect(ctx, target);
+export function drawPoundEffect(ctx: any, target: { x: number; y: number }, step: number = 1, progress: number = 0.5) {
+  drawPhysicalImpactEffect(ctx, target, progress);
 }
 
 /**

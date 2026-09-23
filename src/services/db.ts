@@ -51,12 +51,17 @@ export function initDatabase(): void {
       items TEXT NOT NULL DEFAULT '{}',
       money INTEGER NOT NULL DEFAULT 1000,
       score INTEGER NOT NULL DEFAULT 0,
+      enemy TEXT DEFAULT NULL,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL,
       PRIMARY KEY (user_id, slot_id),
       FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
     );
   `);
+
+  try {
+    db.exec(`ALTER TABLE game_slots ADD COLUMN enemy TEXT DEFAULT NULL;`);
+  } catch {}
 
   // 3. User Starters Table (PokéRogue Starters Unlock & Progression)
   db.exec(`

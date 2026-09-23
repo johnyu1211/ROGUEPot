@@ -26,7 +26,7 @@ import { drawStarburstImpact, drawMiniRetroStar } from "../common/helpers.js";
 /**
  * 지그재그 번개 줄기 생성 헬퍼
  */
-function createLightningPoints(
+export function createLightningPoints(
   x1: number,
   y1: number,
   x2: number,
@@ -109,7 +109,7 @@ function strokeLightningLayers(
  * ⚠️ 마디에 원형 블룸(arc)을 그리지 않고, miter join과 butt cap을 사용하여 꺾인 부분이 완벽하게 날카롭고 각지게 표현됨.
  * ⚠️ taperStart / taperEnd를 통해 시작점과 끝점을 칼날처럼 뾰족하게 테이퍼링.
  */
-function drawSharpGlowingBolt(
+export function drawSharpGlowingBolt(
   ctx: any,
   points: { x: number; y: number }[],
   width: number,
@@ -166,11 +166,15 @@ function drawSharpGlowingBolt(
     return grad;
   };
 
-  const style1 = createLayerStyle(234, 179, 8, 0.20, 0.24, 0.02);
-  const style2 = createLayerStyle(250, 204, 21, 0.45, 0.58, 0.12);
-  const style3 = createLayerStyle(250, 204, 21, 0.85, 1.0, 0.25);
-  const style4 = createLayerStyle(254, 249, 195, 0.85, 1.0, 0.20);
-  const style5 = createLayerStyle(255, 255, 255, 0.90, 1.0, 0.30);
+  // 부드러운 외곽 투명도 감쇠 (Soft Gradient Transparency Falloff)
+  // 외곽 경계선이 뚝 끊기지 않고 어두운 전장에 부드럽게 스며들도록 다층 투명도 적용
+  const style0 = createLayerStyle(234, 179, 8, 0.03, 0.04, 0.01);
+  const style1 = createLayerStyle(245, 158, 11, 0.06, 0.08, 0.02);
+  const style2 = createLayerStyle(250, 204, 21, 0.14, 0.18, 0.04);
+  const style3 = createLayerStyle(253, 224, 71, 0.35, 0.42, 0.10);
+  const style4 = createLayerStyle(254, 240, 138, 0.65, 0.75, 0.18);
+  const style5 = createLayerStyle(254, 249, 195, 0.82, 0.92, 0.22);
+  const style6 = createLayerStyle(255, 255, 255, 0.90, 1.00, 0.30);
 
   // 각 레이어 그리기
   const drawLayer = (strokeColor: any, layerWidth: number) => {
@@ -214,21 +218,25 @@ function drawSharpGlowingBolt(
     }
   };
 
-  // Pass 1: 최외곽 소프트 앰버 투명도 글로우
-  drawLayer(style1, width * 3.6);
-  // Pass 2: 고전압 옐로우 미드 글로우
-  drawLayer(style2, width * 2.2);
-  // Pass 3: 선명한 일렉트릭 레몬 옐로우 바디
-  drawLayer(style3, width * 1.3);
-  // Pass 4: 따뜻한 백황색 서브 코어
-  drawLayer(style4, width * 0.75);
+  // Pass 0: 극외곽 소프트 대기 산란 헤이즈 (가장 바깥쪽 부드러운 투명도 감쇠)
+  drawLayer(style0, width * 5.2);
+  // Pass 1: 최외곽 소프트 앰버 글로우
+  drawLayer(style1, width * 3.8);
+  // Pass 2: 중간 앰버-골드 확산 글로우
+  drawLayer(style2, width * 2.6);
+  // Pass 3: 고전압 옐로우 미드 바디
+  drawLayer(style3, width * 1.7);
+  // Pass 4: 선명한 일렉트릭 레몬 바디
+  drawLayer(style4, width * 1.1);
+  // Pass 5: 따뜻한 백황색 서브 코어
+  drawLayer(style5, width * 0.65);
 
-  // Pass 5: 눈부신 순백 핫 코어 (연속 얇은 와이어 + 테이퍼링 끝점)
+  // Pass 6: 눈부신 순백 핫 코어 (연속 얇은 와이어 + 테이퍼링 끝점)
   const coreStartIdx = taperStart ? 1 : 0;
   const coreEndIdx = taperEnd ? n - 1 : n;
-  ctx.strokeStyle = style5;
-  ctx.fillStyle = style5;
-  ctx.lineWidth = Math.max(1.0, width * 0.38);
+  ctx.strokeStyle = style6;
+  ctx.fillStyle = style6;
+  ctx.lineWidth = Math.max(1.0, width * 0.32);
 
   if (coreStartIdx < coreEndIdx) {
     ctx.beginPath();
@@ -268,7 +276,7 @@ function drawSharpGlowingBolt(
  * 첨부 이미지 기준: 전격 구체 테두리에서 사방으로 뻗어나가는 지그재그 벼락 텐드릴
  * ⚠️ 끝자락이 뭉툭하지 않고 뾰족한 바늘처럼 테이퍼링되며, 끝부분으로 갈수록 투명도 페이드 적용!
  */
-function drawImpactTendril(
+export function drawImpactTendril(
   ctx: any,
   cx: number,
   cy: number,
@@ -377,13 +385,14 @@ function drawImpactTendril(
 /**
  * 첨부 이미지 100% 일치: 중심 고열 순백 + 외곽 라임-옐로우 그라데이션 발광 구체 & 방사 텐드릴
  */
-function drawThunderboltPlasmaSphere(
+export function drawThunderboltPlasmaSphere(
   ctx: any,
   tx: number,
   ty: number,
   radius: number,
   alpha: number = 1.0,
-  tendrilSeed: number = 0
+  tendrilSeed: number = 0,
+  numTendrils: number = 14
 ) {
   ctx.save();
   ctx.globalAlpha = alpha;
@@ -415,7 +424,6 @@ function drawThunderboltPlasmaSphere(
   ctx.fill();
 
   // 3. 구체 테두리에서 사방으로 뻗어나가는 날카로운 벼락 텐드릴들 (첨부 이미지 핵심)
-  const numTendrils = 14;
   for (let i = 0; i < numTendrils; i++) {
     const baseAngle = (i / numTendrils) * Math.PI * 2 + Math.sin(i * 1.5 + tendrilSeed) * 0.2;
     const innerR = radius * 0.42;
@@ -423,10 +431,11 @@ function drawThunderboltPlasmaSphere(
     drawImpactTendril(ctx, tx, ty, baseAngle, innerR, outerR, i * 2.7 + tendrilSeed);
   }
 
-  // 4. 구체 내부를 가로지르는 무작위 마이크로 전격 아크 4줄기
+  // 4. 구체 내부를 가로지르는 무작위 마이크로 전격 아크 줄기
+  const microArcCount = Math.max(2, Math.round(numTendrils * 0.3));
   ctx.strokeStyle = "#FFFFFF";
   ctx.lineWidth = 1.6;
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < microArcCount; i++) {
     const a1 = i * 1.6 + tendrilSeed;
     const a2 = a1 + 1.4;
     const p1x = tx + Math.cos(a1) * (radius * 0.35);
@@ -450,7 +459,7 @@ function drawThunderboltPlasmaSphere(
  * 충격파 링: 투명도가 적용된 부드러운 그라데이션 도넛(Annulus) 링
  * 안쪽도 바깥쪽도 딱딱한 단색 선이 아니라 투명도 그라데이션으로 자연스럽게 발광 페이드
  */
-function drawShockwaveRing(
+export function drawShockwaveRing(
   ctx: any,
   cx: number,
   cy: number,
@@ -485,7 +494,7 @@ function drawShockwaveRing(
  * 12방향 지그재그 전격으로, 안쪽은 두껍고 선명하다가 바깥쪽으로 갈수록 바늘처럼 뾰족해지며
  * 투명도 그라데이션으로 자연스럽게 소멸 페이드아웃 (#9번 프레임 전용)
  */
-function drawRadiatingTaperedStrands(
+export function drawRadiatingTaperedStrands(
   ctx: any,
   cx: number,
   cy: number,
@@ -566,7 +575,7 @@ function drawRadiatingTaperedStrands(
  * 비산하는 미세 전격 스파클 엠버:
  * 딱딱하고 네모난 사각형(fillRect) 대신, 각진 2마디 마이크로 지그재그 아크 및 날카로운 십자 다이아몬드 스파크로 렌더링.
  */
-function drawElectricSparkEmbers(
+export function drawElectricSparkEmbers(
   ctx: any,
   cx: number,
   cy: number,
@@ -1307,225 +1316,903 @@ export function drawThunderWaveEffect(
 }
 
 // ============================================================================
+// // ============================================================================
 // 087: 번개 (Thunder)
 // ============================================================================
 
+/**
+ * 번개(Thunder) 특수 화면 암전:
+ * "배경 좀 많이 어둡게" & "하단은 회색빛 위는 검은"
+ * 상공은 칠흑의 어둠, 하단은 짙고 묵직한 폭풍우 챠콜 회색으로 이어지는 극적 명암 대비
+ */
+function drawStormSkyDimming(
+  ctx: any,
+  centerX: number,
+  currentCenterY: number,
+  alpha: number
+) {
+  if (alpha <= 0.01) return;
+  ctx.save();
+  const topY = currentCenterY - 260;
+  const bottomY = currentCenterY + 260;
+
+  const a = Math.min(1.0, alpha);
+  const grad = ctx.createLinearGradient(centerX, topY, centerX, bottomY);
+  // 상단: 칠흑의 심연 (Pitch Black Abyss)
+  grad.addColorStop(0.0, `rgba(1, 2, 6, ${0.99 * a})`);
+  // 상중단: 딥 옵시디언 네이비 (Midnight Obsidian)
+  grad.addColorStop(0.38, `rgba(4, 7, 16, ${0.97 * a})`);
+  // 하중단: 다크 챠콜 슬레이트 (Dark Storm Slate)
+  grad.addColorStop(0.72, `rgba(16, 24, 38, ${0.94 * a})`);
+  // 하단: 짙은 폭풍우 회색빛 (Deep Misty Charcoal Gray)
+  grad.addColorStop(1.0, `rgba(28, 36, 50, ${0.92 * a})`);
+
+  ctx.fillStyle = grad;
+  ctx.fillRect(centerX - 1200, currentCenterY - 1200, 2400, 2400);
+  ctx.restore();
+}
+
+/**
+ * 2D Canvas 부드러운 수증기 퍼프 (Soft Gaussian-like Vapor Puff)
+ * 중심에서 순백/밝은 회색 -> 외곽 1.0에서 완전 투명(0.0)으로 부드럽게 감쇠하여
+ * 딱딱한 원형/타원형 테두리(boundary arc) 없이 몽글몽글 퍼지는 실제 수증기 응축 질감 구현.
+ */
+function drawSoftVaporPuff(
+  ctx: any,
+  x: number,
+  y: number,
+  rx: number,
+  ry: number,
+  r: number,
+  g: number,
+  b: number,
+  peakAlpha: number
+) {
+  if (peakAlpha <= 0.01) return;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(1.0, ry / rx);
+
+  const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, rx);
+  grad.addColorStop(0.0, `rgba(${r}, ${g}, ${b}, ${peakAlpha})`);
+  grad.addColorStop(0.35, `rgba(${r}, ${g}, ${b}, ${peakAlpha * 0.78})`);
+  grad.addColorStop(0.65, `rgba(${r}, ${g}, ${b}, ${peakAlpha * 0.40})`);
+  grad.addColorStop(0.85, `rgba(${r}, ${g}, ${b}, ${peakAlpha * 0.12})`);
+  grad.addColorStop(1.0, `rgba(${r}, ${g}, ${b}, 0.0)`); // 외곽 완전 0! 경계선 절대 없음!
+
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(0, 0, rx, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+/**
+ * 구름 속 유기적 볼류메트릭 플라즈마 에너지 수렴 볼 (Volumetric Plasma Vortex Node):
+ * 피드백 반영:
+ * 1) "구름에서 번개 내려치기 전 보이는구체 납작하게 만들어봐 (입체적으로 보일 수있도록)"
+ * 2) "번개 시작점 위치 위로 그리고 해당 형태 너무 선명한것도 이상한듯"
+ *
+ * 개선 사항:
+ * - 인위적인 기하학 외곽선(stroke 링, 다이아몬드 각진 선, 사각 스파크 점) 완전 제거!
+ * - 구름 속에 자연스럽게 융합되어 타오르는 가로 납작(aspect: 0.33) 볼류메트릭 플라즈마 블룸.
+ * - 부드러운 가우시안 감쇠의 순백 중심 코어 + 레몬/골든 코로나 헤이즈.
+ * - 구름 수증기를 투과하는 부드러운 수평 대기 이온화 광선대 (경계선 없는 소프트 방사형 그라데이션).
+ * - 구름 틈새로 은은하게 일렁이는 유기적 미세 전격 필라멘트 아크 (자연스러운 테이퍼링).
+ * - 아래로 스며 나오는 전조 방전 텐드릴 (지면을 향해 뻗는 예비 방전).
+ */
+function drawFlattenedConvergenceNode(
+  ctx: any,
+  cx: number,
+  cy: number,
+  alpha: number,
+  chargeProgress: number = 1.0,
+  seed: number = 0
+) {
+  if (alpha <= 0.02) return;
+  ctx.save();
+
+  const aspect = 0.33; // 3D 원근 가로 납작 비율
+  const scale = 0.70 + chargeProgress * 0.30; // 충전에 따른 자연스러운 팽창
+
+  // --------------------------------------------------------------------------
+  // 1. 광역 수증기 플라즈마 헤이즈 (Volumetric Atmosphere Ionization Wash)
+  // --------------------------------------------------------------------------
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(1.0, aspect);
+  const hazeR = 64 * scale;
+  const hazeGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, hazeR);
+  hazeGrad.addColorStop(0.0, `rgba(255, 255, 255, ${0.75 * alpha})`);
+  hazeGrad.addColorStop(0.28, `rgba(254, 240, 138, ${0.55 * alpha})`);
+  hazeGrad.addColorStop(0.62, `rgba(234, 179, 8, ${0.28 * alpha})`);
+  hazeGrad.addColorStop(0.85, `rgba(202, 138, 4, ${0.08 * alpha})`);
+  hazeGrad.addColorStop(1.0, "rgba(202, 138, 4, 0.0)"); // 경계선 없이 완벽 감쇠
+  ctx.fillStyle = hazeGrad;
+  ctx.beginPath();
+  ctx.arc(0, 0, hazeR, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // --------------------------------------------------------------------------
+  // 2. 수평 대기 이온화 광선대 (Soft Horizontal Equatorial Glow - 각진 폴리곤 제거)
+  // --------------------------------------------------------------------------
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(1.0, 0.16); // 극도로 납작한 수평 빔
+  const slitR = 56 * scale;
+  const slitGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, slitR);
+  slitGrad.addColorStop(0.0, `rgba(255, 255, 255, ${0.90 * alpha})`);
+  slitGrad.addColorStop(0.35, `rgba(254, 249, 195, ${0.65 * alpha})`);
+  slitGrad.addColorStop(0.70, `rgba(250, 204, 21, ${0.25 * alpha})`);
+  slitGrad.addColorStop(1.0, "rgba(234, 179, 8, 0.0)");
+  ctx.fillStyle = slitGrad;
+  ctx.beginPath();
+  ctx.arc(0, 0, slitR, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // --------------------------------------------------------------------------
+  // 3. 고밀도 순백/레몬 이온화 플라즈마 코어 (Dense Radiant Plasma Core)
+  // --------------------------------------------------------------------------
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(1.0, 0.28);
+  const coreR = 32 * scale;
+  const coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, coreR);
+  coreGrad.addColorStop(0.0, `rgba(255, 255, 255, ${alpha})`);
+  coreGrad.addColorStop(0.45, `rgba(255, 255, 255, ${0.92 * alpha})`);
+  coreGrad.addColorStop(0.75, `rgba(254, 240, 138, ${0.60 * alpha})`);
+  coreGrad.addColorStop(1.0, "rgba(250, 204, 21, 0.0)");
+  ctx.fillStyle = coreGrad;
+  ctx.beginPath();
+  ctx.arc(0, 0, coreR, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // --------------------------------------------------------------------------
+  // 4. 구름 틈새로 감기는 유기적 미세 전격 필라멘트 (인위적 링 선/사각 점 대체)
+  // --------------------------------------------------------------------------
+  // 타원 궤도를 따라 일렁이는 3개의 유기적 번개 미세 아크
+  const filamentConfigs = [
+    { startA: 0.15,  endA: 0.85,  r: 38 * scale, w: 1.4 * scale, seg: 4, jit: 3 },
+    { startA: 1.05,  endA: 1.85,  r: 44 * scale, w: 1.2 * scale, seg: 4, jit: 4 },
+    { startA: -0.80, endA: -0.15, r: 34 * scale, w: 1.3 * scale, seg: 3, jit: 3 },
+  ];
+
+  for (let f = 0; f < filamentConfigs.length; f++) {
+    const cfg = filamentConfigs[f];
+    const rot = seed * 1.5 + f * 2.1;
+    const a1 = cfg.startA + rot;
+    const a2 = cfg.endA + rot;
+    const pStart = {
+      x: cx + Math.cos(a1) * cfg.r,
+      y: cy + Math.sin(a1) * (cfg.r * aspect)
+    };
+    const pEnd = {
+      x: cx + Math.cos(a2) * cfg.r,
+      y: cy + Math.sin(a2) * (cfg.r * aspect)
+    };
+    const midA = (a1 + a2) * 0.5;
+    const pMid = {
+      x: cx + Math.cos(midA) * (cfg.r * 1.05),
+      y: cy + Math.sin(midA) * (cfg.r * aspect * 1.05)
+    };
+
+    const pts1 = createLightningPoints(pStart.x, pStart.y, pMid.x, pMid.y, cfg.seg, cfg.jit, seed + f * 3.7);
+    const pts2 = createLightningPoints(pMid.x, pMid.y, pEnd.x, pEnd.y, cfg.seg, cfg.jit, seed + f * 5.3);
+    const fullPts = [...pts1, ...pts2.slice(1)];
+
+    drawSharpGlowingBolt(ctx, fullPts, cfg.w, alpha * 0.80, true, true);
+  }
+
+  // --------------------------------------------------------------------------
+  // 5. 하단 정점 전조 방전 텐드릴 (지면을 향해 뻗치는 미세 번개 바늘)
+  // --------------------------------------------------------------------------
+  for (let j = 0; j < 3; j++) {
+    const sx = cx - 10 + j * 10;
+    const sy = cy + 2;
+    const ey = cy + (14 + (j % 2) * 10) * scale;
+    const ex = sx + (j === 1 ? 0 : (j === 0 ? -6 : 6));
+    const pts = createLightningPoints(sx, sy, ex, ey, 3, 4, seed + j * 2.8);
+    drawSharpGlowingBolt(ctx, pts, 1.6 * scale, alpha * 0.85, true, true);
+  }
+
+  ctx.restore();
+}
+
+/**
+ * 최상단 백색 반투명 수증기 응축 구름 (Condensed White Vapor Cloud):
+ * - 유저 요청: "최상단에 흰색 반투명으로 수증기를 응축시킨 것 같은 구름", "희게 퍼지는 느낌", "구름의 형체 자체가 느껴지도록"
+ * - 딱딱한 타원형 스티커 경계선(Mach bands) 완전 제거 -> 부드러운 감쇠 곡선의 다층 수증기 돔 클러스터.
+ * - 어두운 폭풍우 하늘 최상단에서 눈부시게 대비되는 은백색 뭉게구름 체적감 구현.
+ */
+function drawCondensedVaporCloud(
+  ctx: any,
+  cloudCenterX: number,
+  cloudCenterY: number,
+  alpha: number,
+  internalFlash: number = 0,
+  seed: number = 0
+) {
+  if (alpha <= 0.01) return;
+  ctx.save();
+
+  // 상공 최상단 기준 Y (화면 상단 천장선)
+  const baseY = cloudCenterY - 32;
+
+  // --------------------------------------------------------------------------
+  // 1. 최상단 수증기 헤이즈 워시 (Atmospheric Vapor Glow Wash)
+  // --------------------------------------------------------------------------
+  const hazeGrad = ctx.createLinearGradient(cloudCenterX, baseY - 40, cloudCenterX, baseY + 95);
+  hazeGrad.addColorStop(0.0, `rgba(255, 255, 255, ${0.45 * alpha})`);
+  hazeGrad.addColorStop(0.30, `rgba(240, 248, 255, ${0.35 * alpha})`);
+  hazeGrad.addColorStop(0.65, `rgba(215, 230, 250, ${0.18 * alpha})`);
+  hazeGrad.addColorStop(1.0, "rgba(190, 215, 245, 0.0)");
+  ctx.fillStyle = hazeGrad;
+  ctx.fillRect(cloudCenterX - 500, baseY - 60, 1000, 160);
+
+  // --------------------------------------------------------------------------
+  // 2. 내부 전격 이온화 플라즈마 역광 (Backlit Lightning Flash - 원형 220px 0.0 감쇠로 잘림 방지)
+  // --------------------------------------------------------------------------
+  if (internalFlash > 0.05) {
+    const flash = Math.min(1.0, internalFlash) * alpha;
+
+    // 구름 중심부 뒤에서 눈부시게 터져 나오는 황금-순백 역광 (원형 블룸으로 잘림 없이 0.0 감쇠)
+    ctx.save();
+    const flashGrad = ctx.createRadialGradient(cloudCenterX, baseY + 30, 0, cloudCenterX, baseY + 30, 220);
+    flashGrad.addColorStop(0.0, `rgba(255, 255, 255, ${0.90 * flash})`);
+    flashGrad.addColorStop(0.25, `rgba(254, 240, 138, ${0.75 * flash})`);
+    flashGrad.addColorStop(0.60, `rgba(234, 179, 8, ${0.35 * flash})`);
+    flashGrad.addColorStop(1.0, "rgba(202, 138, 4, 0.0)");
+    ctx.fillStyle = flashGrad;
+    ctx.beginPath();
+    ctx.arc(cloudCenterX, baseY + 30, 220, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // 구름 속을 가로지르는 번개 크롤러 아크
+    for (let j = 0; j < 4; j++) {
+      const sx = cloudCenterX - 120 + j * 60;
+      const sy = baseY + 12 + (j % 2) * 10;
+      const ex = cloudCenterX - 50 + j * 45;
+      const ey = baseY + 38;
+      const arcPts = createLightningPoints(sx, sy, ex, ey, 4, 7, seed + j * 2.3);
+      drawSharpGlowingBolt(ctx, arcPts, 2.4, flash * 0.95, true, true);
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // 3. 심층 음영 구름 덩어리 (Deep Shaded Billow Layer - 입체 체적감 형성)
+  // --------------------------------------------------------------------------
+  const deepPuffs = [
+    { x: cloudCenterX - 180, y: baseY + 18, rx: 65, ry: 45 },
+    { x: cloudCenterX - 90,  y: baseY + 26, rx: 62, ry: 46 },
+    { x: cloudCenterX,       y: baseY + 20, rx: 70, ry: 48 },
+    { x: cloudCenterX + 95,  y: baseY + 24, rx: 64, ry: 46 },
+    { x: cloudCenterX + 185, y: baseY + 18, rx: 65, ry: 45 },
+    { x: cloudCenterX - 270, y: baseY + 14, rx: 55, ry: 40 },
+    { x: cloudCenterX + 275, y: baseY + 14, rx: 55, ry: 40 },
+  ];
+
+  for (const p of deepPuffs) {
+    drawSoftVaporPuff(ctx, p.x, p.y, p.rx, p.ry, 195, 212, 232, 0.65 * alpha);
+  }
+
+  // --------------------------------------------------------------------------
+  // 4. 주요 순백 응축 수증기 돔 클러스터 (Primary White Cumulus Domes)
+  // "흰색 반투명으로 수증기를 응축시킨 구름", "희게 퍼지는 느낌"
+  // --------------------------------------------------------------------------
+  const mainPuffs = [
+    // 중앙 수렴 지점 주변 거대 뭉게구름 돔
+    { x: cloudCenterX,       y: baseY + 12, rx: 68, ry: 50, a: 0.92 },
+    { x: cloudCenterX - 45,  y: baseY + 18, rx: 56, ry: 44, a: 0.88 },
+    { x: cloudCenterX + 48,  y: baseY + 16, rx: 58, ry: 44, a: 0.88 },
+
+    // 좌측 주요 적란운 능선
+    { x: cloudCenterX - 110, y: baseY + 20, rx: 62, ry: 46, a: 0.90 },
+    { x: cloudCenterX - 165, y: baseY + 14, rx: 58, ry: 42, a: 0.86 },
+    { x: cloudCenterX - 225, y: baseY + 20, rx: 54, ry: 40, a: 0.84 },
+    { x: cloudCenterX - 290, y: baseY + 12, rx: 52, ry: 38, a: 0.80 },
+    { x: cloudCenterX - 355, y: baseY + 15, rx: 50, ry: 36, a: 0.75 },
+
+    // 우측 주요 적란운 능선
+    { x: cloudCenterX + 115, y: baseY + 18, rx: 62, ry: 46, a: 0.90 },
+    { x: cloudCenterX + 170, y: baseY + 14, rx: 58, ry: 42, a: 0.86 },
+    { x: cloudCenterX + 230, y: baseY + 20, rx: 54, ry: 40, a: 0.84 },
+    { x: cloudCenterX + 295, y: baseY + 12, rx: 52, ry: 38, a: 0.80 },
+    { x: cloudCenterX + 360, y: baseY + 15, rx: 50, ry: 36, a: 0.75 },
+  ];
+
+  for (const p of mainPuffs) {
+    drawSoftVaporPuff(ctx, p.x, p.y, p.rx, p.ry, 255, 255, 255, p.a * alpha);
+  }
+
+  // --------------------------------------------------------------------------
+  // 5. 전면 하이라이트 순백 코어 (Bright Core Highlights)
+  // --------------------------------------------------------------------------
+  const corePuffs = [
+    { x: cloudCenterX,       y: baseY + 6,  rx: 48, ry: 34, a: 0.95 },
+    { x: cloudCenterX - 95,  y: baseY + 10, rx: 42, ry: 30, a: 0.90 },
+    { x: cloudCenterX + 98,  y: baseY + 8,  rx: 44, ry: 30, a: 0.90 },
+    { x: cloudCenterX - 195, y: baseY + 8,  rx: 38, ry: 26, a: 0.85 },
+    { x: cloudCenterX + 200, y: baseY + 8,  rx: 40, ry: 26, a: 0.85 },
+  ];
+
+  for (const p of corePuffs) {
+    drawSoftVaporPuff(ctx, p.x, p.y, p.rx, p.ry, 255, 255, 255, p.a * alpha);
+  }
+
+  // --------------------------------------------------------------------------
+  // 6. 하단 수증기 흩날림/갈래 (Soft Lower Vapor Tendrils - 자연스러운 경계선 소멸)
+  // --------------------------------------------------------------------------
+  const wisps = [
+    { x: cloudCenterX - 75,  y: baseY + 42, rx: 32, ry: 20, a: 0.45 },
+    { x: cloudCenterX + 70,  y: baseY + 40, rx: 34, ry: 22, a: 0.45 },
+    { x: cloudCenterX - 145, y: baseY + 38, rx: 30, ry: 18, a: 0.40 },
+    { x: cloudCenterX + 150, y: baseY + 36, rx: 32, ry: 19, a: 0.40 },
+    { x: cloudCenterX - 220, y: baseY + 34, rx: 28, ry: 17, a: 0.35 },
+    { x: cloudCenterX + 225, y: baseY + 35, rx: 28, ry: 17, a: 0.35 },
+  ];
+
+  for (const w of wisps) {
+    drawSoftVaporPuff(ctx, w.x, w.y, w.rx, w.ry, 235, 245, 255, w.a * alpha);
+  }
+
+  ctx.restore();
+}
+
+/**
+ * 번개(Thunder) 전용: 지축을 가르는 5-Pass 극초고압 거대 벼락 (Trunk Bolt)
+ * 본체 벼락 기둥 + 3줄기 분기 벼락 (모두 drawSharpGlowingBolt로 날카롭고 각지게 렌더링)
+ */
+function drawGreatThunderbolt(
+  ctx: any,
+  startX: number,
+  startY: number,
+  targetX: number,
+  endY: number,
+  width: number,
+  alpha: number,
+  seed: number
+) {
+  if (alpha <= 0.02 || endY <= startY + 5) return;
+  ctx.save();
+
+  // 1) 메인 벼락 줄기 지그재그 생성 (14마디) - 지면 안착 지점까지 테이퍼링 수렴
+  const mainPts = createLightningPoints(startX, startY, targetX, endY, 14, 18, seed);
+  drawSharpGlowingBolt(ctx, mainPts, width, alpha, false, true);
+
+  // 2) 좌우로 찢어져 나가는 분기 벼락 3줄기 (화면 내 가시 영역에 정밀 배치)
+  if (mainPts.length >= 8) {
+    // 분기 1: 화면 상단 가시 영역 (y ≈ targetPos.y - 65)
+    const m1 = mainPts[Math.floor(mainPts.length * 0.60)];
+    const b1Pts = createLightningPoints(m1.x, m1.y, m1.x - 48, m1.y + 38, 5, 10, seed + 4.2);
+    drawSharpGlowingBolt(ctx, b1Pts, width * 0.42, alpha * 0.90, true, true);
+
+    // 분기 2: 화면 중단 가시 영역 (y ≈ targetPos.y - 25)
+    const m2 = mainPts[Math.floor(mainPts.length * 0.74)];
+    const b2Pts = createLightningPoints(m2.x, m2.y, m2.x + 52, m2.y + 35, 5, 10, seed + 7.8);
+    drawSharpGlowingBolt(ctx, b2Pts, width * 0.45, alpha * 0.90, true, true);
+
+    // 분기 3: 지면 직전 하단부 (y ≈ targetPos.y + 12)
+    const m3 = mainPts[Math.floor(mainPts.length * 0.88)];
+    const b3Pts = createLightningPoints(m3.x, m3.y, m3.x - 36, m3.y + 20, 4, 8, seed + 11.4);
+    drawSharpGlowingBolt(ctx, b3Pts, width * 0.38, alpha * 0.85, true, true);
+  }
+
+  // 3) 지면 접촉부 초고온 순백/황금 접지 블룸 (원근 타원 적용으로 원형 링 형태 방지)
+  ctx.save();
+  ctx.translate(targetX, endY);
+  ctx.scale(1.0, 0.35);
+  const impactBloom = ctx.createRadialGradient(0, 0, 0, 0, 0, 36);
+  impactBloom.addColorStop(0.0, `rgba(255, 255, 255, ${alpha})`);
+  impactBloom.addColorStop(0.35, `rgba(254, 240, 138, ${0.92 * alpha})`);
+  impactBloom.addColorStop(0.70, `rgba(234, 179, 8, ${0.45 * alpha})`);
+  impactBloom.addColorStop(1.0, "rgba(202, 138, 4, 0.0)");
+  ctx.fillStyle = impactBloom;
+  ctx.beginPath();
+  ctx.arc(0, 0, 36, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.restore();
+}
+
+/**
+ * 구름에서 하방으로 고속 강하하는 벼락 선단 (Leader Head Bolt)
+ */
+function drawDescendingLightningLeader(
+  ctx: any,
+  startX: number,
+  startY: number,
+  targetX: number,
+  currentTipY: number,
+  trunkWidth: number,
+  alpha: number,
+  seed: number
+) {
+  if (alpha <= 0.02 || currentTipY <= startY + 5) return;
+  ctx.save();
+
+  // 1) 메인 하강 줄기: 시작점/끝점 바늘 테이퍼링 + 전방 투명 감쇠(frontFade) 적용으로 날카로운 낙뢰 선단 연출
+  const mainPts = createLightningPoints(startX, startY, targetX, currentTipY, 10, 16, seed);
+  drawSharpGlowingBolt(ctx, mainPts, trunkWidth, alpha, true, true, true);
+
+  // 2) 하강 도중 찢어지는 곁가지
+  if (mainPts.length >= 5) {
+    const mid = mainPts[Math.floor(mainPts.length * 0.50)];
+    const bPts = createLightningPoints(mid.x, mid.y, mid.x + (seed % 2 === 0 ? 38 : -38), mid.y + 40, 4, 8, seed + 3.7);
+    drawSharpGlowingBolt(ctx, bPts, trunkWidth * 0.40, alpha * 0.85, true, true);
+  }
+
+  // [피드백 반영]: 도달하기 전 선두 구체 완전 제거!
+  // 대상에 도달하기 전까지는 번개가 날카롭고 매서운 선단(Needle Tip)으로만 쇄도하며,
+  // 대상에게 도달했을 때(Step 4) 비로소 거대한 임팩트 플라즈마 구체가 폭발합니다.
+
+  ctx.restore();
+}
+
+/**
+ * 번개 타격 순간 방사되는 고전압 전격 방전 가닥 (Impact Discharge Streaks)
+ * 유저 피드백: "직선 가닥들 중앙 및 외각 투명하게"
+ * 
+ * - 중앙(시작부) 0.0 투명도 -> 중간(중심부) 순백-레몬 고전압 피크 -> 외각(끝단) 0.0 투명도
+ * - 양 끝단(중앙 & 외각)이 부드럽게 감쇠하여 인위적인 직선 느낌 없이 공기 중으로 뻗어나가는 스트리머
+ */
+function drawImpactDischargeStreaks(
+  ctx: any,
+  cx: number,
+  cy: number,
+  radius: number,
+  alpha: number,
+  count: number = 12,
+  seed: number = 0
+) {
+  if (alpha <= 0.02 || radius <= 4) return;
+  ctx.save();
+  ctx.lineCap = "round";
+
+  for (let i = 0; i < count; i++) {
+    const angle = (i / count) * Math.PI * 2 + seed * 0.45 + (i % 2 === 0 ? 0.08 : -0.08);
+    const innerDist = radius * 0.20;
+    const outerDist = radius * (0.95 + (i % 3) * 0.35);
+
+    const x1 = cx + Math.cos(angle) * innerDist;
+    const y1 = cy + Math.sin(angle) * (innerDist * 0.88);
+    const x2 = cx + Math.cos(angle) * outerDist;
+    const y2 = cy + Math.sin(angle) * (outerDist * 0.88);
+
+    // 미세한 전격 곡선 굴곡 (완전 직선 탈피)
+    const midT = 0.50;
+    const perpAngle = angle + Math.PI * 0.5;
+    const jitter = Math.sin(seed * 2.5 + i * 2.1) * (radius * 0.08);
+    const midX = x1 + (x2 - x1) * midT + Math.cos(perpAngle) * jitter;
+    const midY = y1 + (y2 - y1) * midT + Math.sin(perpAngle) * jitter;
+
+    // [핵심] 중앙(0.0) 투명 -> 중간(0.5) 고전압 레몬/골드 -> 외각(1.0) 완전 투명
+    const streakGrad = ctx.createLinearGradient(x1, y1, x2, y2);
+    streakGrad.addColorStop(0.0, "rgba(255, 255, 255, 0.0)"); // 중앙 완전 투명!
+    streakGrad.addColorStop(0.20, `rgba(254, 240, 138, ${0.40 * alpha})`);
+    streakGrad.addColorStop(0.50, `rgba(255, 255, 255, ${0.92 * alpha})`); // 중간 최대 발광
+    streakGrad.addColorStop(0.78, `rgba(250, 204, 21, ${0.40 * alpha})`);
+    streakGrad.addColorStop(1.0, "rgba(234, 179, 8, 0.0)"); // 외각 완전 투명!
+
+    ctx.strokeStyle = streakGrad;
+    ctx.lineWidth = 3.2;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.quadraticCurveTo(midX, midY, x2, y2);
+    ctx.stroke();
+
+    // 내부 순백 코어 (중앙 & 외각 투명)
+    const coreGrad = ctx.createLinearGradient(x1, y1, x2, y2);
+    coreGrad.addColorStop(0.0, "rgba(255, 255, 255, 0.0)"); // 중앙 투명
+    coreGrad.addColorStop(0.35, `rgba(255, 255, 255, ${0.75 * alpha})`);
+    coreGrad.addColorStop(0.50, `rgba(255, 255, 255, ${1.00 * alpha})`);
+    coreGrad.addColorStop(0.65, `rgba(255, 255, 255, ${0.75 * alpha})`);
+    coreGrad.addColorStop(1.0, "rgba(255, 255, 255, 0.0)"); // 외각 투명
+
+    ctx.strokeStyle = coreGrad;
+    ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.quadraticCurveTo(midX, midY, x2, y2);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+/**
+ * 표적 도달 시 폭발하는 대형 블라인딩 플라즈마 임팩트 구체 (Target Impact Plasma Sphere)
+ * 피드백 반영:
+ * 1) "대상에게 도달했을 때 구체가 나오게 해주고"
+ * 2) "번개의 외각에 있는 것들 부드러운 투명도"
+ */
+function drawTargetImpactPlasmaSphere(
+  ctx: any,
+  cx: number,
+  cy: number,
+  radius: number,
+  alpha: number,
+  seed: number = 0
+) {
+  if (alpha <= 0.02 || radius <= 2) return;
+  ctx.save();
+
+  // 1. 최외곽 부드러운 대기 발광 투명도 블룸 (Soft Atmospheric Transparency Bloom)
+  // 외곽 1.0에서 0.0으로 완벽 감쇠하여 경계선 없이 부드럽게 스며듦
+  const outerR = radius * 2.4;
+  const outerBloom = ctx.createRadialGradient(cx, cy, 0, cx, cy, outerR);
+  outerBloom.addColorStop(0.0, `rgba(255, 255, 255, ${0.95 * alpha})`);
+  outerBloom.addColorStop(0.25, `rgba(254, 240, 138, ${0.75 * alpha})`);
+  outerBloom.addColorStop(0.55, `rgba(234, 179, 8, ${0.35 * alpha})`);
+  outerBloom.addColorStop(0.80, `rgba(202, 138, 4, ${0.10 * alpha})`);
+  outerBloom.addColorStop(1.0, "rgba(202, 138, 4, 0.0)"); // 부드러운 0.0 투명도
+  ctx.fillStyle = outerBloom;
+  ctx.beginPath();
+  ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 2. 중간 고밀도 일렉트릭 레몬-골드 구체 바디
+  const midR = radius * 1.25;
+  const midGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, midR);
+  midGrad.addColorStop(0.0, `rgba(255, 255, 255, ${alpha})`);
+  midGrad.addColorStop(0.40, `rgba(255, 255, 255, ${0.95 * alpha})`);
+  midGrad.addColorStop(0.70, `rgba(254, 249, 195, ${0.80 * alpha})`);
+  midGrad.addColorStop(1.0, "rgba(250, 204, 21, 0.0)");
+  ctx.fillStyle = midGrad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, midR, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 3. 중심 초고온 순백 핫 코어
+  ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius * 0.55, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+/**
+/**
+ * 지면 원근법 적용 대형 볼류메트릭 방전 플라즈마 충격파 영역 (Ground Plasma Shockwave Field)
+ * 피드백 반영:
+ * "바닥에 지면에 도형처럼 나오던거 (반투명한) 그건 유지하면서 링을 제거"
+ * 
+ * - 외곽선 테두리(stroke 링)는 완전 제거하여 인위적인 링 형태 방지
+ * - 지면에 반투명한 면(도형) 형태로 넓고 두껍게 퍼져나가는 입체 플라즈마 충격파 장판 구현
+ * - 안쪽은 은은한 반투명 발광 -> 중심 대역 최대 에너지 -> 바깥쪽은 부드러운 완전 투명(0.0) 감쇠
+ */
+function drawGroundDischargeField(
+  ctx: any,
+  cx: number,
+  cy: number,
+  baseR: number,
+  alpha: number
+) {
+  if (alpha <= 0.02 || baseR <= 4) return;
+
+  ctx.save();
+  const aspect = 0.35; // 지면 원근감 (납작한 바닥 타원)
+
+  // --------------------------------------------------------------------------
+  // 1. [메인 1차 외곽 두꺼운 확산 충격파 대역] (바깥쪽 완전 투명, 안쪽 반투명)
+  // --------------------------------------------------------------------------
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(1.0, aspect);
+
+  const r1Outer = baseR * 1.45;
+  const r1Inner = Math.max(0, baseR * 0.45); // 두껍게 퍼지는 충격파 파면
+
+  const waveGrad1 = ctx.createRadialGradient(0, 0, r1Inner, 0, 0, r1Outer);
+  waveGrad1.addColorStop(0.0, `rgba(255, 255, 255, ${0.18 * alpha})`); // 안쪽 시작부 반투명
+  waveGrad1.addColorStop(0.25, `rgba(254, 240, 138, ${0.52 * alpha})`); // 중간 반투명 레몬 골드
+  waveGrad1.addColorStop(0.55, `rgba(234, 179, 8, ${0.38 * alpha})`);  // 확산 앰버
+  waveGrad1.addColorStop(0.80, `rgba(202, 138, 4, ${0.14 * alpha})`);  // 외곽 감쇠
+  waveGrad1.addColorStop(1.0, "rgba(202, 138, 4, 0.0)"); // [핵심] 바깥쪽 완전 투명!
+
+  ctx.fillStyle = waveGrad1;
+  ctx.beginPath();
+  ctx.arc(0, 0, r1Outer, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // --------------------------------------------------------------------------
+  // 2. [2차 내부 고에너지 두꺼운 충격파 대역] (중심부 반투명 순백-레몬)
+  // --------------------------------------------------------------------------
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(1.0, aspect);
+
+  const r2Outer = baseR * 0.95;
+  const r2Inner = Math.max(0, baseR * 0.20);
+
+  const waveGrad2 = ctx.createRadialGradient(0, 0, r2Inner, 0, 0, r2Outer);
+  waveGrad2.addColorStop(0.0, `rgba(255, 255, 255, ${0.28 * alpha})`); // 안쪽 반투명 순백
+  waveGrad2.addColorStop(0.35, `rgba(255, 255, 255, ${0.72 * alpha})`); // 코어 반투명 피크
+  waveGrad2.addColorStop(0.70, `rgba(254, 249, 195, ${0.45 * alpha})`);
+  waveGrad2.addColorStop(1.0, "rgba(250, 204, 21, 0.0)"); // 바깥쪽 투명!
+
+  ctx.fillStyle = waveGrad2;
+  ctx.beginPath();
+  ctx.arc(0, 0, r2Outer, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // [주의]: 링 테두리 선(ctx.stroke() 엣지 라인)은 절대 그리지 않음!
+  // 순수 반투명 면 그라데이션 도형만 렌더링.
+
+  ctx.restore();
+}
+
+/**
+ * 대지 위를 타고 거미줄처럼 질주하는 지면 방전 지그재그 크랙
+ */
+function drawGroundLightningCrackles(
+  ctx: any,
+  cx: number,
+  cy: number,
+  count: number,
+  maxDist: number,
+  alpha: number,
+  seed: number
+) {
+  if (alpha <= 0.02) return;
+
+  ctx.save();
+  for (let i = 0; i < count; i++) {
+    const angle = (i / count) * Math.PI * 2 + seed * 0.35;
+    const dist = maxDist * (0.75 + 0.25 * Math.sin(seed * 2.1 + i * 1.7));
+    const gx = cx + Math.cos(angle) * dist;
+    const gy = cy + Math.sin(angle) * (dist * 0.36); // 원근감
+
+    const pts = createLightningPoints(cx, cy, gx, gy, 4, 7, seed + i * 2.2);
+    drawSharpGlowingBolt(ctx, pts, 3.2, alpha, false, true);
+  }
+  ctx.restore();
+}
+
+/**
+ * 뇌격 대폭발: 12방향 지그재그 분기 벼락 가지 (날카로운 miter join 발광 볼트)
+ */
+function drawBranchingThunderExplosion(
+  ctx: any,
+  cx: number,
+  cy: number,
+  radius: number,
+  alpha: number,
+  seed: number
+) {
+  if (alpha <= 0.02) return;
+
+  ctx.save();
+  const branches = 12;
+  for (let i = 0; i < branches; i++) {
+    const angle = (i / branches) * Math.PI * 2 + seed * 0.25 + (i % 2 === 0 ? 0.08 : -0.08);
+    const dist = radius * (0.85 + 0.30 * Math.sin(seed * 3.1 + i * 1.9));
+    const ex = cx + Math.cos(angle) * dist;
+    const ey = cy + Math.sin(angle) * (dist * 0.85);
+
+    const mainPts = createLightningPoints(cx, cy, ex, ey, 6, 12, seed + i * 2.7);
+    drawSharpGlowingBolt(ctx, mainPts, 4.5, alpha, false, true);
+
+    // 중간 곁가지
+    if (mainPts.length >= 4) {
+      const mid = mainPts[2];
+      const subAngle = angle + (i % 2 === 0 ? 0.60 : -0.60);
+      const subDist = dist * 0.50;
+      const subEx = mid.x + Math.cos(subAngle) * subDist;
+      const subEy = mid.y + Math.sin(subAngle) * subDist;
+      const subPts = createLightningPoints(mid.x, mid.y, subEx, subEy, 4, 8, seed + i * 5.1);
+      drawSharpGlowingBolt(ctx, subPts, 2.6, alpha * 0.85, true, true);
+    }
+  }
+
+  // 사방으로 튀는 고에너지 전격 파편 (32개) - 부드러운 원형 발광 파티클
+  for (let i = 0; i < 32; i++) {
+    const a = i * 1.28 + seed * 2.2;
+    const spDist = 18 + radius * (0.35 + 0.65 * (((i * 7) % 10) / 10));
+    const sx = cx + Math.cos(a) * spDist;
+    const sy = cy + Math.sin(a) * (spDist * 0.82);
+    const size = (i % 3 === 0) ? 3.4 : 2.0;
+    ctx.fillStyle = (i % 2 === 0) ? `rgba(255, 255, 255, ${alpha * 0.90})` : `rgba(254, 240, 138, ${alpha * 0.80})`;
+    ctx.beginPath();
+    ctx.arc(sx, sy, size * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+/**
+ * 번개(Thunder) 배경 레이어 렌더러 (포켓몬/플랫폼 뒷면에 렌더링)
+ */
+export function drawThunderBehindEffect(
+  ctx: any,
+  targetPos: { x: number; y: number },
+  moveStep: number,
+  effectProgress: number,
+  frame: any
+) {
+  ctx.save();
+  const targetX = targetPos.x;
+  const panProg = frame?.skyPanProgress ?? ((moveStep >= 4) ? 1.0 : 0.0);
+  const skyFocalY = targetPos.y - 180;
+  const easedPan = panProg < 0.5 ? 2 * panProg * panProg : 1 - Math.pow(-2 * panProg + 2, 2) / 2;
+  const currentCenterY = Math.round(skyFocalY + ((targetPos.y + 36) - skyFocalY) * easedPan);
+
+  const cloudCenterY = targetPos.y - 275;
+
+  // 1. [전장 폭풍우 암전]: 화면 하단 회색빛, 위는 검은 그라데이션 (배경 레이어)
+  const dimAlpha = frame?.dimAlpha ?? (
+    moveStep === 0 ? 0.35 :
+    moveStep <= 3 ? 0.80 :
+    moveStep === 4 ? 0.45 :
+    moveStep === 5 ? 0.65 :
+    moveStep === 6 ? 0.40 : 0.15
+  );
+
+  if (dimAlpha > 0) {
+    drawStormSkyDimming(ctx, targetX, currentCenterY, dimAlpha);
+  }
+
+  // 2. [최상단 백색 반투명 수증기 응축 구름]: 배경 레이어에 렌더링
+  if (moveStep <= 4) {
+    const cloudAlpha = moveStep === 0
+      ? Math.max(0, 1.0 - (frame?.skyPanProgress ?? 0)) * 0.92
+      : (moveStep <= 2 ? 0.96 : moveStep === 3 ? 0.88 : 0.70);
+
+    if (cloudAlpha > 0.05) {
+      const internalFlash = moveStep === 1
+        ? (effectProgress > 0.25 ? Math.sin((effectProgress - 0.25) / 0.75 * Math.PI) : 0.1)
+        : (moveStep === 2 ? 1.0 : (moveStep === 0 ? 0.0 : 0.35));
+      drawCondensedVaporCloud(ctx, targetX, cloudCenterY, cloudAlpha, internalFlash, effectProgress * 4);
+    }
+  }
+
+  ctx.restore();
+}
+
+/**
+ * 번개(Thunder) 전면 이펙트 레이어 렌더러 (포켓몬 앞면에 렌더링)
+ */
 export function drawThunderEffect(
   ctx: any,
   attackerPos: { x: number; y: number },
   targetPos: { x: number; y: number },
   moveStep: number,
-  effectProgress: number = 0.5
+  effectProgress: number = 0.5,
+  frame?: any
 ) {
   ctx.save();
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
+  ctx.lineCap = "butt";
+  ctx.lineJoin = "miter";
+  ctx.miterLimit = 3.5;
 
   const targetX = targetPos.x;
   const targetY = targetPos.y - 4;
-  const skyY = -40; // 캔버스 최상단 상공 좌표
+  const groundY = targetPos.y + 36; // 표적 플랫폼 지면(ground level)에 정확히 밀착
 
-  // Step 1: 하늘에 짙은 먹구름 뇌운 형성 & 대기 경고 섬광
-  if (moveStep === 1) {
-    const p = effectProgress;
-    // 상공 먹구름 덩어리 렌더링
-    const cloudY = 32;
-    const clouds = [
-      { x: targetX - 45, y: cloudY - 6, r: 28 },
-      { x: targetX, y: cloudY - 14, r: 36 },
-      { x: targetX + 45, y: cloudY - 8, r: 30 },
-      { x: targetX - 20, y: cloudY + 6, r: 24 },
-      { x: targetX + 22, y: cloudY + 8, r: 26 },
-    ];
+  // 상공 및 카메라 수직 위치
+  const panProg = frame?.skyPanProgress ?? ((moveStep >= 4) ? 1.0 : 0.0);
+  const skyFocalY = targetPos.y - 180;
+  const easedPan = panProg < 0.5 ? 2 * panProg * panProg : 1 - Math.pow(-2 * panProg + 2, 2) / 2;
+  const currentCenterY = Math.round(skyFocalY + ((targetPos.y + 36) - skyFocalY) * easedPan);
 
-    // 먹구름 기저 어둠 레이어
-    ctx.fillStyle = "#0F172A"; // 슬레이트 다크
-    for (const c of clouds) {
-      ctx.beginPath();
-      ctx.arc(c.x, c.y, c.r * (0.8 + p * 0.25), 0, Math.PI * 2);
-      ctx.fill();
-    }
+  const cloudCenterY = targetPos.y - 275;
+  const cloudStartY = targetPos.y - 264; // 상공 구름 천장 수렴 중심 및 벼락 분출 지점 (충분한 상공 높이감 확보)
 
-    // 먹구름 속 전격 오라 (보라/남색)
-    ctx.fillStyle = "#312E81"; // 인디고
-    for (const c of clouds) {
-      ctx.beginPath();
-      ctx.arc(c.x, c.y, c.r * 0.65, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // 구름 사이로 비치는 내부 번개 섬광
-    if (p > 0.4) {
-      ctx.fillStyle = "#FEF08A";
-      ctx.beginPath();
-      ctx.arc(targetX + 4, cloudY - 6, 14 * p, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // 하향 번개 전조 가이드 선
-    for (let i = 0; i < 3; i++) {
-      const sx = targetX - 16 + i * 16;
-      const sy = cloudY + 16;
-      const ey = sy + 30 + (i % 2) * 15;
-      const pts = createLightningPoints(sx, sy, sx + (i - 1) * 8, ey, 4, 8, i * 2.1);
-      ctx.strokeStyle = "#FDE047";
-      ctx.lineWidth = 1.8;
-      ctx.beginPath();
-      ctx.moveTo(pts[0].x, pts[0].y);
-      for (let j = 1; j < pts.length; j++) ctx.lineTo(pts[j].x, pts[j].y);
-      ctx.stroke();
-    }
+  // 1. [전장 전체 순백 섬광 (Full-Screen Whiteout Flash)]
+  const whiteFlash = frame?.whiteoutAlpha ?? 0;
+  if (whiteFlash > 0) {
+    ctx.save();
+    ctx.fillStyle = `rgba(255, 255, 255, ${Math.min(0.92, whiteFlash)})`;
+    ctx.fillRect(targetX - 1200, currentCenterY - 1200, 2400, 2400);
+    ctx.restore();
   }
 
-  // Step 2: 하늘 최상단에서 수직 강하하는 초대형 거대 벼락 기둥
+  // Step 0: 필드에서 상공으로 카메라 틸트업 진행 중 (전면 이펙트 대기)
+  if (moveStep === 0) {
+    // 필드 틸트업 도중에는 전면 이펙트 없이 배경 암전과 구름 진입만 연출
+  }
+
+  // Step 1: 카메라 상공 지향 & 3D 납작한 전격 수렴 구체 충전 (입체적 에너지 디스크)
+  else if (moveStep === 1) {
+    const p = effectProgress;
+    drawFlattenedConvergenceNode(ctx, targetX, cloudStartY, 1.0, p, p * 8);
+  }
+
+  // Step 2: 수증기 구름에서 강력한 4중 전격 분출 및 하방 급강하 개시
   else if (moveStep === 2) {
     const p = effectProgress;
-    const currentTipY = skyY + (targetY - skyY) * Math.min(1.0, p * 1.35);
+    // 3D 납작 수렴 노드 잔류 발광
+    drawFlattenedConvergenceNode(ctx, targetX, cloudStartY, Math.max(0, 1.0 - p * 0.35), 1.0, 12 + p * 15);
 
-    // 1) 메인 거대 벼락 줄기 (Trunk Bolt)
-    const mainPts = createLightningPoints(targetX, skyY, targetX, currentTipY, 10, 24, 2.5);
-    strokeLightningLayers(ctx, mainPts, 8.5, "#CA8A04", "#FDE047", "#FFFFFF");
-
-    // 2) 좌우 분기 서브 벼락 2줄기
-    const leftPts = createLightningPoints(targetX - 12, skyY + 20, targetX - 22, currentTipY - 14, 8, 20, 5.8);
-    strokeLightningLayers(ctx, leftPts, 4.0, "#CA8A04", "#FDE047", "#FFFFFF");
-
-    const rightPts = createLightningPoints(targetX + 10, skyY + 30, targetX + 24, currentTipY - 10, 8, 22, 8.4);
-    strokeLightningLayers(ctx, rightPts, 3.8, "#CA8A04", "#FDE047", "#FFFFFF");
-
-    // 선두 낙뢰 헤드 순백 섬광구
-    ctx.fillStyle = "#FFFFFF";
-    ctx.beginPath();
-    ctx.arc(targetX, currentTipY, 18, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.strokeStyle = "#FDE047";
-    ctx.lineWidth = 4.0;
-    ctx.beginPath();
-    ctx.arc(targetX, currentTipY, 26, 0, Math.PI * 2);
-    ctx.stroke();
+    const tipY = cloudStartY + (targetY - cloudStartY) * Math.min(1.0, 0.25 + p * 0.60);
+    drawDescendingLightningLeader(ctx, targetX, cloudStartY, targetX, tipY, 14, 1.0, 3.5 + p * 4);
   }
 
-  // Step 3: 지면 대격돌 & 1프레임 순백 히트 플래시 대폭발!
+  // Step 3: 카메라 수직 하강 (적 머리 위 ➔ 아래로만 내림) & 벼락이 적 정수리 바로 위까지 쇄도
   else if (moveStep === 3) {
     const p = effectProgress;
-    const groundY = targetPos.y + 24;
+    // 상공의 3D 수렴 노드 희미하게 잔류
+    drawFlattenedConvergenceNode(ctx, targetX, cloudStartY, Math.max(0, 0.65 - p * 0.45), 1.0, 25 + p * 15);
 
-    // 지면 충격파 타원 링 2중 전개 (원근법 적용 지면 링)
-    const ringW = 48 + p * 32;
-    const ringH = ringW * 0.38;
-
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 4.0;
-    ctx.beginPath();
-    ctx.ellipse(targetX, groundY, ringW, ringH, 0, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.strokeStyle = "#EAB308";
-    ctx.lineWidth = 3.0;
-    ctx.beginPath();
-    ctx.ellipse(targetX, groundY, ringW * 0.75, ringH * 0.75, 0, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // 표적 중심 초대형 스타버스트 임팩트
-    drawStarburstImpact(ctx, targetX, targetY, "#CA8A04", "#FDE047", 52);
-
-    // 관통 수직 벼락 잔상
-    const strikePts = createLightningPoints(targetX, skyY, targetX, targetY + 20, 10, 18, 3.1);
-    strokeLightningLayers(ctx, strikePts, 7.0, "#CA8A04", "#FDE047", "#FFFFFF");
-
-    // 눈부신 백색 중심구
-    ctx.fillStyle = "#FFFFFF";
-    ctx.beginPath();
-    ctx.arc(targetX, targetY, 22 * (1.0 - p * 0.3), 0, Math.PI * 2);
-    ctx.fill();
+    const tipY = cloudStartY + (targetY - cloudStartY) * Math.min(1.0, 0.82 + p * 0.18);
+    drawDescendingLightningLeader(ctx, targetX, cloudStartY, targetX, tipY, 16, 1.0, 7.8 + p * 6);
   }
 
-  // Step 4: 지면 역류 뇌격 방전 & 대지 관통
+  // Step 4: 적 포켓몬 도착 직후 정수리 대격돌 직격! (Cataclysmic Impact)
   else if (moveStep === 4) {
     const p = effectProgress;
-    const groundY = targetPos.y + 24;
 
-    // 지면에서 솟구쳐 오르는 역류 뇌격 텐드릴 6줄기
-    for (let i = 0; i < 6; i++) {
-      const offsetX = (i - 2.5) * 16;
-      const startGroundX = targetX + offsetX;
-      const endSkyY = targetY - 40 - (i % 3) * 15;
-      const endX = targetX + offsetX * 1.5;
+    // 1) 구름에서 지면까지 대지를 가르는 16px 거대 본체 벼락 기둥 + 3줄기 분기 벼락
+    drawGreatThunderbolt(ctx, targetX, cloudStartY, targetX, groundY, 16, 1.0, 4.5);
 
-      const pts = createLightningPoints(startGroundX, groundY, endX, endSkyY, 6, 16, i * 4.2 + p * 3);
-      strokeLightningLayers(ctx, pts, 3.2, "#EAB308", "#FDE047", "#FFFFFF");
-    }
+    // 2) [피드백 반영] 바닥 반투명 충격파 장판 (테두리 링 선 없이 순수 반투명 도형)
+    drawGroundDischargeField(ctx, targetX, groundY, 44 + p * 16, 1.0);
 
-    // 대상을 관통하는 중심 전격 기둥
-    const centerPts = createLightningPoints(targetX, skyY + 20, targetX, groundY, 8, 14, 1.9);
-    strokeLightningLayers(ctx, centerPts, 5.0, "#EAB308", "#FDE047", "#FFFFFF");
+    // 3) [피드백 반영] 타격 방사 전격 가닥: 중앙 및 외각 투명 감쇠 (직선 spoke 제거)
+    drawImpactDischargeStreaks(ctx, targetX, targetY, 68, 1.0, 14, 4.2 + p * 8);
+
+    // 4) [피드백 반영] 대상에게 도달했을 때 폭발하는 대형 블라인딩 플라즈마 임팩트 구체
+    drawTargetImpactPlasmaSphere(ctx, targetX, targetY, 40 * (1.0 - p * 0.2), 1.0, 5.2 + p * 10);
   }
 
-  // Step 5: 16방향 초특대 뇌격 스타버스트 & 뇌격 파편 비산
+  // Step 5: 맹렬한 지속 뇌격 방전 & 대지 방전 크랙 (Sustained Surge)
   else if (moveStep === 5) {
     const p = effectProgress;
-    const burstR = 56 + p * 34;
-    const alpha = Math.max(0.0, 1.0 - p * 0.65);
 
-    // 16방향 방사 벼락 창
-    for (let i = 0; i < 16; i++) {
-      const a = (i / 16) * Math.PI * 2;
-      const len1 = burstR * 0.2;
-      const len2 = burstR * (0.8 + (i % 2) * 0.4);
-      const x1 = targetX + Math.cos(a) * len1;
-      const y1 = targetY + Math.sin(a) * len1;
-      const x2 = targetX + Math.cos(a) * len2;
-      const y2 = targetY + Math.sin(a) * len2;
+    // 1) 지속 방전 요동치는 거대 벼락
+    drawGreatThunderbolt(ctx, targetX, cloudStartY, targetX, groundY, 15, 1.0, 8.7 + p * 15);
 
-      ctx.strokeStyle = `rgba(253, 224, 71, ${alpha})`;
-      ctx.lineWidth = 3.2;
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
+    // 2) [피드백 반영] 바닥 반투명 충격파 장판 확산 (테두리 링 선 없이 순수 반투명 도형)
+    drawGroundDischargeField(ctx, targetX, groundY, 60 + p * 28, Math.max(0, 1.0 - p * 0.35));
 
-      ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
-      ctx.lineWidth = 1.6;
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
-    }
+    // 3) 지면을 거미줄처럼 가르는 날카로운 방전 크랙 (8줄기)
+    drawGroundLightningCrackles(ctx, targetX, groundY, 8, 60 + p * 35, 0.95, 3.8 + p * 7);
 
-    // 사방으로 튀어나가는 20개의 전격 스파클
-    for (let i = 0; i < 20; i++) {
-      const a = i * 1.2 + p * 6;
-      const dist = 26 + p * 55 + (i % 4) * 10;
-      const sx = targetX + Math.cos(a) * dist;
-      const sy = targetY + Math.sin(a) * dist;
-      ctx.fillStyle = (i % 2 === 0) ? "#FFFFFF" : "#FDE047";
-      ctx.fillRect(sx - 1.5, sy - 1.5, 3, 3);
-    }
+    // 4) [피드백 반영] 타격 방사 전격 잔여 가닥 (중앙 & 외각 투명)
+    drawImpactDischargeStreaks(ctx, targetX, targetY, 52, 1.0 - p * 0.35, 10, 8.4 + p * 12);
+
+    // 5) [피드백 반영] 표적에 잔류하여 맹렬히 방전하는 플라즈마 임팩트 구체
+    drawTargetImpactPlasmaSphere(ctx, targetX, targetY, 30 * (1.0 - p * 0.25), 1.0 - p * 0.2, 12.4 + p * 20);
   }
 
-  // Step 6 & 7: 지면 그을림 잔류 스파크 & 뇌운 소멸
-  else if (moveStep === 6 || moveStep === 7) {
-    const p = moveStep === 6 ? effectProgress * 0.5 : 0.5 + effectProgress * 0.5;
-    const alpha = Math.max(0.0, 1.0 - p);
+  // Step 6: 12방향 지그재그 분기 전격 대폭발 (Fractal Mega Burst)
+  else if (moveStep === 6) {
+    const p = effectProgress;
 
-    if (alpha > 0.05) {
-      const groundY = targetPos.y + 24;
-      // 지면 그을린 전격 균열
-      ctx.strokeStyle = `rgba(253, 224, 71, ${alpha * 0.7})`;
-      ctx.lineWidth = 2.0;
+    // 1) 12방향 지그재그 분기 벼락 폭발!
+    drawBranchingThunderExplosion(ctx, targetX, targetY, 75 + p * 50, Math.max(0, 1.0 - p * 0.65), 5.7);
+
+    // 2) 지면 크랙 페이드아웃
+    drawGroundLightningCrackles(ctx, targetX, groundY, 7, 80, Math.max(0, 0.65 * (1.0 - p)), 9.1);
+
+    // 3) 바닥 반투명 장판 잔류 확산 페이드아웃 (링 없이 순수 감쇠)
+    drawGroundDischargeField(ctx, targetX, groundY, 88 + p * 20, Math.max(0, (1.0 - p) * 0.55));
+  }
+
+  // Step 7: 지면 그을림 & 잔류 뇌격 아크 페이드아웃
+  else if (moveStep === 7) {
+    const p = effectProgress;
+    const alpha = Math.max(0, 1.0 - p);
+
+    if (alpha > 0.02) {
+      // 1) 지면 짙게 그을린 크레이터 타원 (테두리 선 없이 부드러운 그을림 음영)
+      ctx.save();
+      ctx.fillStyle = `rgba(15, 23, 42, ${0.45 * alpha})`;
       ctx.beginPath();
-      ctx.ellipse(targetX, groundY, 32 * (1.0 - p * 0.3), 12 * (1.0 - p * 0.3), 0, 0, Math.PI * 2);
-      ctx.stroke();
+      ctx.ellipse(targetX, groundY, 46 * (1.0 - p * 0.2), 16 * (1.0 - p * 0.2), 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
 
-      for (let i = 0; i < 8; i++) {
-        const a = i * 1.6;
-        const dist = 16 + (i % 3) * 10;
-        const sx = targetX + Math.cos(a) * dist;
-        const sy = targetY + Math.sin(a) * (dist * 0.6);
-        ctx.fillStyle = `rgba(253, 224, 71, ${alpha * 0.85})`;
-        ctx.fillRect(sx - 1, sy - 1, 2.5, 2.5);
-      }
+      // 2) 잔류 쿨링 엠버
+      drawElectricSparkEmbers(ctx, targetX, targetY, 10, 22, p, 4.0, alpha * 0.85);
     }
   }
 
@@ -1544,9 +2231,12 @@ function drawFacetedBoulder(
   cx: number,
   cy: number,
   size: number,
-  rotation: number = 0
+  rotation: number = 0,
+  alpha: number = 1.0
 ) {
+  if (alpha <= 0.01) return;
   ctx.save();
+  ctx.globalAlpha = (ctx.globalAlpha ?? 1.0) * alpha;
   ctx.translate(cx, cy);
   ctx.rotate(rotation);
 
@@ -1606,27 +2296,65 @@ function drawFacetedBoulder(
   ctx.closePath();
   ctx.fill();
 
-  // 4) 굵고 선명한 외곽선 마감 (#1C1917)
+  // 4) 슬림하고 예리한 외곽선 마감 (#1C1917) - 유저 피드백 반영: border 대폭 슬림화 & 안쪽 border 제거
   ctx.strokeStyle = "#1C1917";
-  ctx.lineWidth = Math.max(1.8, s * 0.12);
+  ctx.lineWidth = Math.max(0.65, s * 0.045);
   ctx.beginPath();
   ctx.moveTo(vertices[0].x, vertices[0].y);
   for (let i = 1; i < vertices.length; i++) ctx.lineTo(vertices[i].x, vertices[i].y);
   ctx.closePath();
   ctx.stroke();
 
-  // 내부 패싯 각진 구분선
-  ctx.strokeStyle = "#292524";
-  ctx.lineWidth = Math.max(1.2, s * 0.08);
-  ctx.beginPath();
-  ctx.moveTo(0, -s * 0.2);
-  ctx.lineTo(vertices[1].x, vertices[1].y);
-  ctx.moveTo(0, -s * 0.2);
-  ctx.lineTo(vertices[4].x, vertices[4].y);
-  ctx.moveTo(0, -s * 0.2);
-  ctx.lineTo(vertices[6].x, vertices[6].y);
-  ctx.stroke();
+  ctx.restore();
+}
 
+/**
+ * 088: 돌떨구기 (Rock Throw) 헬퍼 및 메인 이펙트 렌더러
+ *
+ * 유저 지침:
+ * 1. 시전 포켓몬 웅크림 -> 위로 도약할 때 돌멩이가 시전자 스프라이트에서 위로 발사됨
+ * 2. 시전 포켓몬 포커싱 -> 머리 위로 돌이 떨어짐
+ * 3. 현재의 타격 이펙트(스타버스트) 완전 제거 -> #8에서 모래먼지와 돌이 여러 개로 쪼개지는 효과
+ * 4. 쪼개진 돌들이 바닥으로 뿌려지며 떨어짐 (동시에 대상 포켓몬 찌그러짐 -> 펴짐)
+ */
+const ROCK_SHARDS = [
+  { angle: -Math.PI * 0.75, dist: 38, size: 5.5, rotSpeed: 4.5, dropOffset: 8 },
+  { angle: -Math.PI * 0.50, dist: 28, size: 4.2, rotSpeed: -5.2, dropOffset: 4 },
+  { angle: -Math.PI * 0.25, dist: 40, size: 6.0, rotSpeed: 6.0, dropOffset: 10 },
+  { angle: -Math.PI * 0.90, dist: 48, size: 4.5, rotSpeed: -3.8, dropOffset: 18 },
+  { angle: -Math.PI * 0.10, dist: 46, size: 5.0, rotSpeed: 4.2, dropOffset: 20 },
+  { angle: Math.PI * 0.85,  dist: 42, size: 4.2, rotSpeed: 5.8, dropOffset: 28 },
+  { angle: Math.PI * 0.15,  dist: 40, size: 4.8, rotSpeed: -6.4, dropOffset: 26 },
+  { angle: Math.PI * 0.65,  dist: 34, size: 5.8, rotSpeed: 3.5, dropOffset: 34 },
+  { angle: Math.PI * 0.35,  dist: 32, size: 5.2, rotSpeed: -4.0, dropOffset: 32 },
+  { angle: Math.PI * 0.50,  dist: 24, size: 3.8, rotSpeed: 7.0, dropOffset: 38 },
+];
+
+const DUST_PUFFS = [
+  { offX: -18, offY: -8, baseR: 14, maxR: 24, color: "#D6D3D1" },
+  { offX: 20,  offY: -6, baseR: 16, maxR: 26, color: "#E7E5E4" },
+  { offX: -8,  offY: -18, baseR: 12, maxR: 22, color: "#A8A29E" },
+  { offX: 12,  offY: -16, baseR: 15, maxR: 25, color: "#C7BAA7" },
+  { offX: -26, offY: 6,  baseR: 13, maxR: 22, color: "#78716C" },
+  { offX: 24,  offY: 8,  baseR: 14, maxR: 24, color: "#A8A29E" },
+  { offX: 0,   offY: 10, baseR: 18, maxR: 30, color: "#D6D3D1" },
+];
+
+function drawSandDustPuff(
+  ctx: any,
+  cx: number,
+  cy: number,
+  radius: number,
+  alpha: number,
+  color: string = "#D6D3D1"
+) {
+  if (alpha <= 0.01 || radius <= 0.5) return;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+  ctx.fill();
   ctx.restore();
 }
 
@@ -1641,180 +2369,243 @@ export function drawRockThrowEffect(
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
-  const startX = attackerPos.x + 8;
-  const groundStartY = attackerPos.y + 18;
+  const p = effectProgress;
   const targetX = targetPos.x;
-  const targetY = targetPos.y - 6;
+  const targetY = targetPos.y;
+  const groundY = targetPos.y + 18;
+  const impactY = targetPos.y - 14; // 머리 직격 높이
 
-  // 바위 스펙 (메인 대형 바위 1개 + 보조 중형 바위 2개)
-  const boulders = [
-    { offX: 0, offY: -16, size: 20, rotSpeed: 4.2 },
-    { offX: -18, offY: -6, size: 14, rotSpeed: -5.0 },
-    { offX: 16, offY: -4, size: 12, rotSpeed: 6.5 },
-  ];
-
-  // Step 1: 시전자 발밑 지면 균열 & 바위 3개 공중 융기/부유
+  // Step 1: 시전자 웅크림 (상대 머리 위에는 아직 돌 출현 전)
   if (moveStep === 1) {
-    const p = effectProgress;
-    const groundY = groundStartY;
-
-    // 지면 균열선
-    ctx.strokeStyle = "#78350F";
-    ctx.lineWidth = 2.4;
-    ctx.beginPath();
-    ctx.moveTo(startX - 24, groundY);
-    ctx.lineTo(startX - 6, groundY - 3);
-    ctx.lineTo(startX + 12, groundY + 2);
-    ctx.lineTo(startX + 26, groundY);
-    ctx.stroke();
-
-    // 솟아오르는 바위들 (지면에서 공중으로 솟구침)
-    for (let i = 0; i < boulders.length; i++) {
-      const b = boulders[i];
-      const curY = groundY - (p * (32 - i * 6));
-      const curX = startX + b.offX * p;
-      const rot = p * b.rotSpeed * 0.5;
-
-      // 바위 밑 흙먼지 파티클
-      if (p < 0.6) {
-        ctx.fillStyle = "#D97706";
-        ctx.beginPath();
-        ctx.arc(curX + (i - 1) * 6, groundY - 2, 4 + (1 - p) * 4, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      drawFacetedBoulder(ctx, curX, curY, b.size * Math.min(1.0, 0.4 + p * 0.6), rot);
-    }
+    // 시전자 발사 제거: 돌 이펙트 없음
   }
 
-  // Step 2: 대상을 향한 포물선 고속 투척 및 비행 궤적
+  // Step 2: 상대 머리 위 높은 상공에서 돌멩이 출현 (낙하 시작 및 가속)
   else if (moveStep === 2) {
-    const p = effectProgress;
-    const arcHeight = 46; // 포물선 정점 높이
+    const startDropY = targetY - 175;
+    const curY = startDropY + p * 80;
+    const rot = 1.6 + p * 2.2;
 
-    for (let i = 0; i < boulders.length; i++) {
-      const b = boulders[i];
-      // 개별 바위 시차 적용 (약간의 분산)
-      const bProgress = Math.min(1.0, Math.max(0.0, p * 1.15 - i * 0.08));
-      if (bProgress <= 0.0) continue;
+    // 머리 위 높은 상공에서 떨어지기 시작하는 하강 속도선 (윗부분/뒷부분 100% 투명 페이드)
+    const topY = Math.max(0, curY - 45);
+    const botY = curY - 10;
+    if (botY > topY) {
+      const lineGrad = ctx.createLinearGradient(0, topY, 0, botY);
+      lineGrad.addColorStop(0, "rgba(214, 211, 209, 0)");
+      lineGrad.addColorStop(0.4, "rgba(214, 211, 209, 0.30)");
+      lineGrad.addColorStop(1, "rgba(255, 255, 255, 0.75)");
 
-      const curX = startX + (targetX - startX) * bProgress + b.offX * (1.0 - bProgress * 0.8);
-      const linearY = (attackerPos.y - 14) + (targetY - (attackerPos.y - 14)) * bProgress;
-      const curY = linearY - Math.sin(bProgress * Math.PI) * arcHeight + b.offY * (1.0 - bProgress * 0.8);
-      const rot = bProgress * b.rotSpeed * 3.0;
+      ctx.strokeStyle = lineGrad;
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(targetX - 8, topY);
+      ctx.lineTo(targetX - 8, botY);
+      ctx.moveTo(targetX + 8, topY);
+      ctx.lineTo(targetX + 8, botY);
+      ctx.moveTo(targetX, topY + 6);
+      ctx.lineTo(targetX, botY);
+      ctx.stroke();
+    }
 
-      // 뒤따르는 움직임 궤적 선 (Motion streak trail)
-      const prevX = curX - (targetX - startX) * 0.12;
-      const prevY = curY + 6;
-      const trailGrad = ctx.createLinearGradient(prevX, prevY, curX, curY);
-      trailGrad.addColorStop(0, "rgba(168, 162, 158, 0)");
-      trailGrad.addColorStop(1, "rgba(120, 113, 108, 0.85)");
+    drawFacetedBoulder(ctx, targetX, curY, 22, rot);
+  }
+
+  // Step 3: 머리 위로 고속 급강하 낙하 (중력 가속도로 머리 직전 도달)
+  else if (moveStep === 3) {
+    const plungeStartY = targetY - 115;
+    const curY = plungeStartY + p * 80; // 머리 바로 위까지 급강하
+    const rot = 3.8 + p * 3.5;
+
+    const topY = Math.max(0, curY - 65);
+    const botY = curY - 8;
+
+    if (botY > topY) {
+      // 1) 강렬한 수직 하강 모션 트레일 (윗부분/뒷부분 100% 투명 페이드)
+      const trailGrad = ctx.createLinearGradient(0, topY, 0, botY);
+      trailGrad.addColorStop(0, "rgba(120, 113, 108, 0)");
+      trailGrad.addColorStop(0.4, "rgba(168, 162, 158, 0.35)");
+      trailGrad.addColorStop(0.8, "rgba(214, 211, 209, 0.70)");
+      trailGrad.addColorStop(1, "rgba(255, 255, 255, 0.90)");
 
       ctx.strokeStyle = trailGrad;
-      ctx.lineWidth = b.size * 0.55;
+      ctx.lineWidth = 16;
       ctx.beginPath();
-      ctx.moveTo(prevX, prevY);
-      ctx.lineTo(curX, curY);
+      ctx.moveTo(targetX, topY);
+      ctx.lineTo(targetX, botY);
       ctx.stroke();
 
-      // 바위 렌더링
-      drawFacetedBoulder(ctx, curX, curY, b.size, rot);
-    }
-  }
+      // 2) 좌우 공기 가르는 날카로운 스피드 라인 (윗부분/뒷부분 100% 투명 페이드아웃 그라데이션)
+      const speedGrad = ctx.createLinearGradient(0, topY + 12, 0, botY);
+      speedGrad.addColorStop(0, "rgba(255, 255, 255, 0)");
+      speedGrad.addColorStop(0.5, "rgba(255, 255, 255, 0.40)");
+      speedGrad.addColorStop(1, "rgba(255, 255, 255, 0.95)");
 
-  // Step 3: 표적 정면 대충돌 직격 (1프레임 히트 플래시와 동조)
-  else if (moveStep === 3) {
-    const p = effectProgress;
-
-    // 바위 타격 코믹 버스트 & 지면 먼지 충격파
-    drawStarburstImpact(ctx, targetX, targetY, "#D97706", "#FEF3C7", 38 + p * 12);
-
-    // 충돌 순간 금이 간 대형 바위 직격 렌더링
-    drawFacetedBoulder(ctx, targetX, targetY, 22, 0.4);
-
-    // 바위 표면 방사형 균열선
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 2.4;
-    for (let a = 0; a < Math.PI * 2; a += Math.PI / 3) {
+      ctx.strokeStyle = speedGrad;
+      ctx.lineWidth = 2.0;
       ctx.beginPath();
-      ctx.moveTo(targetX, targetY);
-      ctx.lineTo(targetX + Math.cos(a) * 20, targetY + Math.sin(a) * 20);
+      ctx.moveTo(targetX - 11, topY + 12);
+      ctx.lineTo(targetX - 11, botY);
+      ctx.moveTo(targetX + 11, topY + 12);
+      ctx.lineTo(targetX + 11, botY);
+      ctx.moveTo(targetX - 5, topY + 20);
+      ctx.lineTo(targetX - 5, botY);
+      ctx.moveTo(targetX + 5, topY + 20);
+      ctx.lineTo(targetX + 5, botY);
       ctx.stroke();
     }
 
-    // 지면 충격파 타원
-    ctx.strokeStyle = "#B45309";
-    ctx.lineWidth = 3.0;
-    ctx.beginPath();
-    ctx.ellipse(targetX, targetPos.y + 18, 36, 12, 0, 0, Math.PI * 2);
-    ctx.stroke();
+    drawFacetedBoulder(ctx, targetX, curY, 23, rot);
   }
 
-  // Step 4: 바위 산산조각 분쇄 (8~10개 파편 사방 비산)
+  // Step 4: [신규] 돌이 머리를 쾅 내려침! (타격 섬광 & 먼지)
   else if (moveStep === 4) {
-    const p = effectProgress;
-    const shardCount = 10;
+    // 1) 머리 직격 위치에 돌 바위 렌더링
+    drawFacetedBoulder(ctx, targetX, impactY, 23, 7.5);
 
-    for (let i = 0; i < shardCount; i++) {
-      const a = (i / shardCount) * Math.PI * 2;
-      const dist = 14 + p * 42 + (i % 3) * 8;
-      const sx = targetX + Math.cos(a) * dist;
-      const sy = targetY + Math.sin(a) * (dist * 0.75) + p * 16; // 중력 낙하
-      const shardSize = 5 + (i % 4) * 2.5;
-      const rot = i + p * 5.0;
+    // 2) 타격 순간 좌우 충격 먼지 퍼프 2개 분출
+    drawSandDustPuff(ctx, targetX - 16, impactY + 4, 8, 0.75, "#D6D3D1");
+    drawSandDustPuff(ctx, targetX + 16, impactY + 4, 8, 0.75, "#E7E5E4");
+  }
 
-      drawFacetedBoulder(ctx, sx, sy, shardSize, rot);
+  // Step 5: [피드백 반영] 타격 반동으로 돌이 좀 더 위로(36px) 튀어오르며 점진적 투명화 (중간프레임 지원)
+  else if (moveStep === 5) {
+    const bounceMax = 36;
+    const bounceH = bounceMax * Math.sin(p * Math.PI * 0.5);
+    const bounceY = impactY - bounceH;
+    const rot = 7.5 + p * 1.0;
+    const bounceAlpha = Math.max(0.48, 1.0 - p * 0.52);
+
+    // 1) 아래에서 위로 튀어오른 은은한 반투명 모션 잔상
+    if (bounceH > 4) {
+      const bounceTrail = ctx.createLinearGradient(0, impactY, 0, bounceY);
+      bounceTrail.addColorStop(0, "rgba(255, 255, 255, 0)");
+      bounceTrail.addColorStop(0.5, `rgba(214, 211, 209, ${0.25 * p})`);
+      bounceTrail.addColorStop(1, `rgba(255, 255, 255, ${0.50 * p})`);
+      ctx.strokeStyle = bounceTrail;
+      ctx.lineWidth = 12;
+      ctx.beginPath();
+      ctx.moveTo(targetX, impactY);
+      ctx.lineTo(targetX, bounceY);
+      ctx.stroke();
     }
 
-    // 사방으로 퍼지는 흙먼지 퍼프 구름 4개
-    const dustClouds = [
-      { x: targetX - 24, y: targetY + 10, r: 12 + p * 14 },
-      { x: targetX + 22, y: targetY + 8, r: 14 + p * 12 },
-      { x: targetX - 8, y: targetY - 14, r: 10 + p * 10 },
-      { x: targetX + 10, y: targetY + 16, r: 16 + p * 16 },
-    ];
+    // 2) 좀 더 위로 튀면서 투명해진 돌 바위
+    drawFacetedBoulder(ctx, targetX, bounceY, 22.5, rot, bounceAlpha);
 
-    ctx.fillStyle = `rgba(168, 162, 158, ${Math.max(0.0, 0.75 - p * 0.6)})`;
-    for (const d of dustClouds) {
+    // 3) 타격 부위 잔여 먼지 퍼프
+    const dustAlpha = Math.max(0, 0.45 * (1.0 - p * 0.5));
+    drawSandDustPuff(ctx, targetX - 18, impactY + 5, 10, dustAlpha, "#D6D3D1");
+    drawSandDustPuff(ctx, targetX + 18, impactY + 5, 10, dustAlpha, "#E7E5E4");
+  }
+
+  // Step 6: [신규] 튀어오른 높은 정점에서 돌이 콰앙 산산조각 깨짐! (모래먼지 폭발 + 파편 비산, 흰색 선 제거)
+  else if (moveStep === 6) {
+    const shatterY = impactY - 36;
+
+    // 1) 모래먼지 구름 폭발 (7개 퍼프 구름 팽창)
+    for (let i = 0; i < DUST_PUFFS.length; i++) {
+      const puff = DUST_PUFFS[i];
+      const curR = puff.baseR + (puff.maxR - puff.baseR) * p;
+      const alpha = Math.max(0, 0.85 - p * 0.35);
+      const px = targetX + puff.offX * (0.9 + p * 0.7);
+      const py = shatterY + puff.offY * (0.9 + p * 0.7);
+      drawSandDustPuff(ctx, px, py, curR, alpha, puff.color);
+    }
+
+    // 2) 미세 모래 알갱이 입자들 사방 비산 (16개)
+    ctx.fillStyle = "#A8A29E";
+    for (let i = 0; i < 16; i++) {
+      const grainAngle = (i / 16) * Math.PI * 2 + 0.2;
+      const grainDist = 12 + p * 42 + (i % 4) * 6;
+      const gx = targetX + Math.cos(grainAngle) * grainDist;
+      const gy = shatterY + Math.sin(grainAngle) * (grainDist * 0.75) + p * 8;
+      ctx.fillRect(gx, gy, 2, 2);
+    }
+
+    // 3) 돌이 여러 개(10개)로 산산조각 쪼개지는 파편 효과 (흰색 선 없이 순수 파편 비산)
+    const shardSpread = 12 + p * 36;
+    for (let i = 0; i < ROCK_SHARDS.length; i++) {
+      const shard = ROCK_SHARDS[i];
+      const sx = targetX + Math.cos(shard.angle) * shardSpread;
+      const sy = shatterY + Math.sin(shard.angle) * shardSpread * 0.75 + p * shard.dropOffset * 0.5;
+      const rot = shard.rotSpeed * p * 2.5;
+      drawFacetedBoulder(ctx, sx, sy, shard.size, rot, Math.max(0.25, 0.75 - p * 0.35));
+    }
+  }
+
+  // Step 7: 쪼개진 돌들이 바닥으로 뿌려지며 떨어짐
+  else if (moveStep === 7) {
+    const shatterY = impactY - 36;
+    const fallProgress = p;
+
+    // 1) 쪼개진 돌들이 중력을 받아 바닥으로 쏟아져 내림
+    for (let i = 0; i < ROCK_SHARDS.length; i++) {
+      const shard = ROCK_SHARDS[i];
+      const startX = targetX + Math.cos(shard.angle) * 38;
+      const startY = shatterY + Math.sin(shard.angle) * 26 + shard.dropOffset * 0.5;
+      const destY = groundY + (i % 3) * 3;
+
+      const t = Math.min(1.0, fallProgress * 1.35);
+      const sy = Math.min(destY, startY + (destY - startY) * (t * t));
+      const sx = startX + (Math.cos(shard.angle) > 0 ? 1 : -1) * (12 + (i % 3) * 6) * t;
+      const rot = shard.rotSpeed * (1.8 + fallProgress * 3.5);
+
+      // 바닥 충돌 시 미니 먼지 퍼프
+      if (sy >= destY - 2 && fallProgress > 0.4) {
+        drawSandDustPuff(ctx, sx, destY, 5 + (i % 3) * 2, 0.45 * (1.0 - fallProgress), "#D6D3D1");
+      }
+
+      drawFacetedBoulder(ctx, sx, sy, Math.max(3.5, shard.size * (1.0 - fallProgress * 0.12)), rot);
+    }
+
+    // 2) 모래먼지 구름이 바닥으로 가라앉으며 넓게 타원형으로 확산
+    const groundDustAlpha = Math.max(0, 0.55 - fallProgress * 0.35);
+    ctx.fillStyle = `rgba(214, 211, 209, ${groundDustAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(targetX, groundY - 2, 45 + fallProgress * 25, 14 + fallProgress * 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 상공 잔여 엷은 먼지 퍼프들
+    for (let i = 0; i < 4; i++) {
+      const puff = DUST_PUFFS[i];
+      const px = targetX + puff.offX * 1.2;
+      const py = shatterY + puff.offY * 1.1 + fallProgress * 12;
+      drawSandDustPuff(ctx, px, py, puff.maxR * (1.0 + fallProgress * 0.2), groundDustAlpha * 0.6, puff.color);
+    }
+  }
+
+  // Step 8: 쪼개진 돌들이 바닥에 안착 & 모래먼지 부드럽게 페이드아웃
+  else if (moveStep === 8) {
+    const alpha = Math.max(0, 0.35 * (1.0 - p));
+
+    // 바닥에 안착한 7개 작은 돌멩이 파편들
+    for (let i = 0; i < 7; i++) {
+      const offsetX = (i - 3) * 14 + ((i % 2) * 4 - 2);
+      const shardY = groundY + (i % 2) * 3;
+      drawFacetedBoulder(ctx, targetX + offsetX, shardY, 3.8 + (i % 3), i * 1.4);
+    }
+
+    // 바닥에 깔린 은은한 모래먼지 헤이즈 페이드아웃
+    if (alpha > 0.01) {
+      ctx.fillStyle = `rgba(214, 211, 209, ${alpha})`;
       ctx.beginPath();
-      ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+      ctx.ellipse(targetX, groundY, 60, 15, 0, 0, Math.PI * 2);
       ctx.fill();
     }
   }
 
-  // Step 5: 파편 지면 안착 및 자욱한 흙먼지 연무 확산
-  else if (moveStep === 5) {
-    const p = effectProgress;
-    const alpha = Math.max(0.0, 1.0 - p * 0.75);
-
-    // 지면에 흩어진 작은 돌조각들
-    for (let i = 0; i < 6; i++) {
-      const offsetX = (i - 2.5) * 12;
-      const groundShardY = targetPos.y + 16 + (i % 2) * 4;
-      drawFacetedBoulder(ctx, targetX + offsetX, groundShardY, 4.5, i * 1.5);
-    }
-
-    // 안착하는 부드러운 먼지 연무
-    ctx.fillStyle = `rgba(214, 211, 209, ${alpha * 0.6})`;
-    ctx.beginPath();
-    ctx.ellipse(targetX, targetPos.y + 16, 44 + p * 16, 14, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // Step 6 & 7: 잔여 먼지 페이드아웃 및 완료
-  else if (moveStep === 6 || moveStep === 7) {
-    const p = moveStep === 6 ? effectProgress * 0.5 : 0.5 + effectProgress * 0.5;
-    const alpha = Math.max(0.0, 1.0 - p);
-
+  // Step 9: 완료 및 복귀
+  else if (moveStep === 9) {
+    const alpha = Math.max(0, 1.0 - p * 2.0);
     if (alpha > 0.05) {
-      // 바닥 잔여 작은 돌파편
       for (let i = 0; i < 4; i++) {
-        const offsetX = (i - 1.5) * 14;
-        const groundShardY = targetPos.y + 16 + (i % 2) * 4;
-        drawFacetedBoulder(ctx, targetX + offsetX, groundShardY, 3.5, i * 1.5);
+        const offsetX = (i - 1.5) * 16;
+        const shardY = groundY + (i % 2) * 3;
+        drawFacetedBoulder(ctx, targetX + offsetX, shardY, 3.2, i * 1.4);
       }
     }
   }
 
   ctx.restore();
 }
+

@@ -20,6 +20,14 @@ async function main() {
     console.log("[SERVICE] PokeRogue Service initialized.");
   }
 
+  // Global safety error handlers to prevent bot process from terminating on transient errors
+  process.on("unhandledRejection", (reason: any) => {
+    console.error("[GLOBAL UNHANDLED REJECTION]", reason);
+  });
+  process.on("uncaughtException", (error: Error) => {
+    console.error("[GLOBAL UNCAUGHT EXCEPTION]", error);
+  });
+
   // Create and login Discord client with retry handling for temporary 503 / network blips
   const client = createBotClient();
 

@@ -104,10 +104,13 @@ export async function preloadMoveAssets() {
 /**
  * Common Helper: Mini Pixel Star Impact Burst
  */
-export function drawMiniRetroStar(ctx: any, cx: number, cy: number, size: number, color: string = "#FFFFFF") {
+export function drawMiniRetroStar(ctx: any, cx: number, cy: number, size: number, color: string = "#FFFFFF", rotation: number = 0) {
   ctx.save();
   ctx.fillStyle = color;
   ctx.translate(cx, cy);
+  if (rotation !== 0) {
+    ctx.rotate(rotation);
+  }
 
   const half = size / 2;
   const quarter = size / 4;
@@ -350,6 +353,64 @@ export function drawStatDropEffect(ctx: any, pos: { x: number; y: number }, prog
     ctx.arc(px, py, rad, 0, Math.PI * 2);
     ctx.fill();
 
+    ctx.restore();
+  }
+
+  ctx.restore();
+}
+
+/**
+ * Common Helper: 대상 머리 위로 피어오르는 공용 잠듦(Sleep) Zzz 수면 연출
+ * - z -> z -> Z 3개의 문자가 화면상에 동시에 3개 모두 선명히 보이도록 수명과 스폰 타이밍 최적화
+ * - DungGeunMo 레트로 픽셀 폰트 + 파스텔 하늘색(#BAE6FD) + 짙은 남색 외곽선(rgba(15, 23, 42, 0.85))
+ * - 불필요한 노란 원/방울이나 그림자 없이 순수하고 선명한 3단계 수면 룬 파티클
+ */
+export function drawSleepZzzEffect(
+  ctx: any,
+  headX: number,
+  headY: number,
+  progress: number // 0.0 ~ 1.2
+) {
+  if (progress <= 0 || progress > 1.25) return;
+  ctx.save();
+
+  // 3개의 z가 동시에 3개 모두 선명히 보이도록 수명(life)과 스폰 간격 최적화
+  const zzzConfigs = [
+    { text: "z", size: 13, spawnT: 0.05, life: 0.95, dx: 10, dy: -18, swayFreq: 2.2, phase: 0.0 },
+    { text: "z", size: 18, spawnT: 0.16, life: 0.84, dx: 23, dy: -36, swayFreq: 2.0, phase: 0.8 },
+    { text: "Z", size: 24, spawnT: 0.28, life: 0.72, dx: 38, dy: -56, swayFreq: 1.8, phase: 1.6 },
+  ];
+
+  for (let i = 0; i < zzzConfigs.length; i++) {
+    const cfg = zzzConfigs[i];
+    if (progress < cfg.spawnT || progress > cfg.spawnT + cfg.life) continue;
+    const t = (progress - cfg.spawnT) / cfg.life;
+
+    // S자 살랑살랑 부유
+    const sway = Math.sin((t * cfg.swayFreq + cfg.phase) * Math.PI) * 6;
+    const curX = headX + cfg.dx + sway;
+    const curY = headY + (cfg.dy * (0.35 + t * 0.65));
+
+    // 페이드인 -> 오래 유지 -> 정점에서 부드럽게 페이드아웃 (3개가 한눈에 동시에 보이도록 유지 구간 확장)
+    const alpha = t < 0.15
+      ? (t / 0.15)
+      : t > 0.75
+      ? Math.max(0, (1.0 - t) / 0.25)
+      : 1.0;
+
+    ctx.save();
+    ctx.globalAlpha = Math.min(1.0, Math.max(0, alpha));
+    ctx.font = `bold ${Math.round(cfg.size)}px DungGeunMo, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    // 짙은 남색 외곽선으로 또렷하게 강조
+    ctx.strokeStyle = "rgba(15, 23, 42, 0.85)";
+    ctx.lineWidth = 3.2;
+    ctx.strokeText(cfg.text, curX, curY);
+
+    ctx.fillStyle = "#BAE6FD"; // 부드러운 수면 파스텔 하늘색
+    ctx.fillText(cfg.text, curX, curY);
     ctx.restore();
   }
 

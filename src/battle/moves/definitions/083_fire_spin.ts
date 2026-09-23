@@ -22,20 +22,20 @@ export const fireSpinMove: BattleMoveAnimation = {
   nameEn: "Fire Spin",
   type: "fire",
   category: "special",
-  camera: { type: "target", zoom: 1.35 },
+  camera: { type: "target", zoom: 1.35, delayUntilStep: 3 },
   drawBehindEffect: (targetCtx: any, frame: BattleFrame, drawCtx: EffectDrawContext) => {
     if (!frame.showEffect) return;
-    const { attackerPos, targetPos } = drawCtx;
+    const { attackerPos, targetPos, isPlayer } = drawCtx;
     const step = frame.moveStep ?? 1;
     const prog = frame.effectProgress ?? 0.5;
-    drawBehindFireSpinEffect(targetCtx, attackerPos, targetPos, step, prog);
+    drawBehindFireSpinEffect(targetCtx, attackerPos, targetPos, step, prog, isPlayer);
   },
   drawEffect: (targetCtx: any, frame: BattleFrame, drawCtx: EffectDrawContext) => {
     if (!frame.showEffect) return;
-    const { attackerPos, targetPos } = drawCtx;
+    const { attackerPos, targetPos, isPlayer } = drawCtx;
     const step = frame.moveStep ?? 1;
     const prog = frame.effectProgress ?? 0.5;
-    drawFireSpinEffect(targetCtx, attackerPos, targetPos, step, prog);
+    drawFireSpinEffect(targetCtx, attackerPos, targetPos, step, prog, isPlayer);
   },
   buildFrames: (ctx: MoveContext): BattleFrame[] => {
     const { isPlayer: isP, isHit, action: a, enemyHp, playerHp, textLineIdx } = ctx;
@@ -45,113 +45,140 @@ export const fireSpinMove: BattleMoveAnimation = {
       playerHp,
       textLineIdx,
       moveEffect: a,
-      cameraZoom: 1.35,
+      cameraZoom: 1.0,
       pRot: 0,
       eRot: 0,
     };
 
     return [
-      // #1. 회전 불씨 사출
+      // #1. 불꽃 탄환 사출
       {
         ...baseFrame,
         delay: 85,
-        pOffset: isP ? { x: 3, y: -1 } : { x: 0, y: 0 },
-        eOffset: !isP ? { x: -3, y: 1 } : { x: 0, y: 0 },
+        pOffset: isP ? { x: 3, y: -1 } : { x: -3, y: 1 },
+        eOffset: { x: 0, y: 0 },
         showEffect: true,
         hitFlash: false,
         moveStep: 1,
-        effectProgress: 0.55,
-        phaseId: "fire-spin-eject",
-        phaseName: "#1. 회전 불씨 사출",
+        effectProgress: 0.35,
+        phaseId: "fire-spin-shoot",
+        phaseName: "#1. 불꽃 탄환 사출",
       },
-      // #2. 지면 착탄 및 바닥 화염 링 점화
+      // #2. 불꽃 비행 쇄도
       {
         ...baseFrame,
-        delay: 90,
+        delay: 85,
         pOffset: { x: 0, y: 0 },
         eOffset: { x: 0, y: 0 },
         showEffect: true,
         hitFlash: false,
+        moveStep: 1,
+        effectProgress: 0.85,
+        phaseId: "fire-spin-flight",
+        phaseName: "#2. 불꽃 비행 쇄도",
+      },
+      // #3. 지면 착탄 및 바닥 착화
+      {
+        ...baseFrame,
+        delay: 90,
+        pOffset: { x: 0, y: 0 },
+        eOffset: isHit ? (!isP ? { x: -1, y: 0 } : { x: 1, y: 0 }) : { x: 0, y: 0 },
+        showEffect: true,
+        hitFlash: false,
         moveStep: 2,
         effectProgress: 0.70,
-        phaseId: "fire-spin-ignite",
-        phaseName: "#2. 바닥 화염 링 점화",
+        phaseId: "fire-spin-impact",
+        phaseName: "#3. 지면 착탄 및 바닥 착화",
       },
-      // #3. 불꽃 회오리 기둥 솟구침
+      // #4. 바닥부터 올라오는 불 회오리 (1단)
+      {
+        ...baseFrame,
+        delay: 95,
+        pOffset: { x: 0, y: 0 },
+        eOffset: isHit ? (!isP ? { x: 1, y: -1 } : { x: -1, y: 1 }) : { x: 0, y: 0 },
+        showEffect: true,
+        hitFlash: false,
+        moveStep: 3,
+        effectProgress: 0.50,
+        phaseId: "fire-spin-rising-1",
+        phaseName: "#4. 바닥부터 올라오는 불 회오리 (1단)",
+      },
+      // #5. 불 회오리 전신 포위 및 솟구침
       {
         ...baseFrame,
         delay: 100,
         pOffset: { x: 0, y: 0 },
-        eOffset: isHit ? (!isP ? { x: -2, y: 1 } : { x: 2, y: -1 }) : { x: 0, y: 0 },
+        eOffset: isHit ? (!isP ? { x: -3, y: 2 } : { x: 3, y: -2 }) : { x: 0, y: 0 },
         showEffect: true,
         hitFlash: isHit,
         targetRedTint: isHit,
-        moveStep: 3,
-        effectProgress: 0.65,
-        phaseId: "fire-spin-rise",
-        phaseName: "#3. 불꽃 회오리 기둥 솟구침",
-      },
-      // #4. 맹렬한 화염 소용돌이 감옥 (1)
-      {
-        ...baseFrame,
-        delay: 100,
-        pOffset: { x: 0, y: 0 },
-        eOffset: isHit ? (!isP ? { x: -3, y: 1 } : { x: 3, y: -1 }) : { x: 0, y: 0 },
-        showEffect: true,
-        hitFlash: false,
-        targetRedTint: isHit,
         moveStep: 4,
-        effectProgress: 0.50,
-        phaseId: "fire-spin-trap1",
-        phaseName: "#4. 맹렬한 화염 소용돌이 감옥 (1)",
+        effectProgress: 0.70,
+        phaseId: "fire-spin-engulf",
+        phaseName: "#5. 불 회오리 전신 포위 및 솟구침",
       },
-      // #5. 맹렬한 화염 소용돌이 감옥 (2)
+      // #6. 3D 불 회오리 구속 (1)
       {
         ...baseFrame,
-        delay: 100,
+        delay: 105,
         pOffset: { x: 0, y: 0 },
-        eOffset: isHit ? (!isP ? { x: 3, y: -1 } : { x: -3, y: 1 }) : { x: 0, y: 0 },
+        eOffset: isHit ? (!isP ? { x: 2, y: -1 } : { x: -2, y: 1 }) : { x: 0, y: 0 },
         showEffect: true,
         hitFlash: false,
         targetRedTint: isHit,
         moveStep: 5,
         effectProgress: 0.50,
-        phaseId: "fire-spin-trap2",
-        phaseName: "#5. 맹렬한 화염 소용돌이 감옥 (2)",
+        phaseId: "fire-spin-bind-1",
+        phaseName: "#6. 3D 불 회오리 구속 (1)",
       },
-      // #6. 맹렬한 화염 소용돌이 감옥 (3)
+      // #7. 3D 불 회오리 구속 (2) - 데미지
       {
         ...baseFrame,
-        delay: 100,
+        delay: 105,
         pOffset: { x: 0, y: 0 },
-        eOffset: isHit ? (!isP ? { x: -2, y: 1 } : { x: 2, y: -1 }) : { x: 0, y: 0 },
+        eOffset: isHit ? (!isP ? { x: -3, y: 2 } : { x: 3, y: -2 }) : { x: 0, y: 0 },
         showEffect: true,
         hitFlash: false,
         targetRedTint: isHit,
         enemyHp: a.enemyHpAfter,
         playerHp: a.playerHpAfter,
         moveStep: 6,
-        effectProgress: 0.50,
-        phaseId: "fire-spin-trap3",
-        phaseName: "#6. 맹렬한 화염 소용돌이 감옥 (3)",
+        effectProgress: 0.70,
+        phaseId: "fire-spin-bind-2",
+        phaseName: "#7. 3D 불 회오리 구속 (2) - 데미지",
       },
-      // #7. 회오리 분산 및 불티 상승
+      // #8. 3D 불 회오리 구속 (3)
       {
         ...baseFrame,
-        delay: 95,
+        delay: 105,
         pOffset: { x: 0, y: 0 },
-        eOffset: { x: 0, y: 0 },
+        eOffset: isHit ? (!isP ? { x: 2, y: -1 } : { x: -2, y: 1 }) : { x: 0, y: 0 },
         showEffect: true,
         hitFlash: false,
         targetRedTint: isHit,
         enemyHp: a.enemyHpAfter,
         playerHp: a.playerHpAfter,
         moveStep: 7,
-        effectProgress: 0.60,
-        phaseId: "fire-spin-dissolve",
-        phaseName: "#7. 회오리 분산 및 불티 상승",
+        effectProgress: 0.90,
+        phaseId: "fire-spin-bind-3",
+        phaseName: "#8. 3D 불 회오리 구속 (3)",
       },
-      // #8. 완료 및 복귀
+      // #9. 회오리 상공 분산 및 소멸
+      {
+        ...baseFrame,
+        delay: 100,
+        pOffset: { x: 0, y: 0 },
+        eOffset: { x: 0, y: 0 },
+        showEffect: true,
+        hitFlash: false,
+        enemyHp: a.enemyHpAfter,
+        playerHp: a.playerHpAfter,
+        moveStep: 8,
+        effectProgress: 0.70,
+        phaseId: "fire-spin-dissolve",
+        phaseName: "#9. 회오리 상공 분산 및 소멸",
+      },
+      // #10. 완료 및 복귀
       {
         ...baseFrame,
         delay: 80,
@@ -161,8 +188,9 @@ export const fireSpinMove: BattleMoveAnimation = {
         hitFlash: false,
         enemyHp: a.enemyHpAfter,
         playerHp: a.playerHpAfter,
+        moveStep: 9,
         phaseId: "fire-spin-complete",
-        phaseName: "#8. 완료 및 복귀",
+        phaseName: "#10. 완료 및 복귀",
       },
     ];
   },

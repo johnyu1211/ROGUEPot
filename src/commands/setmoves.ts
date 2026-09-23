@@ -5,7 +5,8 @@ import {
 import { Command } from "../types/index.js";
 import { saveService } from "../services/saveService.js";
 import { db } from "../services/db.js";
-import { MOVES_DATA } from "../data/movesKo.js";
+import { MOVES_DATA, getMoveData } from "../data/movesKo.js";
+import { battleService } from "../services/battleService.js";
 import { createBaseEmbed, COLORS } from "../utils/embed.js";
 
 export const command: Command = {
@@ -79,14 +80,17 @@ export const command: Command = {
       // Update slot party in DB
       const party = slot.party;
       party[0].moves = selectedMoves;
-      party[0].movePps = selectedMoves.map(() => 20);
-      party[0].maxMovePps = selectedMoves.map(() => 20);
+      party[0].movePps = selectedMoves.map((m) => getMoveData(m)?.pp || 20);
+      party[0].maxMovePps = [...party[0].movePps];
 
       db.prepare("UPDATE game_slots SET party = ? WHERE user_id = ? AND slot_id = ?").run(
         JSON.stringify(party),
         userId,
         activeSlotId
       );
+
+      // Immediately refresh in-memory active battle if ongoing
+      battleService.healActiveBattle(userId, activeSlotId);
 
       const embed = createBaseEmbed(
         "⚡ 기술 변경 완료!",

@@ -568,7 +568,7 @@ function drawPoisonNeedle(ctx: any, x: number, y: number, angle: number, scale: 
  * - Radius: barely 7~8px
  * - 100% 불투명 쨍한 비비드 맹독 스파크 (살짝 연한 톤)
  */
-function drawTinyPrickImpact(ctx: any, x: number, y: number) {
+export function drawTinyPrickImpact(ctx: any, x: number, y: number) {
   ctx.save();
   ctx.globalAlpha = 1.0;
 
@@ -618,7 +618,7 @@ function drawTinyPrickImpact(ctx: any, x: number, y: number) {
  * - 살짝 연하고 산뜻한 일렉트릭 맹독 컬러 (#FAF5FF, #F0ABFC, #C084FC, #9333EA, #6B21A8)
  * - 두껍고 선명한 솔리드 외곽 링
  */
-function drawPoisonSoapBubble(ctx: any, x: number, y: number, r: number) {
+export function drawPoisonSoapBubble(ctx: any, x: number, y: number, r: number) {
   if (r <= 0) return;
   ctx.save();
   ctx.globalAlpha = 1.0; // ⚠️ 투명도 아예 제거 (100% 완전 불투명!)
@@ -664,6 +664,46 @@ function drawPoisonSoapBubble(ctx: any, x: number, y: number, r: number) {
   ctx.stroke();
 
   ctx.restore();
+}
+
+export const POISON_BUBBLES_WAVE1 = [
+  { ox: -16, oy: 8, r: 6.5 },
+  { ox: 15, oy: -10, r: 8.0 },
+  { ox: -10, oy: -20, r: 5.5 },
+  { ox: 20, oy: 14, r: 7.0 },
+  { ox: -24, oy: -6, r: 5.0 },
+  { ox: 6, oy: 18, r: 6.0 },
+  { ox: 0, oy: -2, r: 9.0 },
+];
+
+export const POISON_BUBBLES_WAVE2 = [
+  { ox: -20, oy: -8, r: 7.5 },
+  { ox: 18, oy: -28, r: 9.5 },
+  { ox: -14, oy: -40, r: 6.5 },
+  { ox: 24, oy: -4, r: 8.0 },
+  { ox: -30, oy: -22, r: 6.0 },
+  { ox: 5, oy: 0, r: 7.5 },
+  { ox: -2, oy: -24, r: 10.5 },
+  { ox: 12, oy: -48, r: 5.5 },
+];
+
+export const POISON_BUBBLES_WAVE3 = [
+  { ox: -24, oy: -26, r: 7.0 },
+  { ox: 22, oy: -50, r: 8.5 },
+  { ox: -16, oy: -62, r: 6.0 },
+  { ox: 28, oy: -20, r: 7.5 },
+  { ox: -34, oy: -42, r: 5.5 },
+  { ox: 2, oy: -46, r: 9.0 },
+];
+
+/**
+ * 독침 피격 후 피어오르는 맹독 비눗방울 군집 (1/2/3차 웨이브 공용 렌더러)
+ */
+export function drawPoisonBubblesWave(ctx: any, tx: number, ty: number, wave: 1 | 2 | 3) {
+  const bubbles = wave === 1 ? POISON_BUBBLES_WAVE1 : (wave === 2 ? POISON_BUBBLES_WAVE2 : POISON_BUBBLES_WAVE3);
+  for (const b of bubbles) {
+    drawPoisonSoapBubble(ctx, tx + b.ox, ty + b.oy, b.r);
+  }
 }
 
 /**
@@ -717,51 +757,13 @@ export function drawPoisonStingEffect(
   } else if (step === 4) {
     // 3. 타격 후 1차: 대상 포켓몬 주변 100% 완전 불투명 선명한 보라색 비눗방울 발생
     drawTinyPrickImpact(ctx, tx, ty);
-
-    // 1st wave of purple soap bubbles around target body (100% 완전 불투명)
-    const bubbles1 = [
-      { ox: -16, oy: 8, r: 6.5 },
-      { ox: 15, oy: -10, r: 8.0 },
-      { ox: -10, oy: -20, r: 5.5 },
-      { ox: 20, oy: 14, r: 7.0 },
-      { ox: -24, oy: -6, r: 5.0 },
-      { ox: 6, oy: 18, r: 6.0 },
-      { ox: 0, oy: -2, r: 9.0 },
-    ];
-
-    for (const b of bubbles1) {
-      drawPoisonSoapBubble(ctx, tx + b.ox, ty + b.oy, b.r);
-    }
+    drawPoisonBubblesWave(ctx, tx, ty, 1);
   } else if (step === 5) {
     // 4. 타격 후 2차: 보라색화 극대화 & 비눗방울 군집 상승 (100% 완전 불투명)
-    const bubbles2 = [
-      { ox: -20, oy: -8, r: 7.5 },
-      { ox: 18, oy: -28, r: 9.5 },
-      { ox: -14, oy: -40, r: 6.5 },
-      { ox: 24, oy: -4, r: 8.0 },
-      { ox: -30, oy: -22, r: 6.0 },
-      { ox: 5, oy: 0, r: 7.5 },
-      { ox: -2, oy: -24, r: 10.5 },
-      { ox: 12, oy: -48, r: 5.5 },
-    ];
-
-    for (const b of bubbles2) {
-      drawPoisonSoapBubble(ctx, tx + b.ox, ty + b.oy, b.r);
-    }
+    drawPoisonBubblesWave(ctx, tx, ty, 2);
   } else if (step === 6) {
     // 5. 타격 후 3차: 비눗방울 상공 부유 및 분산 (100% 완전 불투명)
-    const bubbles3 = [
-      { ox: -24, oy: -26, r: 7.0 },
-      { ox: 22, oy: -50, r: 8.5 },
-      { ox: -16, oy: -62, r: 6.0 },
-      { ox: 28, oy: -20, r: 7.5 },
-      { ox: -34, oy: -42, r: 5.5 },
-      { ox: 2, oy: -46, r: 9.0 },
-    ];
-
-    for (const b of bubbles3) {
-      drawPoisonSoapBubble(ctx, tx + b.ox, ty + b.oy, b.r);
-    }
+    drawPoisonBubblesWave(ctx, tx, ty, 3);
   }
 
   ctx.restore();

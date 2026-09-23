@@ -33,6 +33,8 @@ import { VERIFIED_MOVES } from "./movesData.js";
 import { renderBattleMoveGif, renderBattleEntryGif } from "../src/utils/battleGifRenderer.js";
 import { getMoveData } from "../src/data/movesKo.js";
 import { POKEMON_SPECIES_DATA } from "../src/data/pokemonStats.js";
+import { POKEMON_NAMES_KO } from "../src/data/pokemonNamesKo.js";
+import { getTypeEffectiveness } from "../src/battle/mechanics/typeChart.js";
 import sharp from "sharp";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -51,6 +53,8 @@ function initSimulatedUser() {
     "squirtle": { isUnlocked: true, shinyTier: 0, hasHiddenAbility: true, passiveUnlocked: false, candies: 15, eggMoves: [] },
     "piplup": { isUnlocked: true, shinyTier: 0, hasHiddenAbility: false, passiveUnlocked: false, candies: 12, eggMoves: [] },
     "pikachu": { isUnlocked: true, shinyTier: 3, hasHiddenAbility: true, passiveUnlocked: true, candies: 99, eggMoves: [] },
+    "lucario": { isUnlocked: true, shinyTier: 2, hasHiddenAbility: true, passiveUnlocked: true, candies: 50, eggMoves: ["Meteor Mash"] },
+    "cinderace": { isUnlocked: true, shinyTier: 2, hasHiddenAbility: true, passiveUnlocked: true, candies: 50, eggMoves: ["High Jump Kick"] },
   };
 
   db.prepare("UPDATE users SET starter_data = ? WHERE user_id = ?").run(
@@ -60,30 +64,470 @@ function initSimulatedUser() {
 }
 initSimulatedUser();
 
+// ============================================================================
+// 🏟️ 배틀 중계 전용 일반 포켓몬 4마리 (+1 팬텀) 로드아웃 사양
+// ============================================================================
+export interface BattleLoadoutMove {
+  key: string;
+  nameKo: string;
+  type: string;
+  category: "physical" | "special" | "status";
+  power: number | null;
+  accuracy: number;
+  pp: number;
+  desc: string;
+}
+
+export interface BattleLoadoutPokemon {
+  id: string;
+  dexNumber: number;
+  nameKo: string;
+  nameEn: string;
+  types: string[];
+  hp: number;
+  maxHp: number;
+  attack: number;
+  defense: number;
+  spAtk: number;
+  spDef: number;
+  speed: number;
+  moves: BattleLoadoutMove[];
+}
+
+export const BATTLE_LOADOUTS: Record<string, BattleLoadoutPokemon> = {
+  cloyster: {
+    id: "cloyster",
+    dexNumber: 91,
+    nameKo: "파르셀",
+    nameEn: "Cloyster",
+    types: ["water", "ice"],
+    hp: 160,
+    maxHp: 160,
+    attack: 115,
+    defense: 180,
+    spAtk: 95,
+    spDef: 60,
+    speed: 70,
+    moves: [
+      { key: "clamp", nameKo: "껍질에끼우기", type: "water", category: "physical", power: 35, accuracy: 85, pp: 15, desc: "4~5턴간 대상을 조개 껍질 속에 가두어 조인다." },
+      { key: "waterfall", nameKo: "폭포오르기", type: "water", category: "physical", power: 80, accuracy: 100, pp: 15, desc: "세찬 폭포수를 거슬러 솟구쳐 들이받는다. (20% 풀죽음)" },
+      { key: "withdraw", nameKo: "껍질에숨기", type: "water", category: "status", power: null, accuracy: 100, pp: 40, desc: "단단한 조개 껍질에 몸을 숨겨 방어를 1랭크 올린다." },
+      { key: "ice-beam", nameKo: "냉동빔", type: "ice", category: "special", power: 90, accuracy: 100, pp: 10, desc: "얼어붙는 맹렬한 냉기 빔을 발사한다. (10% 얼음)" },
+    ],
+  },
+  marowak: {
+    id: "marowak",
+    dexNumber: 105,
+    nameKo: "텅구리",
+    nameEn: "Marowak",
+    types: ["ground"],
+    hp: 170,
+    maxHp: 170,
+    attack: 130,
+    defense: 120,
+    spAtk: 70,
+    spDef: 85,
+    speed: 65,
+    moves: [
+      { key: "bone-club", nameKo: "뼈다귀치기", type: "ground", category: "physical", power: 65, accuracy: 85, pp: 20, desc: "손에 쥔 뼈다귀를 휘둘러 내려친다. (10% 풀죽음)" },
+      { key: "fire-blast", nameKo: "불대문자", type: "fire", category: "special", power: 110, accuracy: 85, pp: 5, desc: "대(大) 자 화염을 날려 대상을 불태운다. (10% 화상)" },
+      { key: "earthquake", nameKo: "지진", type: "ground", category: "physical", power: 100, accuracy: 100, pp: 10, desc: "대지진을 일으켜 전장의 모든 대상을 강타한다." },
+      { key: "focus-energy", nameKo: "기충전", type: "normal", category: "status", power: null, accuracy: 100, pp: 30, desc: "기를 집중하여 급소율을 2랭크 올린다." },
+    ],
+  },
+  weezing: {
+    id: "weezing",
+    dexNumber: 110,
+    nameKo: "또도가스",
+    nameEn: "Weezing",
+    types: ["poison"],
+    hp: 175,
+    maxHp: 175,
+    attack: 100,
+    defense: 130,
+    spAtk: 95,
+    spDef: 80,
+    speed: 60,
+    moves: [
+      { key: "smog", nameKo: "스모그", type: "poison", category: "special", power: 30, accuracy: 70, pp: 20, desc: "자욱한 유독가스를 뿜어 공격한다. (40% 독)" },
+      { key: "sludge", nameKo: "오물공격", type: "poison", category: "special", power: 65, accuracy: 100, pp: 20, desc: "더러운 오물을 세차게 투척한다. (30% 독)" },
+      { key: "self-destruct", nameKo: "자폭", type: "normal", category: "physical", power: 200, accuracy: 100, pp: 5, desc: "자신을 희생하여 전장을 뒤흔드는 괴멸적 대폭발을 일으킨다." },
+      { key: "toxic", nameKo: "맹독", type: "poison", category: "status", power: null, accuracy: 90, pp: 10, desc: "상대를 치명적인 맹독 상태에 빠뜨린다." },
+    ],
+  },
+  chansey: {
+    id: "chansey",
+    dexNumber: 113,
+    nameKo: "럭키",
+    nameEn: "Chansey",
+    types: ["normal"],
+    hp: 250,
+    maxHp: 250,
+    attack: 45,
+    defense: 50,
+    spAtk: 80,
+    spDef: 140,
+    speed: 55,
+    moves: [
+      { key: "egg-bomb", nameKo: "알폭탄", type: "normal", category: "physical", power: 100, accuracy: 75, pp: 10, desc: "단단한 알을 힘껏 던져 상대에게 큰 충격을 준다." },
+      { key: "recover", nameKo: "HP회복", type: "normal", category: "status", power: null, accuracy: 100, pp: 10, desc: "상처를 치유하여 최대 HP의 절반을 회복한다." },
+      { key: "minimize", nameKo: "작아지기", type: "normal", category: "status", power: null, accuracy: 100, pp: 10, desc: "몸을 축소시켜 회피율을 2랭크 올린다." },
+      { key: "light-screen", nameKo: "빛의장막", type: "psychic", category: "status", power: null, accuracy: 100, pp: 30, desc: "빛의 벽을 세워 5턴간 특수 공격 데미지를 반감한다." },
+    ],
+  },
+  gengar: {
+    id: "gengar",
+    dexNumber: 94,
+    nameKo: "팬텀",
+    nameEn: "Gengar",
+    types: ["ghost", "poison"],
+    hp: 160,
+    maxHp: 160,
+    attack: 85,
+    defense: 80,
+    spAtk: 135,
+    spDef: 95,
+    speed: 110,
+    moves: [
+      { key: "lick", nameKo: "핥기", type: "ghost", category: "physical", power: 30, accuracy: 100, pp: 30, desc: "긴 혀로 대상을 핥아 공격한다. (30% 마비)" },
+      { key: "sludge", nameKo: "오물공격", type: "poison", category: "special", power: 65, accuracy: 100, pp: 20, desc: "더러운 오물을 세차게 투척한다. (30% 독)" },
+      { key: "night-shade", nameKo: "나이트헤드", type: "ghost", category: "special", power: null, accuracy: 100, pp: 15, desc: "거대한 환영으로 상대에게 레벨 수치만큼의 고정 피해를 준다." },
+      { key: "confuse-ray", nameKo: "이상한빛", type: "ghost", category: "status", power: null, accuracy: 100, pp: 10, desc: "요사스러운 도깨비불로 상대를 100% 혼란에 빠뜨린다." },
+    ],
+  },
+};
+
+export const NEW_MOVES_KEYS = [
+  "self-destruct", // 120
+  "egg-bomb",      // 121
+  "lick",          // 122
+  "smog",          // 123
+  "sludge",        // 124
+  "bone-club",     // 125
+  "fire-blast",    // 126
+  "waterfall",     // 127
+  "clamp",         // 128
+];
+
+export const BATTLE_DEFAULT_TEAMS = {
+  player: ["cloyster", "marowak", "chansey"],
+  enemy: ["weezing", "gengar", "marowak"],
+};
+
+function calculateBattleAction(
+  attackerRole: "player" | "enemy",
+  attackerMon: BattleLoadoutPokemon,
+  defenderMon: BattleLoadoutPokemon,
+  moveKey: string,
+  attackerCurrentHp: number,
+  defenderCurrentHp: number
+) {
+  const moveObj = attackerMon.moves.find(m => m.key === moveKey) || {
+    key: moveKey,
+    nameKo: moveKey,
+    type: "normal",
+    category: "physical" as const,
+    power: 40,
+    accuracy: 100,
+    pp: 20,
+    desc: "",
+  };
+
+  const isHit = Math.random() * 100 < moveObj.accuracy;
+  let damage = 0;
+  let typeMod = 1.0;
+  let commentary = "";
+  const aName = attackerMon.nameKo;
+  const dName = defenderMon.nameKo;
+
+  if (!isHit) {
+    commentary = `💨 ${aName}의 ${moveObj.nameKo}! 그러나 빗나갔다!`;
+    return {
+      attacker: attackerRole,
+      moveKey,
+      moveName: moveObj.nameKo,
+      isHit: false,
+      damage: 0,
+      typeMod: 1.0,
+      attackerHpAfter: attackerCurrentHp,
+      defenderHpAfter: defenderCurrentHp,
+      commentary,
+    };
+  }
+
+  // 변화기 (Status)
+  if (moveObj.category === "status") {
+    let statDirection: "up" | "down" | undefined;
+    let statTarget: "self" | "target" | undefined;
+
+    if (moveKey === "recover") {
+      const heal = Math.round(attackerMon.maxHp * 0.5);
+      const newHp = Math.min(attackerMon.maxHp, attackerCurrentHp + heal);
+      commentary = `✨ ${aName}의 ${moveObj.nameKo}! 체력을 ${heal} 회복했다! (${newHp}/${attackerMon.maxHp})`;
+      return {
+        attacker: attackerRole,
+        moveKey,
+        moveName: moveObj.nameKo,
+        isHit: true,
+        damage: 0,
+        typeMod: 1.0,
+        attackerHpAfter: newHp,
+        defenderHpAfter: defenderCurrentHp,
+        commentary,
+      };
+    } else if (moveKey === "withdraw") {
+      commentary = `🛡️ ${aName}의 ${moveObj.nameKo}! 단단한 조개 껍질 속에 숨어 방어가 올랐다! (+1)`;
+      statDirection = "up";
+      statTarget = "self";
+    } else if (moveKey === "minimize") {
+      commentary = `🫥 ${aName}의 ${moveObj.nameKo}! 몸을 작게 축소시켜 회피율이 크게 올랐다! (+2)`;
+      statDirection = "up";
+      statTarget = "self";
+    } else if (moveKey === "light-screen") {
+      commentary = `🔮 ${aName}의 ${moveObj.nameKo}! 빛의 장막이 펼쳐져 특수 방어가 강화되었다!`;
+      statDirection = "up";
+      statTarget = "self";
+    } else if (moveKey === "focus-energy") {
+      commentary = `💢 ${aName}의 ${moveObj.nameKo}! 기를 모아 급소에 맞힐 확률이 크게 올랐다! (+2)`;
+      statDirection = "up";
+      statTarget = "self";
+    } else if (moveKey === "toxic") {
+      commentary = `☠️ ${aName}의 ${moveObj.nameKo}! ${dName}(은)는 맹독에 걸렸다!`;
+    } else if (moveKey === "confuse-ray") {
+      commentary = `💫 ${aName}의 ${moveObj.nameKo}! ${dName}(은)는 혼란에 빠졌다!`;
+    } else {
+      const desc = moveObj.description || "";
+      if (desc.includes("떨어뜨") || desc.includes("낮춘") || desc.includes("감소") || desc.includes("하락")) {
+        statDirection = "down";
+        statTarget = "target";
+        commentary = `🔻 ${aName}의 ${moveObj.nameKo}! ${dName}의 능력이 떨어졌다!`;
+      } else if (desc.includes("올린다") || desc.includes("상승") || desc.includes("높인다") || desc.includes("올려")) {
+        statDirection = "up";
+        statTarget = "self";
+        commentary = `🔺 ${aName}의 ${moveObj.nameKo}! ${aName}의 능력이 올랐다!`;
+      } else {
+        commentary = `✨ ${aName}의 ${moveObj.nameKo}!`;
+      }
+    }
+    return {
+      attacker: attackerRole,
+      moveKey,
+      moveName: moveObj.nameKo,
+      isHit: true,
+      damage: 0,
+      typeMod: 1.0,
+      attackerHpAfter: attackerCurrentHp,
+      defenderHpAfter: defenderCurrentHp,
+      commentary,
+      statDirection,
+      statTarget,
+    };
+  }
+
+  // 자폭 (Self-Destruct)
+  let attackerHpAfter = attackerCurrentHp;
+  if (moveKey === "self-destruct") {
+    attackerHpAfter = 0;
+  }
+
+  // 공격/특수 데미지 계산
+  typeMod = getTypeEffectiveness(moveObj.type, defenderMon.types);
+  if (typeMod === 0) {
+    commentary = `⛔ ${aName}의 ${moveObj.nameKo}! 그러나 ${dName}에게는 효과가 없는 것 같다... (0 데미지)`;
+    return {
+      attacker: attackerRole,
+      moveKey,
+      moveName: moveObj.nameKo,
+      isHit: true,
+      damage: 0,
+      typeMod: 0,
+      attackerHpAfter,
+      defenderHpAfter: defenderCurrentHp,
+      commentary,
+    };
+  }
+
+  // 나이트헤드 (고정 피해 50)
+  if (moveKey === "night-shade") {
+    damage = 50 * typeMod;
+  } else {
+    const isSpecial = moveObj.category === "special";
+    const aStat = isSpecial ? attackerMon.spAtk : attackerMon.attack;
+    const dStat = isSpecial ? defenderMon.spDef : defenderMon.defense;
+    const basePower = moveObj.power || 40;
+    const isStab = attackerMon.types.includes(moveObj.type) ? 1.5 : 1.0;
+    const randomFactor = 0.85 + Math.random() * 0.15;
+    damage = Math.max(1, Math.round(((basePower * (aStat / dStat) * 0.38) + 2) * isStab * typeMod * randomFactor));
+  }
+
+  const defenderHpAfter = Math.max(0, defenderCurrentHp - damage);
+
+  // 중계 멘트 작성
+  let effText = "";
+  if (typeMod > 1.0) effText = " 🔥 효과가 굉장했다!";
+  else if (typeMod < 1.0) effText = " 💧 효과가 별로인 듯하다...";
+
+  if (moveKey === "clamp") {
+    commentary = `🐚 ${aName}의 ${moveObj.nameKo}! ${dName}(을)를 껍질 속에 가두어 조였다!${effText} (-${damage} HP)`;
+  } else if (moveKey === "waterfall") {
+    commentary = `🌊 ${aName}의 ${moveObj.nameKo}! 솟구치는 폭포수로 ${dName}(을)를 쳐올렸다!${effText} (-${damage} HP)`;
+  } else if (moveKey === "bone-club") {
+    commentary = `🦴 ${aName}의 ${moveObj.nameKo}! 단단한 뼈다귀로 머리를 내려쳤다!${effText} (-${damage} HP)`;
+  } else if (moveKey === "fire-blast") {
+    commentary = `🔥 ${aName}의 ${moveObj.nameKo}! 거대한 大 자 화염이 ${dName}(을)를 집어삼켰다!${effText} (-${damage} HP)`;
+  } else if (moveKey === "earthquake") {
+    commentary = `💥 ${aName}의 ${moveObj.nameKo}! 대지가 갈라지며 엄청난 진동이 강타했다!${effText} (-${damage} HP)`;
+  } else if (moveKey === "egg-bomb") {
+    commentary = `🥚 ${aName}의 ${moveObj.nameKo}! 거대한 알이 직격하여 폭발했다!${effText} (-${damage} HP)`;
+  } else if (moveKey === "smog") {
+    commentary = `💨 ${aName}의 ${moveObj.nameKo}! 짙은 유독가스가 ${dName}(을)를 덮쳤다!${effText} (-${damage} HP)`;
+  } else if (moveKey === "sludge") {
+    commentary = `🧪 ${aName}의 ${moveObj.nameKo}! 더러운 오물 덩어리가 날아와 터졌다!${effText} (-${damage} HP)`;
+  } else if (moveKey === "self-destruct") {
+    commentary = `💣 ${aName}의 ${moveObj.nameKo}! 전장을 날려버리는 괴멸적 대폭발!${effText} (-${damage} HP, 시전자 기절)`;
+  } else if (moveKey === "lick") {
+    commentary = `👅 ${aName}의 ${moveObj.nameKo}! 긴 혀로 ${dName}(을)를 쓸어올렸다!${effText} (-${damage} HP)`;
+  } else {
+    commentary = `⚡ ${aName}의 ${moveObj.nameKo}!${effText} (-${damage} HP)`;
+  }
+
+  return {
+    attacker: attackerRole,
+    moveKey,
+    moveName: moveObj.nameKo,
+    isHit: true,
+    damage,
+    typeMod,
+    attackerHpAfter,
+    defenderHpAfter,
+    commentary,
+  };
+}
+
 // SSE Clients for Live Reload
 const sseClients: http.ServerResponse[] = [];
 const moveGifMemoryCache = new Map<string, any>();
 const bulbapediaCoreSeriesCache = new Map<string, any>();
 
+const serverStartTime = Date.now();
+let movesVersionCounter = 1;
+
+export function getMovesVersion(): string {
+  let hash = 0;
+  for (const m of VERIFIED_MOVES) {
+    const s = `${m.id}:${m.status}:${m.isVerified}`;
+    for (let i = 0; i < s.length; i++) {
+      hash = ((hash << 5) - hash) + s.charCodeAt(i);
+      hash |= 0;
+    }
+  }
+  return `${serverStartTime}_${movesVersionCounter}_${hash}`;
+}
+
+// ============================================================================
+// 실시간 소스 파일 변경 감지 및 캐시 자동 초기화 헬퍼
+// ============================================================================
+
+/**
+ * 특정 기술(moveKey)에 직접/간접적으로 영향을 미치는 모든 소스 파일 목록을 반환합니다.
+ */
+export function getMoveSourceFiles(rawMoveKey: string): string[] {
+  const moveKey = rawMoveKey.replace(/-enemy$/, "");
+  const files: string[] = [];
+
+  // 1. 모든 기술 렌더링에 공통으로 영향을 주는 핵심 종속 파일
+  const sharedFiles = [
+    path.resolve(__dirname, "../src/utils/battleGifRenderer.ts"),
+    path.resolve(__dirname, "../src/renderers/moves/common/helpers.ts"),
+    path.resolve(__dirname, "../src/renderers/moves/common/genericTypeEffects.ts"),
+    path.resolve(__dirname, "../src/battle/moves/types.ts"),
+    path.resolve(__dirname, "../src/battle/moves/moveRegistry.ts"),
+    path.resolve(__dirname, "movesData.ts"),
+  ];
+  for (const sf of sharedFiles) {
+    if (fs.existsSync(sf)) files.push(sf);
+  }
+
+  // 2. 개별 기술 정의 파일 (src/battle/moves/definitions/XXX_move_name.ts)
+  const moveItem = VERIFIED_MOVES.find((m) => m.id === moveKey);
+  const moveNum = moveItem?.num;
+
+  if (moveNum !== undefined && moveNum > 0) {
+    const numPrefix = String(moveNum).padStart(3, "0");
+    const defsDir = path.resolve(__dirname, "../src/battle/moves/definitions");
+    if (fs.existsSync(defsDir)) {
+      try {
+        const defFiles = fs.readdirSync(defsDir);
+        const match = defFiles.find(
+          (f) => f.startsWith(`${numPrefix}_`) && (f.endsWith(".ts") || f.endsWith(".js"))
+        );
+        if (match) {
+          files.push(path.join(defsDir, match));
+        }
+      } catch {}
+    }
+
+    // 3. 렌더러 구현 파일 (Gen 1 4단위 규격: move001_004.ts, move113_116.ts 등)
+    const start = Math.floor((moveNum - 1) / 4) * 4 + 1;
+    const end = start + 3;
+    const gen1Dir = path.resolve(__dirname, "../src/renderers/moves/gen1");
+    const rendererFilename = `move${String(start).padStart(3, "0")}_${String(end).padStart(3, "0")}.ts`;
+    const rendererPath = path.join(gen1Dir, rendererFilename);
+    if (fs.existsSync(rendererPath)) {
+      files.push(rendererPath);
+    }
+  }
+
+  return files;
+}
+
+/**
+ * 특정 기술(moveKey)의 소스 파일들 중 가장 최신 수정 시각(mtime ms)을 반환합니다.
+ */
+export function getMoveLatestMtime(rawMoveKey: string): number {
+  const files = getMoveSourceFiles(rawMoveKey);
+  let latest = 0;
+  for (const f of files) {
+    try {
+      const stat = fs.statSync(f);
+      if (stat.mtimeMs > latest) {
+        latest = stat.mtimeMs;
+      }
+    } catch {}
+  }
+  return Math.round(latest);
+}
+
 const rendererPath = path.resolve(__dirname, "../src/utils/canvasRenderer.ts");
 const interactionPath = path.resolve(__dirname, "../src/events/interactionCreate.ts");
 const movesRendererDir = path.resolve(__dirname, "../src/renderers/moves");
 const movesDefsDir = path.resolve(__dirname, "../src/battle/moves");
+const viewerMovesDataPath = path.resolve(__dirname, "movesData.ts");
+const battleServicePath = path.resolve(__dirname, "../src/services/battleService.ts");
 
-[rendererPath, interactionPath, movesRendererDir, movesDefsDir].forEach((targetPath) => {
+[rendererPath, interactionPath, movesRendererDir, movesDefsDir, viewerMovesDataPath, battleServicePath].forEach((targetPath) => {
   if (fs.existsSync(targetPath)) {
-    try {
-      fs.watch(targetPath, { recursive: true }, () => {
-        console.log(`[VIEWER] ${path.basename(targetPath)} changed, clearing move cache and triggering live reload...`);
-        moveGifMemoryCache.clear();
-        sseClients.forEach((client) => client.write("data: reload\n\n"));
+    const onFileChange = (eventType?: string, filename?: string | null) => {
+      console.log(`[VIEWER] ${path.basename(targetPath)} changed (${filename || "file"}), clearing move cache and triggering live reload...`);
+      movesVersionCounter++;
+      moveGifMemoryCache.clear();
+      const payload = JSON.stringify({
+        type: "reload",
+        changedFile: filename || "",
+        version: getMovesVersion(),
       });
+      sseClients.forEach((client) => {
+        try {
+          client.write(`data: ${payload}\n\n`);
+        } catch {}
+      });
+    };
+
+    try {
+      fs.watch(targetPath, { recursive: true }, onFileChange);
     } catch {
       // Fallback non-recursive
-      fs.watch(targetPath, () => {
-        moveGifMemoryCache.clear();
-        sseClients.forEach((client) => client.write("data: reload\n\n"));
-      });
+      fs.watch(targetPath, onFileChange);
     }
   }
 });
@@ -236,13 +680,26 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 2-A-1. Move Viewer - Clear In-Memory Render Cache
-  if (req.method === "POST" && req.url === "/api/clear-cache") {
-    const count = moveGifMemoryCache.size;
-    moveGifMemoryCache.clear();
-    console.log(`[VIEWER CACHE] Cleared ${count} cached GIF items.`);
+  // 2-A-1. Move Viewer - Clear In-Memory Render Cache (All or specific move)
+  if (req.method === "POST" && req.url?.startsWith("/api/clear-cache")) {
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const targetMove = url.searchParams.get("moveKey");
+    let count = 0;
+    if (targetMove) {
+      for (const [k] of moveGifMemoryCache.entries()) {
+        if (k.startsWith(targetMove)) {
+          moveGifMemoryCache.delete(k);
+          count++;
+        }
+      }
+      console.log(`[VIEWER CACHE] Cleared ${count} cached GIF items for move "${targetMove}".`);
+    } else {
+      count = moveGifMemoryCache.size;
+      moveGifMemoryCache.clear();
+      console.log(`[VIEWER CACHE] Cleared ${count} cached GIF items.`);
+    }
     res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
-    res.end(JSON.stringify({ ok: true, clearedCount: count }));
+    res.end(JSON.stringify({ ok: true, clearedCount: count, targetMove: targetMove || "all" }));
     return;
   }
 
@@ -275,10 +732,280 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // 2-B-1. Move Viewer - Real-time Version & Hash Checker (for live polling sync)
+  if (req.method === "GET" && req.url?.startsWith("/api/moves-version")) {
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const activeMoveKey = url.searchParams.get("activeMove") || "";
+    const activeMoveMtime = activeMoveKey ? getMoveLatestMtime(activeMoveKey) : 0;
+    const version = getMovesVersion();
+    res.writeHead(200, {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+    });
+    res.end(JSON.stringify({
+      ok: true,
+      version,
+      serverStartTime,
+      count: VERIFIED_MOVES.length,
+      activeMove: activeMoveKey,
+      activeMoveMtime,
+    }));
+    return;
+  }
+
   // 2-B. Move Viewer - List all verified moves
-  if (req.method === "GET" && req.url === "/api/moves") {
-    res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+  if (req.method === "GET" && req.url?.startsWith("/api/moves")) {
+    res.writeHead(200, {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      "X-Moves-Version": getMovesVersion(),
+    });
     res.end(JSON.stringify(VERIFIED_MOVES));
+    return;
+  }
+
+  // 2-B-4. Battle View - Get 3v3 Battle Loadouts & Defaults
+  if (req.method === "GET" && req.url?.startsWith("/api/battle-loadouts")) {
+    res.writeHead(200, {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+    });
+    res.end(JSON.stringify({
+      ok: true,
+      loadouts: BATTLE_LOADOUTS,
+      defaultTeams: BATTLE_DEFAULT_TEAMS,
+      newMoveKeys: NEW_MOVES_KEYS,
+    }));
+    return;
+  }
+
+  // 2-B-5. Battle View - Execute 3v3 Battle Turn Simulation
+  if (req.method === "POST" && req.url?.startsWith("/api/battle-turn")) {
+    let bodyStr = "";
+    req.on("data", (chunk) => { bodyStr += chunk; });
+    req.on("end", async () => {
+      try {
+        const body = JSON.parse(bodyStr || "{}");
+        const turnNumber = Number(body.turnNumber ?? 1);
+        let trapTurns = Number(body.trapTurns ?? 0);
+        let usedNewMoves: string[] = Array.isArray(body.usedNewMoves) ? [...body.usedNewMoves] : [];
+
+        // 3v3 Team Parsing with smart fallback
+        let playerTeam: Array<{ species: string; currentHp: number; maxHp: number }> = body.playerTeam;
+        let enemyTeam: Array<{ species: string; currentHp: number; maxHp: number }> = body.enemyTeam;
+        let pActiveIdx = Number(body.playerActiveIdx ?? 0);
+        let eActiveIdx = Number(body.enemyActiveIdx ?? 0);
+
+        if (!playerTeam || !playerTeam.length) {
+          playerTeam = BATTLE_DEFAULT_TEAMS.player.map((sp) => {
+            const l = BATTLE_LOADOUTS[sp] || BATTLE_LOADOUTS["cloyster"];
+            return { species: sp, currentHp: l.hp, maxHp: l.maxHp };
+          });
+          pActiveIdx = 0;
+        }
+        if (!enemyTeam || !enemyTeam.length) {
+          enemyTeam = BATTLE_DEFAULT_TEAMS.enemy.map((sp) => {
+            const l = BATTLE_LOADOUTS[sp] || BATTLE_LOADOUTS["weezing"];
+            return { species: sp, currentHp: l.hp, maxHp: l.maxHp };
+          });
+          eActiveIdx = 0;
+        }
+
+        let pEntry = playerTeam[pActiveIdx];
+        let eEntry = enemyTeam[eActiveIdx];
+        let playerMon = BATTLE_LOADOUTS[pEntry.species] || BATTLE_LOADOUTS["cloyster"];
+        let enemyMon = BATTLE_LOADOUTS[eEntry.species] || BATTLE_LOADOUTS["weezing"];
+
+        // 1. Player Move Selection (Smart priority for unused new moves if not provided)
+        let playerMoveKey = body.playerMove;
+        if (!playerMoveKey) {
+          const unusedPNew = playerMon.moves.filter(
+            (m) => NEW_MOVES_KEYS.includes(m.key) && !usedNewMoves.includes(m.key)
+          );
+          if (unusedPNew.length > 0) {
+            playerMoveKey = unusedPNew[0].key;
+          } else {
+            playerMoveKey = playerMon.moves[Math.floor(Math.random() * playerMon.moves.length)].key;
+          }
+        }
+
+        // 2. Enemy AI Move Selection (Prioritizes unused new moves, controls self-destruct timing)
+        let enemyMoveKey = body.enemyMove;
+        if (!enemyMoveKey) {
+          const unusedENew = enemyMon.moves.filter(
+            (m) => NEW_MOVES_KEYS.includes(m.key) && !usedNewMoves.includes(m.key)
+          );
+          if (unusedENew.length > 0) {
+            const nonSelfDestruct = unusedENew.filter((m) => m.key !== "self-destruct");
+            if (nonSelfDestruct.length > 0 && eEntry.currentHp > enemyMon.maxHp * 0.4) {
+              enemyMoveKey = nonSelfDestruct[Math.floor(Math.random() * nonSelfDestruct.length)].key;
+            } else {
+              enemyMoveKey = unusedENew[Math.floor(Math.random() * unusedENew.length)].key;
+            }
+          } else {
+            enemyMoveKey = enemyMon.moves[Math.floor(Math.random() * enemyMon.moves.length)].key;
+          }
+        }
+
+        // 3. Speed Comparison
+        const playerGoesFirst = playerMon.speed >= enemyMon.speed;
+        const actions: any[] = [];
+        const switchEvents: any[] = [];
+        let battleEnded = false;
+        let winner: string | null = null;
+
+        const executeStep = (attackerRole: "player" | "enemy", moveKey: string) => {
+          if (attackerRole === "player") {
+            const beforePHp = pEntry.currentHp;
+            const beforeEHp = eEntry.currentHp;
+            const act = calculateBattleAction("player", playerMon, enemyMon, moveKey, beforePHp, beforeEHp);
+            pEntry.currentHp = act.attackerHpAfter;
+            eEntry.currentHp = act.defenderHpAfter;
+            if (NEW_MOVES_KEYS.includes(moveKey) && !usedNewMoves.includes(moveKey)) {
+              usedNewMoves.push(moveKey);
+            }
+            actions.push({
+              ...act,
+              gifUrl: `/api/render-move?moveKey=${encodeURIComponent(act.moveKey)}&playerSpecies=${pEntry.species}&enemySpecies=${eEntry.species}&playerHp=${beforePHp}&enemyHp=${beforeEHp}&playerMaxHp=${playerMon.maxHp}&enemyMaxHp=${enemyMon.maxHp}&damage=${act.damage}&isHit=${act.isHit}&dialogue=${encodeURIComponent(act.commentary)}&actMode=single&statDirection=${act.statDirection || ""}&statTarget=${act.statTarget || ""}&t=${Date.now()}`,
+            });
+            if (act.moveKey === "clamp" && act.isHit && eEntry.currentHp > 0) {
+              trapTurns = Math.floor(Math.random() * 2) + 4;
+            }
+          } else {
+            const beforePHp = pEntry.currentHp;
+            const beforeEHp = eEntry.currentHp;
+            const act = calculateBattleAction("enemy", enemyMon, playerMon, moveKey, beforeEHp, beforePHp);
+            eEntry.currentHp = act.attackerHpAfter;
+            pEntry.currentHp = act.defenderHpAfter;
+            if (NEW_MOVES_KEYS.includes(moveKey) && !usedNewMoves.includes(moveKey)) {
+              usedNewMoves.push(moveKey);
+            }
+            actions.push({
+              ...act,
+              gifUrl: `/api/render-move?moveKey=${encodeURIComponent(act.moveKey + "-enemy")}&playerSpecies=${pEntry.species}&enemySpecies=${eEntry.species}&playerHp=${beforePHp}&enemyHp=${beforeEHp}&playerMaxHp=${playerMon.maxHp}&enemyMaxHp=${enemyMon.maxHp}&damage=${act.damage}&isHit=${act.isHit}&dialogue=${encodeURIComponent(act.commentary)}&actMode=single&statDirection=${act.statDirection || ""}&statTarget=${act.statTarget || ""}&t=${Date.now()}`,
+            });
+          }
+        };
+
+        const checkFaintAndSwitch = () => {
+          // Check Player faint
+          if (pEntry.currentHp <= 0) {
+            pEntry.currentHp = 0;
+            if (pActiveIdx + 1 < playerTeam.length) {
+              const prevMonName = playerMon.nameKo;
+              pActiveIdx++;
+              pEntry = playerTeam[pActiveIdx];
+              playerMon = BATTLE_LOADOUTS[pEntry.species] || BATTLE_LOADOUTS["cloyster"];
+              switchEvents.push({
+                side: "player",
+                fromIdx: pActiveIdx - 1,
+                toIdx: pActiveIdx,
+                newSpecies: pEntry.species,
+                newNameKo: playerMon.nameKo,
+                commentary: `💀 아군의 [${prevMonName}]이(가) 쓰러졌다!\n🔄 아군은 [${playerMon.nameKo}]을(를) 전장에 내보냈다!`,
+              });
+            } else {
+              battleEnded = true;
+            }
+          }
+
+          // Check Enemy faint
+          if (eEntry.currentHp <= 0) {
+            eEntry.currentHp = 0;
+            trapTurns = 0;
+            if (eActiveIdx + 1 < enemyTeam.length) {
+              const prevMonName = enemyMon.nameKo;
+              eActiveIdx++;
+              eEntry = enemyTeam[eActiveIdx];
+              enemyMon = BATTLE_LOADOUTS[eEntry.species] || BATTLE_LOADOUTS["weezing"];
+              switchEvents.push({
+                side: "enemy",
+                fromIdx: eActiveIdx - 1,
+                toIdx: eActiveIdx,
+                newSpecies: eEntry.species,
+                newNameKo: enemyMon.nameKo,
+                commentary: `💥 적군의 [${prevMonName}]이(가) 쓰러졌다!\n🔄 상대는 [${enemyMon.nameKo}]을(를) 전장에 내보냈다!`,
+              });
+            } else {
+              battleEnded = true;
+            }
+          }
+        };
+
+        if (playerGoesFirst) {
+          executeStep("player", playerMoveKey);
+          checkFaintAndSwitch();
+          const firstAct = actions[0];
+          const defenderFainted = firstAct && firstAct.defenderHpAfter <= 0;
+          const attackerFainted = firstAct && firstAct.attackerHpAfter <= 0;
+          if (!defenderFainted && !attackerFainted && !battleEnded) {
+            executeStep("enemy", enemyMoveKey);
+            checkFaintAndSwitch();
+          }
+        } else {
+          executeStep("enemy", enemyMoveKey);
+          checkFaintAndSwitch();
+          const firstAct = actions[0];
+          const defenderFainted = firstAct && firstAct.defenderHpAfter <= 0;
+          const attackerFainted = firstAct && firstAct.attackerHpAfter <= 0;
+          if (!defenderFainted && !attackerFainted && !battleEnded) {
+            executeStep("player", playerMoveKey);
+            checkFaintAndSwitch();
+          }
+        }
+
+        // End of Turn Effects
+        let endOfTurnCommentary = "";
+        if (!battleEnded && trapTurns > 0 && eEntry.currentHp > 0) {
+          const trapDmg = Math.max(1, Math.round(enemyMon.maxHp / 8));
+          eEntry.currentHp = Math.max(0, eEntry.currentHp - trapDmg);
+          trapTurns--;
+          if (trapTurns === 0) {
+            endOfTurnCommentary = `📢 ${enemyMon.nameKo}(은)는 껍질의 조임으로 ${trapDmg} 데미지를 입고, 구속에서 풀려났다!`;
+          } else {
+            endOfTurnCommentary = `📢 ${enemyMon.nameKo}(은)는 껍질에 조여져 고통받고 있다! (-${trapDmg} HP, 잔여 ${trapTurns}턴)`;
+          }
+          checkFaintAndSwitch();
+        }
+
+        const playerAllFainted = playerTeam.every((p) => p.currentHp <= 0);
+        const enemyAllFainted = enemyTeam.every((e) => e.currentHp <= 0);
+        if (playerAllFainted && enemyAllFainted) {
+          battleEnded = true;
+          winner = "draw";
+        } else if (enemyAllFainted) {
+          battleEnded = true;
+          winner = "player";
+        } else if (playerAllFainted) {
+          battleEnded = true;
+          winner = "enemy";
+        }
+
+        res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({
+          ok: true,
+          turnNumber,
+          playerTeam,
+          enemyTeam,
+          playerActiveIdx: pActiveIdx,
+          enemyActiveIdx: eActiveIdx,
+          playerSpecies: pEntry.species,
+          enemySpecies: eEntry.species,
+          playerHp: pEntry.currentHp,
+          enemyHp: eEntry.currentHp,
+          trapTurns,
+          actions,
+          switchEvents,
+          usedNewMoves,
+          endOfTurnCommentary,
+          battleEnded,
+          winner,
+        }));
+      } catch (err: any) {
+        res.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({ ok: false, error: err.message }));
+      }
+    });
     return;
   }
 
@@ -366,28 +1093,73 @@ const server = http.createServer(async (req, res) => {
       const hitMode = url.searchParams.get("hitMode") || "normal";
       const flyPhase = url.searchParams.get("flyPhase") || "2";
       const actMode = url.searchParams.get("actMode") || "dual";
-      console.log(`[VIEWER MOVE] moveKey=${rawMoveKey}, hitMode=${hitMode}, actMode=${actMode}`);
+      const subMoveParam = (url.searchParams.get("subMove") || url.searchParams.get("subMoveKey") || "").toLowerCase().trim();
+      const metronomeOnly = subMoveParam === "only" || subMoveParam === "none" || flyPhase === "only" || flyPhase === "1";
+      const METRONOME_SAMPLE_MOVES = ["thunderbolt", "flamethrower", "earthquake", "hydro-pump", "psychic", "blizzard", "tackle", "fire-blast"];
+      const metronomeSubKey = metronomeOnly ? "none" : (
+        flyPhase === "thunderbolt" ? "thunderbolt" :
+        (subMoveParam && subMoveParam !== "random" ? subMoveParam :
+        METRONOME_SAMPLE_MOVES[Math.floor(Math.random() * METRONOME_SAMPLE_MOVES.length)])
+      );
+      const metronomeSubData = getMoveData(metronomeSubKey);
+      const metronomeSubKo = metronomeSubData?.nameKo || metronomeSubKey;
+      const metronomeIsStatus = metronomeSubData?.category === "status";
 
-      const cacheKey = `${rawMoveKey}_${playerSpecies}_${enemySpecies}_${hitMode}_${flyPhase}_${actMode}`;
+      const mirrorSubKey = (subMoveParam && subMoveParam !== "random") ? subMoveParam : (
+        (flyPhase === "thunderbolt" || flyPhase === "1") ? "thunderbolt" :
+        (flyPhase === "tackle" || flyPhase === "full") ? "tackle" : "flamethrower"
+      );
+      const mirrorSubData = getMoveData(mirrorSubKey);
+      const customPlayerHp = url.searchParams.get("playerHp") !== null ? parseInt(url.searchParams.get("playerHp")!, 10) : undefined;
+      const customEnemyHp = url.searchParams.get("enemyHp") !== null ? parseInt(url.searchParams.get("enemyHp")!, 10) : undefined;
+      const customPlayerMaxHp = url.searchParams.get("playerMaxHp") !== null ? parseInt(url.searchParams.get("playerMaxHp")!, 10) : undefined;
+      const customEnemyMaxHp = url.searchParams.get("enemyMaxHp") !== null ? parseInt(url.searchParams.get("enemyMaxHp")!, 10) : undefined;
+      const customDamage = url.searchParams.get("damage") !== null ? parseInt(url.searchParams.get("damage")!, 10) : undefined;
+      const customDialogue = url.searchParams.get("dialogue")
+        ? decodeURIComponent(url.searchParams.get("dialogue")!).replace(/(\p{Extended_Pictographic}|\p{Emoji_Presentation}|\uFE0F)/gu, "").trim()
+        : undefined;
+      const customStatDirection = (url.searchParams.get("statDirection") || "").toLowerCase().trim() as "up" | "down" | "";
+      const customStatTarget = (url.searchParams.get("statTarget") || "").toLowerCase().trim() as "self" | "target" | "";
+
+      console.log(`[VIEWER MOVE] moveKey=${rawMoveKey}, hitMode=${hitMode}, actMode=${actMode}, pHP=${customPlayerHp ?? 'def'}, eHP=${customEnemyHp ?? 'def'}, statDir=${customStatDirection || 'none'}`);
+
+      const cacheKey = `${rawMoveKey}_${playerSpecies}_${enemySpecies}_${hitMode}_${flyPhase}_${actMode}_${metronomeSubKey}_${mirrorSubKey}_p${customPlayerHp ?? ''}_e${customEnemyHp ?? ''}_d${customDamage ?? ''}_dlg${customDialogue ? '1' : '0'}_sd${customStatDirection}_st${customStatTarget}`;
       const noCache = url.searchParams.get("nocache") === "1" || !!url.searchParams.get("t");
       const cached = noCache ? null : moveGifMemoryCache.get(cacheKey);
       if (cached) {
-        res.writeHead(200, {
-          "Content-Type": "application/json; charset=utf-8",
-          "Cache-Control": "no-cache, no-store, must-revalidate",
-        });
-        res.end(JSON.stringify({ ...cached, fromCache: true, renderTimeMs: cached.renderTimeMs }));
-        return;
+        const latestMtime = getMoveLatestMtime(rawMoveKey);
+        if (latestMtime > (cached.cachedAt || 0)) {
+          console.log(`[VIEWER CACHE AUTO-CLEAR] Move "${rawMoveKey}" source modified (${new Date(latestMtime).toLocaleTimeString()}), auto-invalidating cache!`);
+          moveGifMemoryCache.delete(cacheKey);
+        } else {
+          if (url.searchParams.get("format") === "gif" || (req.headers.accept && req.headers.accept.includes("image/gif"))) {
+            const base64Data = cached.gif.replace(/^data:image\/gif;base64,/, "");
+            const buf = Buffer.from(base64Data, "base64");
+            res.writeHead(200, {
+              "Content-Type": "image/gif",
+              "Content-Length": buf.length,
+              "Cache-Control": "no-cache"
+            });
+            res.end(buf);
+            return;
+          }
+          res.writeHead(200, {
+            "Content-Type": "application/json; charset=utf-8",
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+          });
+          res.end(JSON.stringify({ ...cached, fromCache: true, renderTimeMs: cached.renderTimeMs }));
+          return;
+        }
       }
 
       const moveData = getMoveData(moveKey);
       const moveKo = moveKey === "encounter-entry" ? "야생 포켓몬 조우 (등장)" : (moveKey === "perk-hug" ? "포옹 (🫂 특수 연출)" : (moveData?.nameKo || moveKey));
       const playerInfo = POKEMON_SPECIES_DATA[playerSpecies];
       const enemyInfo = POKEMON_SPECIES_DATA[enemySpecies];
-      const playerDisplayName = playerInfo?.nameKo || playerSpecies;
-      const enemyDisplayName = enemyInfo?.nameKo || enemySpecies;
+      const playerDisplayName = (playerInfo?.num ? POKEMON_NAMES_KO[String(playerInfo.num)] : null) || (playerInfo as any)?.nameKo || playerSpecies;
+      const enemyDisplayName = (enemyInfo?.num ? POKEMON_NAMES_KO[String(enemyInfo.num)] : null) || (enemyInfo as any)?.nameKo || enemySpecies;
 
-      const isStatus = moveData?.category === "status" || moveKey === "swords-dance" || moveKey === "whirlwind" || moveKey === "perk-hug";
+      const isStatus = moveData?.category === "status" || moveKey === "swords-dance" || moveKey === "whirlwind" || moveKey === "perk-hug" || moveKey === "bide-charge";
       const isOHKO = moveKey === "guillotine" || moveKey === "horn-drill" || moveKey === "fissure" || moveKey === "sheer-cold";
       const isMiss = hitMode === "miss";
       const isImmune = hitMode === "immune";
@@ -405,28 +1177,62 @@ const server = http.createServer(async (req, res) => {
       else typeMod = 1.0;
 
       const isHit = !isMiss;
-      const actualDamage = isStatus ? 0 : (isMiss || isImmune ? 0 : (isOHKO ? 150 : Math.max(1, Math.round(35 * typeMod))));
-      const act1EnemyHpAfter = isStatus ? 150 : (isMiss || isImmune ? 150 : (isOHKO ? 0 : Math.max(0, 150 - actualDamage)));
+      const isMetronomeAttack = moveKey === "metronome" && !metronomeOnly && !metronomeIsStatus;
+      const mirrorIsStatus = mirrorSubData?.category === "status";
+      const isMirrorAttack = moveKey === "mirror-move" && !mirrorIsStatus;
+      const isStatusEffective = isStatus && !isMetronomeAttack && !isMirrorAttack;
+      const calculatedDamage = isStatusEffective ? 0 : (isMiss || isImmune ? 0 : (isOHKO ? 150 : Math.max(1, Math.round(35 * typeMod))));
+      const actualDamage = customDamage !== undefined ? customDamage : calculatedDamage;
+      const act1EnemyHpAfter = customEnemyHp !== undefined ? Math.max(0, customEnemyHp - actualDamage) : (isStatusEffective ? 150 : (isMiss || isImmune ? 150 : (isOHKO ? 0 : Math.max(0, 150 - actualDamage))));
 
-      const isBuff = moveKey === "swords-dance" || moveKey === "growth" || moveKey === "dragon-dance" || moveKey === "calm-mind" || moveKey === "bulk-up" || moveKey === "agility";
+      const isBuffMove = (
+        moveKey === "swords-dance" || moveKey === "growth" || moveKey === "dragon-dance" ||
+        moveKey === "calm-mind" || moveKey === "bulk-up" || moveKey === "agility" ||
+        moveKey === "double-team" || moveKey === "minimize" || moveKey === "harden" ||
+        moveKey === "iron-defense" || moveKey === "withdraw" || moveKey === "focus-energy" ||
+        moveKey === "barrier" || moveKey === "defense-curl" || moveKey === "amnesia" ||
+        moveKey === "acid-armor" || moveKey === "sharpen" || moveKey === "charge" ||
+        moveKey === "nasty-plot" || moveKey === "quiver-dance" || moveKey === "shell-smash" ||
+        moveKey === "rock-polish" || moveKey === "work-up" || moveKey === "hone-claws" ||
+        moveKey === "belly-drum" || moveKey === "coil" || moveKey === "light-screen" || moveKey === "reflect" ||
+        Boolean(moveData?.description && (
+          !moveData.description.includes("떨어지지") &&
+          !moveData.description.includes("떨어뜨") &&
+          !moveData.description.includes("낮춘") &&
+          !moveData.description.includes("감소") &&
+          !moveData.description.includes("하락") &&
+          (moveData.description.includes("올린다") || moveData.description.includes("상승") || moveData.description.includes("높인다") || moveData.description.includes("올려") || moveData.description.includes("급소율을"))
+        ))
+      );
       const isNotDebuff = moveKey === "mist" || moveKey === "haze" || moveKey === "safeguard";
-      const isDebuff = !isNotDebuff && (
+      const isDebuffMove = isStatus && !isOHKO && !isNotDebuff && (
         moveKey === "growl" || moveKey === "tail-whip" || moveKey === "leer" || moveKey === "sand-attack" ||
         moveKey === "screech" || moveKey === "charm" || moveKey === "fake-tears" || moveKey === "metal-sound" ||
         moveKey === "string-shot" || moveKey === "smokescreen" || moveKey === "kinesis" || moveKey === "flash" ||
+        moveKey === "sweet-scent" || moveKey === "scary-face" || moveKey === "cotton-spore" ||
         Boolean(moveData?.description && (
           !moveData.description.includes("떨어지지") &&
           (moveData.description.includes("떨어뜨") || moveData.description.includes("낮춘") || moveData.description.includes("감소") || moveData.description.includes("하락"))
         ))
       );
 
+      const isBuff = customStatDirection === "up" || (customStatDirection === "" && isBuffMove);
+      const isDebuff = customStatDirection === "down" || (customStatDirection === "" && isDebuffMove);
+
+      const targetIsTarget = customStatTarget === "target" || (!customStatTarget && isDebuff);
+
       const pStatChanges: { target: "player" | "enemy"; direction: "up" | "down" }[] | undefined = isBuff
-        ? [{ target: "player", direction: "up" }]
-        : (isDebuff ? [{ target: "enemy", direction: "down" }] : undefined);
+        ? [{ target: targetIsTarget ? "enemy" : "player", direction: "up" }]
+        : (isDebuff ? [{ target: targetIsTarget ? "enemy" : "player", direction: "down" }] : undefined);
 
       const eStatChanges: { target: "player" | "enemy"; direction: "up" | "down" }[] | undefined = isBuff
-        ? [{ target: "enemy", direction: "up" }]
-        : (isDebuff ? [{ target: "player", direction: "down" }] : undefined);
+        ? [{ target: targetIsTarget ? "player" : "enemy", direction: "up" }]
+        : (isDebuff ? [{ target: targetIsTarget ? "player" : "enemy", direction: "down" }] : undefined);
+
+      const initPlayerMaxHp = customPlayerMaxHp ?? 150;
+      const initEnemyMaxHp = customEnemyMaxHp ?? 150;
+      const initPlayerHp = customPlayerHp !== undefined ? customPlayerHp : ((isEnemyCaster && isOHKO && !isMiss) ? 0 : initPlayerMaxHp);
+      const initEnemyHp = customEnemyHp !== undefined ? customEnemyHp : ((!isEnemyCaster && isOHKO && !isMiss) ? 0 : initEnemyMaxHp);
 
       const mockBattle = {
         userId: "viewer_user",
@@ -434,67 +1240,477 @@ const server = http.createServer(async (req, res) => {
         stage: 1,
         biome: "town",
         phase: (isOHKO && !isMiss) ? (isEnemyCaster ? "DEFEAT" : "VICTORY") : "ACTION",
-        dialogueText: moveKey === "perk-hug" ? `[PERK:hug] ${playerDisplayName}(은)는 당신을 포옹하고 돌아갔다.` : "",
+        dialogueText: customDialogue || (moveKey === "perk-hug" ? `[PERK:hug] ${playerDisplayName}(은)는 당신을 포옹하고 돌아갔다.` : ""),
         hugTriggered: moveKey === "perk-hug",
         playerParty: [{
           id: "p1",
           speciesId: playerSpecies,
-          dexNumber: playerInfo?.dexNumber || 1,
+          dexNumber: playerInfo?.num || (playerInfo as any)?.dexNumber || 448,
           species: playerSpecies,
           name: playerDisplayName,
           level: 25,
-          hp: (isEnemyCaster && isOHKO && !isMiss) ? 0 : 150,
-          maxHp: 150,
-          stats: { hp: 150, attack: 100, defense: 100, spAtk: 100, spDef: 100, speed: 100 },
+          hp: initPlayerHp,
+          maxHp: initPlayerMaxHp,
+          stats: { hp: initPlayerMaxHp, attack: 100, defense: 100, spAtk: 100, spDef: 100, speed: 100 },
           moves: [moveKey, "surf", "ice-beam", "blizzard", "psybeam"].filter((m, i, arr) => arr.indexOf(m) === i).slice(0, 4),
-          types: playerInfo?.types || ["grass"]
+          types: playerInfo?.types?.map((t: string) => t.toLowerCase()) || ["fighting", "steel"]
         }],
         playerBattleMon: {
           id: "p1",
           speciesId: playerSpecies,
-          dexNumber: playerInfo?.dexNumber || 1,
+          dexNumber: playerInfo?.num || (playerInfo as any)?.dexNumber || 448,
           species: playerSpecies,
           name: playerDisplayName,
           level: 25,
-          hp: (isEnemyCaster && isOHKO && !isMiss) ? 0 : 150,
-          maxHp: 150,
-          stats: { hp: 150, attack: 100, defense: 100, spAtk: 100, spDef: 100, speed: 100 },
+          hp: initPlayerHp,
+          maxHp: initPlayerMaxHp,
+          stats: { hp: initPlayerMaxHp, attack: 100, defense: 100, spAtk: 100, spDef: 100, speed: 100 },
           moves: [moveKey, "surf", "ice-beam", "blizzard", "psybeam"].filter((m, i, arr) => arr.indexOf(m) === i).slice(0, 4),
-          types: playerInfo?.types || ["grass"],
-          semiInvulnerableState: (moveKey === "fly" && flyPhase === "2") ? "air" : null,
-          chargingMove: (moveKey === "fly" && flyPhase === "2") ? "fly" : null,
+          types: playerInfo?.types?.map((t: string) => t.toLowerCase()) || ["fighting", "steel"],
+          semiInvulnerableState: (!isEnemyCaster && ((moveKey === "fly" && flyPhase === "2") ? "air" : ((moveKey === "dig" && flyPhase === "2") ? "underground" : null))),
+          chargingMove: (!isEnemyCaster && ((moveKey === "fly" && flyPhase === "2") ? "fly" : ((moveKey === "dig" && flyPhase === "2") ? "dig" : null))),
         },
         enemy: {
           id: "e1",
           speciesId: enemySpecies,
-          dexNumber: enemyInfo?.dexNumber || 95,
+          dexNumber: enemyInfo?.num || (enemyInfo as any)?.dexNumber || 815,
           species: enemySpecies,
           name: enemyDisplayName,
           level: 25,
-          hp: (!isEnemyCaster && isOHKO && !isMiss) ? 0 : 150,
-          maxHp: 150,
-          stats: { hp: 150, attack: 100, defense: 100, spAtk: 100, spDef: 100, speed: 100 },
+          hp: initEnemyHp,
+          maxHp: initEnemyMaxHp,
+          stats: { hp: initEnemyMaxHp, attack: 100, defense: 100, spAtk: 100, spDef: 100, speed: 100 },
           moves: [moveKey],
-          types: enemyInfo?.types || ["rock"]
+          types: enemyInfo?.types?.map((t: string) => t.toLowerCase()) || ["fire"],
+          semiInvulnerableState: (isEnemyCaster && ((moveKey === "fly" && flyPhase === "2") ? "air" : ((moveKey === "dig" && flyPhase === "2") ? "underground" : null))),
+          chargingMove: (isEnemyCaster && ((moveKey === "fly" && flyPhase === "2") ? "fly" : ((moveKey === "dig" && flyPhase === "2") ? "dig" : null))),
         },
-        turnActions: isEnemyCaster ? [
-          {
-            actor: "enemy",
-            moveKey: moveKey,
-            moveName: moveKo,
-            damage: actualDamage,
-            isHit: isHit,
-            isSuperEffective: false,
-            typeMod: 1.0,
-            statChanges: eStatChanges,
-            playerHpAfter: (isOHKO && !isMiss) ? 0 : 150,
-            enemyHpAfter: 150,
-            effectiveness: 1.0,
-            log: isMiss
-              ? `적 ${enemyDisplayName}의 ${moveKo}!\n하지만 상대에게 빗나갔다!`
-              : `적 ${enemyDisplayName}의 ${moveKo}!\n일격필살! 아군 ${playerDisplayName}(은)는 쓰러졌다!`
-          }
-        ] : (moveKey === "fly" && flyPhase === "1") ? [
+        turnActions: isEnemyCaster ? (
+          (moveKey === "fly" && flyPhase === "1") ? [
+            {
+              actor: "enemy",
+              moveKey: "fly",
+              moveName: "공중날기",
+              damage: 0,
+              isHit: true,
+              isTurn1Launch: true,
+              chargingMove: "fly",
+              playerHpAfter: 150,
+              enemyHpAfter: 150,
+              effectiveness: 1.0,
+              log: `적 ${enemyDisplayName}(은)는 하늘 높이 날아올랐다!`
+            },
+            {
+              actor: "player",
+              moveKey: "tackle",
+              moveName: "몸통박치기",
+              damage: 0,
+              isHit: false,
+              playerHpAfter: 150,
+              enemyHpAfter: 150,
+              effectiveness: 1.0,
+              log: `아군 ${playerDisplayName}의 몸통박치기!\n하지만 상대에게 닿지 않았다!`
+            }
+          ] : (moveKey === "fly" && flyPhase === "full") ? [
+            {
+              actor: "enemy",
+              moveKey: "fly",
+              moveName: "공중날기",
+              damage: 0,
+              isHit: true,
+              isTurn1Launch: true,
+              chargingMove: "fly",
+              playerHpAfter: 150,
+              enemyHpAfter: 150,
+              effectiveness: 1.0,
+              log: `적 ${enemyDisplayName}(은)는 하늘 높이 날아올랐다!`
+            },
+            {
+              actor: "enemy",
+              moveKey: "fly",
+              moveName: "공중날기",
+              damage: actualDamage,
+              isHit: isHit,
+              isTurn1Launch: false,
+              wasDescentFromAir: true,
+              isSuperEffective: isSuper,
+              typeMod: typeMod,
+              playerHpAfter: isMiss ? 150 : Math.max(0, 150 - actualDamage),
+              enemyHpAfter: 150,
+              effectiveness: typeMod,
+              log: isMiss
+                ? `적 ${enemyDisplayName}의 공중날기!\n하지만 상대에게 빗나갔다!`
+                : `적 ${enemyDisplayName}의 공중날기! ${actualDamage} 데미지!`
+            }
+          ] : (moveKey === "fly") ? [
+            {
+              actor: "enemy",
+              moveKey: "fly",
+              moveName: "공중날기",
+              damage: actualDamage,
+              isHit: isHit,
+              isTurn1Launch: false,
+              wasDescentFromAir: true,
+              isSuperEffective: isSuper,
+              typeMod: typeMod,
+              playerHpAfter: isMiss ? 150 : Math.max(0, 150 - actualDamage),
+              enemyHpAfter: 150,
+              effectiveness: typeMod,
+              log: isMiss
+                ? `적 ${enemyDisplayName}의 공중날기!\n하지만 상대에게 빗나갔다!`
+                : `적 ${enemyDisplayName}의 공중날기! ${actualDamage} 데미지!`
+            },
+            {
+              actor: "player",
+              moveKey: "tackle",
+              moveName: "몸통박치기",
+              damage: 25,
+              isHit: true,
+              isSuperEffective: false,
+              typeMod: 1.0,
+              playerHpAfter: isMiss ? 150 : Math.max(0, 150 - actualDamage),
+              enemyHpAfter: 125,
+              effectiveness: 1.0,
+              log: `아군 ${playerDisplayName}의 몸통박치기! 25 데미지!`
+            }
+          ] : (moveKey === "dig" && flyPhase === "1") ? [
+            {
+              actor: "enemy",
+              moveKey: "dig",
+              moveName: "구멍파기",
+              damage: 0,
+              isHit: true,
+              isTurn1Launch: true,
+              chargingMove: "dig",
+              playerHpAfter: 150,
+              enemyHpAfter: 150,
+              effectiveness: 1.0,
+              log: `적 ${enemyDisplayName}(은)는 땅속으로 파고들었다!`
+            },
+            ...(actMode === "single" ? [] : [{
+              actor: "player",
+              moveKey: "tackle",
+              moveName: "몸통박치기",
+              damage: 0,
+              isHit: false,
+              playerHpAfter: 150,
+              enemyHpAfter: 150,
+              effectiveness: 1.0,
+              log: `아군 ${playerDisplayName}의 몸통박치기!\n하지만 상대에게 닿지 않았다!`
+            }])
+          ] : (moveKey === "dig" && flyPhase === "full") ? [
+            {
+              actor: "enemy",
+              moveKey: "dig",
+              moveName: "구멍파기",
+              damage: 0,
+              isHit: true,
+              isTurn1Launch: true,
+              chargingMove: "dig",
+              playerHpAfter: 150,
+              enemyHpAfter: 150,
+              effectiveness: 1.0,
+              log: `적 ${enemyDisplayName}(은)는 땅속으로 파고들었다!`
+            },
+            {
+              actor: "enemy",
+              moveKey: "dig",
+              moveName: "구멍파기",
+              damage: actualDamage,
+              isHit: isHit,
+              isTurn1Launch: false,
+              isSuperEffective: isSuper,
+              typeMod: typeMod,
+              playerHpAfter: isMiss ? 150 : Math.max(0, 150 - actualDamage),
+              enemyHpAfter: 150,
+              effectiveness: typeMod,
+              log: isMiss
+                ? `적 ${enemyDisplayName}의 구멍파기!\n하지만 상대에게 빗나갔다!`
+                : `적 ${enemyDisplayName}의 구멍파기! ${actualDamage} 데미지!`
+            }
+          ] : (moveKey === "dig") ? [
+            {
+              actor: "enemy",
+              moveKey: "dig",
+              moveName: "구멍파기",
+              damage: actualDamage,
+              isHit: isHit,
+              isTurn1Launch: false,
+              isSuperEffective: isSuper,
+              typeMod: typeMod,
+              playerHpAfter: isMiss ? 150 : Math.max(0, 150 - actualDamage),
+              enemyHpAfter: 150,
+              effectiveness: typeMod,
+              log: isMiss
+                ? `적 ${enemyDisplayName}의 구멍파기!\n하지만 상대에게 빗나갔다!`
+                : `적 ${enemyDisplayName}의 구멍파기! ${actualDamage} 데미지!`
+            },
+            ...(actMode === "single" ? [] : [{
+              actor: "player",
+              moveKey: "tackle",
+              moveName: "몸통박치기",
+              damage: 25,
+              isHit: true,
+              isSuperEffective: false,
+              typeMod: 1.0,
+              playerHpAfter: isMiss ? 150 : Math.max(0, 150 - actualDamage),
+              enemyHpAfter: 125,
+              effectiveness: 1.0,
+              log: `아군 ${playerDisplayName}의 몸통박치기! 25 데미지!`
+            }])
+          ] : ((moveKey === "bide" && flyPhase === "1") || moveKey === "bide-charge") ? [
+            {
+              actor: "enemy",
+              moveKey: "bide-charge",
+              moveName: "참기 (참기)",
+              damage: 0,
+              isHit: true,
+              isTurn1Launch: true,
+              chargingMove: "bide",
+              playerHpAfter: 150,
+              enemyHpAfter: 150,
+              effectiveness: 1.0,
+              log: `적 ${enemyDisplayName}(은)는 참기를 시작했다!`
+            }
+          ] : (moveKey === "bide" && flyPhase === "full") ? [
+            {
+              actor: "enemy",
+              moveKey: "bide",
+              moveName: "참기",
+              damage: 0,
+              isHit: true,
+              isTurn1Launch: true,
+              chargingMove: "bide",
+              playerHpAfter: 150,
+              enemyHpAfter: 150,
+              effectiveness: 1.0,
+              log: `적 ${enemyDisplayName}(은)는 참기를 시작했다!`
+            },
+            {
+              actor: "player",
+              moveKey: "tackle",
+              moveName: "몸통박치기",
+              damage: 25,
+              isHit: true,
+              playerHpAfter: 150,
+              enemyHpAfter: 125,
+              effectiveness: 1.0,
+              log: `아군 ${playerDisplayName}의 몸통박치기! 25 데미지!`
+            },
+            {
+              actor: "enemy",
+              moveKey: "bide",
+              moveName: "참기",
+              damage: 50,
+              isHit: isHit,
+              isTurn1Launch: false,
+              isSuperEffective: false,
+              typeMod: 1.0,
+              playerHpAfter: isMiss ? 150 : 100,
+              enemyHpAfter: 125,
+              effectiveness: 1.0,
+              log: isMiss
+                ? `적 ${enemyDisplayName}의 참기 방출!\n하지만 상대에게 빗나갔다!`
+                : `적 ${enemyDisplayName}(은)는 참아낸 데미지를 방출했다! 50 데미지!`
+            }
+          ] : (moveKey === "bide") ? [
+            {
+              actor: "enemy",
+              moveKey: "bide",
+              moveName: "참기",
+              damage: 50,
+              isHit: isHit,
+              isTurn1Launch: false,
+              isSuperEffective: false,
+              typeMod: 1.0,
+              playerHpAfter: isMiss ? 150 : 100,
+              enemyHpAfter: 125,
+              effectiveness: 1.0,
+              log: isMiss
+                ? `적 ${enemyDisplayName}의 참기 방출!\n하지만 상대에게 빗나갔다!`
+                : `적 ${enemyDisplayName}(은)는 참아낸 데미지를 방출했다! 50 데미지!`
+            },
+            ...(actMode === "single" ? [] : [{
+              actor: "player",
+              moveKey: "tackle",
+              moveName: "몸통박치기",
+              damage: 25,
+              isHit: true,
+              isSuperEffective: false,
+              typeMod: 1.0,
+              playerHpAfter: isMiss ? 150 : 100,
+              enemyHpAfter: 100,
+              effectiveness: 1.0,
+              log: `아군 ${playerDisplayName}의 몸통박치기! 25 데미지!`
+            }])
+          ] : (moveKey === "metronome") ? (
+            metronomeOnly ? [
+              {
+                actor: "enemy",
+                moveKey: "metronome",
+                moveName: "손가락흔들기",
+                copiedMoveKey: "none",
+                damage: 0,
+                isHit: true,
+                playerHpAfter: 150,
+                enemyHpAfter: 150,
+                effectiveness: 1.0,
+                log: `적 ${enemyDisplayName}의 손가락흔들기!\n손가락을 흔들어 집중하고 있다!`
+              }
+            ] : [
+              {
+                actor: "enemy",
+                moveKey: "metronome",
+                moveName: "손가락흔들기",
+                copiedMoveKey: metronomeSubKey,
+                damage: actualDamage,
+                isHit: isHit,
+                isSuperEffective: false,
+                typeMod: 1.0,
+                playerHpAfter: isMiss ? 150 : act1EnemyHpAfter,
+                enemyHpAfter: 150,
+                effectiveness: 1.0,
+                log: isMiss
+                  ? `적 ${enemyDisplayName}의 손가락흔들기!\n하지만 상대에게 빗나갔다!`
+                  : `적 ${enemyDisplayName}의 손가락흔들기!\n손가락을 흔들어 ${metronomeSubKo}(이)가 튀어나왔다!\n${actualDamage} 데미지!`
+              },
+              ...(actMode === "single" ? [] : [{
+                actor: "player",
+                moveKey: "tackle",
+                moveName: "몸통박치기",
+                damage: 25,
+                isHit: true,
+                isSuperEffective: false,
+                typeMod: 1.0,
+                playerHpAfter: isMiss ? 150 : act1EnemyHpAfter,
+                enemyHpAfter: 125,
+                effectiveness: 1.0,
+                log: `아군 ${playerDisplayName}의 몸통박치기! 25 데미지!`
+              }])
+            ]
+          ) : (moveKey === "mimic" || moveKey === "copycat") ? (
+            actMode === "single" ? [
+              {
+                actor: "enemy",
+                moveKey: "mimic",
+                moveName: "흉내쟁이",
+                copiedMoveKey: "tackle",
+                damage: 35,
+                isHit: isHit,
+                isSuperEffective: false,
+                typeMod: 1.0,
+                playerHpAfter: isMiss ? 150 : Math.max(0, 150 - 35),
+                enemyHpAfter: 150,
+                effectiveness: 1.0,
+                log: isMiss
+                  ? `적 ${enemyDisplayName}의 흉내쟁이!\n하지만 상대에게 빗나갔다!`
+                  : `적 ${enemyDisplayName}의 흉내쟁이!\n아군 ${playerDisplayName}의 몸통박치기(을)를 따라했다!\n35 데미지!`
+              }
+            ] : [
+              {
+                actor: "player",
+                moveKey: "tackle",
+                moveName: "몸통박치기",
+                damage: 25,
+                isHit: true,
+                isSuperEffective: false,
+                typeMod: 1.0,
+                playerHpAfter: 150,
+                enemyHpAfter: 125,
+                effectiveness: 1.0,
+                log: `아군 ${playerDisplayName}의 몸통박치기! 25 데미지!`
+              },
+              {
+                actor: "enemy",
+                moveKey: "mimic",
+                moveName: "흉내쟁이",
+                copiedMoveKey: "tackle",
+                damage: 35,
+                isHit: isHit,
+                isSuperEffective: false,
+                typeMod: 1.0,
+                playerHpAfter: isMiss ? 150 : Math.max(0, 150 - 35),
+                enemyHpAfter: 125,
+                effectiveness: 1.0,
+                log: isMiss
+                  ? `적 ${enemyDisplayName}의 흉내쟁이!\n하지만 상대에게 빗나갔다!`
+                  : `적 ${enemyDisplayName}의 흉내쟁이!\n아군 ${playerDisplayName}의 몸통박치기(을)를 따라했다!\n35 데미지!`
+              }
+            ]
+          ) : (moveKey === "mirror-move") ? (
+            actMode === "single" ? [
+              {
+                actor: "enemy",
+                moveKey: "mirror-move",
+                moveName: "따라하기",
+                copiedMoveKey: mirrorSubKey,
+                damage: mirrorIsStatus ? 0 : actualDamage,
+                isHit: isHit,
+                isSuperEffective: isSuper,
+                typeMod: typeMod,
+                playerHpAfter: isMiss || mirrorIsStatus ? 150 : Math.max(0, 150 - actualDamage),
+                enemyHpAfter: 150,
+                effectiveness: typeMod,
+                log: isMiss
+                  ? `적 ${enemyDisplayName}의 따라하기!\n하지만 상대에게 빗나갔다!`
+                  : (mirrorIsStatus
+                    ? `적 ${enemyDisplayName}의 따라하기!\n아군 ${playerDisplayName}의 ${mirrorSubKo}(을)를 흉내 냈다!`
+                    : `적 ${enemyDisplayName}의 따라하기!\n아군 ${playerDisplayName}의 ${mirrorSubKo}(을)를 흉내 냈다!\n${actualDamage} 데미지!`)
+              }
+            ] : [
+              {
+                actor: "player",
+                moveKey: mirrorSubKey,
+                moveName: mirrorSubKo,
+                damage: 25,
+                isHit: true,
+                isSuperEffective: false,
+                typeMod: 1.0,
+                playerHpAfter: 150,
+                enemyHpAfter: 125,
+                effectiveness: 1.0,
+                log: `아군 ${playerDisplayName}의 ${mirrorSubKo}! 25 데미지!`
+              },
+              {
+                actor: "enemy",
+                moveKey: "mirror-move",
+                moveName: "따라하기",
+                copiedMoveKey: mirrorSubKey,
+                damage: mirrorIsStatus ? 0 : actualDamage,
+                isHit: isHit,
+                isSuperEffective: isSuper,
+                typeMod: typeMod,
+                playerHpAfter: isMiss || mirrorIsStatus ? 150 : Math.max(0, 150 - actualDamage),
+                enemyHpAfter: 125,
+                effectiveness: typeMod,
+                log: isMiss
+                  ? `적 ${enemyDisplayName}의 따라하기!\n하지만 상대에게 빗나갔다!`
+                  : (mirrorIsStatus
+                    ? `적 ${enemyDisplayName}의 따라하기!\n아군 ${playerDisplayName}의 ${mirrorSubKo}(을)를 흉내 냈다!`
+                    : `적 ${enemyDisplayName}의 따라하기!\n아군 ${playerDisplayName}의 ${mirrorSubKo}(을)를 흉내 냈다!\n${actualDamage} 데미지!`)
+              }
+            ]
+          ) : [
+            {
+              actor: "enemy",
+              moveKey: moveKey,
+              moveName: moveKo,
+              damage: actualDamage,
+              isHit: isHit,
+              isSuperEffective: false,
+              typeMod: 1.0,
+              statChanges: eStatChanges,
+              playerHpAfter: customPlayerHp !== undefined ? Math.max(0, customPlayerHp - actualDamage) : ((isOHKO && !isMiss) ? 0 : Math.max(0, 150 - actualDamage)),
+              enemyHpAfter: initEnemyHp,
+              effectiveness: 1.0,
+              log: isMiss
+                ? `적 ${enemyDisplayName}의 ${moveKo}!\n하지만 상대에게 빗나갔다!`
+                : (isOHKO
+                  ? `적 ${enemyDisplayName}의 ${moveKo}!\n일격필살! 아군 ${playerDisplayName}(은)는 쓰러졌다!`
+                  : `적 ${enemyDisplayName}의 ${moveKo}! ${actualDamage} 데미지!`)
+            }
+          ]
+        ) : (moveKey === "fly" && flyPhase === "1") ? [
           {
             actor: "player",
             moveKey: "fly",
@@ -674,7 +1890,324 @@ const server = http.createServer(async (req, res) => {
             effectiveness: 1.0,
             log: `적 ${enemyDisplayName}의 몸통박치기! 20 데미지!`
           }
-        ] : (moveKey === "perk-hug") ? [
+        ] : (moveKey === "dig" && flyPhase === "1") ? [
+          {
+            actor: "player",
+            moveKey: "dig",
+            moveName: "구멍파기",
+            damage: 0,
+            isHit: true,
+            isTurn1Launch: true,
+            chargingMove: "dig",
+            playerHpAfter: 150,
+            enemyHpAfter: 150,
+            effectiveness: 1.0,
+            log: `아군 ${playerDisplayName}(은)는 땅속으로 파고들었다!`
+          },
+          ...(actMode === "single" ? [] : [{
+            actor: "enemy",
+            moveKey: "tackle",
+            moveName: "몸통박치기",
+            damage: 0,
+            isHit: false,
+            playerHpAfter: 150,
+            enemyHpAfter: 150,
+            effectiveness: 1.0,
+            log: `적 ${enemyDisplayName}의 몸통박치기!\n하지만 상대에게 닿지 않았다!`
+          }])
+        ] : (moveKey === "dig" && flyPhase === "full") ? [
+          {
+            actor: "player",
+            moveKey: "dig",
+            moveName: "구멍파기",
+            damage: 0,
+            isHit: true,
+            isTurn1Launch: true,
+            chargingMove: "dig",
+            playerHpAfter: 150,
+            enemyHpAfter: 150,
+            effectiveness: 1.0,
+            log: `아군 ${playerDisplayName}(은)는 땅속으로 파고들었다!`
+          },
+          {
+            actor: "player",
+            moveKey: "dig",
+            moveName: "구멍파기",
+            damage: actualDamage,
+            isHit: isHit,
+            isTurn1Launch: false,
+            isSuperEffective: isSuper,
+            typeMod: typeMod,
+            playerHpAfter: 150,
+            enemyHpAfter: isMiss ? 150 : (isSuper ? 80 : 115),
+            effectiveness: typeMod,
+            log: isMiss
+              ? `아군 ${playerDisplayName}의 구멍파기!\n하지만 상대에게 빗나갔다!`
+              : (isSuper
+                ? `아군 ${playerDisplayName}의 구멍파기! 효과가 굉장했다! ${actualDamage} 데미지!`
+                : `아군 ${playerDisplayName}의 구멍파기! ${actualDamage} 데미지!`)
+          }
+        ] : (moveKey === "dig") ? [
+          {
+            actor: "player",
+            moveKey: "dig",
+            moveName: "구멍파기",
+            damage: actualDamage,
+            isHit: isHit,
+            isTurn1Launch: false,
+            isSuperEffective: isSuper,
+            typeMod: typeMod,
+            playerHpAfter: 150,
+            enemyHpAfter: isMiss ? 150 : (isSuper ? 80 : 115),
+            effectiveness: typeMod,
+            log: isMiss
+              ? `아군 ${playerDisplayName}의 구멍파기!\n하지만 상대에게 빗나갔다!`
+              : (isSuper
+                ? `아군 ${playerDisplayName}의 구멍파기! 효과가 굉장했다! ${actualDamage} 데미지!`
+                : `아군 ${playerDisplayName}의 구멍파기! ${actualDamage} 데미지!`)
+          },
+          ...(actMode === "single" ? [] : [{
+            actor: "enemy",
+            moveKey: "tackle",
+            moveName: "몸통박치기",
+            damage: 25,
+            isHit: true,
+            isSuperEffective: false,
+            typeMod: 1.0,
+            playerHpAfter: 125,
+            enemyHpAfter: isMiss ? 150 : (isSuper ? 80 : 115),
+            effectiveness: 1.0,
+            log: `적 ${enemyDisplayName}의 몸통박치기! 25 데미지!`
+          }])
+        ] : ((moveKey === "bide" && flyPhase === "1") || moveKey === "bide-charge") ? [
+          {
+            actor: "player",
+            moveKey: "bide-charge",
+            moveName: "참기 (참기)",
+            damage: 0,
+            isHit: true,
+            isTurn1Launch: true,
+            chargingMove: "bide",
+            playerHpAfter: 150,
+            enemyHpAfter: 150,
+            effectiveness: 1.0,
+            log: `아군 ${playerDisplayName}(은)는 참기를 시작했다!`
+          }
+        ] : (moveKey === "bide" && flyPhase === "full") ? [
+          {
+            actor: "player",
+            moveKey: "bide",
+            moveName: "참기",
+            damage: 0,
+            isHit: true,
+            isTurn1Launch: true,
+            chargingMove: "bide",
+            playerHpAfter: 150,
+            enemyHpAfter: 150,
+            effectiveness: 1.0,
+            log: `아군 ${playerDisplayName}(은)는 참기를 시작했다!`
+          },
+          {
+            actor: "enemy",
+            moveKey: "tackle",
+            moveName: "몸통박치기",
+            damage: 25,
+            isHit: true,
+            playerHpAfter: 125,
+            enemyHpAfter: 150,
+            effectiveness: 1.0,
+            log: `적 ${enemyDisplayName}의 몸통박치기! 25 데미지!`
+          },
+          {
+            actor: "player",
+            moveKey: "bide",
+            moveName: "참기",
+            damage: 50,
+            isHit: isHit,
+            isTurn1Launch: false,
+            isSuperEffective: false,
+            typeMod: 1.0,
+            playerHpAfter: 125,
+            enemyHpAfter: isMiss ? 150 : 100,
+            effectiveness: 1.0,
+            log: isMiss
+              ? `아군 ${playerDisplayName}의 참기 방출!\n하지만 상대에게 빗나갔다!`
+              : `아군 ${playerDisplayName}(은)는 참아낸 데미지를 방출했다! 50 데미지!`
+          }
+        ] : (moveKey === "bide") ? [
+          {
+            actor: "player",
+            moveKey: "bide",
+            moveName: "참기",
+            damage: 50,
+            isHit: isHit,
+            isTurn1Launch: false,
+            isSuperEffective: false,
+            typeMod: 1.0,
+            playerHpAfter: 125,
+            enemyHpAfter: isMiss ? 150 : 100,
+            effectiveness: 1.0,
+            log: isMiss
+              ? `아군 ${playerDisplayName}의 참기 방출!\n하지만 상대에게 빗나갔다!`
+              : `아군 ${playerDisplayName}(은)는 참아낸 데미지를 방출했다! 50 데미지!`
+          },
+          ...(actMode === "single" ? [] : [{
+            actor: "enemy",
+            moveKey: "tackle",
+            moveName: "몸통박치기",
+            damage: 20,
+            isHit: true,
+            isSuperEffective: false,
+            typeMod: 1.0,
+            playerHpAfter: 105,
+            enemyHpAfter: isMiss ? 150 : 100,
+            effectiveness: 1.0,
+            log: `적 ${enemyDisplayName}의 몸통박치기! 20 데미지!`
+          }])
+        ] : (moveKey === "metronome") ? (
+          metronomeOnly ? [
+            {
+              actor: "player",
+              moveKey: "metronome",
+              moveName: "손가락흔들기",
+              copiedMoveKey: "none",
+              damage: 0,
+              isHit: true,
+              playerHpAfter: 150,
+              enemyHpAfter: 150,
+              effectiveness: 1.0,
+              log: `아군 ${playerDisplayName}의 손가락흔들기!\n손가락을 흔들어 집중하고 있다!`
+            }
+          ] : [
+            {
+              actor: "player",
+              moveKey: "metronome",
+              moveName: "손가락흔들기",
+              copiedMoveKey: metronomeSubKey,
+              damage: actualDamage,
+              isHit: isHit,
+              isSuperEffective: isSuper,
+              typeMod: typeMod,
+              playerHpAfter: 150,
+              enemyHpAfter: isMiss ? 150 : act1EnemyHpAfter,
+              effectiveness: typeMod,
+              log: isMiss
+                ? `아군 ${playerDisplayName}의 손가락흔들기!\n손가락을 흔들어 ${metronomeSubKo}(이)가 튀어나왔다!\n하지만 상대에게 빗나갔다!`
+                : `아군 ${playerDisplayName}의 손가락흔들기!\n손가락을 흔들어 ${metronomeSubKo}(이)가 튀어나왔다!\n${actualDamage} 데미지!`
+            },
+            ...(actMode === "single" ? [] : [{
+              actor: "enemy",
+              moveKey: "tackle",
+              moveName: "몸통박치기",
+              damage: 25,
+              isHit: true,
+              isSuperEffective: false,
+              typeMod: 1.0,
+              playerHpAfter: 125,
+              enemyHpAfter: isMiss ? 150 : act1EnemyHpAfter,
+              effectiveness: 1.0,
+              log: `적 ${enemyDisplayName}의 몸통박치기! 25 데미지!`
+            }])
+          ]
+        ) : (moveKey === "mimic" || moveKey === "copycat") ? (
+          actMode === "single" ? [
+            {
+              actor: "player",
+              moveKey: "mimic",
+              moveName: "흉내쟁이",
+              copiedMoveKey: "tackle",
+              damage: 35,
+              isHit: isHit,
+              isSuperEffective: isSuper,
+              typeMod: typeMod,
+              playerHpAfter: 150,
+              enemyHpAfter: isMiss ? 150 : Math.max(0, 150 - 35),
+              effectiveness: 1.0,
+              log: isMiss
+                ? `아군 ${playerDisplayName}의 흉내쟁이!\n하지만 상대에게 빗나갔다!`
+                : `아군 ${playerDisplayName}의 흉내쟁이!\n상대 ${enemyDisplayName}의 몸통박치기(을)를 따라했다!\n35 데미지!`,
+            }
+          ] : [
+            {
+              actor: "enemy",
+              moveKey: "tackle",
+              moveName: "몸통박치기",
+              damage: 25,
+              isHit: true,
+              isSuperEffective: false,
+              typeMod: 1.0,
+              playerHpAfter: 125,
+              enemyHpAfter: 150,
+              effectiveness: 1.0,
+              log: `적 ${enemyDisplayName}의 몸통박치기! 25 데미지!`
+            },
+            {
+              actor: "player",
+              moveKey: "mimic",
+              moveName: "흉내쟁이",
+              copiedMoveKey: "tackle",
+              damage: 35,
+              isHit: isHit,
+              isSuperEffective: isSuper,
+              typeMod: typeMod,
+              playerHpAfter: 125,
+              enemyHpAfter: isMiss ? 150 : Math.max(0, 150 - 35),
+              effectiveness: 1.0,
+              log: isMiss
+                ? `아군 ${playerDisplayName}의 흉내쟁이!\n하지만 상대에게 빗나갔다!`
+                : `아군 ${playerDisplayName}의 흉내쟁이!\n상대 ${enemyDisplayName}의 몸통박치기(을)를 따라했다!\n35 데미지!`,
+            }
+          ]
+        ) : (moveKey === "mirror-move") ? (
+          actMode === "single" ? [
+            {
+              actor: "player",
+              moveKey: "mirror-move",
+              moveName: "따라하기",
+              copiedMoveKey: mirrorSubKey,
+              damage: actualDamage,
+              isHit: isHit,
+              isSuperEffective: isSuper,
+              typeMod: typeMod,
+              playerHpAfter: 150,
+              enemyHpAfter: isMiss ? 150 : Math.max(0, 150 - actualDamage),
+              effectiveness: typeMod,
+              log: isMiss
+                ? `아군 ${playerDisplayName}의 따라하기!\n하지만 상대에게 빗나갔다!`
+                : `아군 ${playerDisplayName}의 따라하기!\n상대 ${enemyDisplayName}의 ${mirrorSubKo}(을)를 흉내 냈다!\n${actualDamage} 데미지!`,
+            }
+          ] : [
+            {
+              actor: "enemy",
+              moveKey: mirrorSubKey,
+              moveName: mirrorSubKo,
+              damage: 45,
+              isHit: true,
+              isSuperEffective: true,
+              typeMod: 2.0,
+              playerHpAfter: 105,
+              enemyHpAfter: 150,
+              effectiveness: 2.0,
+              log: `적 ${enemyDisplayName}의 ${mirrorSubKo}! 효과가 굉장했다! 45 데미지!`
+            },
+            {
+              actor: "player",
+              moveKey: "mirror-move",
+              moveName: "따라하기",
+              copiedMoveKey: mirrorSubKey,
+              damage: actualDamage,
+              isHit: isHit,
+              isSuperEffective: isSuper,
+              typeMod: typeMod,
+              playerHpAfter: 105,
+              enemyHpAfter: isMiss ? 150 : Math.max(0, 150 - actualDamage),
+              effectiveness: typeMod,
+              log: isMiss
+                ? `아군 ${playerDisplayName}의 따라하기!\n하지만 상대에게 빗나갔다!`
+                : `아군 ${playerDisplayName}의 따라하기!\n상대 ${enemyDisplayName}의 ${mirrorSubKo}(을)를 흉내 냈다!\n${actualDamage} 데미지!`
+            }
+          ]
+        ) : (moveKey === "perk-hug") ? [
           {
             actor: "player",
             moveKey: "perk-hug",
@@ -688,6 +2221,39 @@ const server = http.createServer(async (req, res) => {
             effectiveness: 1.0,
             log: `[PERK:hug] ${playerDisplayName}(은)는 당신을 포옹하고 돌아갔다.`
           }
+        ] : (moveKey === "self-destruct") ? [
+          {
+            actor: "player",
+            moveKey: "self-destruct",
+            moveName: "자폭",
+            damage: isMiss ? 0 : Math.round(95 * typeMod),
+            isHit: isHit,
+            isSuperEffective: isSuper,
+            typeMod: typeMod,
+            playerHpAfter: 0,
+            enemyHpAfter: isMiss ? 150 : Math.max(0, 150 - Math.round(95 * typeMod)),
+            effectiveness: typeMod,
+            log: isMiss
+              ? `아군 ${playerDisplayName}의 자폭!\n하지만 상대에게 빗나갔다!\n${playerDisplayName}(은)는 폭발하여 스스로 쓰러졌다!`
+              : `아군 ${playerDisplayName}의 자폭! ${Math.round(95 * typeMod)} 데미지!\n${playerDisplayName}(은)는 폭발하여 스스로 쓰러졌다!`
+          },
+          ...(actMode === "dual" ? [
+            {
+              actor: "enemy",
+              moveKey: "self-destruct",
+              moveName: "자폭",
+              damage: isMiss ? 0 : Math.round(95 * typeMod),
+              isHit: isHit,
+              isSuperEffective: isSuper,
+              typeMod: typeMod,
+              playerHpAfter: 0,
+              enemyHpAfter: 0,
+              effectiveness: typeMod,
+              log: isMiss
+                ? `적 ${enemyDisplayName}의 자폭!\n하지만 상대에게 빗나갔다!\n${enemyDisplayName}(은)는 폭발하여 스스로 쓰러졌다!`
+                : `적 ${enemyDisplayName}의 자폭! ${Math.round(95 * typeMod)} 데미지!\n${enemyDisplayName}(은)는 폭발하여 스스로 쓰러졌다!`
+            }
+          ] : [])
         ] : (isOHKO && !isMiss) ? [
           {
             actor: "player",
@@ -759,7 +2325,7 @@ const server = http.createServer(async (req, res) => {
             isSuperEffective: isSuper,
             typeMod: typeMod,
             statChanges: pStatChanges,
-            playerHpAfter: (moveKey === "take-down" || moveKey === "double-edge") ? 135 : 150,
+            playerHpAfter: customPlayerHp !== undefined ? (moveKey === "take-down" || moveKey === "double-edge" ? Math.max(0, customPlayerHp - Math.round(actualDamage * 0.25)) : customPlayerHp) : ((moveKey === "take-down" || moveKey === "double-edge") ? 135 : 150),
             enemyHpAfter: act1EnemyHpAfter,
             effectiveness: typeMod,
             log: isMiss
@@ -812,9 +2378,21 @@ const server = http.createServer(async (req, res) => {
         moveName: isEnemyCaster ? `${moveKo} (상대 시전)` : moveKo,
         phases: gifResult.phases || [],
         frames: gifResult.frames || [],
+        cachedAt: Date.now(),
+        mtime: getMoveLatestMtime(rawMoveKey),
       };
 
       moveGifMemoryCache.set(cacheKey, responseData);
+
+      if (url.searchParams.get("format") === "gif" || (req.headers.accept && req.headers.accept.includes("image/gif"))) {
+        res.writeHead(200, {
+          "Content-Type": "image/gif",
+          "Content-Length": gifResult.buffer.length,
+          "Cache-Control": "no-cache"
+        });
+        res.end(gifResult.buffer);
+        return;
+      }
 
       res.writeHead(200, {
         "Content-Type": "application/json; charset=utf-8",

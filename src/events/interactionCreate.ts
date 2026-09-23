@@ -19,6 +19,7 @@ import { MOVES_DATA, getMoveData, getMoveKey } from "../data/movesKo.js";
 import { MOVES_EN_DESC } from "../data/movesEn.js";
 import { saveService, PartyPokemon } from "../services/saveService.js";
 import { battleService, BattleState } from "../services/battleService.js";
+import { battlePreloadService } from "../services/battlePreloadService.js";
 import { getPokemonByQuery, getPokemonByDexNumber, getPokemonPage, getAbilityKoreanName, getAbilityDetail, ABILITY_DETAILED_DESC_KO, ABILITY_DETAILED_DESC_EN, KOREAN_POKEMON_DICT } from "../services/pokeApiService.js";
 import { STARTER_DATABASE, GENERATION_INFO, getStartersByGen, getStarterByDexNumber, DEFAULT_MAX_COST, StarterEntry } from "../data/starterCosts.js";
 import { getUserStarters, getUserStarter, unlockPassiveAbility, reduceStarterCost } from "../services/starterService.js";
@@ -265,12 +266,17 @@ export function scheduleBattleButtonUnlock(
     try {
       // ONLY unlock buttons on Discord! Do NOT convert GIF to static PNG!
       const targetMsg = interaction.message || await interaction.fetchReply?.().catch(() => null);
+      let unlocked = false;
+      if (interaction.editReply) {
+        try {
+          await interaction.editReply({ components: enabledComponents });
+          unlocked = true;
+        } catch {}
+      }
+      if (!unlocked && targetMsg?.edit) {
+        await targetMsg.edit({ components: enabledComponents }).catch(() => null);
+      }
       if (targetMsg) {
-        if (targetMsg.edit) {
-          await targetMsg.edit({ components: enabledComponents }).catch(() => null);
-        } else if (interaction.editReply) {
-          await interaction.editReply({ components: enabledComponents }).catch(() => null);
-        }
         // Clear used perk reactions from message once turn finishes
         clearAllPerkReactions(targetMsg, interaction.client?.user).catch(() => null);
         ensureClickItReaction(targetMsg, interaction.client?.user).catch(() => null);
@@ -332,8 +338,17 @@ export async function renderBattleMessageData(
   }
 
   const attachment = new AttachmentBuilder(imageBuffer, { name: fileName });
-  const components: ActionRowBuilder<ButtonBuilder>[] = [];
+  const components = buildBattleComponents(battle, userId, slotId, isKo);
+  return { embeds: [], files: [attachment], attachments: [], components, motionDurationMs };
+}
 
+export function buildBattleComponents(
+  battle: BattleState,
+  userId: string,
+  slotId: number,
+  isKo: boolean
+): ActionRowBuilder<ButtonBuilder>[] {
+  const components: ActionRowBuilder<ButtonBuilder>[] = [];
   const combatMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex] || battle.playerParty[0];
   const playerMon = combatMon;
 
@@ -549,7 +564,7 @@ export async function renderBattleMessageData(
     components.push(mainRow2);
   }
 
-  return { embeds: [], files: [attachment], attachments: [], components, motionDurationMs };
+  return components;
 }
 
 export function renderSettingsMessageData(userId: string) {
@@ -2193,6 +2208,23 @@ export const interactionCreateEvent: BotEvent = {
       return;
     }
 
+    // 1-B. Autocomplete Interactions
+    if (interaction.isAutocomplete()) {
+      const client = interaction.client as ExtendedClient;
+      const command = client.commands.get(interaction.commandName);
+      if (command && command.autocomplete) {
+        try {
+          await command.autocomplete(interaction);
+        } catch (error: any) {
+          if (error?.code === 10062 || error?.code === 40060) {
+            return;
+          }
+          console.error(`[ERROR] Autocomplete error for command ${interaction.commandName}:`, error);
+        }
+      }
+      return;
+    }
+
     // 2. Modal Submits
     if (interaction.isModalSubmit()) {
       // 2-A. Starter Pokemon Search Modal Submit (🔍)
@@ -2386,6 +2418,69 @@ export const interactionCreateEvent: BotEvent = {
       }
 
       const customId = interaction.customId;
+
+      // 3-Showcase. /battleact 3v3 Showcase Match Interactive Buttons
+      if (customId.startsWith("battleact_")) {
+        const parts = customId.split("_");
+        // Format: battleact_auto_${userId}, battleact_reset_${userId}, battleact_move_${userId}_${moveKey}
+        const action = parts[1];
+        const sessionUserId = parts[2];
+        const moveKey = parts[3];
+
+        if (sessionUserId && sessionUserId !== interaction.user.id) {
+          await interaction.reply({
+            content: "❌ 본인의 쇼케이스 배틀만 조작할 수 있습니다. `/battleact`로 새 배틀을 시작해주세요.",
+            ephemeral: true,
+          });
+          return;
+        }
+
+        // Concurrency guard: Drop rapid/spam clicks while showcase turn is already generating!
+        if (!acquireBattleLock(interaction.user.id)) {
+          await interaction.deferUpdate().catch(() => null);
+          return;
+        }
+
+        try {
+          // Immediately disable buttons on the current message to prevent spam and give visual feedback
+          if (interaction.message?.components) {
+            const disabled = disableComponentsList(interaction.message.components);
+            await interaction.update({ components: disabled }).catch(async () => {
+              await interaction.deferUpdate().catch(() => null);
+            });
+          } else {
+            await interaction.deferUpdate().catch(() => null);
+          }
+
+          const {
+            getOrCreateShowcaseSession,
+            executeShowcaseTurn,
+            renderShowcaseInitialEntry,
+            buildShowcaseMessageData,
+          } = await import("../battle/showcaseEngine.js");
+
+          if (action === "reset") {
+            const session = getOrCreateShowcaseSession(interaction.user.id, true);
+            const { buffer, commentary } = await renderShowcaseInitialEntry(session);
+            const msgData = buildShowcaseMessageData(session, interaction.user.id, commentary, buffer);
+            await safeInteractionUpdate(interaction, msgData).catch(() => null);
+            return;
+          }
+
+          const session = getOrCreateShowcaseSession(interaction.user.id);
+          const { buffer, turnCommentary } = await executeShowcaseTurn(session);
+          const msgData = buildShowcaseMessageData(session, interaction.user.id, turnCommentary, buffer);
+          await safeInteractionUpdate(interaction, msgData).catch(() => null);
+          return;
+        } catch (err: any) {
+          if (err?.code !== 40060 && err?.code !== 10062 && err?.code !== "InteractionNotReplied") {
+            console.error("[ERROR] Error during showcase turn:", err);
+          }
+        } finally {
+          releaseBattleLock(interaction.user.id);
+        }
+      }
+
       const parts = customId.split("_");
       const ownerId = parts[parts.length - 1];
 
@@ -3719,6 +3814,8 @@ export const interactionCreateEvent: BotEvent = {
           } else {
             await interaction.update(battleData);
           }
+          const currentBattle = battleService.getOrCreateBattle(interaction.user.id, slotNum);
+          battlePreloadService.schedulePreload(interaction.user.id, slotNum, currentBattle, profile.language);
         }
         return;
       }
@@ -3835,9 +3932,32 @@ export const interactionCreateEvent: BotEvent = {
           // 1회 사용 완료 -> 이전 턴의 특수 효과 알림 메시지 삭제!
           deleteActivePerkBannerMessage(`${interaction.user.id}_${slotId}`).catch(() => null);
           const profile = saveService.getProfile(interaction.user.id);
+          const battle = battleService.getOrCreateBattle(interaction.user.id, slotId);
+          const currentTurn = battle.turnCount;
+
           try {
-            battleService.executePlayerMove(interaction.user.id, slotId, moveKey, profile.language);
-            const battleData = await renderBattleMessageData(interaction.user.id, slotId);
+            // Check Preload Cache Hit or In-flight Await
+            let preloaded = battlePreloadService.consumeMovePreload(interaction.user.id, slotId, moveKey, currentTurn);
+            if (!preloaded) {
+              preloaded = await battlePreloadService.awaitMovePreload(interaction.user.id, slotId, moveKey, currentTurn, 3500);
+            }
+
+            let battleData;
+            if (preloaded) {
+              const attachment = new AttachmentBuilder(preloaded.imageBuffer, { name: preloaded.fileName });
+              battleData = {
+                embeds: [],
+                files: [attachment],
+                attachments: [],
+                components: preloaded.components,
+                motionDurationMs: preloaded.motionDurationMs,
+              };
+            } else {
+              battlePreloadService.invalidate(interaction.user.id, slotId);
+              battleService.executePlayerMove(interaction.user.id, slotId, moveKey, profile.language);
+              battleData = await renderBattleMessageData(interaction.user.id, slotId);
+            }
+
             if (battleData.motionDurationMs && battleData.motionDurationMs > 0) {
               const disabledComponents = disableComponentsList(battleData.components);
               await safeInteractionUpdate(interaction, { ...battleData, components: disabledComponents });
@@ -3845,6 +3965,10 @@ export const interactionCreateEvent: BotEvent = {
             } else {
               await safeInteractionUpdate(interaction, battleData);
             }
+
+            // Immediately schedule background preload for the next turn or wave!
+            const updatedBattle = battleService.getOrCreateBattle(interaction.user.id, slotId);
+            battlePreloadService.schedulePreload(interaction.user.id, slotId, updatedBattle, profile.language);
           } catch (moveErr) {
             console.error("[BATTLE MOVE ERROR - AUTO RECOVERY]", moveErr);
             // ⚠️ VICTORY/DEFEAT 상태는 절대 MAIN으로 되돌리지 않는다!
@@ -3873,6 +3997,7 @@ export const interactionCreateEvent: BotEvent = {
           const ballType = parts[2] || "poke-ball";
           const slotId = parseInt(parts[3], 10) || 1;
           const profile = saveService.getProfile(interaction.user.id);
+          battlePreloadService.invalidate(interaction.user.id, slotId);
           battleService.attemptCatch(interaction.user.id, slotId, ballType, profile.language);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId);
           if (battleData.motionDurationMs && battleData.motionDurationMs > 0) {
@@ -3882,6 +4007,8 @@ export const interactionCreateEvent: BotEvent = {
           } else {
             await safeInteractionUpdate(interaction, battleData);
           }
+          const updatedBattle = battleService.getOrCreateBattle(interaction.user.id, slotId);
+          battlePreloadService.schedulePreload(interaction.user.id, slotId, updatedBattle, profile.language);
           return;
         }
 
@@ -3896,6 +4023,7 @@ export const interactionCreateEvent: BotEvent = {
           const targetIdx = parseInt(parts[2], 10) || 0;
           const slotId = parseInt(parts[3], 10) || 1;
           const profile = saveService.getProfile(interaction.user.id);
+          battlePreloadService.invalidate(interaction.user.id, slotId);
           battleService.switchPlayerPokemon(interaction.user.id, slotId, targetIdx, profile.language);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId);
           if (battleData.motionDurationMs && battleData.motionDurationMs > 0) {
@@ -3905,6 +4033,8 @@ export const interactionCreateEvent: BotEvent = {
           } else {
             await safeInteractionUpdate(interaction, battleData);
           }
+          const updatedBattle = battleService.getOrCreateBattle(interaction.user.id, slotId);
+          battlePreloadService.schedulePreload(interaction.user.id, slotId, updatedBattle, profile.language);
           return;
         }
 
@@ -3921,8 +4051,31 @@ export const interactionCreateEvent: BotEvent = {
             ensureClickItReaction(interaction.message, interaction.client?.user).catch(() => null);
           }
           const slotId = parseInt(parts[2], 10) || 1;
-          battleService.advanceToNextWave(interaction.user.id, slotId);
-          const battleData = await renderBattleMessageData(interaction.user.id, slotId, undefined, true);
+          const profile = saveService.getProfile(interaction.user.id);
+          const currentBattle = battleService.getOrCreateBattle(interaction.user.id, slotId);
+          const currentWave = currentBattle.wave;
+
+          let preloaded = battlePreloadService.consumeNextWavePreload(interaction.user.id, slotId, currentWave);
+          if (!preloaded) {
+            preloaded = await battlePreloadService.awaitNextWavePreload(interaction.user.id, slotId, currentWave, 3500);
+          }
+
+          let battleData;
+          if (preloaded) {
+            const attachment = new AttachmentBuilder(preloaded.imageBuffer, { name: preloaded.fileName });
+            battleData = {
+              embeds: [],
+              files: [attachment],
+              attachments: [],
+              components: preloaded.components,
+              motionDurationMs: preloaded.motionDurationMs,
+            };
+          } else {
+            battlePreloadService.invalidate(interaction.user.id, slotId);
+            battleService.advanceToNextWave(interaction.user.id, slotId);
+            battleData = await renderBattleMessageData(interaction.user.id, slotId, undefined, true);
+          }
+
           if (battleData.motionDurationMs && battleData.motionDurationMs > 0) {
             const disabledComponents = disableComponentsList(battleData.components);
             await safeInteractionUpdate(interaction, { ...battleData, components: disabledComponents });
@@ -3930,6 +4083,10 @@ export const interactionCreateEvent: BotEvent = {
           } else {
             await safeInteractionUpdate(interaction, battleData);
           }
+
+          // Immediately schedule background preload for turn 1 of the new wave!
+          const newBattle = battleService.getOrCreateBattle(interaction.user.id, slotId);
+          battlePreloadService.schedulePreload(interaction.user.id, slotId, newBattle, profile.language);
           return;
         }
 
@@ -3947,6 +4104,7 @@ export const interactionCreateEvent: BotEvent = {
           }
           const slotId = parseInt(parts[2], 10) || 1;
           const profile = saveService.getProfile(interaction.user.id);
+          battlePreloadService.invalidate(interaction.user.id, slotId);
           battleService.restartRunFromDefeat(interaction.user.id, slotId, profile.language);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId);
           if (battleData.motionDurationMs && battleData.motionDurationMs > 0) {
@@ -3956,6 +4114,8 @@ export const interactionCreateEvent: BotEvent = {
           } else {
             await safeInteractionUpdate(interaction, battleData);
           }
+          const retryBattle = battleService.getOrCreateBattle(interaction.user.id, slotId);
+          battlePreloadService.schedulePreload(interaction.user.id, slotId, retryBattle, profile.language);
           return;
         }
       } finally {
@@ -4037,7 +4197,7 @@ export const interactionCreateEvent: BotEvent = {
       }
     }
     } catch (err: any) {
-      if (err?.code === 40060 || err?.code === 10062) {
+      if (err?.code === 40060 || err?.code === 10062 || err?.code === "InteractionNotReplied") {
         // Ignored safe Discord race condition (e.g. user rapid double-click or token timeout)
         return;
       }
