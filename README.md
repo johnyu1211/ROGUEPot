@@ -1,5 +1,11 @@
 # 🎮 ROGUEPot (PokeRogue on Discord)
 
+> [!WARNING]
+> ### ⚠️ 현재 개발 진행 중 안내 (Under Active Development)
+> **본 프로젝트는 현재 활발히 개발 중인 단계로, 전체적인 시스템 및 배틀 상태가 완전하지 않습니다.**
+> - 일부 기능이 정상 작동하지 않거나 게임플레이 중 예기치 않은 오류가 발생할 수 있습니다.
+> - 안정적인 플레이보다는 기능 구현 및 테스트 목적으로 운영되고 있으니 참고 부탁드립니다.
+
 **ROGUEPot**은 [PokeRogue](https://github.com/pagefaultgames/pokerogue) 로그라이크 포켓몬 게임을 디스코드에서 직접 플레이할 수 있도록 제공하는 디스코드 게임 봇입니다.
 
 ---

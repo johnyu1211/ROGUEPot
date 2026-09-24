@@ -1,4 +1,4 @@
-﻿# Dependencies
+# Dependencies
 node_modules/
 .pnp
 .pnp.js
@@ -37,3 +37,12 @@ Thumbs.db
 
 data/*.sqlite
 data/*.sqlite-*
+
+# Temporary Dumps, Previews & Scratch Artifacts
+dump_frames/
+scratch/
+preview_*
+test_switch_*
+*.gif
+.antigravity/
+
