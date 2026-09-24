@@ -46,3 +46,7 @@ test_switch_*
 *.gif
 .antigravity/
 
+
+# AI Internal Docs & Reports
+MOVE_CREATION_GUIDE.md
+BATTLE_MOVES_AUDIT_REPORT.md
