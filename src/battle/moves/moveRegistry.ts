@@ -144,7 +144,7 @@ import { fireBlastMove } from "./definitions/126_fire_blast.js";
 import { waterfallMove } from "./definitions/127_waterfall.js";
 import { clampMove } from "./definitions/128_clamp.js";
 import { swiftMove } from "./definitions/129_swift.js";
-import { skullBashMove } from "./definitions/130_skull_bash.js";
+import { skullBashMove, skullBashChargeMove } from "./definitions/130_skull_bash.js";
 import { spikeCannonMove } from "./definitions/131_spike_cannon.js";
 import { constrictMove } from "./definitions/132_constrict.js";
 import { amnesiaMove } from "./definitions/133_amnesia.js";
@@ -523,6 +523,10 @@ export const MOVE_REGISTRY: Record<string, BattleMoveAnimation> = {
   "skullbash": skullBashMove,
   "130": skullBashMove,
   "로켓박치기": skullBashMove,
+  "skull-bash-charge": skullBashChargeMove,
+  "skullbash-charge": skullBashChargeMove,
+  "로켓박치기-충전": skullBashChargeMove,
+  "로켓박치기(충전)": skullBashChargeMove,
   "spike-cannon": spikeCannonMove,
   "spikecannon": spikeCannonMove,
   "131": spikeCannonMove,

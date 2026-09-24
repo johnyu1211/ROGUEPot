@@ -50,125 +50,197 @@ export const barrageMove: BattleMoveAnimation = {
         : (isHit ? { pOffset: { x: -x, y: -y } } : { pOffset: { x: 0, y: 0 } });
 
     return [
-      // 1. 1발째 투척 시작
+      // 1. 1개 구슬 소환 및 투척 준비 (와인드업)
       {
         ...baseFrame,
-        delay: 75,
+        delay: 80,
         ...cOff(6, -2),
         ...tOff(0, 0),
         showEffect: true,
         moveStep: 1,
-        phaseId: "barrage-1-throw",
-        phaseName: "1. 1발째 구슬 투척",
+        showLaunchOrb: true,
+        phaseId: "barrage-throw-ready",
+        phaseName: "1. 구슬 투척 준비",
       },
-      // 2. 1발째 포물선 비행
+
+      // 2. 1개 구슬 포물선 비행 (상승 구간)
       {
         ...baseFrame,
-        delay: 75,
+        delay: 80,
         ...cOff(8, -3),
         ...tOff(0, 0),
         showEffect: true,
         moveStep: 2,
-        phaseId: "barrage-1-fly",
-        phaseName: "2. 1발째 구슬 비행",
+        flyProgress: 0.30,
+        phaseId: "barrage-fly-rise",
+        phaseName: "2. 구슬 상공 고각 포물선 상승",
       },
 
-      // 3. 1발째 타격 & 2발째 투척
-      {
-        ...baseFrame,
-        delay: 85,
-        ...cOff(12, -4),
-        ...tOff(4, -1),
-        showEffect: true,
-        moveStep: 3,
-        phaseId: "barrage-2-throw",
-        phaseName: "3. 1발째 타격 & 2발째 투척",
-      },
-      // 4. 2발째 포물선 비행
-      {
-        ...baseFrame,
-        delay: 75,
-        ...cOff(14, -5),
-        ...tOff(0, 0),
-        showEffect: true,
-        moveStep: 4,
-        phaseId: "barrage-2-fly",
-        phaseName: "4. 2발째 구슬 비행",
-      },
-
-      // 5. 2발째 타격 & 3발째 투척
-      {
-        ...baseFrame,
-        delay: 85,
-        ...cOff(16, -6),
-        ...tOff(-4, 2),
-        showEffect: true,
-        moveStep: 5,
-        phaseId: "barrage-3-throw",
-        phaseName: "5. 2발째 타격 & 3발째 투척",
-      },
-      // 6. 3발째 포물선 비행
-      {
-        ...baseFrame,
-        delay: 75,
-        ...cOff(18, -6),
-        ...tOff(0, 0),
-        showEffect: true,
-        moveStep: 6,
-        phaseId: "barrage-3-fly",
-        phaseName: "6. 3발째 구슬 비행",
-      },
-
-      // 7. 3발째 타격 & 4발째 피니시 투척
-      {
-        ...baseFrame,
-        delay: 85,
-        ...cOff(20, -7),
-        ...tOff(5, -2),
-        showEffect: true,
-        moveStep: 7,
-        phaseId: "barrage-4-throw",
-        phaseName: "7. 3발째 타격 & 4발째 피니시 투척",
-      },
-      // 8. 4발째 피니시 고속 포물선 쇄도
+      // 3. 1개 구슬 포물선 비행 (정점 구간 - 상대 머리 위 상공)
       {
         ...baseFrame,
         delay: 80,
-        ...cOff(18, -6),
+        ...cOff(10, -3),
         ...tOff(0, 0),
         showEffect: true,
-        moveStep: 8,
-        phaseId: "barrage-4-fly",
-        phaseName: "8. 4발째 피니시 구슬 비행",
+        moveStep: 2,
+        flyProgress: 0.65,
+        phaseId: "barrage-fly-peak",
+        phaseName: "3. 상대 머리 위 상공 도달 (정점)",
       },
 
-      // 9. 4발째 피니시 파쇄 강타 (피격 플래시 & 넉백)
+      // 4. 머리 위 급강하 수직 낙하
       {
         ...baseFrame,
-        delay: 130,
-        ...cOff(12, -4),
-        ...tOff(14, -6),
+        delay: 70,
+        ...cOff(6, -1),
+        ...tOff(0, 0),
+        showEffect: true,
+        moveStep: 2,
+        flyProgress: 0.88,
+        phaseId: "barrage-fly-fall",
+        phaseName: "4. 머리 위 급강하 수직 낙하",
+      },
+
+      // 5. 머리 위 직격 타격 쿵! (1차 진동 시작 & 카메라 진동 & 구슬 유지)
+      {
+        ...baseFrame,
+        delay: 55,
+        ...cOff(2, 0),
+        ...tOff(0, 5),
+        cameraPan: isHit ? { x: 0, y: 3.5 } : undefined,
         showEffect: true,
         hitFlash: isHit,
+        moveStep: 3,
+        showOrbOnTarget: true,
+        orbAlpha: 1.0,
+        dustProgress: 0.25,
         enemyHp: isHit ? (a?.enemyHpAfter ?? enemyHp) : enemyHp,
         playerHp: isHit ? (a?.playerHpAfter ?? playerHp) : playerHp,
-        moveStep: 9,
-        phaseId: "barrage-finish-hit",
-        phaseName: "9. 4발째 피니시 파쇄 대격돌 (4연타 완료)",
+        phaseId: "barrage-impact-hit",
+        phaseName: "5. 머리 위 직격 타격 (1차 충격 & 쿵!)",
       },
 
-      // 10. 반동 복귀 완료
+      // 6. 충격 반동 진동 1 (위로 튕김 & 카메라 역진동 & 구슬 유지)
       {
         ...baseFrame,
-        delay: 80,
+        delay: 50,
+        ...cOff(1, 0),
+        ...tOff(-2, -3),
+        cameraPan: isHit ? { x: -2.0, y: -2.5 } : undefined,
+        showEffect: true,
+        moveStep: 3,
+        showOrbOnTarget: true,
+        orbAlpha: 1.0,
+        dustProgress: 0.45,
+        enemyHp: isHit ? (a?.enemyHpAfter ?? enemyHp) : enemyHp,
+        playerHp: isHit ? (a?.playerHpAfter ?? playerHp) : playerHp,
+        phaseId: "barrage-vibration-1",
+        phaseName: "6. 타격 반동 진동 1 (구슬 유지 & 카메라 셰이크)",
+      },
+
+      // 7. 충격 반동 진동 2 (아래 떨림 & 카메라 진동 & 구슬 유지)
+      {
+        ...baseFrame,
+        delay: 50,
+        ...cOff(0, 0),
+        ...tOff(2, 3),
+        cameraPan: isHit ? { x: 2.0, y: 2.0 } : undefined,
+        showEffect: true,
+        moveStep: 3,
+        showOrbOnTarget: true,
+        orbAlpha: 1.0,
+        dustProgress: 0.65,
+        enemyHp: isHit ? (a?.enemyHpAfter ?? enemyHp) : enemyHp,
+        playerHp: isHit ? (a?.playerHpAfter ?? playerHp) : playerHp,
+        phaseId: "barrage-vibration-2",
+        phaseName: "7. 타격 반동 진동 2 (구슬 유지 & 카메라 셰이크)",
+      },
+
+      // 8. 진동 수렴 잔향 (구슬 유지)
+      {
+        ...baseFrame,
+        delay: 55,
+        ...cOff(0, 0),
+        ...tOff(-1, -1),
+        cameraPan: isHit ? { x: -1.0, y: -1.0 } : undefined,
+        showEffect: true,
+        moveStep: 3,
+        showOrbOnTarget: true,
+        orbAlpha: 1.0,
+        dustProgress: 0.80,
+        enemyHp: isHit ? (a?.enemyHpAfter ?? enemyHp) : enemyHp,
+        playerHp: isHit ? (a?.playerHpAfter ?? playerHp) : playerHp,
+        phaseId: "barrage-vibration-3",
+        phaseName: "8. 타격 진동 수렴 (구슬 유지)",
+      },
+
+      // 9. 진동 종료 후 구슬 1차 페이드아웃 (바닥 먼지 구름 피크)
+      {
+        ...baseFrame,
+        delay: 95,
         ...cOff(0, 0),
         ...tOff(0, 0),
+        cameraPan: { x: 0, y: 0 },
+        showEffect: true,
+        moveStep: 4,
+        showOrbOnTarget: true,
+        orbAlpha: 0.60, // 1.0 -> 0.60 부드러운 페이드아웃 개시
+        dustProgress: 0.88,
+        enemyHp: isHit ? (a?.enemyHpAfter ?? enemyHp) : enemyHp,
+        playerHp: isHit ? (a?.playerHpAfter ?? playerHp) : playerHp,
+        phaseId: "barrage-orb-fade-1",
+        phaseName: "9. 진동 종료 및 구슬 1차 페이드아웃",
+      },
+
+      // 10. 구슬 2차 깊은 페이드아웃 (바닥 먼지 소산 진행)
+      {
+        ...baseFrame,
+        delay: 85,
+        ...cOff(0, 0),
+        ...tOff(0, 0),
+        cameraPan: { x: 0, y: 0 },
+        showEffect: true,
+        moveStep: 5,
+        showOrbOnTarget: true,
+        orbAlpha: 0.20, // 0.60 -> 0.20 깊은 페이드아웃
+        dustProgress: 0.96,
+        enemyHp: isHit ? (a?.enemyHpAfter ?? enemyHp) : enemyHp,
+        playerHp: isHit ? (a?.playerHpAfter ?? playerHp) : playerHp,
+        phaseId: "barrage-orb-fade-2",
+        phaseName: "10. 구슬 2차 페이드아웃",
+      },
+
+      // 11. 구슬 완전 소멸 및 바닥 먼지 최종 소산
+      {
+        ...baseFrame,
+        delay: 75,
+        ...cOff(0, 0),
+        ...tOff(0, 0),
+        cameraPan: { x: 0, y: 0 },
+        showEffect: true,
+        moveStep: 5,
+        showOrbOnTarget: false, // 구슬 완전 소멸
+        dustProgress: 1.0,
+        enemyHp: isHit ? (a?.enemyHpAfter ?? enemyHp) : enemyHp,
+        playerHp: isHit ? (a?.playerHpAfter ?? playerHp) : playerHp,
+        phaseId: "barrage-dust-dissipate",
+        phaseName: "11. 구슬 소멸 및 먼지 소산 완료",
+      },
+
+      // 12. 정위치 복귀 완료
+      {
+        ...baseFrame,
+        delay: 75,
+        ...cOff(0, 0),
+        ...tOff(0, 0),
+        cameraPan: { x: 0, y: 0 },
         showEffect: false,
         enemyHp: isHit ? (a?.enemyHpAfter ?? enemyHp) : enemyHp,
         playerHp: isHit ? (a?.playerHpAfter ?? playerHp) : playerHp,
-        moveStep: 10,
+        moveStep: 6,
         phaseId: "barrage-finish",
-        phaseName: "10. 정위치 복귀 완료",
+        phaseName: "12. 정위치 복귀 완료",
       },
     ];
   },

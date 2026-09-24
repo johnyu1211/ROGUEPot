@@ -13,6 +13,7 @@ import { Command } from "../types/index.js";
 import { COLORS, POKEROGUE_VERSION } from "../utils/embed.js";
 import { renderTitleScreen } from "../utils/canvasRenderer.js";
 import { saveService } from "../services/saveService.js";
+import { battleService } from "../services/battleService.js";
 import { renderBattleMessageData } from "../events/interactionCreate.js";
 
 export const command: Command = {
@@ -38,7 +39,12 @@ export const command: Command = {
 
       if (slot) {
         try {
-          const battleData = await renderBattleMessageData(interaction.user.id, activeSlotId, "MAIN");
+          const currentBattle = battleService.getOrCreateBattle(interaction.user.id, activeSlotId);
+          const recoverPhase =
+            (currentBattle.phase === "VICTORY" || currentBattle.phase === "DEFEAT" || currentBattle.phase === "SWITCH")
+              ? undefined
+              : "MAIN";
+          const battleData = await renderBattleMessageData(interaction.user.id, activeSlotId, recoverPhase);
           await interaction.deleteReply().catch(() => null);
           const sent = await (channel as any).send(battleData);
           sent?.react("pokeball_1:1545110604912529498")

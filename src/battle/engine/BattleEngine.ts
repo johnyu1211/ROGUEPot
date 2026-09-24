@@ -7,6 +7,7 @@ import { processTurnEndEffects } from "./TurnEndProcessor.js";
 import { calculateStats, createPlayerBattleMon } from "../entities/pokemonFactory.js";
 import { saveService } from "../../services/saveService.js";
 import { BALL_PERK_DEFINITIONS } from "../../utils/perkSvgIcons.js";
+import { withSubjectMarker } from "../../renderers/common/textHelpers.js";
 
 /**
  * High-level Battle Engine Orchestrator.
@@ -25,7 +26,10 @@ export class BattleEngine {
     if (!playerMon || playerMon.hp <= 0 || enemyMon.hp <= 0) return battle;
 
     const isKo = lang === "ko";
-    const pMoveKey = getMoveKey(playerMoveKey);
+    let pMoveKey = getMoveKey(playerMoveKey);
+    if (playerMon.chargingMove) {
+      pMoveKey = playerMon.chargingMove;
+    }
     const pMove = getMoveData(pMoveKey) || {
       id: 0,
       name: pMoveKey,
@@ -55,7 +59,18 @@ export class BattleEngine {
         description: "기본 공격 기술",
       };
     } else {
-      const eMoveRaw = enemyMon.moves[Math.floor(Math.random() * enemyMon.moves.length)] || "Tackle";
+      // Smart AI: filter out redundant status moves if player already has a status condition
+      let candidateMoves = enemyMon.moves;
+      if (playerMon.status) {
+        const filtered = candidateMoves.filter((m) => {
+          const mKey = getMoveKey(m);
+          return !["glare", "thunder-wave", "stun-spore", "nuzzle", "spore", "sleep-powder", "hypnosis", "sing", "toxic", "poison-gas", "poison-powder", "will-o-wisp"].includes(mKey);
+        });
+        if (filtered.length > 0) {
+          candidateMoves = filtered;
+        }
+      }
+      const eMoveRaw = candidateMoves[Math.floor(Math.random() * candidateMoves.length)] || "Tackle";
       eMoveKey = getMoveKey(eMoveRaw);
       eMove = getMoveData(eMoveRaw) || {
         id: 0,
@@ -248,7 +263,11 @@ export class BattleEngine {
         );
 
         const rawKey1 = isFirstPlayer ? pMoveKey : eMoveKey;
-        const finalKey1 = (rawKey1 === "solar-beam" && isTurn1Launch1) ? "solar-beam-charge" : rawKey1;
+        const finalKey1 = (rawKey1 === "solar-beam" && isTurn1Launch1)
+          ? "solar-beam-charge"
+          : (rawKey1 === "skull-bash" && isTurn1Launch1)
+            ? "skull-bash-charge"
+            : rawKey1;
 
         turnActions.push({
           actor: isFirstPlayer ? "player" : "enemy",
@@ -363,7 +382,11 @@ export class BattleEngine {
           );
 
           const rawKey2 = !isFirstPlayer ? pMoveKey : eMoveKey;
-          const finalKey2 = (rawKey2 === "solar-beam" && isTurn1Launch2) ? "solar-beam-charge" : rawKey2;
+          const finalKey2 = (rawKey2 === "solar-beam" && isTurn1Launch2)
+            ? "solar-beam-charge"
+            : (rawKey2 === "skull-bash" && isTurn1Launch2)
+              ? "skull-bash-charge"
+              : rawKey2;
 
           turnActions.push({
             actor: !isFirstPlayer ? "player" : "enemy",
@@ -429,10 +452,23 @@ export class BattleEngine {
     // --- Victory / Defeat Transitions ---
     const enemyFainted = enemyMon.hp <= 0;
     const playerFainted = playerMon.hp <= 0;
+    const eNameKo = enemyMon.nameKo || enemyMon.name;
+    const pNameKo = playerMon.nameKo || playerMon.name;
 
     if (enemyFainted && playerFainted) {
       // Both fainted simultaneously (e.g. Self-Destruct, Explosion, Destiny Bond, Recoil)
       const aliveIdx = battle.playerParty.findIndex((p) => p.hp > 0);
+      const enemyFaintLine = isKo ? `상대 ${withSubjectMarker(eNameKo)} 쓰러졌다!` : `Foe ${enemyMon.name} fainted!`;
+      const playerFaintLine = isKo ? `${withSubjectMarker(pNameKo)} 쓰러졌다!` : `${playerMon.name} fainted!`;
+
+      // Inject faint line into last turn action so GIF displays it
+      if (battle.turnActions && battle.turnActions.length > 0) {
+        const lastAct = battle.turnActions[battle.turnActions.length - 1];
+        if (!lastAct.log.includes("쓰러졌다") && !lastAct.log.includes("fainted")) {
+          lastAct.log += `\n${enemyFaintLine}\n${playerFaintLine}`;
+        }
+      }
+
       if (aliveIdx >= 0) {
         battle.phase = "VICTORY";
         if (battle.gameMode !== "showcase") {
@@ -441,29 +477,40 @@ export class BattleEngine {
           battle.score += enemyMon.level * 10;
           turnLogs.push(
             isKo
-              ? `상대 ${enemyMon.nameKo}(이)가 쓰러졌다! (획득: +P ${moneyGain.toLocaleString()})`
+              ? `상대 ${withSubjectMarker(eNameKo)} 쓰러졌다! (획득: +P ${moneyGain.toLocaleString()})`
               : `Foe ${enemyMon.name} fainted! (Won: +P ${moneyGain.toLocaleString()})`
           );
         } else {
-          turnLogs.push(
-            isKo
-              ? `상대 ${enemyMon.nameKo}(이)가 쓰러졌다!`
-              : `Foe ${enemyMon.name} fainted!`
-          );
+          turnLogs.push(enemyFaintLine);
         }
         battle.playerActiveIndex = aliveIdx;
         battle.playerBattleMon = createPlayerBattleMon(battle.playerParty[aliveIdx], battle.playerParty);
+        const newPName = isKo ? (battle.playerBattleMon.nameKo || battle.playerBattleMon.name) : battle.playerBattleMon.name;
         turnLogs.push(
           isKo
-            ? `${playerMon.name}(이)가 쓰러졌다! 가랏, ${battle.playerBattleMon.name}!`
-            : `${playerMon.name} fainted! Go, ${battle.playerBattleMon.name}!`
+            ? `${withSubjectMarker(pNameKo)} 쓰러졌다!\n가랏, ${newPName}!`
+            : `${playerMon.name} fainted!\nGo, ${battle.playerBattleMon.name}!`
         );
       } else {
         battle.phase = "DEFEAT";
-        turnLogs.push(isKo ? `모든 포켓몬이 쓰러졌다... 눈앞이 캄캄해졌다!` : `All Pokémon fainted... You blacked out!`);
+        turnLogs.push(
+          isKo
+            ? `${enemyFaintLine}\n${playerFaintLine}\n모든 포켓몬이 쓰러졌다... 눈앞이 캄캄해졌다!`
+            : `${enemyFaintLine}\n${playerFaintLine}\nAll Pokémon fainted... You blacked out!`
+        );
       }
     } else if (enemyFainted) {
       battle.phase = "VICTORY";
+      const enemyFaintLine = isKo ? `상대 ${withSubjectMarker(eNameKo)} 쓰러졌다!` : `Foe ${enemyMon.name} fainted!`;
+
+      // Inject faint line into last turn action so GIF displays it
+      if (battle.turnActions && battle.turnActions.length > 0) {
+        const lastAct = battle.turnActions[battle.turnActions.length - 1];
+        if (!lastAct.log.includes("쓰러졌다") && !lastAct.log.includes("fainted")) {
+          lastAct.log += `\n${enemyFaintLine}`;
+        }
+      }
+
       if (battle.gameMode !== "showcase") {
         const expGain = Math.floor(enemyMon.level * 15);
         const moneyGain = Math.floor(enemyMon.level * 120);
@@ -473,7 +520,7 @@ export class BattleEngine {
 
         turnLogs.push(
           isKo
-            ? `상대 ${enemyMon.nameKo}(이)가 쓰러졌다! 획득: +P ${moneyGain.toLocaleString()} | +${expGain} EXP`
+            ? `상대 ${withSubjectMarker(eNameKo)} 쓰러졌다! 획득: +P ${moneyGain.toLocaleString()} | +${expGain} EXP`
             : `Foe ${enemyMon.name} fainted! Won: +P ${moneyGain.toLocaleString()} | +${expGain} EXP`
         );
 
@@ -494,32 +541,40 @@ export class BattleEngine {
           battle.playerParty[battle.playerActiveIndex].level = playerMon.level;
           battle.playerParty[battle.playerActiveIndex].hp = playerMon.hp;
           battle.playerParty[battle.playerActiveIndex].maxHp = playerMon.maxHp;
-          turnLogs.push(isKo ? `${playerMon.name}의 레벨이 ${playerMon.level}(으)로 올랐다!` : `${playerMon.name} grew to Lv. ${playerMon.level}!`);
+          const lvPName = isKo ? (playerMon.nameKo || playerMon.name) : playerMon.name;
+          turnLogs.push(isKo ? `${lvPName}의 레벨이 ${playerMon.level}(으)로 올랐다!` : `${playerMon.name} grew to Lv. ${playerMon.level}!`);
         }
       } else {
-        turnLogs.push(
-          isKo
-            ? `상대 ${enemyMon.nameKo}(이)가 쓰러졌다!`
-            : `Foe ${enemyMon.name} fainted!`
-        );
+        turnLogs.push(enemyFaintLine);
       }
     } else if (playerFainted) {
       const aliveIdx = battle.playerParty.findIndex((p) => p.hp > 0);
+      const playerFaintLine = isKo ? `${withSubjectMarker(pNameKo)} 쓰러졌다!` : `${playerMon.name} fainted!`;
+
+      // Inject faint line into last turn action so GIF displays it
+      if (battle.turnActions && battle.turnActions.length > 0) {
+        const lastAct = battle.turnActions[battle.turnActions.length - 1];
+        if (!lastAct.log.includes("쓰러졌다") && !lastAct.log.includes("fainted")) {
+          lastAct.log += `\n${playerFaintLine}`;
+        }
+      }
+
       if (aliveIdx >= 0) {
-        battle.playerActiveIndex = aliveIdx;
-        battle.playerBattleMon = createPlayerBattleMon(battle.playerParty[aliveIdx], battle.playerParty);
-        turnLogs.push(
-          isKo
-            ? `${playerMon.name}(이)가 쓰러졌다! 가랏, ${battle.playerBattleMon.name}!`
-            : `${playerMon.name} fainted! Go, ${battle.playerBattleMon.name}!`
-        );
+        // Player still has alive Pokémon!
+        // Keep the fainted Pokémon as playerBattleMon so the move GIF accurately renders its faint!
+        battle.phase = "SWITCH";
+        turnLogs.push(playerFaintLine);
       } else {
         battle.phase = "DEFEAT";
-        turnLogs.push(isKo ? `모든 포켓몬이 쓰러졌다... 눈앞이 캄캄해졌다!` : `All Pokémon fainted... You blacked out!`);
+        turnLogs.push(
+          isKo
+            ? `${playerFaintLine}\n모든 포켓몬이 쓰러졌다... 눈앞이 캄캄해졌다!`
+            : `${playerFaintLine}\nAll Pokémon fainted... You blacked out!`
+        );
       }
     }
 
-    if (battle.phase !== "VICTORY" && battle.phase !== "DEFEAT") {
+    if (battle.phase !== "VICTORY" && battle.phase !== "DEFEAT" && battle.phase !== "SWITCH") {
       const activeMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
       if (activeMon?.chargingMove) {
         battle.phase = "FIGHT";
@@ -603,7 +658,7 @@ export class BattleEngine {
     battle.dialogueText = turnLogs.join("\n");
     battle.turnCount += 1;
 
-    if (!skipSave) {
+    if (!skipSave && battle.userId && battle.slotId) {
       saveService.updateSlot(battle.userId, battle.slotId, {
         party: battle.playerParty,
         money: battle.money,

@@ -78,6 +78,7 @@ export interface BattleFrame {
   enemyStatus?: string | null;
   playerStatus?: string | null;
   textLineIdx?: number;
+  dialogueLines?: string[];
   isBlur?: boolean;
   cameraBlur?: number | boolean;
   isHighSkyCutscene?: boolean;

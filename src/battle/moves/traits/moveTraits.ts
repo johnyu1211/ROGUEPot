@@ -171,6 +171,7 @@ export const MOVE_TRAITS_REGISTRY: Record<string, MoveTraitDefinition> = {
   "absorb": { drainRatio: 0.5 },
   "mega-drain": { drainRatio: 0.5 },
   "giga-drain": { drainRatio: 0.5 },
+  "dream-eater": { drainRatio: 0.5 },
   "drain-punch": { drainRatio: 0.5 },
   "horn-leech": { drainRatio: 0.5 },
   "draining-kiss": { drainRatio: 0.75 },
