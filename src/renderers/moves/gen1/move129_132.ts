@@ -1048,6 +1048,232 @@ export function drawSkullBashEffect(
 }
 
 // ============================================================================
+// 🛡️ 130-Charge: 로켓박치기 1턴 충전 고증 연출 (Skull Bash Charge - Turn 1)
+// - [유저 첨부 5세대 원작 이미지 고증 (media_1790138952888.png)]:
+//   1. 시전자 고개 푹 숙이고 웅크림
+//   2. 머리 부위 검은-암회색 원형 에너지 압축 링(Aura Compression Ring) 형성
+//   3. 시전자 하단 좌우로 몽글몽글 피어오르는 황금빛 모래먼지 구름층(Billowing Sand Dust Aura)
+//   4. 방어력 상승 스파클 및 에너지 모트
+// ============================================================================
+
+/**
+ * 🌪️ 시전자 하단 좌우로 팽창하며 피어오르는 황금빛 모래먼지 구름층 (원작 5세대 완벽 고증)
+ */
+export function drawSkullBashDustAura(
+  ctx: any,
+  cx: number,
+  cy: number,
+  progress: number,
+  alpha: number = 1.0,
+  isP: boolean = true
+) {
+  if (alpha <= 0.01) return;
+
+  ctx.save();
+  ctx.translate(cx, cy);
+
+  // 모래먼지 구름 로브 구성 (원작 5세대 캡처 완벽 일치: 지면 좌우로 풍성하게 부풀어 오른 형태)
+  const dustLobes = [
+    // [좌측 먼지 로브들]
+    { ox: -32, oy: -2, rx: 15, ry: 9, scale: 1.05 },
+    { ox: -22, oy: -6, rx: 16, ry: 10, scale: 1.15 },
+    { ox: -12, oy: -9, rx: 15, ry: 11, scale: 1.2 },
+    // [중앙 베이스]
+    { ox: 0, oy: -10, rx: 17, ry: 11, scale: 1.25 },
+    // [우측 먼지 로브들]
+    { ox: 12, oy: -9, rx: 15, ry: 11, scale: 1.2 },
+    { ox: 22, oy: -6, rx: 16, ry: 10, scale: 1.15 },
+    { ox: 32, oy: -2, rx: 15, ry: 9, scale: 1.05 },
+  ];
+
+  const puffExpand = 0.85 + Math.sin(progress * Math.PI) * 0.3;
+  const puffAlpha = alpha * Math.min(1.0, 0.5 + Math.sin(progress * Math.PI) * 0.5);
+
+  // 1. 하단 어두운 음영 먼지 층 (바닥 접지 그림자)
+  ctx.save();
+  ctx.fillStyle = `rgba(165, 140, 95, ${puffAlpha * 0.65})`;
+  for (const lobe of dustLobes) {
+    ctx.beginPath();
+    ctx.ellipse(
+      lobe.ox * puffExpand,
+      lobe.oy * puffExpand + 3,
+      lobe.rx * lobe.scale * puffExpand,
+      lobe.ry * lobe.scale * puffExpand,
+      0,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // 2. 중간 웜 샌드 골드 볼륨 먼지 층 (원작 메인 톤: #D4BC88)
+  ctx.save();
+  ctx.fillStyle = `rgba(215, 190, 140, ${puffAlpha * 0.85})`;
+  for (const lobe of dustLobes) {
+    ctx.beginPath();
+    ctx.ellipse(
+      lobe.ox * puffExpand,
+      lobe.oy * puffExpand,
+      lobe.rx * 0.88 * lobe.scale * puffExpand,
+      lobe.ry * 0.88 * lobe.scale * puffExpand,
+      0,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // 3. 상단 밝은 크림-아이보리 하이라이트 림 (원작 상단 발광 림: #F7EAC4)
+  ctx.save();
+  ctx.fillStyle = `rgba(247, 234, 196, ${puffAlpha * 0.95})`;
+  for (const lobe of dustLobes) {
+    ctx.beginPath();
+    ctx.ellipse(
+      lobe.ox * puffExpand,
+      lobe.oy * puffExpand - 2.5,
+      lobe.rx * 0.65 * lobe.scale * puffExpand,
+      lobe.ry * 0.65 * lobe.scale * puffExpand,
+      0,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+  }
+  ctx.restore();
+
+  ctx.restore();
+}
+
+/**
+ * 🔘 머리 부위 검은-암회색 원형 에너지 압축 링 (원작 5세대 완벽 고증)
+ */
+export function drawSkullBashCompressionRing(
+  ctx: any,
+  cx: number,
+  cy: number,
+  progress: number,
+  alpha: number = 1.0
+) {
+  if (alpha <= 0.01) return;
+
+  ctx.save();
+  ctx.translate(cx, cy);
+
+  // 펄스 팽창 및 수축 (progress에 따라 부드러운 호흡)
+  const pulse = Math.sin(progress * Math.PI);
+  const r = 21 + pulse * 4;
+
+  // 1. 외곽 부드러운 다크 글로우 섀도우
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(0, 0, r + 2.5, 0, Math.PI * 2);
+  ctx.strokeStyle = `rgba(18, 14, 22, ${alpha * 0.45})`;
+  ctx.lineWidth = 4.5;
+  ctx.stroke();
+  ctx.restore();
+
+  // 2. 주 원형 링: 두껍고 또렷한 암회색 림 (원작 고증)
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.strokeStyle = `rgba(38, 34, 44, ${alpha * 0.95})`;
+  ctx.lineWidth = 3.2;
+  ctx.stroke();
+  ctx.restore();
+
+  // 3. 내부 얇은 순백/골드 하이라이트 림
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(0, 0, r - 1.4, 0, Math.PI * 2);
+  ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * (0.35 + pulse * 0.35)})`;
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+  ctx.restore();
+
+  // 4. 중심 미세 에너지 압축 렌즈 효과 (내부 투명 ~ 외곽 엷은 셰이드)
+  const grad = ctx.createRadialGradient(0, 0, r * 0.3, 0, 0, r);
+  grad.addColorStop(0.0, "rgba(255, 255, 255, 0.0)");
+  grad.addColorStop(0.65, `rgba(240, 230, 200, ${alpha * 0.08})`);
+  grad.addColorStop(0.95, `rgba(40, 35, 45, ${alpha * 0.22})`);
+  grad.addColorStop(1.0, "rgba(0, 0, 0, 0.0)");
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+/**
+ * ✨ 방어력 상승 스파클 파티클
+ */
+export function drawSkullBashDefSparkles(
+  ctx: any,
+  cx: number,
+  cy: number,
+  progress: number,
+  isP: boolean = true
+) {
+  ctx.save();
+  ctx.translate(cx, cy);
+
+  const sparkleCount = 6;
+  for (let i = 0; i < sparkleCount; i++) {
+    const angle = (i / sparkleCount) * Math.PI * 2 + progress * 2.0;
+    const rDist = 20 + ((i * 7 + progress * 25) % 18);
+    const sx = Math.cos(angle) * rDist * 0.9;
+    const sy = Math.sin(angle) * (rDist * 0.5) - 6 - progress * 14;
+
+    const sAlpha = Math.sin(((progress + i / sparkleCount) % 1.0) * Math.PI);
+    if (sAlpha <= 0.05) continue;
+
+    ctx.save();
+    ctx.globalAlpha = Math.min(1.0, sAlpha);
+    ctx.fillStyle = i % 2 === 0 ? "#FFF68F" : "#FFFFFF";
+    ctx.beginPath();
+    const sSize = 2.0 + (i % 2) * 1.2;
+    ctx.rect(sx - sSize, sy - 0.7, sSize * 2, 1.4);
+    ctx.rect(sx - 0.7, sy - sSize, 1.4, sSize * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  ctx.restore();
+}
+
+/**
+ * 🌟 130-Charge: 로켓박치기 1턴 충전 후방 레이어
+ */
+export function drawSkullBashChargeBehindEffect(
+  targetCtx: any,
+  frame: BattleFrame,
+  drawCtx: EffectDrawContext
+) {
+  // 모래먼지 제거 요청에 따라 후방 지면 오라 비활성화
+}
+
+/**
+ * 🌟 130-Charge: 로켓박치기 1턴 충전 전방 레이어 (방어력 상승 스파클)
+ */
+export function drawSkullBashChargeEffect(
+  targetCtx: any,
+  frame: BattleFrame,
+  drawCtx: EffectDrawContext
+) {
+  const { attackerPos, isPlayer: isP } = drawCtx;
+  const casterPos = drawCtx.casterPos || attackerPos;
+  const progress = frame.effectProgress !== undefined ? frame.effectProgress : 0.5;
+
+  const cx = casterPos.x;
+  const cy = casterPos.y;
+
+  // 방어력 상승 스파클 파티클만 렌더링
+  drawSkullBashDefSparkles(targetCtx, cx, cy, progress, isP);
+}
+
+// ============================================================================
 // 131: 가시대포 (Spike Cannon)
 // - [유저 요구사항 1]: 바늘미사일의 바늘 에셋 기반, 발사 유형도 바늘미사일과 비슷하게 4연속 발사
 // - [유저 요구사항 2]: 바늘 뒷부분에 고출력 로켓 엔진 추진 화염(Rocket Jet Flame) 탑재!

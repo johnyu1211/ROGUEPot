@@ -79,7 +79,7 @@ export function applySecondaryAttackEffects(
       const parChance = (mName === "thunder" || mName === "body-slam" || mName === "lick") ? 0.3 : 0.1;
       if (Math.random() < parChance && !target.types.map(t => t.toLowerCase()).includes("electric")) {
         target.status = "par";
-        log += isKo ? `\n${target.name}(은)는 마비되어 저려왔다!` : `\n${target.name} is paralyzed!`;
+        log += isKo ? `\n${target.name}(은)는 마비에 걸렸다!` : `\n${target.name} is paralyzed!`;
       }
     } else if (["poison-sting", "twineedle", "sludge-bomb", "poison-jab", "smog", "sludge"].includes(mName)) {
       const psnChance = mName === "smog" ? 0.4 : (mName === "poison-sting" ? 0.3 : (mName === "twineedle" ? 0.2 : 0.3));

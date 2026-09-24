@@ -738,6 +738,8 @@ const server = http.createServer(async (req, res) => {
     const activeMoveKey = url.searchParams.get("activeMove") || "";
     const activeMoveMtime = activeMoveKey ? getMoveLatestMtime(activeMoveKey) : 0;
     const version = getMovesVersion();
+    const officialCount = VERIFIED_MOVES.filter((m) => !m.isSpecialVariant).length;
+    const specialCount = VERIFIED_MOVES.filter((m) => m.isSpecialVariant).length;
     res.writeHead(200, {
       "Content-Type": "application/json; charset=utf-8",
       "Cache-Control": "no-cache, no-store, must-revalidate",
@@ -746,7 +748,10 @@ const server = http.createServer(async (req, res) => {
       ok: true,
       version,
       serverStartTime,
-      count: VERIFIED_MOVES.length,
+      count: officialCount,
+      officialCount,
+      specialCount,
+      totalCount: VERIFIED_MOVES.length,
       activeMove: activeMoveKey,
       activeMoveMtime,
     }));

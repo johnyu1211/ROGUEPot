@@ -370,7 +370,7 @@ export function executeStatusMove(ctx: StatusMoveContext): string {
     }
     if (!target.types.some(t => t.toLowerCase() === "electric") && !target.status) {
       target.status = "par";
-      return isKo ? `${targetName}(은)는 마비되어 기술을 쓰기 어려워졌다!` : `${targetName} is paralyzed!`;
+      return isKo ? `${targetName}(은)는 마비에 걸렸다!` : `${targetName} is paralyzed!`;
     }
     return isKo ? `하지만 효과가 없었다!` : `It had no effect!`;
   }
@@ -461,6 +461,7 @@ export function executeStatusMove(ctx: StatusMoveContext): string {
   if (["barrier", "acid-armor", "iron-defense", "cotton-guard"].includes(mName)) {
     return applyStage("actor", "def", "방어", "Defense", mName === "cotton-guard" ? 3 : 2);
   }
+  if (mName === "amnesia") return applyStage("actor", "spd", "특수방어", "Sp. Def", 2);
   if (["agility", "rock-polish", "autotomize"].includes(mName)) return applyStage("actor", "spe", "스피드", "Speed", 2);
   if (["minimize", "double-team"].includes(mName)) return applyStage("actor", "eva", "회피율", "Evasiveness", mName === "minimize" ? 2 : 1);
   if (mName === "growth") {
@@ -496,6 +497,7 @@ export function executeStatusMove(ctx: StatusMoveContext): string {
   if (mName === "sweet-scent") return applyStage("target", "eva", "회피율", "Evasiveness", -2);
   if (["mimic", "copycat"].includes(mName)) return isKo ? `상대의 기술을 흉내냈다!` : `Mimicked the target's move!`;
   if (mName === "light-screen") return isKo ? `빛의장막으로 특수공격에 강해졌다! (5턴)` : `Light Screen raised special defense! (5 turns)`;
+  if (mName === "reflect") return isKo ? `리플렉터로 물리공격에 강해졌다! (5턴)` : `Reflect raised physical defense! (5 turns)`;
   if (mName === "focus-energy") {
     if (actor.hasFocusEnergy) {
       return isKo ? `하지만 이미 기운을 모아 더는 집중할 수 없다!` : `But it had no effect!`;

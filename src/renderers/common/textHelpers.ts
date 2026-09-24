@@ -232,3 +232,43 @@ export function drawInGameMessageBox(ctx: any, width: number, height: number, ms
   ctx.textAlign = "left";
   drawWrappedText(ctx, msg.text, boxX + 12, boxY + 38, boxW - 24, 20);
 }
+
+/**
+ * Korean subject particle helper (이 / 가)
+ */
+export function withSubjectMarker(name: string): string {
+  if (!name) return "";
+  const lastChar = name.charCodeAt(name.length - 1);
+  if (lastChar >= 0xac00 && lastChar <= 0xd7a3) {
+    const hasBatchim = (lastChar - 0xac00) % 28 > 0;
+    return `${name}${hasBatchim ? "이" : "가"}`;
+  }
+  return `${name}이(가)`;
+}
+
+/**
+ * Korean object particle helper (을 / 를)
+ */
+export function withObjectMarker(name: string): string {
+  if (!name) return "";
+  const lastChar = name.charCodeAt(name.length - 1);
+  if (lastChar >= 0xac00 && lastChar <= 0xd7a3) {
+    const hasBatchim = (lastChar - 0xac00) % 28 > 0;
+    return `${name}${hasBatchim ? "을" : "를"}`;
+  }
+  return `${name}을(를)`;
+}
+
+/**
+ * Korean topic particle helper (은 / 는)
+ */
+export function withTopicMarker(name: string): string {
+  if (!name) return "";
+  const lastChar = name.charCodeAt(name.length - 1);
+  if (lastChar >= 0xac00 && lastChar <= 0xd7a3) {
+    const hasBatchim = (lastChar - 0xac00) % 28 > 0;
+    return `${name}${hasBatchim ? "은" : "는"}`;
+  }
+  return `${name}(은)는`;
+}
+

@@ -24,7 +24,7 @@ export const glareMove: BattleMoveAnimation = {
   nameEn: "Glare",
   type: "normal",
   category: "status",
-  camera: { type: "none" },
+  camera: { type: "self", zoom: 1.20 },
   drawEffect: (targetCtx: any, frame: BattleFrame, drawCtx: EffectDrawContext) => {
     if (frame.showEffect) {
       drawGlareEffect(targetCtx, frame, drawCtx);
@@ -51,6 +51,11 @@ export const glareMove: BattleMoveAnimation = {
         ? (isHit ? { eOffset: { x: shake, y: 0 } } : { eOffset: { x: 0, y: 0 } })
         : (isHit ? { pOffset: { x: shake, y: 0 } } : { pOffset: { x: 0, y: 0 } });
 
+    const beforeEnemyStatus = a?.enemyStatusBefore ?? null;
+    const beforePlayerStatus = a?.playerStatusBefore ?? null;
+    const afterEnemyStatus = isHit ? (a?.enemyStatusAfter ?? (isP ? "par" : null)) : beforeEnemyStatus;
+    const afterPlayerStatus = isHit ? (a?.playerStatusAfter ?? (!isP ? "par" : null)) : beforePlayerStatus;
+
     return [
       // 1. 암전 진입 & 붉은 실선 아래에서 상승
       {
@@ -58,6 +63,8 @@ export const glareMove: BattleMoveAnimation = {
         delay: 90,
         ...cOff(-3, 1),
         ...tTremble(0),
+        enemyStatus: beforeEnemyStatus,
+        playerStatus: beforePlayerStatus,
         showEffect: true,
         moveStep: 1,
         phaseId: "glare-slit-rise",
@@ -69,6 +76,8 @@ export const glareMove: BattleMoveAnimation = {
         delay: 75,
         ...cOff(-4, 2),
         ...tTremble(0),
+        enemyStatus: beforeEnemyStatus,
+        playerStatus: beforePlayerStatus,
         showEffect: true,
         moveStep: 2,
         phaseId: "glare-slit-settle",
@@ -80,6 +89,8 @@ export const glareMove: BattleMoveAnimation = {
         delay: 90,
         ...cOff(-4, 2),
         ...tTremble(0),
+        enemyStatus: beforeEnemyStatus,
+        playerStatus: beforePlayerStatus,
         showEffect: true,
         moveStep: 3,
         phaseId: "glare-eye-opening",
@@ -91,21 +102,25 @@ export const glareMove: BattleMoveAnimation = {
         delay: 200,
         ...cOff(-2, 1),
         ...tTremble(0),
+        enemyStatus: afterEnemyStatus,
+        playerStatus: afterPlayerStatus,
         showEffect: true,
         moveStep: 4,
         phaseId: "glare-eye-open",
         phaseName: "4. 붉은 뱀눈 & 황록색 슬릿 동공 형성",
       },
-      // 5. 암전 및 뱀눈 페이드아웃
+      // 5. 암전 및 뱀눈 페이드아웃 (마비 안착)
       {
         ...baseFrame,
         delay: 110,
         ...cOff(0, 0),
         ...tTremble(0),
+        enemyStatus: afterEnemyStatus,
+        playerStatus: afterPlayerStatus,
         showEffect: true,
         moveStep: 5,
         phaseId: "glare-fade",
-        phaseName: "5. 암전 및 뱀눈 페이드아웃",
+        phaseName: "5. 암전 및 뱀눈 페이드아웃 (마비 안착)",
       },
       // 6. 정위치 복귀
       {
@@ -113,6 +128,9 @@ export const glareMove: BattleMoveAnimation = {
         delay: 70,
         ...cOff(0, 0),
         ...tTremble(0),
+        afterCameraReturn: true,
+        enemyStatus: afterEnemyStatus,
+        playerStatus: afterPlayerStatus,
         showEffect: false,
         moveStep: 6,
         phaseId: "glare-finish",

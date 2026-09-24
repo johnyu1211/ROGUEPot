@@ -26,6 +26,7 @@ import { POKEMON_SPECIES_DATA } from "../data/pokemonStats.js";
 import type { SpeciesBaseData } from "../data/pokemonStats.js";
 import { POKEMON_NAMES_KO } from "../data/pokemonNamesKo.js";
 import { getMoveData } from "../data/movesKo.js";
+import { withSubjectMarker, withObjectMarker } from "../renderers/common/textHelpers.js";
 
 // Re-export common types and constants for backwards compatibility
 export type {
@@ -234,9 +235,15 @@ export class BattleService {
       : this.spawnWildPokemon(slot.wave, slot.biome || "Town");
     const isKo = profile.language === "ko";
 
-    const activeIndex = (preservedActiveIndex !== undefined && slot.party[preservedActiveIndex])
-      ? preservedActiveIndex
-      : 0;
+    const hasValidPreserved = preservedActiveIndex !== undefined &&
+      slot.party[preservedActiveIndex] &&
+      (slot.party[preservedActiveIndex].hp === undefined || slot.party[preservedActiveIndex].hp > 0);
+
+    const firstAliveIdx = slot.party.findIndex((p: any) => p && (p.hp === undefined || p.hp > 0));
+
+    const activeIndex = hasValidPreserved
+      ? preservedActiveIndex!
+      : (firstAliveIdx >= 0 ? firstAliveIdx : 0);
 
     const activeLeader = slot.party[activeIndex] || slot.party[0] || {
       speciesId: "lucario",
@@ -287,7 +294,7 @@ export class BattleService {
       playerParty: slot.party,
       playerBattleMon,
       dialogueText,
-      phase: "MAIN",
+      phase: firstAliveIdx < 0 ? "DEFEAT" : "MAIN",
       turnCount: 0,
       money: slot.money ?? 0,
       score: slot.score || 0,
@@ -334,9 +341,10 @@ export class BattleService {
     const preservedStages = (existingBattle && !shouldResetStages && existingBattle.playerBattleMon.hp > 0)
       ? { ...existingBattle.playerBattleMon.stages }
       : undefined;
-    const preservedActiveIndex = (existingBattle && !shouldResetStages)
+    const firstAliveIdx = (slot?.party || []).findIndex((p: any) => p && (p.hp === undefined || p.hp > 0));
+    const preservedActiveIndex = (existingBattle && !shouldResetStages && existingBattle.playerBattleMon && existingBattle.playerBattleMon.hp > 0)
       ? existingBattle.playerActiveIndex
-      : 0;
+      : (firstAliveIdx >= 0 ? firstAliveIdx : 0);
 
     const biomes = Object.keys(BIOME_ENCOUNTERS);
     const currentBiomeIdx = biomes.indexOf(slot?.biome || "Town");
@@ -379,9 +387,6 @@ export class BattleService {
     const preservedStages = (!shouldResetStages && currentBattle.playerBattleMon.hp > 0)
       ? { ...currentBattle.playerBattleMon.stages }
       : undefined;
-    const preservedActiveIndex = (!shouldResetStages)
-      ? currentBattle.playerActiveIndex
-      : 0;
 
     const biomes = Object.keys(BIOME_ENCOUNTERS);
     const currentBiomeIdx = biomes.indexOf(currentBattle.biome || slot?.biome || "Town");
@@ -413,9 +418,14 @@ export class BattleService {
             moves: ["Aura Sphere", "Close Combat", "Extreme Speed", "Meteor Mash"],
           }]);
 
-    const activeIndex = (preservedActiveIndex !== undefined && party[preservedActiveIndex])
+    const firstAliveIdx = party.findIndex((p: any) => p && (p.hp === undefined || p.hp > 0));
+    const preservedActiveIndex = (!shouldResetStages && currentBattle.playerBattleMon && currentBattle.playerBattleMon.hp > 0)
+      ? currentBattle.playerActiveIndex
+      : (firstAliveIdx >= 0 ? firstAliveIdx : 0);
+
+    const activeIndex = (preservedActiveIndex !== undefined && party[preservedActiveIndex] && (party[preservedActiveIndex].hp === undefined || party[preservedActiveIndex].hp > 0))
       ? preservedActiveIndex
-      : 0;
+      : (firstAliveIdx >= 0 ? firstAliveIdx : 0);
 
     const activeLeader = party[activeIndex] || party[0];
     const playerBattleMon = this.createPlayerBattleMon(activeLeader, party);
@@ -498,14 +508,16 @@ export class BattleService {
     battle.playerBattleMon = this.createPlayerBattleMon(targetMon, battle.playerParty);
     battle.phase = "MAIN";
 
+    const tName = isKo ? (targetMon.nameKo || targetMon.name) : targetMon.name;
     let switchLog = isKo
-      ? `가랏, ${targetMon.name}!`
+      ? `가랏, ${tName}!`
       : `Go, ${targetMon.name}!`;
 
     if (battle.playerBattleMon.ability === "Imposter" || battle.playerBattleMon.passiveAbility === "Imposter") {
       this.applyTransform(battle.playerBattleMon, battle.enemy);
+      const pName = isKo ? (battle.playerBattleMon.nameKo || battle.playerBattleMon.name) : battle.playerBattleMon.name;
       switchLog += isKo
-        ? `\n[특성 괴짜 발동!] ${battle.playerBattleMon.name}(이)가 ${battle.enemy.nameKo}(으)로 변신했다!`
+        ? `\n[특성 괴짜 발동!] ${withSubjectMarker(pName)} ${battle.enemy.nameKo}(으)로 변신했다!`
         : `\n[Imposter!] ${battle.playerBattleMon.name} transformed into ${battle.enemy.name}!`;
     }
 

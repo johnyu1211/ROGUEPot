@@ -12,7 +12,7 @@ import {
 export const command: Command = {
   data: new SlashCommandBuilder()
     .setName("battleact")
-    .setDescription("3 vs 3 포켓몬 배틀을 진행합니다."),
+    .setDescription("4 vs 4 포켓몬 쇼케이스 배틀을 진행합니다. (129~140번 기술)"),
 
   async execute(interaction: ChatInputCommandInteraction) {
     await interaction.deferReply();

@@ -55,13 +55,33 @@ export function applyDamageBlinkFrames(
     insertIdx = frames.length;
   }
 
+  // 상태이상 부여/변화 타이밍: afterCameraReturn이 없는 변화기 등의 경우 타격/절정 시점부터 상태이상 필터 적용
+  let statusChangeIdx = insertIdx;
+  if (statusChangeIdx === frames.length && isHit && (afterEnemyStatus !== initEnemyStatus || afterPlayerStatus !== initPlayerStatus)) {
+    const foundIdx = frames.findIndex(f =>
+      f.hitFlash ||
+      (f.moveStep && f.moveStep >= 3) ||
+      f.phaseId?.includes("strike") ||
+      f.phaseId?.includes("hit") ||
+      f.phaseId?.includes("impact") ||
+      f.phaseId?.includes("open") ||
+      f.phaseId?.includes("climax") ||
+      f.showEffect === false
+    );
+    statusChangeIdx = foundIdx !== -1 ? foundIdx : Math.max(1, Math.floor(frames.length * 0.5));
+  }
+
   // 효과가 없는 경우 (0x / 무효 / 미스 / 데미지 0): 깜빡임 및 체력 변동 X (단, 기술 정의에서 오염된 HP 값은 시작 체력으로 완전 복구)
   if (!isHit || damage <= 0 || typeMod === 0 || hpLoss <= 0) {
     for (let i = 0; i < frames.length; i++) {
       if (frames[i].enemyHp !== undefined) frames[i].enemyHp = initEnemyHp;
       if (frames[i].playerHp !== undefined) frames[i].playerHp = initPlayerHp;
-      frames[i].enemyStatus = (i < insertIdx ? initEnemyStatus : afterEnemyStatus);
-      frames[i].playerStatus = (i < insertIdx ? initPlayerStatus : afterPlayerStatus);
+      if (frames[i].enemyStatus === undefined) {
+        frames[i].enemyStatus = (i < statusChangeIdx ? initEnemyStatus : afterEnemyStatus);
+      }
+      if (frames[i].playerStatus === undefined) {
+        frames[i].playerStatus = (i < statusChangeIdx ? initPlayerStatus : afterPlayerStatus);
+      }
     }
     return frames;
   }
@@ -208,8 +228,12 @@ export function applyDamageBlinkFrames(
 
   // 6. 깜빡임 및 체력 감소 이후의 후속 프레임(예: 돌진 반동 프레임 등)은 대상은 최종 HP, 시전자는 초기 HP(반동 전) 유지
   for (let i = insertIdx; i < frames.length; i++) {
-    frames[i].enemyStatus = afterEnemyStatus;
-    frames[i].playerStatus = afterPlayerStatus;
+    if (frames[i].enemyStatus === undefined) {
+      frames[i].enemyStatus = afterEnemyStatus;
+    }
+    if (frames[i].playerStatus === undefined) {
+      frames[i].playerStatus = afterPlayerStatus;
+    }
     if (isAttackerPlayer) {
       frames[i].enemyHp = targetFinalHp;
       if (frames[i].playerHp === undefined) {

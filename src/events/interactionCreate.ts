@@ -18,7 +18,7 @@ import { renderBattleMoveGif, renderBattleFaintGif, renderBattleEntryGif } from 
 import { MOVES_DATA, getMoveData, getMoveKey } from "../data/movesKo.js";
 import { MOVES_EN_DESC } from "../data/movesEn.js";
 import { saveService, PartyPokemon } from "../services/saveService.js";
-import { battleService, BattleState } from "../services/battleService.js";
+import { battleService, BattleState, BattlePokemon } from "../services/battleService.js";
 import { battlePreloadService } from "../services/battlePreloadService.js";
 import { getPokemonByQuery, getPokemonByDexNumber, getPokemonPage, getAbilityKoreanName, getAbilityDetail, ABILITY_DETAILED_DESC_KO, ABILITY_DETAILED_DESC_EN, KOREAN_POKEMON_DICT } from "../services/pokeApiService.js";
 import { STARTER_DATABASE, GENERATION_INFO, getStartersByGen, getStarterByDexNumber, DEFAULT_MAX_COST, StarterEntry } from "../data/starterCosts.js";
@@ -295,8 +295,9 @@ export const scheduleBattleStaticization = scheduleBattleButtonUnlock;
 export async function renderBattleMessageData(
   userId: string,
   slotId: number,
-  overridePhase?: "MAIN" | "FIGHT" | "BAG" | "PARTY",
-  isEntryTransition?: boolean
+  overridePhase?: "MAIN" | "FIGHT" | "BAG" | "PARTY" | "SWITCH",
+  isEntryTransition?: boolean,
+  prevPlayer?: BattlePokemon
 ) {
   const profile = saveService.getProfile(userId);
   const isKo = profile.language === "ko";
@@ -315,6 +316,9 @@ export async function renderBattleMessageData(
     const res = await renderBattleEntryGif({
       battle,
       lang: profile.language,
+      entryType: prevPlayer ? "player" : "both",
+      isSwitch: Boolean(prevPlayer),
+      prevPlayer,
     });
     imageBuffer = res.buffer;
     motionDurationMs = res.motionDurationMs;
@@ -509,26 +513,66 @@ export function buildBattleComponents(
         .setStyle(ButtonStyle.Secondary)
     );
     components.push(bagRow);
-  } else if (battle.phase === "PARTY") {
-    const partyRow = new ActionRowBuilder<ButtonBuilder>();
-    battle.playerParty.slice(0, 4).forEach((p, idx) => {
-      const hpPct = Math.round((p.hp / p.maxHp) * 100);
-      const isCurrent = idx === battle.playerActiveIndex;
-      partyRow.addComponents(
+  } else if (battle.phase === "SWITCH") {
+    // Player MUST choose a replacement Pokémon because their active Pokémon fainted!
+    let currentRow = new ActionRowBuilder<ButtonBuilder>();
+    battle.playerParty.forEach((p, idx) => {
+      if (currentRow.components.length >= 3) {
+        components.push(currentRow);
+        currentRow = new ActionRowBuilder<ButtonBuilder>();
+      }
+      const pName = isKo ? (p.nameKo || p.name) : p.name;
+      const hpPct = Math.max(0, Math.round((p.hp / p.maxHp) * 100));
+      const isDead = p.hp <= 0;
+      currentRow.addComponents(
         new ButtonBuilder()
           .setCustomId(`battle_switch_${idx}_${slotId}_${userId}`)
-          .setLabel(`${idx + 1}. ${p.name} (${hpPct}%)`)
-          .setStyle(isCurrent ? ButtonStyle.Success : (p.hp > 0 ? ButtonStyle.Primary : ButtonStyle.Secondary))
-          .setDisabled(p.hp <= 0 || isCurrent)
+          .setLabel(isDead ? `❌ ${pName} (기절)` : `${idx + 1}. 가랏, ${pName}! (${hpPct}%) ⏩`)
+          .setStyle(isDead ? ButtonStyle.Secondary : ButtonStyle.Success)
+          .setDisabled(isDead)
       );
     });
-    partyRow.addComponents(
-      new ButtonBuilder()
-        .setCustomId(`battle_cancel_${slotId}_${userId}`)
-        .setLabel("↩️")
-        .setStyle(ButtonStyle.Secondary)
-    );
-    components.push(partyRow);
+    if (currentRow.components.length > 0) {
+      components.push(currentRow);
+    }
+  } else if (battle.phase === "PARTY") {
+    let currentRow = new ActionRowBuilder<ButtonBuilder>();
+    battle.playerParty.forEach((p, idx) => {
+      if (currentRow.components.length >= 3) {
+        components.push(currentRow);
+        currentRow = new ActionRowBuilder<ButtonBuilder>();
+      }
+      const pName = isKo ? (p.nameKo || p.name) : p.name;
+      const hpPct = Math.max(0, Math.round((p.hp / p.maxHp) * 100));
+      const isCurrent = idx === battle.playerActiveIndex;
+      const isDead = p.hp <= 0;
+      currentRow.addComponents(
+        new ButtonBuilder()
+          .setCustomId(`battle_switch_${idx}_${slotId}_${userId}`)
+          .setLabel(isDead ? `❌ ${pName} (기절)` : `${idx + 1}. ${pName} (${hpPct}%)`)
+          .setStyle(isCurrent ? ButtonStyle.Success : (isDead ? ButtonStyle.Secondary : ButtonStyle.Primary))
+          .setDisabled(isDead || isCurrent)
+      );
+    });
+    if (currentRow.components.length < 5) {
+      currentRow.addComponents(
+        new ButtonBuilder()
+          .setCustomId(`battle_cancel_${slotId}_${userId}`)
+          .setLabel(isKo ? "↩️ 뒤로" : "↩️ Back")
+          .setStyle(ButtonStyle.Secondary)
+      );
+      components.push(currentRow);
+    } else {
+      components.push(currentRow);
+      components.push(
+        new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`battle_cancel_${slotId}_${userId}`)
+            .setLabel(isKo ? "↩️ 뒤로" : "↩️ Back")
+            .setStyle(ButtonStyle.Secondary)
+        )
+      );
+    }
   } else {
     // MAIN Action Rows
     const isCharging = Boolean(combatMon?.chargingMove);
@@ -2467,11 +2511,37 @@ export const interactionCreateEvent: BotEvent = {
             return;
           }
 
-          const session = getOrCreateShowcaseSession(interaction.user.id);
-          const { buffer, turnCommentary } = await executeShowcaseTurn(session);
-          const msgData = buildShowcaseMessageData(session, interaction.user.id, turnCommentary, buffer);
-          await safeInteractionUpdate(interaction, msgData).catch(() => null);
-          return;
+          if (action === "prev") {
+            const session = getOrCreateShowcaseSession(interaction.user.id);
+            if (session.history && session.history.length > 0) {
+              const curIdx = session.viewingTurnIndex ?? (session.history.length - 1);
+              session.viewingTurnIndex = Math.max(0, curIdx - 1);
+              const snapshot = session.history[session.viewingTurnIndex];
+              const msgData = buildShowcaseMessageData(session, interaction.user.id, snapshot.commentary, snapshot.buffer);
+              await safeInteractionUpdate(interaction, msgData).catch(() => null);
+              return;
+            }
+          }
+
+          if (action === "next" || action === "auto") {
+            const session = getOrCreateShowcaseSession(interaction.user.id);
+            const curIdx = session.viewingTurnIndex ?? (session.history?.length ? session.history.length - 1 : 0);
+
+            // If user is currently browsing earlier turns in history, advance through history!
+            if (session.history && curIdx < session.history.length - 1) {
+              session.viewingTurnIndex = curIdx + 1;
+              const snapshot = session.history[session.viewingTurnIndex];
+              const msgData = buildShowcaseMessageData(session, interaction.user.id, snapshot.commentary, snapshot.buffer);
+              await safeInteractionUpdate(interaction, msgData).catch(() => null);
+              return;
+            }
+
+            // At the frontier: execute next turn!
+            const { buffer, turnCommentary } = await executeShowcaseTurn(session);
+            const msgData = buildShowcaseMessageData(session, interaction.user.id, turnCommentary, buffer);
+            await safeInteractionUpdate(interaction, msgData).catch(() => null);
+            return;
+          }
         } catch (err: any) {
           if (err?.code !== 40060 && err?.code !== 10062 && err?.code !== "InteractionNotReplied") {
             console.error("[ERROR] Error during showcase turn:", err);
@@ -3841,6 +3911,12 @@ export const interactionCreateEvent: BotEvent = {
         if (customId.startsWith("battle_menu_fight_")) {
           const slotId = parseInt(parts[3], 10) || 1;
           clearBattleStaticization(interaction.user.id, slotId);
+          const battle = battleService.getOrCreateBattle(interaction.user.id, slotId);
+          if (battle.phase === "SWITCH") {
+            const battleData = await renderBattleMessageData(interaction.user.id, slotId);
+            await safeInteractionUpdate(interaction, battleData);
+            return;
+          }
           const battleData = await renderBattleMessageData(interaction.user.id, slotId, "FIGHT");
           await safeInteractionUpdate(interaction, battleData);
           return;
@@ -3851,6 +3927,11 @@ export const interactionCreateEvent: BotEvent = {
           const slotId = parseInt(parts[3], 10) || 1;
           clearBattleStaticization(interaction.user.id, slotId);
           const battle = battleService.getOrCreateBattle(interaction.user.id, slotId);
+          if (battle.phase === "SWITCH") {
+            const battleData = await renderBattleMessageData(interaction.user.id, slotId);
+            await safeInteractionUpdate(interaction, battleData);
+            return;
+          }
           const combatMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
           if (combatMon?.chargingMove) {
             // Cannot use Bag while charging mid-air! Keep in FIGHT phase
@@ -3868,6 +3949,11 @@ export const interactionCreateEvent: BotEvent = {
           const slotId = parseInt(parts[3], 10) || 1;
           clearBattleStaticization(interaction.user.id, slotId);
           const battle = battleService.getOrCreateBattle(interaction.user.id, slotId);
+          if (battle.phase === "SWITCH") {
+            const battleData = await renderBattleMessageData(interaction.user.id, slotId);
+            await safeInteractionUpdate(interaction, battleData);
+            return;
+          }
           const combatMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
           if (combatMon?.chargingMove) {
             // Cannot switch party while charging mid-air! Keep in FIGHT phase
@@ -3885,6 +3971,11 @@ export const interactionCreateEvent: BotEvent = {
           const slotId = parseInt(parts[3], 10) || 1;
           clearBattleStaticization(interaction.user.id, slotId);
           const battle = battleService.getOrCreateBattle(interaction.user.id, slotId);
+          if (battle.phase === "SWITCH") {
+            const battleData = await renderBattleMessageData(interaction.user.id, slotId);
+            await safeInteractionUpdate(interaction, battleData);
+            return;
+          }
           const combatMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
           if (combatMon?.chargingMove) {
             // Cannot run while charging mid-air! Keep in FIGHT phase
@@ -3902,6 +3993,11 @@ export const interactionCreateEvent: BotEvent = {
           const slotId = parseInt(parts[2], 10) || 1;
           clearBattleStaticization(interaction.user.id, slotId);
           const battle = battleService.getOrCreateBattle(interaction.user.id, slotId);
+          if (battle.phase === "SWITCH") {
+            const battleData = await renderBattleMessageData(interaction.user.id, slotId);
+            await safeInteractionUpdate(interaction, battleData);
+            return;
+          }
           const combatMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
           if (combatMon?.chargingMove) {
             // Cannot exit FIGHT while charging mid-air! Keep in FIGHT phase
@@ -3971,11 +4067,11 @@ export const interactionCreateEvent: BotEvent = {
             battlePreloadService.schedulePreload(interaction.user.id, slotId, updatedBattle, profile.language);
           } catch (moveErr) {
             console.error("[BATTLE MOVE ERROR - AUTO RECOVERY]", moveErr);
-            // ⚠️ VICTORY/DEFEAT 상태는 절대 MAIN으로 되돌리지 않는다!
-            // (적 기절 GIF 렌더링 후 예외가 나면, 승리 화면이 MAIN 버튼으로 덮어써지는 버그 방지)
+            // ⚠️ VICTORY/DEFEAT/SWITCH 상태는 절대 MAIN으로 되돌리지 않는다!
+            // (적 기절 또는 아군 기절 교체 화면에서 예외가 나면, 화면이 MAIN 버튼으로 잘못 덮어써지는 버그 방지)
             const recoverBattle = battleService.getOrCreateBattle(interaction.user.id, slotId);
             const recoverPhase =
-              (recoverBattle.phase === "VICTORY" || recoverBattle.phase === "DEFEAT")
+              (recoverBattle.phase === "VICTORY" || recoverBattle.phase === "DEFEAT" || recoverBattle.phase === "SWITCH")
                 ? undefined
                 : "MAIN";
             const recoverData = await renderBattleMessageData(interaction.user.id, slotId, recoverPhase).catch(() => null);
@@ -4024,8 +4120,11 @@ export const interactionCreateEvent: BotEvent = {
           const slotId = parseInt(parts[3], 10) || 1;
           const profile = saveService.getProfile(interaction.user.id);
           battlePreloadService.invalidate(interaction.user.id, slotId);
+          const prevBattle = battleService.getOrCreateBattle(interaction.user.id, slotId);
+          const rawPrev = prevBattle.playerBattleMon || prevBattle.playerParty[prevBattle.playerActiveIndex];
+          const prevPlayer = rawPrev ? { ...rawPrev } : undefined;
           battleService.switchPlayerPokemon(interaction.user.id, slotId, targetIdx, profile.language);
-          const battleData = await renderBattleMessageData(interaction.user.id, slotId);
+          const battleData = await renderBattleMessageData(interaction.user.id, slotId, undefined, true, prevPlayer);
           if (battleData.motionDurationMs && battleData.motionDurationMs > 0) {
             const disabledComponents = disableComponentsList(battleData.components);
             await safeInteractionUpdate(interaction, { ...battleData, components: disabledComponents });

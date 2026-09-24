@@ -36,6 +36,12 @@ export function executeSingleAction(
   // 1. Action Validation (Recharge, Flinch, Sleep, Freeze, Paralysis, Attract, Confusion, Taunt, Disable)
   const validation = validateAction(actor, move, actorName, moveName, isKo);
   if (!validation.canAct) {
+    if (actor.chargingMove) {
+      actor.chargingMove = null;
+      actor.isSemiInvulnerable = false;
+      actor.semiInvulnerableState = null;
+      actor.bideDamageTaken = 0;
+    }
     return { log: validation.log || "", damage: 0, canAct: false };
   }
   const validationPrefix = validation.log ? `${validation.log}\n` : "";
@@ -235,7 +241,10 @@ export function executeSingleAction(
           const sKey = chargeInfo.chargeStatBoost.stat;
           actor.stages[sKey] = Math.min(6, actor.stages[sKey] + chargeInfo.chargeStatBoost.stage);
         }
-        const chargeLog = isKo ? `${actorName}(은)는 ${chargeInfo.chargeTextKo}` : `${actorName} ${chargeInfo.chargeTextEn}`;
+        const moveHeader = isKo ? `${actorName}의 ${moveName}!` : `${actorName} used ${moveName}!`;
+        const chargeLog = isKo
+          ? `${moveHeader}\n${actorName}(은)는 ${chargeInfo.chargeTextKo}`
+          : `${moveHeader}\n${actorName} ${chargeInfo.chargeTextEn}`;
         return withPrefix({ log: chargeLog, damage: 0 });
       }
       // Turn 2: Unleash attack

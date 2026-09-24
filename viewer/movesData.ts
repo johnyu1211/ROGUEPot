@@ -7,7 +7,7 @@ export interface VerifiedMoveItem {
   nameEn: string;
   type: string;
   category: "physical" | "special" | "status";
-  camera: "target" | "self" | "sky" | "none";
+  camera: "target" | "self" | "sky" | "none" | "custom" | "beam" | "sky_pan_down";
   desc: string;
   power?: number | null;
   accuracy?: number | null;
@@ -17,6 +17,8 @@ export interface VerifiedMoveItem {
   makesContact?: boolean;
   isVerified?: boolean;
   status?: "complete" | "visual_done" | "testing";
+  isSpecialVariant?: boolean; // 특수/충전/출연 분리 연출 플래그
+  specialType?: "entry" | "charge" | "variant" | "cutscene"; // 특수 유형 구분
 }
 
 function toTitleCase(slug: string): string {
@@ -54,7 +56,7 @@ function getMoveContact(category: string, moveKey: string): boolean {
 
 // Handcrafted verified (1-41) and testing (999) move definitions
 const HANDCRAFTED_MAP: Record<string, VerifiedMoveItem> = {
-  "encounter-entry": { num: 0, id: "encounter-entry", nameKo: "야생 포켓몬 조우 (등장)", nameEn: "Wild Encounter Entry", type: "normal", category: "status", camera: "none", desc: "야생 포켓몬 출현 및 '야생의 OO(이)가 나타났다!' 대사 등장", isVerified: true },
+  "encounter-entry": { num: 0, id: "encounter-entry", nameKo: "야생 포켓몬 조우 (등장)", nameEn: "Wild Encounter Entry", type: "normal", category: "status", camera: "none", desc: "야생 포켓몬 출현 및 '야생의 OO(이)가 나타났다!' 대사 등장", isVerified: true, isSpecialVariant: true, specialType: "entry" },
   "pound": { num: 1, id: "pound", nameKo: "막치기", nameEn: "Pound", type: "normal", category: "physical", camera: "target", desc: "손이나 꼬리로 상대를 세게 후려쳐 공격", isVerified: true },
   "karate-chop": { num: 2, id: "karate-chop", nameKo: "태권당수", nameEn: "Karate Chop", type: "fighting", category: "physical", camera: "target", desc: "정수리 수직 수도 내려치기", isVerified: true },
   "double-slap": { num: 3, id: "double-slap", nameKo: "연속뺨치기", nameEn: "Double Slap", type: "normal", category: "physical", camera: "target", desc: "좌우 왕복 연속 뺨치기", isVerified: true },
@@ -67,7 +69,7 @@ const HANDCRAFTED_MAP: Record<string, VerifiedMoveItem> = {
   "scratch": { num: 10, id: "scratch", nameKo: "할퀴기", nameEn: "Scratch", type: "normal", category: "physical", camera: "target", desc: "3연속 예리한 손톱 베기", isVerified: true },
   "vice-grip": { num: 11, id: "vice-grip", nameKo: "찝기", nameEn: "Vice Grip", type: "normal", category: "physical", camera: "target", desc: "대형 집게 양방향 압착 협공", isVerified: true },
   "guillotine": { num: 12, id: "guillotine", nameKo: "길로틴", nameEn: "Guillotine", type: "normal", category: "physical", camera: "target", desc: "일격필살 대형 집게 참격 & 승리 포즈", isVerified: true },
-  "guillotine-enemy": { num: 12, id: "guillotine-enemy", nameKo: "가위자르기 (상대 시전)", nameEn: "Guillotine (Enemy POV)", type: "normal", category: "physical", camera: "target", desc: "상대(적)가 가위자르기 시전 시점 (내 포켓몬 피격 & 처형)", isVerified: true },
+  "guillotine-enemy": { num: 12, id: "guillotine-enemy", nameKo: "가위자르기 (상대 시전)", nameEn: "Guillotine (Enemy POV)", type: "normal", category: "physical", camera: "target", desc: "상대(적)가 가위자르기 시전 시점 (내 포켓몬 피격 & 처형)", isVerified: true, isSpecialVariant: true, specialType: "variant" },
   "razor-wind": { num: 13, id: "razor-wind", nameKo: "칼바람", nameEn: "Razor Wind", type: "normal", category: "special", camera: "target", desc: "진공 칼날 회전 난무", isVerified: true },
   "swords-dance": { num: 14, id: "swords-dance", nameKo: "칼춤", nameEn: "Swords Dance", type: "normal", category: "status", camera: "self", desc: "검 3자루 회전 공격력 2랭크 상승", isVerified: true },
   "cut": { num: 15, id: "cut", nameKo: "풀베기", nameEn: "Cut", type: "normal", category: "physical", camera: "target", desc: "사선 크로스 칼날 베기", isVerified: true },
@@ -88,8 +90,8 @@ const HANDCRAFTED_MAP: Record<string, VerifiedMoveItem> = {
   "horn-attack": { num: 30, id: "horn-attack", nameKo: "뿔찌르기", nameEn: "Horn Attack", type: "normal", category: "physical", camera: "target", desc: "황금빛 날카로운 뿔 돌진, 정면 일시정지 후 관통 돌파 & 복귀", isVerified: true },
   "fury-attack": { num: 31, id: "fury-attack", nameKo: "마구찌르기", nameEn: "Fury Attack", type: "normal", category: "physical", camera: "target", desc: "전방 스텝 후 3개의 뿔 원뿔이 나란히 연속 비행 관통", isVerified: true },
   "horn-drill": { num: 32, id: "horn-drill", nameKo: "뿔드릴", nameEn: "Horn Drill", type: "normal", category: "physical", camera: "target", desc: "초고속 회전 드릴 관통, 검정 배경 순백 실루엣 & 관통 구멍 연출", isVerified: true },
-  "horn-drill-enemy": { num: 32, id: "horn-drill-enemy", nameKo: "뿔드릴 (상대 시전)", nameEn: "Horn Drill (Enemy POV)", type: "normal", category: "physical", camera: "target", desc: "상대(적)가 뿔드릴 시전 시점 (내 포켓몬 피격 & 처형)", isVerified: true },
-  "tackle": { num: 33, id: "tackle", nameKo: "몸통박치기", nameEn: "Tackle", type: "normal", category: "physical", camera: "target", desc: "도움닫기 웅크림 후 전방 고속 쇄도 & 정면 격돌 순백 충돌 타격 (쌍선 브래킷 호, 다이아몬드 스파크, 충격파 링, 지면 흙먼지 팝)", isVerified: false, status: "testing" },
+  "horn-drill-enemy": { num: 32, id: "horn-drill-enemy", nameKo: "뿔드릴 (상대 시전)", nameEn: "Horn Drill (Enemy POV)", type: "normal", category: "physical", camera: "target", desc: "상대(적)가 뿔드릴 시전 시점 (내 포켓몬 피격 & 처형)", isVerified: true, isSpecialVariant: true, specialType: "variant" },
+  "tackle": { num: 33, id: "tackle", nameKo: "몸통박치기", nameEn: "Tackle", type: "normal", category: "physical", camera: "target", desc: "도움닫기 웅크림 후 전방 고속 쇄도 & 정면 격돌 순백 충돌 타격 (쌍선 브래킷 호, 다이아몬드 스파크, 충격파 링, 지면 흙먼지 팝)", isVerified: true, status: "complete" },
   "body-slam": { num: 34, id: "body-slam", nameKo: "누르기", nameEn: "Body Slam", type: "normal", category: "physical", camera: "target", desc: "체중을 실어 전신으로 덮쳐 누르기", isVerified: true },
   "wrap": { num: 35, id: "wrap", nameKo: "김밥말이", nameEn: "Wrap", type: "normal", category: "physical", camera: "target", desc: "3D 회전 황금빛 밧줄 궤적 속박 공격", isVerified: true },
   "take-down": { num: 36, id: "take-down", nameKo: "돌진", nameEn: "Take Down", type: "normal", category: "physical", camera: "target", desc: "시전 포켓몬 살짝 후진 후 몸통박치기 (주황색 충격 이펙트 & 반동 데미지)", isVerified: true },
@@ -157,7 +159,7 @@ const HANDCRAFTED_MAP: Record<string, VerifiedMoveItem> = {
   "reflect": { num: 115, id: "reflect", nameKo: "리플렉터", nameEn: "Reflect", type: "psychic", category: "status", camera: "custom", desc: "전장 3D 360도 연속 선회 아크 샷(0° 아군 뷰 ➔ 90° 측면 대치 ➔ 180° 적 시점 정면 대면) ➔ 적 시점에서 시전 포켓몬 앞 맑고 견고한 5단 3D 육각형 에메랄드 크리스탈 베리어 순차 전개 & 결계 공명 ➔ 가던 방향 그대로 360도 연속 선회(180° ➔ 270° ➔ 360° 원래 아군 뷰) 및 시전자 전방 일체형 육각 수호 장막 안착 (5턴간 물리공격 데미지 50% 반감)", isVerified: true, status: "complete" },
   "focus-energy": { num: 116, id: "focus-energy", nameKo: "기충전 (기에모으기)", nameEn: "Focus Energy", type: "normal", category: "status", camera: "self", desc: "시전자 정중앙 록온 줌(1.25x) ➔ 시전 포켓몬 둘레를 45° 균등 간격으로 도는 8개의 초소형 백황색 에너지 구체(8-Orb Ki Ring) ➔ 3D 전후 레이어 교차 공전 ➔ 회전 도중 구체들의 연쇄 상공 130px 초장거리 노란빛기둥 분출 및 회전 절정 ➔ 상공 승화 및 공전 안정화 완주 (급소율 2랭크 상승)", isVerified: true, status: "complete" },
   "bide": { num: 117, id: "bide", nameKo: "참기 (공격)", nameEn: "Bide (Attack)", type: "normal", category: "physical", camera: "target", desc: "축적된 에너지를 폭발시키며 상대방에게 정면 대격돌 (몸통박치기 이펙트 & 2배 반격)", isVerified: true, status: "complete" },
-  "bide-charge": { num: 117, id: "bide-charge", nameKo: "참기 (참기)", nameEn: "Bide (Biding)", type: "normal", category: "physical", camera: "self", desc: "시전자 정중앙 록온 줌(1.25x) ➔ 붉게 물들며 머리 위로 3개의 하얀 증기 구름을 순차 분출(칙- 칙- 칙-)", isVerified: true, status: "complete" },
+  "bide-charge": { num: 117, id: "bide-charge", nameKo: "참기 (참기)", nameEn: "Bide (Biding)", type: "normal", category: "physical", camera: "self", desc: "시전자 정중앙 록온 줌(1.25x) ➔ 붉게 물들며 머리 위로 3개의 하얀 증기 구름을 순차 분출(칙- 칙- 칙-)", isVerified: true, status: "complete", isSpecialVariant: true, specialType: "charge" },
   "metronome": { num: 118, id: "metronome", nameKo: "손가락흔들기", nameEn: "Metronome", type: "normal", category: "status", camera: "self", desc: "시전자 정면 거대 순백 포인팅 핸드가 메트로놈처럼 좌우로 흔들리며 마법 별빛(✦)과 음표(♪)를 뿜은 뒤 랜덤 기술 발동", isVerified: true, status: "complete" },
   "mirror-move": { num: 119, id: "mirror-move", nameKo: "따라하기", nameEn: "Mirror Move", type: "flying", category: "status", camera: "beam", desc: "상대방이 사용한 기술을 흉내 내어 똑같은 기술로 반격 (기본: 에이스번의 화염방사 따라하기)", isVerified: true, status: "complete" },
   "self-destruct": { num: 120, id: "self-destruct", nameKo: "자폭", nameEn: "Self-Destruct", type: "normal", category: "physical", camera: "target", desc: "상대를 향해 달려가다 중간에 멈춰 서서 트레이너를 향해 뒤돌아본 뒤(아군 시전 시) ➔ 다시 돌아서서 상대 코앞까지 쇄도 ➔ 크리퍼 점멸 카운트다운 & 과부하 팽창 ➔ 3D 타원 충격파 링과 폭풍 블러를 동반한 대폭발 (시전자 자폭 기절 & 상대에게 200 위력의 괴멸적 물리 피해)", isVerified: true, status: "complete" },
@@ -171,17 +173,18 @@ const HANDCRAFTED_MAP: Record<string, VerifiedMoveItem> = {
   "clamp": { num: 128, id: "clamp", nameKo: "껍질에끼우기", nameEn: "Clamp", type: "water", category: "physical", camera: "target", desc: "대상 포켓몬 좌우에서 110번 껍질에숨기 공식 보라색 조개 껍질(drawClamValve) 소환 & 개방 포위 ➔ 닫힐 때 3단계 조개 투명 잔상 궤적과 함께 쾅! 맞물림 닫힘 직격 (피격자 가로 스쿼시 & 중심 물빛 타격 섬광) ➔ 닫힌 껍질로 2단 연속 추가 압박 조이기 (틈새 모락모락 화이트-연하늘 물 수증기 & 아쿠아 수포 분출) ➔ 딸깍 개방되며 반짝이는 물방울과 함께 기화 소멸 (4~5턴 바인드 구속)", isVerified: true, status: "complete" },
   "swift": { num: 129, id: "swift", nameKo: "스피드스타", nameEn: "Swift", type: "normal", category: "special", camera: "none", desc: "시전자 주변 밤하늘 암전(Fade-in) & 황금별 6개 반시계 지속 회전 ➔ 별쪽은 반투명 끝쪽은 투명한 스피드라인을 두른 5각 별과 4각 다이아몬드 십자별들의 촘촘한 스타 스트림 대각선 쇄도 ➔ 상대방에게 닿을 때마다 2D 동그란 노란 파동 링이 연속으로 팡! 팡! 팡! 팡! 쾅! 터지며 페이드아웃 복귀 (필중기)", isVerified: true, status: "complete" },
   "skull-bash": { num: 130, id: "skull-bash", nameKo: "로켓박치기", nameEn: "Skull Bash", type: "normal", category: "physical", camera: "target", desc: "시전포켓몬 포커싱 ➔ 도움닫기 후방 웅크림 ➔ 머리 전방 돔 형태의 유선형 바람 부스터 이펙트 생성 ➔ 상대방에게 26도 대각선 초고속 돌진 쇄도 & 배경 검정 암전 ➔ 정면 머리 격돌 직격 & 순백-황금 플라즈마 코어 폭발 & 방사형 초승달 충격파 칼날 & 8개 볼륨 뭉게구름 연기 팽창 ➔ 반동 착지 및 암전 페이드아웃 복귀", isVerified: true, status: "complete" },
+  "skull-bash-charge": { num: 130, id: "skull-bash-charge", nameKo: "로켓박치기 (충전)", nameEn: "Skull Bash (Charge)", type: "normal", category: "status", camera: "self", desc: "시전자 고개 푹 숙여 웅크림 ➔ 머리 둘레 암회색 원형 에너지 압축 링(Aura Compression Ring) 형성 ➔ 발밑 하단 몽글몽글 피어오르는 황금빛 모래먼지 구름층(Billowing Sand Dust Aura) ➔ 방어력 1랭크 상승 스파클 분출 (1턴 충전 고증 연출, 방어 +1)", isVerified: true, status: "complete", isSpecialVariant: true, specialType: "charge" },
   "spike-cannon": { num: 131, id: "spike-cannon", nameKo: "가시대포", nameEn: "Spike Cannon", type: "normal", category: "physical", camera: "target", desc: "바늘미사일의 내추럴 아이보리 뿔 콘 바늘 기반 4발 연속 발사 ➔ 바늘 뒷부분 로켓 엔진 추진 제트 화염(Rocket Jet Flame) 분출 ➔ 매 타격마다 핀포인트 찰진 폭발 & 타격점 전용 미니 뭉게구름 연기 솟구침 ➔ 4타 피니시 격돌 시 폭발 후 연기가 대기 중으로 부드럽게 페이드아웃 (2~5회 연속 공격)", isVerified: true, status: "complete" },
   "constrict": { num: 132, id: "constrict", nameKo: "휘감기", nameEn: "Constrict", type: "normal", category: "physical", camera: "target", desc: "시전자가 상대 포켓몬에게 접근하여 전신을 똬리로 돌돌 감기 ➔ 피격자 360도 회전(돌돌 말림) ➔ 강력한 수축 조이기 압박 작렬 (035 김밥말이 연출 100% 계승, 10% 확률 스피드 -1)", isVerified: true, status: "complete" },
   "amnesia": { num: 133, id: "amnesia", nameKo: "망각술", nameEn: "Amnesia", type: "psychic", category: "status", camera: "self", desc: "배경 암전 ➔ 시전자 머리 위 몽실몽실 피어오르는 부드러운 수증기 구름 & 중앙 파란색 물음표(?) ➔ 포켓몬과 함께 귀엽게 갸우뚱~ ➔ 수증기 구름 퐁!(Pop!) 기화 터짐 & 암전 해제 ➔ 특수방어 2랭크 상승 (+2)", isVerified: true, status: "complete" },
   "kinesis": { num: 134, id: "kinesis", nameKo: "숟가락휘기", nameEn: "Kinesis", type: "psychic", category: "status", camera: "target", desc: "약한 보라색 암전 ➔ 은빛 메탈릭 숟가락 소환 ➔ 초능력에 의해 목 부분이 자연스럽게 급절곡 ➔ 꺾인 후 외곽으로 퍼지는 보라색 파장 ➔ 상대 시야 착란 흔들림 & 명중률 1랭크 하락 (-1)", isVerified: true, status: "complete" },
   "soft-boiled": { num: 135, id: "soft-boiled", nameKo: "알낳기", nameEn: "Soft-Boiled", type: "normal", category: "status", camera: "self", desc: "시전자 앞 부드러운 상아빛 달걀 통- 통- 도약 출현 ➔ 공중 정점 '톡!' 지그재그 균열 ➔ 알 위아래 쪼개짐 & 밝은 전방위 광채 ➔ 계란이 완전히 페이드아웃된 후 ➔ HP회복 전용 녹색 치유 에너지 수렴 및 상승 나선 회복별 비상 (최대 HP 50% 회복)", isVerified: true, status: "complete" },
   "high-jump-kick": { num: 136, id: "high-jump-kick", nameKo: "무릎차기", nameEn: "High Jump Kick", type: "fighting", category: "physical", camera: "target", desc: "도약 준비 웅크림 ➔ 상공 초고도 수직 도약 & 후방 주황 실루엣 고스트 잔상 ➔ 무릎 내지른 45도 급강하 마하 돌진 ➔ 상대 무릎 직격 폭쇄 강타 & 100% 외곽 투명 충격파/스파이크 & 사방으로 퍼지며 페이드아웃되는 #FF1D00 고광택 붉은 입체 알갱이 ➔ 타격 반동 공중 백플립 회전 후 지면 착지 복귀 (위력 130)", isVerified: true, status: "complete" },
-  "glare": { num: 137, id: "glare", nameKo: "뱀눈초리", nameEn: "Glare", type: "normal", category: "status", camera: "target", desc: "연출 제작 대기 중", isVerified: false, status: "testing" },
-  "dream-eater": { num: 138, id: "dream-eater", nameKo: "꿈먹기", nameEn: "Dream Eater", type: "psychic", category: "special", camera: "target", desc: "연출 제작 대기 중", isVerified: false, status: "testing" },
-  "poison-gas": { num: 139, id: "poison-gas", nameKo: "독가스", nameEn: "Poison Gas", type: "poison", category: "status", camera: "target", desc: "연출 제작 대기 중", isVerified: false, status: "testing" },
-  "barrage": { num: 140, id: "barrage", nameKo: "구슬던지기", nameEn: "Barrage", type: "normal", category: "physical", camera: "target", desc: "연출 제작 대기 중", isVerified: false, status: "testing" },
-  "perk-hug": { num: 999, id: "perk-hug", nameKo: "포옹 (🫂 특수 연출)", nameEn: "Embrace / Hug", type: "normal", category: "status", camera: "self", desc: "내 포켓몬이 전면 상태로 카메라 앞까지 통통 뛰어와 1초간 안아준 뒤 복귀", isVerified: false },
+  "glare": { num: 137, id: "glare", nameKo: "뱀눈초리", nameEn: "Glare", type: "normal", category: "status", camera: "self", desc: "붉은 실선이 떠올라 매서운 뱀눈을 뜨며 상대를 노려본다 (100% 마비)", isVerified: true, status: "complete" },
+  "dream-eater": { num: 138, id: "dream-eater", nameKo: "꿈먹기", nameEn: "Dream Eater", type: "psychic", category: "special", camera: "custom", desc: "몽환 암전 ➔ 피격자 몸체에서 꿈의 정기 추출 ➔ 악몽 타격 및 메가드레인 궤적 곡선 아크 흡수 비행 ➔ 시전자 포커싱 전환 및 1프레임 안착 ➔ 보랏빛 나선 상승 회복별 & HP 흡수 회복 (피해 50% 흡수)", isVerified: true, status: "complete" },
+  "poison-gas": { num: 139, id: "poison-gas", nameKo: "독가스", nameEn: "Poison Gas", type: "poison", category: "status", camera: "target", desc: "시전자 들이쉬기 ➔ 상대방을 향해 100% 일직선으로 뻗어나가는 고속 독가스 제트 ➔ 상대 스프라이트를 직선으로 관통하여 Z축 뒤로 뿜어나감(뒤로 갈수록 투명화) ➔ 상대 전신 독무 차폐 & 보라색 독 기포 퐁퐁 비산 ➔ 중독 기침 전율 후 소멸 (100% 독 상태이상)", isVerified: true, status: "complete" },
+  "barrage": { num: 140, id: "barrage", nameKo: "구슬던지기", nameEn: "Barrage", type: "normal", category: "physical", camera: "target", desc: "흰색 구슬이 상공으로 고각 포물선 상승 ➔ 상대 머리 위 상공 도달 후 수직 급강하 낙하 타격 ➔ 구슬이 머리에 유지된 채로 피격자 & 카메라 진동 셰이크 작렬 ➔ 진동 종료 후 구슬 자연스러운 페이드아웃 & 외곽 투명 그라데이션 바닥 흙먼지 확산 및 소산", isVerified: true, status: "complete" },
+  "perk-hug": { num: 999, id: "perk-hug", nameKo: "포옹 (🫂 특수 연출)", nameEn: "Embrace / Hug", type: "normal", category: "status", camera: "self", desc: "내 포켓몬이 전면 상태로 카메라 앞까지 통통 뛰어와 1초간 안아준 뒤 복귀", isVerified: false, isSpecialVariant: true, specialType: "cutscene" },
 };
 
 function buildAllMovesList(): VerifiedMoveItem[] {
@@ -303,6 +306,21 @@ function buildAllMovesList(): VerifiedMoveItem[] {
         pp: 10,
         description: "공격을 견뎌 입은 데미지를 축적한다. (참기 연출)",
         descriptionEn: "Endures attacks and stores energy.",
+        makesContact: false,
+      });
+    }
+    // 130번 로켓박치기 바로 뒤에 1턴 충전 버전 삽입
+    if (m.id === 130 && HANDCRAFTED_MAP["skull-bash-charge"]) {
+      const hc = HANDCRAFTED_MAP["skull-bash-charge"];
+      result.push({
+        ...hc,
+        isVerified: true,
+        status: "complete",
+        power: null,
+        accuracy: null,
+        pp: 10,
+        description: "1턴째에 머리를 움츠려 방어를 올린다. 머리 둘레의 압축 링과 황금빛 모래먼지 오라 (1턴 충전 연출, 방어 +1)",
+        descriptionEn: "Tucks in its head to raise Defense on turn 1. Compression ring and billowing sand dust aura.",
         makesContact: false,
       });
     }

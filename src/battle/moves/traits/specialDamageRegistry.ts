@@ -233,6 +233,20 @@ export function checkSpecialDamage(ctx: SpecialDamageContext): SpecialDamageResu
     };
   }
 
+  // 9. Dream Eater (꿈먹기) - Fails if target is not asleep
+  if (moveKey === "dream-eater") {
+    const isTargetAsleep = target.status === "slp" || ((target.sleepTurns ?? 0) > 0);
+    if (!isTargetAsleep) {
+      return {
+        handled: true,
+        damage: 0,
+        log: isKo
+          ? `${actorName}의 ${moveName}!\n하지만 ${targetName}(은)는 잠들어 있지 않다!`
+          : `${actorName}'s ${moveName}!\nBut ${targetName} is not asleep!`,
+      };
+    }
+  }
+
   // Standard damage formula should proceed
   return { handled: false };
 }

@@ -1902,7 +1902,7 @@
         <div class="sidebar-title">
           <span>검수 대상 기술 목록</span>
           <div style="display: flex; align-items: center; gap: 6px;">
-            <span class="badge-count" id="move-count">24개</span>
+            <span class="badge-count" id="move-count">919개 (완료 140개) + 특수 6개</span>
             <button class="sidebar-close-btn" onclick="closeSidebar()" aria-label="메뉴 닫기" title="메뉴 닫기">✕</button>
           </div>
         </div>
@@ -2330,27 +2330,50 @@
       return "testing";
     }
 
+    const SPECIAL_VARIANT_IDS = new Set([
+      "encounter-entry",
+      "guillotine-enemy",
+      "horn-drill-enemy",
+      "bide-charge",
+      "skull-bash-charge",
+      "perk-hug"
+    ]);
+
+    function isSpecialMove(m) {
+      if (!m) return false;
+      return Boolean(m.isSpecialVariant || SPECIAL_VARIANT_IDS.has(m.id));
+    }
+
     function getMoveStatusBadge(m, inline = false) {
       const st = getMoveStatus(m);
       const style = inline ? 'margin-left: 8px; font-size: 11px; vertical-align: middle;' : '';
-      if (st === "complete") {
-        return `<span class="complete-pill"${style ? ` style="${style}"` : ''}>컴플릿</span>`;
-      } else if (st === "visual_done") {
-        return `<span class="verified-pill"${style ? ` style="${style}"` : ''}>검수완료</span>`;
-      } else {
-        return `<span class="testing-pill"${style ? ` style="${style}"` : ''}>검수중</span>`;
+      let specialBadge = '';
+      if (isSpecialMove(m)) {
+        const typeLabel = m.specialType === 'entry' ? '등장' : (m.specialType === 'charge' ? '충전' : (m.specialType === 'cutscene' ? '연출' : '특수'));
+        specialBadge = `<span class="special-pill"${style ? ` style="${style} background: #8B5CF6; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 10px;"` : ' style="background: #8B5CF6; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 10px; margin-right: 4px;"'}>${typeLabel}</span>`;
       }
+      let statusPill = '';
+      if (st === "complete") {
+        statusPill = `<span class="complete-pill"${style ? ` style="${style}"` : ''}>컴플릿</span>`;
+      } else if (st === "visual_done") {
+        statusPill = `<span class="verified-pill"${style ? ` style="${style}"` : ''}>검수완료</span>`;
+      } else {
+        statusPill = `<span class="testing-pill"${style ? ` style="${style}"` : ''}>검수중</span>`;
+      }
+      return specialBadge + statusPill;
     }
 
     function renderMoveList(moves) {
       const container = document.getElementById('move-list');
       container.innerHTML = '';
 
-      // Update sidebar counter with complete / verified count
-      const completeCount = allMoves.filter(m => getMoveStatus(m) === "complete").length;
+      // Update sidebar counter: Only 본가 official moves (919) are counted in main total!
+      const officialMoves = allMoves.filter(m => !isSpecialMove(m));
+      const completeCount = officialMoves.filter(m => getMoveStatus(m) === "complete").length;
+      const specialCount = allMoves.filter(m => isSpecialMove(m)).length;
       const countEl = document.getElementById('move-count');
       if (countEl) {
-        countEl.innerText = `${allMoves.length}개 (컴플릿 ${completeCount}개)`;
+        countEl.innerText = `${officialMoves.length}개 (완료 ${completeCount}개) + 특수 ${specialCount}개`;
       }
 
       if (!moves || moves.length === 0) {
@@ -2618,6 +2641,25 @@
           contactEl.innerHTML = '💨 비접촉기 (Non-Contact)';
           contactEl.title = '상대와 직접 접촉하지 않는 기술입니다 (접촉 판정 특성/도구 무시)';
         }
+      }
+
+      // 특수 연출 분리 배지
+      let specialPill = document.getElementById('spec-pill-special');
+      if (isSpecialMove(move)) {
+        if (!specialPill) {
+          specialPill = document.createElement('span');
+          specialPill.id = 'spec-pill-special';
+          specialPill.className = 'spec-pill';
+          specialPill.style.background = '#8B5CF6';
+          specialPill.style.color = '#FFFFFF';
+          specialPill.style.fontWeight = '700';
+          document.getElementById('detail-spec-badges')?.appendChild(specialPill);
+        }
+        const label = move.specialType === 'entry' ? '조우 등장 연출' : (move.specialType === 'charge' ? '1턴 충전 연출' : (move.specialType === 'cutscene' ? '호감도 특수 연출' : '상대 시점 연출'));
+        specialPill.innerText = `✨ 특수: ${label}`;
+        specialPill.style.display = 'inline-block';
+      } else if (specialPill) {
+        specialPill.style.display = 'none';
       }
 
       // 인게임 설명
