@@ -3,6 +3,7 @@ import {
   drawMiniRetroStar,
 } from "../common/helpers.js";
 import { drawFrontStraightPunchFistSvg } from "./move001_004.js";
+import { drawClawSwipeCluster } from "./move153_156.js";
 
 /**
  * Dynamic Writhing Sharp Zigzag Lightning Bolt
@@ -189,63 +190,26 @@ export function drawThunderPunchEffect(ctx: any, target: { x: number; y: number 
 }
 
 /**
- * 010 할퀴기 (Scratch): 3 Sharp Diagonal White/Silver Claw Slash Streaks
+ * 010 할퀴기 (Scratch): 3 Sharp Curved Silver Claw Blades with Speed Needle Trail
+ * (마구할퀴기의 단일 베기 연출을 적용하여 선명한 출현 ➔ 슬라이드 다운 페이드 ➔ 소멸)
  */
 export function drawScratchEffect(ctx: any, target: { x: number; y: number }, step: number = 1) {
-  ctx.save();
-
-  const targetX = target.x;
-  const targetY = target.y - 12;
-
-  let alpha = 1.0;
-  let spread = 1.0;
-  if (step === 2) {
-    alpha = 0.75;
-    spread = 1.25;
-  } else if (step >= 3) {
-    alpha = 0.30;
-    spread = 1.50;
-  }
+  const cx = target.x;
+  const cy = target.y - 26; // 타겟 포켓몬 몸체 중심
+  const angleRight = (3 * Math.PI) / 4 - 0.15;
+  const curveRight = -2.0;
 
   ctx.save();
-  ctx.globalAlpha = alpha;
 
-  const clawTracks = [
-    { ox: -20, oy: -14, length: 50 },
-    { ox: 0, oy: 0, length: 62 },
-    { ox: 20, oy: 14, length: 50 },
-  ];
-
-  for (const ct of clawTracks) {
-    ctx.save();
-    ctx.translate(targetX + ct.ox, targetY - 14 + ct.oy);
-    ctx.rotate(Math.PI / 4 + 0.15);
-
-    const halfL = (ct.length * spread) / 2;
-
-    ctx.fillStyle = "#E2E8F0";
-    ctx.strokeStyle = "#94A3B8";
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.moveTo(-halfL, 0);
-    ctx.quadraticCurveTo(0, -5 * spread, halfL, 0);
-    ctx.quadraticCurveTo(0, 5 * spread, -halfL, 0);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = "#FFFFFF";
-    ctx.beginPath();
-    ctx.moveTo(-halfL * 0.85, 0);
-    ctx.quadraticCurveTo(0, -2.5 * spread, halfL * 0.85, 0);
-    ctx.quadraticCurveTo(0, 2.5 * spread, -halfL * 0.85, 0);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.restore();
+  if (step === 1) {
+    // 1단계: 정위치 선명한 출현
+    drawClawSwipeCluster(ctx, cx, cy, angleRight, 1.0, 1.0, 1.0, 3, curveRight, { x: 0, y: 0 });
+  } else if (step === 2) {
+    // 2단계: 해당 방향 아래로 살짝 슬라이드하며 페이드아웃
+    drawClawSwipeCluster(ctx, cx, cy, angleRight, 1.0, 1.22, 0.40, 3, curveRight, { x: 14, y: 0 });
   }
+  // step >= 3: 완전히 사라짐 (클린)
 
-  ctx.restore();
   ctx.restore();
 }
 

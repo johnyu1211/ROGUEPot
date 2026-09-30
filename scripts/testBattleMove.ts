@@ -16,15 +16,33 @@ const testSpecies = speciesArg ? speciesArg.split('=')[1] : 'bulbasaur';
 saveService.startNewRun(testUserId, slotId, testSpecies);
 const battle = battleService.getOrCreateBattle(testUserId, slotId);
 const isEnemyActor = process.argv.includes('--enemy');
-if (isEnemyActor && speciesArg) {
-  battle.enemy.species = testSpecies;
-  battle.enemy.speciesId = testSpecies;
-}
+const enemySpeciesArg = process.argv.find(a => a.startsWith('--enemy-species='));
+const testEnemySpecies = enemySpeciesArg ? enemySpeciesArg.split('=')[1] : 'lugia';
+battle.enemy.species = isEnemyActor && speciesArg ? testSpecies : testEnemySpecies;
+battle.enemy.speciesId = isEnemyActor && speciesArg ? testSpecies : testEnemySpecies;
+battle.enemy.name = 'Lugia';
+battle.enemy.nameKo = '루기아';
 battle.playerParty[0].moves = [moveKey];
 battle.playerBattleMon.moves = [moveKey];
 battle.enemy.moves = [moveKey];
 battle.enemy.hp = 500;
 battle.enemy.maxHp = 500;
+if (moveKey === 'snore') {
+  battle.playerBattleMon.status = 'slp';
+  battle.playerBattleMon.sleepDuration = 5;
+  battle.playerBattleMon.sleepTurns = 0;
+  battle.enemy.status = 'slp';
+  battle.enemy.sleepDuration = 5;
+  battle.enemy.sleepTurns = 0;
+} else if (moveKey === 'nightmare') {
+  battle.enemy.status = 'slp';
+  battle.enemy.sleepDuration = 5;
+  battle.enemy.sleepTurns = 0;
+} else if (moveKey === 'curse-ghost') {
+  battle.playerBattleMon.types = ['ghost', 'poison'];
+  battle.playerParty[0].speciesId = 'gengar';
+  battle.playerBattleMon.speciesId = 'gengar';
+}
 saveService.updateSlot(testUserId, slotId, { party: battle.playerParty });
 
 const t0 = Date.now();
@@ -53,6 +71,9 @@ if (isEnemyActor) {
   };
 } else {
   bRes = battleService.executePlayerMove(testUserId, slotId, moveKey);
+  if (process.argv.includes('--turn2')) {
+    bRes = battleService.executePlayerMove(testUserId, slotId, moveKey);
+  }
 }
 const gif = await renderBattleMoveGif({ battle: bRes, lang: 'ko' });
 const t1 = Date.now();

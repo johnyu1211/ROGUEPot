@@ -41,7 +41,11 @@ data/*.sqlite-*
 # Temporary Dumps, Previews & Scratch Artifacts
 dump_frames/
 scratch/
+scratch_*
 preview_*
+test_*
+crop_*
+step*.json
 test_switch_*
 *.gif
 .antigravity/
@@ -56,3 +60,10 @@ memoforme.txt
 memoforme*
 moves_all_list.csv
 moves_all_list*
+
+# Custom Viewer Assets & Configs (Local Only - Never Commit to Git)
+data/custom_*
+viewer/custom_*
+custom_player*
+custom_config*
+

@@ -259,9 +259,10 @@ export class BattleService {
       playerBattleMon.stages = { ...preservedStages };
     }
 
+    const pName = isKo ? (playerBattleMon.nameKo || playerBattleMon.name) : playerBattleMon.name;
     let dialogueText = wildPokemon.isBoss
-      ? (isKo ? `보스 포켓몬 ${wildPokemon.nameKo}(이)가 나타났다!` : `Boss Pokémon ${wildPokemon.name} appeared!`)
-      : (isKo ? `야생의 ${wildPokemon.nameKo}(이)가 나타났다!` : `Wild ${wildPokemon.name} appeared!`);
+      ? (isKo ? `보스 포켓몬 ${wildPokemon.nameKo}(이)가 나타났다!\n가랏, ${pName}!` : `Boss Pokémon ${wildPokemon.name} appeared!\nGo, ${playerBattleMon.name}!`)
+      : (isKo ? `야생의 ${wildPokemon.nameKo}(이)가 나타났다!\n가랏, ${pName}!` : `Wild ${wildPokemon.name} appeared!\nGo, ${playerBattleMon.name}!`);
 
     if (playerBattleMon.ability === "Imposter" || playerBattleMon.passiveAbility === "Imposter") {
       this.applyTransform(playerBattleMon, wildPokemon);
@@ -433,9 +434,10 @@ export class BattleService {
       playerBattleMon.stages = { ...preservedStages };
     }
 
+    const pName = isKo ? (playerBattleMon.nameKo || playerBattleMon.name) : playerBattleMon.name;
     let dialogueText = wildPokemon.isBoss
-      ? (isKo ? `보스 포켓몬 ${wildPokemon.nameKo}(이)가 나타났다!` : `Boss Pokémon ${wildPokemon.name} appeared!`)
-      : (isKo ? `야생의 ${wildPokemon.nameKo}(이)가 나타났다!` : `Wild ${wildPokemon.name} appeared!`);
+      ? (isKo ? `보스 포켓몬 ${wildPokemon.nameKo}(이)가 나타났다!\n가랏, ${pName}!` : `Boss Pokémon ${wildPokemon.name} appeared!\nGo, ${playerBattleMon.name}!`)
+      : (isKo ? `야생의 ${wildPokemon.nameKo}(이)가 나타났다!\n가랏, ${pName}!` : `Wild ${wildPokemon.name} appeared!\nGo, ${playerBattleMon.name}!`);
 
     if (playerBattleMon.ability === "Imposter" || playerBattleMon.passiveAbility === "Imposter") {
       this.applyTransform(playerBattleMon, wildPokemon);
@@ -629,6 +631,8 @@ export class BattleService {
         battle.playerBattleMon.stages = createDefaultStages();
         battle.playerBattleMon.isConfused = false;
         battle.playerBattleMon.confusionTurns = 0;
+        battle.playerBattleMon.hasNightmare = false;
+        battle.playerBattleMon.isCursed = false;
         if (battle.playerBattleMon.moves) {
           battle.playerBattleMon.movePps = battle.playerBattleMon.moves.map((m) => getMoveData(m)?.pp || 20);
         }

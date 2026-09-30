@@ -39,9 +39,18 @@ export function validateAction(
 
   // 3. Sleep condition
   if (actor.status === "slp") {
+    const mKey = move.name.toLowerCase().replace(/[\s_]+/g, "-");
+    const isSleepMove = mKey === "snore" || mKey === "sleep-talk" || move.nameKo === "코골기" || move.nameKo === "잠꼬대";
+
     // 같은 턴에 방금 잠든 직후(sleepTurns === 0)라면 절대 즉시 깰 수 없음!
     if ((actor.sleepTurns || 0) === 0) {
       actor.sleepTurns = 1;
+      if (isSleepMove) {
+        return {
+          canAct: true,
+          log: isKo ? `${actorName}(은)는 쿨쿨 잠들어 있다...` : `${actorName} is fast asleep!`,
+        };
+      }
       return {
         canAct: false,
         log: isKo ? `${actorName}(은)는 쿨쿨 잠들어 있다...` : `${actorName} is fast asleep!`,
@@ -51,6 +60,12 @@ export function validateAction(
     const duration = actor.sleepDuration || 2;
     if ((actor.sleepTurns || 0) < duration) {
       actor.sleepTurns = (actor.sleepTurns || 0) + 1;
+      if (isSleepMove) {
+        return {
+          canAct: true,
+          log: isKo ? `${actorName}(은)는 쿨쿨 잠들어 있다...` : `${actorName} is fast asleep!`,
+        };
+      }
       return {
         canAct: false,
         log: isKo ? `${actorName}(은)는 쿨쿨 잠들어 있다...` : `${actorName} is fast asleep!`,
@@ -61,6 +76,9 @@ export function validateAction(
     actor.status = null;
     actor.sleepTurns = 0;
     delete actor.sleepDuration;
+    if (actor.hasNightmare) {
+      actor.hasNightmare = false;
+    }
     return {
       canAct: false,
       log: isKo ? `${actorName}(은)는 눈을 떴다!` : `${actorName} woke up!`,
@@ -69,6 +87,20 @@ export function validateAction(
 
   // 4. Freeze condition
   if (actor.status === "frz") {
+    const mKey = move.name.toLowerCase().replace(/[\s_]+/g, "-");
+    const isThawMove = [
+      "flame-wheel", "flamewheel", "172", "화염바퀴", "화염자동차",
+      "sacred-fire", "flare-blitz", "scald", "steam-eruption", "pyro-ball", "matcha-gotcha"
+    ].includes(mKey) || move.nameKo === "화염바퀴" || move.nameKo === "화염자동차";
+
+    if (isThawMove) {
+      actor.status = null;
+      return {
+        canAct: true,
+        log: isKo ? `${actorName}의 얼음이 녹았다!` : `${actorName} thawed out!`,
+      };
+    }
+
     if (Math.random() < 0.2) {
       actor.status = null;
       // Thawed out: can act immediately

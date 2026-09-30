@@ -155,6 +155,41 @@ import { glareMove } from "./definitions/137_glare.js";
 import { dreamEaterMove } from "./definitions/138_dream_eater.js";
 import { poisonGasMove } from "./definitions/139_poison_gas.js";
 import { barrageMove } from "./definitions/140_barrage.js";
+import { leechLifeMove } from "./definitions/141_leech_life.js";
+import { lovelyKissMove } from "./definitions/142_lovely_kiss.js";
+import { skyAttackMove, skyAttackChargeMove } from "./definitions/143_sky_attack.js";
+import { transformMove } from "./definitions/144_transform.js";
+import { bubbleMove } from "./definitions/145_bubble.js";
+import { dizzyPunchMove } from "./definitions/146_dizzy_punch.js";
+import { sporeMove } from "./definitions/147_spore.js";
+import { flashMove } from "./definitions/148_flash.js";
+import { psywaveMove } from "./definitions/149_psywave.js";
+import { splashMove } from "./definitions/150_splash.js";
+import { acidArmorMove } from "./definitions/151_acid_armor.js";
+import { crabhammerMove } from "./definitions/152_crabhammer.js";
+import { explosionMove } from "./definitions/153_explosion.js";
+import { furySwipesMove } from "./definitions/154_fury_swipes.js";
+import { bonemerangMove } from "./definitions/155_bonemerang.js";
+import { restMove } from "./definitions/156_rest.js";
+import { rockSlideMove } from "./definitions/157_rock_slide.js";
+import { hyperFangMove } from "./definitions/158_hyper_fang.js";
+import { sharpenMove } from "./definitions/159_sharpen.js";
+import { conversionMove } from "./definitions/160_conversion.js";
+import { triAttackMove } from "./definitions/161_tri_attack.js";
+import { superFangMove } from "./definitions/162_super_fang.js";
+import { slashMove } from "./definitions/163_slash.js";
+import { substituteMove } from "./definitions/164_substitute.js";
+import { struggleMove } from "./definitions/165_struggle.js";
+import { sketchMove } from "./definitions/166_sketch.js";
+import { tripleKickMove } from "./definitions/167_triple_kick.js";
+import { thiefMove } from "./definitions/168_thief.js";
+import { spiderWebMove } from "./definitions/169_spider_web.js";
+import { mindReaderMove } from "./definitions/170_mind_reader.js";
+import { nightmareMove } from "./definitions/171_nightmare.js";
+import { flameWheelMove } from "./definitions/172_flame_wheel.js";
+import { snoreMove } from "./definitions/173_snore.js";
+import { curseMove, curseNormalMove, curseGhostMove, curseDamageMove } from "./definitions/174_curse.js";
+import { aeroblastMove } from "./definitions/177_aeroblast.js";
 import { statusMove } from "./definitions/status.js";
 import { defaultMove } from "./definitions/default.js";
 import { hugMove } from "./definitions/hug.js";
@@ -562,6 +597,143 @@ export const MOVE_REGISTRY: Record<string, BattleMoveAnimation> = {
   "barrage": barrageMove,
   "140": barrageMove,
   "구슬던지기": barrageMove,
+  "leech-life": leechLifeMove,
+  "leechlife": leechLifeMove,
+  "141": leechLifeMove,
+  "흡혈": leechLifeMove,
+  "lovely-kiss": lovelyKissMove,
+  "lovelykiss": lovelyKissMove,
+  "142": lovelyKissMove,
+  "악마의키스": lovelyKissMove,
+  "sky-attack": skyAttackMove,
+  "skyattack": skyAttackMove,
+  "143": skyAttackMove,
+  "불새": skyAttackMove,
+  "sky-attack-charge": skyAttackChargeMove,
+  "transform": transformMove,
+  "144": transformMove,
+  "변신": transformMove,
+  "bubble": bubbleMove,
+  "145": bubbleMove,
+  "거품": bubbleMove,
+  "dizzy-punch": dizzyPunchMove,
+  "dizzypunch": dizzyPunchMove,
+  "146": dizzyPunchMove,
+  "잼잼펀치": dizzyPunchMove,
+  "잽잽펀치": dizzyPunchMove,
+  "spore": sporeMove,
+  "147": sporeMove,
+  "버섯포자": sporeMove,
+  "flash": flashMove,
+  "148": flashMove,
+  "플래시": flashMove,
+  "psywave": psywaveMove,
+  "149": psywaveMove,
+  "사이코웨이브": psywaveMove,
+  "splash": splashMove,
+  "150": splashMove,
+  "튀어오르기": splashMove,
+  "acid-armor": acidArmorMove,
+  "acidarmor": acidArmorMove,
+  "151": acidArmorMove,
+  "녹기": acidArmorMove,
+  "crabhammer": crabhammerMove,
+  "152": crabhammerMove,
+  "집게해머": crabhammerMove,
+  "explosion": explosionMove,
+  "153": explosionMove,
+  "대폭발": explosionMove,
+  "fury-swipes": furySwipesMove,
+  "furyswipes": furySwipesMove,
+  "154": furySwipesMove,
+  "마구할퀴기": furySwipesMove,
+  "bonemerang": bonemerangMove,
+  "155": bonemerangMove,
+  "뼈다귀부메랑": bonemerangMove,
+  "rest": restMove,
+  "156": restMove,
+  "잠자기": restMove,
+  "rock-slide": rockSlideMove,
+  "rockslide": rockSlideMove,
+  "157": rockSlideMove,
+  "스톤샤워": rockSlideMove,
+  "hyper-fang": hyperFangMove,
+  "hyperfang": hyperFangMove,
+  "158": hyperFangMove,
+  "필살앞니": hyperFangMove,
+  "sharpen": sharpenMove,
+  "159": sharpenMove,
+  "각지기": sharpenMove,
+  "conversion": conversionMove,
+  "160": conversionMove,
+  "텍스처": conversionMove,
+  "텍스쳐": conversionMove,
+  "tri-attack": triAttackMove,
+  "triattack": triAttackMove,
+  "161": triAttackMove,
+  "트라이어택": triAttackMove,
+  "super-fang": superFangMove,
+  "superfang": superFangMove,
+  "162": superFangMove,
+  "분노의앞니": superFangMove,
+  "분노앞니": superFangMove,
+  "slash": slashMove,
+  "163": slashMove,
+  "베어가르기": slashMove,
+  "substitute": substituteMove,
+  "164": substituteMove,
+  "대타출동": substituteMove,
+  "struggle": struggleMove,
+  "165": struggleMove,
+  "발버둥": struggleMove,
+  "sketch": sketchMove,
+  "166": sketchMove,
+  "스케치": sketchMove,
+  "triple-kick": tripleKickMove,
+  "triplekick": tripleKickMove,
+  "167": tripleKickMove,
+  "트리플킥": tripleKickMove,
+  "thief": thiefMove,
+  "168": thiefMove,
+  "도둑질": thiefMove,
+  "spider-web": spiderWebMove,
+  "spiderweb": spiderWebMove,
+  "169": spiderWebMove,
+  "거미집": spiderWebMove,
+  "mind-reader": mindReaderMove,
+  "mindreader": mindReaderMove,
+  "170": mindReaderMove,
+  "마음의눈": mindReaderMove,
+  "nightmare": nightmareMove,
+  "171": nightmareMove,
+  "악몽": nightmareMove,
+  "flame-wheel": flameWheelMove,
+  "flamewheel": flameWheelMove,
+  "172": flameWheelMove,
+  "화염바퀴": flameWheelMove,
+  "화염자동차": flameWheelMove,
+  "snore": snoreMove,
+  "173": snoreMove,
+  "코골기": snoreMove,
+  "curse": curseMove,
+  "174": curseMove,
+  "저주": curseMove,
+  "curse-normal": curseNormalMove,
+  "cursenormal": curseNormalMove,
+  "저주-일반": curseNormalMove,
+  "저주(일반)": curseNormalMove,
+  "curse-ghost": curseGhostMove,
+  "curseghost": curseGhostMove,
+  "저주-고스트": curseGhostMove,
+  "저주(고스트)": curseGhostMove,
+  "curse-damage": curseDamageMove,
+  "cursedamage": curseDamageMove,
+  "저주-데미지": curseDamageMove,
+  "저주(데미지)": curseDamageMove,
+  "저주데미지": curseDamageMove,
+  "aeroblast": aeroblastMove,
+  "177": aeroblastMove,
+  "에어로블라스트": aeroblastMove,
   "status": statusMove,
   "default": defaultMove,
   "perk-hug": hugMove,

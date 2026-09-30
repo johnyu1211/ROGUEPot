@@ -195,6 +195,26 @@ export const BATTLE_LOADOUTS: Record<string, BattleLoadoutPokemon> = {
       { key: "confuse-ray", nameKo: "이상한빛", type: "ghost", category: "status", power: null, accuracy: 100, pp: 10, desc: "요사스러운 도깨비불로 상대를 100% 혼란에 빠뜨린다." },
     ],
   },
+  lugia: {
+    id: "lugia",
+    dexNumber: 249,
+    nameKo: "루기아",
+    nameEn: "Lugia",
+    types: ["psychic", "flying"],
+    hp: 200,
+    maxHp: 200,
+    attack: 110,
+    defense: 150,
+    spAtk: 110,
+    spDef: 174,
+    speed: 130,
+    moves: [
+      { key: "aeroblast", nameKo: "에어로블라스트", type: "flying", category: "special", power: 100, accuracy: 95, pp: 5, desc: "진공의 소용돌이를 날려 공격한다. 급소에 맞기 쉽다." },
+      { key: "hydro-pump", nameKo: "하이드로펌프", type: "water", category: "special", power: 110, accuracy: 80, pp: 5, desc: "대량의 물을 맹렬한 기세로 상대에게 뿜어낸다." },
+      { key: "psychic", nameKo: "사이코키네시스", type: "psychic", category: "special", power: 90, accuracy: 100, pp: 10, desc: "강한 염동력으로 상대를 공격한다. (10% 특방 1랭크 하락)" },
+      { key: "rest", nameKo: "잠자기", type: "psychic", category: "status", power: null, accuracy: 100, pp: 5, desc: "2턴 동안 잠자며 체력과 상태이상을 모두 회복한다." },
+    ],
+  },
 };
 
 export const NEW_MOVES_KEYS = [
@@ -1093,8 +1113,10 @@ const server = http.createServer(async (req, res) => {
       const rawMoveKey = url.searchParams.get("moveKey") || "double-kick";
       const isEnemyCaster = rawMoveKey.endsWith("-enemy");
       const moveKey = isEnemyCaster ? rawMoveKey.replace(/-enemy$/, "") : rawMoveKey;
-      const playerSpecies = url.searchParams.get("playerSpecies") || "bulbasaur";
-      const enemySpecies = url.searchParams.get("enemySpecies") || "onix";
+      const defaultPlayerSpecies = (moveKey === "transform" && !isEnemyCaster) ? "ditto" : (moveKey === "curse-ghost" && !isEnemyCaster) ? "gengar" : "bulbasaur";
+      const defaultEnemySpecies = (moveKey === "transform" && isEnemyCaster) ? "ditto" : (moveKey === "curse-ghost" && isEnemyCaster) ? "gengar" : "lugia";
+      const playerSpecies = url.searchParams.get("playerSpecies") || defaultPlayerSpecies;
+      const enemySpecies = url.searchParams.get("enemySpecies") || defaultEnemySpecies;
       const hitMode = url.searchParams.get("hitMode") || "normal";
       const flyPhase = url.searchParams.get("flyPhase") || "2";
       const actMode = url.searchParams.get("actMode") || "dual";
@@ -1157,14 +1179,16 @@ const server = http.createServer(async (req, res) => {
         }
       }
 
+      const verifiedMove = VERIFIED_MOVES.find(m => m.id === moveKey);
       const moveData = getMoveData(moveKey);
-      const moveKo = moveKey === "encounter-entry" ? "야생 포켓몬 조우 (등장)" : (moveKey === "perk-hug" ? "포옹 (🫂 특수 연출)" : (moveData?.nameKo || moveKey));
+      const moveKo = moveKey === "encounter-entry" ? "야생 포켓몬 조우 (등장)" : (moveKey === "perk-hug" ? "포옹 (🫂 특수 연출)" : (verifiedMove?.nameKo || moveData?.nameKo || moveKey));
       const playerInfo = POKEMON_SPECIES_DATA[playerSpecies];
       const enemyInfo = POKEMON_SPECIES_DATA[enemySpecies];
-      const playerDisplayName = (playerInfo?.num ? POKEMON_NAMES_KO[String(playerInfo.num)] : null) || (playerInfo as any)?.nameKo || playerSpecies;
-      const enemyDisplayName = (enemyInfo?.num ? POKEMON_NAMES_KO[String(enemyInfo.num)] : null) || (enemyInfo as any)?.nameKo || enemySpecies;
+      const playerDisplayName = playerSpecies === "custom" ? "커스텀" : ((playerInfo?.num ? POKEMON_NAMES_KO[String(playerInfo.num)] : null) || (playerInfo as any)?.nameKo || playerSpecies);
+      const enemyDisplayName = enemySpecies === "custom" ? "커스텀" : ((enemyInfo?.num ? POKEMON_NAMES_KO[String(enemyInfo.num)] : null) || (enemyInfo as any)?.nameKo || enemySpecies);
 
-      const isStatus = moveData?.category === "status" || moveKey === "swords-dance" || moveKey === "whirlwind" || moveKey === "perk-hug" || moveKey === "bide-charge";
+      const isCharge = moveKey.endsWith("-charge") || verifiedMove?.specialType === "charge";
+      const isStatus = moveData?.category === "status" || verifiedMove?.category === "status" || isCharge || moveKey === "swords-dance" || moveKey === "whirlwind" || moveKey === "perk-hug" || moveKey === "bide-charge";
       const isOHKO = moveKey === "guillotine" || moveKey === "horn-drill" || moveKey === "fissure" || moveKey === "sheer-cold";
       const isMiss = hitMode === "miss";
       const isImmune = hitMode === "immune";
@@ -1196,7 +1220,7 @@ const server = http.createServer(async (req, res) => {
         moveKey === "double-team" || moveKey === "minimize" || moveKey === "harden" ||
         moveKey === "iron-defense" || moveKey === "withdraw" || moveKey === "focus-energy" ||
         moveKey === "barrier" || moveKey === "defense-curl" || moveKey === "amnesia" ||
-        moveKey === "acid-armor" || moveKey === "sharpen" || moveKey === "charge" ||
+        moveKey === "acid-armor" || moveKey === "sharpen" || moveKey === "conversion" || moveKey === "charge" ||
         moveKey === "nasty-plot" || moveKey === "quiver-dance" || moveKey === "shell-smash" ||
         moveKey === "rock-polish" || moveKey === "work-up" || moveKey === "hone-claws" ||
         moveKey === "belly-drum" || moveKey === "coil" || moveKey === "light-screen" || moveKey === "reflect" ||
@@ -1477,6 +1501,48 @@ const server = http.createServer(async (req, res) => {
               effectiveness: 1.0,
               log: `적 ${enemyDisplayName}(은)는 참기를 시작했다!`
             }
+          ] : (moveKey === "sky-attack-charge" || moveKey === "sky-attack-charge-enemy") ? [
+            {
+              actor: "enemy",
+              moveKey: "sky-attack-charge",
+              moveName: "불새 (충전)",
+              damage: 0,
+              isHit: true,
+              isTurn1Launch: true,
+              chargingMove: "sky-attack",
+              playerHpAfter: 150,
+              enemyHpAfter: 150,
+              effectiveness: 1.0,
+              log: `적 ${enemyDisplayName}(은)는 눈부신 빛에 휩싸였다!`
+            }
+          ] : (moveKey === "skull-bash-charge" || moveKey === "skull-bash-charge-enemy") ? [
+            {
+              actor: "enemy",
+              moveKey: "skull-bash-charge",
+              moveName: "로켓박치기 (충전)",
+              damage: 0,
+              isHit: true,
+              isTurn1Launch: true,
+              chargingMove: "skull-bash",
+              playerHpAfter: 150,
+              enemyHpAfter: 150,
+              effectiveness: 1.0,
+              log: `적 ${enemyDisplayName}(은)는 머리를 움츠렸다!`
+            }
+          ] : (moveKey === "solar-beam-charge" || moveKey === "solar-beam-charge-enemy") ? [
+            {
+              actor: "enemy",
+              moveKey: "solar-beam-charge",
+              moveName: "솔라빔 (충전)",
+              damage: 0,
+              isHit: true,
+              isTurn1Launch: true,
+              chargingMove: "solar-beam",
+              playerHpAfter: 150,
+              enemyHpAfter: 150,
+              effectiveness: 1.0,
+              log: `적 ${enemyDisplayName}(은)는 빛을 모으고 있다!`
+            }
           ] : (moveKey === "bide" && flyPhase === "full") ? [
             {
               actor: "enemy",
@@ -1695,7 +1761,100 @@ const server = http.createServer(async (req, res) => {
                     : `적 ${enemyDisplayName}의 따라하기!\n아군 ${playerDisplayName}의 ${mirrorSubKo}(을)를 흉내 냈다!\n${actualDamage} 데미지!`)
               }
             ]
-          ) : [
+          ) : (moveKey === "struggle") ? [
+            {
+              actor: "enemy",
+              moveKey: "struggle",
+              moveName: "발버둥",
+              damage: actualDamage,
+              isHit: isHit,
+              isSuperEffective: false,
+              typeMod: 1.0,
+              playerHpAfter: isMiss ? initPlayerHp : Math.max(0, initPlayerHp - actualDamage),
+              enemyHpAfter: Math.max(1, Math.round(initEnemyHp * 0.75)),
+              effectiveness: 1.0,
+              log: isMiss
+                ? `적 ${enemyDisplayName}의 발버둥!\n하지만 상대에게 빗나갔다!`
+                : `적 ${enemyDisplayName}의 발버둥!\n반동으로 데미지를 입었다!`
+            }
+          ] : (moveKey === "curse-ghost") ? [
+            {
+              actor: "enemy",
+              moveKey: "curse-ghost",
+              moveName: "저주",
+              damage: 0,
+              isHit: true,
+              isSuperEffective: false,
+              typeMod: 1.0,
+              playerHpAfter: initPlayerHp,
+              enemyHpAfter: Math.max(1, Math.round(initEnemyHp * 0.50)),
+              effectiveness: 1.0,
+              log: `적 ${enemyDisplayName}(은)는 자신의 체력을 깎아 ${playerDisplayName}에게 저주를 걸었다!`
+            }
+          ] : (moveKey === "curse-damage") ? [
+            {
+              actor: "enemy",
+              moveKey: "curse-damage",
+              moveName: "저주",
+              damage: Math.max(1, Math.round(initPlayerHp * 0.25)),
+              isHit: true,
+              isSuperEffective: false,
+              typeMod: 1.0,
+              playerHpBefore: initPlayerHp,
+              playerHpAfter: Math.max(1, Math.round(initPlayerHp * 0.75)),
+              enemyHpBefore: initEnemyHp,
+              enemyHpAfter: initEnemyHp,
+              effectiveness: 1.0,
+              log: `${playerDisplayName}(은)는 저주에 걸려 있다! (-${Math.max(1, Math.round(initPlayerHp * 0.25))})`
+            }
+          ] : (moveKey === "curse" || moveKey === "curse-normal") ? [
+            {
+              actor: "enemy",
+              moveKey: "curse",
+              moveName: "저주",
+              damage: 0,
+              isHit: true,
+              isSuperEffective: false,
+              typeMod: 1.0,
+              playerHpAfter: initPlayerHp,
+              enemyHpAfter: initEnemyHp,
+              statChanges: [
+                { target: "enemy", direction: "down" },
+                { target: "enemy", direction: "up" },
+                { target: "enemy", direction: "up" }
+              ],
+              effectiveness: 1.0,
+              log: `적 ${enemyDisplayName}의 스피드가 떨어지고 공격과 방어가 올라갔다!`
+            }
+          ] : (moveKey === "substitute") ? [
+            {
+              actor: "enemy",
+              moveKey: "substitute",
+              moveName: "대타출동",
+              damage: 0,
+              isHit: true,
+              isSuperEffective: false,
+              typeMod: 1.0,
+              playerHpAfter: initPlayerHp,
+              enemyHpAfter: Math.max(1, Math.round(initEnemyHp * 0.75)),
+              effectiveness: 1.0,
+              log: `적 ${enemyDisplayName}(은)는 자신의 HP를 깎아 대타 분신을 만들었다!`
+            }
+          ] : (moveKey === "transform") ? [
+            {
+              actor: "enemy",
+              moveKey: "transform",
+              moveName: "변신",
+              damage: 0,
+              isHit: true,
+              isSuperEffective: false,
+              typeMod: 1.0,
+              playerHpAfter: initPlayerHp,
+              enemyHpAfter: initEnemyHp,
+              effectiveness: 1.0,
+              log: `적 ${enemyDisplayName}(은)는 ${playerDisplayName}(으)로 변신했다!`
+            }
+          ] : [
             {
               actor: "enemy",
               moveKey: moveKey,
@@ -1998,6 +2157,48 @@ const server = http.createServer(async (req, res) => {
             effectiveness: 1.0,
             log: `아군 ${playerDisplayName}(은)는 참기를 시작했다!`
           }
+        ] : (moveKey === "sky-attack-charge") ? [
+          {
+            actor: "player",
+            moveKey: "sky-attack-charge",
+            moveName: "불새 (충전)",
+            damage: 0,
+            isHit: true,
+            isTurn1Launch: true,
+            chargingMove: "sky-attack",
+            playerHpAfter: 150,
+            enemyHpAfter: 150,
+            effectiveness: 1.0,
+            log: `아군 ${playerDisplayName}(은)는 눈부신 빛에 휩싸였다!`
+          }
+        ] : (moveKey === "skull-bash-charge") ? [
+          {
+            actor: "player",
+            moveKey: "skull-bash-charge",
+            moveName: "로켓박치기 (충전)",
+            damage: 0,
+            isHit: true,
+            isTurn1Launch: true,
+            chargingMove: "skull-bash",
+            playerHpAfter: 150,
+            enemyHpAfter: 150,
+            effectiveness: 1.0,
+            log: `아군 ${playerDisplayName}(은)는 머리를 움츠렸다!`
+          }
+        ] : (moveKey === "solar-beam-charge") ? [
+          {
+            actor: "player",
+            moveKey: "solar-beam-charge",
+            moveName: "솔라빔 (충전)",
+            damage: 0,
+            isHit: true,
+            isTurn1Launch: true,
+            chargingMove: "solar-beam",
+            playerHpAfter: 150,
+            enemyHpAfter: 150,
+            effectiveness: 1.0,
+            log: `아군 ${playerDisplayName}(은)는 빛을 모으고 있다!`
+          }
         ] : (moveKey === "bide" && flyPhase === "full") ? [
           {
             actor: "player",
@@ -2272,6 +2473,181 @@ const server = http.createServer(async (req, res) => {
             enemyHpAfter: 0,
             effectiveness: 1.0,
             log: `아군 ${playerDisplayName}의 ${moveKo}!\n일격필살! 상대 ${enemyDisplayName}(은)는 쓰러졌다!`
+          }
+        ] : (moveKey === "struggle") ? [
+          {
+            actor: "player",
+            moveKey: "struggle",
+            moveName: "발버둥",
+            damage: actualDamage,
+            isHit: isHit,
+            isSuperEffective: false,
+            typeMod: 1.0,
+            playerHpAfter: Math.max(1, Math.round(initPlayerHp * 0.75)),
+            enemyHpAfter: isMiss ? initEnemyHp : Math.max(0, initEnemyHp - actualDamage),
+            effectiveness: 1.0,
+            log: isMiss
+              ? `아군 ${playerDisplayName}의 발버둥!\n하지만 상대에게 빗나갔다!`
+              : `아군 ${playerDisplayName}의 발버둥! ${actualDamage} 데미지!\n발버둥의 반동으로 데미지를 입었다!`
+          },
+          ...(actMode === "dual" ? [
+            {
+              actor: "enemy",
+              moveKey: "struggle",
+              moveName: "발버둥",
+              damage: actualDamage,
+              isHit: true,
+              isSuperEffective: false,
+              typeMod: 1.0,
+              playerHpAfter: Math.max(1, Math.round(initPlayerHp * 0.50)),
+              enemyHpAfter: Math.max(1, Math.round(initEnemyHp * 0.75)),
+              effectiveness: 1.0,
+              log: `적 ${enemyDisplayName}의 발버둥! ${actualDamage} 데미지!\n발버둥의 반동으로 데미지를 입었다!`
+            }
+          ] : [])
+        ] : (moveKey === "curse-ghost") ? [
+          {
+            actor: "player",
+            moveKey: "curse-ghost",
+            moveName: "저주",
+            damage: 0,
+            isHit: true,
+            isSuperEffective: false,
+            typeMod: 1.0,
+            playerHpAfter: Math.max(1, Math.round(initPlayerHp * 0.50)),
+            enemyHpAfter: initEnemyHp,
+            effectiveness: 1.0,
+            log: `아군 ${playerDisplayName}(은)는 자신의 체력을 깎아 ${enemyDisplayName}에게 저주를 걸었다!`
+          },
+          ...(actMode === "dual" ? [
+            {
+              actor: "enemy",
+              moveKey: "curse-ghost",
+              moveName: "저주",
+              damage: 0,
+              isHit: true,
+              isSuperEffective: false,
+              typeMod: 1.0,
+              playerHpAfter: Math.max(1, Math.round(initPlayerHp * 0.50)),
+              enemyHpAfter: Math.max(1, Math.round(initEnemyHp * 0.50)),
+              effectiveness: 1.0,
+              log: `적 ${enemyDisplayName}(은)는 자신의 체력을 깎아 ${playerDisplayName}에게 저주를 걸었다!`
+            }
+          ] : [])
+        ] : (moveKey === "curse-damage") ? [
+          {
+            actor: "player",
+            moveKey: "curse-damage",
+            moveName: "저주",
+            damage: Math.max(1, Math.round(initEnemyHp * 0.25)),
+            isHit: true,
+            isSuperEffective: false,
+            typeMod: 1.0,
+            enemyHpBefore: initEnemyHp,
+            enemyHpAfter: Math.max(1, Math.round(initEnemyHp * 0.75)),
+            playerHpBefore: initPlayerHp,
+            playerHpAfter: initPlayerHp,
+            effectiveness: 1.0,
+            log: `${enemyDisplayName}(은)는 저주에 걸려 있다! (-${Math.max(1, Math.round(initEnemyHp * 0.25))})`
+          },
+          ...(actMode === "dual" ? [
+            {
+              actor: "enemy",
+              moveKey: "curse-damage",
+              moveName: "저주",
+              damage: Math.max(1, Math.round(initPlayerHp * 0.25)),
+              isHit: true,
+              isSuperEffective: false,
+              typeMod: 1.0,
+              playerHpBefore: initPlayerHp,
+              playerHpAfter: Math.max(1, Math.round(initPlayerHp * 0.75)),
+              enemyHpBefore: Math.max(1, Math.round(initEnemyHp * 0.75)),
+              enemyHpAfter: Math.max(1, Math.round(initEnemyHp * 0.75)),
+              effectiveness: 1.0,
+              log: `${playerDisplayName}(은)는 저주에 걸려 있다! (-${Math.max(1, Math.round(initPlayerHp * 0.25))})`
+            }
+          ] : [])
+        ] : (moveKey === "curse" || moveKey === "curse-normal") ? [
+          {
+            actor: "player",
+            moveKey: "curse",
+            moveName: "저주",
+            damage: 0,
+            isHit: true,
+            isSuperEffective: false,
+            typeMod: 1.0,
+            playerHpAfter: initPlayerHp,
+            enemyHpAfter: initEnemyHp,
+            statChanges: [
+              { target: "player", direction: "down" },
+              { target: "player", direction: "up" },
+              { target: "player", direction: "up" }
+            ],
+            effectiveness: 1.0,
+            log: `아군 ${playerDisplayName}의 스피드가 떨어지고 공격과 방어가 올라갔다!`
+          },
+          ...(actMode === "dual" ? [
+            {
+              actor: "enemy",
+              moveKey: "curse",
+              moveName: "저주",
+              damage: 0,
+              isHit: true,
+              isSuperEffective: false,
+              typeMod: 1.0,
+              playerHpAfter: initPlayerHp,
+              enemyHpAfter: initEnemyHp,
+              statChanges: [
+                { target: "enemy", direction: "down" },
+                { target: "enemy", direction: "up" },
+                { target: "enemy", direction: "up" }
+              ],
+              effectiveness: 1.0,
+              log: `적 ${enemyDisplayName}의 스피드가 떨어지고 공격과 방어가 올라갔다!`
+            }
+          ] : [])
+        ] : (moveKey === "substitute") ? [
+          {
+            actor: "player",
+            moveKey: "substitute",
+            moveName: "대타출동",
+            damage: 0,
+            isHit: true,
+            isSuperEffective: false,
+            typeMod: 1.0,
+            playerHpAfter: Math.max(1, Math.round(initPlayerHp * 0.75)),
+            enemyHpAfter: initEnemyHp,
+            effectiveness: 1.0,
+            log: `아군 ${playerDisplayName}(은)는 자신의 HP를 깎아 대타 분신을 만들었다!`
+          },
+          ...(actMode === "dual" ? [
+            {
+              actor: "enemy",
+              moveKey: "substitute",
+              moveName: "대타출동",
+              damage: 0,
+              isHit: true,
+              isSuperEffective: false,
+              typeMod: 1.0,
+              playerHpAfter: Math.max(1, Math.round(initPlayerHp * 0.75)),
+              enemyHpAfter: Math.max(1, Math.round(initEnemyHp * 0.75)),
+              effectiveness: 1.0,
+              log: `적 ${enemyDisplayName}(은)는 자신의 HP를 깎아 대타 분신을 만들었다!`
+            }
+          ] : [])
+        ] : (moveKey === "transform") ? [
+          {
+            actor: "player",
+            moveKey: "transform",
+            moveName: "변신",
+            damage: 0,
+            isHit: true,
+            isSuperEffective: false,
+            typeMod: 1.0,
+            playerHpAfter: initPlayerHp,
+            enemyHpAfter: initEnemyHp,
+            effectiveness: 1.0,
+            log: `아군 ${playerDisplayName}(은)는 ${enemyDisplayName}(으)로 변신했다!`
           }
         ] : (actMode === "dual" ? [
           {

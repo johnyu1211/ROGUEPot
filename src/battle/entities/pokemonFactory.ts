@@ -133,6 +133,7 @@ export function spawnWildPokemon(
     isBoss,
     bossShields: isBoss ? 2 : undefined,
     bossMaxShields: isBoss ? 2 : undefined,
+    heldItems: [],
   };
 }
 
@@ -203,6 +204,7 @@ export function createPlayerBattleMon(partyMon: PartyPokemon, fullParty: PartyPo
     isShiny: partyMon.isShiny,
     hasIllusion,
     illusionTarget,
+    heldItems: partyMon.heldItems ? [...partyMon.heldItems] : [],
   };
 }
 

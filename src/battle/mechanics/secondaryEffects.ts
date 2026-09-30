@@ -25,7 +25,11 @@ export function applySecondaryAttackEffects(
   }
 
   // 2. Recoil Moves
-  if (trait?.recoilRatio) {
+  if (["struggle", "165", "발버둥"].includes(mName)) {
+    const recoilDmg = Math.max(1, Math.floor(actor.maxHp * 0.25));
+    actor.hp = Math.max(0, actor.hp - recoilDmg);
+    log += isKo ? `\n발버둥친 반동으로 ${recoilDmg} 데미지를 입었다!` : `\nHit with ${recoilDmg} recoil damage from struggling!`;
+  } else if (trait?.recoilRatio) {
     const recoilDmg = Math.max(1, Math.floor(damageDealt * trait.recoilRatio));
     actor.hp = Math.max(0, actor.hp - recoilDmg);
     log += isKo ? `\n반동으로 ${recoilDmg} 데미지를 입었다!` : `\nHit with ${recoilDmg} recoil damage!`;
@@ -48,11 +52,11 @@ export function applySecondaryAttackEffects(
   }
 
   // 5. Flinch
-  if (["bite", "rock-slide", "iron-head", "air-slash", "headbutt"].includes(mName)) {
+  if (["bite", "rock-slide", "rockslide", "157", "스톤샤워", "iron-head", "air-slash", "headbutt", "sky-attack", "stomp", "23", "짓밟기", "rolling-kick", "27", "돌려차기", "snore", "173", "코골기"].includes(mName)) {
     if (Math.random() < 0.3) {
       target.isFlinched = true;
     }
-  } else if (["bone-club", "boneclub", "125"].includes(mName)) {
+  } else if (["bone-club", "boneclub", "125", "hyper-fang", "hyperfang", "158", "필살앞니"].includes(mName)) {
     if (Math.random() < 0.1) {
       target.isFlinched = true;
     }
@@ -63,8 +67,14 @@ export function applySecondaryAttackEffects(
   }
 
   // 6. Status Inflictions from Attacks
+  // 불꽃 타입 공격 또는 열탕(Scald)에 피격된 대상의 얼음 상태 해제 (포켓몬 본가 공식 시스템)
+  if (target.hp > 0 && target.status === "frz" && (move.type === "fire" || mName === "scald")) {
+    target.status = null;
+    log += isKo ? `\n${target.name}의 얼음이 녹았다!` : `\n${target.name} thawed out!`;
+  }
+
   if (target.hp > 0 && !target.status) {
-    if (["flamethrower", "fire-blast", "scald", "ember", "fire-punch"].includes(mName)) {
+    if (["flamethrower", "fire-blast", "scald", "ember", "fire-punch", "flame-wheel", "flamewheel", "172", "화염바퀴", "화염자동차"].includes(mName)) {
       const burnChance = mName === "scald" ? 0.3 : 0.1;
       if (Math.random() < burnChance && !target.types.map(t => t.toLowerCase()).includes("fire")) {
         target.status = "brn";
@@ -87,6 +97,21 @@ export function applySecondaryAttackEffects(
       if (Math.random() < psnChance && !isTargetPoisonOrSteel) {
         target.status = "psn";
         log += isKo ? `\n${target.name}(은)는 독에 걸렸다!` : `\n${target.name} was poisoned!`;
+      }
+    } else if (["tri-attack", "triattack", "161", "트라이어택"].includes(mName)) {
+      if (Math.random() < 0.2) {
+        const targetTypes = target.types.map(t => t.toLowerCase());
+        const candidates: Array<{ status: "brn" | "frz" | "par"; immuneType: string; koText: string; enText: string }> = [
+          { status: "brn", immuneType: "fire", koText: `\n${target.name}(은)는 화상을 입었다!`, enText: `\n${target.name} was burned!` },
+          { status: "frz", immuneType: "ice", koText: `\n${target.name}(은)는 꽁꽁 얼어붙었다!`, enText: `\n${target.name} was frozen solid!` },
+          { status: "par", immuneType: "electric", koText: `\n${target.name}(은)는 마비에 걸렸다!`, enText: `\n${target.name} is paralyzed!` },
+        ];
+        const valid = candidates.filter(c => !targetTypes.includes(c.immuneType));
+        if (valid.length > 0) {
+          const chosen = valid[Math.floor(Math.random() * valid.length)];
+          target.status = chosen.status;
+          log += isKo ? chosen.koText : chosen.enText;
+        }
       }
     }
   }
@@ -143,6 +168,55 @@ export function applySecondaryAttackEffects(
     log += isKo
       ? `\n${target.name}(은)는 ${move.nameKo || move.name}에 묶여 빠져나올 수 없게 되었다!`
       : `\n${target.name} was trapped by ${move.name}!`;
+  }
+
+  // 10. Thief (도둑질: 상대의 지닌물건을 훔쳐옴)
+  if (["thief", "168", "도둑질"].includes(mName)) {
+    if (target.heldItems && target.heldItems.length > 0) {
+      if (!actor.heldItems || actor.heldItems.length === 0) {
+        const stolenItem = target.heldItems.shift()!;
+        actor.heldItems = actor.heldItems || [];
+        actor.heldItems.push(stolenItem);
+        log += isKo
+          ? `\n${actor.nameKo || actor.name}(은)는 ${target.nameKo || target.name}의 ${stolenItem}을(를) 훔쳤다!`
+          : `\n${actor.name} stole ${target.name}'s ${stolenItem}!`;
+      }
+    }
+  }
+
+  // 11. Rampage Moves (Thrash, Petal Dance, Outrage)
+  if (trait?.rampageMove && actor.hp > 0) {
+    const aName = isKo ? (actor.nameKo || actor.name) : (actor.name || actor.nameKo);
+    if (!actor.rampageState) {
+      const totalTurns = Math.random() < 0.5 ? 2 : 3;
+      actor.rampageState = {
+        moveKey: mName,
+        turnsLeft: totalTurns - 1, // 1st turn completed right now
+      };
+      log += isKo
+        ? `\n${aName}(은)는 난동을 부리기 시작했다!`
+        : `\n${aName} began rampaging!`;
+    } else {
+      actor.rampageState.turnsLeft -= 1;
+      if (actor.rampageState.turnsLeft <= 0) {
+        actor.rampageState = null;
+        if (!actor.status && !actor.isConfused) {
+          actor.isConfused = true;
+          actor.confusionTurns = Math.floor(Math.random() * 4) + 2; // 2 ~ 5 turns
+          log += isKo
+            ? `\n${aName}(은)는 피로로 혼란에 빠졌다!`
+            : `\n${aName} became confused due to fatigue!`;
+        } else {
+          log += isKo
+            ? `\n${aName}(은)는 난동을 끝냈다.`
+            : `\n${aName}'s rampage ended.`;
+        }
+      } else {
+        log += isKo
+          ? `\n${aName}(은)는 계속해서 난동을 부리고 있다!`
+          : `\n${aName} is still rampaging!`;
+      }
+    }
   }
 
   return log;

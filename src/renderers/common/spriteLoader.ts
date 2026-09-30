@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import { createCanvas, loadImage, Image } from "@napi-rs/canvas";
 import { POKEMON_SPECIES_DATA } from "../../data/pokemonStats.js";
 import { STARTER_DATABASE } from "../../data/starterCosts.js";
@@ -21,6 +23,41 @@ export async function getPokemonSprite(
 ): Promise<any | null> {
   try {
     let clean = pokemonName.toLowerCase().trim();
+
+    // 0. Local Custom Sprite support (Local only, not committed to git)
+    if (clean === "custom") {
+      const customCacheKey = `custom_${isBack ? "b" : "f"}`;
+      if (spriteCache.has(customCacheKey)) {
+        return spriteCache.get(customCacheKey)!;
+      }
+      const candidatePaths = [
+        path.resolve(process.cwd(), "data", "custom_player.png"),
+        path.resolve(process.cwd(), "viewer", "custom_player.png"),
+        path.resolve(process.cwd(), "custom_player.png"),
+      ];
+      for (const p of candidatePaths) {
+        if (fs.existsSync(p)) {
+          try {
+            const img = await loadImage(p);
+            spriteCache.set(customCacheKey, img);
+            return img;
+          } catch (e) {
+            console.warn("[getPokemonSprite] Failed loading custom sprite from", p, e);
+          }
+        }
+      }
+      const configPath = path.resolve(process.cwd(), "data", "custom_config.json");
+      if (fs.existsSync(configPath)) {
+        try {
+          const cfg = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+          if (cfg.playerSpritePath && fs.existsSync(path.resolve(process.cwd(), cfg.playerSpritePath))) {
+            const img = await loadImage(path.resolve(process.cwd(), cfg.playerSpritePath));
+            spriteCache.set(customCacheKey, img);
+            return img;
+          }
+        } catch {}
+      }
+    }
     if (clean === "nidoran-f" || clean === "nidoran_f" || clean === "nidoran♀") clean = "nidoranf";
     else if (clean === "nidoran-m" || clean === "nidoran_m" || clean === "nidoran♂") clean = "nidoranm";
     else if (clean === "mr-mime" || clean === "mr.-mime" || clean === "mr mime") clean = "mrmime";
@@ -150,9 +187,11 @@ export async function getPokemonSprite(
 
     // 4. Secondary Fallback Source: Showdown CDN
     if (!img) {
-      const folder = isBack
-        ? (tier > 0 && !isTestSubject ? "gen5-back-shiny" : "gen5-back")
-        : (tier > 0 && !isTestSubject ? "gen5-shiny" : "gen5");
+      const folder = clean === "substitute"
+        ? (isBack ? "gen5-back" : "gen5")
+        : (isBack
+          ? (tier > 0 && !isTestSubject ? "gen5-back-shiny" : "gen5-back")
+          : (tier > 0 && !isTestSubject ? "gen5-shiny" : "gen5"));
       
       const candidateKeys = [
         lookupKey,
@@ -366,7 +405,8 @@ export function drawFittedBattleSprite(
   targetX: number,
   targetY: number,
   targetSize: number,
-  tintColor?: string | null
+  tintColor?: string | null,
+  bottomSpread?: number
 ) {
   if (!sprite || !sprite.width || !sprite.height) return;
 
@@ -417,12 +457,53 @@ export function drawFittedBattleSprite(
       const drawX = targetX - drawW / 2;
       const drawY = targetY - drawH; // bottom-aligned on surface
 
+      if (bottomSpread && bottomSpread !== 1.0) {
+        const numSlices = 24;
+        const sliceSrcH = actH / numSlices;
+        const sliceDstH = drawH / numSlices;
+        for (let i = 0; i < numSlices; i++) {
+          const t = (i + 0.5) / numSlices; // 0.0 (머리) ~ 1.0 (바닥)
+          const sliceSpread = 1.0 + (bottomSpread - 1.0) * t;
+          const curDrawW = drawW * sliceSpread;
+          const curDrawX = targetX - curDrawW / 2;
+          const sy = minY + i * sliceSrcH;
+          const dy = drawY + i * sliceDstH;
+          ctx.drawImage(
+            spriteToDraw,
+            minX,
+            sy,
+            actW,
+            sliceSrcH,
+            curDrawX,
+            dy,
+            curDrawW,
+            sliceDstH + 0.5
+          );
+        }
+        return;
+      }
+
       ctx.drawImage(spriteToDraw, minX, minY, actW, actH, drawX, drawY, drawW, drawH);
       return;
     }
   } catch {}
 
   const fallbackSprite = tintColor ? getTintedSprite(sprite, tintColor) : sprite;
+  if (bottomSpread && bottomSpread !== 1.0) {
+    const numSlices = 24;
+    const sliceSrcH = sprite.height / numSlices;
+    const sliceDstH = targetSize / numSlices;
+    for (let i = 0; i < numSlices; i++) {
+      const t = (i + 0.5) / numSlices;
+      const sliceSpread = 1.0 + (bottomSpread - 1.0) * t;
+      const curDrawW = targetSize * sliceSpread;
+      const curDrawX = targetX - curDrawW / 2;
+      const sy = i * sliceSrcH;
+      const dy = targetY - targetSize + i * sliceDstH;
+      ctx.drawImage(fallbackSprite, 0, sy, sprite.width, sliceSrcH, curDrawX, dy, curDrawW, sliceDstH + 0.5);
+    }
+    return;
+  }
   ctx.drawImage(fallbackSprite, targetX - targetSize / 2, targetY - targetSize, targetSize, targetSize);
 }
 

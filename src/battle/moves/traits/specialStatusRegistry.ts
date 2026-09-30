@@ -1,5 +1,5 @@
 import { BattlePokemon, BattleState, StatStages } from "../../engine/types.js";
-import { MoveData, getMoveData } from "../../../data/movesKo.js";
+import { MoveData, getMoveData, MOVES_DATA } from "../../../data/movesKo.js";
 import { applyStatChange } from "../../mechanics/statModifier.js";
 import { createPlayerBattleMon } from "../../entities/pokemonFactory.js";
 
@@ -16,8 +16,16 @@ export interface StatusMoveContext {
 /**
  * Checks whether a status move targets self (rather than opponent).
  */
-export function isSelfTargetStatusMove(moveName: string): boolean {
+export function isSelfTargetStatusMove(moveName: string, actor?: BattlePokemon): boolean {
   const k = moveName.toLowerCase().replace(/[\s_]+/g, "-");
+  if (k === "curse-ghost") return false;
+  if (k === "curse-normal") return true;
+  if (k === "curse" || k === "174" || k === "저주") {
+    if (actor?.types) {
+      return !actor.types.some((t) => t.toLowerCase() === "ghost");
+    }
+    return true;
+  }
   const selfMoves = new Set([
     "swords-dance", "dragon-dance", "calm-mind", "nasty-plot", "bulk-up", "quiver-dance",
     "agility", "rock-polish", "iron-defense", "amnesia", "acid-armor", "barrier", "growth",
@@ -30,7 +38,7 @@ export function isSelfTargetStatusMove(moveName: string): boolean {
     "rain-dance", "sunny-day", "sandstorm", "snowscape", "hail", "electric-terrain",
     "grassy-terrain", "misty-terrain", "psychic-terrain", "tailwind", "trick-room",
     "reflect", "light-screen", "aurora-veil", "safeguard", "mist", "haze", "refresh",
-    "heal-bell", "aromatherapy", "splash", "teleport", "focus-energy"
+    "heal-bell", "aromatherapy", "splash", "teleport", "focus-energy", "conversion"
   ]);
   return selfMoves.has(k);
 }
@@ -133,6 +141,39 @@ export function executeStatusMove(ctx: StatusMoveContext): string {
         : `${actorName} created a substitute with its own HP!`;
     }
     return isKo ? `하지만 기술은 실패했다!` : `But it failed!`;
+  }
+
+  // 3-1. Sketch (스케치)
+  if (mName === "sketch" || move.nameKo === "스케치") {
+    let candidateKey = target.lastMoveUsed || battle?.lastMoveEffect?.moveKey;
+    if (!candidateKey || candidateKey === "sketch" || candidateKey === "166") {
+      if (target.moves && target.moves.length > 0) {
+        candidateKey = target.moves.find(m => m !== "sketch" && m !== "166") || "tackle";
+      } else {
+        candidateKey = "tackle";
+      }
+    }
+    const cleanKey = candidateKey.toLowerCase().replace(/[\s_]+/g, "-");
+    const copiedMoveData = getMoveData(cleanKey) || MOVES_DATA[cleanKey] || MOVES_DATA["tackle"];
+    const copiedKo = copiedMoveData?.nameKo || cleanKey;
+    const copiedEn = (copiedMoveData?.name || cleanKey).toUpperCase();
+
+    // Replace sketch permanently in actor's moves
+    const sIdx = actor.moves.findIndex(m => m === "sketch" || m === "166" || m === "스케치");
+    if (sIdx !== -1) {
+      actor.moves[sIdx] = cleanKey;
+      if (actor.movePps) {
+        actor.movePps[sIdx] = copiedMoveData?.pp || 5;
+      }
+    }
+
+    if (battle?.lastMoveEffect) {
+      battle.lastMoveEffect.copiedMoveKey = cleanKey;
+    }
+
+    return isKo
+      ? `${actorName}(은)는 상대의 ${copiedKo}(을)를 스케치하여 자신의 기술로 만들었다!`
+      : `${actorName} sketched ${targetName}'s ${copiedEn}!`;
   }
 
   // 4. Protect / Detect / Spiky Shield
@@ -421,14 +462,23 @@ export function executeStatusMove(ctx: StatusMoveContext): string {
   }
 
   if (mName === "rest") {
-    if (actor.hp === actor.maxHp) {
+    const ability = (actor.ability || "").toLowerCase().replace(/[\s_]+/g, "-");
+    const passive = (actor.passiveAbility || "").toLowerCase().replace(/[\s_]+/g, "-");
+    if (ability === "insomnia" || ability === "vital-spirit" || passive === "insomnia" || passive === "vital-spirit") {
+      return isKo ? `하지만 ${actorName}의 특성 때문에 잠들 수 없다!` : `But ${actorName}'s ability prevents sleep!`;
+    }
+    if (actor.status === "slp") {
+      return isKo ? `하지만 이미 잠들어 있다!` : `But ${actorName} is already asleep!`;
+    }
+    if (actor.hp >= actor.maxHp) {
       return isKo ? `하지만 이미 체력이 가득 차 있다!` : `But its HP is already full!`;
     }
     actor.hp = actor.maxHp;
     actor.status = "slp";
     actor.sleepTurns = 0;
     actor.sleepDuration = 2;
-    return isKo ? `${actorName}(은)는 잠을 자서 체력을 모두 회복했다!` : `${actorName} went to sleep and fully recovered!`;
+    actor.toxicCounter = 0;
+    return isKo ? `${actorName}(은)는 잠을 자서 체력과 상태이상을 모두 회복했다!` : `${actorName} went to sleep, fully restoring HP and curing its status!`;
   }
 
   if (mName === "attract") {
@@ -463,7 +513,12 @@ export function executeStatusMove(ctx: StatusMoveContext): string {
   }
   if (mName === "amnesia") return applyStage("actor", "spd", "특수방어", "Sp. Def", 2);
   if (["agility", "rock-polish", "autotomize"].includes(mName)) return applyStage("actor", "spe", "스피드", "Speed", 2);
-  if (["minimize", "double-team"].includes(mName)) return applyStage("actor", "eva", "회피율", "Evasiveness", mName === "minimize" ? 2 : 1);
+  if (["minimize", "double-team"].includes(mName)) {
+    if (mName === "minimize") {
+      actor.hasMinimized = true;
+    }
+    return applyStage("actor", "eva", "회피율", "Evasiveness", mName === "minimize" ? 2 : 1);
+  }
   if (mName === "growth") {
     applyStage("actor", "atk", "공격", "Attack", 1);
     return applyStage("actor", "spa", "특수공격", "Sp. Atk", 1);
@@ -495,15 +550,127 @@ export function executeStatusMove(ctx: StatusMoveContext): string {
   if (["string-shot", "scary-face", "cotton-spore"].includes(mName)) return applyStage("target", "spe", "스피드", "Speed", -2);
   if (["flash", "sand-attack", "smokescreen", "kinesis"].includes(mName)) return applyStage("target", "acc", "명중률", "Accuracy", -1);
   if (mName === "sweet-scent") return applyStage("target", "eva", "회피율", "Evasiveness", -2);
+  if (["spider-web", "mean-look", "block"].includes(mName)) {
+    if (target.cannotEscape) {
+      return isKo ? `하지만 ${targetName}(은)는 이미 도망칠 수 없다!` : `But it failed!`;
+    }
+    target.cannotEscape = true;
+    return isKo
+      ? `${targetName}(은)는 거미집에 묶여 도망칠 수 없게 되었다!`
+      : `${targetName} was trapped in the web and cannot escape!`;
+  }
+  if (["mind-reader", "lock-on", "mindreader", "lockon", "170", "마음의눈"].includes(mName)) {
+    if (actor.mindReaderTargetId) {
+      return isKo ? `하지만 이미 상대의 움직임을 읽고 있다!` : `But it failed!`;
+    }
+    const targetId = (target as any).id || target.speciesId || "target";
+    actor.mindReaderTargetId = targetId;
+    actor.mindReaderTurnsLeft = 2;
+    return isKo
+      ? `${actorName}(은)는 마음의 눈으로 ${targetName}의 움직임을 포착했다!`
+      : `${actorName} took aim at ${targetName}!`;
+  }
+  if (["nightmare", "171", "악몽"].includes(mName)) {
+    if (target.status !== "slp") {
+      return isKo
+        ? `하지만 ${targetName}(은)는 잠들어 있지 않다!`
+        : `But it failed!`;
+    }
+    if (target.hasNightmare) {
+      return isKo
+        ? `하지만 ${targetName}(은)는 이미 악몽에 시달리고 있다!`
+        : `But it had no effect!`;
+    }
+    target.hasNightmare = true;
+    return isKo
+      ? `${targetName}(은)는 악몽에 빠져들었다!`
+      : `${targetName} began having a nightmare!`;
+  }
+  if (["curse", "curse-ghost", "curse-normal", "174", "저주"].includes(mName)) {
+    const isGhost = mName === "curse-ghost" || Boolean(actor.types?.some((t) => t.toLowerCase() === "ghost"));
+
+    if (isGhost) {
+      if (target.isCursed) {
+        return isKo
+          ? `하지만 ${targetName}에게는 효과가 없었다!`
+          : `But it had no effect!`;
+      }
+      const hpCost = Math.max(1, Math.floor(actor.maxHp / 2));
+      actor.hp = Math.max(0, actor.hp - hpCost);
+      target.isCursed = true;
+      return isKo
+        ? `${actorName}(은)는 자신의 체력을 깎아 ${targetName}에게 저주를 걸었다!`
+        : `${actorName} cut its own HP and laid a curse on ${targetName}!`;
+    } else {
+      applyStage("actor", "spe", "스피드", "Speed", -1);
+      recordStatChange("actor", "down");
+      applyStage("actor", "atk", "공격", "Attack", 1);
+      recordStatChange("actor", "up");
+      applyStage("actor", "def", "방어", "Defense", 1);
+      recordStatChange("actor", "up");
+      return isKo
+        ? `${actorName}의 스피드가 떨어지고 공격과 방어가 올라갔다!`
+        : `${actorName}'s Speed fell! Its Attack and Defense rose!`;
+    }
+  }
   if (["mimic", "copycat"].includes(mName)) return isKo ? `상대의 기술을 흉내냈다!` : `Mimicked the target's move!`;
-  if (mName === "light-screen") return isKo ? `빛의장막으로 특수공격에 강해졌다! (5턴)` : `Light Screen raised special defense! (5 turns)`;
-  if (mName === "reflect") return isKo ? `리플렉터로 물리공격에 강해졌다! (5턴)` : `Reflect raised physical defense! (5 turns)`;
+  if (mName === "light-screen") {
+    if ((actor.lightScreenTurns || 0) > 0) {
+      return isKo ? `하지만 이미 빛의장막이 펼쳐져 있다!` : `Light Screen is already active!`;
+    }
+    actor.lightScreenTurns = 5;
+    return isKo ? `빛의장막으로 5턴간 특수공격 데미지가 절반이 된다!` : `Light Screen halved special damage for 5 turns!`;
+  }
+  if (mName === "reflect") {
+    if ((actor.reflectTurns || 0) > 0) {
+      return isKo ? `하지만 이미 리플렉터가 펼쳐져 있다!` : `Reflect is already active!`;
+    }
+    actor.reflectTurns = 5;
+    return isKo ? `리플렉터로 5턴간 물리공격 데미지가 절반이 된다!` : `Reflect halved physical damage for 5 turns!`;
+  }
   if (mName === "focus-energy") {
     if (actor.hasFocusEnergy) {
       return isKo ? `하지만 이미 기운을 모아 더는 집중할 수 없다!` : `But it had no effect!`;
     }
     actor.hasFocusEnergy = true;
     return isKo ? `${actorName}(은)는 기운을 집중했다! 급소율이 크게 올랐다!` : `${actorName} is getting pumped! Critical hit ratio rose!`;
+  }
+  if (mName === "conversion") {
+    const TYPE_KO: Record<string, string> = {
+      normal: "노말", fire: "불꽃", water: "물", electric: "전기", grass: "풀",
+      ice: "얼음", fighting: "격투", poison: "독", ground: "땅", flying: "비행",
+      psychic: "에스퍼", bug: "벌레", rock: "바위", ghost: "고스트", dragon: "드래곤",
+      steel: "강철", dark: "악", fairy: "페어리"
+    };
+
+    let targetType: string | null = null;
+    if (actor.moves && actor.moves.length > 0) {
+      // 1순위: 0번 슬롯 기술의 타입 (원작/포켓로그 기준)
+      const firstMove = getMoveData(actor.moves[0]);
+      if (firstMove && firstMove.type && !actor.types.includes(firstMove.type.toLowerCase())) {
+        targetType = firstMove.type.toLowerCase();
+      } else {
+        // 0번 슬롯이 이미 자신의 타입이라면 다른 슬롯 중 변환 가능한 첫 번째 타입 탐색
+        for (let i = 1; i < actor.moves.length; i++) {
+          const m = getMoveData(actor.moves[i]);
+          if (m && m.type && !actor.types.includes(m.type.toLowerCase())) {
+            targetType = m.type.toLowerCase();
+            break;
+          }
+        }
+      }
+    }
+
+    if (!targetType) {
+      return isKo ? `하지만 아무 일도 일어나지 않았다!` : `But it failed!`;
+    }
+
+    actor.types = [targetType];
+    const typeKo = TYPE_KO[targetType] || targetType;
+    const typeEn = targetType.toUpperCase();
+    return isKo
+      ? `${actorName}(은)는 [${typeKo}] 타입으로 텍스처를 변환했다!`
+      : `${actorName}'s type converted to [${typeEn}]!`;
   }
 
   return isKo ? `기술의 효과가 발동했다!` : `The move took effect!`;

@@ -94,6 +94,11 @@ export function calculateDamage(
     power *= semiCheck.powerMultiplier;
   }
 
+  // Stomp doubles power against target that used Minimize
+  if ((moveKey === "stomp" || moveKey === "23" || moveKey === "짓밟기") && target.hasMinimized) {
+    power *= 2;
+  }
+
   // Self-destruct moves power overrides
   const trait = getMoveTrait(moveKey);
   if (trait?.isSelfDestruct) {
@@ -148,9 +153,26 @@ export function calculateDamage(
   );
   singleHitDamage = Math.max(typeMod > 0 ? 1 : 0, singleHitDamage);
 
+  // Light Screen / Reflect reduction (50% reduction, ignored by critical hits)
+  let screenLog = "";
+  if (!isCrit && typeMod > 0) {
+    if (isSpecial && target.lightScreenTurns && target.lightScreenTurns > 0) {
+      singleHitDamage = Math.max(1, Math.floor(singleHitDamage * 0.5));
+      screenLog = isKo ? "\n[빛의장막] 특수공격 피해를 50% 경감했다!" : "\n[Light Screen] Halved special damage!";
+    } else if (!isSpecial && target.reflectTurns && target.reflectTurns > 0) {
+      singleHitDamage = Math.max(1, Math.floor(singleHitDamage * 0.5));
+      screenLog = isKo ? "\n[리플렉터] 물리공격 피해를 50% 경감했다!" : "\n[Reflect] Halved physical damage!";
+    }
+  }
+
   // 10. Multi-Hit Calculation
   const hitCount = calculateMultiHitCount(moveKey);
-  const totalDamage = singleHitDamage * hitCount;
+  let totalDamage = singleHitDamage * hitCount;
+  if (moveKey === "triple-kick") {
+    // 1st hit: 10 power (1x), 2nd hit: 20 power (2x), 3rd hit: 30 power (3x)
+    const multiplier = hitCount === 3 ? 6 : hitCount === 2 ? 3 : 1;
+    totalDamage = singleHitDamage * multiplier;
+  }
 
   // 11. Perks: Firmament (sky_flight) 1.5x boost
   let finalDamage = totalDamage;
@@ -190,6 +212,9 @@ export function calculateDamage(
 
   if (isCrit && typeMod > 0) {
     effLog += critPerkLog ? critPerkLog : (isKo ? " 급소에 맞았다!" : " A critical hit!");
+  }
+  if (screenLog) {
+    effLog += screenLog;
   }
   if (hitCount > 1) {
     effLog += isKo ? ` (${hitCount}회 명중!)` : ` (Hit ${hitCount} times!)`;

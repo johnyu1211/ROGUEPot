@@ -19,9 +19,11 @@ export interface MoveTraitDefinition {
   fixedMultiHit?: number; // e.g. 2 for Double Kick, 3 for Triple Dive
   randomMultiHit?: boolean; // 2~5 hits standard distribution
   populationBomb?: boolean; // Up to 10 hits at 90% accuracy
+  tripleKick?: boolean; // Up to 3 hits at 90% accuracy per hit (power increases each hit)
   isSelfDestruct?: boolean; // Explosion, Self-Destruct
   rechargeRequired?: boolean; // Hyper Beam, Giga Impact
   trapMove?: boolean; // Bind, Wrap, Fire Spin, Sand Tomb, Whirlpool (4~5 turns)
+  rampageMove?: boolean; // Thrash, Petal Dance, Outrage (2~3 turns then confusion)
   priority?: number; // Move priority (-7 to +4)
 }
 
@@ -46,6 +48,7 @@ export const MOVE_TRAITS_REGISTRY: Record<string, MoveTraitDefinition> = {
   "psycho-cut": { critBonus: true },
   "drill-run": { critBonus: true },
   "blaze-kick": { critBonus: true },
+  "aeroblast": { critBonus: true },
 
   // --- Multi-Hit Moves ---
   "double-slap": { randomMultiHit: true },
@@ -53,6 +56,7 @@ export const MOVE_TRAITS_REGISTRY: Record<string, MoveTraitDefinition> = {
   "double-kick": { fixedMultiHit: 2 },
   "fury-attack": { randomMultiHit: true },
   "twineedle": { fixedMultiHit: 2 },
+  "bonemerang": { fixedMultiHit: 2 },
   "pin-missile": { randomMultiHit: true },
   "fury-swipes": { randomMultiHit: true },
   "spike-cannon": { randomMultiHit: true },
@@ -72,6 +76,8 @@ export const MOVE_TRAITS_REGISTRY: Record<string, MoveTraitDefinition> = {
   "surging-strikes": { fixedMultiHit: 3 },
   "triple-dive": { fixedMultiHit: 3 },
   "population-bomb": { populationBomb: true },
+  "triple-kick": { tripleKick: true },
+  "triple-axel": { tripleKick: true },
 
   // --- Two-Turn Charging Moves ---
   "fly": {
@@ -145,6 +151,7 @@ export const MOVE_TRAITS_REGISTRY: Record<string, MoveTraitDefinition> = {
     },
   },
   "sky-attack": {
+    critBonus: true,
     chargeTrait: {
       chargeTextKo: "눈부신 빛에 휩싸였다!",
       chargeTextEn: "became cloaked in a harsh light!",
@@ -166,8 +173,11 @@ export const MOVE_TRAITS_REGISTRY: Record<string, MoveTraitDefinition> = {
   "wood-hammer": { recoilRatio: 0.33 },
   "wave-crash": { recoilRatio: 0.33 },
   "head-smash": { recoilRatio: 0.5 },
+  "struggle": { recoilRatio: 0.25 },
 
   // --- Draining Moves ---
+  "leech-life": { drainRatio: 0.5 },
+  "leechlife": { drainRatio: 0.5 },
   "absorb": { drainRatio: 0.5 },
   "mega-drain": { drainRatio: 0.5 },
   "giga-drain": { drainRatio: 0.5 },
@@ -203,6 +213,11 @@ export const MOVE_TRAITS_REGISTRY: Record<string, MoveTraitDefinition> = {
   "infestation": { trapMove: true },
   "snap-trap": { trapMove: true },
   "thunder-cage": { trapMove: true },
+
+  // --- Rampage Moves (2~3 turns then confusion) ---
+  "thrash": { rampageMove: true },
+  "petal-dance": { rampageMove: true },
+  "outrage": { rampageMove: true },
 
   // --- Priority Moves ---
   "protect": { priority: 4 },
@@ -262,6 +277,15 @@ export function calculateMultiHitCount(moveKey: string): number {
   if (trait.populationBomb) {
     let hits = 0;
     for (let i = 0; i < 10; i++) {
+      if (Math.random() < 0.9) hits++;
+      else break;
+    }
+    return Math.max(1, hits);
+  }
+
+  if (trait.tripleKick) {
+    let hits = 0;
+    for (let i = 0; i < 3; i++) {
       if (Math.random() < 0.9) hits++;
       else break;
     }

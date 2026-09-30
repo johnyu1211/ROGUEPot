@@ -194,52 +194,6 @@ class SaveService {
     return 1;
   }
 
-  public startNewRun(userId: string, slotId: number, starterSpecies: string): GameSlot {
-    const now = new Date().toISOString();
-
-    const starterNameMap: Record<string, string> = {
-      bulbasaur: "Bulbasaur (이상해씨)",
-      charmander: "Charmander (파이리)",
-      squirtle: "Squirtle (꼬부기)",
-    };
-
-    const initialParty: PartyPokemon[] = [
-      {
-        speciesId: starterSpecies,
-        name: starterNameMap[starterSpecies] || starterSpecies,
-        level: 5,
-        hp: 20,
-        maxHp: 20,
-        moves: ["Tackle", "Growl"],
-      },
-    ];
-
-    this.getProfile(userId);
-
-    // Save into SQLite
-    db.prepare(`
-      INSERT OR REPLACE INTO game_slots (user_id, slot_id, game_mode, wave, biome, starter, party, items, money, score, created_at, updated_at)
-      VALUES (?, ?, 'Classic', 1, 'Town', ?, ?, ?, 0, 0, ?, ?)
-    `).run(userId, slotId, starterSpecies, JSON.stringify(initialParty), JSON.stringify({ "poke-ball": 5 }), now, now);
-
-    db.prepare(`
-      UPDATE users SET active_slot_id = ?, total_runs = total_runs + 1, updated_at = ? WHERE user_id = ?
-    `).run(slotId, now, userId);
-
-    return {
-      slotId,
-      gameMode: "Classic",
-      wave: 1,
-      biome: "Town",
-      starter: starterSpecies,
-      party: initialParty,
-      items: { "poke-ball": 5 },
-      money: 0,
-      score: 0,
-      updatedAt: now,
-    };
-  }
-
   public createNewRunWithParty(
     userId: string,
     slotId: number,

@@ -153,7 +153,7 @@ export function drawCartoonBone(
  * - 뼈다귀 헤드 근처: alpha 0.65, lineWidth 1.6px 선명하게 시작
  * - 후류 꼬리 끝: alpha 0.0, lineWidth 0.5px 가늘어지며 자연스럽게 페이드아웃
  */
-function drawTaperedWindArc(
+export function drawTaperedWindArc(
   ctx: any,
   cx: number,
   cy: number,

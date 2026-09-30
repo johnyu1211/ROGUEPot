@@ -369,8 +369,9 @@ export async function executeShowcaseTurn(
     const moves: string[] = mon.moves || [];
     if (moves.length === 0) return "tackle";
 
-    // If charging move is active, must execute it!
+    // If charging move or rampage move is active, must execute it!
     if (mon.chargingMove) return mon.chargingMove;
+    if (mon.rampageState) return mon.rampageState.moveKey;
 
     // Helper to filter out invalid / anti-pattern moves
     const isMoveValid = (mKey: string): boolean => {
@@ -387,6 +388,10 @@ export async function executeShowcaseTurn(
       if (k === "dream-eater") {
         const isTargetAsleep = target.status === "slp" || ((target.sleepTurns ?? 0) > 0);
         if (!isTargetAsleep) return false;
+      }
+      // 4. Never use snore if user is not asleep! ("안 자는데 코골기" 방지!)
+      if (k === "snore") {
+        if (mon.status !== "slp") return false;
       }
       return true;
     };
@@ -437,6 +442,8 @@ export async function executeShowcaseTurn(
   let playerMoveKey: string;
   if (pMon.chargingMove) {
     playerMoveKey = pMon.chargingMove;
+  } else if (pMon.rampageState) {
+    playerMoveKey = pMon.rampageState.moveKey;
   } else {
     playerMoveKey = selectSmartShowcaseMove(pMon, eMon, session.usedNewMoves);
   }
@@ -446,6 +453,8 @@ export async function executeShowcaseTurn(
   let enemyMoveKey: string;
   if (eMon.chargingMove) {
     enemyMoveKey = eMon.chargingMove;
+  } else if (eMon.rampageState) {
+    enemyMoveKey = eMon.rampageState.moveKey;
   } else {
     enemyMoveKey = selectSmartShowcaseMove(eMon, pMon, session.usedNewMoves);
   }

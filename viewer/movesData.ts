@@ -66,7 +66,7 @@ const HANDCRAFTED_MAP: Record<string, VerifiedMoveItem> = {
   "fire-punch": { num: 7, id: "fire-punch", nameKo: "불꽃펀치", nameEn: "Fire Punch", type: "fire", category: "physical", camera: "target", desc: "화염 소용돌이를 두른 불꽃 펀치", isVerified: true },
   "ice-punch": { num: 8, id: "ice-punch", nameKo: "냉동펀치", nameEn: "Ice Punch", type: "ice", category: "physical", camera: "target", desc: "얼음 결정 폭발 냉동 펀치", isVerified: true },
   "thunder-punch": { num: 9, id: "thunder-punch", nameKo: "번개펀치", nameEn: "Thunder Punch", type: "electric", category: "physical", camera: "target", desc: "뇌격 스파크 전기 펀치", isVerified: true },
-  "scratch": { num: 10, id: "scratch", nameKo: "할퀴기", nameEn: "Scratch", type: "normal", category: "physical", camera: "target", desc: "3연속 예리한 손톱 베기", isVerified: true },
+  "scratch": { num: 10, id: "scratch", nameKo: "할퀴기", nameEn: "Scratch", type: "normal", category: "physical", camera: "target", desc: "시전자 전방 도약 ➔ 예리한 3단 은백색 곡선 발톱 출현 ➔ 해당 방향 아래로 살짝 슬라이드하며 페이드아웃 ➔ 완전 소멸 후 착지 복귀", isVerified: true, status: "complete" },
   "vice-grip": { num: 11, id: "vice-grip", nameKo: "찝기", nameEn: "Vice Grip", type: "normal", category: "physical", camera: "target", desc: "대형 집게 양방향 압착 협공", isVerified: true },
   "guillotine": { num: 12, id: "guillotine", nameKo: "길로틴", nameEn: "Guillotine", type: "normal", category: "physical", camera: "target", desc: "일격필살 대형 집게 참격 & 승리 포즈", isVerified: true },
   "guillotine-enemy": { num: 12, id: "guillotine-enemy", nameKo: "가위자르기 (상대 시전)", nameEn: "Guillotine (Enemy POV)", type: "normal", category: "physical", camera: "target", desc: "상대(적)가 가위자르기 시전 시점 (내 포켓몬 피격 & 처형)", isVerified: true, isSpecialVariant: true, specialType: "variant" },
@@ -184,6 +184,44 @@ const HANDCRAFTED_MAP: Record<string, VerifiedMoveItem> = {
   "dream-eater": { num: 138, id: "dream-eater", nameKo: "꿈먹기", nameEn: "Dream Eater", type: "psychic", category: "special", camera: "custom", desc: "몽환 암전 ➔ 피격자 몸체에서 꿈의 정기 추출 ➔ 악몽 타격 및 메가드레인 궤적 곡선 아크 흡수 비행 ➔ 시전자 포커싱 전환 및 1프레임 안착 ➔ 보랏빛 나선 상승 회복별 & HP 흡수 회복 (피해 50% 흡수)", isVerified: true, status: "complete" },
   "poison-gas": { num: 139, id: "poison-gas", nameKo: "독가스", nameEn: "Poison Gas", type: "poison", category: "status", camera: "target", desc: "시전자 들이쉬기 ➔ 상대방을 향해 100% 일직선으로 뻗어나가는 고속 독가스 제트 ➔ 상대 스프라이트를 직선으로 관통하여 Z축 뒤로 뿜어나감(뒤로 갈수록 투명화) ➔ 상대 전신 독무 차폐 & 보라색 독 기포 퐁퐁 비산 ➔ 중독 기침 전율 후 소멸 (100% 독 상태이상)", isVerified: true, status: "complete" },
   "barrage": { num: 140, id: "barrage", nameKo: "구슬던지기", nameEn: "Barrage", type: "normal", category: "physical", camera: "target", desc: "흰색 구슬이 상공으로 고각 포물선 상승 ➔ 상대 머리 위 상공 도달 후 수직 급강하 낙하 타격 ➔ 구슬이 머리에 유지된 채로 피격자 & 카메라 진동 셰이크 작렬 ➔ 진동 종료 후 구슬 자연스러운 페이드아웃 & 외곽 투명 그라데이션 바닥 흙먼지 확산 및 소산", isVerified: true, status: "complete" },
+  "leech-life": { num: 141, id: "leech-life", nameKo: "흡혈", nameEn: "Leech Life", type: "bug", category: "physical", camera: "none", desc: "시전자 찌르기 모션 ➔ 양끝이 뾰족한 순백색 침 & 끝이 투명해지는 긴 잔상 초고속 관통 사출 ➔ 화면 암전 & 대상 피격 흔들림 ➔ 대상에게서 노란색 발광 흡수 에너지가 바깥쪽 완만한 호를 그리며 시전자에게 쇄도 ➔ 시전자 체내 흡수 & 발밑 골드 펄스 링 및 상승 치유 별빛 전개 (피해 50% HP 회복)", isVerified: true, status: "complete" },
+  "lovely-kiss": { num: 142, id: "lovely-kiss", nameKo: "악마의키스", nameEn: "Lovely Kiss", type: "normal", category: "status", camera: "target", desc: "시전자 전방 기울임 ➔ 깔끔한 단색 핫핑크 츄 입술 부드러운 아크 사출 ➔ 대상 얼굴 정면 찰싹 '쪽!' 립스틱 마크 밀착 & 피격자 리액션 ➔ 러블리 핑크 하트 퐁퐁 팝 & 몽롱한 흔들림 ➔ 머리 위 Zzz 수면 방울 상승 & 스르륵 잠듦 (수면 상태이상)", isVerified: true, status: "complete" },
+  "sky-attack": { num: 143, id: "sky-attack", nameKo: "불새", nameEn: "Sky Attack", type: "flying", category: "physical", camera: "target", desc: "하늘색 필터 배경 ➔ 전신을 감싸는 ) 형태의 푸른 불새 화염 날개 & 궤적을 수놓는 눈부신 불빛 잔상 ➔ 음속 관통 돌진 (날개치기 스타일 관통 연출) ➔ 상대 위치 6단계 엇박자 볼류메트릭 교차 대폭발 작렬 (폭발 내내 하늘색 배경 필터 완벽 유지) ➔ 날렵한 곡선 회항 및 착지 (위력 140, 급소율 +1, 30% 풀죽음)", isVerified: true, status: "complete" },
+  "sky-attack-charge": { num: 143, id: "sky-attack-charge", nameKo: "불새 (충전)", nameEn: "Sky Attack (Charge)", type: "flying", category: "status", camera: "custom", desc: "시전자 포커싱 ➔ 전장 짙은 암전 ➔ 시전자 주변을 감싸며 점진적으로 증식하는 3D 입체 나선 푸른 불꽃 궤도 회전 볼텍스 ➔ 카메라 원위치 복귀 후에도 눈부신 빛의 불꽃을 휘감은 채 돌진 대기 (1턴 충전 연출)", isVerified: true, status: "complete", isSpecialVariant: true, specialType: "charge" },
+  "transform": { num: 144, id: "transform", nameKo: "변신", nameEn: "Transform", type: "normal", category: "status", camera: "self", desc: "시전포켓몬이 납작해지며 순백 필터 적용 ➔ 완전 납작 ➔ 흰색 필터가 적용된 대상포켓몬 후면(플레이어 시전 시) 전환 ➔ 펴지면서 원래 상태로 돌아오면서 흰색 필터 서서히 제거 & 변신 완료", isVerified: true, status: "complete" },
+  "bubble": { num: 145, id: "bubble", nameKo: "거품", nameEn: "Bubble", type: "water", category: "special", camera: "target", desc: "시전자 들이쉬기 ➔ 꼬리 없이 커졌다 작아졌다 팽창·수축하며 비행하는 영롱한 물 비눗방울 3개 ➔ 대상 도달 후 1번, 2번, 3번 거품 순차 파열 '펑! 펑! 펑!' & 물방울 스플래시 비산 (10% 스피드 -1)", isVerified: true, status: "complete" },
+  "dizzy-punch": { num: 146, id: "dizzy-punch", nameKo: "잼잼펀치", nameEn: "Dizzy Punch", type: "normal", category: "physical", camera: "target", desc: "1차 잽 전진 ➔ 메가톤펀치 정면 주먹 타격 (퍽!) & 피격자 리액션 ➔ 1차 혼란 별무리·스파이럴·피요피요 병아리 다각도 3D 포물선 분출 ➔ 리드미컬한 반대손 2차 잽 연타 (퍽!) ➔ 2차 혼란 효과 다각도 3D 포물선 2회 분출 및 상공 체공 (20% 혼란)", isVerified: true, status: "complete" },
+  "spore": { num: 147, id: "spore", nameKo: "버섯포자", nameEn: "Spore", type: "grass", category: "status", camera: "target", desc: "시전자 포자 방출 ➔ 대상 머리 위 상공에서 황금빛 포자가 유기적으로 쏟아져 내리는 포자 샤워 (낙하하면서 자연스럽게 페이드아웃) ➔ 전신 포자 침투 & 대상 졸림 반응 ➔ 머리 위 몽환적인 3단 Zzz 수면 방울 비상 & 깊은 잠 안착 (100% 수면 상태이상, 풀 타입 무효)", isVerified: true, status: "complete" },
+  "flash": { num: 148, id: "flash", nameKo: "플래시", nameEn: "Flash", type: "normal", category: "status", camera: "none", desc: "전장 짙은 암전 ➔ 시전포켓몬에게서 강렬한 십자 섬광 번쩍 (1프레임) ➔ 화면 전체 눈부신 순백 화이트아웃 ➔ 흰색이 부드럽게 페이드아웃되며 원래 화면 복귀 & 상대 명중률 1랭크 하락", isVerified: true, status: "complete" },
+  "psywave": { num: 149, id: "psywave", nameKo: "사이코웨이브", nameEn: "Psywave", type: "psychic", category: "special", camera: "target", desc: "시전포켓몬에게서 시작되는 길쭉한 타원형으로 이루어진 마젠타·보랏빛 색깔 곡선이 상대에게로 이동 ➔ 타격 ➔ 대상포켓몬 스프라이트 잠깐 살짝 납작해졌다가 탄성 복귀 ➔ 몸체를 감싸며 공명하는 3단 보랏빛 링 출현 및 파동 확산", isVerified: true, status: "complete" },
+  "splash": { num: 150, id: "splash", nameKo: "튀어오르기", nameEn: "Splash", type: "normal", category: "status", camera: "self", desc: "시전포켓몬 납작 ➔ 세로길쭉(공중 도약) ➔ 납작 ➔ 세로길쭉 ➔ 납작 ➔ 원복 (스쿼시 & 스트레치 극대화 팔딱팔딱 튀어오름)", isVerified: true, status: "complete" },
+  "acid-armor": { num: 151, id: "acid-armor", nameKo: "녹기", nameEn: "Acid Armor", type: "poison", category: "status", camera: "self", desc: "시전포켓몬 납작해지며 하단 확장 + 흰색필터 점점강하게 적용 ➔ 동시 페이드아웃 ➔ 빠른 원상복귀 (액화 용해 연출)", isVerified: true, status: "complete" },
+  "crabhammer": { num: 152, id: "crabhammer", nameKo: "집게해머", nameEn: "Crabhammer", type: "water", category: "physical", camera: "target", desc: "시전자 도약 & 대상 줌인(1.34x) ➔ 상공에서 벼락같이 내리찍는 유선형 테이퍼드 순백 기둥 ➔ 지면 강타(콰앙!) & 피격자 납작 찌그러짐 4프레임(350ms) 지속 ➔ 지면 물보라 알갱이 버스트(중심부 왼쪽 위 하이라이트) ➔ Z축 최상단에서 별개로 비대칭 팽창·소산하는 반투명 스카이블루 수증기 ➔ 피격자 탄성 반동 튕김 복귀 & 안정화", isVerified: true, status: "complete" },
+  "explosion": { num: 153, id: "explosion", nameKo: "대폭발", nameEn: "Explosion", type: "normal", category: "physical", camera: "custom", desc: "시전자 화면 중앙 고정 카메라 줌아웃(0.78x) 360° ORBIT 선회 ➔ 줌인(1.50x) 시전자 초근접 확대 밀착 ➔ 시전포켓몬 튀어오르기(Splash) 1회 팔딱 모션 ➔ 기폭 직전 흑백 고대비·음화 반전 이펙트프레임 ➔ 순백 섬광 플래시 ➔ 화면 전체를 100% 집어삼키는 초대형 초신성 화염 폭풍 & 폭발 속 4차 연쇄 내부 폭발 & 격렬한 지진 셰이크 ➔ 흑연 연막 버섯구름 융기 & 타겟 최대 넉백", isVerified: true, status: "complete" },
+  "fury-swipes": { num: 154, id: "fury-swipes", nameKo: "마구할퀴기", nameEn: "Fury Swipes", type: "normal", category: "physical", camera: "target", desc: "시전자 전방 도약 ➔ 010 할퀴기(Scratch) 고유 3단 은백색 곡선 발톱 출현 ➔ 해당 방향 아래로 살짝 슬라이드하며 페이드아웃 ➔ 완전 소멸 후 반대 방향 할퀴기 출현 ➔ 해당 방향 아래로 슬라이드하며 페이드아웃 ➔ 4연속 좌우 교대 연타 피니시 & 착지 복귀 (노란 별/구형 타격 이펙트 완전 배제, 깔끔하고 예리한 순수 참격 연출)", isVerified: true, status: "complete" },
+  "bonemerang": { num: 155, id: "bonemerang", nameKo: "뼈다귀부메랑", nameEn: "Bonemerang", type: "ground", category: "physical", camera: "target", desc: "시전자 뼈다귀 투척 와인드업 ➔ 상대방에게 고속 회전 비행 ➔ 상대 포켓몬 스프라이트 관통 직격 (1차 몸통박치기 타격 이펙트) ➔ 상대 뒤로 넘어가 배후 3D 타원 선회 루프 ➔ 배후에서 돌아오면서 상대를 다시 관통 (2차 몸통박치기 타격 이펙트 & 체력 감소) ➔ 시전포켓몬에게 뼈가 돌아오면서 페이드아웃 소멸 (위력 50x2타)", isVerified: true, status: "complete" },
+  "rest": { num: 156, id: "rest", nameKo: "잠자기", nameEn: "Rest", type: "psychic", category: "status", camera: "self", desc: "시전자 피로에 웅크리며 잠에 빠져듦 ➔ 머리 위로 순수하게 z ➔ z ➔ Z 글자가 순서대로 부드럽게 상승 ➔ HP 100% 완전 회복 & 수면 상태 돌입 ➔ 편안한 호흡과 함께 깊은 숙면 안착", isVerified: true, status: "complete" },
+  "rock-slide": { num: 157, id: "rock-slide", nameKo: "스톤샤워", nameEn: "Rock Slide", type: "rock", category: "physical", camera: "target", desc: "시전자 발구르기 지면 균열 & 자갈 파쇄 분출 ➔ 상대 상공에서 지진 톤 3D 다면체 바위 군집이 단일 속도선과 함께 순차 급강하 ➔ 1·2차 바위 직격 및 잼잼펀치 3D 포물선 탄도학 파편 전방위 비산 ➔ 이전 바위 페이드아웃 & 메인 초대형 바위 수직 직격 쾅!! ➔ 초대형 3D 포물선 파편 대폭쇄 & 지면 안착 잔해 소산 (위력 75, 30% 확률 풀죽음)", isVerified: true, status: "complete" },
+  "hyper-fang": { num: 158, id: "hyper-fang", nameKo: "필살앞니", nameEn: "Hyper Fang", type: "normal", category: "physical", camera: "target", desc: "시전자 후방 웅크림 힘 축적 ➔ 상대방 주위 좌상단 2개 & 우하단 2개 유선형 거대 앞니 대각 대치 ➔ 초고속 대각 교합 쇄도 및 회색 치아 헤드가 서서히 주황빛으로 달아오름 ➔ 격돌 순간 우상단 & 좌하단 만화풍 적색 폭발 구름 폭발 (내외각 글로우 & 하이라이트 배제) ➔ 맞물린 앞니에서 비산하며 점차 작아지는 적색 테두리 알갱이 파티클 폭발적 분출 ➔ 외각 투명 그라데이션 흙먼지 연막 팽창 및 소산 (위력 80, 10% 풀죽음, 5세대 원작 완벽 고증)", isVerified: true, status: "complete" },
+  "sharpen": { num: 159, id: "sharpen", nameKo: "각지기", nameEn: "Sharpen", type: "normal", category: "status", camera: "self", desc: "시전자 웅크림 힘 축적 ➔ 몸체 주변을 감싸며 등속 회전하는 3D 사각 큐브 와이어프레임 & 상단 순백 하이라이트와 우측하단 그림자 음영 패싯 ➔ 회전하면서 포켓몬 몸체로 점진적으로 작아지며 압축 수축 ➔ 소형화되며 중심부로 소산 & 공격력 1랭크 상승 스탯 부스트 오라 분출 및 탄성 복귀 (공격 1랭크 상승)", isVerified: true, status: "complete" },
+  "conversion": { num: 160, id: "conversion", nameKo: "텍스처", nameEn: "Conversion", type: "normal", category: "status", camera: "self", desc: "시전자 가벼운 호버링 & 사이버네틱 코너 브래킷 및 수평 시안 스캔라인 빔 ➔ 6종 네온 타입 UV 텍스처 패싯이 나선형으로 몸체 속에 흡수 래핑 ➔ 변환 완료! 눈부신 순백 다이아몬드 글린트 & 홀로그램 사이버 쇼크웨이브 링 & 8방향 네온 큐브 파편 분출 ➔ 잔여 비트 파티클 승화 및 탄성 복귀 (첫 번째 기술의 타입으로 변환)", isVerified: false, status: "complete" },
+  "tri-attack": { num: 161, id: "tri-attack", nameKo: "트라이어택", nameEn: "Tri Attack", type: "normal", category: "special", camera: "target", desc: "전장 암전 ➔ 시전자 주위 3차원 궤도로 파란색·노란색·빨간색 삼원소 불꽃이 짧은 불씨에서 시작해 회전 가속과 함께 점차 길게 신장 ➔ 상대방 클로즈업(1.38x) ➔ 외곽 그라데이션 삼색 에너지 구체(화염·전격·빙결) 순차 발사 ➔ 3연속 직격(1타: 화염 폭발 / 2타: 중심에서 사방으로 뻗는 날카로운 테이퍼드 벼락 방전 / 3타: 3D 다면체 빙석 군집 강타 및 사방 비산 & 체력 감소) ➔ 원복 안정화 (20% 확률 화상·마비·얼음)", isVerified: true, status: "complete" },
+  "super-fang": { num: 162, id: "super-fang", nameKo: "분노의앞니", nameEn: "Super Fang", type: "normal", category: "physical", camera: "caster_to_target", desc: "시전 포켓몬 좌우 분노 진동 & 붉게 발열 ➔ 카메라 상대방 글라이드 포커싱 ➔ 필살앞니 기반 붉은 앞니 초고속 교합(무는 것만 빠르게!) ➔ 붉은 만화풍 폭발 구름 & 14방향 붉은 루비 알갱이 분출 & 붉은 연막 구름 팽창 및 소산 (상대 현재 HP 50% 고정 데미지)", isVerified: true, status: "complete" },
+  "slash": { num: 163, id: "slash", nameKo: "베어가르기", nameEn: "Slash", type: "normal", category: "physical", camera: "target", desc: "시전자 발도 및 도약 추진 (시전자 발광 배제) ➔ 상대방을 향해 찰나의 초고속 돌진 ➔ 상대 전면에 양 끝단이 0px 바늘 끝으로 예리하게 빠지는 레몬 옐로우 & 순백 코어 거대 일체형 참격호 쇄도 ➔ 중심 순백 & 연분홍 림 타격 스타버스트 폭발 ➔ 라임/골드 스파크 비산 ➔ 피격자 묵직한 넉백 후 탄성 복귀 (원작 레퍼런스 1:1 완벽 고증)", isVerified: true, status: "complete" },
+  "substitute": { num: 164, id: "substitute", nameKo: "대타출동", nameEn: "Substitute", type: "normal", category: "status", camera: "self", desc: "시전포켓몬 화면 밖으로 가속 미끄러져 퇴장 (아군은 좌측 밖 / 상대는 우측 밖) ➔ 원래 자리에 펑!! 카툰풍 몽글몽글 연기구름 폭발 & 소환 스파클 ➔ 연기 속에서 대타출동 인형(아군: 뒷모습 인형 / 상대: 앞모습 인형) 쨘! 등장 & 도약 ➔ 지면 쿵 착지 스쿼시 & 통! 탄성 리바운드 안착 (최대 HP 25% 소모하여 분신 생성)", isVerified: true, status: "complete" },
+  "struggle": { num: 165, id: "struggle", nameKo: "발버둥", nameEn: "Struggle", type: "normal", category: "physical", camera: "caster_to_target", desc: "시전 포켓몬 좌우 각도 격렬하게 흔들흔들 (발버둥 모션) ➔ 카메라 타겟 포커싱 ➔ 서로 다른 3곳 위치에 순차적으로 몸통박치기 타격 이펙트 직격 (1타: 좌상단 / 2타: 우하단 / 3타: 중앙 피니시 & 반동 피해)", isVerified: true, status: "complete" },
+  "sketch": { num: 166, id: "sketch", nameKo: "스케치", nameEn: "Sketch", type: "normal", category: "status", camera: "caster_to_target", desc: "시전 포켓몬 전방 과감한 돌진 ➔ 카메라 타겟 포커싱 ➔ 타겟 앞 우든 이젤 & 캔버스 탄성 팝업 ➔ 브러시의 역동적인 스케치 드로잉 & 컬러 워시 채색 ➔ 피니시 백색 섬광 & 비비드 4색 페인트 스플래시 & 스타버스트 폭발 ➔ 캔버스 페이드아웃 및 안착", isVerified: true, status: "complete" },
+  "triple-kick": { num: 167, id: "triple-kick", nameKo: "트리플킥", nameEn: "Triple Kick", type: "fighting", category: "physical", camera: "target", desc: "시전자 후방 웅크림 힘 축적 ➔ 1타 전방 도약 하단 스냅 킥(우상향 아크 & 0.95x 발바닥 스탬프 & 주황 십자 섬광) ➔ 공중 180° 피벗 다리 전환 ➔ 2타 상단 하이스핀 킥(하향 스핀 아크 & 1.30x 발바닥 스탬프 & 1프레임 섬광 & 다이아몬드 버스트) ➔ 공중 360° 서머솔트 회전 힘 응축 ➔ 3타 피니시 급강하 풀파워 드롭 킥 쾅!!(순백 섬광 & 초대형 초승달 아크 & 55° 1.80x 초대형 발바닥 & 8방향 플레어 & 파이팅 스파클 폭발 & 최대 넉백) ➔ 공중제비 착지 및 안정 복귀 (연속 3타, 위력 10➔20➔30)", isVerified: true, status: "complete" },
+  "thief": { num: 168, id: "thief", nameKo: "도둑질", nameEn: "Thief", type: "dark", category: "physical", camera: "target", desc: "상대 포커싱 ➔ 대상 포켓몬 스프라이트 위에 좁은 범위의 회색 연막 피어오름 ➔ 대상 포켓몬 회색화(그레이스케일) & 피격 직격 ➔ 좀 더 어두운 회색 연기가 살짝 다각도로 퍼짐 ➔ 대상에게서 작은 순백 구체 생성 및 시전 포켓몬에게로 유려한 포물선 비행 & 쏙 안착 흡수 완료 (상대의 도구를 훔침)", isVerified: true, status: "complete" },
+  "spider-web": { num: 169, id: "spider-web", nameKo: "거미집", nameEn: "Spider Web", type: "bug", category: "status", camera: "target", desc: "시전자 웅크림 힘 축적 & 은백색 실크 에너지 응축 ➔ 10% 암전 & 실뿜기 기반 2가닥 투명한 직선 실 초고속 발사 ➔ 상대 전면에 끝단이 바늘처럼 날카로운 8방향 방사선 & 4단 동심 다각형 거미줄 폭발적 전개 ➔ 거미줄의 팽팽한 장력 수축 진동 & 순백 스파클 록다운 결박 ➔ 완전 결박 고정 및 점착 페이드아웃 (도주 및 교체 불가)", isVerified: true, status: "complete" },
+  "mind-reader": { num: 170, id: "mind-reader", nameKo: "마음의눈", nameEn: "Mind Reader", type: "normal", category: "status", camera: "target", desc: "전장 암전 ➔ 상대방 포켓몬 타겟 포커싱 ➔ 대상 주변 은은한 반투명 역장 구체 형성 ➔ 마음의 눈 개안(안구 흰자 & 적갈색 홍채 & 칠흑 동공 1:1 고증) ➔ 움직임 완전 간파 및 깔끔한 페이드아웃 (다음 턴 필중)", isVerified: true, status: "complete" },
+  "nightmare": { num: 171, id: "nightmare", nameKo: "악몽", nameEn: "Nightmare", type: "ghost", category: "status", camera: "target", desc: "암전(어두움 100%, 대상 포켓몬 제외) ➔ 갑작스럽게 나타나는 사이코키네시스 배경필터(비틀림/소용돌이 왜곡 효과) ➔ 악몽 각인 및 페이드아웃 (수면 중인 적 매턴 최대 HP 1/4 감소)", isVerified: true, status: "complete" },
+  "flame-wheel": { num: 172, id: "flame-wheel", nameKo: "화염바퀴", nameEn: "Flame Wheel", type: "fire", category: "physical", camera: "target", desc: "시전자 제자리 반시계 회전(2D 기준) ➔ 회전하면서 화염 잔상 발생 & 3D 화염바퀴(Flame Wheel) 완성 ➔ 회전을 유지하며 상대에게 맹렬히 돌진 (지면 타오르는 궤적 & 후방 제트 화염) ➔ 상대 정면 격돌 직격 & 화염 폭발과 사방 비산 불꽃 파편 (위력 60, 10% 화상)", isVerified: true, status: "complete" },
+  "snore": { num: 173, id: "snore", nameKo: "코골기", nameEn: "Snore", type: "normal", category: "special", camera: "caster_to_target", desc: "수면 들숨 & 살짝 파란빛어두운 암전 ➔ 울부짖기 기반 3D 원추형 반투명 파장(네온 로열 블루 외곽 림 + 딥 바이올렛 반투명 몸체) 초고속 전진 사출 ➔ 카메라 타겟 포커싱 & 상대 면전 3D 반투명 파장 관통 ➔ 전방으로 파장 부드러운 소산 및 암전 해제 ➔ 시전자 태평한 단잠 복귀 (잠듦 상태 전용 기술, 위력 50, 특수)", isVerified: true, status: "complete" },
+  "curse": { num: 174, id: "curse", nameKo: "저주 (일반)", nameEn: "Curse (Normal)", type: "ghost", category: "status", camera: "self", desc: "시전자 살짝 납작해지며 좌우 수직 이동 후 원래자리 복귀 ➔ 랭크 다운(스피드 -1) ➔ 랭크 업(공격/방어 +1) 순차 재생", isVerified: true, status: "complete" },
+  "curse-ghost": { num: 174, id: "curse-ghost", nameKo: "저주 (고스트)", nameEn: "Curse (Ghost)", type: "ghost", category: "status", camera: "caster_to_target", desc: "칠흑 보랏빛 암전 ➔ 저주의 대못 소환 ➔ 대못이 시전자에게 내리꽂혀 최대 HP 50% 희생 ➔ 카메라 타겟 글라이드 ➔ 원혼 그림자 쇄도 & 상대 가슴에 저주의 대못 직격 ➔ 도깨비불 3기 포위 (매턴 상대 최대 HP 1/4 감소)", isVerified: true, status: "complete", isSpecialVariant: true, specialType: "variant" },
+  "curse-damage": { num: 174, id: "curse-damage", nameKo: "저주 (데미지)", nameEn: "Curse (Damage)", type: "ghost", category: "status", camera: "target", desc: "턴 종료 시 저주에 걸린 대상이 1/4 최대 HP 피해를 입을 때의 전용 연출: 가슴팍 검정 원 & 대못 출현 ➔ 쿵! 깊숙이 박히며 1/4 체력 감소 & 피격 전율", isVerified: true, status: "complete", isSpecialVariant: true, specialType: "variant" },
+  "aeroblast": { num: 177, id: "aeroblast", nameKo: "에어로블라스트", nameEn: "Aeroblast", type: "flying", category: "special", camera: "target", desc: "풍압 집약 & 대기압 왜곡 차징 ➔ 전장을 가로지르는 초고속 3D 나선형 볼텍스 캐논(순백 심선 & 이중 나선 회오리 리본 & 마하 충격파 링) 폭발적 사출 ➔ 상대 직격 착탄 & 상공으로 솟구치는 거대 회오리바람 기둥 분출 & 진공 참격 칼날 난타 ➔ 대기 파열 십자 섬광 & 초고압 대폭발 (급소율 1랭크 증가, 루기아 전용기)", isVerified: true, status: "complete" },
   "perk-hug": { num: 999, id: "perk-hug", nameKo: "포옹 (🫂 특수 연출)", nameEn: "Embrace / Hug", type: "normal", category: "status", camera: "self", desc: "내 포켓몬이 전면 상태로 카메라 앞까지 통통 뛰어와 1초간 안아준 뒤 복귀", isVerified: false, isSpecialVariant: true, specialType: "cutscene" },
 };
 
@@ -321,6 +359,50 @@ function buildAllMovesList(): VerifiedMoveItem[] {
         pp: 10,
         description: "1턴째에 머리를 움츠려 방어를 올린다. 머리 둘레의 압축 링과 황금빛 모래먼지 오라 (1턴 충전 연출, 방어 +1)",
         descriptionEn: "Tucks in its head to raise Defense on turn 1. Compression ring and billowing sand dust aura.",
+        makesContact: false,
+      });
+    }
+    // 143번 불새 바로 뒤에 1턴 충전 버전 삽입
+    if (m.id === 143 && HANDCRAFTED_MAP["sky-attack-charge"]) {
+      const hc = HANDCRAFTED_MAP["sky-attack-charge"];
+      result.push({
+        ...hc,
+        isVerified: false,
+        status: "complete",
+        power: null,
+        accuracy: null,
+        pp: 5,
+        description: "1턴째에 짙은 암전 속에서 시전자 좌우로 푸른 불꽃들이 날개 형태로 타오른다. (1턴 충전 연출)",
+        descriptionEn: "Cloaked in a harsh light on turn 1.",
+        makesContact: false,
+      });
+    }
+    // 174번 저주 바로 뒤에 고스트 버전 및 데미지 버전 삽입
+    if (m.id === 174 && HANDCRAFTED_MAP["curse-ghost"]) {
+      const hc = HANDCRAFTED_MAP["curse-ghost"];
+      result.push({
+        ...hc,
+        isVerified: true,
+        status: "complete",
+        power: null,
+        accuracy: null,
+        pp: 10,
+        description: "시전자가 고스트 타입일 때: 최대 HP의 50%를 깎아 상대에게 매 턴 최대 HP 1/4을 깎는 저주를 건다.",
+        descriptionEn: "Ghost-type variant: Cuts 1/2 max HP to lay a curse on the target.",
+        makesContact: false,
+      });
+    }
+    if (m.id === 174 && HANDCRAFTED_MAP["curse-damage"]) {
+      const hc = HANDCRAFTED_MAP["curse-damage"];
+      result.push({
+        ...hc,
+        isVerified: true,
+        status: "complete",
+        power: null,
+        accuracy: null,
+        pp: 10,
+        description: "턴 종료 시 저주에 걸린 대상이 1/4 최대 HP 피해를 입을 때의 전용 연출 (검정 원 + 대못 쿵! 타격 & HP 감소)",
+        descriptionEn: "Residual damage trigger at turn end: Opponent takes 1/4 max HP damage from the curse.",
         makesContact: false,
       });
     }
