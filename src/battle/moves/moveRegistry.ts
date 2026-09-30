@@ -189,6 +189,7 @@ import { nightmareMove } from "./definitions/171_nightmare.js";
 import { flameWheelMove } from "./definitions/172_flame_wheel.js";
 import { snoreMove } from "./definitions/173_snore.js";
 import { curseMove, curseNormalMove, curseGhostMove, curseDamageMove } from "./definitions/174_curse.js";
+import { flailMove } from "./definitions/175_flail.js";
 import { aeroblastMove } from "./definitions/177_aeroblast.js";
 import { statusMove } from "./definitions/status.js";
 import { defaultMove } from "./definitions/default.js";
@@ -731,6 +732,10 @@ export const MOVE_REGISTRY: Record<string, BattleMoveAnimation> = {
   "저주-데미지": curseDamageMove,
   "저주(데미지)": curseDamageMove,
   "저주데미지": curseDamageMove,
+  "flail": flailMove,
+  "175": flailMove,
+  "바둥바둥": flailMove,
+  "버둥거리기": flailMove,
   "aeroblast": aeroblastMove,
   "177": aeroblastMove,
   "에어로블라스트": aeroblastMove,

@@ -5,6 +5,8 @@
 // ============================================================================
 
 import { BattleFrame, EffectDrawContext } from "../../../battle/moves/types.js";
+import { drawTackleEffect } from "./move033_036.js";
+import { drawSplashParticles, drawSweatDropParticles } from "./move149_152.js";
 
 /**
  * Gen 2 Moves 173 - 176 Renderers
@@ -633,4 +635,100 @@ export function drawCurseDamageEffect(
 
   ctx.restore();
 }
+
+// ============================================================================
+// 175: 바둥바둥 (Flail)
+// ============================================================================
+
+/**
+ * 바둥바둥 3연속 타격 오프셋 위치 (발버둥 동일 규격)
+ * 1타: 좌상단 (-20, -16)
+ * 2타: 우하단 (+22, +14)
+ * 3타: 중앙 피니시 (-2, -6)
+ */
+export const FLAIL_HIT_OFFSETS = [
+  { x: -20, y: -16 }, // 1타: 좌상단
+  { x: 22, y: 14 },   // 2타: 우하단
+  { x: -2, y: -6 },   // 3타: 중앙 피니시
+];
+
+/**
+ * 💥 바둥바둥 (Flail) 이펙트 렌더러
+ * 
+ * [유저 요구사항 100% 반영]:
+ * 1. [발버둥 기반]: 시전 포켓몬 좌우 흔들흔들 + 서로 다른 3곳 위치에 순차 몸통박치기 타격 이펙트 직격
+ * 2. [튀어오르기 효과 결합]: 시전자 몸부림 시 상하 도약 스쿼시/스트레치 및 지면 착지 물방울 비산
+ * 3. [땀방울 튀기기]: 시전자가 바둥바둥 뛸 때 머리/몸통 주변에서 사방으로 솟구쳐 튀는 땀방울 파티클
+ */
+export function drawFlailEffect(
+  targetCtx: any,
+  frame: BattleFrame,
+  drawCtx: EffectDrawContext
+) {
+  if (!frame || frame.showEffect === false) return;
+
+  const ctx = targetCtx;
+  const { isPlayer: isP } = drawCtx;
+  const casterPos = drawCtx.casterPos ?? drawCtx.attackerPos;
+  const targetPos = drawCtx.targetPos;
+  const moveStep = frame.moveStep ?? 1;
+
+  // ---------------------------------------------------------------------------
+  // Step 1: 시전자 바둥바둥 + 튀어오르기 + 땀방울 튀기기 연출
+  // ---------------------------------------------------------------------------
+  if (moveStep === 1) {
+    const baseX = casterPos.x;
+    // 착지 접지면 Y
+    const groundY = casterPos.y + (isP ? 22 : 18);
+    // 공중 땀방울 튀는 높이 Y (도약 오프셋 반영)
+    const airOffsetY = frame.sweatAirOffsetY ?? (isP ? -12 : -10);
+    const airY = casterPos.y + airOffsetY;
+
+    const cycle = frame.splashCycle ?? 1;
+    const effectAlpha = frame.splashAlpha ?? 1.0;
+
+    // 1) 튀어오르기 효과: 착지 시 바닥 물방울 파티클
+    const splashProg = frame.splashProgress ?? 0;
+    if (splashProg > 0.001 && splashProg <= 1.0) {
+      drawSplashParticles(ctx, baseX, groundY, splashProg, cycle, effectAlpha);
+    }
+
+    // 2) 땀방울 튀기기: 도약/바둥바둥 시 사방으로 튀는 땀방울
+    const sweatProg = frame.sweatProgress ?? 0;
+    if (sweatProg > 0.001 && sweatProg <= 1.0) {
+      drawSweatDropParticles(ctx, baseX, airY, sweatProg, cycle, effectAlpha * 0.95);
+    }
+    return;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Step 2 ~ 5: 발버둥 그대로의 3곳 몸통박치기 타격 이펙트 직격
+  // ---------------------------------------------------------------------------
+  if (!targetPos) return;
+
+  const hitIndex = frame.hitIndex ?? 1;
+  const hitProgress = frame.effectProgress ?? 0.5;
+
+  const curOffset = FLAIL_HIT_OFFSETS[(hitIndex - 1) % FLAIL_HIT_OFFSETS.length];
+  const curHitPos = {
+    x: targetPos.x + curOffset.x,
+    y: targetPos.y + curOffset.y,
+  };
+
+  // 멀티히트 레이어링 잔향
+  if (hitIndex === 2 && moveStep === 3) {
+    const prevOffset = FLAIL_HIT_OFFSETS[0];
+    const prevPos = { x: targetPos.x + prevOffset.x, y: targetPos.y + prevOffset.y };
+    drawTackleEffect(targetCtx, prevPos, casterPos, 4, 0.85, isP);
+  } else if (hitIndex === 3 && moveStep === 4) {
+    const prevOffset = FLAIL_HIT_OFFSETS[1];
+    const prevPos = { x: targetPos.x + prevOffset.x, y: targetPos.y + prevOffset.y };
+    drawTackleEffect(targetCtx, prevPos, casterPos, 4, 0.85, isP);
+  }
+
+  // 현재 타격 몸통박치기 이펙트 (moveStep 5는 3타 이후 잔향 페이드아웃)
+  const tackleStep = moveStep === 5 ? 4 : 3;
+  drawTackleEffect(targetCtx, curHitPos, casterPos, tackleStep, hitProgress, isP);
+}
+
 
