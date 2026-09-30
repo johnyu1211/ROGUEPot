@@ -260,103 +260,121 @@ function createStatChangeFrames(
   }
 
   const isP = isAttackerPlayer;
-  const isBoost = action.statChanges.some(sc => sc.direction === "up");
-  const statTypeName = isBoost ? "능력치 상승" : "능력치 하락";
+  const hasDown = action.statChanges.some(sc => sc.direction === "down");
+  const hasUp = action.statChanges.some(sc => sc.direction === "up");
 
-  return [
-    // Step 1: Wave 1 soaring up from ground (150ms)
-    {
-      phaseId: "stat-change-1",
-      phaseName: `${statTypeName} 파티클 1단계`,
-      delay: 150,
-      pOffset: (usePlayerFront && isP) ? { x: 0, y: 0 } : { x: 0, y: 0 },
-      eOffset: (useEnemyBack && !isP) ? { x: 0, y: 0 } : { x: 0, y: 0 },
-      showEffect: false,
-      hitFlash: false,
-      usePlayerFront: false,
-      useEnemyBack: false,
-      targetAlpha: 1.0,
-      enemyHp: action.enemyHpAfter,
-      playerHp: action.playerHpAfter,
-      textLineIdx: dialogueTextIdx,
-      statProgress: 0.18,
-      isBlur: false,
-      moveEffect: action,
-      cameraZoom: 1.0,
-      cameraFocal: null,
-      _gen5Camera: false,
-      afterCameraReturn: true,
-    },
-    // Step 2: Wave 1 fading, Wave 2 soaring up from ground (150ms)
-    {
-      phaseId: "stat-change-2",
-      phaseName: `${statTypeName} 파티클 2단계`,
-      delay: 150,
-      pOffset: (usePlayerFront && isP) ? { x: 0, y: 0 } : { x: 0, y: 0 },
-      eOffset: (useEnemyBack && !isP) ? { x: 0, y: 0 } : { x: 0, y: 0 },
-      showEffect: false,
-      hitFlash: false,
-      usePlayerFront: false,
-      useEnemyBack: false,
-      targetAlpha: 1.0,
-      enemyHp: action.enemyHpAfter,
-      playerHp: action.playerHpAfter,
-      textLineIdx: dialogueTextIdx,
-      statProgress: 0.45,
-      isBlur: false,
-      moveEffect: action,
-      cameraZoom: 1.0,
-      cameraFocal: null,
-      _gen5Camera: false,
-      afterCameraReturn: true,
-    },
-    // Step 3: Wave 2 fading, Wave 3 soaring up from ground (160ms)
-    {
-      phaseId: "stat-change-3",
-      phaseName: `${statTypeName} 파티클 3단계`,
-      delay: 160,
-      pOffset: (usePlayerFront && isP) ? { x: 0, y: 0 } : { x: 0, y: 0 },
-      eOffset: (useEnemyBack && !isP) ? { x: 0, y: 0 } : { x: 0, y: 0 },
-      showEffect: false,
-      hitFlash: false,
-      usePlayerFront: false,
-      useEnemyBack: false,
-      targetAlpha: 1.0,
-      enemyHp: action.enemyHpAfter,
-      playerHp: action.playerHpAfter,
-      textLineIdx: dialogueTextIdx,
-      statProgress: 0.72,
-      isBlur: false,
-      moveEffect: action,
-      cameraZoom: 1.0,
-      cameraFocal: null,
-      _gen5Camera: false,
-      afterCameraReturn: true,
-    },
-    // Step 4: Wave 3 reaching apex and cleanly dissolving (180ms)
-    {
-      phaseId: "stat-change-4",
-      phaseName: `${statTypeName} 파티클 클라이맥스`,
-      delay: 180,
-      pOffset: (usePlayerFront && isP) ? { x: 0, y: 0 } : { x: 0, y: 0 },
-      eOffset: (useEnemyBack && !isP) ? { x: 0, y: 0 } : { x: 0, y: 0 },
-      showEffect: false,
-      hitFlash: false,
-      usePlayerFront: false,
-      useEnemyBack: false,
-      targetAlpha: 1.0,
-      enemyHp: action.enemyHpAfter,
-      playerHp: action.playerHpAfter,
-      textLineIdx: dialogueTextIdx,
-      statProgress: 0.95,
-      isBlur: false,
-      moveEffect: action,
-      cameraZoom: 1.0,
-      cameraFocal: null,
-      _gen5Camera: false,
-      afterCameraReturn: true,
-    },
-  ];
+  const buildWave = (direction: "down" | "up", prefix: string) => {
+    const statTypeName = direction === "up" ? "능력치 상승" : "능력치 하락";
+    return [
+      // Step 1: Wave 1 (150ms)
+      {
+        phaseId: `${prefix}-1`,
+        phaseName: `${statTypeName} 파티클 1단계`,
+        delay: 150,
+        pOffset: (usePlayerFront && isP) ? { x: 0, y: 0 } : { x: 0, y: 0 },
+        eOffset: (useEnemyBack && !isP) ? { x: 0, y: 0 } : { x: 0, y: 0 },
+        showEffect: false,
+        hitFlash: false,
+        usePlayerFront: false,
+        useEnemyBack: false,
+        targetAlpha: 1.0,
+        enemyHp: action.enemyHpAfter,
+        playerHp: action.playerHpAfter,
+        textLineIdx: dialogueTextIdx,
+        statProgress: 0.18,
+        statDirection: direction,
+        isBlur: false,
+        moveEffect: action,
+        cameraZoom: 1.0,
+        cameraFocal: null,
+        _gen5Camera: false,
+        afterCameraReturn: true,
+      },
+      // Step 2: Wave 2 (150ms)
+      {
+        phaseId: `${prefix}-2`,
+        phaseName: `${statTypeName} 파티클 2단계`,
+        delay: 150,
+        pOffset: (usePlayerFront && isP) ? { x: 0, y: 0 } : { x: 0, y: 0 },
+        eOffset: (useEnemyBack && !isP) ? { x: 0, y: 0 } : { x: 0, y: 0 },
+        showEffect: false,
+        hitFlash: false,
+        usePlayerFront: false,
+        useEnemyBack: false,
+        targetAlpha: 1.0,
+        enemyHp: action.enemyHpAfter,
+        playerHp: action.playerHpAfter,
+        textLineIdx: dialogueTextIdx,
+        statProgress: 0.45,
+        statDirection: direction,
+        isBlur: false,
+        moveEffect: action,
+        cameraZoom: 1.0,
+        cameraFocal: null,
+        _gen5Camera: false,
+        afterCameraReturn: true,
+      },
+      // Step 3: Wave 3 (160ms)
+      {
+        phaseId: `${prefix}-3`,
+        phaseName: `${statTypeName} 파티클 3단계`,
+        delay: 160,
+        pOffset: (usePlayerFront && isP) ? { x: 0, y: 0 } : { x: 0, y: 0 },
+        eOffset: (useEnemyBack && !isP) ? { x: 0, y: 0 } : { x: 0, y: 0 },
+        showEffect: false,
+        hitFlash: false,
+        usePlayerFront: false,
+        useEnemyBack: false,
+        targetAlpha: 1.0,
+        enemyHp: action.enemyHpAfter,
+        playerHp: action.playerHpAfter,
+        textLineIdx: dialogueTextIdx,
+        statProgress: 0.72,
+        statDirection: direction,
+        isBlur: false,
+        moveEffect: action,
+        cameraZoom: 1.0,
+        cameraFocal: null,
+        _gen5Camera: false,
+        afterCameraReturn: true,
+      },
+      // Step 4: Wave 4 Climax (180ms)
+      {
+        phaseId: `${prefix}-4`,
+        phaseName: `${statTypeName} 파티클 클라이맥스`,
+        delay: 180,
+        pOffset: (usePlayerFront && isP) ? { x: 0, y: 0 } : { x: 0, y: 0 },
+        eOffset: (useEnemyBack && !isP) ? { x: 0, y: 0 } : { x: 0, y: 0 },
+        showEffect: false,
+        hitFlash: false,
+        usePlayerFront: false,
+        useEnemyBack: false,
+        targetAlpha: 1.0,
+        enemyHp: action.enemyHpAfter,
+        playerHp: action.playerHpAfter,
+        textLineIdx: dialogueTextIdx,
+        statProgress: 0.95,
+        statDirection: direction,
+        isBlur: false,
+        moveEffect: action,
+        cameraZoom: 1.0,
+        cameraFocal: null,
+        _gen5Camera: false,
+        afterCameraReturn: true,
+      },
+    ];
+  };
+
+  const frames: any[] = [];
+  if (hasDown && hasUp) {
+    frames.push(...buildWave("down", "stat-drop"));
+    frames.push(...buildWave("up", "stat-boost"));
+  } else if (hasDown) {
+    frames.push(...buildWave("down", "stat-drop"));
+  } else if (hasUp) {
+    frames.push(...buildWave("up", "stat-boost"));
+  }
+  return frames;
 }
 
 /**
@@ -989,13 +1007,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     ? ((playerMon as any).illusionTarget.shinyTier !== undefined ? (playerMon as any).illusionTarget.shinyTier : ((playerMon as any).illusionTarget.isShiny ? 1 : 0))
     : ((playerMon as any).shinyTier !== undefined ? (playerMon as any).shinyTier : ((playerMon as any).isShiny ? 1 : 0));
 
-  const [arena, pbAssets, enemySprite, playerSprite, playerFrontSprite, enemyBackSprite] = await Promise.all([
+  const [arena, pbAssets, enemySprite, playerSprite, playerFrontSprite, enemyBackSprite, subFrontSprite, subBackSprite] = await Promise.all([
     getArenaAssets(battle.biome || "Town"),
     getPbInfoAssets(),
     getPokemonSprite(enemyActiveSpecies, true, enemyShinyTier, false),
     getPokemonSprite(playerActiveSpecies, true, playerShinyTier, true),
     getPokemonSprite(playerActiveSpecies, true, playerShinyTier, false),
     getPokemonSprite(enemyActiveSpecies, true, enemyShinyTier, true),
+    getPokemonSprite("substitute", true, 0, false),
+    getPokemonSprite("substitute", true, 0, true),
   ]);
 
   // ============================================================================
@@ -1048,6 +1068,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   }
   if (mKey1 === "skull-bash" && (a1.isTurn1Launch || a1.chargingMove === "skull-bash" || a1.log?.includes("고개를 숙이고") || a1.log?.includes("tucked in its head"))) {
     mKey1 = "skull-bash-charge";
+  }
+  if (mKey1 === "sky-attack" && (a1.isTurn1Launch || a1.chargingMove === "sky-attack" || a1.log?.includes("빛에 휩싸였다") || a1.log?.includes("harsh light") || a1.log?.includes("눈부신 빛"))) {
+    mKey1 = "sky-attack-charge";
   }
   const isChop1 = (mKey1 === "karate-chop" || mKey1 === "karatechop");
   const isSlap1 = (mKey1 === "double-slap" || mKey1 === "doubleslap");
@@ -1146,6 +1169,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     }
     if (mKey2 === "skull-bash" && (a2.isTurn1Launch || a2.chargingMove === "skull-bash" || a2.log?.includes("고개를 숙이고") || a2.log?.includes("tucked in its head"))) {
       mKey2 = "skull-bash-charge";
+    }
+    if (mKey2 === "sky-attack" && (a2.isTurn1Launch || a2.chargingMove === "sky-attack" || a2.log?.includes("빛에 휩싸였다") || a2.log?.includes("harsh light") || a2.log?.includes("눈부신 빛"))) {
+      mKey2 = "sky-attack-charge";
     }
     const isChop2 = (mKey2 === "karate-chop" || mKey2 === "karatechop");
     const isSlap2 = (mKey2 === "double-slap" || mKey2 === "doubleslap");
@@ -1259,7 +1285,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const isPlayerFainted = (finalPlayerHp <= 0 || (playerMon.hp <= 0 && !hasWhirlwindSuccess) || (battle.phase === "DEFEAT" && !hasWhirlwindSuccess));
     const isAnyFainted = a1Fainted || a2Fainted || isEnemyFainted || isPlayerFainted;
 
-    const faintAction = a2 || a1;
+    const faintAction = a3 || a2 || a1;
     const isFissureAction = ((faintAction?.moveKey || "").toLowerCase().replace(/[\s_]+/g, "-") === "fissure");
     const faintTarget = (isEnemyFainted && isPlayerFainted) ? "both" : (isPlayerFainted ? "player" : "enemy");
     const faintFrames = (isEnemyFainted || isPlayerFainted) && !isFissureAction
@@ -1398,6 +1424,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       if (mKey3 === "skull-bash" && (a3.isTurn1Launch || a3.chargingMove === "skull-bash" || a3.log?.includes("고개를 숙이고") || a3.log?.includes("tucked in its head"))) {
         mKey3 = "skull-bash-charge";
       }
+      if (mKey3 === "sky-attack" && (a3.isTurn1Launch || a3.chargingMove === "sky-attack" || a3.log?.includes("빛에 휩싸였다") || a3.log?.includes("harsh light") || a3.log?.includes("눈부신 빛"))) {
+        mKey3 = "sky-attack-charge";
+      }
       const moveData3 = getMoveData(mKey3);
       const isCharging3 = isEvasionLaunch(a3) || mKey3.endsWith("-charge");
       const isEvasionHit3 = isEvasionStrike(a3);
@@ -1411,8 +1440,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         isPlayer: isP3,
         isHit: isHit3,
         isMiss: isMiss3,
-        enemyHp: a2.enemyHpAfter,
-        playerHp: a2.playerHpAfter,
+        enemyHp: a3.enemyHpBefore !== undefined ? a3.enemyHpBefore : (a2 ? a2.enemyHpAfter : a1.enemyHpAfter),
+        playerHp: a3.playerHpBefore !== undefined ? a3.playerHpBefore : (a2 ? a2.playerHpAfter : a1.playerHpAfter),
         textLineIdx: 99,
         usePlayerFront: false,
         useEnemyBack: false,
@@ -1445,6 +1474,46 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const act1HasStatFrames = processedAct1Frames.some(f => f.statProgress !== undefined) || Boolean(moveAnim1?.customStatParticles);
     const act2HasStatFrames = processedAct2Frames.some(f => f.statProgress !== undefined) || Boolean(moveAnim2?.customStatParticles);
 
+    const isAct1Transformed = processedAct1Frames.some(f => f.useTransformedSprite);
+    const act1TransformedWho: ("player" | "enemy" | undefined) = isAct1Transformed
+      ? (processedAct1Frames.find(f => f.transformedWho)?.transformedWho || (isP1 ? "player" : "enemy"))
+      : undefined;
+
+    const isAct1Substituted = processedAct1Frames.some(f => f.useSubstituteSprite || f.usePlayerSubstitute || f.useEnemySubstitute);
+    const act1SubstitutedWho: ("player" | "enemy" | undefined) = isAct1Substituted
+      ? (processedAct1Frames.find(f => f.substituteWho)?.substituteWho || (isP1 ? "player" : "enemy"))
+      : undefined;
+
+    if (isAct1Transformed || isAct1Substituted) {
+      processedAct2Frames = processedAct2Frames.map(f => ({
+        ...f,
+        useTransformedSprite: isAct1Transformed ? (f.useTransformedSprite ?? true) : f.useTransformedSprite,
+        transformedWho: isAct1Transformed ? (f.transformedWho ?? act1TransformedWho) : f.transformedWho,
+        usePlayerSubstitute: act1SubstitutedWho === "player" ? true : f.usePlayerSubstitute,
+        useEnemySubstitute: act1SubstitutedWho === "enemy" ? true : f.useEnemySubstitute,
+      }));
+    }
+
+    const isAct2Transformed = isAct1Transformed || processedAct2Frames.some(f => f.useTransformedSprite);
+    const act2TransformedWho: ("player" | "enemy" | undefined) = isAct2Transformed
+      ? (processedAct2Frames.find(f => f.transformedWho)?.transformedWho || act1TransformedWho || (isP2 ? "player" : "enemy"))
+      : undefined;
+
+    const isAct2Substituted = isAct1Substituted || processedAct2Frames.some(f => f.useSubstituteSprite || f.usePlayerSubstitute || f.useEnemySubstitute);
+    const act2SubstitutedWho: ("player" | "enemy" | undefined) = isAct2Substituted
+      ? (processedAct2Frames.find(f => f.substituteWho)?.substituteWho || act1SubstitutedWho || (isP2 ? "player" : "enemy"))
+      : undefined;
+
+    if ((isAct2Transformed || isAct2Substituted) && a3) {
+      processedAct3Frames = processedAct3Frames.map(f => ({
+        ...f,
+        useTransformedSprite: isAct2Transformed ? (f.useTransformedSprite ?? true) : f.useTransformedSprite,
+        transformedWho: isAct2Transformed ? (f.transformedWho ?? act2TransformedWho) : f.transformedWho,
+        usePlayerSubstitute: (act2SubstitutedWho === "player" || act1SubstitutedWho === "player") ? true : f.usePlayerSubstitute,
+        useEnemySubstitute: (act2SubstitutedWho === "enemy" || act1SubstitutedWho === "enemy") ? true : f.useEnemySubstitute,
+      }));
+    }
+
     framesConfig = [
       // Frame 0: Leading Cinematic Soft-Blur Loading Frame (1000ms for Fly glide, 800ms for others) - Field Blur
       {
@@ -1474,13 +1543,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       ...(createEffectivenessFlickerFrames(a1, isP1, true, isP1GuillotineKill, isE1GuillotineKill).map(f => {
         const base = isPlayerEvadingDuringAct1 ? { ...f, pOffset: { x: 0, y: -9999 }, hidePlayer: true, hidePShadow: true, pAlpha: 0.0 }
           : (isEnemyEvadingDuringAct1 ? { ...f, eOffset: { x: 0, y: -9999 }, hideEnemy: true, hideEShadow: true, eAlpha: 0.0 } : f);
-        return { ...base, dialogueLines: a1Lines, textLineIdx: 99 };
+        return { ...base, useTransformedSprite: isAct1Transformed, transformedWho: act1TransformedWho, useSubstituteSprite: isAct1Substituted, substituteWho: act1SubstitutedWho, dialogueLines: a1Lines, textLineIdx: 99 };
       })),
       // Dedicated Post-Move Stat Change Phase for Action 1 (if stat changes exist and not already in act1 frames!)
       ...(!act1HasStatFrames ? (createStatChangeFrames(a1, isP1, 2, isP1GuillotineKill, isE1GuillotineKill).map(f => {
         const base = isPlayerEvadingDuringAct1 ? { ...f, pOffset: { x: 0, y: -9999 }, hidePlayer: true, hidePShadow: true, pAlpha: 0.0 }
           : (isEnemyEvadingDuringAct1 ? { ...f, eOffset: { x: 0, y: -9999 }, hideEnemy: true, hideEShadow: true, eAlpha: 0.0 } : f);
-        return { ...base, dialogueLines: a1Lines, textLineIdx: 99 };
+        return { ...base, useTransformedSprite: isAct1Transformed, transformedWho: act1TransformedWho, useSubstituteSprite: isAct1Substituted, substituteWho: act1SubstitutedWho, dialogueLines: a1Lines, textLineIdx: 99 };
       })) : []),
       // Frame 4: Natural Breathing Room Pause between Turns (850ms - comfortable reading pause!)
       {
@@ -1500,6 +1569,10 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         hitFlash: false,
         usePlayerFront: isP1GuillotineKill,
         useEnemyBack: isE1GuillotineKill,
+        useTransformedSprite: isAct1Transformed,
+        transformedWho: act1TransformedWho,
+        useSubstituteSprite: isAct1Substituted,
+        substituteWho: act1SubstitutedWho,
         targetAlpha: 1.0,
         enemyHp: a1.enemyHpAfter,
         playerHp: a1.playerHpAfter,
@@ -1517,13 +1590,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       ...(a2.canAct === false ? [] : (createEffectivenessFlickerFrames(a2, isP2, false, playerFrontHold, enemyBackHold).map(f => {
         const base = isPlayerEvadingDuringAct2 ? { ...f, pOffset: { x: 0, y: -9999 }, hidePlayer: true, hidePShadow: true, pAlpha: 0.0 }
           : (isEnemyEvadingDuringAct2 ? { ...f, eOffset: { x: 0, y: -9999 }, hideEnemy: true, hideEShadow: true, eAlpha: 0.0 } : f);
-        return { ...base, dialogueLines: a2Lines, textLineIdx: 99 };
+        return { ...base, useTransformedSprite: isAct2Transformed, transformedWho: act2TransformedWho, useSubstituteSprite: isAct2Substituted, substituteWho: act2SubstitutedWho, dialogueLines: a2Lines, textLineIdx: 99 };
       }))),
       // Dedicated Post-Move Stat Change Phase for Action 2 (if stat changes exist and not already in act2 frames!)
       ...(!act2HasStatFrames && a2.canAct !== false ? (createStatChangeFrames(a2, isP2, 4, playerFrontHold, enemyBackHold).map(f => {
         const base = isPlayerEvadingDuringAct2 ? { ...f, pOffset: { x: 0, y: -9999 }, hidePlayer: true, hidePShadow: true, pAlpha: 0.0 }
           : (isEnemyEvadingDuringAct2 ? { ...f, eOffset: { x: 0, y: -9999 }, hideEnemy: true, hideEShadow: true, eAlpha: 0.0 } : f);
-        return { ...base, dialogueLines: a2Lines, textLineIdx: 99 };
+        return { ...base, useTransformedSprite: isAct2Transformed, transformedWho: act2TransformedWho, useSubstituteSprite: isAct2Substituted, substituteWho: act2SubstitutedWho, dialogueLines: a2Lines, textLineIdx: 99 };
       })) : []),
       // === ACT 3 (If present!) ===
       ...(a3 ? [
@@ -1545,6 +1618,10 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           hitFlash: false,
           usePlayerFront: false,
           useEnemyBack: false,
+          useTransformedSprite: isAct2Transformed,
+          transformedWho: act2TransformedWho,
+          useSubstituteSprite: isAct2Substituted,
+          substituteWho: act2SubstitutedWho,
           targetAlpha: 1.0,
           enemyHp: a2.enemyHpAfter,
           playerHp: a2.playerHpAfter,
@@ -1559,9 +1636,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         ...act3StatFrames,
       ] : []),
       // Turn-End Residual Damage (poison, burn, trap, weather)
-      ...(residualFrames.map(f => ({ ...f, dialogueLines: lastActionLines, textLineIdx: 99 }))),
+      ...(residualFrames.map(f => ({ ...f, useTransformedSprite: isAct2Transformed, transformedWho: act2TransformedWho, useSubstituteSprite: isAct2Substituted, substituteWho: act2SubstitutedWho, dialogueLines: lastActionLines, textLineIdx: 99 }))),
       // Sinking Faint Collapse Animation (if someone fainted)
-      ...(faintFrames.map(f => ({ ...f, dialogueLines: lastActionLines, textLineIdx: 99 }))),
+      ...(faintFrames.map(f => ({ ...f, useTransformedSprite: isAct2Transformed, transformedWho: act2TransformedWho, useSubstituteSprite: isAct2Substituted, substituteWho: act2SubstitutedWho, dialogueLines: lastActionLines, textLineIdx: 99 }))),
       // Final 11-Minute Static Hold Frame (655,000ms) - completely neutral with NO statProgress
       {
         delay: 655000,
@@ -1580,6 +1657,10 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         hitFlash: false,
         usePlayerFront: playerFrontHold,
         useEnemyBack: enemyBackHold,
+        useTransformedSprite: isAct2Transformed,
+        transformedWho: act2TransformedWho,
+        useSubstituteSprite: isAct2Substituted,
+        substituteWho: act2SubstitutedWho,
         enemyHp: finalEnemyHp,
         playerHp: finalPlayerHp,
         enemyStatus: (a3 || a2)?.enemyStatusAfter !== undefined ? (a3 || a2).enemyStatusAfter : a1.enemyStatusAfter,
@@ -1713,6 +1794,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const hugFramesSingle = isHugTurnSingle ? createHugAnimationFrames(enemy.hp, playerMon.hp, 1, extraDownOffsetSingle).map(f => ({ ...f, dialogueLines: a1SingleLines, textLineIdx: 99 })) : [];
 
     const singleHasStatFrames = processedSingleActFrames.some(f => f.statProgress !== undefined) || Boolean(moveAnim1?.customStatParticles);
+    const isTransformedHold = processedSingleActFrames.some(f => f.useTransformedSprite);
+    const transformedWhoHold: ("player" | "enemy" | undefined) = isTransformedHold
+      ? (processedSingleActFrames.find(f => f.transformedWho)?.transformedWho || (isP1 ? "player" : "enemy"))
+      : undefined;
+
+    const isSubstitutedHold = processedSingleActFrames.some(f => f.useSubstituteSprite);
+    const substituteWhoHold: ("player" | "enemy" | undefined) = isSubstitutedHold
+      ? (processedSingleActFrames.find(f => f.substituteWho)?.substituteWho || (isP1 ? "player" : "enemy"))
+      : undefined;
 
     framesConfig = [
       // Frame 0: Leading Cinematic Soft-Blur Loading Frame (1000ms for Fly glide, 800ms for others) - Field Blur
@@ -1743,18 +1833,18 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       ...(createEffectivenessFlickerFrames(eff, isP1, true, playerFrontHold, enemyBackHold).map(f => {
         const base = isPlayerStartingEvading && !isP1 ? { ...f, pOffset: { x: 0, y: -9999 }, hidePlayer: true, hidePShadow: true, pAlpha: 0.0 }
           : (isEnemyStartingEvading && isP1 ? { ...f, eOffset: { x: 0, y: -9999 }, hideEnemy: true, hideEShadow: true, eAlpha: 0.0 } : f);
-        return { ...base, dialogueLines: a1SingleLines, textLineIdx: 99 };
+        return { ...base, useTransformedSprite: isTransformedHold, transformedWho: transformedWhoHold, useSubstituteSprite: isSubstitutedHold, substituteWho: substituteWhoHold, dialogueLines: a1SingleLines, textLineIdx: 99 };
       })),
       // Dedicated Post-Move Stat Change Phase (if stat changes exist and not already in single act frames!)
       ...(!singleHasStatFrames ? (createStatChangeFrames(eff, isP1, 2, playerFrontHold, enemyBackHold).map(f => {
         const base = isPlayerStartingEvading && !isP1 ? { ...f, pOffset: { x: 0, y: -9999 }, hidePlayer: true, hidePShadow: true, pAlpha: 0.0 }
           : (isEnemyStartingEvading && isP1 ? { ...f, eOffset: { x: 0, y: -9999 }, hideEnemy: true, hideEShadow: true, eAlpha: 0.0 } : f);
-        return { ...base, dialogueLines: a1SingleLines, textLineIdx: 99 };
+        return { ...base, useTransformedSprite: isTransformedHold, transformedWho: transformedWhoHold, useSubstituteSprite: isSubstitutedHold, substituteWho: substituteWhoHold, dialogueLines: a1SingleLines, textLineIdx: 99 };
       })) : []),
       // Turn-End Residual Damage (poison, burn, trap, weather)
-      ...(residualFramesSingle.map(f => ({ ...f, dialogueLines: a1SingleLines, textLineIdx: 99 }))),
+      ...(residualFramesSingle.map(f => ({ ...f, useTransformedSprite: isTransformedHold, transformedWho: transformedWhoHold, useSubstituteSprite: isSubstitutedHold, substituteWho: substituteWhoHold, dialogueLines: a1SingleLines, textLineIdx: 99 }))),
       // Sinking Faint Collapse Animation (if fainted)
-      ...(faintFrames.map(f => ({ ...f, dialogueLines: a1SingleLines, textLineIdx: 99 }))),
+      ...(faintFrames.map(f => ({ ...f, useTransformedSprite: isTransformedHold, transformedWho: transformedWhoHold, useSubstituteSprite: isSubstitutedHold, substituteWho: substituteWhoHold, dialogueLines: a1SingleLines, textLineIdx: 99 }))),
       // Final 11-Minute Static Hold Frame (655,000ms) - completely neutral with NO statProgress
       {
         delay: 655000,
@@ -1773,6 +1863,10 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         hitFlash: false,
         usePlayerFront: playerFrontHold,
         useEnemyBack: enemyBackHold,
+        useTransformedSprite: isTransformedHold,
+        transformedWho: transformedWhoHold,
+        useSubstituteSprite: isSubstitutedHold,
+        substituteWho: substituteWhoHold,
         enemyHp: finalEnemyHp,
         playerHp: finalPlayerHp,
         enemyStatus: eff?.enemyStatusAfter,
@@ -1792,6 +1886,33 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
 
   // Resample all battle keyframes with rhythmic pacing (25 FPS dashes, hit-stop, weighty flinch)
   framesConfig = interpolateBattleFramesTo30Fps(framesConfig);
+
+  // 🧸 대타출동(Substitute) 지속 상태 전파 패스 (Persistent Substitute State Propagation)
+  // - 배틀 시작 시점에 이미 대타출동 상태이거나,
+  // - 턴 도중(Act 1 또는 Act 2) 대타출동 인형이 소환된 이후부터는
+  //   그 뒤의 모든 프레임(스탯 변화, 턴 사이 휴식, 상대의 맞시전 등)에서 인형 상태가 지속되도록 보장!
+  let playerSubActive = Boolean((playerMon as any)?.substituteHp > 0 || (playerMon as any)?.hasSubstitute || (playerMon as any)?.isSubstituted);
+  let enemySubActive = Boolean((enemy as any)?.substituteHp > 0 || (enemy as any)?.hasSubstitute || (enemy as any)?.isSubstituted);
+
+  for (let i = 0; i < framesConfig.length; i++) {
+    const f = framesConfig[i];
+    // 프레임에서 대타출동 소환이 발동되었는지 감지 (인형이 나타나는 시점)
+    if (f.useSubstituteSprite) {
+      if (f.substituteWho === "player") playerSubActive = true;
+      else if (f.substituteWho === "enemy") enemySubActive = true;
+      else if (f.isAttackingPlayer ?? isPlayer) playerSubActive = true;
+      else enemySubActive = true;
+    }
+    if (f.usePlayerSubstitute !== undefined) playerSubActive = f.usePlayerSubstitute;
+    if (f.useEnemySubstitute !== undefined) enemySubActive = f.useEnemySubstitute;
+
+    if (playerSubActive) {
+      f.usePlayerSubstitute = true;
+    }
+    if (enemySubActive) {
+      f.useEnemySubstitute = true;
+    }
+  }
 
   const motionDurationMs = framesConfig.slice(0, -1).reduce((sum, f) => sum + f.delay, 0);
 
@@ -1829,7 +1950,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     f.playerStatus = curRenderPlayerStatus;
 
     let drawPlayerSpriteFn: (() => void) | null = null;
-    const isAnyBlur = Boolean(f.isBlur || f.cameraBlur);
+    const isAnyBlur = Boolean(f.isBlur || f.cameraBlur || f.screenFilter);
     const targetCtx = isAnyBlur ? offCtx : ctx;
     targetCtx.clearRect(0, 0, width, height);
 
@@ -2004,23 +2125,46 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       // Pokémon Silhouette Shadows (cast onto platform ground - cleanly suppressed when Pokemon rushes away, leaps into mid-air, or goes off-screen)
       const platShadowMul = f.platformAlpha !== undefined ? f.platformAlpha : (f.hidePlatform ? 0 : 1.0);
       const isEnemyHidden = (!f.ePlatOffset && f.eOffset && (Math.abs(f.eOffset.x) > 35 || f.eOffset.y <= -30 || f.eOffset.y >= 9000)) || f.hideEShadow || f.hideEnemy || (eAlpha <= 0.02) || f.blackoutScreen || platShadowMul <= 0.01;
-      if (enemySprite && !isEnemyHidden) {
+      const isEnemyTransformed = f.transformedWho === "enemy" || (f.useTransformedSprite && !isAttackingPlayer);
+      const isPlayerTransformed = f.transformedWho === "player" || (f.useTransformedSprite && isAttackingPlayer);
+      const isEnemySubstituted = f.useEnemySubstitute ?? (
+        f.substituteWho === "enemy" || (f.useSubstituteSprite && (f.substituteWho ? f.substituteWho === "enemy" : !isAttackingPlayer))
+      );
+      const isPlayerSubstituted = f.usePlayerSubstitute ?? (
+        f.substituteWho === "player" || (f.useSubstituteSprite && (f.substituteWho ? f.substituteWho === "player" : isAttackingPlayer))
+      );
+
+      const eSpriteForShadow = isEnemySubstituted
+        ? (subFrontSprite || enemySprite)
+        : (isEnemyTransformed
+          ? (playerFrontSprite || playerSprite)
+          : (f.useEnemyBack ? (enemyBackSprite || enemySprite) : enemySprite));
+      if (eSpriteForShadow && !isEnemyHidden) {
         const eShadowX = em.x + ((f.targetWhiteAura && eTarget) ? 0 : (f.eOffset?.x || 0));
         const eShadowY = em.y + (f.ePlatOffset ? (f.eOffset?.y || 0) : 0);
         const eSize = em.size * (f.eScale?.x ?? 1.0);
-        drawPokemonSilhouetteShadow(targetCtx, enemySprite, eShadowX, eShadowY, eSize, false, 0.42 * eAlpha * platShadowMul);
+        drawPokemonSilhouetteShadow(targetCtx, eSpriteForShadow, eShadowX, eShadowY, eSize, false, 0.42 * eAlpha * platShadowMul);
       }
 
       const isPlayerHidden = (!f.pPlatOffset && f.pOffset && (Math.abs(f.pOffset.x) > 35 || f.pOffset.y <= -30 || f.pOffset.y >= 9000)) || f.hidePShadow || f.hidePlayer || (pAlpha <= 0.02) || f.blackoutScreen || platShadowMul <= 0.01;
-      if (playerSprite && !isPlayerHidden) {
+      const pSpriteForShadow = isPlayerSubstituted
+        ? (subBackSprite || playerSprite)
+        : (isPlayerTransformed
+          ? (enemyBackSprite || enemySprite)
+          : (f.usePlayerFront ? (playerFrontSprite || playerSprite) : playerSprite));
+      if (pSpriteForShadow && !isPlayerHidden) {
         const pShadowX = pm.x + ((f.targetWhiteAura && pTarget) ? 0 : (f.pOffset?.x || 0));
         const pShadowY = pm.y + (f.pPlatOffset ? (f.pOffset?.y || 0) : 0);
         const pSize = pm.size * (f.pScale?.x ?? 1.0);
-        drawPokemonSilhouetteShadow(targetCtx, playerSprite, pShadowX, pShadowY, pSize, true, 0.42 * pAlpha * platShadowMul);
+        drawPokemonSilhouetteShadow(targetCtx, pSpriteForShadow, pShadowX, pShadowY, pSize, true, 0.42 * pAlpha * platShadowMul);
       }
 
       const drawEnemySprite = () => {
-        const eSpriteToDraw = f.useEnemyBack ? (enemyBackSprite || enemySprite) : enemySprite;
+        const eSpriteToDraw = isEnemySubstituted
+          ? (subFrontSprite || enemySprite)
+          : (isEnemyTransformed
+            ? (playerFrontSprite || playerSprite)
+            : (f.useEnemyBack ? (enemyBackSprite || enemySprite) : enemySprite));
         const isEnemySpriteHidden = (f.eOffset && (f.eOffset.y <= -500 || f.eOffset.y >= 9000)) || f.hideEnemy || (eAlpha <= 0.01);
         if (eSpriteToDraw && !isEnemySpriteHidden) {
           targetCtx.save();
@@ -2030,7 +2174,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             targetCtx.clip();
           }
           const isWhiteAura = (f.targetWhiteAura && eTarget) || f.eWhiteAura;
-          if (f.eWhite || (f.casterWhite && !isAttackingPlayer)) {
+          const eWhiteAlpha = f.eWhiteAlpha ?? (!isAttackingPlayer ? f.whiteFilterAlpha : 0) ?? 0;
+          const isPureWhite = f.eWhite || (f.casterWhite && !isAttackingPlayer) || eWhiteAlpha >= 0.99;
+          const eBottomSpread = f.eBottomSpread ?? (!isAttackingPlayer ? f.bottomSpread : undefined);
+
+          if (isPureWhite) {
             targetCtx.filter = "brightness(0) invert(1)";
           } else if (f.eWhiteTint) {
             const rad = f.whiteTintRadius ?? 2.5;
@@ -2053,8 +2201,14 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             const sat = (1.5 + 2.0 * lvl).toFixed(1);
             const bri = (1.0 - 0.15 * lvl).toFixed(2);
             targetCtx.filter = `sepia(${sep}) hue-rotate(${rot}deg) saturate(${sat}) brightness(${bri})`;
-          } else if ((f.targetRedTint && eTarget) || f.eRedTint) {
-            targetCtx.filter = "sepia(1) hue-rotate(314deg) saturate(9) brightness(1.05) drop-shadow(0px 0px 6px #ef4444)";
+          } else if ((f.targetRedTint && eTarget) || f.eRedTint || (f.casterRedTint && !isAttackingPlayer) || (f.eRedLevel !== undefined && f.eRedLevel > 0) || (f.casterRedLevel !== undefined && f.casterRedLevel > 0 && !isAttackingPlayer)) {
+            const rawLvl = f.eRedLevel ?? (f.casterRedLevel && !isAttackingPlayer ? f.casterRedLevel : 1.0);
+            const lvl = Math.max(0, Math.min(1, rawLvl));
+            const sep = (0.35 + 0.65 * lvl).toFixed(2);
+            const sat = (1.5 + 7.5 * lvl).toFixed(1);
+            const bri = (1.0 + 0.05 * lvl).toFixed(2);
+            const shadow = lvl > 0.3 ? ` drop-shadow(0px 0px ${Math.round(6 * lvl)}px #ef4444)` : "";
+            targetCtx.filter = `sepia(${sep}) hue-rotate(314deg) saturate(${sat}) brightness(${bri})${shadow}`;
           } else if ((f.targetBlueTint && eTarget) || f.eBlueTint) {
             targetCtx.filter = "sepia(0.60) hue-rotate(180deg) saturate(2.5) brightness(1.1)";
           }
@@ -2066,7 +2220,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           const eTintColor = getStatusTintColor(curRenderEnemyStatus);
           if (isWhiteAura) {
             // 1. [아래 레이어] 원본 스프라이트는 제자리에 그대로 유지 (오프셋 0, 스케일 1.0, 원본 색상)
-            drawFittedBattleSprite(targetCtx, eSpriteToDraw, em.x, em.y, em.size, eTintColor);
+            drawFittedBattleSprite(targetCtx, eSpriteToDraw, em.x, em.y, em.size, eTintColor, eBottomSpread);
 
             // 2. [위 레이어] 반투명 흰색 스프라이트는 위에 뜨며(이동/진동/팽창) 렌더링
             targetCtx.save();
@@ -2075,27 +2229,55 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             targetCtx.globalAlpha = (f.targetWhiteOpacity ?? 0.48) * eAlpha;
             if (f.eScale || f.eRot || f.eOffset) {
               targetCtx.translate(ex, ey);
-              if (f.eRot) targetCtx.rotate(f.eRot);
+              if (f.eRot) {
+                const pivotY = (f.rotateFromCenter || f.eRotCenter) ? (f.eRotPivotY ?? 26) : 0;
+                if (pivotY) targetCtx.translate(0, -pivotY);
+                targetCtx.rotate(f.eRot);
+                if (pivotY) targetCtx.translate(0, pivotY);
+              }
               if (f.eScale) targetCtx.scale(f.eScale.x, f.eScale.y);
-              drawFittedBattleSprite(targetCtx, eSpriteToDraw, 0, 0, em.size, eTintColor);
+              drawFittedBattleSprite(targetCtx, eSpriteToDraw, 0, 0, em.size, eTintColor, eBottomSpread);
             } else {
-              drawFittedBattleSprite(targetCtx, eSpriteToDraw, ex, ey, em.size, eTintColor);
+              drawFittedBattleSprite(targetCtx, eSpriteToDraw, ex, ey, em.size, eTintColor, eBottomSpread);
             }
             targetCtx.restore();
-          } else if (f.eScale || f.eRot) {
+          } else if (f.eScale || f.eRot || eBottomSpread) {
             targetCtx.translate(ex, ey);
-            if (f.eRot) targetCtx.rotate(f.eRot);
+            if (f.eRot) {
+              const pivotY = (f.rotateFromCenter || f.eRotCenter) ? (f.eRotPivotY ?? 26) : 0;
+              if (pivotY) targetCtx.translate(0, -pivotY);
+              targetCtx.rotate(f.eRot);
+              if (pivotY) targetCtx.translate(0, pivotY);
+            }
             if (f.eScale) targetCtx.scale(f.eScale.x, f.eScale.y);
-            drawFittedBattleSprite(targetCtx, eSpriteToDraw, 0, 0, em.size, eTintColor);
+            drawFittedBattleSprite(targetCtx, eSpriteToDraw, 0, 0, em.size, eTintColor, eBottomSpread);
+            if (!isPureWhite && eWhiteAlpha > 0.01) {
+              targetCtx.save();
+              targetCtx.filter = "brightness(0) invert(1)";
+              targetCtx.globalAlpha = eAlpha * eWhiteAlpha;
+              drawFittedBattleSprite(targetCtx, eSpriteToDraw, 0, 0, em.size, eTintColor, eBottomSpread);
+              targetCtx.restore();
+            }
           } else {
-            drawFittedBattleSprite(targetCtx, eSpriteToDraw, ex, ey, em.size, eTintColor);
+            drawFittedBattleSprite(targetCtx, eSpriteToDraw, ex, ey, em.size, eTintColor, eBottomSpread);
+            if (!isPureWhite && eWhiteAlpha > 0.01) {
+              targetCtx.save();
+              targetCtx.filter = "brightness(0) invert(1)";
+              targetCtx.globalAlpha = eAlpha * eWhiteAlpha;
+              drawFittedBattleSprite(targetCtx, eSpriteToDraw, ex, ey, em.size, eTintColor, eBottomSpread);
+              targetCtx.restore();
+            }
           }
           targetCtx.restore();
         }
       };
 
       const drawPlayerSprite = () => {
-        const pSpriteToDraw = f.usePlayerFront ? (playerFrontSprite || playerSprite) : playerSprite;
+        const pSpriteToDraw = isPlayerSubstituted
+          ? (subBackSprite || playerSprite)
+          : (isPlayerTransformed
+            ? (enemyBackSprite || enemySprite)
+            : (f.usePlayerFront ? (playerFrontSprite || playerSprite) : playerSprite));
         const isPlayerSpriteHidden = (f.pOffset && (f.pOffset.y <= -500 || f.pOffset.y >= 9000)) || f.hidePlayer || (pAlpha <= 0.01);
         if (pSpriteToDraw && !isPlayerSpriteHidden && (playerMon.hp > 0 || f.playerHp > 0 || pAlpha > 0.01)) {
           targetCtx.save();
@@ -2105,7 +2287,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             targetCtx.clip();
           }
           const isWhiteAura = (f.targetWhiteAura && pTarget) || f.pWhiteAura;
-          if (f.pWhite || (f.casterWhite && isAttackingPlayer)) {
+          const pWhiteAlpha = f.pWhiteAlpha ?? (isAttackingPlayer ? f.whiteFilterAlpha : 0) ?? 0;
+          const isPureWhite = f.pWhite || (f.casterWhite && isAttackingPlayer) || pWhiteAlpha >= 0.99;
+          const pBottomSpread = f.pBottomSpread ?? (isAttackingPlayer ? f.bottomSpread : undefined);
+
+          if (isPureWhite) {
             targetCtx.filter = "brightness(0) invert(1)";
           } else if (f.pWhiteTint) {
             const rad = f.whiteTintRadius ?? 2.5;
@@ -2128,8 +2314,14 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             const sat = (1.5 + 2.0 * lvl).toFixed(1);
             const bri = (1.0 - 0.15 * lvl).toFixed(2);
             targetCtx.filter = `sepia(${sep}) hue-rotate(${rot}deg) saturate(${sat}) brightness(${bri})`;
-          } else if ((f.targetRedTint && pTarget) || f.pRedTint) {
-            targetCtx.filter = "sepia(1) hue-rotate(314deg) saturate(9) brightness(1.05) drop-shadow(0px 0px 6px #ef4444)";
+          } else if ((f.targetRedTint && pTarget) || f.pRedTint || (f.casterRedTint && isAttackingPlayer) || (f.pRedLevel !== undefined && f.pRedLevel > 0) || (f.casterRedLevel !== undefined && f.casterRedLevel > 0 && isAttackingPlayer)) {
+            const rawLvl = f.pRedLevel ?? (f.casterRedLevel && isAttackingPlayer ? f.casterRedLevel : 1.0);
+            const lvl = Math.max(0, Math.min(1, rawLvl));
+            const sep = (0.35 + 0.65 * lvl).toFixed(2);
+            const sat = (1.5 + 7.5 * lvl).toFixed(1);
+            const bri = (1.0 + 0.05 * lvl).toFixed(2);
+            const shadow = lvl > 0.3 ? ` drop-shadow(0px 0px ${Math.round(6 * lvl)}px #ef4444)` : "";
+            targetCtx.filter = `sepia(${sep}) hue-rotate(314deg) saturate(${sat}) brightness(${bri})${shadow}`;
           } else if ((f.targetBlueTint && pTarget) || f.pBlueTint) {
             targetCtx.filter = "sepia(0.60) hue-rotate(180deg) saturate(2.5) brightness(1.1)";
           }
@@ -2141,7 +2333,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           const pTintColor = getStatusTintColor(curRenderPlayerStatus);
           if (isWhiteAura) {
             // 1. [아래 레이어] 원본 스프라이트는 제자리에 그대로 유지 (오프셋 0, 스케일 1.0, 원본 색상)
-            drawFittedBattleSprite(targetCtx, pSpriteToDraw, pm.x, pm.y, pm.size, pTintColor);
+            drawFittedBattleSprite(targetCtx, pSpriteToDraw, pm.x, pm.y, pm.size, pTintColor, pBottomSpread);
 
             // 2. [위 레이어] 반투명 흰색 스프라이트는 위에 뜨며(이동/진동/팽창) 렌더링
             targetCtx.save();
@@ -2150,20 +2342,44 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             targetCtx.globalAlpha = (f.targetWhiteOpacity ?? 0.48) * pAlpha;
             if (f.pScale || f.pRot || f.pOffset) {
               targetCtx.translate(px, py);
-              if (f.pRot) targetCtx.rotate(f.pRot);
+              if (f.pRot) {
+                const pivotY = (f.rotateFromCenter || f.pRotCenter) ? (f.pRotPivotY ?? 36) : 0;
+                if (pivotY) targetCtx.translate(0, -pivotY);
+                targetCtx.rotate(f.pRot);
+                if (pivotY) targetCtx.translate(0, pivotY);
+              }
               if (f.pScale) targetCtx.scale(f.pScale.x, f.pScale.y);
-              drawFittedBattleSprite(targetCtx, pSpriteToDraw, 0, 0, pm.size, pTintColor);
+              drawFittedBattleSprite(targetCtx, pSpriteToDraw, 0, 0, pm.size, pTintColor, pBottomSpread);
             } else {
-              drawFittedBattleSprite(targetCtx, pSpriteToDraw, px, py, pm.size, pTintColor);
+              drawFittedBattleSprite(targetCtx, pSpriteToDraw, px, py, pm.size, pTintColor, pBottomSpread);
             }
             targetCtx.restore();
-          } else if (f.pScale || f.pRot) {
+          } else if (f.pScale || f.pRot || pBottomSpread) {
             targetCtx.translate(px, py);
-            if (f.pRot) targetCtx.rotate(f.pRot);
+            if (f.pRot) {
+              const pivotY = (f.rotateFromCenter || f.pRotCenter) ? (f.pRotPivotY ?? 36) : 0;
+              if (pivotY) targetCtx.translate(0, -pivotY);
+              targetCtx.rotate(f.pRot);
+              if (pivotY) targetCtx.translate(0, pivotY);
+            }
             if (f.pScale) targetCtx.scale(f.pScale.x, f.pScale.y);
-            drawFittedBattleSprite(targetCtx, pSpriteToDraw, 0, 0, pm.size, pTintColor);
+            drawFittedBattleSprite(targetCtx, pSpriteToDraw, 0, 0, pm.size, pTintColor, pBottomSpread);
+            if (!isPureWhite && pWhiteAlpha > 0.01) {
+              targetCtx.save();
+              targetCtx.filter = "brightness(0) invert(1)";
+              targetCtx.globalAlpha = pAlpha * pWhiteAlpha;
+              drawFittedBattleSprite(targetCtx, pSpriteToDraw, 0, 0, pm.size, pTintColor, pBottomSpread);
+              targetCtx.restore();
+            }
           } else {
-            drawFittedBattleSprite(targetCtx, pSpriteToDraw, px, py, pm.size, pTintColor);
+            drawFittedBattleSprite(targetCtx, pSpriteToDraw, px, py, pm.size, pTintColor, pBottomSpread);
+            if (!isPureWhite && pWhiteAlpha > 0.01) {
+              targetCtx.save();
+              targetCtx.filter = "brightness(0) invert(1)";
+              targetCtx.globalAlpha = pAlpha * pWhiteAlpha;
+              drawFittedBattleSprite(targetCtx, pSpriteToDraw, px, py, pm.size, pTintColor, pBottomSpread);
+              targetCtx.restore();
+            }
           }
           targetCtx.restore();
         }
@@ -2314,7 +2530,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           }
         }
         if (statChanges && statChanges.length > 0) {
+          const seen = new Set<string>();
           for (const change of statChanges) {
+            if (f.statDirection && change.direction !== f.statDirection) {
+              continue;
+            }
+            const key = `${change.target}_${change.direction}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+
             const targetPos = change.target === "player"
               ? { x: pm.x + (f.pOffset?.x ?? 0), y: pm.y + (f.pOffset?.y ?? 0) }
               : { x: em.x + (f.eOffset?.x ?? 0), y: em.y + (f.eOffset?.y ?? 0) };
@@ -2392,6 +2616,32 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         }
         ctx.restore();
       }
+    } else if (f.screenFilter) {
+      // 🌟 [전체화면 필터 이펙트]: 흑백/고대비/반전 등 전체 화면(배경 + 포켓몬 + 이펙트)에 CSS 필터 적용
+      ctx.clearRect(0, 0, width, height);
+      ctx.save();
+      ctx.filter = f.screenFilter;
+      ctx.drawImage(offCanvas, 0, 0, width, height);
+      ctx.restore();
+      ctx.filter = "none";
+
+      if (!f.blackoutScreen && !f.blackFadeAlpha) {
+        ctx.save();
+        ctx.scale(renderScale, renderScale);
+        if (!f.hideUI) {
+          renderBattleHeader(ctx, logicalWidth, battle, isKo);
+        }
+        if (!f.hideHud && !f.hideUI) {
+          renderBattleHuds(ctx, battle, isKo, pbAssets, curRenderEnemyHp, curRenderPlayerHp, undefined, curRenderEnemyStatus, curRenderPlayerStatus);
+        }
+        if (!f.hideDialogue && !f.hideUI) {
+          renderBattleDialogue(ctx, logicalWidth, logicalHeight, f.dialogueLines || dialogueLines, f.textLineIdx !== undefined ? f.textLineIdx : 99);
+        }
+        if (f.drawPlayerAboveHud && drawPlayerSpriteFn) {
+          drawPlayerSpriteFn();
+        }
+        ctx.restore();
+      }
     }
 
     let effectiveDelay = f.delay;
@@ -2411,10 +2661,17 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       (frameIdx === 1) ||
       (prevBattleFrame && Boolean(f.isBlur) !== Boolean(prevBattleFrame.isBlur)) ||
       (prevBattleFrame && Boolean(f.cameraBlur) !== Boolean(prevBattleFrame.cameraBlur)) ||
+      (prevBattleFrame && Boolean(f.screenFilter) !== Boolean(prevBattleFrame.screenFilter)) ||
       (prevBattleFrame && Boolean(f.hitFlash) !== Boolean(prevBattleFrame.hitFlash)) ||
       (prevBattleFrame && Boolean(f.whiteFlash) !== Boolean(prevBattleFrame.whiteFlash)) ||
       (prevBattleFrame && Boolean(f.targetBlueTint) !== Boolean(prevBattleFrame.targetBlueTint)) ||
       (prevBattleFrame && Boolean(f.targetRedTint) !== Boolean(prevBattleFrame.targetRedTint)) ||
+      (prevBattleFrame && Boolean(f.pRedTint) !== Boolean(prevBattleFrame.pRedTint)) ||
+      (prevBattleFrame && Boolean(f.eRedTint) !== Boolean(prevBattleFrame.eRedTint)) ||
+      (prevBattleFrame && Boolean(f.casterRedTint) !== Boolean(prevBattleFrame.casterRedTint)) ||
+      (prevBattleFrame && f.pRedLevel !== prevBattleFrame.pRedLevel) ||
+      (prevBattleFrame && f.eRedLevel !== prevBattleFrame.eRedLevel) ||
+      (prevBattleFrame && f.casterRedLevel !== prevBattleFrame.casterRedLevel) ||
       (prevBattleFrame && Boolean(f.targetPurpleLevel) !== Boolean(prevBattleFrame.targetPurpleLevel)) ||
       (prevBattleFrame && Boolean(f.eWhite) !== Boolean(prevBattleFrame.eWhite)) ||
       (prevBattleFrame && Boolean(f.pWhite) !== Boolean(prevBattleFrame.pWhite)) ||
@@ -2425,7 +2682,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       (prevBattleFrame && Boolean(f.whiteoutAlpha) !== Boolean(prevBattleFrame.whiteoutAlpha)) ||
       (prevBattleFrame && Boolean(f.targetYellowAura || f.eYellowAura || f.pYellowAura || f.casterYellowAura) !== Boolean(prevBattleFrame.targetYellowAura || prevBattleFrame.eYellowAura || prevBattleFrame.pYellowAura || prevBattleFrame.casterYellowAura)) ||
       (prevBattleFrame && Boolean(f.targetWhiteAura || f.eWhiteAura || f.pWhiteAura) !== Boolean(prevBattleFrame.targetWhiteAura || prevBattleFrame.eWhiteAura || prevBattleFrame.pWhiteAura)) ||
-      (prevBattleFrame && (f.targetWhiteOpacity !== prevBattleFrame.targetWhiteOpacity || f.targetWhiteBorderAlpha !== prevBattleFrame.targetWhiteBorderAlpha)) ||
+      (prevBattleFrame && Boolean(f.useTransformedSprite) !== Boolean(prevBattleFrame.useTransformedSprite)) ||
+      (prevBattleFrame && Boolean(f.useSubstituteSprite) !== Boolean(prevBattleFrame.useSubstituteSprite)) ||
+      (prevBattleFrame && Boolean(f.usePlayerSubstitute) !== Boolean(prevBattleFrame.usePlayerSubstitute)) ||
+      (prevBattleFrame && Boolean(f.useEnemySubstitute) !== Boolean(prevBattleFrame.useEnemySubstitute)) ||
+      (prevBattleFrame && (f.whiteFilterAlpha !== undefined || prevBattleFrame.whiteFilterAlpha !== undefined) && f.whiteFilterAlpha !== prevBattleFrame.whiteFilterAlpha) ||
       (prevBattleFrame && f.phaseId && prevBattleFrame.phaseId ? f.phaseId !== prevBattleFrame.phaseId : (prevBattleFrame && f.moveStep !== undefined && prevBattleFrame.moveStep !== undefined && f.moveStep !== prevBattleFrame.moveStep))
     );
 
@@ -2505,7 +2766,11 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
         ? `Foe sent out ${enemy.name}!`
         : (enemy.isBoss ? `Boss Pokémon ${enemy.name} appeared!` : `Wild ${enemy.name} appeared!`)
       ));
-  const rawDialogue = battle.dialogueText || defaultEntryDialogue;
+  let rawDialogue = battle.dialogueText || defaultEntryDialogue;
+  if (entryType === "both" && !rawDialogue.includes("가랏") && !rawDialogue.includes("Go,")) {
+    const pCall = isKo ? `가랏, ${playerMon.nameKo || playerMon.name}!` : `Go, ${playerMon.name}!`;
+    rawDialogue += `\n${pCall}`;
+  }
   const dialogueLines = options.dialogueLines || rawDialogue.replace(/\\n/g, "\n").split("\n");
 
   const enemyActiveSpecies = (enemy as any).isTransformed
@@ -2587,256 +2852,181 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
     }
   }
 
-  let entryFrames: any[];
+  const frames: any[] = [];
 
-  if (isSwitch) {
-    const frames: any[] = [];
-
-    // --- Phase 1: Retreat Frames (퇴장: 생존 포켓몬만 뒤로 물러나며 볼 복귀) ---
-    if (hasRetreat) {
-      // R0: Initial Hold (160ms) - Battlers in position before retreating
-      frames.push({
-        delay: 160,
-        pPlatX: 0, ePlatX: 0, ePlatY: 0,
-        pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0,
-        prevEMonX: 0, prevEMonY: 0, prevEnemyOpacity: hasPrevEnemy ? 1.0 : 0.0,
-        prevPMonX: 0, prevPMonY: 0, prevPlayerOpacity: hasPrevPlayer ? 1.0 : 0.0,
-        enemyOpacity: hasPrevEnemy ? 0.0 : 1.0,
-        playerOpacity: hasPrevPlayer ? 0.0 : 1.0,
-        showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0,
-        dialogueLines: retreatDialogueLines,
-      });
-
-      // R1: Step 1 (110ms) - Gliding back with 70% opacity (Enemy up-right: +14, -8 / Player down-left: -14, +8)
-      frames.push({
-        delay: 110,
-        pPlatX: 0, ePlatX: 0, ePlatY: 0,
-        pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0,
-        prevEMonX: 14, prevEMonY: -8, prevEnemyOpacity: hasPrevEnemy ? 0.70 : 0.0,
-        prevPMonX: -14, prevPMonY: 8, prevPlayerOpacity: hasPrevPlayer ? 0.70 : 0.0,
-        enemyOpacity: hasPrevEnemy ? 0.0 : 1.0,
-        playerOpacity: hasPrevPlayer ? 0.0 : 1.0,
-        showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0,
-        dialogueLines: retreatDialogueLines,
-      });
-
-      // R2: Step 2 (110ms) - Gliding further back with 40% opacity (+30, -17 / -30, +17)
-      frames.push({
-        delay: 110,
-        pPlatX: 0, ePlatX: 0, ePlatY: 0,
-        pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0,
-        prevEMonX: 30, prevEMonY: -17, prevEnemyOpacity: hasPrevEnemy ? 0.40 : 0.0,
-        prevPMonX: -30, prevPMonY: 17, prevPlayerOpacity: hasPrevPlayer ? 0.40 : 0.0,
-        enemyOpacity: hasPrevEnemy ? 0.0 : 1.0,
-        playerOpacity: hasPrevPlayer ? 0.0 : 1.0,
-        showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0,
-        dialogueLines: retreatDialogueLines,
-      });
-
-      // R3: Step 3 (100ms) - Almost gone with 12% opacity (+48, -27 / -48, +27)
-      frames.push({
-        delay: 100,
-        pPlatX: 0, ePlatX: 0, ePlatY: 0,
-        pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0,
-        prevEMonX: 48, prevEMonY: -27, prevEnemyOpacity: hasPrevEnemy ? 0.12 : 0.0,
-        prevPMonX: -48, prevPMonY: 27, prevPlayerOpacity: hasPrevPlayer ? 0.12 : 0.0,
-        enemyOpacity: hasPrevEnemy ? 0.0 : 1.0,
-        playerOpacity: hasPrevPlayer ? 0.0 : 1.0,
-        showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0,
-        dialogueLines: retreatDialogueLines,
-      });
-
-      // R4: Empty Platform Pause (100ms) - Exiting battler completely vanished
-      frames.push({
-        delay: 100,
-        pPlatX: 0, ePlatX: 0, ePlatY: 0,
-        pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0,
-        prevEnemyOpacity: 0.0, prevPlayerOpacity: 0.0,
-        enemyOpacity: entryType === "player" ? 1.0 : 0.0,
-        playerOpacity: entryType === "enemy" ? 1.0 : 0.0,
-        showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0,
-        dialogueLines: dialogueLines,
-      });
-    }
-
-    // --- Phase 2: Entrance Frames (등장: 신규 포켓몬 진입 및 환호) ---
-    const isEnemyEntering = entryType === "enemy" || entryType === "both";
-    const isPlayerEntering = entryType === "player" || entryType === "both";
-
-    if (!hasRetreat) {
-      // E0: Initial Empty Platform Pause (150ms) - 기절 후 출전 시 대사가 먼저 뜨고 신규 포켓몬 등장
-      frames.push({
-        delay: 150,
-        pPlatX: 0, ePlatX: 0, ePlatY: 0,
-        pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0,
-        enemyOpacity: isEnemyEntering ? 0.0 : 1.0,
-        playerOpacity: isPlayerEntering ? 0.0 : 1.0,
-        showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0,
-        dialogueLines: dialogueLines,
-      });
-    }
-
-    // E1: Fade-in Step 1 (120ms) - Translucent 35% at start offset
-    frames.push({
-      delay: 120,
-      pPlatX: 0, ePlatX: 0, ePlatY: 0,
-      pMonX: isPlayerEntering ? -20 : 0,
-      pMonY: isPlayerEntering ? 12 : 0,
-      eMonX: isEnemyEntering ? 22 : 0,
-      eMonY: isEnemyEntering ? -13 : 0,
-      enemyOpacity: isEnemyEntering ? 0.35 : 1.0,
-      playerOpacity: isPlayerEntering ? 0.35 : 1.0,
-      showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0,
-      dialogueLines: dialogueLines,
-    });
-
-    // E2: Fade-in Step 2 (120ms) - 75% opacity moving towards center
-    frames.push({
-      delay: 120,
-      pPlatX: 0, ePlatX: 0, ePlatY: 0,
-      pMonX: isPlayerEntering ? -14 : 0,
-      pMonY: isPlayerEntering ? 8 : 0,
-      eMonX: isEnemyEntering ? 14 : 0,
-      eMonY: isEnemyEntering ? -8 : 0,
-      enemyOpacity: isEnemyEntering ? 0.75 : 1.0,
-      playerOpacity: isPlayerEntering ? 0.75 : 1.0,
-      showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0,
-      dialogueLines: dialogueLines,
-    });
-
-    // E3: Fade-in Step 3 (160ms) - 100% opacity nearing platform
+  // --- Phase 1: Retreat Frames (퇴장: 생존 포켓몬만 뒤로 물러나며 볼 복귀) ---
+  if (hasRetreat) {
+    // R0: Initial Hold (160ms) - Battlers in position before retreating
     frames.push({
       delay: 160,
-      pPlatX: 0, ePlatX: 0, ePlatY: 0,
-      pMonX: isPlayerEntering ? -6 : 0,
-      pMonY: isPlayerEntering ? 3 : 0,
-      eMonX: isEnemyEntering ? 6 : 0,
-      eMonY: isEnemyEntering ? -3 : 0,
-      enemyOpacity: 1.0,
-      playerOpacity: 1.0,
-      showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0,
-      dialogueLines: dialogueLines,
+      prevEMonX: 0, prevEMonY: 0, prevEnemyOpacity: hasPrevEnemy ? 1.0 : 0.0,
+      prevPMonX: 0, prevPMonY: 0, prevPlayerOpacity: hasPrevPlayer ? 1.0 : 0.0,
+      enemyOpacity: hasPrevEnemy ? 0.0 : 1.0,
+      playerOpacity: hasPrevPlayer ? 0.0 : 1.0,
+      showHud: false, textLineIdx: 0, cryWave: 0,
+      dialogueLines: retreatDialogueLines,
     });
 
-    // E4: Settled on Stage (120ms) - (0, 0)
+    // R1: Step 1 (110ms) - Gliding back with 70% opacity (Enemy up-right: +14, -8 / Player down-left: -14, +8)
     frames.push({
-      delay: 120,
-      pPlatX: 0, ePlatX: 0, ePlatY: 0,
-      pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0,
-      enemyOpacity: 1.0, playerOpacity: 1.0,
-      showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0,
-      dialogueLines: dialogueLines,
+      delay: 110,
+      prevEMonX: 14, prevEMonY: -8, prevEnemyOpacity: hasPrevEnemy ? 0.70 : 0.0,
+      prevPMonX: -14, prevPMonY: 8, prevPlayerOpacity: hasPrevPlayer ? 0.70 : 0.0,
+      enemyOpacity: hasPrevEnemy ? 0.0 : 1.0,
+      playerOpacity: hasPrevPlayer ? 0.0 : 1.0,
+      showHud: false, textLineIdx: 0, cryWave: 0,
+      dialogueLines: retreatDialogueLines,
     });
 
-    // E5: DS Cry Callout Shake 1 (150ms)
+    // R2: Step 2 (110ms) - Gliding further back with 40% opacity (+30, -17 / -30, +17)
     frames.push({
-      delay: 150,
-      pPlatX: 0, ePlatX: 0, ePlatY: 0,
-      pMonX: isPlayerEntering ? -2 : 0,
-      pMonY: isPlayerEntering ? -3 : 0,
-      eMonX: isEnemyEntering ? -2 : 0,
-      eMonY: isEnemyEntering ? -3 : 0,
-      enemyOpacity: 1.0, playerOpacity: 1.0,
-      showHud: false, textLineIdx: 0, isBlur: false, cryWave: 1,
-      dialogueLines: dialogueLines,
+      delay: 110,
+      prevEMonX: 30, prevEMonY: -17, prevEnemyOpacity: hasPrevEnemy ? 0.40 : 0.0,
+      prevPMonX: -30, prevPMonY: 17, prevPlayerOpacity: hasPrevPlayer ? 0.40 : 0.0,
+      enemyOpacity: hasPrevEnemy ? 0.0 : 1.0,
+      playerOpacity: hasPrevPlayer ? 0.0 : 1.0,
+      showHud: false, textLineIdx: 0, cryWave: 0,
+      dialogueLines: retreatDialogueLines,
     });
 
-    // E6: DS Cry Callout Shake 2 (150ms)
+    // R3: Step 3 (100ms) - Almost gone with 12% opacity (+48, -27 / -48, +27)
     frames.push({
-      delay: 150,
-      pPlatX: 0, ePlatX: 0, ePlatY: 0,
-      pMonX: isPlayerEntering ? 3 : 0,
-      pMonY: isPlayerEntering ? 2 : 0,
-      eMonX: isEnemyEntering ? 3 : 0,
-      eMonY: isEnemyEntering ? 2 : 0,
-      enemyOpacity: 1.0, playerOpacity: 1.0,
-      showHud: false, textLineIdx: 0, isBlur: false, cryWave: 2,
-      dialogueLines: dialogueLines,
+      delay: 100,
+      prevEMonX: 48, prevEMonY: -27, prevEnemyOpacity: hasPrevEnemy ? 0.12 : 0.0,
+      prevPMonX: -48, prevPMonY: 27, prevPlayerOpacity: hasPrevPlayer ? 0.12 : 0.0,
+      enemyOpacity: hasPrevEnemy ? 0.0 : 1.0,
+      playerOpacity: hasPrevPlayer ? 0.0 : 1.0,
+      showHud: false, textLineIdx: 0, cryWave: 0,
+      dialogueLines: retreatDialogueLines,
     });
 
-    // E7: HUD Status Slates Slide In & Appear (300ms)
+    // R4: Empty Platform Pause (100ms) - Exiting battler completely vanished
     frames.push({
-      delay: 300,
-      pPlatX: 0, ePlatX: 0, ePlatY: 0,
-      pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0,
-      enemyOpacity: 1.0, playerOpacity: 1.0,
-      showHud: true, textLineIdx: 99, isBlur: false, cryWave: 0,
+      delay: 100,
+      prevEnemyOpacity: 0.0, prevPlayerOpacity: 0.0,
+      enemyOpacity: entryType === "player" ? 1.0 : 0.0,
+      playerOpacity: entryType === "enemy" ? 1.0 : 0.0,
+      showHud: false, textLineIdx: 0, cryWave: 0,
       dialogueLines: dialogueLines,
     });
-
-    // E8: Dialogue reading frame (1,200ms)
-    frames.push({
-      delay: 1200,
-      pPlatX: 0, ePlatX: 0, ePlatY: 0,
-      pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0,
-      enemyOpacity: 1.0, playerOpacity: 1.0,
-      showHud: true, textLineIdx: 99, isBlur: false, cryWave: 0,
-      dialogueLines: dialogueLines,
-    });
-
-    // E9: 11-Minute Static Hold Frame (655,000ms)
-    frames.push({
-      delay: 655000,
-      pPlatX: 0, ePlatX: 0, ePlatY: 0,
-      pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0,
-      enemyOpacity: 1.0, playerOpacity: 1.0,
-      showHud: true, textLineIdx: 99, isBlur: false, cryWave: 0,
-      dialogueLines: dialogueLines,
-    });
-
-    entryFrames = frames;
-  } else {
-    entryFrames = entryType === "player" ? [
-      // Player Replacement Entry Frames
-      // Frame 0: Leading Cinematic Soft-Blur Loading Frame (800ms)
-      { delay: 800, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 0.0, showHud: false, textLineIdx: 0, isBlur: true, cryWave: 0 },
-      // Frame 1: Fade-in Step 1 (120ms) - At (-15px, +10px) 35% translucent
-      { delay: 120, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: -15, pMonY: 10, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 0.35, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
-      // Frame 2: Fade-in Step 2 (120ms) - 75% opacity
-      { delay: 120, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: -15, pMonY: 10, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 0.75, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
-      // Frame 3: Fade-in Hold (280ms) - 100% FULLY OPAQUE
-      { delay: 280, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: -15, pMonY: 10, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
-      // Frame 4: Movement Step 1 (140ms) - moves towards center
-      { delay: 140, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: -6, pMonY: 4, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
-      // Frame 5: Movement Step 2 (140ms) - Settles onto Stage at (0, 0)
-      { delay: 140, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
-      // Frame 6: Player Battler DS Cry Callout (Vibration Step 1: 150ms)
-      { delay: 150, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: -2, pMonY: -3, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 1 },
-      // Frame 7: Player Battler DS Cry Callout (Vibration Step 2: 150ms)
-      { delay: 150, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 3, pMonY: 2, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 2 },
-      // Frame 8: HUD Status Slates Slide In & Appear (300ms)
-      { delay: 300, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: true, textLineIdx: 99, isBlur: false, cryWave: 0 },
-      // Frame 9: Dialogue reading frame (1,200ms)
-      { delay: 1200, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: true, textLineIdx: 99, isBlur: false, cryWave: 0 },
-      // Frame 10: 11-Minute Static Hold Frame (655,000ms)
-      { delay: 655000, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: true, textLineIdx: 99, isBlur: false, cryWave: 0 }
-    ] : [
-      // Wild Encounter or Enemy Entry Frames
-      // Frame 0: Leading Cinematic Soft-Blur Loading Frame (800ms / 0.8s)
-      { delay: 800, pPlatX: 0, ePlatX: 24, ePlatY: -15, pMonX: 0, pMonY: 0, eMonX: 24, eMonY: -15, enemyOpacity: 0.0, playerOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: true, cryWave: 0 },
-      // Frame 1: Fade-in Step 1 (120ms)
-      { delay: 120, pPlatX: 0, ePlatX: 24, ePlatY: -15, pMonX: 0, pMonY: 0, eMonX: 24, eMonY: -15, enemyOpacity: 0.35, playerOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
-      // Frame 2: Fade-in Step 2 (120ms)
-      { delay: 120, pPlatX: 0, ePlatX: 24, ePlatY: -15, pMonX: 0, pMonY: 0, eMonX: 24, eMonY: -15, enemyOpacity: 0.75, playerOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
-      // Frame 3: Fade-in Hold (280ms)
-      { delay: 280, pPlatX: 0, ePlatX: 24, ePlatY: -15, pMonX: 0, pMonY: 0, eMonX: 24, eMonY: -15, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
-      // Frame 4: Movement Step 1 (140ms)
-      { delay: 140, pPlatX: 0, ePlatX: 10, ePlatY: -6, pMonX: 0, pMonY: 0, eMonX: 10, eMonY: -6, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
-      // Frame 5: Movement Step 2 (140ms)
-      { delay: 140, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 0 },
-      // Frame 6: Enemy Battler DS Cry Callout (Vibration Step 1: 150ms)
-      { delay: 150, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: -2, eMonY: -3, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 1 },
-      // Frame 7: Enemy Battler DS Cry Callout (Vibration Step 2: 150ms)
-      { delay: 150, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 3, eMonY: 2, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: false, textLineIdx: 0, isBlur: false, cryWave: 2 },
-      // Frame 8: HUD Status Slates Slide In & Appear (300ms)
-      { delay: 300, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: true, textLineIdx: 99, isBlur: false, cryWave: 0 },
-      // Frame 9: Reading frame (1,200ms)
-      { delay: 1200, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: true, textLineIdx: 99, isBlur: false, cryWave: 0 },
-      // Frame 10: 11-Minute Static Hold Frame (655,000ms)
-      { delay: 655000, pPlatX: 0, ePlatX: 0, ePlatY: 0, pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0, enemyOpacity: 1.0, playerOpacity: 1.0, showHud: true, textLineIdx: 99, isBlur: false, cryWave: 0 }
-    ];
   }
 
+  // --- Phase 2: Entrance Frames (등장: 신규 포켓몬 진입 및 환호) ---
+  const isEnemyEntering = entryType === "enemy" || entryType === "both";
+  const isPlayerEntering = entryType === "player" || entryType === "both";
+
+  if (!hasRetreat) {
+    // E0: Initial Empty Platform Pause (100ms) - 깔끔한 필드 대기
+    frames.push({
+      delay: 100,
+      pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0,
+      enemyOpacity: isEnemyEntering ? 0.0 : 1.0,
+      playerOpacity: isPlayerEntering ? 0.0 : 1.0,
+      showHud: false, textLineIdx: 0, cryWave: 0,
+      dialogueLines: dialogueLines,
+    });
+  }
+
+  // E1: Fade-in Step 1 (110ms) - Translucent 35% at start offset (아군: 좌하단 -20, +12 / 적군: 우상단 +22, -13)
+  frames.push({
+    delay: 110,
+    pMonX: isPlayerEntering ? -20 : 0,
+    pMonY: isPlayerEntering ? 12 : 0,
+    eMonX: isEnemyEntering ? 22 : 0,
+    eMonY: isEnemyEntering ? -13 : 0,
+    enemyOpacity: isEnemyEntering ? 0.35 : 1.0,
+    playerOpacity: isPlayerEntering ? 0.35 : 1.0,
+    showHud: false, textLineIdx: 0, cryWave: 0,
+    dialogueLines: dialogueLines,
+  });
+
+  // E2: Fade-in Step 2 (110ms) - 75% opacity moving towards center
+  frames.push({
+    delay: 110,
+    pMonX: isPlayerEntering ? -14 : 0,
+    pMonY: isPlayerEntering ? 8 : 0,
+    eMonX: isEnemyEntering ? 14 : 0,
+    eMonY: isEnemyEntering ? -8 : 0,
+    enemyOpacity: isEnemyEntering ? 0.75 : 1.0,
+    playerOpacity: isPlayerEntering ? 0.75 : 1.0,
+    showHud: false, textLineIdx: 0, cryWave: 0,
+    dialogueLines: dialogueLines,
+  });
+
+  // E3: Fade-in Step 3 (140ms) - 100% opacity nearing platform
+  frames.push({
+    delay: 140,
+    pMonX: isPlayerEntering ? -6 : 0,
+    pMonY: isPlayerEntering ? 3 : 0,
+    eMonX: isEnemyEntering ? 6 : 0,
+    eMonY: isEnemyEntering ? -3 : 0,
+    enemyOpacity: 1.0,
+    playerOpacity: 1.0,
+    showHud: false, textLineIdx: 0, cryWave: 0,
+    dialogueLines: dialogueLines,
+  });
+
+  // E4: Settled on Stage (100ms) - (0, 0)
+  frames.push({
+    delay: 100,
+    pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0,
+    enemyOpacity: 1.0, playerOpacity: 1.0,
+    showHud: false, textLineIdx: 0, cryWave: 0,
+    dialogueLines: dialogueLines,
+  });
+
+  // E5: DS Cry Callout Shake 1 (140ms)
+  frames.push({
+    delay: 140,
+    pMonX: isPlayerEntering ? -2 : 0,
+    pMonY: isPlayerEntering ? -3 : 0,
+    eMonX: isEnemyEntering ? -2 : 0,
+    eMonY: isEnemyEntering ? -3 : 0,
+    enemyOpacity: 1.0, playerOpacity: 1.0,
+    showHud: false, textLineIdx: 0, cryWave: 1,
+    dialogueLines: dialogueLines,
+  });
+
+  // E6: DS Cry Callout Shake 2 (140ms)
+  frames.push({
+    delay: 140,
+    pMonX: isPlayerEntering ? 3 : 0,
+    pMonY: isPlayerEntering ? 2 : 0,
+    eMonX: isEnemyEntering ? 3 : 0,
+    eMonY: isEnemyEntering ? 2 : 0,
+    enemyOpacity: 1.0, playerOpacity: 1.0,
+    showHud: false, textLineIdx: 0, cryWave: 2,
+    dialogueLines: dialogueLines,
+  });
+
+  // E7: HUD Status Slates Slide In & Appear (250ms)
+  frames.push({
+    delay: 250,
+    pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0,
+    enemyOpacity: 1.0, playerOpacity: 1.0,
+    showHud: true, textLineIdx: 99, cryWave: 0,
+    dialogueLines: dialogueLines,
+  });
+
+  // E8: Dialogue reading frame (1,000ms)
+  frames.push({
+    delay: 1000,
+    pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0,
+    enemyOpacity: 1.0, playerOpacity: 1.0,
+    showHud: true, textLineIdx: 99, cryWave: 0,
+    dialogueLines: dialogueLines,
+  });
+
+  // E9: 11-Minute Static Hold Frame (655,000ms)
+  frames.push({
+    delay: 655000,
+    pMonX: 0, pMonY: 0, eMonX: 0, eMonY: 0,
+    enemyOpacity: 1.0, playerOpacity: 1.0,
+    showHud: true, textLineIdx: 99, cryWave: 0,
+    dialogueLines: dialogueLines,
+  });
+
+  const entryFrames = frames;
   const motionDurationMs = entryFrames.slice(0, -1).reduce((sum, f) => sum + f.delay, 0);
 
   const ep = BATTLE_LAYOUT_CONFIG.enemyPlatform;
@@ -2849,55 +3039,33 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
   const em = BATTLE_LAYOUT_CONFIG.enemyPokemon;
   const pm = BATTLE_LAYOUT_CONFIG.playerPokemon;
 
-  const offEntryCanvas = createCanvas(width, height);
-  const offEntryCtx = offEntryCanvas.getContext("2d");
-  offEntryCtx.imageSmoothingEnabled = false;
-
   let entryFrameIdx = 0;
   let prevEntryFrame: any = null;
 
   for (const f of entryFrames) {
-    const targetCtx = f.isBlur ? offEntryCtx : ctx;
-    targetCtx.clearRect(0, 0, width, height);
+    ctx.clearRect(0, 0, width, height);
 
-    targetCtx.save();
-    targetCtx.scale(renderScale, renderScale);
+    ctx.save();
+    ctx.scale(renderScale, renderScale);
 
-    if (arena.bg) targetCtx.drawImage(arena.bg, 0, 0, logicalWidth, logicalHeight);
-    else { targetCtx.fillStyle = "#487848"; targetCtx.fillRect(0, 0, logicalWidth, logicalHeight); }
+    if (arena.bg) ctx.drawImage(arena.bg, 0, 0, logicalWidth, logicalHeight);
+    else { ctx.fillStyle = "#487848"; ctx.fillRect(0, 0, logicalWidth, logicalHeight); }
 
     const eOpacity = f.enemyOpacity !== undefined ? f.enemyOpacity : 1.0;
     const pOpacity = (f as any).playerOpacity !== undefined ? (f as any).playerOpacity : 1.0;
 
-    // Sliding / Fading Platforms
+    // Authentic stationary platforms with full opacity
     if (arena.b) {
-      if (isSwitch) {
-        // Switch: Both platforms are 100% stationary and 100% opaque at (0, 0)!
-        targetCtx.save();
-        targetCtx.globalAlpha = 1.0;
-        targetCtx.drawImage(arena.b, ep.x, ep.y, enemyPlatW, enemyPlatH);
-        targetCtx.restore();
+      ctx.save();
+      ctx.globalAlpha = 1.0;
+      ctx.drawImage(arena.b, ep.x, ep.y, enemyPlatW, enemyPlatH);
+      ctx.restore();
 
-        targetCtx.save();
-        targetCtx.translate(logicalWidth, 0);
-        targetCtx.scale(-1, 1);
-        targetCtx.drawImage(arena.b, pp.x, pp.y, playerPlatW, playerPlatH);
-        targetCtx.restore();
-      } else {
-        // Enemy Platform: with enemyOpacity and (ePlatX, ePlatY)
-        if (entryType === "player" || eOpacity > 0) {
-          targetCtx.save();
-          if (entryType !== "player") targetCtx.globalAlpha = eOpacity;
-          targetCtx.drawImage(arena.b, ep.x + (f.ePlatX || 0), ep.y + ((f as any).ePlatY || 0), enemyPlatW, enemyPlatH);
-          targetCtx.restore();
-        }
-        // Player Platform: always static at pp.x, pp.y with 100% opacity
-        targetCtx.save();
-        targetCtx.translate(logicalWidth, 0);
-        targetCtx.scale(-1, 1);
-        targetCtx.drawImage(arena.b, pp.x + f.pPlatX, pp.y, playerPlatW, playerPlatH);
-        targetCtx.restore();
-      }
+      ctx.save();
+      ctx.translate(logicalWidth, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(arena.b, pp.x, pp.y, playerPlatW, playerPlatH);
+      ctx.restore();
     }
 
     // Retiring / Exiting Battler Sprites (Retreat & Fade-out)
@@ -2905,63 +3073,44 @@ export async function renderBattleEntryGif(options: BattleAnimationOptions): Pro
     const prevPOpacity = (f as any).prevPlayerOpacity !== undefined ? (f as any).prevPlayerOpacity : 0.0;
 
     if (prevEnemySprite && prevEOpacity > 0) {
-      targetCtx.save();
-      targetCtx.globalAlpha = prevEOpacity;
-      drawFittedBattleSprite(targetCtx, prevEnemySprite, em.x + ((f as any).prevEMonX || 0), em.y + ((f as any).prevEMonY || 0), em.size, getStatusTintColor((options.prevEnemy as any)?.status));
-      targetCtx.restore();
+      ctx.save();
+      ctx.globalAlpha = prevEOpacity;
+      drawFittedBattleSprite(ctx, prevEnemySprite, em.x + ((f as any).prevEMonX || 0), em.y + ((f as any).prevEMonY || 0), em.size, getStatusTintColor((options.prevEnemy as any)?.status));
+      ctx.restore();
     }
     if (prevPlayerSprite && prevPOpacity > 0) {
-      targetCtx.save();
-      targetCtx.globalAlpha = prevPOpacity;
-      drawFittedBattleSprite(targetCtx, prevPlayerSprite, pm.x + ((f as any).prevPMonX || 0), pm.y + ((f as any).prevPMonY || 0), pm.size, getStatusTintColor((options.prevPlayer as any)?.status));
-      targetCtx.restore();
+      ctx.save();
+      ctx.globalAlpha = prevPOpacity;
+      drawFittedBattleSprite(ctx, prevPlayerSprite, pm.x + ((f as any).prevPMonX || 0), pm.y + ((f as any).prevPMonY || 0), pm.size, getStatusTintColor((options.prevPlayer as any)?.status));
+      ctx.restore();
     }
 
     // Entering / Active Battler Sprites (with DS Cry vibration offsets and fade-in)
     if (enemySprite && eOpacity > 0) {
-      targetCtx.save();
-      targetCtx.globalAlpha = eOpacity;
-      drawFittedBattleSprite(targetCtx, enemySprite, em.x + (f.eMonX || 0), em.y + (f.eMonY || 0), em.size, getStatusTintColor(enemy.status));
-      targetCtx.restore();
+      ctx.save();
+      ctx.globalAlpha = eOpacity;
+      drawFittedBattleSprite(ctx, enemySprite, em.x + (f.eMonX || 0), em.y + (f.eMonY || 0), em.size, getStatusTintColor(enemy.status));
+      ctx.restore();
     }
     if (playerSprite && pOpacity > 0) {
-      targetCtx.save();
-      targetCtx.globalAlpha = pOpacity;
-      drawFittedBattleSprite(targetCtx, playerSprite, pm.x + (f.pMonX || 0), pm.y + (f.pMonY || 0), pm.size, getStatusTintColor(playerMon.status));
-      targetCtx.restore();
+      ctx.save();
+      ctx.globalAlpha = pOpacity;
+      drawFittedBattleSprite(ctx, playerSprite, pm.x + (f.pMonX || 0), pm.y + (f.pMonY || 0), pm.size, getStatusTintColor(playerMon.status));
+      ctx.restore();
     }
 
     const linesToDraw = (f as any).dialogueLines || dialogueLines;
 
-    if (!f.isBlur) {
-      renderBattleHeader(targetCtx, logicalWidth, battle, isKo);
-      if (f.showHud) {
-        renderBattleHuds(targetCtx, battle, isKo, pbAssets, enemy.hp, playerMon.hp, undefined, enemy.status, playerMon.status);
-      }
-      renderBattleDialogue(targetCtx, logicalWidth, logicalHeight, linesToDraw, f.textLineIdx);
-    } else {
-      // Base empty dialogue box drawn on offEntryCanvas before full-frame blur
-      const boxY = 270;
-      const glassGrad = targetCtx.createLinearGradient(0, boxY, 0, logicalHeight);
-      glassGrad.addColorStop(0, "rgba(10, 16, 26, 0.58)");
-      glassGrad.addColorStop(1, "rgba(6, 10, 18, 0.68)");
-      targetCtx.fillStyle = glassGrad;
-      targetCtx.fillRect(0, boxY, logicalWidth, logicalHeight - boxY);
+    renderBattleHeader(ctx, logicalWidth, battle, isKo);
+    if (f.showHud) {
+      renderBattleHuds(ctx, battle, isKo, pbAssets, enemy.hp, playerMon.hp, undefined, enemy.status, playerMon.status);
     }
+    renderBattleDialogue(ctx, logicalWidth, logicalHeight, linesToDraw, f.textLineIdx);
 
-    targetCtx.restore();
-
-    if (f.isBlur) {
-      // Apply UNIFIED 100% Full-Screen Deep Soft-Blur to main canvas
-      ctx.clearRect(0, 0, width, height);
-      ctx.filter = "blur(12px) brightness(0.88)";
-      ctx.drawImage(offEntryCanvas, 0, 0, width, height);
-      ctx.filter = "none";
-    }
+    ctx.restore();
 
     const isEntryVisualShift = Boolean(
       (entryFrameIdx === 1) ||
-      (prevEntryFrame && Boolean(f.isBlur) !== Boolean(prevEntryFrame.isBlur)) ||
       (prevEntryFrame && Boolean(f.showHud) !== Boolean(prevEntryFrame.showHud)) ||
       (prevEntryFrame && Boolean(f.enemyOpacity > 0) !== Boolean(prevEntryFrame.enemyOpacity > 0)) ||
       (prevEntryFrame && Boolean((f as any).playerOpacity > 0) !== Boolean((prevEntryFrame as any).playerOpacity > 0)) ||

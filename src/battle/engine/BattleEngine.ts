@@ -29,6 +29,8 @@ export class BattleEngine {
     let pMoveKey = getMoveKey(playerMoveKey);
     if (playerMon.chargingMove) {
       pMoveKey = playerMon.chargingMove;
+    } else if (playerMon.rampageState) {
+      pMoveKey = playerMon.rampageState.moveKey;
     }
     const pMove = getMoveData(pMoveKey) || {
       id: 0,
@@ -47,6 +49,19 @@ export class BattleEngine {
     let eMove: any;
     if (enemyMon.chargingMove) {
       eMoveKey = enemyMon.chargingMove;
+      eMove = getMoveData(eMoveKey) || {
+        id: 0,
+        name: eMoveKey,
+        nameKo: eMoveKey,
+        type: "normal",
+        power: 40,
+        accuracy: 100,
+        pp: 35,
+        category: "physical",
+        description: "기본 공격 기술",
+      };
+    } else if (enemyMon.rampageState) {
+      eMoveKey = enemyMon.rampageState.moveKey;
       eMove = getMoveData(eMoveKey) || {
         id: 0,
         name: eMoveKey,
@@ -87,7 +102,8 @@ export class BattleEngine {
 
     // PP consumption for non-charging moves
     const isPlayerChargingSame = playerMon.chargingMove && (playerMon.chargingMove === pMoveKey);
-    if (!isPlayerChargingSame) {
+    const isPlayerRampagingSame = Boolean(playerMon.rampageState);
+    if (!isPlayerChargingSame && !isPlayerRampagingSame) {
       if (!playerMon.movePps || playerMon.movePps.length !== playerMon.moves.length) {
         playerMon.movePps = playerMon.moves.map(m => getMoveData(m)?.pp || 20);
       }
@@ -259,6 +275,7 @@ export class BattleEngine {
           res1.log.includes("튀어올랐다") || res1.log.includes("bounced") ||
           res1.log.includes("빛을 흡수") || res1.log.includes("sunlight") ||
           res1.log.includes("칼바람을 일으켰다") || res1.log.includes("whirlwind") ||
+          res1.log.includes("빛에 휩싸였다") || res1.log.includes("harsh light") || res1.log.includes("눈부신 빛") ||
           firstActor.chargingMove
         );
 
@@ -267,7 +284,9 @@ export class BattleEngine {
           ? "solar-beam-charge"
           : (rawKey1 === "skull-bash" && isTurn1Launch1)
             ? "skull-bash-charge"
-            : rawKey1;
+            : (rawKey1 === "sky-attack" && isTurn1Launch1)
+              ? "sky-attack-charge"
+              : rawKey1;
 
         turnActions.push({
           actor: isFirstPlayer ? "player" : "enemy",
@@ -378,6 +397,7 @@ export class BattleEngine {
             res2.log.includes("튀어올랐다") || res2.log.includes("bounced") ||
             res2.log.includes("빛을 흡수") || res2.log.includes("sunlight") ||
             res2.log.includes("칼바람을 일으켰다") || res2.log.includes("whirlwind") ||
+            res2.log.includes("빛에 휩싸였다") || res2.log.includes("harsh light") || res2.log.includes("눈부신 빛") ||
             secondActor.chargingMove
           );
 
@@ -386,7 +406,9 @@ export class BattleEngine {
             ? "solar-beam-charge"
             : (rawKey2 === "skull-bash" && isTurn1Launch2)
               ? "skull-bash-charge"
-              : rawKey2;
+              : (rawKey2 === "sky-attack" && isTurn1Launch2)
+                ? "sky-attack-charge"
+                : rawKey2;
 
           turnActions.push({
             actor: !isFirstPlayer ? "player" : "enemy",
@@ -448,6 +470,9 @@ export class BattleEngine {
       enemyMon.hp = 0;
     }
     battle.playerParty[battle.playerActiveIndex].hp = playerMon.hp;
+    if (playerMon.heldItems) {
+      battle.playerParty[battle.playerActiveIndex].heldItems = [...playerMon.heldItems];
+    }
 
     // --- Victory / Defeat Transitions ---
     const enemyFainted = enemyMon.hp <= 0;
@@ -576,7 +601,7 @@ export class BattleEngine {
 
     if (battle.phase !== "VICTORY" && battle.phase !== "DEFEAT" && battle.phase !== "SWITCH") {
       const activeMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
-      if (activeMon?.chargingMove) {
+      if (activeMon?.chargingMove || activeMon?.rampageState) {
         battle.phase = "FIGHT";
       } else {
         battle.phase = "MAIN";

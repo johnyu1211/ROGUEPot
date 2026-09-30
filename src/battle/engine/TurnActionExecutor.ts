@@ -42,6 +42,13 @@ export function executeSingleAction(
       actor.semiInvulnerableState = null;
       actor.bideDamageTaken = 0;
     }
+    if (actor.rampageState) {
+      actor.rampageState = null;
+      if (!actor.isConfused) {
+        actor.isConfused = true;
+        actor.confusionTurns = Math.floor(Math.random() * 4) + 2;
+      }
+    }
     return { log: validation.log || "", damage: 0, canAct: false };
   }
   const validationPrefix = validation.log ? `${validation.log}\n` : "";
@@ -139,6 +146,11 @@ export function executeSingleAction(
 
   const withPrefix = (res: SingleActionResult): SingleActionResult => {
     actor.lastMoveUsed = moveKey;
+    const isMindReaderMove = ["mind-reader", "mindreader", "lock-on", "lockon", "170", "마음의눈"].includes(moveKey);
+    if (!isMindReaderMove && actor.mindReaderTargetId) {
+      actor.mindReaderTargetId = null;
+      actor.mindReaderTurnsLeft = 0;
+    }
     return {
       ...res,
       log: `${validationPrefix}${metronomePrefix}${mimicPrefix}${mirrorPrefix}${res.log}`,
@@ -155,16 +167,21 @@ export function executeSingleAction(
 
   // 3. Status Moves Pipeline
   if (activeMove.category === "status") {
-    const isSelfTarget = isSelfTargetStatusMove(activeMove.name);
+    const activeMoveKeyStatus = activeMove.name.toLowerCase().replace(/[\s_]+/g, "-");
+    const isCurseMove = ["curse", "curse-ghost", "curse-normal", "174", "저주"].includes(activeMoveKeyStatus);
+    const isGhostUser = Boolean(actor.types?.some((t) => t.toLowerCase() === "ghost")) || activeMoveKeyStatus === "curse-ghost";
+    const isGhostCurse = isCurseMove && isGhostUser;
 
-    if (!isSelfTarget && target.isProtected) {
+    const isSelfTarget = isSelfTargetStatusMove(activeMove.name, actor);
+
+    if (!isSelfTarget && !isGhostCurse && target.isProtected) {
       return withPrefix({
         log: isKo ? `${targetName}(은)는 공격을 막아냈다!` : `${targetName} protected itself!`,
         damage: 0,
       });
     }
 
-    if (!isSelfTarget && target.substituteHp && target.substituteHp > 0) {
+    if (!isSelfTarget && !isGhostCurse && target.substituteHp && target.substituteHp > 0) {
       return withPrefix({
         log: isKo
           ? `${actorName}의 ${activeMove.nameKo}!\n하지만 대타출동 분신에게는 통하지 않았다!`
@@ -173,10 +190,15 @@ export function executeSingleAction(
       });
     }
 
-    if (!isSelfTarget && target.isSemiInvulnerable) {
+    if (!isSelfTarget && !isGhostCurse && target.isSemiInvulnerable) {
       const hasNoGuard = actor.ability?.toLowerCase() === "no-guard";
       const isPoisonToxic = (activeMove.name.toLowerCase().replace(/[\s_]+/g, "-") === "toxic") && actor.types.includes("poison");
-      if (!hasNoGuard && !isPoisonToxic) {
+      const targetId = (target as any).id || target.speciesId || "target";
+      const hasMindReader = Boolean(
+        actor.mindReaderTargetId &&
+        (actor.mindReaderTargetId === targetId || actor.mindReaderTargetId === "target")
+      );
+      if (!hasNoGuard && !isPoisonToxic && !hasMindReader) {
         return withPrefix({
           log: isKo
             ? `${actorName}의 ${activeMove.nameKo}!\n하지만 ${targetName}에게는 닿지 않았다!`
@@ -186,7 +208,7 @@ export function executeSingleAction(
       }
     }
 
-    if (!isSelfTarget) {
+    if (!isSelfTarget && !isGhostCurse) {
       const hitResult = checkMoveHit({
         actor,
         target,
@@ -270,7 +292,26 @@ export function executeSingleAction(
     }
   }
 
+  // Semi-Invulnerable Check for Damaging Moves (공중날기, 구멍파기 등 회피 상태 판정)
+  if (target.isSemiInvulnerable) {
+    const hasNoGuard = actor.ability?.toLowerCase() === "no-guard" || actor.passiveAbility?.toLowerCase() === "no-guard";
+    const targetId = (target as any).id || target.speciesId || "target";
+    const hasMindReader = Boolean(
+      actor.mindReaderTargetId &&
+      (actor.mindReaderTargetId === targetId || actor.mindReaderTargetId === "target")
+    );
+    if (!hasNoGuard && !hasMindReader) {
+      return withPrefix({
+        log: isKo
+          ? `${actorName}의 ${moveName}!\n하지만 ${targetName}에게는 닿지 않았다!`
+          : `${actorName}'s ${moveName}!\nBut it couldn't reach ${targetName}!`,
+        damage: 0,
+      });
+    }
+  }
+
   // 5. Accuracy & Evasiveness Check
+  const isJumpKick = ["jump-kick", "high-jump-kick", "26", "136"].includes(activeMoveKey);
   const hitResult = checkMoveHit({
     actor,
     target,
@@ -288,6 +329,24 @@ export function executeSingleAction(
         actor.hp = 0;
         selfDestructLog = isKo ? `\n${actorName}(은)는 폭발하여 스스로 쓰러졌다!` : `\n${actorName} self-destructed and fainted!`;
       }
+      if (isJumpKick && actor.hp > 0) {
+        const crashDmg = Math.max(1, Math.floor(actor.maxHp * 0.5));
+        actor.hp = Math.max(0, actor.hp - crashDmg);
+        selfDestructLog += isKo ? `\n${actorName}(은)는 빗나가 땅에 부딪혀 큰 상처를 입었다! (-${crashDmg})` : `\n${actorName} kept going and crashed! (-${crashDmg})`;
+        if (actor.hp === 0) {
+          actor.chargingMove = null;
+          actor.rampageState = null;
+          selfDestructLog += isKo ? `\n${actorName}(은)는 쓰러졌다!` : `\n${actorName} fainted!`;
+        }
+      }
+      if (actor.rampageState) {
+        actor.rampageState = null;
+        if (!actor.isConfused) {
+          actor.isConfused = true;
+          actor.confusionTurns = Math.floor(Math.random() * 4) + 2;
+          selfDestructLog += isKo ? `\n${actorName}(은)는 난동이 끊겨 피로로 혼란에 빠졌다!` : `\n${actorName} became confused due to fatigue!`;
+        }
+      }
       return withPrefix({
         log: isKo
           ? `${actorName}의 ${moveName}!\n[PERK:dodge] ${targetName}(은)는 회피기동으로 적의 공격을 완벽히 피했다!${selfDestructLog}`
@@ -303,6 +362,24 @@ export function executeSingleAction(
       actor.hp = 0;
       selfDestructLog = isKo ? `\n${actorName}(은)는 폭발하여 스스로 쓰러졌다!` : `\n${actorName} self-destructed and fainted!`;
     }
+    if (isJumpKick && actor.hp > 0) {
+      const crashDmg = Math.max(1, Math.floor(actor.maxHp * 0.5));
+      actor.hp = Math.max(0, actor.hp - crashDmg);
+      selfDestructLog += isKo ? `\n${actorName}(은)는 빗나가 땅에 부딪혀 큰 상처를 입었다! (-${crashDmg})` : `\n${actorName} kept going and crashed! (-${crashDmg})`;
+      if (actor.hp === 0) {
+        actor.chargingMove = null;
+        actor.rampageState = null;
+        selfDestructLog += isKo ? `\n${actorName}(은)는 쓰러졌다!` : `\n${actorName} fainted!`;
+      }
+    }
+    if (actor.rampageState) {
+      actor.rampageState = null;
+      if (!actor.isConfused) {
+        actor.isConfused = true;
+        actor.confusionTurns = Math.floor(Math.random() * 4) + 2;
+        selfDestructLog += isKo ? `\n${actorName}(은)는 난동이 끊겨 피로로 혼란에 빠졌다!` : `\n${actorName} became confused due to fatigue!`;
+      }
+    }
     return withPrefix({
       log: isKo ? `${actorName}의 ${moveName}! 하지만 공격은 빗나갔다!${selfDestructLog}` : `${actorName}'s ${moveName}! But the attack missed!${selfDestructLog}`,
       damage: 0,
@@ -315,6 +392,24 @@ export function executeSingleAction(
     if (trait?.isSelfDestruct) {
       actor.hp = 0;
       selfDestructLog = isKo ? `\n${actorName}(은)는 폭발하여 스스로 쓰러졌다!` : `\n${actorName} self-destructed and fainted!`;
+    }
+    if (isJumpKick && actor.hp > 0) {
+      const crashDmg = Math.max(1, Math.floor(actor.maxHp * 0.5));
+      actor.hp = Math.max(0, actor.hp - crashDmg);
+      selfDestructLog += isKo ? `\n${actorName}(은)는 빗나가 땅에 부딪혀 큰 상처를 입었다! (-${crashDmg})` : `\n${actorName} kept going and crashed! (-${crashDmg})`;
+      if (actor.hp === 0) {
+        actor.chargingMove = null;
+        actor.rampageState = null;
+        selfDestructLog += isKo ? `\n${actorName}(은)는 쓰러졌다!` : `\n${actorName} fainted!`;
+      }
+    }
+    if (actor.rampageState) {
+      actor.rampageState = null;
+      if (!actor.isConfused) {
+        actor.isConfused = true;
+        actor.confusionTurns = Math.floor(Math.random() * 4) + 2;
+        selfDestructLog += isKo ? `\n${actorName}(은)는 난동이 끊겨 피로로 혼란에 빠졌다!` : `\n${actorName} became confused due to fatigue!`;
+      }
     }
     return withPrefix({
       log: isKo ? `${actorName}의 ${moveName}! 하지만 ${targetName}(은)는 공격을 막아냈다!${selfDestructLog}` : `${actorName}'s ${moveName}! But ${targetName} protected itself!${selfDestructLog}`,
@@ -383,6 +478,7 @@ export function executeSingleAction(
       target.semiInvulnerableState = null;
       target.isRaging = false;
       target.bideDamageTaken = 0;
+      target.rampageState = null;
     }
 
     if (activeMove.category === "physical" && damage > 0) {
@@ -419,6 +515,20 @@ export function executeSingleAction(
     damageLog += isKo ? `\n${actorName}(은)는 폭발하여 스스로 쓰러졌다!` : `\n${actorName} self-destructed and fainted!`;
   }
 
+  // Crash damage on immune target (e.g. Ghost type)
+  if (isJumpKick && dmgResult.typeMod === 0 && actor.hp > 0) {
+    const crashDmg = Math.max(1, Math.floor(actor.maxHp * 0.5));
+    actor.hp = Math.max(0, actor.hp - crashDmg);
+    damageLog += isKo
+      ? `\n${actorName}(은)는 빗나가 땅에 부딪혀 큰 상처를 입었다! (-${crashDmg})`
+      : `\n${actorName} kept going and crashed! (-${crashDmg})`;
+    if (actor.hp === 0) {
+      actor.chargingMove = null;
+      actor.rampageState = null;
+      damageLog += isKo ? `\n${actorName}(은)는 쓰러졌다!` : `\n${actorName} fainted!`;
+    }
+  }
+
   // 11. Secondary Effects
   const extraEffects = (dmgResult.typeMod > 0 && damage > 0)
     ? applySecondaryAttackEffects(actor, target, activeMove, damage, isKo)
@@ -427,6 +537,11 @@ export function executeSingleAction(
   // 12. Must recharge setup
   if (dmgResult.mustRecharge) {
     actor.mustRecharge = true;
+  }
+
+  if (actor.hp === 0) {
+    actor.chargingMove = null;
+    actor.rampageState = null;
   }
 
   const finalLog = `${dmgResult.log}${perkText}${damageLog}${extraEffects}`;

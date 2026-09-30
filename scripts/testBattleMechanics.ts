@@ -791,6 +791,514 @@ function assert(condition: boolean, testName: string) {
   assert(resultGhost.enemy.hp === 200, "고스트 타입 상대는 노말 물리 기술인 알폭탄에 무효화(피해 0)되어야 함");
 }
 
+// 27. [사이코웨이브 (Psywave) 레벨 비례 가변 데미지 및 악 타입 무효 메커니즘 검증]
+{
+  const { saveService } = await import("../src/services/saveService.js");
+  const testUserId = `test_psywave_${Date.now()}`;
+  saveService.createNewRunWithParty(testUserId, 1, [
+    {
+      speciesId: "kadabra",
+      name: "윤겔라",
+      level: 50,
+      hp: 150,
+      maxHp: 150,
+      moves: ["psywave"],
+    }
+  ]);
+
+  const battle = battleService.getOrCreateBattle(testUserId, 1);
+  battle.enemy.hp = 200;
+  battle.enemy.maxHp = 200;
+  battle.enemy.types = ["normal"];
+  battle.enemy.status = "slp";
+  battle.enemy.sleepTurns = 10;
+  battle.playerBattleMon.stages.acc = 6; // 명중 확정
+
+  const result = battleService.executePlayerMove(testUserId, 1, "psywave", "ko");
+  const damageDealt = 200 - result.enemy.hp;
+  console.log(`   ➔ 사이코웨이브 피격 후 적 HP: ${result.enemy.hp}/200 (데미지: ${damageDealt}, 시전자 레벨 50 기준)`);
+  assert(damageDealt >= 25 && damageDealt <= 75, `사이코웨이브 데미지는 레벨 50 기준 25~75 사이여야 함 (실제 데미지: ${damageDealt})`);
+  assert(result.turnActions?.some(a => a.log.includes("사이코웨이브")) ?? false, "사이코웨이브 배틀 로그가 정상 기록되어야 함");
+
+  // 악 타입(에스퍼 무효) 대상 테스트
+  battle.enemy.types = ["dark"];
+  battle.enemy.hp = 200;
+  battle.enemy.maxHp = 200;
+  battle.enemy.status = "slp";
+  battle.enemy.sleepTurns = 10;
+  const resultDark = battleService.executePlayerMove(testUserId, 1, "psywave", "ko");
+  console.log(`   ➔ 악 타입 상대에게 사이코웨이브 사용 후 적 HP: ${resultDark.enemy.hp}/200`);
+  assert(resultDark.enemy.hp === 200, "악 타입 상대는 에스퍼 특수기 사이코웨이브에 무효화(피해 0)되어야 함");
+}
+
+// 29. [잠자기(Rest) 검증] 체력 100% 회복, 기존 상태이상 치유, 2턴 수면, 불면 특성 면역 및 HP 가득 찼을 때 실패
+{
+  const { saveService } = await import("../src/services/saveService.js");
+  const testUserId = `test_rest_${Date.now()}`;
+  saveService.createNewRunWithParty(testUserId, 1, [
+    {
+      speciesId: "snorlax",
+      name: "잠만보",
+      level: 10,
+      hp: 20, // 20으로 깎여 있는 상태
+      maxHp: 50,
+      moves: ["rest"],
+    }
+  ]);
+
+  const battle = battleService.getOrCreateBattle(testUserId, 1);
+  const maxHp = battle.playerBattleMon.maxHp;
+  battle.playerBattleMon.status = "psn";
+  battle.playerBattleMon.toxicCounter = 3;
+  battle.enemy.status = "slp";
+  battle.enemy.sleepTurns = 10; // 적은 잠들어 있어 방해하지 않음
+
+  // 1) 체력 깎임 + 독 상태에서 잠자기 사용 -> HP 100% 풀회복, 독 치료 후 수면 돌입
+  const res1 = battleService.executePlayerMove(testUserId, 1, "rest", "ko");
+  console.log(`   ➔ 잠자기 사용 후 아군 HP: ${res1.playerBattleMon.hp}/${res1.playerBattleMon.maxHp}, 상태: ${res1.playerBattleMon.status}`);
+  assert(res1.playerBattleMon.hp === maxHp, "잠자기 사용 시 HP가 100% 풀회복되어야 함");
+  assert(res1.playerBattleMon.status === "slp", "잠자기 사용 후 수면(slp) 상태가 되어야 함");
+  assert(res1.playerBattleMon.sleepDuration === 2, "잠자기 수면 지속 턴은 정확히 2턴이어야 함");
+  assert((res1.playerBattleMon.toxicCounter || 0) === 0, "기존 독/맹독 카운터가 완전히 초기화되어야 함");
+
+  // 2) 이미 잠들어 있는 상태에서 턴 진행 -> 쿨쿨 잠들어 있어 행동 불가 확인
+  battle.enemy.status = "slp";
+  battle.enemy.sleepTurns = 10;
+  const res2 = battleService.executePlayerMove(testUserId, 1, "rest", "ko");
+  const isSleepLog = res2.turnActions?.some(a => a.log.includes("쿨쿨 잠들어 있다")) ?? false;
+  assert(res2.playerBattleMon.status === "slp" && isSleepLog, "이미 잠들어 있는 상태에서는 쿨쿨 잠들어 있어 행동 불가");
+
+  // 3) 기상 후 HP 가득 찬 상태에서 잠자기 사용 -> 실패
+  res1.playerBattleMon.status = null;
+  res1.playerBattleMon.sleepTurns = 0;
+  delete res1.playerBattleMon.sleepDuration;
+  battle.enemy.status = "slp";
+  battle.enemy.sleepTurns = 10;
+  const res3 = battleService.executePlayerMove(testUserId, 1, "rest", "ko");
+  assert(res3.playerBattleMon.status !== "slp", "HP가 100% 가득 찬 상태에서는 잠자기가 실패해야 함");
+
+  // 4) 불면(Insomnia) 특성 포켓몬의 잠자기 사용 -> 실패
+  saveService.updateSlot(testUserId, 1, {
+    party: [{ ...battle.playerParty[0], hp: 20 }]
+  });
+  battle.playerBattleMon.hp = 20;
+  battle.playerBattleMon.ability = "insomnia";
+  battle.enemy.status = "slp";
+  battle.enemy.sleepTurns = 10;
+  const res4 = battleService.executePlayerMove(testUserId, 1, "rest", "ko");
+  assert(res4.playerBattleMon.status !== "slp" && res4.playerBattleMon.hp === 20, "불면(Insomnia) 특성은 잠자기를 사용할 수 없어야 함");
+}
+
+// 28. [162: 분노의앞니 (Super Fang) 메커니즘 검증]
+// - 상대 현재 HP의 정확히 절반(50%, 내림) 데미지
+// - 최소 1 데미지 보장
+// - 고스트 타입 무효화 (노말 물리 특수 고정 데미지)
+{
+  const superFang = getMoveData("super-fang")!;
+  const user = battleService.spawnWildPokemon(1, "Town", "rattata", 30);
+  const target100 = battleService.spawnWildPokemon(1, "Town", "snorlax", 50);
+  target100.hp = 100;
+  target100.maxHp = 200;
+
+  const res100 = calculateDamage(user, target100, superFang, true, true);
+  console.log(`   ➔ 현재 HP 100 대상에게 분노의앞니 사용: ${res100.damage} 데미지 (로그: ${res100.log})`);
+  assert(res100.damage === 50, "분노의앞니는 대상의 현재 HP 100 중 정확히 절반인 50 데미지를 입혀야 함");
+
+  const target55 = battleService.spawnWildPokemon(1, "Town", "snorlax", 50);
+  target55.hp = 55;
+  const res55 = calculateDamage(user, target55, superFang, true, true);
+  assert(res55.damage === 27, "분노의앞니는 대상의 현재 HP 55 중 절반(내림)인 27 데미지를 입혀야 함");
+
+  const target1 = battleService.spawnWildPokemon(1, "Town", "snorlax", 50);
+  target1.hp = 1;
+  const res1 = calculateDamage(user, target1, superFang, true, true);
+  assert(res1.damage === 1, "분노의앞니는 대상 HP가 1일 때 최소 1 데미지를 입혀야 함");
+
+  const ghostTarget = battleService.spawnWildPokemon(1, "Town", "gengar", 50);
+  ghostTarget.types = ["ghost", "poison"];
+  const resGhost = calculateDamage(user, ghostTarget, superFang, true, true);
+  assert(resGhost.damage === 0 && resGhost.log.includes("효과가 없는 것 같다"), "분노의앞니(노말)는 고스트 타입에게 완전히 무효화되어야 함");
+}
+
+// 29. [166: 스케치 (Sketch) 메커니즘 검증]
+// - 상대방이 직전에 사용한 기술을 영구 복사하여 자신의 기술로 교체
+// - 기술 교체 후 복사한 기술의 최대 PP로 설정
+// - 배틀 로그에 스케치 발동 및 기술 습득 내용 정상 기록
+{
+  const { saveService } = await import("../src/services/saveService.js");
+  const testUserId = `test_sketch_${Date.now()}`;
+  saveService.createNewRunWithParty(testUserId, 1, [
+    {
+      speciesId: "smeargle",
+      name: "루브도",
+      level: 50,
+      hp: 150,
+      maxHp: 150,
+      moves: ["sketch"],
+    }
+  ]);
+
+  const battle = battleService.getOrCreateBattle(testUserId, 1);
+  battle.enemy.lastMoveUsed = "flamethrower";
+  battle.enemy.moves = ["flamethrower", "tackle"];
+
+  const result = battleService.executePlayerMove(testUserId, 1, "sketch", "ko");
+  console.log(`   ➔ 상대 직전 기술(화염방사) 대상 스케치 시전 후 기술 목록: [${result.playerBattleMon.moves.join(", ")}]`);
+  assert(result.playerBattleMon.moves.includes("flamethrower"), "스케치 시전 후 루브도의 기술 목록에 화염방사가 추가/교체되어야 함");
+  assert(!result.playerBattleMon.moves.includes("sketch"), "스케치는 사용 후 목록에서 영구 제거(교체)되어야 함");
+  assert(result.turnActions?.some(a => a.log.includes("스케치")) ?? false, "배틀 로그에 스케치 발동 로그가 정상 기록되어야 함");
+}
+
+// 30. [167: 트리플킥 (Triple Kick) 메커니즘 검증]
+// - 최대 3회 연속 공격 판정 (90% 명중)
+// - 1타: 10, 2타: 20 (누적 30), 3타: 30 (누적 60) 점진적 위력 증가
+// - 배틀 로그에 연속 명중 횟수 및 물리 데미지 정상 반영
+{
+  const { calculateMultiHitCount } = await import("../src/battle/moves/traits/moveTraits.js");
+  const { calculateDamage } = await import("../src/battle/mechanics/damageCalculator.js");
+
+  // 1. 타격 횟수 검증 (1~3회 범위 내)
+  const hitSamples: number[] = [];
+  for (let i = 0; i < 50; i++) {
+    hitSamples.push(calculateMultiHitCount("triple-kick"));
+  }
+  const minHit = Math.min(...hitSamples);
+  const maxHit = Math.max(...hitSamples);
+  console.log(`   ➔ 트리플킥 타격 횟수 샘플링 범위: ${minHit} ~ ${maxHit}회`);
+  assert(minHit >= 1 && maxHit <= 3, "트리플킥의 타격 횟수는 최소 1회에서 최대 3회 사이여야 함");
+  assert(hitSamples.some(h => h === 3), "50회 시도 중 3회 연속 타격이 최소 1번 이상 발생해야 함");
+
+  // 2. 점진적 위력 증가 검증 (1타 10, 2타 20, 3타 30)
+  const user = battleService.spawnWildPokemon(1, "Town", "hitmontop", 50);
+  const target = battleService.spawnWildPokemon(1, "Town", "snorlax", 50);
+  const tripleKickMoveData = {
+    id: 167,
+    name: "triple-kick",
+    nameKo: "트리플킥",
+    type: "fighting",
+    power: 10,
+    accuracy: 90,
+    pp: 10,
+    category: "physical" as const,
+  };
+
+  const dmgRes = calculateDamage(user, target, tripleKickMoveData, true, true);
+  console.log(`   ➔ 트리플킥 데미지: ${dmgRes.damage} (명중 횟수: ${dmgRes.hitCount}회, 로그: ${dmgRes.log})`);
+  assert(dmgRes.damage > 0, "트리플킥은 노말 타입 잠만보에게 격투 물리 피해를 입혀야 함");
+  assert(dmgRes.hitCount >= 1 && dmgRes.hitCount <= 3, "결과 hitCount는 1~3 사이여야 함");
+  assert(dmgRes.log.includes("효과가 굉장했다"), "격투 타입 기술이므로 노말 타입에게 효과가 굉장해야 함");
+}
+
+// 31. [169: 거미집 (Spider Web) 메커니즘 검증]
+// - 상대 포켓몬에게 cannotEscape = true 상태이상 부여
+// - 이미 도망칠 수 없는 경우 실패 처리
+{
+  const { executeStatusMove } = await import("../src/battle/moves/traits/specialStatusRegistry.js");
+  const user = battleService.spawnWildPokemon(1, "Town", "spinarak", 20);
+  const target = battleService.spawnWildPokemon(1, "Town", "pidgey", 20);
+  const spiderWebMoveData = getMoveData("spider-web")!;
+
+  // 1차 시전: 도망칠 수 없게 됨
+  const log1 = executeStatusMove({
+    actor: user,
+    target: target,
+    move: spiderWebMoveData,
+    actorName: "페이검",
+    targetName: "구구",
+    isKo: true,
+  });
+  console.log(`   ➔ 거미집 1차 시전 로그: ${log1}`);
+  assert(target.cannotEscape === true, "거미집 적중 시 대상의 cannotEscape 플래그가 true가 되어야 함");
+  assert(log1.includes("도망칠 수 없게 되었다"), "배틀 로그에 거미집에 묶여 도망칠 수 없게 되었다는 메시지가 나와야 함");
+
+  // 2차 시전: 이미 도망칠 수 없으므로 실패
+  const log2 = executeStatusMove({
+    actor: user,
+    target: target,
+    move: spiderWebMoveData,
+    actorName: "페이검",
+    targetName: "구구",
+    isKo: true,
+  });
+  console.log(`   ➔ 거미집 2차 시전 로그: ${log2}`);
+  assert(log2.includes("이미 도망칠 수 없다"), "이미 묶여 있는 경우 실패 메시지가 나와야 함");
+}
+
+// 32. [173: 코골기 (Snore) 메커니즘 검증]
+// - 깨어 있을 때 시전: 잠들어 있지 않아 실패 처리
+// - 잠들어 있을 때 시전: 수면 중 행동 허용 & 특수 노말 데미지 정상 적용
+// - 30% 확률로 상대 풀죽음(flinch) 상태이상 유발
+{
+  const { validateAction } = await import("../src/battle/mechanics/actionValidator.js");
+  const { checkSpecialDamage } = await import("../src/battle/moves/traits/specialDamageRegistry.js");
+  const { applySecondaryAttackEffects } = await import("../src/battle/mechanics/secondaryEffects.js");
+  const snoreMoveData = getMoveData("snore")!;
+
+  const user = battleService.spawnWildPokemon(1, "Town", "snorlax", 30);
+  const target = battleService.spawnWildPokemon(1, "Town", "pidgey", 30);
+
+  // 1) 깨어 있을 때: actionValidator는 통과하지만 checkSpecialDamage에서 실패
+  user.status = null;
+  const valAwake = validateAction(user, snoreMoveData, "잠만보", "코골기", true);
+  assert(valAwake.canAct === true, "깨어 있을 때 actionValidator 자체는 행동을 차단하지 않음");
+
+  const specDmgAwake = checkSpecialDamage({
+    actor: user,
+    target: target,
+    move: snoreMoveData,
+    isActorPlayer: true,
+    isKo: true,
+  });
+  console.log(`   ➔ 깨어 있을 때 코골기 시전 결과: ${specDmgAwake.log}`);
+  assert(specDmgAwake.handled === true && specDmgAwake.damage === 0, "깨어 있을 때 코골기는 실패 처리되어야 함");
+  assert(specDmgAwake.log!.includes("잠들어 있지 않아"), "잠들어 있지 않아 실패했다는 메시지가 출력되어야 함");
+
+  // 2) 잠들어 있을 때: actionValidator에서 canAct: true로 수면 중 행동 허용
+  user.status = "slp";
+  user.sleepTurns = 0;
+  user.sleepDuration = 3;
+
+  const valAsleep = validateAction(user, snoreMoveData, "잠만보", "코골기", true);
+  console.log(`   ➔ 수면 중 코골기 actionValidator 결과: canAct=${valAsleep.canAct}, log=${valAsleep.log}`);
+  assert(valAsleep.canAct === true, "코골기는 잠들어 있을 때 행동이 허용(canAct: true)되어야 함");
+  assert(valAsleep.log!.includes("쿨쿨 잠들어 있다"), "수면 중 메시지가 포함되어야 함");
+
+  const specDmgAsleep = checkSpecialDamage({
+    actor: user,
+    target: target,
+    move: snoreMoveData,
+    isActorPlayer: true,
+    isKo: true,
+  });
+  assert(specDmgAsleep.handled === false, "잠들어 있을 때는 checkSpecialDamage를 통과하여 일반 데미지 계산으로 넘어가야 함");
+
+  const dmgRes = calculateDamage(user, target, snoreMoveData, true, true);
+  console.log(`   ➔ 코골기 데미지 계산 결과: ${dmgRes.damage}`);
+  assert(dmgRes.damage > 0, "코골기는 상대에게 정상적으로 특수 데미지를 입혀야 함");
+
+  // 3) 풀죽음(Flinch) 30% 확률 검증
+  let flinchCount = 0;
+  const trials = 1000;
+  for (let i = 0; i < trials; i++) {
+    const dummyTarget = battleService.spawnWildPokemon(1, "Town", "pidgey", 30);
+    applySecondaryAttackEffects(user, dummyTarget, snoreMoveData, 30, true);
+    if (dummyTarget.isFlinched) flinchCount++;
+  }
+  const flinchRate = (flinchCount / trials) * 100;
+  console.log(`   ➔ 코골기 풀죽음 발동률: ${flinchRate.toFixed(1)}% (기대치: 약 30%)`);
+  assert(flinchRate > 20 && flinchRate < 40, "코골기의 풀죽음 확률은 약 30%여야 함");
+}
+
+// 33. [170: 마음의눈 (Mind Reader) 메커니즘 검증]
+// - 마음의 눈 시전 시 시전자에게 mindReaderTargetId 설정 및 포착 로그 출력
+// - 회피율 +6랭크 및 반무적(공중날기) 상태의 상대에게도 다음 턴 100% 필중
+// - 중복 시전 시 이미 읽고 있어 실패 처리
+{
+  const { executeStatusMove } = await import("../src/battle/moves/traits/specialStatusRegistry.js");
+  const mindReaderMoveData = getMoveData("mind-reader")!;
+  const blizzardMoveData = getMoveData("blizzard")!; // 기본 명중 70%
+  const user = battleService.spawnWildPokemon(1, "Town", "poliwhirl", 30);
+  const target = battleService.spawnWildPokemon(1, "Town", "pidgeot", 30);
+  target.stages.eva = 6; // 상대 회피율 +6랭크 (일반적으로 명중률 33% 이하)
+
+  // 1) 1차 시전: 타겟 포착 성공
+  const log1 = executeStatusMove({
+    actor: user,
+    target: target,
+    move: mindReaderMoveData,
+    actorName: "슈륙챙이",
+    targetName: "피죤투",
+    isKo: true,
+  });
+  console.log(`   ➔ 마음의눈 1차 시전 로그: ${log1}`);
+  assert(Boolean(user.mindReaderTargetId), "마음의눈 시전 시 user.mindReaderTargetId가 설정되어야 함");
+  assert(log1.includes("움직임을 포착했다"), "배틀 로그에 움직임을 포착했다는 메시지가 출력되어야 함");
+
+  // 2) 2차 중복 시전: 실패
+  const log2 = executeStatusMove({
+    actor: user,
+    target: target,
+    move: mindReaderMoveData,
+    actorName: "슈륙챙이",
+    targetName: "피죤투",
+    isKo: true,
+  });
+  console.log(`   ➔ 마음의눈 중복 시전 로그: ${log2}`);
+  assert(log2.includes("이미 상대의 움직임을 읽고 있다"), "마음의눈 중복 시전 시 실패 메시지가 출력되어야 함");
+
+  // 3) 회피율 +6랭크 상대에게 저명중률 기술(눈보라, 70%) 시전 시 100% 필중 검증
+  let allHit = true;
+  for (let i = 0; i < 50; i++) {
+    const res = checkMoveHit({ actor: user, target: target, move: blizzardMoveData });
+    if (!res.isHit || res.reason !== "mind_reader") {
+      allHit = false;
+      break;
+    }
+  }
+  assert(allHit, "마음의눈 상태에서는 회피율 +6랭크 상대에게도 100% 필중(reason: mind_reader)해야 함");
+}
+
+// 39. [악몽(Nightmare) 배틀 메커니즘 검증]
+{
+  const nightmareMoveData = getMoveData("nightmare")!;
+  const { executeStatusMove } = await import("../src/battle/moves/traits/specialStatusRegistry.js");
+  const { processTurnEndEffects } = await import("../src/battle/engine/TurnEndProcessor.js");
+  const { validateAction } = await import("../src/battle/mechanics/actionValidator.js");
+
+  const caster = battleService.spawnWildPokemon(1, "Town", "gengar", 50);
+  const target = battleService.spawnWildPokemon(1, "Town", "snorlax", 50);
+  target.hp = 200;
+  target.maxHp = 200;
+
+  // 1) 잠들어 있지 않은 상대에게 시전 시: 실패
+  const failLog = executeStatusMove({
+    actor: caster,
+    target: target,
+    move: nightmareMoveData,
+    actorName: "팬텀",
+    targetName: "잠만보",
+    isKo: true,
+  });
+  console.log(`   ➔ 수면 아닐 때 악몽 시전: ${failLog}`);
+  assert(!target.hasNightmare && failLog.includes("잠들어 있지 않다"), "잠들어 있지 않은 상대에게 악몽 시전 시 실패해야 함");
+
+  // 2) 잠들어 있는 상대에게 시전 시: 성공 및 hasNightmare 플래그 설정
+  target.status = "slp";
+  target.sleepDuration = 3;
+  target.sleepTurns = 0;
+  const successLog = executeStatusMove({
+    actor: caster,
+    target: target,
+    move: nightmareMoveData,
+    actorName: "팬텀",
+    targetName: "잠만보",
+    isKo: true,
+  });
+  console.log(`   ➔ 수면 중 악몽 시전: ${successLog}`);
+  assert(target.hasNightmare === true, "수면 중인 상대에게 악몽 적중 시 hasNightmare 플래그가 true가 되어야 함");
+  assert(successLog.includes("악몽에 빠져들었다"), "배틀 로그에 악몽에 빠져들었다는 메시지가 출력되어야 함");
+
+  // 3) 이미 악몽 상태인 상대에게 재시전: 실패
+  const duplicateLog = executeStatusMove({
+    actor: caster,
+    target: target,
+    move: nightmareMoveData,
+    actorName: "팬텀",
+    targetName: "잠만보",
+    isKo: true,
+  });
+  console.log(`   ➔ 악몽 중복 시전: ${duplicateLog}`);
+  assert(duplicateLog.includes("이미 악몽에 시달리고 있다"), "이미 악몽에 걸린 상대에게 재시전 시 실패 메시지가 나와야 함");
+
+  // 4) 턴 종료 시 데미지 처리: 최대 HP의 1/4 (200의 1/4 = 50) 데미지 감소
+  const logsTurn1: string[] = [];
+  processTurnEndEffects(target, true, logsTurn1);
+  console.log(`   ➔ 악몽 턴종료 데미지: HP ${target.hp}/200, 로그: ${logsTurn1.join(" / ")}`);
+  assert(target.hp === 150, "수면 중 턴 종료 시 최대 HP의 1/4(50) 데미지를 입어야 함");
+  assert(logsTurn1.some(l => l.includes("악몽에 시달리고 있다")), "악몽 피해 메시지가 턴 종료 로그에 출력되어야 함");
+
+  // 5) 수면에서 깨어날 때(기상) 악몽 자동 해제 검증
+  target.sleepTurns = 3; // 수면 턴수 충족
+  const wakeVal = validateAction(target, getMoveData("tackle")!, "잠만보", "몸통박치기", true);
+  console.log(`   ➔ 기상 판정: status=${target.status}, hasNightmare=${target.hasNightmare}, 로그=${wakeVal.log}`);
+  assert(target.status === null, "기상 시 상태이상이 해제되어야 함");
+  assert(target.hasNightmare === false, "기상 시 hasNightmare 플래그가 false로 자동 해제되어야 함");
+
+  // 6) 기상 후 턴 종료 시 더 이상 악몽 피해가 발생하지 않음 검증
+  const logsTurnAfterWake: string[] = [];
+  const hpBefore = target.hp;
+  processTurnEndEffects(target, true, logsTurnAfterWake);
+  assert(target.hp === hpBefore && !logsTurnAfterWake.some(l => l.includes("악몽")), "기상 후에는 턴 종료 시 악몽 데미지가 발생하지 않아야 함");
+}
+
+// 40. [저주(Curse) 배틀 메커니즘 검증 - 일반 타입 vs 고스트 타입 분기]
+{
+  const curseMoveData = getMoveData("curse")!;
+  const { executeSingleAction } = await import("../src/battle/engine/TurnActionExecutor.js");
+  const { processTurnEndEffects } = await import("../src/battle/engine/TurnEndProcessor.js");
+
+  // 1) 비고스트 포켓몬(잠만보 - normal)의 저주 시전: 스피드 -1, 공격 +1, 방어 +1 (자해 없음)
+  const snorlax = battleService.spawnWildPokemon(1, "Town", "snorlax", 50);
+  snorlax.types = ["normal"];
+  snorlax.maxHp = 200;
+  snorlax.hp = 200;
+  const enemyPidgey = battleService.spawnWildPokemon(1, "Town", "pidgey", 20);
+
+  const normalRes = executeSingleAction(snorlax, enemyPidgey, curseMoveData, true, true);
+  console.log(`   ➔ 일반타입 저주 시전 로그: ${normalRes.log}`);
+  assert(normalRes.log.includes("스피드가 떨어지고") && normalRes.log.includes("공격과 방어가"), "일반타입 저주 시전 시 스피드 하락 및 공/방 상승 로그가 나와야 함");
+  assert(snorlax.stages.spe === -1, "스피드가 1랭크 하락해야 함 (-1)");
+  assert(snorlax.stages.atk === 1, "공격력이 1랭크 상승해야 함 (+1)");
+  assert(snorlax.stages.def === 1, "방어력이 1랭크 상승해야 함 (+1)");
+  assert(snorlax.hp === 200, "일반타입 저주는 시전자 HP를 깎지 않아야 함 (HP 200/200 유지)");
+  assert(!enemyPidgey.isCursed, "일반타입 저주는 상대에게 저주를 걸지 않아야 함");
+
+  // 2) 고스트 포켓몬(팬텀 - ghost/poison)의 저주 시전: 시전자 최대 HP 절반 소모 & 상대에게 저주 각인
+  const gengar = battleService.spawnWildPokemon(1, "Town", "gengar", 50);
+  gengar.types = ["ghost", "poison"];
+  gengar.maxHp = 160;
+  gengar.hp = 160;
+  const enemyTarget = battleService.spawnWildPokemon(1, "Town", "snorlax", 50);
+  enemyTarget.maxHp = 200;
+  enemyTarget.hp = 200;
+
+  const ghostRes = executeSingleAction(gengar, enemyTarget, curseMoveData, true, true);
+  console.log(`   ➔ 고스트타입 저주 시전 로그: ${ghostRes.log}`);
+  assert(ghostRes.log.includes("자신의 체력을 깎아") && ghostRes.log.includes("저주를 걸었다"), "고스트타입 저주 시전 시 체력 희생 및 저주 각인 로그가 나와야 함");
+  assert(gengar.hp === 80, "고스트타입 저주 시전 시 최대 HP의 절반(80)이 소모되어야 함 (160 -> 80)");
+  assert(enemyTarget.isCursed === true, "피격 대상의 isCursed 플래그가 true가 되어야 함");
+
+  // 3) 이미 저주에 걸린 상대에게 재시전 시 실패
+  const repeatRes = executeSingleAction(gengar, enemyTarget, curseMoveData, true, true);
+  console.log(`   ➔ 저주 중복 시전: ${repeatRes.log}`);
+  assert(repeatRes.log.includes("효과가 없었다"), "이미 저주에 걸린 대상에게 재시전 시 실패 메시지가 나와야 함");
+
+  // 4) 턴 종료 시 저주 데미지: 매 턴 최대 HP의 1/4 (200의 1/4 = 50) 데미지 및 turnActions 등록 검증
+  const mockBattle: any = {
+    enemy: enemyTarget,
+    playerBattleMon: gengar,
+    playerParty: [gengar],
+    playerActiveIndex: 0,
+    turnActions: [
+      { actor: "player", moveKey: "shadow-ball", damage: 30, isHit: true, log: "팬텀의 섀도볼!" }
+    ],
+  };
+  const logsTurnEnd: string[] = [];
+  processTurnEndEffects(enemyTarget, true, logsTurnEnd, null, mockBattle);
+  console.log(`   ➔ 저주 턴종료 데미지: HP ${enemyTarget.hp}/200, 로그: ${logsTurnEnd.join(" / ")}`);
+  assert(enemyTarget.hp === 150, "저주 상태인 포켓몬은 턴 종료 시 최대 HP의 1/4(50) 피해를 입어야 함");
+  assert(logsTurnEnd.some(l => l.includes("저주에 걸려 있다")), "저주 턴종료 로그가 정상 출력되어야 함");
+  assert(mockBattle.turnActions.length === 2, "턴 종료 시 저주 데미지 액션이 turnActions에 추가되어야 함");
+  assert(mockBattle.turnActions[1].moveKey === "curse-damage", "추가된 액션의 moveKey는 'curse-damage'여야 함");
+  assert(mockBattle.turnActions[1].damage === 50, "추가된 액션의 데미지는 50이어야 함");
+
+  const { MOVE_REGISTRY } = await import("../src/battle/moves/moveRegistry.js");
+  assert(MOVE_REGISTRY["curse-damage"] !== undefined, "MOVE_REGISTRY에 'curse-damage'가 등록되어 있어야 함");
+  assert(MOVE_REGISTRY["저주(데미지)"] !== undefined, "MOVE_REGISTRY에 '저주(데미지)'가 등록되어 있어야 함");
+
+  // 5) 고스트 저주는 방어(Protect) 및 대타출동(Substitute)을 관통해야 함
+  const gengar2 = battleService.spawnWildPokemon(1, "Town", "gengar", 50);
+  gengar2.types = ["ghost"];
+  gengar2.maxHp = 100;
+  gengar2.hp = 100;
+
+  const protectedTarget = battleService.spawnWildPokemon(1, "Town", "rattata", 20);
+  protectedTarget.isProtected = true;
+  executeSingleAction(gengar2, protectedTarget, curseMoveData, true, true);
+  assert(protectedTarget.isCursed === true, "고스트타입 저주는 상대의 방어(Protect)를 관통해야 함");
+
+  const gengar3 = battleService.spawnWildPokemon(1, "Town", "gengar", 50);
+  gengar3.types = ["ghost"];
+  gengar3.maxHp = 100;
+  gengar3.hp = 100;
+
+  const subTarget = battleService.spawnWildPokemon(1, "Town", "rattata", 20);
+  subTarget.substituteHp = 30;
+  executeSingleAction(gengar3, subTarget, curseMoveData, true, true);
+  assert(subTarget.isCursed === true, "고스트타입 저주는 상대의 대타출동(Substitute)을 관통해야 함");
+}
+
+
 console.log("==================================================");
 console.log(`📊 테스트 결과: 통과 ${passed}개 / 실패 ${failed}개`);
 console.log("==================================================");

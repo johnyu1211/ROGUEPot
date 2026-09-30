@@ -26,59 +26,6 @@ import { getUserStarters, getUserStarter, unlockPassiveAbility, reduceStarterCos
 import { pullEggs, getUserEggs, advanceEggHatching } from "../services/eggService.js";
 import { ensureClickItReaction, clearAllPerkReactions, deleteActivePerkBannerMessage } from "./messageReactionAdd.js";
 
-function createStarterSelectMenu(slotId: number, userId: string, fromSource: "title" | "slots" = "title") {
-  const profile = saveService.getProfile(userId);
-  const isKo = profile.language === "ko";
-
-  const starterEmbed = createBaseEmbed(
-    isKo ? `[슬롯 ${slotId}] 스타팅 포켓몬 선택` : `[Slot ${slotId}] Choose Your Starter Pokémon`,
-    isKo
-      ? "포켓로그 모험을 함께할 첫 번째 파트너 포켓몬을 선택하세요!\n\n" +
-        "🌱 **이상해씨 (#0001)** - 풀/독 | 코스트: 3 | 밸런스 & 상태이상\n" +
-        "🔥 **파이리 (#0004)** - 불꽃 | 코스트: 3 | 강력한 화력 & 공격형\n" +
-        "💧 **꼬부기 (#0007)** - 물 | 코스트: 3 | 높은 방어력 & 탱커"
-      : "Select your starter Pokémon to begin your PokéRogue adventure!\n\n" +
-        "🌱 **Bulbasaur (#0001)** - Grass/Poison | Cost: 3 | Balanced & Status Moves\n" +
-        "🔥 **Charmander (#0004)** - Fire | Cost: 3 | High Firepower & Offense\n" +
-        "💧 **Squirtle (#0007)** - Water | Cost: 3 | High Defense & Tanky"
-  )
-    .setColor(COLORS.POKEROGUE_GOLD)
-    .setImage("https://play.pokemonshowdown.com/sprites/ani/charmander.gif");
-
-  const starterSelectMenu = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-    new StringSelectMenuBuilder()
-      .setCustomId(`starter_select_${slotId}_${userId}`)
-      .setPlaceholder(isKo ? "스타팅 포켓몬을 선택하세요..." : "Select a starter Pokémon...")
-      .addOptions(
-        new StringSelectMenuOptionBuilder()
-          .setLabel("Bulbasaur (이상해씨)")
-          .setDescription("Cost: 3 | Grass/Poison | Overgrow")
-          .setValue("bulbasaur")
-          .setEmoji("🌱"),
-        new StringSelectMenuOptionBuilder()
-          .setLabel("Charmander (파이리)")
-          .setDescription("Cost: 3 | Fire | Blaze")
-          .setValue("charmander")
-          .setEmoji("🔥"),
-        new StringSelectMenuOptionBuilder()
-          .setLabel("Squirtle (꼬부기)")
-          .setDescription("Cost: 3 | Water | Torrent")
-          .setValue("squirtle")
-          .setEmoji("💧")
-      )
-  );
-
-  const backCustomId = fromSource === "title" ? `menu_back_to_title_${userId}` : `menu_loadgame_${userId}`;
-
-  const backRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId(backCustomId)
-      .setLabel("↩️")
-      .setStyle(ButtonStyle.Danger)
-  );
-
-  return { embeds: [starterEmbed], components: [starterSelectMenu, backRow] };
-}
 
 export async function renderSlotsScreenData(
   userId: string,
@@ -393,8 +340,10 @@ export function buildBattleComponents(
       combatMon.movePps = moves.map(m => getMoveData(m)?.pp || 20);
     }
 
-    const isCharging = Boolean(combatMon?.chargingMove);
-    const chargeKey = combatMon?.chargingMove ? getMoveKey(combatMon.chargingMove) : null;
+    const isCharging = Boolean(combatMon?.chargingMove || combatMon?.rampageState);
+    const chargeKey = combatMon?.chargingMove
+      ? getMoveKey(combatMon.chargingMove)
+      : (combatMon?.rampageState ? getMoveKey(combatMon.rampageState.moveKey) : null);
 
     // Row 1: Moves 1, 2
     const row1 = new ActionRowBuilder<ButtonBuilder>();
@@ -413,7 +362,9 @@ export function buildBattleComponents(
         : ButtonStyle.Primary;
 
       const btnLabel = isThisChargingMove
-        ? `${i + 1}. ⚔️ ${mName} 공격! [${typeName}] (${curPp}/${maxPp})`
+        ? (combatMon?.rampageState
+            ? `${i + 1}. 🔥 ${mName} (난동 중!) [${typeName}] (${curPp}/${maxPp})`
+            : `${i + 1}. ⚔️ ${mName} 공격! [${typeName}] (${curPp}/${maxPp})`)
         : `${i + 1}. ${mName} [${typeName}] (${curPp}/${maxPp})`;
 
       row1.addComponents(
@@ -443,7 +394,9 @@ export function buildBattleComponents(
         : ButtonStyle.Primary;
 
       const btnLabel = isThisChargingMove
-        ? `${i + 1}. ⚔️ ${mName} 공격! [${typeName}] (${curPp}/${maxPp})`
+        ? (combatMon?.rampageState
+            ? `${i + 1}. 🔥 ${mName} (난동 중!) [${typeName}] (${curPp}/${maxPp})`
+            : `${i + 1}. ⚔️ ${mName} 공격! [${typeName}] (${curPp}/${maxPp})`)
         : `${i + 1}. ${mName} [${typeName}] (${curPp}/${maxPp})`;
 
       row2.addComponents(
@@ -575,7 +528,7 @@ export function buildBattleComponents(
     }
   } else {
     // MAIN Action Rows
-    const isCharging = Boolean(combatMon?.chargingMove);
+    const isCharging = Boolean(combatMon?.chargingMove || combatMon?.rampageState);
 
     // Row 1: [⚔️ 싸운다] + [⚪ 몬스터볼] + [⚪] (같은 더미 버튼)
     const mainRow1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -3875,14 +3828,15 @@ export const interactionCreateEvent: BotEvent = {
           const starterData = await renderStarterSelectMessageData(client, interaction.user.id, slotNum, 0, 1, 1, []);
           await interaction.update(starterData);
         } else {
+          await interaction.deferUpdate().catch(() => null);
           saveService.setActiveSlot(interaction.user.id, slotNum);
           const battleData = await renderBattleMessageData(interaction.user.id, slotNum, undefined, true);
           if (battleData.motionDurationMs && battleData.motionDurationMs > 0) {
             const disabledComponents = disableComponentsList(battleData.components);
-            await interaction.update({ ...battleData, components: disabledComponents });
+            await safeInteractionUpdate(interaction, { ...battleData, components: disabledComponents });
             scheduleBattleStaticization(interaction, interaction.user.id, slotNum, battleData.motionDurationMs, battleData.components);
           } else {
-            await interaction.update(battleData);
+            await safeInteractionUpdate(interaction, battleData);
           }
           const currentBattle = battleService.getOrCreateBattle(interaction.user.id, slotNum);
           battlePreloadService.schedulePreload(interaction.user.id, slotNum, currentBattle, profile.language);
@@ -3911,6 +3865,7 @@ export const interactionCreateEvent: BotEvent = {
         if (customId.startsWith("battle_menu_fight_")) {
           const slotId = parseInt(parts[3], 10) || 1;
           clearBattleStaticization(interaction.user.id, slotId);
+          await interaction.deferUpdate().catch(() => null);
           const battle = battleService.getOrCreateBattle(interaction.user.id, slotId);
           if (battle.phase === "SWITCH") {
             const battleData = await renderBattleMessageData(interaction.user.id, slotId);
@@ -3926,6 +3881,7 @@ export const interactionCreateEvent: BotEvent = {
         if (customId.startsWith("battle_menu_bag_")) {
           const slotId = parseInt(parts[3], 10) || 1;
           clearBattleStaticization(interaction.user.id, slotId);
+          await interaction.deferUpdate().catch(() => null);
           const battle = battleService.getOrCreateBattle(interaction.user.id, slotId);
           if (battle.phase === "SWITCH") {
             const battleData = await renderBattleMessageData(interaction.user.id, slotId);
@@ -3933,8 +3889,8 @@ export const interactionCreateEvent: BotEvent = {
             return;
           }
           const combatMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
-          if (combatMon?.chargingMove) {
-            // Cannot use Bag while charging mid-air! Keep in FIGHT phase
+          if (combatMon?.chargingMove || combatMon?.rampageState) {
+            // Cannot use Bag while charging or rampaging! Keep in FIGHT phase
             const battleData = await renderBattleMessageData(interaction.user.id, slotId, "FIGHT");
             await safeInteractionUpdate(interaction, battleData);
             return;
@@ -3948,6 +3904,7 @@ export const interactionCreateEvent: BotEvent = {
         if (customId.startsWith("battle_menu_party_")) {
           const slotId = parseInt(parts[3], 10) || 1;
           clearBattleStaticization(interaction.user.id, slotId);
+          await interaction.deferUpdate().catch(() => null);
           const battle = battleService.getOrCreateBattle(interaction.user.id, slotId);
           if (battle.phase === "SWITCH") {
             const battleData = await renderBattleMessageData(interaction.user.id, slotId);
@@ -3955,8 +3912,8 @@ export const interactionCreateEvent: BotEvent = {
             return;
           }
           const combatMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
-          if (combatMon?.chargingMove) {
-            // Cannot switch party while charging mid-air! Keep in FIGHT phase
+          if (combatMon?.chargingMove || combatMon?.rampageState) {
+            // Cannot switch party while charging or rampaging! Keep in FIGHT phase
             const battleData = await renderBattleMessageData(interaction.user.id, slotId, "FIGHT");
             await safeInteractionUpdate(interaction, battleData);
             return;
@@ -3970,6 +3927,7 @@ export const interactionCreateEvent: BotEvent = {
         if (customId.startsWith("battle_menu_run_")) {
           const slotId = parseInt(parts[3], 10) || 1;
           clearBattleStaticization(interaction.user.id, slotId);
+          await interaction.deferUpdate().catch(() => null);
           const battle = battleService.getOrCreateBattle(interaction.user.id, slotId);
           if (battle.phase === "SWITCH") {
             const battleData = await renderBattleMessageData(interaction.user.id, slotId);
@@ -3977,8 +3935,8 @@ export const interactionCreateEvent: BotEvent = {
             return;
           }
           const combatMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
-          if (combatMon?.chargingMove) {
-            // Cannot run while charging mid-air! Keep in FIGHT phase
+          if (combatMon?.chargingMove || combatMon?.rampageState) {
+            // Cannot run while charging or rampaging! Keep in FIGHT phase
             const battleData = await renderBattleMessageData(interaction.user.id, slotId, "FIGHT");
             await safeInteractionUpdate(interaction, battleData);
             return;
@@ -3992,6 +3950,7 @@ export const interactionCreateEvent: BotEvent = {
         if (customId.startsWith("battle_cancel_")) {
           const slotId = parseInt(parts[2], 10) || 1;
           clearBattleStaticization(interaction.user.id, slotId);
+          await interaction.deferUpdate().catch(() => null);
           const battle = battleService.getOrCreateBattle(interaction.user.id, slotId);
           if (battle.phase === "SWITCH") {
             const battleData = await renderBattleMessageData(interaction.user.id, slotId);
@@ -3999,8 +3958,8 @@ export const interactionCreateEvent: BotEvent = {
             return;
           }
           const combatMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
-          if (combatMon?.chargingMove) {
-            // Cannot exit FIGHT while charging mid-air! Keep in FIGHT phase
+          if (combatMon?.chargingMove || combatMon?.rampageState) {
+            // Cannot exit FIGHT while charging or rampaging! Keep in FIGHT phase
             const battleData = await renderBattleMessageData(interaction.user.id, slotId, "FIGHT");
             await safeInteractionUpdate(interaction, battleData);
             return;
@@ -4221,63 +4180,10 @@ export const interactionCreateEvent: BotEvent = {
         releaseBattleLock(interaction.user.id);
       }
     }
+  }
 
-      // 2-8. Overwrite Slot (Back destination: SLOTS)
-      if (customId.startsWith("slot_overwrite_")) {
-        const slotNum = parseInt(parts[2], 10) || 1;
-        const responseData = createStarterSelectMenu(slotNum, interaction.user.id, "slots");
-        await interaction.update(responseData);
-        return;
-      }
-    }
-
-    // 3. String Select Menu Interactions (Starter Picked)
-    if (interaction.isStringSelectMenu()) {
-      const customId = interaction.customId;
-      if (customId.startsWith("starter_select_")) {
-        const parts = customId.split("_");
-        const slotNum = parseInt(parts[2], 10) || 1;
-        const selectedSpecies = interaction.values[0];
-
-        const newRun = saveService.startNewRun(interaction.user.id, slotNum, selectedSpecies);
-        const profile = saveService.getProfile(interaction.user.id);
-        const isKo = profile.language === "ko";
-
-        const runStartedEmbed = createBaseEmbed(
-          isKo ? `🎮 슬롯 #${slotNum}에서 모험 시작!` : `🎮 Adventure Begins in Slot #${slotNum}!`,
-          isKo
-            ? `첫 파트너로 **${newRun.party[0].name}**을(를) 선택하셨습니다!\n\n` +
-              `• **출발 바이옴**: ${newRun.biome}\n` +
-              `• **시작 웨이브**: Wave 1\n` +
-              `• **초기 자금**: P ${newRun.money}\n\n` +
-              "지금 포켓로그의 여정을 시작하세요!"
-            : `You chose **${newRun.party[0].name}** as your starter!\n\n` +
-              `• **Current Biome**: ${newRun.biome}\n` +
-              `• **Starting Wave**: Wave 1\n` +
-              `• **Starting Balance**: P ${newRun.money}\n\n` +
-              "Your journey into PokéRogue starts now!"
-        )
-          .setColor(COLORS.SUCCESS)
-          .setImage(`https://play.pokemonshowdown.com/sprites/ani/${selectedSpecies}.gif`);
-
-        const battleStartRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-          new ButtonBuilder()
-            .setCustomId(`wave_battle_${slotNum}_1_${interaction.user.id}`)
-            .setLabel(isKo ? "Wave 1 배틀 시작 ⚔️" : "Enter Wave 1 Battle ⚔️")
-            .setStyle(ButtonStyle.Success),
-          new ButtonBuilder()
-            .setCustomId(`menu_back_to_title_${interaction.user.id}`)
-            .setLabel("↩️")
-            .setStyle(ButtonStyle.Danger)
-        );
-
-        await interaction.update({
-          embeds: [runStartedEmbed],
-          components: [battleStartRow],
-        });
-        return;
-      }
-
+  // 3. String Select Menu Interactions
+  if (interaction.isStringSelectMenu()) {
       // 4-2. Pokédex Region Jump Selection (1~9 Gen National Dex Jump)
       if (interaction.customId.startsWith("pokedex_region_select_")) {
         await interaction.deferUpdate().catch(() => null);
@@ -4295,7 +4201,7 @@ export const interactionCreateEvent: BotEvent = {
         return;
       }
     }
-    } catch (err: any) {
+  } catch (err: any) {
       if (err?.code === 40060 || err?.code === 10062 || err?.code === "InteractionNotReplied") {
         // Ignored safe Discord race condition (e.g. user rapid double-click or token timeout)
         return;

@@ -47,10 +47,16 @@ export interface BattlePokemon {
   tauntTurns?: number;
   isAttracted?: boolean;
   cannotEscape?: boolean;
+  hasNightmare?: boolean;
+  isCursed?: boolean;
+  mindReaderTargetId?: string | null;
+  mindReaderTurnsLeft?: number;
   lastPhysicalDamageTakenThisTurn?: number;
   disabledMove?: string | null;
   disabledTurns?: number;
   mistTurns?: number;
+  lightScreenTurns?: number;
+  reflectTurns?: number;
   isRaging?: boolean;
   hasFocusEnergy?: boolean;
   bideDamageTaken?: number;
@@ -81,6 +87,11 @@ export interface BattlePokemon {
     moveNameEn: string;
     turnsLeft: number;
   } | null;
+  rampageState?: {
+    moveKey: string;
+    turnsLeft: number;
+  } | null;
+  hasMinimized?: boolean;
   isSeeded?: boolean;
 
   isShiny?: boolean;
@@ -89,6 +100,7 @@ export interface BattlePokemon {
   bossShields?: number;
   bossMaxShields?: number;
   hasEndurePerk?: boolean;
+  heldItems?: string[];
 }
 
 export interface TurnActionInfo {
@@ -154,6 +166,7 @@ export interface BattleState {
     }[];
     wasDescentFromAir?: boolean;
     hugTriggered?: boolean;
+    copiedMoveKey?: string;
   } | null;
   pendingBallPerk?: BallPerkId | null;
   activeBallPerk?: BallPerkId | null;

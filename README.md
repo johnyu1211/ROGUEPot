@@ -89,12 +89,29 @@ npm run deploy-commands
 
 ---
 
-## ⚖️ License & Disclaimer
+## ⚖️ License & Legal Policies
 
-### License
-This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**. See the [LICENSE](LICENSE) file for details.
+* 📄 **[License (GNU AGPL-3.0)](LICENSE)**
+* 📜 **[이용약관 (Terms of Service)](TERMS.md)**
+* 🔒 **[개인정보처리방침 (Privacy Policy)](PRIVACY.md)**
 
-### Disclaimer
-* **ROGUEPot** is an unofficial, non-profit fan-made project created for educational and community entertainment purposes.
-* Pokémon and Pokémon character names, sprites, and audio are trademarks and copyrights of **Nintendo**, **Creatures Inc.**, and **GAME FREAK Inc.**
-* This project is not affiliated with, endorsed by, or sponsored by Nintendo or Game Freak.
+---
+
+### ⚠️ Disclaimer & Legal Notice (법적 고지 및 면책)
+
+1. **비영리 팬메이드 프로젝트 (Non-Profit Fan Project)**
+   * **ROGUEPot**은 순수 교육, 연구 및 비영리 팬 커뮤니티 목적으로 제작된 오픈소스 프로젝트입니다.
+   * 본 프로젝트는 일체의 금전적 수익(유료 결제, 광고, 후원 강제 등)을 창출하지 않습니다.
+
+2. **지식재산권 귀속 및 커스텀 에셋 (Intellectual Property & Custom Assets)**
+   * 포켓몬(Pokémon) 관련 명칭, 캐릭터, 공식 스프라이트, 사운드 등의 모든 상표권 및 저작권은 **Nintendo**, **Creatures Inc.**, **GAME FREAK Inc.**에 귀속됩니다.
+   * 커스텀 이로치 및 도트 그래픽은 [PMD SpriteCollab](https://sprites.pmdcollab.org/) (CC BY-NC 4.0), PokéRogue 커뮤니티 및 기여 아티스트들의 저작물이며, 비영리 목적으로 인용됩니다.
+   * 본 프로젝트는 Nintendo, Creatures, 또는 GAME FREAK과 공식적인 제휴, 후원, 승인 관계가 없는 비공식 2차 창작물이며, 원저작권자의 요청 시 즉각 중단 또는 삭제될 수 있습니다.
+
+3. **오픈소스 코드베이스 및 자가 호스팅 면책 (Open Source & Self-Hosting Liability)**
+   * 본 리포지토리는 개발자 개인의 오픈소스 연구 및 코드 공유 목적으로만 관리되며, 제작자가 공식 봇 서비스를 직접 운영·제공하지 않습니다.
+   * 본 코드를 직접 호스팅(Self-Host)하여 운영하는 사용자가 해당 인스턴스의 데이터 관리(SQLite), 서비스 안정성, 디스코드 개발자 정책 준수에 대한 **모든 법적·운영적 책임을 전적으로 부담**합니다.
+
+> **English Summary**: ROGUEPot is an open-source, non-commercial fan-made project developed for educational purposes. Pokémon trademarks and copyrights belong to Nintendo, Creatures Inc., and GAME FREAK Inc. Custom sprites are credited to the community (PMD SpriteCollab CC BY-NC 4.0, PokéRogue, Showdown). The developer does not operate an official public bot service; self-hosters assume all liability for their own instances. Please refer to **[TERMS.md](TERMS.md)** and **[PRIVACY.md](PRIVACY.md)** for detailed policies.
+
+

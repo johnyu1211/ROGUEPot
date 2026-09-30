@@ -38,8 +38,21 @@ export function checkMoveHit(ctx: AccuracyCheckContext): { isHit: boolean; reaso
     target.ability?.toLowerCase() === "no-guard" ||
     target.passiveAbility?.toLowerCase() === "no-guard";
 
-  if (isNeverMissMove || isPoisonToxic || hasNoGuard) {
-    return { isHit: true, reason: "never_miss" };
+  // 3-1. Stomp on Minimized target guarantees hit
+  const isStompOnMinimized = (moveKey === "stomp" || moveKey === "23" || moveKey === "짓밟기") && Boolean(target.hasMinimized);
+
+  // 3-2. Mind Reader / Lock-On guarantees hit on targeted Pokémon
+  const targetId = (target as any).id || target.speciesId || "target";
+  const hasMindReaderHit = Boolean(
+    actor.mindReaderTargetId &&
+    (actor.mindReaderTargetId === targetId || actor.mindReaderTargetId === "target")
+  );
+
+  if (isNeverMissMove || isPoisonToxic || hasNoGuard || isStompOnMinimized || hasMindReaderHit) {
+    return {
+      isHit: true,
+      reason: isStompOnMinimized ? "minimize_stomp" : (hasMindReaderHit ? "mind_reader" : "never_miss"),
+    };
   }
 
   // 4. Weather-based accuracy overrides

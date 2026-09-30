@@ -86,6 +86,19 @@ import {
   drawDoubleKickEffect,
 } from "./gen1/move021_024.js";
 
+import { drawFurySwipesEffect, drawBonemerangEffect, drawRestEffect, drawRestBehindEffect } from "./gen1/move153_156.js";
+import { drawRockSlideEffect } from "./gen1/move157_160.js";
+import { drawStruggleEffect, drawSketchEffect, drawTripleKickEffect, drawThiefEffect } from "./gen1/move165_168.js";
+import { drawSpiderWebEffect, drawMindReaderEffect, drawNightmareEffect, drawNightmareBehindEffect } from "./gen1/move169_172.js";
+import {
+  drawSnoreEffect,
+  drawCurseNormalEffect,
+  drawCurseNormalBehindEffect,
+  drawCurseGhostEffect,
+  drawCurseGhostBehindEffect,
+} from "./gen1/move173_176.js";
+import { drawAeroblastEffect, drawAeroblastBehindEffect } from "./gen1/move177_180.js";
+
 import { getMoveKey, MOVES_DATA } from "../../data/movesKo.js";
 
 // Re-export everything for modules and backward compatibility
@@ -145,7 +158,17 @@ export * from "./gen1/move121_124.js";
 export * from "./gen1/move125_128.js";
 export * from "./gen1/move129_132.js";
 export * from "./gen1/move133_136.js";
-
+export * from "./gen1/move137_140.js";
+export * from "./gen1/move141_144.js";
+export * from "./gen1/move145_148.js";
+export * from "./gen1/move149_152.js";
+export * from "./gen1/move153_156.js";
+export * from "./gen1/move157_160.js";
+export * from "./gen1/move161_164.js";
+export * from "./gen1/move165_168.js";
+export * from "./gen1/move169_172.js";
+export * from "./gen1/move173_176.js";
+export * from "./gen1/move177_180.js";
 
 /**
  * Central Dispatcher for rendering Pokémon move visual effects onto the battle canvas
@@ -172,7 +195,7 @@ export function renderMoveEffect(
 
   const moveData = MOVES_DATA[moveKey];
   const isStatus = moveData?.category === "status" || (info as any).category === "status";
-  if (isStatus && moveKey !== "swords-dance" && moveKey !== "swordsdance" && moveKey !== "whirlwind") {
+  if (isStatus && moveKey !== "swords-dance" && moveKey !== "swordsdance" && moveKey !== "whirlwind" && moveKey !== "spider-web" && moveKey !== "spiderweb" && moveKey !== "mind-reader" && moveKey !== "mindreader") {
     ctx.restore();
     return;
   }
@@ -241,8 +264,48 @@ export function renderMoveEffect(
     drawWaterEffect(ctx, startPos, targetPos, info.isSpecial);
   } else if (moveKey === "ice-beam" || moveKey === "blizzard" || type === "ice") {
     drawIceEffect(ctx, startPos, targetPos, info.isSpecial);
-  } else if (moveKey === "slash" || moveKey === "fury-swipes" || moveKey === "night-slash" || moveKey === "dragon-claw" || moveKey === "shadow-claw") {
+  } else if (moveKey === "fury-swipes" || moveKey === "furyswipes") {
+    drawFurySwipesEffect(ctx, targetPos, info.step ?? 1);
+  } else if (moveKey === "bonemerang" || moveKey === "bone-merang") {
+    drawBonemerangEffect(ctx, startPos, targetPos, info.step ?? 1);
+  } else if (moveKey === "rest") {
+    drawRestEffect(ctx, startPos, targetPos, info.step ?? 1);
+  } else if (moveKey === "rock-slide" || moveKey === "rockslide") {
+    drawRockSlideEffect(ctx, startPos, targetPos, info.step ?? 1);
+  } else if (moveKey === "slash" || moveKey === "night-slash" || moveKey === "dragon-claw" || moveKey === "shadow-claw") {
     drawSlashEffect(ctx, targetPos, type);
+  } else if (moveKey === "struggle") {
+    drawStruggleEffect(ctx, targetPos, info.step ?? 3);
+  } else if (moveKey === "sketch") {
+    drawSketchEffect(ctx, targetPos, info.step ?? 2);
+  } else if (moveKey === "triple-kick" || moveKey === "triplekick") {
+    drawTripleKickEffect(ctx, targetPos, info.step ?? 2);
+  } else if (moveKey === "thief") {
+    drawThiefEffect(ctx, targetPos, info.step ?? 3);
+  } else if (moveKey === "spider-web" || moveKey === "spiderweb") {
+    drawSpiderWebEffect(ctx, targetPos, info.step ?? 3);
+  } else if (moveKey === "mind-reader" || moveKey === "mindreader") {
+    drawMindReaderEffect(ctx, targetPos, info.step ?? 4);
+  } else if (moveKey === "nightmare") {
+    if (info.layer === "behind") {
+      drawNightmareBehindEffect(ctx, targetPos, info.step ?? 3);
+    } else {
+      drawNightmareEffect(ctx, targetPos, info.step ?? 3);
+    }
+  } else if (moveKey === "curse-ghost") {
+    if (info.layer === "behind") {
+      drawCurseGhostBehindEffect(ctx, { moveStep: info.step ?? 3, effectProgress: 0.5 } as any, { attackerPos: startPos, targetPos, isPlayer: true } as any);
+    } else {
+      drawCurseGhostEffect(ctx, { moveStep: info.step ?? 3, effectProgress: 0.5 } as any, { attackerPos: startPos, targetPos, isPlayer: true } as any);
+    }
+  } else if (moveKey === "curse" || moveKey === "curse-normal") {
+    if (info.layer === "behind") {
+      drawCurseNormalBehindEffect(ctx, { moveStep: info.step ?? 3, effectProgress: 0.5 } as any, { attackerPos: startPos, targetPos, isPlayer: true } as any);
+    } else {
+      drawCurseNormalEffect(ctx, { moveStep: info.step ?? 3, effectProgress: 0.5 } as any, { attackerPos: startPos, targetPos, isPlayer: true } as any);
+    }
+  } else if (moveKey === "aeroblast") {
+    drawAeroblastEffect(ctx, targetPos, info.step ?? 3);
   } else if (type === "grass") {
     drawGrassEffect(ctx, startPos, targetPos);
   } else if (type === "psychic") {

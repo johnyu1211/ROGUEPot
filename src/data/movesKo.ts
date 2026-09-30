@@ -11061,6 +11061,11 @@ for (const [key, move] of Object.entries(MOVES_DATA)) {
   }
 }
 
+// 구세대 번역명 및 특수 별칭 매핑 (Gen 2 원작 번역 등)
+if (MOVES_DATA["flame-wheel"]) {
+  KO_NAME_TO_MOVE_MAP["화염자동차"] = MOVES_DATA["flame-wheel"];
+}
+
 /**
  * Resolves a MoveData entry by either Korean name or English key
  */

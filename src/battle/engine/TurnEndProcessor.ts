@@ -21,6 +21,30 @@ export function processTurnEndEffects(
     }
   }
 
+  // 1-1. Light Screen countdown
+  if (mon.lightScreenTurns && mon.lightScreenTurns > 0) {
+    mon.lightScreenTurns -= 1;
+    if (mon.lightScreenTurns === 0) {
+      logs.push(isKo ? `${name}의 빛의장막이 걷혔다.` : `${name}'s Light Screen wore off.`);
+    }
+  }
+
+  // 1-2. Reflect countdown
+  if (mon.reflectTurns && mon.reflectTurns > 0) {
+    mon.reflectTurns -= 1;
+    if (mon.reflectTurns === 0) {
+      logs.push(isKo ? `${name}의 리플렉터가 걷혔다.` : `${name}'s Reflect wore off.`);
+    }
+  }
+
+  // 1-3. Mind Reader countdown
+  if (mon.mindReaderTurnsLeft && mon.mindReaderTurnsLeft > 0) {
+    mon.mindReaderTurnsLeft -= 1;
+    if (mon.mindReaderTurnsLeft === 0) {
+      mon.mindReaderTargetId = null;
+    }
+  }
+
   // 2. Disable countdown
   if (mon.disabledTurns && mon.disabledTurns > 0) {
     mon.disabledTurns -= 1;
@@ -130,6 +154,65 @@ export function processTurnEndEffects(
         damage: drainDmg,
         isHit: true,
       });
+    }
+  }
+
+  // 7-1. Nightmare (악몽) residual damage (1/4 max HP while asleep)
+  if (mon.hasNightmare && mon.hp > 0) {
+    if (mon.status === "slp") {
+      const nightmareDmg = Math.max(1, Math.floor(mon.maxHp / 4));
+      mon.hp = Math.max(0, mon.hp - nightmareDmg);
+      logs.push(
+        isKo
+          ? `${name}(은)는 악몽에 시달리고 있다! (-${nightmareDmg})`
+          : `${name} is locked in a nightmare! (-${nightmareDmg})`
+      );
+    } else {
+      mon.hasNightmare = false;
+    }
+  }
+
+  // 7-2. Curse (저주) residual damage (1/4 max HP)
+  if (mon.isCursed && mon.hp > 0) {
+    const prevHp = mon.hp;
+    const curseDmg = Math.max(1, Math.floor(mon.maxHp / 4));
+    mon.hp = Math.max(0, mon.hp - curseDmg);
+    logs.push(
+      isKo
+        ? `${name}(은)는 저주에 걸려 있다! (-${curseDmg})`
+        : `${name} is afflicted by the curse! (-${curseDmg})`
+    );
+
+    if (battle) {
+      const isPlayerVictim = (mon === battle.playerBattleMon || mon === battle.playerParty[battle.playerActiveIndex]);
+      const playerMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
+
+      battle.lastMoveEffect = {
+        moveKey: "curse-damage",
+        moveName: "Curse",
+        type: "ghost",
+        isSpecial: false,
+        isPlayerAttacking: !isPlayerVictim,
+      };
+
+      if (battle.turnActions && battle.turnActions.length < 3) {
+        battle.turnActions.push({
+          actor: !isPlayerVictim ? "player" : "enemy",
+          moveKey: "curse-damage",
+          moveName: "Curse",
+          type: "ghost",
+          isSpecial: false,
+          log: isKo
+            ? `${name}(은)는 저주에 걸려 있다! (-${curseDmg})`
+            : `${name} is afflicted by the curse! (-${curseDmg})`,
+          enemyHpBefore: !isPlayerVictim ? prevHp : battle.enemy.hp,
+          enemyHpAfter: battle.enemy.hp,
+          playerHpBefore: isPlayerVictim ? prevHp : (playerMon ? playerMon.hp : 0),
+          playerHpAfter: playerMon ? playerMon.hp : 0,
+          damage: curseDmg,
+          isHit: true,
+        });
+      }
     }
   }
 

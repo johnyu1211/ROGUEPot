@@ -60,9 +60,11 @@ export function createSmoothCameraReturnFrames(
       hideEnemy: isEnemyEvading,
       hidePShadow: isPlayerEvading,
       hideEShadow: isEnemyEvading,
-      pAlpha: isPlayerEvading ? 0.0 : (lastFrame.pAlpha ?? 1.0),
-      eAlpha: isEnemyEvading ? 0.0 : (lastFrame.eAlpha ?? 1.0),
+      pAlpha: isPlayerEvading ? 0.0 : 1.0,
+      eAlpha: isEnemyEvading ? 0.0 : 1.0,
+      hidePlatform: false,
       showEffect: fadeEffect,
+      showBehindEffect: fadeEffect,
       moveStep: fadeEffect ? lastFrame.moveStep : undefined,
       effectProgress: effectProg,
       fadeEffectOnCameraReturn: fadeEffect,
@@ -887,6 +889,203 @@ export const beamCameraHandler: CameraHandler = (
 };
 
 /**
+ * 8. Caster To Target Camera Handler (Super Fang / 분노의앞니)
+ * 
+ * Flow:
+ * 1. Zooms onto CASTER (시전자 포켓몬) during initial rage / windup (e.g. shaking, turning red)
+ * 2. Glides smoothly across the battlefield to TARGET (상대방 포커싱) when attacking
+ * 3. Locks onto TARGET for strike impact and burst effects
+ * 4. Smoothly glides out to 1.0x neutral arena
+ */
+export const casterToTargetCameraHandler: CameraHandler = (
+  frames,
+  attackerPos,
+  defenderPos,
+  cfg,
+  isTargetPlayer = false,
+  hasNextTarget = false
+) => {
+  const targetZoom = cfg.zoom || 1.35;
+  if (frames.length === 0) return;
+
+  const postCameraFrames: BattleFrame[] = [];
+  const actionFrames: BattleFrame[] = [];
+  for (const f of frames) {
+    if (f.afterCameraReturn) {
+      postCameraFrames.push(f);
+    } else {
+      actionFrames.push(f);
+    }
+  }
+
+  frames.length = 0;
+  frames.push(...actionFrames);
+
+  const base = frames[0] || postCameraFrames[0];
+  const neutralX = 280;
+  const neutralY = 190;
+
+  // 1. Attacker Focal Point (시전자 포커싱)
+  const isAttackerPlayer = !isTargetPlayer;
+  const attackerRatio = isAttackerPlayer ? 1.0 : 0.52;
+  const attackerFocal: CameraFocalPoint = {
+    x: Math.round(neutralX + (attackerPos.x - neutralX) * attackerRatio),
+    y: Math.round(neutralY + (attackerPos.y - neutralY) * attackerRatio),
+  };
+
+  // 2. Defender Focal Point (상대방 피격 포커싱)
+  const defenderRatio = isTargetPlayer ? 1.0 : 0.52;
+  const defenderFocal: CameraFocalPoint = {
+    x: Math.round(neutralX + (defenderPos.x - neutralX) * defenderRatio),
+    y: Math.round(neutralY + (defenderPos.y - neutralY) * defenderRatio),
+  };
+
+  const delayStep = cfg.delayUntilStep ?? 2;
+
+  // Transition point from Caster -> Defender: find first frame of target step
+  const stepIdx = frames.findIndex(
+    (f) => !f.isBlur && f.delay < 10000 && !f.isHighSkyCutscene && (f.moveStep ?? 1) >= delayStep
+  );
+
+  if (stepIdx > 0) {
+    const prev = frames[stepIdx - 1];
+    const next = frames[stepIdx];
+    const shouldHidePlayer = Boolean(next?.hidePlayer || prev.hidePlayer);
+    const shouldHideEnemy = Boolean(next?.hideEnemy || prev.hideEnemy);
+
+    // 2 smooth transition frames across the battlefield
+    const g1: BattleFrame = {
+      ...prev,
+      delay: 45,
+      showEffect: prev.showEffect ?? false,
+      hitFlash: false,
+      hidePlayer: shouldHidePlayer,
+      hideEnemy: shouldHideEnemy,
+      pOffset: shouldHidePlayer ? { x: 0, y: 0 } : prev.pOffset,
+      eOffset: shouldHideEnemy ? { x: 0, y: 0 } : prev.eOffset,
+      cameraZoom: targetZoom,
+      cameraFocal: {
+        x: Math.round(attackerFocal.x + (defenderFocal.x - attackerFocal.x) * 0.40),
+        y: Math.round(attackerFocal.y + (defenderFocal.y - attackerFocal.y) * 0.40),
+      },
+      _gen5Camera: true,
+      phaseId: "camera-target-glide-1",
+      phaseName: "상대방 포커싱 (이동)",
+      moveStep: prev.moveStep ?? 1,
+      effectProgress: prev.effectProgress ?? 1.0,
+    };
+    const g2: BattleFrame = {
+      ...prev,
+      delay: 45,
+      showEffect: prev.showEffect ?? false,
+      hitFlash: false,
+      hidePlayer: shouldHidePlayer,
+      hideEnemy: shouldHideEnemy,
+      pOffset: shouldHidePlayer ? { x: 0, y: 0 } : prev.pOffset,
+      eOffset: shouldHideEnemy ? { x: 0, y: 0 } : prev.eOffset,
+      cameraZoom: targetZoom,
+      cameraFocal: {
+        x: Math.round(attackerFocal.x + (defenderFocal.x - attackerFocal.x) * 0.85),
+        y: Math.round(attackerFocal.y + (defenderFocal.y - attackerFocal.y) * 0.85),
+      },
+      _gen5Camera: true,
+      phaseId: "camera-target-glide-2",
+      phaseName: "상대방 포커싱 (안착)",
+      moveStep: prev.moveStep ?? 1,
+      effectProgress: prev.effectProgress ?? 1.0,
+    };
+    frames.splice(stepIdx, 0, g1, g2);
+  }
+
+  // Tag frames
+  let activeStep = 1;
+  for (let i = 0; i < frames.length; i++) {
+    const f = frames[i];
+    if (f.isBlur || f.delay >= 10000 || f.isHighSkyCutscene) continue;
+    if (f.moveStep !== undefined) activeStep = f.moveStep;
+
+    f._gen5Camera = true;
+    f.cameraZoom = targetZoom;
+
+    if (f.cameraFocal && (f.phaseId === "camera-target-glide-1" || f.phaseId === "camera-target-glide-2")) {
+      continue;
+    }
+
+    if (activeStep < delayStep) {
+      // Caster phase
+      f.cameraFocal = attackerFocal;
+    } else {
+      // Target phase
+      f.cameraFocal = defenderFocal;
+    }
+  }
+
+  // Glide-in to Attacker at start
+  const inlineGlideCount = cfg.inlineGlideInFrames ?? 0;
+  if (inlineGlideCount > 0) {
+    for (let i = 0; i < Math.min(inlineGlideCount, frames.length); i++) {
+      const u = (i + 1) / inlineGlideCount;
+      const factor = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+      frames[i].cameraZoom = Number((1.0 + (targetZoom - 1.0) * factor).toFixed(4));
+      frames[i].cameraFocal = {
+        x: Math.round(neutralX + (attackerFocal.x - neutralX) * factor),
+        y: Math.round(neutralY + (attackerFocal.y - neutralY) * factor),
+      };
+    }
+  } else {
+    // 2-frame glide-in to Attacker
+    const start1: BattleFrame = {
+      ...base,
+      delay: 45,
+      pOffset: { x: 0, y: 0 },
+      eOffset: { x: 0, y: 0 },
+      showEffect: false,
+      hitFlash: false,
+      cameraZoom: 1.0 + (targetZoom - 1.0) * 0.45,
+      cameraFocal: {
+        x: Math.round(neutralX + (attackerFocal.x - neutralX) * 0.45),
+        y: Math.round(neutralY + (attackerFocal.y - neutralY) * 0.45),
+      },
+      _gen5Camera: true,
+      phaseId: "camera-caster-zoom-1",
+      phaseName: "시전자 포커싱 (진입)",
+    };
+    const start2: BattleFrame = {
+      ...base,
+      delay: 45,
+      pOffset: { x: 0, y: 0 },
+      eOffset: { x: 0, y: 0 },
+      showEffect: false,
+      hitFlash: false,
+      cameraZoom: targetZoom,
+      cameraFocal: attackerFocal,
+      _gen5Camera: true,
+      phaseId: "camera-caster-zoom-2",
+      phaseName: "시전자 포커싱 (안착)",
+    };
+    frames.unshift(start1, start2);
+  }
+
+  // Camera Return (Glide-Out) from DEFENDER to neutral arena
+  const lastFrame = frames[frames.length - 1];
+  if (hasNextTarget) {
+    frames.push(...createSmoothCameraReturnFrames(lastFrame, targetZoom, defenderFocal, neutralX, neutralY, 3, 40));
+  } else {
+    frames.push(...createSmoothCameraReturnFrames(lastFrame, targetZoom, defenderFocal, neutralX, neutralY, 7, 50));
+  }
+
+  // Post-Camera Frames
+  if (postCameraFrames.length > 0) {
+    for (const pf of postCameraFrames) {
+      pf.cameraZoom = 1.0;
+      pf.cameraFocal = null;
+      pf._gen5Camera = false;
+    }
+    frames.push(...postCameraFrames);
+  }
+};
+
+/**
  * 5. Sky Pan Down Camera Handler (Thunder)
  * 
  * Flow:
@@ -1009,6 +1208,7 @@ export const CAMERA_HANDLERS: Record<CameraType, CameraHandler> = {
   sky_pan_down: skyPanDownCameraHandler,
   rush: rushCameraHandler,
   beam: beamCameraHandler,
+  caster_to_target: casterToTargetCameraHandler,
   none: wideCameraHandler,
   custom: customCameraHandler,
 };
@@ -1065,6 +1265,22 @@ export function applyMoveCameraToFrames(
     }
     if (copiedAnim && copiedAnim.key !== moveAnim.key) {
       applyMoveCameraToFrames(frames, copiedAnim, isPlayerAttacking, em, pm, hasNextTarget);
+      return;
+    }
+  }
+
+  // 3. 저주 (Curse) - 고스트 버전(caster_to_target)과 일반 버전(self), 데미지 버전(target)의 카메라 분기
+  if (moveAnim?.key === "curse") {
+    const isDamageCurse = frames.some((f) => f.phaseId?.startsWith("curse-damage"));
+    const isGhostCurse = frames.some((f) => f.phaseId?.startsWith("curse-ghost"));
+    let activeAnim: BattleMoveAnimation | undefined;
+    if (_externalGetMoveAnimation) {
+      activeAnim = _externalGetMoveAnimation(isDamageCurse ? "curse-damage" : (isGhostCurse ? "curse-ghost" : "curse-normal"));
+    } else if ((globalThis as any).__getMoveAnimation) {
+      activeAnim = (globalThis as any).__getMoveAnimation(isDamageCurse ? "curse-damage" : (isGhostCurse ? "curse-ghost" : "curse-normal"));
+    }
+    if (activeAnim && activeAnim !== moveAnim) {
+      applyMoveCameraToFrames(frames, activeAnim, isPlayerAttacking, em, pm, hasNextTarget);
       return;
     }
   }

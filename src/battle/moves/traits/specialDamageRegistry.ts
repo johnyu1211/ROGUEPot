@@ -247,6 +247,43 @@ export function checkSpecialDamage(ctx: SpecialDamageContext): SpecialDamageResu
     }
   }
 
+  // 10. Psywave (사이코웨이브) - Variable damage based on user level: level * (50 ~ 150) / 100, min 1 HP
+  if (moveKey === "psywave") {
+    const typeMod = getTypeEffectiveness(move.type, target.types);
+    if (typeMod === 0) {
+      return {
+        handled: true,
+        damage: 0,
+        log: isKo
+          ? `${actorName}의 ${moveName}! 하지만 ${targetName}에게는 효과가 없는 것 같다...`
+          : `${actorName}'s ${moveName}! It doesn't affect ${targetName}...`,
+      };
+    }
+    const randMultiplier = (Math.floor(Math.random() * 101) + 50) / 100; // 0.5 ~ 1.5
+    const damage = Math.max(1, Math.floor(actor.level * randMultiplier));
+    return {
+      handled: true,
+      damage,
+      log: isKo
+        ? `${actorName}의 ${moveName}! ${targetName}에게 ${damage}의 데미지!`
+        : `${actorName}'s ${moveName}! Dealt ${damage} damage!`,
+    };
+  }
+
+  // 11. Snore (코골기) - Fails if user is not asleep
+  if (moveKey === "snore" || moveKey === "173" || move.nameKo === "코골기") {
+    const isActorAsleep = actor.status === "slp";
+    if (!isActorAsleep) {
+      return {
+        handled: true,
+        damage: 0,
+        log: isKo
+          ? `${actorName}의 ${moveName}!\n하지만 잠들어 있지 않아 실패했다!`
+          : `${actorName}'s ${moveName}!\nBut it failed because ${actorName} is not asleep!`,
+      };
+    }
+  }
+
   // Standard damage formula should proceed
   return { handled: false };
 }

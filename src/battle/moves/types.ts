@@ -11,6 +11,7 @@ export type CameraType =
   | "sky_pan_down" // [Special] High-sky focus then pans down vertically to target (Thunder)
   | "rush"     // Focuses on caster during windup, then whips to target on impact
   | "beam"     // Focuses on caster at launch, smoothly glides to target along beam trajectory
+  | "caster_to_target" // Focuses on caster first, then glides across battlefield to target on attack step
   | "none"     // Wide neutral arena
   | "custom";  // Custom move-managed camera (frames retain their own cameraZoom and cameraFocal)
 
@@ -46,6 +47,11 @@ export interface BattleFrame {
   eScale?: { x: number; y: number };
   pRot?: number;
   eRot?: number;
+  rotateFromCenter?: boolean;
+  pRotCenter?: boolean;
+  eRotCenter?: boolean;
+  pRotPivotY?: number;
+  eRotPivotY?: number;
   pAlpha?: number;
   eAlpha?: number;
   targetAlpha?: number;
@@ -81,6 +87,7 @@ export interface BattleFrame {
   dialogueLines?: string[];
   isBlur?: boolean;
   cameraBlur?: number | boolean;
+  screenFilter?: string; // e.g. "grayscale(100%) contrast(300%)" or "invert(100%) grayscale(100%)" for anime impact frames
   isHighSkyCutscene?: boolean;
   afterCameraReturn?: boolean;
   cameraTrackAttacker?: boolean;
@@ -97,6 +104,14 @@ export interface BattleFrame {
   stormProg?: number;
   stormIntensity?: number;
   _gen5Camera?: boolean;
+  radiusScale?: number;
+  absorptionGlow?: number;
+  skyFilterAlpha?: number;
+  birdAlpha?: number;
+  birdScale?: number;
+  chainExplosionStep?: number;
+  chainExplosionAlpha?: number;
+  showSlashCut?: boolean;
   drawEnemyOnTop?: boolean;
   drawPlayerAboveHud?: boolean;
   casterYellowAura?: boolean;
@@ -112,6 +127,10 @@ export interface BattleFrame {
   targetRedTint?: boolean;
   pRedTint?: boolean;
   eRedTint?: boolean;
+  casterRedTint?: boolean;
+  pRedLevel?: number;
+  eRedLevel?: number;
+  casterRedLevel?: number;
   pWhiteTint?: boolean;
   eWhiteTint?: boolean;
   pWhite?: boolean;
@@ -123,9 +142,22 @@ export interface BattleFrame {
   eBlueTint?: boolean;
   pGreyTint?: boolean;
   eGreyTint?: boolean;
+  useTransformedSprite?: boolean;
+  transformedWho?: "player" | "enemy";
+  useSubstituteSprite?: boolean;
+  substituteWho?: "player" | "enemy";
+  usePlayerSubstitute?: boolean;
+  useEnemySubstitute?: boolean;
+  whiteFilterAlpha?: number;
+  pWhiteAlpha?: number;
+  eWhiteAlpha?: number;
+  bottomSpread?: number;
+  pBottomSpread?: number;
+  eBottomSpread?: number;
   phaseId?: string;
   phaseName?: string;
   statProgress?: any;
+  statDirection?: "up" | "down";
   moveEffect?: any;
   [key: string]: any;
 }
