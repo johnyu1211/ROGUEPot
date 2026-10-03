@@ -1,6 +1,6 @@
-import { battleService } from "../src/services/battleService.js";
-import { saveService } from "../src/services/saveService.js";
-import { renderBattleMessageData, buildBattleComponents } from "../src/events/interactionCreate.js";
+﻿import { battleService } from "../../src/services/battleService.js";
+import { saveService } from "../../src/services/saveService.js";
+import { renderBattleMessageData, buildBattleComponents } from "../../src/events/interactionCreate.js";
 
 async function testFullBattleFlow() {
   const userId = "test_user_flow";
@@ -8,31 +8,26 @@ async function testFullBattleFlow() {
 
   // Setup user profile and slot
   saveService.getProfile(userId);
-  saveService.startNewRun(userId, slotId, "charmander");
-  saveService.updateSlot(userId, slotId, {
-    wave: 1,
-    biome: "Town",
-    party: [
-      {
-        speciesId: "charmander",
-        name: "파이리",
-        level: 5,
-        hp: 1, // Will faint on next hit
-        maxHp: 20,
-        moves: ["scratch"],
-        movePps: [35],
-      },
-      {
-        speciesId: "squirtle",
-        name: "꼬부기",
-        level: 5,
-        hp: 22,
-        maxHp: 22,
-        moves: ["tackle"],
-        movePps: [35],
-      },
-    ],
-  });
+  saveService.createNewRunWithParty(userId, slotId, [
+    {
+      speciesId: "charmander",
+      name: "파이리",
+      level: 5,
+      hp: 1, // Will faint on next hit
+      maxHp: 20,
+      moves: ["scratch"],
+      movePps: [35],
+    },
+    {
+      speciesId: "squirtle",
+      name: "꼬부기",
+      level: 5,
+      hp: 22,
+      maxHp: 22,
+      moves: ["tackle"],
+      movePps: [35],
+    },
+  ]);
 
   const battle = battleService.getOrCreateBattle(userId, slotId);
   battle.enemy.hp = 50;

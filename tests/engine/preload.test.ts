@@ -1,6 +1,6 @@
-import { battlePreloadService } from "../src/services/battlePreloadService.js";
-import { battleService } from "../src/services/battleService.js";
-import { BattleState, createDefaultStages } from "../src/battle/engine/types.js";
+﻿import { battlePreloadService } from "../../src/services/battlePreloadService.js";
+import { battleService } from "../../src/services/battleService.js";
+import { BattleState, createDefaultStages } from "../../src/battle/engine/types.js";
 
 async function runTests() {
   console.log("=== 🧪 STARTING PRELOAD SERVICE VERIFICATION ===");

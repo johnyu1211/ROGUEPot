@@ -13,7 +13,14 @@ const testUserId = `test_cli_${Date.now()}`;
 const slotId = 1;
 const speciesArg = process.argv.find(a => a.startsWith('--species='));
 const testSpecies = speciesArg ? speciesArg.split('=')[1] : 'bulbasaur';
-saveService.startNewRun(testUserId, slotId, testSpecies);
+saveService.createNewRunWithParty(testUserId, slotId, [{
+  speciesId: testSpecies,
+  name: testSpecies,
+  level: 50,
+  hp: 500,
+  maxHp: 500,
+  moves: [moveKey],
+}]);
 const battle = battleService.getOrCreateBattle(testUserId, slotId);
 const isEnemyActor = process.argv.includes('--enemy');
 const enemySpeciesArg = process.argv.find(a => a.startsWith('--enemy-species='));

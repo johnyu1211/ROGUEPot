@@ -1,8 +1,8 @@
-import { BattleEngine } from "../src/battle/engine/BattleEngine.js";
-import { BattleState } from "../src/battle/engine/types.js";
-import { createPlayerBattleMon, spawnWildPokemon } from "../src/battle/entities/pokemonFactory.js";
-import { renderBattleMoveGif } from "../src/utils/battleGifRenderer.js";
-import { PartyPokemon } from "../src/services/saveService.js";
+﻿import { BattleEngine } from "../../src/battle/engine/BattleEngine.js";
+import { BattleState } from "../../src/battle/engine/types.js";
+import { createPlayerBattleMon, spawnWildPokemon } from "../../src/battle/entities/pokemonFactory.js";
+import { renderBattleMoveGif } from "../../src/utils/battleGifRenderer.js";
+import { PartyPokemon } from "../../src/services/saveService.js";
 
 async function testPlayerFaint() {
   const playerParty: PartyPokemon[] = [
