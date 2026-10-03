@@ -731,4 +731,327 @@ export function drawFlailEffect(
   drawTackleEffect(targetCtx, curHitPos, casterPos, tackleStep, hitProgress, isP);
 }
 
+// ============================================================================
+// 💾 176: 텍스처2 (Conversion 2)
+// ============================================================================
+
+interface Conversion2Square {
+  relX: number;        // 포켓몬 중심 대비 상대 X
+  relY: number;        // 포켓몬 중심 대비 상대 Y
+  size: number;        // 사각형 크기 (서로 다른 크기)
+  riseSpeed: number;   // 1단계 상승 가속도
+  flightDelay: number; // 4단계 비행 시작 지연 (stagger)
+  arcOffset: number;   // 4단계 비행 포물선 궤적 높이 오프셋
+  tintType: "yellow" | "blue" | "red"; // 미세한 틴트 종류
+}
+
+const CONVERSION2_SQUARES: readonly Conversion2Square[] = [
+  // 포켓몬 몸체 주위 상·하·좌·우 골고루 자연 분산 (텍스처1과 동일한 고품질 배치)
+  { relX:  28, relY: -32, size: 20, riseSpeed: 1.10, flightDelay: 0.00, arcOffset: -18, tintType: "yellow" }, // 우상단
+  { relX: -24, relY: -26, size: 24, riseSpeed: 1.05, flightDelay: 0.05, arcOffset: -26, tintType: "blue" },   // 좌상단
+  { relX:  -4, relY:  -8, size: 26, riseSpeed: 1.00, flightDelay: 0.08, arcOffset: -10, tintType: "red" },    // 중앙
+  { relX:  32, relY:  10, size: 16, riseSpeed: 1.15, flightDelay: 0.02, arcOffset:  16, tintType: "yellow" }, // 우하단
+  { relX:   8, relY:  26, size: 14, riseSpeed: 1.20, flightDelay: 0.10, arcOffset:  22, tintType: "blue" },   // 하단 중앙
+  { relX: -28, relY:  22, size: 18, riseSpeed: 0.95, flightDelay: 0.06, arcOffset:  14, tintType: "red" },    // 좌하단
+];
+
+/**
+ * 미세한 틴트 색상 계산 (텍스처1 규격: 여전히 흰색에 가깝지만 살짝 노랑/파랑/빨강)
+ */
+function getSubtleTintColor(tintType: "yellow" | "blue" | "red", t: number, alpha: number): string {
+  const clampedT = Math.max(0, Math.min(1, t));
+
+  let r = 255, g = 255, b = 255;
+  if (tintType === "yellow") {
+    // 순백 #FFFFFF -> 미세 노랑 #FFFED6
+    r = 255;
+    g = Math.round(255 - 2 * clampedT);
+    b = Math.round(255 - 42 * clampedT);
+  } else if (tintType === "blue") {
+    // 순백 #FFFFFF -> 미세 연하늘 #E2F2FF
+    r = Math.round(255 - 32 * clampedT);
+    g = Math.round(255 - 16 * clampedT);
+    b = 255;
+  } else if (tintType === "red") {
+    // 순백 #FFFFFF -> 미세 연분홍 #FFE8E8
+    r = 255;
+    g = Math.round(255 - 26 * clampedT);
+    b = Math.round(255 - 26 * clampedT);
+  }
+
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+/**
+ * 176: 텍스처2 (Conversion 2) 메인 이펙트 렌더러
+ * 
+ * [유저 연출 구성]:
+ * 1. 대상포켓몬에게서 사각형들이 나타남 (텍스처1과 같이 아래에서 위로 솟아오름)
+ * 2. 줌아웃해서 둘 다 보이게 (전장 전체 조망, 대상 주위 사각형 부유)
+ * 3. 시전포켓몬에게로 줌인 (시전자 포커싱 안착)
+ * 4. 대상포켓몬에게서 사각형들이 시전포켓몬에게로 이동함 (포물선 궤적 & 잔상)
+ * 5. 작아지면서 중앙으로 몰리면서 페이드아웃 (흡수되는듯한 연출)
+ * 6. 안정화 및 잔여 오라 소산
+ */
+export function drawConversion2Effect(
+  targetCtx: any,
+  frame: BattleFrame,
+  drawCtx: EffectDrawContext
+) {
+  if (!frame || frame.showEffect === false) return;
+
+  const ctx = targetCtx;
+  const isP = Boolean(drawCtx.isPlayer ?? (drawCtx as any).isPlayerAttacking ?? true);
+  const attackerPos = drawCtx.attackerPos ?? (isP ? { x: 150, y: 244 } : { x: 346, y: 154 });
+  const targetPos = drawCtx.targetPos ?? (isP ? { x: 346, y: 154 } : { x: 150, y: 244 });
+
+  const moveStep = frame.moveStep ?? 1;
+  const p = frame.effectProgress ?? 0.5;
+
+  const ax = attackerPos.x;
+  const ay = attackerPos.y;
+  const casterCenterY = ay - 32;
+
+  const tx = targetPos.x;
+  const ty = targetPos.y;
+  const targetCenterY = ty - 32;
+  const targetBelowFloorY = ty + 30; // 바닥 아래 지점
+
+  ctx.save();
+
+  // =========================================================================
+  // Step 1: 대상 포켓몬 포커싱 & 대상에게서 사각형 상승 (순백 -> 미세 파스텔 틴트)
+  // =========================================================================
+  if (moveStep === 1) {
+    for (let i = 0; i < CONVERSION2_SQUARES.length; i++) {
+      const sq = CONVERSION2_SQUARES[i];
+      const sqP = Math.min(1.0, Math.max(0, p * sq.riseSpeed));
+      const easeP = 1 - Math.pow(1 - sqP, 2.5); // 부드러운 감속 상승
+
+      const curX = tx + sq.relX;
+      const targetY = targetCenterY + sq.relY;
+      const curY = targetBelowFloorY - easeP * (targetBelowFloorY - targetY);
+
+      const alpha = Math.min(1.0, sqP * 1.8);
+      if (alpha <= 0.01) continue;
+
+      const fillColor = getSubtleTintColor(sq.tintType, sqP, alpha * 0.95);
+      const halfS = sq.size * 0.5;
+      ctx.fillStyle = fillColor;
+      ctx.fillRect(curX - halfS, curY - halfS, sq.size, sq.size);
+    }
+  }
+
+  // =========================================================================
+  // Step 2: 줌아웃해서 둘다 보이게 (전장 전체 조망, 대상 주위 사각형 부유)
+  // =========================================================================
+  else if (moveStep === 2) {
+    for (let i = 0; i < CONVERSION2_SQUARES.length; i++) {
+      const sq = CONVERSION2_SQUARES[i];
+      // 부드러운 미세 상하 호흡 플로팅
+      const floatY = Math.sin(p * Math.PI * 2 + i * 1.1) * 1.8;
+      const curX = tx + sq.relX;
+      const curY = targetCenterY + sq.relY + floatY;
+
+      const fillColor = getSubtleTintColor(sq.tintType, 1.0, 0.95);
+      const halfS = sq.size * 0.5;
+      ctx.fillStyle = fillColor;
+      ctx.fillRect(curX - halfS, curY - halfS, sq.size, sq.size);
+    }
+  }
+
+  // =========================================================================
+  // Step 3: 시전포켓몬에게로 줌인 (시전자 포커싱 안착, 사각형 발사 준비)
+  // =========================================================================
+  else if (moveStep === 3) {
+    for (let i = 0; i < CONVERSION2_SQUARES.length; i++) {
+      const sq = CONVERSION2_SQUARES[i];
+      // 발사 직전 미세 펄스 텐션
+      const pulse = 1.0 + Math.sin(p * Math.PI) * 0.08;
+      const curSize = sq.size * pulse;
+      const halfS = curSize * 0.5;
+
+      const curX = tx + sq.relX;
+      const curY = targetCenterY + sq.relY;
+
+      const fillColor = getSubtleTintColor(sq.tintType, 1.0, 0.95);
+      ctx.fillStyle = fillColor;
+      ctx.fillRect(curX - halfS, curY - halfS, curSize, curSize);
+    }
+  }
+
+  // =========================================================================
+  // Step 4: 대상포켓몬에게서 사각형들이 시전포켓몬에게로 차례대로 이동 (순차 비행)
+  // =========================================================================
+  else if (moveStep === 4) {
+    const flightDuration = 0.42; // 개별 사각형 비행 소요 시간
+    const N = CONVERSION2_SQUARES.length;
+
+    for (let i = 0; i < N; i++) {
+      const sq = CONVERSION2_SQUARES[i];
+      const startX = tx + sq.relX;
+      const startY = targetCenterY + sq.relY;
+      const endX = ax + sq.relX;
+      const endY = casterCenterY + sq.relY;
+
+      // 순차 이륙 시작 시각 (i=0부터 5까지 차례대로 0.00 ~ 0.58 간격 분배)
+      const launchTime = i * ((1.0 - flightDuration) / (N - 1));
+      const arriveTime = launchTime + flightDuration;
+
+      let curX: number;
+      let curY: number;
+
+      if (p <= launchTime) {
+        // [아직 출발 전]: 대상 포켓몬 주위에 대기하며 가볍게 상하 부유
+        const idleFloat = Math.sin(p * Math.PI * 4 + i * 1.2) * 1.5;
+        curX = startX;
+        curY = startY + idleFloat;
+      } else if (p >= arriveTime) {
+        // [이미 도착 완료]: 시전 포켓몬 주위 목표 위치에 안착 대기
+        curX = endX;
+        curY = endY;
+      } else {
+        // [비행 중]: 전장을 가로지르는 차례대로의 포물선 고속 비행
+        const localP = (p - launchTime) / flightDuration;
+
+        // 부드러운 3차 가감속 (Cubic Ease-in-out)
+        const ease = localP < 0.5
+          ? 4 * localP * localP * localP
+          : 1 - Math.pow(-2 * localP + 2, 3) / 2;
+
+        const arc = Math.sin(ease * Math.PI) * sq.arcOffset;
+        curX = startX + (endX - startX) * ease;
+        curY = startY + (endY - startY) * ease + arc;
+
+        // 고속 비행 이동 잔상(Trail)
+        if (localP > 0.05 && localP < 0.95) {
+          const trailEase = Math.max(0, ease - 0.12);
+          const trailArc = Math.sin(trailEase * Math.PI) * sq.arcOffset;
+          const trailX = startX + (endX - startX) * trailEase;
+          const trailY = startY + (endY - startY) * trailEase + trailArc;
+
+          const trailAlpha = 0.40 * Math.sin(localP * Math.PI);
+          const trailColor = getSubtleTintColor(sq.tintType, 1.0, trailAlpha);
+          const trailS = sq.size * 0.85;
+          const trailHalfS = trailS * 0.5;
+
+          ctx.fillStyle = trailColor;
+          ctx.fillRect(trailX - trailHalfS, trailY - trailHalfS, trailS, trailS);
+        }
+      }
+
+      const fillColor = getSubtleTintColor(sq.tintType, 1.0, 0.95);
+      const halfS = sq.size * 0.5;
+      ctx.fillStyle = fillColor;
+      ctx.fillRect(curX - halfS, curY - halfS, sq.size, sq.size);
+    }
+  }
+
+  // =========================================================================
+  // Step 5: 작아지면서 중앙으로 몰리면서 페이드아웃 (차례대로 순차 흡수)
+  // =========================================================================
+  else if (moveStep === 5) {
+    const shrinkDuration = 0.44; // 개별 사각형 수렴/축소 소요 시간
+    const N = CONVERSION2_SQUARES.length;
+
+    for (let i = 0; i < N; i++) {
+      const sq = CONVERSION2_SQUARES[i];
+      const startX = ax + sq.relX;
+      const startY = casterCenterY + sq.relY;
+
+      // 차례대로 순차 수렴 시작 시각 (0.00 ~ 0.56)
+      const shrinkStart = i * ((1.0 - shrinkDuration) / (N - 1));
+      const shrinkEnd = shrinkStart + shrinkDuration;
+
+      let curX = startX;
+      let curY = startY;
+      let curSize = sq.size;
+      let alpha = 0.95;
+
+      if (p <= shrinkStart) {
+        // 아직 대기: 시전자 주변 위치 유지
+        curX = startX;
+        curY = startY;
+        curSize = sq.size;
+        alpha = 0.95;
+      } else if (p >= shrinkEnd) {
+        // 중심 흡수 완료: 소멸
+        continue;
+      } else {
+        // 중심 수렴 및 축소 진행 중
+        const localP = (p - shrinkStart) / shrinkDuration;
+        const ease = Math.pow(localP, 1.6); // 중심으로 빨려들어가는 가속
+
+        curX = startX + (ax - startX) * ease;
+        curY = startY + (casterCenterY - startY) * ease;
+        curSize = Math.max(0, sq.size * (1 - ease));
+        alpha = Math.max(0, (1 - ease * 1.05) * 0.95);
+      }
+
+      if (curSize <= 0.01 || alpha <= 0.01) continue;
+
+      const halfS = curSize * 0.5;
+      const fillColor = getSubtleTintColor(sq.tintType, 1.0, alpha);
+      ctx.fillStyle = fillColor;
+      ctx.fillRect(curX - halfS, curY - halfS, curSize, curSize);
+    }
+
+    // 시전자 중심 데이터 코어 흡수 섬광 & 디지털 입자
+    if (p > 0.08) {
+      const glowP = (p - 0.08) / 0.92;
+      const glowAlpha = Math.sin(glowP * Math.PI);
+
+      if (glowAlpha > 0.01) {
+        ctx.save();
+        // 1. 은은한 디지털 코어 흡수 광배 (원형 그라데이션)
+        const radius = 18 + Math.sin(glowP * Math.PI) * 16;
+        const grad = ctx.createRadialGradient(ax, casterCenterY, 0, ax, casterCenterY, radius);
+        grad.addColorStop(0.0, `rgba(255, 255, 255, ${(glowAlpha * 0.85).toFixed(3)})`);
+        grad.addColorStop(0.35, `rgba(230, 245, 255, ${(glowAlpha * 0.60).toFixed(3)})`);
+        grad.addColorStop(0.70, `rgba(180, 220, 255, ${(glowAlpha * 0.25).toFixed(3)})`);
+        grad.addColorStop(1.0, `rgba(160, 210, 255, 0)`);
+
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(ax, casterCenterY, radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 2. 중심으로 빨려들어가는 미세 디지털 픽셀 비트 4개
+        const bitCount = 4;
+        for (let b = 0; b < bitCount; b++) {
+          const bitAngle = (b / bitCount) * Math.PI * 2 + glowP * 2.8;
+          const bitDist = (1 - glowP) * 22;
+          const bx = ax + Math.cos(bitAngle) * bitDist;
+          const by = casterCenterY + Math.sin(bitAngle) * bitDist;
+          const bitS = Math.max(0.5, 4.5 * (1 - glowP));
+
+          ctx.fillStyle = `rgba(255, 255, 255, ${(glowAlpha * 0.90).toFixed(3)})`;
+          ctx.fillRect(bx - bitS * 0.5, by - bitS * 0.5, bitS, bitS);
+        }
+        ctx.restore();
+      }
+    }
+  }
+
+  // =========================================================================
+  // Step 6: 안정화 및 복귀 (잔여 오라 소산)
+  // =========================================================================
+  else if (moveStep === 6) {
+    const fade = Math.max(0, 1.0 - p * 1.5);
+    if (fade > 0.01) {
+      const radius = 24 * fade;
+      const grad = ctx.createRadialGradient(ax, casterCenterY, 0, ax, casterCenterY, radius);
+      grad.addColorStop(0.0, `rgba(255, 255, 255, ${(fade * 0.45).toFixed(3)})`);
+      grad.addColorStop(0.6, `rgba(200, 235, 255, ${(fade * 0.20).toFixed(3)})`);
+      grad.addColorStop(1.0, `rgba(180, 220, 255, 0)`);
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(ax, casterCenterY, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  ctx.restore();
+}
+
 

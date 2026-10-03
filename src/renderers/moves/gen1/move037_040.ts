@@ -78,9 +78,11 @@ function drawOfficialFoot(
 /**
  * Helper to draw 5th Gen sharp Comic Hit Starburst (Angular polygon contact explosion)
  */
-function drawGen5ComicHitBurst(ctx: any, cx: number, cy: number, radius = 26) {
+export function drawGen5ComicHitBurst(ctx: any, cx: number, cy: number, radius = 26, alpha = 1.0) {
+  if (alpha <= 0.01 || radius <= 1) return;
   ctx.save();
   ctx.translate(cx, cy);
+  ctx.globalAlpha = Math.min(1.0, Math.max(0, alpha));
 
   // Outer Golden-Amber Comic Starburst Polygon (8 sharp points)
   ctx.fillStyle = "#F59E0B";
@@ -127,7 +129,10 @@ function drawGen5ComicHitBurst(ctx: any, cx: number, cy: number, radius = 26) {
 /**
  * Helper to draw sparkling 4-pointed diamond stars
  */
-function drawSparkleStars(ctx: any, cx: number, cy: number, count = 5, dist = 24) {
+export function drawSparkleStars(ctx: any, cx: number, cy: number, count = 5, dist = 24, alpha = 1.0, starSize = 5) {
+  if (alpha <= 0.01) return;
+  ctx.save();
+  ctx.globalAlpha = Math.min(1.0, Math.max(0, alpha));
   for (let i = 0; i < count; i++) {
     const a = (i / count) * Math.PI * 2 + 0.35;
     const sx = cx + Math.cos(a) * dist;
@@ -135,22 +140,23 @@ function drawSparkleStars(ctx: any, cx: number, cy: number, count = 5, dist = 24
 
     ctx.fillStyle = "#FFFFFF";
     ctx.beginPath();
-    ctx.moveTo(sx, sy - 5);
-    ctx.lineTo(sx + 2, sy);
-    ctx.lineTo(sx, sy + 5);
-    ctx.lineTo(sx - 2, sy);
+    ctx.moveTo(sx, sy - starSize);
+    ctx.lineTo(sx + starSize * 0.4, sy);
+    ctx.lineTo(sx, sy + starSize);
+    ctx.lineTo(sx - starSize * 0.4, sy);
     ctx.closePath();
     ctx.fill();
 
     ctx.fillStyle = "#FEF08A";
     ctx.beginPath();
-    ctx.moveTo(sx - 5, sy);
-    ctx.lineTo(sx, sy + 2);
-    ctx.lineTo(sx + 5, sy);
-    ctx.lineTo(sx, sy - 2);
+    ctx.moveTo(sx - starSize, sy);
+    ctx.lineTo(sx, sy + starSize * 0.4);
+    ctx.lineTo(sx + starSize, sy);
+    ctx.lineTo(sx, sy - starSize * 0.4);
     ctx.closePath();
     ctx.fill();
   }
+  ctx.restore();
 }
 
 /**

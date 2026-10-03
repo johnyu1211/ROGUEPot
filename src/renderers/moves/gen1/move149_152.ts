@@ -355,29 +355,17 @@ export interface SplashDropletDef {
  * - 포켓몬 좌우로 넓고 둥글게 뻗어나가는 포물선(Parabolic Arc) 궤적
  */
 export const SPLASH_PARABOLA_STREAMS: SplashDropletDef[] = [
-  // 1. 좌측 와이드 포물선 (낮고 넓게 좌측 바닥으로 휘어지는 아치)
-  { vx: -82, vy: -52, gravity: 135, size: 4.2, colorStyle: "main",  originOffsetX: -10, originOffsetY: 4 },
-  { vx: -68, vy: -62, gravity: 140, size: 4.6, colorStyle: "light", originOffsetX: -14, originOffsetY: 3 },
-  { vx: -92, vy: -42, gravity: 130, size: 3.4, colorStyle: "deep",  originOffsetX: -12, originOffsetY: 5 },
+  // 좌측 2개
+  { vx: -72, vy: -52, gravity: 140, size: 4.0, colorStyle: "main",  originOffsetX: -10, originOffsetY: 4 },
+  { vx: -42, vy: -82, gravity: 155, size: 4.4, colorStyle: "light", originOffsetX: -6,  originOffsetY: 2 },
 
-  // 2. 좌측 하이 포물선 (상공 높이 솟구쳤다가 좌측으로 둥글게 떨어지는 아치)
-  { vx: -48, vy: -88, gravity: 155, size: 4.5, colorStyle: "white", originOffsetX: -6, originOffsetY: 2 },
-  { vx: -32, vy: -98, gravity: 160, size: 4.0, colorStyle: "main",  originOffsetX: -4, originOffsetY: 1 },
-  { vx: -58, vy: -78, gravity: 150, size: 3.6, colorStyle: "light", originOffsetX: -8, originOffsetY: 3 },
+  // 우측 2개
+  { vx:  72, vy: -52, gravity: 140, size: 4.0, colorStyle: "main",  originOffsetX:  10, originOffsetY: 4 },
+  { vx:  42, vy: -82, gravity: 155, size: 4.4, colorStyle: "light", originOffsetX:  6,  originOffsetY: 2 },
 
-  // 3. 우측 와이드 포물선 (낮고 넓게 우측 바닥으로 휘어지는 아치)
-  { vx: 82,  vy: -52, gravity: 135, size: 4.2, colorStyle: "main",  originOffsetX: 10, originOffsetY: 4 },
-  { vx: 68,  vy: -62, gravity: 140, size: 4.6, colorStyle: "light", originOffsetX: 14, originOffsetY: 3 },
-  { vx: 92,  vy: -42, gravity: 130, size: 3.4, colorStyle: "deep",  originOffsetX: 12, originOffsetY: 5 },
-
-  // 4. 우측 하이 포물선 (상공 높이 솟구쳤다가 우측으로 둥글게 떨어지는 아치)
-  { vx: 48,  vy: -88, gravity: 155, size: 4.5, colorStyle: "white", originOffsetX: 6, originOffsetY: 2 },
-  { vx: 32,  vy: -98, gravity: 160, size: 4.0, colorStyle: "main",  originOffsetX: 4, originOffsetY: 1 },
-  { vx: 58,  vy: -78, gravity: 150, size: 3.6, colorStyle: "light", originOffsetX: 8, originOffsetY: 3 },
-
-  // 5. 중앙 하이 포물선 (수직으로 높이 치솟아 좌우로 흩뿌려지는 정수리 아치)
-  { vx: -12, vy: -105, gravity: 165, size: 4.8, colorStyle: "white", originOffsetX: -2, originOffsetY: 0 },
-  { vx: 12,  vy: -102, gravity: 165, size: 4.4, colorStyle: "light", originOffsetX: 2, originOffsetY: 0 },
+  // 중앙 2개
+  { vx: -14, vy: -96, gravity: 165, size: 4.2, colorStyle: "light", originOffsetX: -3,  originOffsetY: 0 },
+  { vx:  14, vy: -92, gravity: 165, size: 4.0, colorStyle: "deep",  originOffsetX:  3,  originOffsetY: 0 },
 ];
 
 /**
@@ -450,6 +438,13 @@ export function drawParabolicArcTrail(
  * - 궤적 방향(angle)에 맞추어 유선형(Teardrop) 물방울 모양으로 뻗음
  * - 코어 하이라이트(순백)를 포함하여 입체감 있고 청량한 물방울 질감
  */
+/**
+ * 단일 물방울 파티클 (Water Droplet) 렌더링
+ * - [유저 요구사항 100% 반영]:
+ *   1. 흰색 물방울 제거 (모두 청량한 하늘색/물빛 단색 적용)
+ *   2. 유선형 대신 깔끔한 타원형(ellipse) 조형
+ *   3. 흰색 하이라이트 일체 제거 (플랫 클린 도트 스타일)
+ */
 export function drawWaterDroplet(
   ctx: any,
   x: number,
@@ -464,95 +459,85 @@ export function drawWaterDroplet(
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(angle);
-  ctx.globalAlpha = Math.min(1.0, Math.max(0, alpha));
+  // 유저 요청: 반투명 적용 (0.55 반투명)
+  ctx.globalAlpha = Math.min(1.0, Math.max(0, alpha * 0.55));
 
-  // 유선형 눈물방울 패스 (진행 방향으로 뾰족하고 뒤쪽은 둥글게 볼록)
+  // 유저 요청: 타원형(ellipse)으로 제작
   ctx.beginPath();
-  const tipX = size * 1.6;
-  const tailX = -size * 0.9;
-  const radiusY = size * 0.95;
+  const rx = size * 1.35;
+  const ry = size * 0.90;
+  ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
 
-  ctx.moveTo(tipX, 0);
-  ctx.bezierCurveTo(size * 0.6, -radiusY * 1.2, tailX * 0.7, -radiusY * 1.1, tailX, 0);
-  ctx.bezierCurveTo(tailX * 0.7, radiusY * 1.1, size * 0.6, radiusY * 1.2, tipX, 0);
-  ctx.closePath();
-
-  // 256색 팔레트 최적화 색상
-  if (colorStyle === "white") {
-    ctx.fillStyle = "#ffffff";
-  } else if (colorStyle === "light") {
-    ctx.fillStyle = "#7dd3fc"; // 맑은 하늘색
-  } else if (colorStyle === "deep") {
+  // 유저 요청: 흰색 물방울 제거 -> 맑은 하늘색 / 시안 / 마린블루만 사용
+  if (colorStyle === "deep") {
     ctx.fillStyle = "#0284c7"; // 깊은 마린블루
+  } else if (colorStyle === "light" || colorStyle === "white") {
+    ctx.fillStyle = "#7dd3fc"; // 맑은 하늘색 (흰색 제거)
   } else {
     ctx.fillStyle = "#38bdf8"; // 비비드 시안블루
   }
   ctx.fill();
 
-  // 물방울 표면 내부의 눈부신 순백 반사 하이라이트
-  if (size >= 2.5 && colorStyle !== "white") {
-    ctx.fillStyle = "#ffffff";
-    ctx.beginPath();
-    ctx.ellipse(size * 0.15, -radiusY * 0.35, size * 0.45, radiusY * 0.30, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
+  // 유저 요청: 하이라이트 완전 제거 (순수 타원형 단색)
 
   ctx.restore();
 }
 
 /**
  * 튀어오르기 물방울 파티클 군집 렌더링
- * - ⚠️ 유저 요구사항: "(링없이 파티클만)" 100% 준수
- * - [포물선 강화]: 물방울들이 뚜렷한 곡선 포물선 호(Parabolic Arc)를 그리며 
- *   바닥에서 상공으로 치솟았다가 양옆으로 둥글게 휘어 떨어지는 분수 연출
- * - 각 줄기마다 포물선 궤적 호(Arc Trail) + 선두 눈물방울 + 뒤따르는 2~3개의 방울들이 일렬로 비산
+ * - [유저 피드백 반영]:
+ *   1. 궤적 선(트레일) 완전 제거 (순수 알갱이만 렌더링)
+ *   2. 알갱이들이 일정한 간격/동시가 아니라 서로 다른 순서와 타이밍(비동기 시차)으로 비산
+ *   3. 사이클(1, 2, 3)마다 알갱이 발사 순서가 완전히 뒤바뀜
  */
 export function drawSplashParticles(
   ctx: any,
   baseX: number,
   baseY: number,
-  progress: number, // 0.0 ~ 1.0 (해당 납작 타이밍의 물방울 진행도)
+  progress: number, // 0.0 ~ 1.0
   cycle: number = 1,
   alpha: number = 1.0
 ) {
   if (progress <= 0 || progress > 1.0 || alpha <= 0.01) return;
 
-  // 사이클별 약간의 각도 및 속도 변위 (1: 기본, 2: 약간 더 넓은 포물선, 3: 약간 더 높은 포물선)
   const cycleSpeedMult = cycle === 2 ? 1.08 : (cycle === 3 ? 1.14 : 1.0);
   const cycleGravityShift = cycle === 3 ? 1.06 : 1.0;
 
-  // 시간 경과 (t: 0.0 ~ 1.0)
-  const t = progress;
-
-  // 알파 계산: 초반 빠르게 출현(1.0), 0.70 이후 자연스러운 페이드아웃
-  const currentAlpha = t < 0.15
-    ? (t / 0.15)
-    : (t > 0.70 ? Math.max(0, 1.0 - (t - 0.70) / 0.30) : 1.0);
+  // 6개 알갱이별 불규칙한 발사 지연 시간표
+  const STAGGER_MAP: Record<number, number[]> = {
+    1: [0.00, 0.24, 0.10, 0.34, 0.16, 0.04],
+    2: [0.26, 0.00, 0.36, 0.12, 0.04, 0.20],
+    3: [0.12, 0.32, 0.00, 0.22, 0.36, 0.08],
+  };
+  const delays = STAGGER_MAP[cycle] || STAGGER_MAP[1];
 
   ctx.save();
 
   SPLASH_PARABOLA_STREAMS.forEach((tmpl, idx) => {
-    const startX = baseX + tmpl.originOffsetX;
+    const delay = delays[idx % delays.length];
+    if (progress < delay) return; // 아직 출발하지 않은 알갱이
+
+    // 지연 이후의 유효 시간 (0.0 ~ 1.0)
+    const activeDuration = Math.max(0.40, 1.0 - delay);
+    const t = Math.min(1.0, (progress - delay) / activeDuration);
+    if (t <= 0.01) return;
+
+    // 자연스러운 페이드인/아웃
+    const pAlpha = t < 0.12 ? (t / 0.12) : (t > 0.65 ? Math.max(0, 1.0 - (t - 0.65) / 0.35) : 1.0);
+    const finalAlpha = alpha * pAlpha;
+    if (finalAlpha <= 0.01) return;
+
+    // 사이클별 약간의 각도/방향 미세 지터(불규칙성)
+    const jitterX = Math.sin(idx * 3.7 + cycle * 2.1) * 4;
+    const startX = baseX + tmpl.originOffsetX + jitterX;
     const startY = baseY + tmpl.originOffsetY;
     const vx = tmpl.vx * cycleSpeedMult;
     const vy = tmpl.vy * cycleSpeedMult;
     const gravity = tmpl.gravity * cycleGravityShift;
 
-    // 1. 유려한 포물선 아치 곡선 트레일 (물줄기 호)
-    drawParabolicArcTrail(
-      ctx,
-      startX,
-      startY,
-      vx,
-      vy,
-      gravity,
-      t,
-      alpha * currentAlpha
-    );
-
-    // 2. 선두 메인 물방울 (Lead Droplet at t)
+    // 선두 타원형 물방울 알갱이 단독 렌더링 (보조 알갱이 제거로 개수 축소)
     const leadPt = computeParabolaPoint(startX, startY, vx, vy, gravity, t);
-    const sizeScale = t < 0.25 ? (0.75 + 0.25 * (t / 0.25)) : Math.max(0.65, 1.0 - (t - 0.25) * 0.35);
+    const sizeScale = t < 0.22 ? (0.65 + 0.35 * (t / 0.22)) : Math.max(0.55, 1.0 - (t - 0.22) * 0.45);
     const curSize = tmpl.size * sizeScale;
 
     drawWaterDroplet(
@@ -561,37 +546,9 @@ export function drawSplashParticles(
       leadPt.y,
       curSize,
       leadPt.angle,
-      alpha * currentAlpha,
+      finalAlpha,
       tmpl.colorStyle
     );
-
-    // 3. 포물선 궤적을 뒤따르는 보조 물방울 1 (t * 0.65 지점)
-    if (t > 0.12) {
-      const midT = t * 0.65;
-      const midPt = computeParabolaPoint(startX, startY, vx, vy, gravity, midT);
-      drawWaterDroplet(
-        ctx,
-        midPt.x,
-        midPt.y,
-        curSize * 0.65,
-        midPt.angle,
-        alpha * currentAlpha * 0.88,
-        tmpl.colorStyle === "white" ? "light" : tmpl.colorStyle
-      );
-    }
-
-    // 4. 포물선 궤적의 꼬리를 잇는 미세 물방울 비드 (t * 0.32 지점)
-    if (t > 0.22) {
-      const tailT = t * 0.32;
-      const tailPt = computeParabolaPoint(startX, startY, vx, vy, gravity, tailT);
-      ctx.save();
-      ctx.globalAlpha = Math.min(1.0, Math.max(0, alpha * currentAlpha * 0.75));
-      ctx.fillStyle = tmpl.colorStyle === "white" ? "#ffffff" : "#bae6fd";
-      ctx.beginPath();
-      ctx.arc(tailPt.x, tailPt.y, Math.max(0.9, curSize * 0.38), 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    }
   });
 
   ctx.restore();
@@ -611,27 +568,23 @@ export interface SweatDropletDef {
   originOffsetY: number;
 }
 
-/** 땀방울 분사 스트림 정의 (작고 좌우로 흩뿌려지는 땀방울) */
+/** 땀방울 분사 스트림 정의 (5개로 정예화하여 깔끔한 비산) */
 export const SWEAT_DROP_STREAMS: SweatDropletDef[] = [
-  // 좌측 포물선
-  { vx: -55, vy: -38, gravity: 200, size: 2.8, colorStyle: "white", originOffsetX: -8,  originOffsetY: -4  },
-  { vx: -38, vy: -52, gravity: 210, size: 2.4, colorStyle: "light", originOffsetX: -12, originOffsetY: -8  },
-  { vx: -72, vy: -28, gravity: 195, size: 2.2, colorStyle: "deep",  originOffsetX: -6,  originOffsetY: -2  },
-  { vx: -25, vy: -62, gravity: 220, size: 3.0, colorStyle: "main",  originOffsetX: -4,  originOffsetY: -10 },
-  // 우측 포물선
-  { vx:  55, vy: -38, gravity: 200, size: 2.8, colorStyle: "white", originOffsetX:  8,  originOffsetY: -4  },
-  { vx:  38, vy: -52, gravity: 210, size: 2.4, colorStyle: "light", originOffsetX:  12, originOffsetY: -8  },
-  { vx:  72, vy: -28, gravity: 195, size: 2.2, colorStyle: "deep",  originOffsetX:  6,  originOffsetY: -2  },
-  { vx:  25, vy: -62, gravity: 220, size: 3.0, colorStyle: "main",  originOffsetX:  4,  originOffsetY: -10 },
-  // 중앙 위로 솟구치는 작은 방울
-  { vx: -8,  vy: -72, gravity: 230, size: 2.6, colorStyle: "white", originOffsetX: -2,  originOffsetY: -12 },
-  { vx:  8,  vy: -68, gravity: 230, size: 2.2, colorStyle: "light", originOffsetX:  2,  originOffsetY: -12 },
+  // 좌측 2개
+  { vx: -50, vy: -42, gravity: 200, size: 2.8, colorStyle: "light", originOffsetX: -8, originOffsetY: -4 },
+  { vx: -28, vy: -62, gravity: 215, size: 2.5, colorStyle: "main",  originOffsetX: -4, originOffsetY: -8 },
+
+  // 우측 2개
+  { vx:  50, vy: -42, gravity: 200, size: 2.8, colorStyle: "light", originOffsetX:  8, originOffsetY: -4 },
+  { vx:  28, vy: -62, gravity: 215, size: 2.5, colorStyle: "main",  originOffsetX:  4, originOffsetY: -8 },
+
+  // 중앙 1개
+  { vx:   0, vy: -70, gravity: 225, size: 2.7, colorStyle: "light", originOffsetX:  0, originOffsetY: -12 },
 ];
 
 /**
  * 땀방울 파티클 군집 렌더링
- * - 공중 도약 시 몸에서 땀방울이 사방으로 튀는 연출
- * - 물방울보다 작고 중력이 강해 빠르게 낙하
+ * - 땀방울 개수를 줄여 귀엽고 깔끔하게 연출
  */
 export function drawSweatDropParticles(
   ctx: any,
@@ -644,39 +597,40 @@ export function drawSweatDropParticles(
   if (progress <= 0 || progress > 1.0 || alpha <= 0.01) return;
 
   const cycleSpeedMult = cycle === 2 ? 1.06 : (cycle === 3 ? 1.12 : 1.0);
-  const t = progress;
-  const currentAlpha = t < 0.12
-    ? (t / 0.12)
-    : (t > 0.65 ? Math.max(0, 1.0 - (t - 0.65) / 0.35) : 1.0);
+
+  // 5개 땀방울 지연 시간표
+  const SWEAT_STAGGER_MAP: Record<number, number[]> = {
+    1: [0.00, 0.22, 0.08, 0.28, 0.14],
+    2: [0.24, 0.04, 0.28, 0.10, 0.00],
+    3: [0.10, 0.26, 0.00, 0.18, 0.30],
+  };
+  const delays = SWEAT_STAGGER_MAP[cycle] || SWEAT_STAGGER_MAP[1];
 
   ctx.save();
 
-  SWEAT_DROP_STREAMS.forEach((tmpl) => {
-    const startX = baseX + tmpl.originOffsetX;
+  SWEAT_DROP_STREAMS.forEach((tmpl, idx) => {
+    const delay = delays[idx % delays.length];
+    if (progress < delay) return;
+
+    const activeDuration = Math.max(0.40, 1.0 - delay);
+    const t = Math.min(1.0, (progress - delay) / activeDuration);
+    if (t <= 0.01) return;
+
+    const pAlpha = t < 0.10 ? (t / 0.10) : (t > 0.60 ? Math.max(0, 1.0 - (t - 0.60) / 0.40) : 1.0);
+    const finalAlpha = alpha * pAlpha;
+    if (finalAlpha <= 0.01) return;
+
+    const jitterX = Math.sin(idx * 2.9 + cycle * 1.7) * 3;
+    const startX = baseX + tmpl.originOffsetX + jitterX;
     const startY = baseY + tmpl.originOffsetY;
     const vx = tmpl.vx * cycleSpeedMult;
     const vy = tmpl.vy * cycleSpeedMult;
     const gravity = tmpl.gravity;
 
-    // 얇은 궤적 트레일
-    drawParabolicArcTrail(ctx, startX, startY, vx, vy, gravity, t, alpha * currentAlpha * 0.5);
-
-    // 선두 땀방울
+    // 선두 땀방울 알갱이 단독 렌더링 (보조 알갱이 제거)
     const leadPt = computeParabolaPoint(startX, startY, vx, vy, gravity, t);
-    const sizeScale = t < 0.2 ? (0.6 + 0.4 * (t / 0.2)) : Math.max(0.5, 1.0 - (t - 0.2) * 0.6);
-    drawWaterDroplet(ctx, leadPt.x, leadPt.y, tmpl.size * sizeScale, leadPt.angle, alpha * currentAlpha, tmpl.colorStyle);
-
-    // 보조 미세 물방울
-    if (t > 0.15) {
-      const midPt = computeParabolaPoint(startX, startY, vx, vy, gravity, t * 0.5);
-      ctx.save();
-      ctx.globalAlpha = Math.min(1.0, alpha * currentAlpha * 0.60);
-      ctx.fillStyle = tmpl.colorStyle === "white" ? "#e0f2fe" : "#bae6fd";
-      ctx.beginPath();
-      ctx.arc(midPt.x, midPt.y, Math.max(0.8, tmpl.size * sizeScale * 0.42), 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    }
+    const sizeScale = t < 0.20 ? (0.60 + 0.40 * (t / 0.20)) : Math.max(0.45, 1.0 - (t - 0.20) * 0.65);
+    drawWaterDroplet(ctx, leadPt.x, leadPt.y, tmpl.size * sizeScale, leadPt.angle, finalAlpha, tmpl.colorStyle);
   });
 
   ctx.restore();
