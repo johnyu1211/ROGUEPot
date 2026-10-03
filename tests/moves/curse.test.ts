@@ -1,10 +1,10 @@
-import { BattleService } from "../src/services/battleService.js";
-import { BattleEngine } from "../src/battle/engine/BattleEngine.js";
-import { getMoveData } from "../src/data/movesKo.js";
-import { executeSingleAction } from "../src/battle/engine/TurnActionExecutor.js";
-import { processTurnEndEffects } from "../src/battle/engine/TurnEndProcessor.js";
-import { MOVE_REGISTRY } from "../src/battle/moves/moveRegistry.js";
-import { curseMove, curseGhostMove, curseNormalMove, curseDamageMove } from "../src/battle/moves/definitions/174_curse.js";
+﻿import { BattleService } from "../../src/services/battleService.js";
+import { BattleEngine } from "../../src/battle/engine/BattleEngine.js";
+import { getMoveData } from "../../src/data/movesKo.js";
+import { executeSingleAction } from "../../src/battle/engine/TurnActionExecutor.js";
+import { processTurnEndEffects } from "../../src/battle/engine/TurnEndProcessor.js";
+import { MOVE_REGISTRY } from "../../src/battle/moves/moveRegistry.js";
+import { curseMove, curseGhostMove, curseNormalMove, curseDamageMove } from "../../src/battle/moves/definitions/174_curse.js";
 import assert from "node:assert";
 
 console.log("==================================================");

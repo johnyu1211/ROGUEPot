@@ -10,6 +10,9 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "deploy-commands": "tsx scripts/deploy-commands.ts",
+    "test": "tsx tests/runAllTests.ts",
+    "test:engine": "tsx tests/runAllTests.ts --engine",
+    "test:moves": "tsx tests/runAllTests.ts --moves",
     "test:move": "tsx scripts/testBattleMove.ts"
   },
   "keywords": [

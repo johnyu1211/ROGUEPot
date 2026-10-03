@@ -1,8 +1,8 @@
-import { BattleEngine } from "../src/battle/engine/BattleEngine.js";
-import { battleService } from "../src/services/battleService.js";
-import { checkMoveHit } from "../src/battle/mechanics/accuracyEngine.js";
-import { calculateDamage } from "../src/battle/mechanics/damageCalculator.js";
-import { getMoveData } from "../src/data/movesKo.js";
+﻿import { BattleEngine } from "../../src/battle/engine/BattleEngine.js";
+import { battleService } from "../../src/services/battleService.js";
+import { checkMoveHit } from "../../src/battle/mechanics/accuracyEngine.js";
+import { calculateDamage } from "../../src/battle/mechanics/damageCalculator.js";
+import { getMoveData } from "../../src/data/movesKo.js";
 
 console.log("==================================================");
 console.log("🧪 ROGUEPot 배틀 엔진 모듈화 종합 단위 테스트");
@@ -113,9 +113,9 @@ function assert(condition: boolean, testName: string) {
 
 // 6. [전체 턴 실행 검증] BattleEngine.executeTurn
 {
-  const { saveService } = await import("../src/services/saveService.js");
+  const { saveService } = await import("../../src/services/saveService.js");
   const testUserId = `test_engine_${Date.now()}`;
-  saveService.startNewRun(testUserId, 1, "bulbasaur");
+  saveService.createNewRunWithParty(testUserId, 1, [{ speciesId: "bulbasaur", name: "bulbasaur", level: 5, hp: 20, maxHp: 20, moves: ["tackle"] }]);
   const battle = battleService.getOrCreateBattle(testUserId, 1);
   const initialEnemyHp = battle.enemy.hp;
 
@@ -127,9 +127,9 @@ function assert(condition: boolean, testName: string) {
 
 // 7. [고속이동 (Agility) 기술 구현 검증]
 {
-  const { saveService } = await import("../src/services/saveService.js");
+  const { saveService } = await import("../../src/services/saveService.js");
   const testUserId = `test_agility_${Date.now()}`;
-  saveService.startNewRun(testUserId, 1, "pikachu");
+  saveService.createNewRunWithParty(testUserId, 1, [{ speciesId: "pikachu", name: "pikachu", level: 50, hp: 9999, maxHp: 9999, moves: ["agility"] }]);
   const battle = battleService.getOrCreateBattle(testUserId, 1);
   battle.playerParty[0].moves = ["agility"];
   battle.playerBattleMon.moves = ["agility"];
@@ -172,7 +172,7 @@ function assert(condition: boolean, testName: string) {
 
 // 8. [HP회복 (Recover) 기술 구현 검증]
 {
-  const { saveService } = await import("../src/services/saveService.js");
+  const { saveService } = await import("../../src/services/saveService.js");
   const testUserId = `test_recover_${Date.now()}`;
   saveService.createNewRunWithParty(testUserId, 1, [
     {
@@ -214,7 +214,7 @@ function assert(condition: boolean, testName: string) {
 
 // 9. [작아지기(Minimize) 회피율 2랭크 상승 검증]
 {
-  const { saveService } = await import("../src/services/saveService.js");
+  const { saveService } = await import("../../src/services/saveService.js");
   const testUserId = `test_minimize_${Date.now()}`;
   saveService.createNewRunWithParty(testUserId, 1, [
     {
@@ -272,7 +272,7 @@ function assert(condition: boolean, testName: string) {
 
 // 10. [연막(Smokescreen) 상대 명중률 1랭크 하락 검증]
 {
-  const { saveService } = await import("../src/services/saveService.js");
+  const { saveService } = await import("../../src/services/saveService.js");
   const testUserId = `test_smokescreen_${Date.now()}`;
   saveService.createNewRunWithParty(testUserId, 1, [
     {
@@ -332,7 +332,7 @@ function assert(condition: boolean, testName: string) {
 
 // 11. [이상한빛(Confuse Ray) 메커니즘 검증]
 {
-  const { saveService } = await import("../src/services/saveService.js");
+  const { saveService } = await import("../../src/services/saveService.js");
   const testUserId = `test_confuse_ray_${Date.now()}`;
   saveService.createNewRunWithParty(testUserId, 1, [
     {
@@ -365,7 +365,7 @@ function assert(condition: boolean, testName: string) {
   assert(Boolean(hasAlreadyConfusedLog), "이미 혼란 상태인 대상에게 사용 시 중복 적용 방지 및 안내 메시지 출력");
 
   // 혼란 상태에서 행동 시 33% 확률로 자해 데미지 발생 검증 (1,000회 시뮬레이션: 기대치 약 33%)
-  const { validateAction } = await import("../src/battle/mechanics/actionValidator.js");
+  const { validateAction } = await import("../../src/battle/mechanics/actionValidator.js");
   const tackle = getMoveData("tackle")!;
   const testMon = battleService.spawnWildPokemon(1, "Town", "rattata", 20);
 
@@ -386,7 +386,7 @@ function assert(condition: boolean, testName: string) {
 
 // 12. [껍질에숨기(Withdraw) 방어 1랭크 상승 검증]
 {
-  const { saveService } = await import("../src/services/saveService.js");
+  const { saveService } = await import("../../src/services/saveService.js");
   const testUserId = `test_withdraw_${Date.now()}`;
   saveService.createNewRunWithParty(testUserId, 1, [
     {
@@ -430,7 +430,7 @@ function assert(condition: boolean, testName: string) {
 
 // 13. [웅크리기(Defense Curl) 방어 1랭크 상승 및 연계 플래그 검증]
 {
-  const { saveService } = await import("../src/services/saveService.js");
+  const { saveService } = await import("../../src/services/saveService.js");
   const testUserId = `test_defense_curl_${Date.now()}`;
   saveService.createNewRunWithParty(testUserId, 1, [
     {
@@ -475,7 +475,7 @@ function assert(condition: boolean, testName: string) {
 
 // 14. [배리어(Barrier) 방어 2랭크 상승 검증]
 {
-  const { saveService } = await import("../src/services/saveService.js");
+  const { saveService } = await import("../../src/services/saveService.js");
   const testUserId = `test_barrier_${Date.now()}`;
   saveService.createNewRunWithParty(testUserId, 1, [
     {
@@ -517,7 +517,7 @@ function assert(condition: boolean, testName: string) {
 
 // 18. [따라하기 (Mirror Move) 검증] 상대방이 직전에 사용한 기술을 즉시 흉내내어 발동
 {
-  const { saveService } = await import("../src/services/saveService.js");
+  const { saveService } = await import("../../src/services/saveService.js");
   const testUserId = `test_mirror_move_${Date.now()}`;
   saveService.createNewRunWithParty(testUserId, 1, [
     {
@@ -544,7 +544,7 @@ function assert(condition: boolean, testName: string) {
 
 // 19. [기충전 (Focus Energy) 검증] 급소율 상승 상태 부여 및 중복 사용 방지
 {
-  const { saveService } = await import("../src/services/saveService.js");
+  const { saveService } = await import("../../src/services/saveService.js");
   const testUserId = `test_focus_energy_${Date.now()}`;
   saveService.createNewRunWithParty(testUserId, 1, [
     {
@@ -574,7 +574,7 @@ function assert(condition: boolean, testName: string) {
 
 // 20. [참기 (Bide) 검증] 1턴 축적 시작 및 2턴 데미지 2배 방출
 {
-  const { saveService } = await import("../src/services/saveService.js");
+  const { saveService } = await import("../../src/services/saveService.js");
   const testUserId = `test_bide_${Date.now()}`;
   saveService.createNewRunWithParty(testUserId, 1, [
     {
@@ -613,7 +613,7 @@ function assert(condition: boolean, testName: string) {
 
 // 21. [손가락흔들기 (Metronome) 검증] 무작위 기술 발동 및 복제 키 전달
 {
-  const { saveService } = await import("../src/services/saveService.js");
+  const { saveService } = await import("../../src/services/saveService.js");
   const testUserId = `test_metronome_${Date.now()}`;
   saveService.createNewRunWithParty(testUserId, 1, [
     {
@@ -639,7 +639,7 @@ function assert(condition: boolean, testName: string) {
 
 // 22. [자폭 (Self-Destruct) 검증] 상대에게 200 위력 데미지 전달 및 시전자 자폭 사망 (HP 0)
 {
-  const { saveService } = await import("../src/services/saveService.js");
+  const { saveService } = await import("../../src/services/saveService.js");
   const testUserId = `test_selfdestruct_${Date.now()}`;
   saveService.createNewRunWithParty(testUserId, 1, [
     {
@@ -667,7 +667,7 @@ function assert(condition: boolean, testName: string) {
 
 // 23. [자폭 (Self-Destruct) 습기(Damp) 특성 방어 검증]
 {
-  const { saveService } = await import("../src/services/saveService.js");
+  const { saveService } = await import("../../src/services/saveService.js");
   const testUserId = `test_selfdestruct_damp_${Date.now()}`;
   saveService.createNewRunWithParty(testUserId, 1, [
     {
@@ -696,7 +696,7 @@ function assert(condition: boolean, testName: string) {
 
 // 24. [자폭 (Self-Destruct) 방어(Protect) 상대로 자폭 시전자 쓰러짐 검증]
 {
-  const { saveService } = await import("../src/services/saveService.js");
+  const { saveService } = await import("../../src/services/saveService.js");
   const testUserId = `test_selfdestruct_protect_${Date.now()}`;
   saveService.createNewRunWithParty(testUserId, 1, [
     {
@@ -724,7 +724,7 @@ function assert(condition: boolean, testName: string) {
 
 // 25. [자폭 (Self-Destruct) 고스트 무효 상대로 자폭 시전자 쓰러짐 검증]
 {
-  const { saveService } = await import("../src/services/saveService.js");
+  const { saveService } = await import("../../src/services/saveService.js");
   const testUserId = `test_selfdestruct_ghost_${Date.now()}`;
   saveService.createNewRunWithParty(testUserId, 1, [
     {
@@ -753,7 +753,7 @@ function assert(condition: boolean, testName: string) {
 
 // 26. [알폭탄 (Egg Bomb) 위력 100 노말 물리 공격 메커니즘 검증]
 {
-  const { saveService } = await import("../src/services/saveService.js");
+  const { saveService } = await import("../../src/services/saveService.js");
   const testUserId = `test_eggbomb_${Date.now()}`;
   saveService.createNewRunWithParty(testUserId, 1, [
     {
@@ -793,7 +793,7 @@ function assert(condition: boolean, testName: string) {
 
 // 27. [사이코웨이브 (Psywave) 레벨 비례 가변 데미지 및 악 타입 무효 메커니즘 검증]
 {
-  const { saveService } = await import("../src/services/saveService.js");
+  const { saveService } = await import("../../src/services/saveService.js");
   const testUserId = `test_psywave_${Date.now()}`;
   saveService.createNewRunWithParty(testUserId, 1, [
     {
@@ -833,7 +833,7 @@ function assert(condition: boolean, testName: string) {
 
 // 29. [잠자기(Rest) 검증] 체력 100% 회복, 기존 상태이상 치유, 2턴 수면, 불면 특성 면역 및 HP 가득 찼을 때 실패
 {
-  const { saveService } = await import("../src/services/saveService.js");
+  const { saveService } = await import("../../src/services/saveService.js");
   const testUserId = `test_rest_${Date.now()}`;
   saveService.createNewRunWithParty(testUserId, 1, [
     {
@@ -925,7 +925,7 @@ function assert(condition: boolean, testName: string) {
 // - 기술 교체 후 복사한 기술의 최대 PP로 설정
 // - 배틀 로그에 스케치 발동 및 기술 습득 내용 정상 기록
 {
-  const { saveService } = await import("../src/services/saveService.js");
+  const { saveService } = await import("../../src/services/saveService.js");
   const testUserId = `test_sketch_${Date.now()}`;
   saveService.createNewRunWithParty(testUserId, 1, [
     {
@@ -954,8 +954,8 @@ function assert(condition: boolean, testName: string) {
 // - 1타: 10, 2타: 20 (누적 30), 3타: 30 (누적 60) 점진적 위력 증가
 // - 배틀 로그에 연속 명중 횟수 및 물리 데미지 정상 반영
 {
-  const { calculateMultiHitCount } = await import("../src/battle/moves/traits/moveTraits.js");
-  const { calculateDamage } = await import("../src/battle/mechanics/damageCalculator.js");
+  const { calculateMultiHitCount } = await import("../../src/battle/moves/traits/moveTraits.js");
+  const { calculateDamage } = await import("../../src/battle/mechanics/damageCalculator.js");
 
   // 1. 타격 횟수 검증 (1~3회 범위 내)
   const hitSamples: number[] = [];
@@ -993,7 +993,7 @@ function assert(condition: boolean, testName: string) {
 // - 상대 포켓몬에게 cannotEscape = true 상태이상 부여
 // - 이미 도망칠 수 없는 경우 실패 처리
 {
-  const { executeStatusMove } = await import("../src/battle/moves/traits/specialStatusRegistry.js");
+  const { executeStatusMove } = await import("../../src/battle/moves/traits/specialStatusRegistry.js");
   const user = battleService.spawnWildPokemon(1, "Town", "spinarak", 20);
   const target = battleService.spawnWildPokemon(1, "Town", "pidgey", 20);
   const spiderWebMoveData = getMoveData("spider-web")!;
@@ -1029,9 +1029,9 @@ function assert(condition: boolean, testName: string) {
 // - 잠들어 있을 때 시전: 수면 중 행동 허용 & 특수 노말 데미지 정상 적용
 // - 30% 확률로 상대 풀죽음(flinch) 상태이상 유발
 {
-  const { validateAction } = await import("../src/battle/mechanics/actionValidator.js");
-  const { checkSpecialDamage } = await import("../src/battle/moves/traits/specialDamageRegistry.js");
-  const { applySecondaryAttackEffects } = await import("../src/battle/mechanics/secondaryEffects.js");
+  const { validateAction } = await import("../../src/battle/mechanics/actionValidator.js");
+  const { checkSpecialDamage } = await import("../../src/battle/moves/traits/specialDamageRegistry.js");
+  const { applySecondaryAttackEffects } = await import("../../src/battle/mechanics/secondaryEffects.js");
   const snoreMoveData = getMoveData("snore")!;
 
   const user = battleService.spawnWildPokemon(1, "Town", "snorlax", 30);
@@ -1094,7 +1094,7 @@ function assert(condition: boolean, testName: string) {
 // - 회피율 +6랭크 및 반무적(공중날기) 상태의 상대에게도 다음 턴 100% 필중
 // - 중복 시전 시 이미 읽고 있어 실패 처리
 {
-  const { executeStatusMove } = await import("../src/battle/moves/traits/specialStatusRegistry.js");
+  const { executeStatusMove } = await import("../../src/battle/moves/traits/specialStatusRegistry.js");
   const mindReaderMoveData = getMoveData("mind-reader")!;
   const blizzardMoveData = getMoveData("blizzard")!; // 기본 명중 70%
   const user = battleService.spawnWildPokemon(1, "Town", "poliwhirl", 30);
@@ -1141,9 +1141,9 @@ function assert(condition: boolean, testName: string) {
 // 39. [악몽(Nightmare) 배틀 메커니즘 검증]
 {
   const nightmareMoveData = getMoveData("nightmare")!;
-  const { executeStatusMove } = await import("../src/battle/moves/traits/specialStatusRegistry.js");
-  const { processTurnEndEffects } = await import("../src/battle/engine/TurnEndProcessor.js");
-  const { validateAction } = await import("../src/battle/mechanics/actionValidator.js");
+  const { executeStatusMove } = await import("../../src/battle/moves/traits/specialStatusRegistry.js");
+  const { processTurnEndEffects } = await import("../../src/battle/engine/TurnEndProcessor.js");
+  const { validateAction } = await import("../../src/battle/mechanics/actionValidator.js");
 
   const caster = battleService.spawnWildPokemon(1, "Town", "gengar", 50);
   const target = battleService.spawnWildPokemon(1, "Town", "snorlax", 50);
@@ -1214,8 +1214,8 @@ function assert(condition: boolean, testName: string) {
 // 40. [저주(Curse) 배틀 메커니즘 검증 - 일반 타입 vs 고스트 타입 분기]
 {
   const curseMoveData = getMoveData("curse")!;
-  const { executeSingleAction } = await import("../src/battle/engine/TurnActionExecutor.js");
-  const { processTurnEndEffects } = await import("../src/battle/engine/TurnEndProcessor.js");
+  const { executeSingleAction } = await import("../../src/battle/engine/TurnActionExecutor.js");
+  const { processTurnEndEffects } = await import("../../src/battle/engine/TurnEndProcessor.js");
 
   // 1) 비고스트 포켓몬(잠만보 - normal)의 저주 시전: 스피드 -1, 공격 +1, 방어 +1 (자해 없음)
   const snorlax = battleService.spawnWildPokemon(1, "Town", "snorlax", 50);
@@ -1272,7 +1272,7 @@ function assert(condition: boolean, testName: string) {
   assert(mockBattle.turnActions[1].moveKey === "curse-damage", "추가된 액션의 moveKey는 'curse-damage'여야 함");
   assert(mockBattle.turnActions[1].damage === 50, "추가된 액션의 데미지는 50이어야 함");
 
-  const { MOVE_REGISTRY } = await import("../src/battle/moves/moveRegistry.js");
+  const { MOVE_REGISTRY } = await import("../../src/battle/moves/moveRegistry.js");
   assert(MOVE_REGISTRY["curse-damage"] !== undefined, "MOVE_REGISTRY에 'curse-damage'가 등록되어 있어야 함");
   assert(MOVE_REGISTRY["저주(데미지)"] !== undefined, "MOVE_REGISTRY에 '저주(데미지)'가 등록되어 있어야 함");
 

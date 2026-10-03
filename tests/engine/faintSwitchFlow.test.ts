@@ -1,10 +1,10 @@
-import { BattleEngine } from "../src/battle/engine/BattleEngine.js";
-import { battleService } from "../src/services/battleService.js";
-import { saveService } from "../src/services/saveService.js";
-import { buildBattleComponents } from "../src/events/interactionCreate.js";
-import { renderBattleEntryGif, renderBattleMoveGif } from "../src/utils/battleGifRenderer.js";
-import { createPlayerBattleMon, spawnWildPokemon } from "../src/battle/entities/pokemonFactory.js";
-import type { BattleState } from "../src/battle/engine/types.js";
+﻿import { BattleEngine } from "../../src/battle/engine/BattleEngine.js";
+import { battleService } from "../../src/services/battleService.js";
+import { saveService } from "../../src/services/saveService.js";
+import { buildBattleComponents } from "../../src/events/interactionCreate.js";
+import { renderBattleEntryGif, renderBattleMoveGif } from "../../src/utils/battleGifRenderer.js";
+import { createPlayerBattleMon, spawnWildPokemon } from "../../src/battle/entities/pokemonFactory.js";
+import type { BattleState } from "../../src/battle/engine/types.js";
 
 async function runTests() {
   console.log("==================================================");
