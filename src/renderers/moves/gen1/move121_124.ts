@@ -743,7 +743,7 @@ export function drawLickEffect(
  * 5. 먼저 뿜어진 가스부터 순차적으로 상공 분산 소멸 (FIFO)
  */
 
-interface SmogCloudDef {
+export interface SmogCloudDef {
   dx: number;
   dy: number;
   r: number;
@@ -753,7 +753,7 @@ interface SmogCloudDef {
   layer: "behind" | "front";
 }
 
-const SMOG_BILLOW_CLOUDS: SmogCloudDef[] = [
+export const SMOG_BILLOW_CLOUDS: SmogCloudDef[] = [
   // 1차 웨이브 (가장 먼저 도달하여 피어오르고, 가장 먼저 페이드아웃)
   { dx: 0, dy: -4, r: 48, birth: 0.04, wave: 1, seed: 1.5, layer: "front" },
   { dx: -26, dy: 8, r: 42, birth: 0.08, wave: 1, seed: 2.8, layer: "front" },
@@ -773,7 +773,7 @@ const SMOG_BILLOW_CLOUDS: SmogCloudDef[] = [
 /**
  * 부드러운 유독 가스 퍼프 (외곽 100% 완전 투명 라디얼 그라데이션)
  */
-function drawToxicGasPuff(
+export function drawToxicGasPuff(
   ctx: any,
   cx: number,
   cy: number,
@@ -817,7 +817,7 @@ function drawToxicGasPuff(
 /**
  * 다엽형 유기적 독가스 구름 클러스터 (Organic Billowing Toxic Gas Cloud)
  */
-function drawOrganicToxicCloud(
+export function drawOrganicToxicCloud(
   ctx: any,
   cx: number,
   cy: number,
@@ -873,7 +873,7 @@ function drawOrganicToxicCloud(
 /**
  * 스모그 생애주기 투명도/스케일 계산 헬퍼
  */
-function getSmogCloudInfo(
+export function getSmogCloudInfo(
   c: SmogCloudDef,
   step: number,
   p: number
@@ -1358,7 +1358,7 @@ function getSludgeTangentAngle(
  * 🟣 순수 스모그 가스로 뭉쳐진 유기적 독가스 덩어리 (Billowing Smog Cluster Blob)
  * - 딱딱하거나 번들거리는 액체 껍질이 아닌, 꿀렁이는 고밀도 유기적 스모그 가스 뭉치
  */
-function drawSludgeSmogBlob(
+export function drawSludgeSmogBlob(
   ctx: any,
   cx: number,
   cy: number,
@@ -1402,7 +1402,7 @@ function drawSludgeSmogBlob(
  * 💨 포물선 비행 후류에 남겨지는 스모그 연무 잔상 (Smog Trail Puff)
  * - 촘촘하게 뭉치지 않고, 공기 중에 퐁퐁 피어나는 부드러운 스모그 연무
  */
-function drawSmogTrailPuff(
+export function drawSmogTrailPuff(
   ctx: any,
   cx: number,
   cy: number,

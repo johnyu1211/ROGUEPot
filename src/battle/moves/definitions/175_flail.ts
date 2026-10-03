@@ -77,11 +77,13 @@ export const flailMove: BattleMoveAnimation = {
     return [
       // =======================================================================
       // Step 1: 바둥바둥 + 튀어오르기(스쿼시/스트레치 도약) + 땀방울 튀기기
+      // - 각 도약/착지당 2프레임(진입 ➔ 피크 확산)으로 알갱이 시간차 비산 연출
+      // - 사이클별(1, 2, 3) 완전히 다른 순서로 알갱이들이 퐁! 퐁퐁! 튀어나감
       // =======================================================================
       // 1. 시작 준비
       {
         ...baseFrame,
-        delay: 50,
+        delay: 45,
         ...cRot(0),
         ...cOff(0, 0),
         ...cScale(1.0, 1.0),
@@ -92,93 +94,168 @@ export const flailMove: BattleMoveAnimation = {
         phaseId: "flail-prep",
         phaseName: "1. 바둥바둥 시작 준비",
       },
-      // 2. 1차 발버둥: 좌측 틸트 & 착지 납작(스쿼시) + 물방울 비산
+
+      // --- [1차 착지: 물방울 튀기기 (Cycle 1)] ---
+      // 2. 1차 납작 진입: 선두 알갱이들 먼저 퐁!
+      {
+        ...baseFrame,
+        delay: 55,
+        ...cRot(-0.16),
+        ...cOff(-2, 0),
+        ...cScale(1.22, 0.78),
+        ...defOff(0, 0),
+        showEffect: true,
+        splashProgress: 0.22,
+        splashCycle: 1,
+        moveStep: 1,
+        effectProgress: 0.15,
+        phaseId: "flail-squash-1a",
+        phaseName: "2. 1차 납작 (선두 물방울 퐁!)",
+      },
+      // 3. 1차 납작 피크: 뒤따르는 알갱이들 퐁퐁!
       {
         ...baseFrame,
         delay: 65,
-        ...cRot(-0.18),
+        ...cRot(-0.20),
         ...cOff(-2, 0),
-        ...cScale(1.26, 0.76),
+        ...cScale(1.30, 0.72),
         ...defOff(0, 0),
         showEffect: true,
-        splashProgress: 0.30,
+        splashProgress: 0.65,
         splashCycle: 1,
         moveStep: 1,
-        effectProgress: 0.20,
-        phaseId: "flail-squash-1",
-        phaseName: "2. 1차 납작 착지 (물방울)",
+        effectProgress: 0.28,
+        phaseId: "flail-squash-1b",
+        phaseName: "3. 1차 납작 피크 (물방울 시간차 확산)",
       },
-      // 3. 1차 도약: 우측 틸트 & 상공 세로길쭉 도약 + 땀방울 튀기기!
+
+      // --- [1차 도약: 땀방울 튀기기 (Cycle 1)] ---
+      // 4. 1차 상승 도약: 선두 땀방울 먼저 퐁!
+      {
+        ...baseFrame,
+        delay: 55,
+        ...cRot(0.18),
+        ...cOff(2, -8),
+        ...cScale(0.84, 1.22),
+        ...defOff(0, 0),
+        showEffect: true,
+        sweatProgress: 0.25,
+        sweatAirOffsetY: -8,
+        splashCycle: 1,
+        moveStep: 1,
+        effectProgress: 0.40,
+        phaseId: "flail-jump-1a",
+        phaseName: "4. 1차 도약 (선두 땀방울 퐁!)",
+      },
+      // 5. 1차 상공 피크: 뒤따르는 땀방울 퐁퐁!
+      {
+        ...baseFrame,
+        delay: 65,
+        ...cRot(0.22),
+        ...cOff(3, -14),
+        ...cScale(0.76, 1.30),
+        ...defOff(0, 0),
+        showEffect: true,
+        sweatProgress: 0.70,
+        sweatAirOffsetY: -14,
+        splashCycle: 1,
+        moveStep: 1,
+        effectProgress: 0.50,
+        phaseId: "flail-jump-1b",
+        phaseName: "5. 1차 상공 정점 (땀방울 시간차 확산)",
+      },
+
+      // --- [2차 착지: 물방울 튀기기 (Cycle 2: 완전히 다른 순서로 출발!)] ---
+      // 6. 2차 납작 진입 (다른 알갱이들이 먼저 퐁!)
+      {
+        ...baseFrame,
+        delay: 55,
+        ...cRot(-0.22),
+        ...cOff(-3, 0),
+        ...cScale(1.26, 0.75),
+        ...defOff(0, 0),
+        showEffect: true,
+        splashProgress: 0.22,
+        splashCycle: 2,
+        moveStep: 1,
+        effectProgress: 0.60,
+        phaseId: "flail-squash-2a",
+        phaseName: "6. 2차 납작 (전혀 다른 순서 알갱이 퐁!)",
+      },
+      // 7. 2차 납작 피크 (뒤따르는 알갱이들 비산)
+      {
+        ...baseFrame,
+        delay: 65,
+        ...cRot(-0.26),
+        ...cOff(-3, 0),
+        ...cScale(1.34, 0.68),
+        ...defOff(0, 0),
+        showEffect: true,
+        splashProgress: 0.68,
+        splashCycle: 2,
+        moveStep: 1,
+        effectProgress: 0.70,
+        phaseId: "flail-squash-2b",
+        phaseName: "7. 2차 납작 피크 (물방울 시간차 확산)",
+      },
+
+      // --- [2차 도약: 땀방울 튀기기 (Cycle 2: 완전히 다른 순서!)] ---
+      // 8. 2차 상승 도약
+      {
+        ...baseFrame,
+        delay: 55,
+        ...cRot(0.22),
+        ...cOff(3, -10),
+        ...cScale(0.82, 1.25),
+        ...defOff(0, 0),
+        showEffect: true,
+        sweatProgress: 0.25,
+        sweatAirOffsetY: -10,
+        splashCycle: 2,
+        moveStep: 1,
+        effectProgress: 0.78,
+        phaseId: "flail-jump-2a",
+        phaseName: "8. 2차 도약 (다른 순서 땀방울 퐁!)",
+      },
+      // 9. 2차 최고점 피크 (사방으로 땀방울 흩뿌림)
       {
         ...baseFrame,
         delay: 75,
-        ...cRot(0.20),
-        ...cOff(3, -12),
-        ...cScale(0.80, 1.28),
-        ...defOff(0, 0),
-        showEffect: true,
-        sweatProgress: 0.40,
-        sweatAirOffsetY: -12,
-        splashCycle: 1,
-        moveStep: 1,
-        effectProgress: 0.38,
-        phaseId: "flail-jump-1",
-        phaseName: "3. 1차 상공 도약 (땀방울 튀기기)",
-      },
-      // 4. 2차 발버둥: 좌측 격렬 틸트 & 착지 납작(스쿼시) + 물방울 비산
-      {
-        ...baseFrame,
-        delay: 65,
-        ...cRot(-0.25),
-        ...cOff(-3, 0),
-        ...cScale(1.32, 0.70),
-        ...defOff(0, 0),
-        showEffect: true,
-        splashProgress: 0.60,
-        splashCycle: 2,
-        moveStep: 1,
-        effectProgress: 0.55,
-        phaseId: "flail-squash-2",
-        phaseName: "4. 2차 격렬 납작 (물방울)",
-      },
-      // 5. 2차 도약: 우측 격렬 틸트 & 상공 최고점 도약 + 폭발적 땀방울 튀기기!
-      {
-        ...baseFrame,
-        delay: 80,
-        ...cRot(0.25),
+        ...cRot(0.26),
         ...cOff(3, -18),
-        ...cScale(0.72, 1.36),
+        ...cScale(0.70, 1.38),
         ...defOff(0, 0),
         showEffect: true,
         sweatProgress: 0.75,
         sweatAirOffsetY: -18,
         splashCycle: 2,
         moveStep: 1,
-        effectProgress: 0.72,
-        phaseId: "flail-jump-2",
-        phaseName: "5. 2차 최고점 도약 (땀방울 폭발)",
+        effectProgress: 0.86,
+        phaseId: "flail-jump-2b",
+        phaseName: "9. 2차 최고점 정점 (땀방울 폭발)",
       },
-      // 6. 3차 착지: 좌측 틸트 & 탄성 안착 (스쿼시 리바운드)
+
+      // --- [3차 착지 안착 (Cycle 3)] ---
+      // 10. 3차 착지 탄성 안착 (스쿼시 리바운드)
       {
         ...baseFrame,
         delay: 65,
-        ...cRot(-0.14),
+        ...cRot(-0.12),
         ...cOff(-1, 0),
         ...cScale(1.18, 0.84),
         ...defOff(0, 0),
         showEffect: true,
-        sweatProgress: 0.95,
-        sweatAirOffsetY: -4,
-        splashProgress: 0.88,
+        splashProgress: 0.45,
+        splashCycle: 3,
         moveStep: 1,
-        effectProgress: 0.88,
+        effectProgress: 0.94,
         phaseId: "flail-squash-3",
-        phaseName: "6. 3차 착지 탄성 안착",
+        phaseName: "10. 3차 착지 탄성 안착",
       },
-      // 7. 발버둥 중심 복귀 및 타격 와인드업
+      // 11. 중심 복귀 및 타격 와인드업
       {
         ...baseFrame,
-        delay: 60,
+        delay: 55,
         ...cRot(0),
         ...cOff(0, 0),
         ...cScale(1.0, 1.0),
@@ -187,7 +264,7 @@ export const flailMove: BattleMoveAnimation = {
         moveStep: 1,
         effectProgress: 1.0,
         phaseId: "flail-center",
-        phaseName: "7. 타격 준비 중심 복귀",
+        phaseName: "11. 타격 준비 중심 복귀",
       },
 
       // =======================================================================

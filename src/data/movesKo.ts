@@ -11048,16 +11048,23 @@ export const MOVES_DATA: Record<string, MoveData> = {
 
 const KO_NAME_TO_MOVE_MAP: Record<string, MoveData> = {};
 const EN_NAME_TO_MOVE_MAP: Record<string, MoveData> = {};
+const ID_TO_MOVE_MAP: Record<number, MoveData> = {};
 
 for (const [key, move] of Object.entries(MOVES_DATA)) {
   const normKey = key.toLowerCase().replace(/[\s_]+/g, "-");
   EN_NAME_TO_MOVE_MAP[normKey] = move;
+  EN_NAME_TO_MOVE_MAP[normKey.replace(/-/g, "")] = move;
   if (move.name) {
-    EN_NAME_TO_MOVE_MAP[move.name.toLowerCase().replace(/[\s_]+/g, "-")] = move;
+    const normName = move.name.toLowerCase().replace(/[\s_]+/g, "-");
+    EN_NAME_TO_MOVE_MAP[normName] = move;
+    EN_NAME_TO_MOVE_MAP[normName.replace(/-/g, "")] = move;
   }
   if (move.nameKo) {
     KO_NAME_TO_MOVE_MAP[move.nameKo.trim()] = move;
     KO_NAME_TO_MOVE_MAP[move.nameKo.replace(/\s+/g, "")] = move;
+  }
+  if (move.id) {
+    ID_TO_MOVE_MAP[move.id] = move;
   }
 }
 
@@ -11067,11 +11074,16 @@ if (MOVES_DATA["flame-wheel"]) {
 }
 
 /**
- * Resolves a MoveData entry by either Korean name or English key
+ * Resolves a MoveData entry by either Korean name, English key, or numeric ID
  */
-export function getMoveData(nameOrKey: string | undefined): MoveData | undefined {
-  if (!nameOrKey) return undefined;
-  const clean = nameOrKey.trim();
+export function getMoveData(nameOrKey: string | number | undefined): MoveData | undefined {
+  if (nameOrKey === undefined || nameOrKey === null) return undefined;
+  if (typeof nameOrKey === "number") return ID_TO_MOVE_MAP[nameOrKey];
+  const clean = String(nameOrKey).trim();
+  const numId = Number(clean);
+  if (!isNaN(numId) && ID_TO_MOVE_MAP[numId]) {
+    return ID_TO_MOVE_MAP[numId];
+  }
   const lowerClean = clean.toLowerCase().replace(/[\s_]+/g, "-");
 
   return (

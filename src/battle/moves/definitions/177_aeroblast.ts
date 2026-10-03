@@ -18,20 +18,19 @@ import {
  * 설명: 소용돌이치는 공기 덩어리를 상대에게 날려서 공격한다. 급소에 맞기 쉽다.
  *
  * [연출 기승전결 시퀀스]:
- * 1. Step 1: 풍압 집약 & 대기압 왜곡 차징 (Atmospheric Intake - 180ms)
+ * 1. Step 1: 풍압 집약 & 대기압 왜곡 차징 (Atmospheric Intake)
  *    - 화면 전체 대기압 강하 암전 & 시전자 웅크림
- *    - 6가닥 나선형 기류가 시전자 앞 초고압 에어로 볼텍스 구체로 맹렬히 수렴
- * 2. Step 2: 초고속 3D 나선형 볼텍스 캐논 발사 (Supersonic Vortex Blast - 160ms)
- *    - 시전자 전방 방출 반동 & 전장을 가로지르는 거대 공기 볼텍스 빔 사출
- *    - 중심 순백 심선 + 이중 나선 회오리 리본 + 마하 압축 충격파 링 쇄도
- * 3. Step 3: 상대 직격 착탄 & 거대 회오리바람 기둥 분출 (Target Impact & Cyclone Eruption - 270ms)
- *    - 카메라 타겟 스무스 줌인(1.38x) & 피격자 정면 격돌 섬광
- *    - 상공으로 솟구치는 거대한 회오리바람 기둥 & 피격자 난타 진공 참격 칼날
- * 4. Step 4: 대기 파열 십자 섬광 & 초고압 대폭발 (Atmospheric Rupture & Mega Burst - 270ms)
- *    - 급소 타격의 위용을 알리는 거대 대기 파열 십자 섬광 & 외곽 충격파 방사
- *    - 상대방 체력(HP) 감소 반영 & 진공 참격 2차 작렬 및 전방위 스파크 비산
+ *    - 사방 백색 기체가 시전자 앞 초고압 에어로 볼텍스 구체로 맹렬히 수렴
+ * 2. Step 2: 겹쳐진 회오리바람 연쇄 폭풍 사출 (Connected Overlapping Cyclones Launch - 255ms)
+ *    - 시전자 전방 방출 반동 & 각기 다른 크기와 회전이 적용된 회오리바람들이 여러 개 겹쳐서 이어진 거대 폭풍
+ *    - 10개의 독립 회오리 노드(크기 15~34px, CW/CCW 회전) + 나선 결합 브릿지 기류선
+ * 3. Step 3: 상대 직격 착탄 & 관통 연결 폭풍 작렬 (Target Impact & Full Power Cyclones - 270ms)
+ *    - 카메라 타겟 스무스 줌인 & 대상 정면 관통 폭풍 최고 출력 유지
+ *    - 피격자 전신을 칭칭 동여매는 14가닥 3D 볼텍스 고속 회전 폭발
+ * 4. Step 4: 대기 안착 및 체력 감쇠 (Atmospheric Settling - 270ms)
+ *    - 상대방 체력(HP) 감소 반영 & 회오리바람 연쇄 회전 유지
  * 5. Step 5: 폭풍 소멸 & 대기 안정화 (Cyclone Dissipation & Recovery - 180ms)
- *    - 회오리가 상공으로 서서히 흩어지며 기류 잔향 소멸
+ *    - 필터 종료까지 볼텍스 회전 유지 후 대기 안정화
  *    - 시전자 및 피격자 안정 스탠스 복귀 & 카메라 중립 글라이드아웃
  */
 export const aeroblastMove: BattleMoveAnimation = {
@@ -42,9 +41,10 @@ export const aeroblastMove: BattleMoveAnimation = {
   type: "flying",
   category: "special",
   camera: {
-    type: "target",
-    zoom: 1.38,
-    delayUntilStep: 3, // Step 1·2: 중립 1.0x 와이드 뷰(풍압 집약 및 전장 가로지르는 빔 사출) -> Step 3 착탄부터 타겟 포커싱
+    type: "caster_to_target",
+    zoom: 1.55, // 시전자에게 깊은 줌인 후 발포 직후 대상으로 전환
+    focalRatio: 0.85,
+    delayUntilStep: 2, // Step 1: 시전자 집중 차징 -> Step 2(발포 직후): 바로 대상 포커싱 및 푸른 필터 회전선 배경 전개
   },
   drawBehindEffect: (targetCtx: any, frame: BattleFrame, drawCtx: EffectDrawContext) => {
     drawAeroblastBehindEffect(targetCtx, frame, drawCtx);
@@ -87,75 +87,193 @@ export const aeroblastMove: BattleMoveAnimation = {
 
     return [
       // =======================================================================
-      // Step 1: 풍압 집약 & 대기압 왜곡 차징 (180ms)
+      // Step 1: [1단계] 공기 모으기 (사방 기체 수렴 & 순백 구체 페이드인 - 5프레임)
       // =======================================================================
       {
         ...baseFrame,
         delay: 90,
-        ...cOff(-dir * 4, 2),
-        ...cScale(1.05, 0.95),
+        ...cOff(-dir * 2, 1),
+        ...cScale(1.02, 0.98),
+        ...defOff(0, 0),
+        showEffect: true,
+        showBehindEffect: true,
+        moveStep: 1,
+        effectProgress: 0.20,
+        chargeProgress: 0.20,
+        dimAlpha: 0.18,
+        phaseId: "aeroblast-charge-1",
+        phaseName: "1. [공기 모으기] 기류 집약 태동 & 미세한 백색 기체 유입",
+      },
+      {
+        ...baseFrame,
+        delay: 95,
+        ...cOff(-dir * 4, 1),
+        ...cScale(1.04, 0.96),
         ...defOff(0, 0),
         showEffect: true,
         showBehindEffect: true,
         moveStep: 1,
         effectProgress: 0.40,
         chargeProgress: 0.40,
-        dimAlpha: 0.18,
-        phaseId: "aeroblast-charge-1",
-        phaseName: "1. 풍압 흡입 & 기압 강하 (웅크림)",
+        dimAlpha: 0.32,
+        phaseId: "aeroblast-charge-2",
+        phaseName: "1. [공기 모으기] 사방 백색 기체 수렴 & 암전 심화",
       },
       {
         ...baseFrame,
-        delay: 90,
-        ...cOff(-dir * 7, 3),
+        delay: 95,
+        ...cOff(-dir * 6, 2),
+        ...cScale(1.07, 0.93),
+        ...defOff(0, 0),
+        showEffect: true,
+        showBehindEffect: true,
+        moveStep: 1,
+        effectProgress: 0.60,
+        chargeProgress: 0.60,
+        dimAlpha: 0.48,
+        phaseId: "aeroblast-charge-3",
+        phaseName: "1. [공기 모으기] 순백 구체 선명화 & 기압 급강하 암전",
+      },
+      {
+        ...baseFrame,
+        delay: 100,
+        ...cOff(-dir * 7, 2),
         ...cScale(1.09, 0.91),
+        ...defOff(0, 0),
+        showEffect: true,
+        showBehindEffect: true,
+        moveStep: 1,
+        effectProgress: 0.80,
+        chargeProgress: 0.80,
+        dimAlpha: 0.62,
+        phaseId: "aeroblast-charge-4",
+        phaseName: "1. [공기 모으기] 깊은 어둠 속 백색 기체선 입체 휘감기",
+      },
+      {
+        ...baseFrame,
+        delay: 100,
+        ...cOff(-dir * 8, 3),
+        ...cScale(1.11, 0.89),
+        ...defOff(0, 0),
+        showEffect: true,
+        showBehindEffect: true,
+        moveStep: 1,
+        effectProgress: 0.95,
+        chargeProgress: 0.95,
+        dimAlpha: 0.74,
+        phaseId: "aeroblast-charge-5",
+        phaseName: "1. [공기 모으기] 전장 짙은 암전 & 기체 마지막 흡입",
+      },
+
+      // =======================================================================
+      // Step 1: [2단계] 기체가 다 모인 후 (완성된 구체 머금기 & 발포 직전 긴장감 - 3프레임)
+      // =======================================================================
+      {
+        ...baseFrame,
+        delay: 110,
+        ...cOff(-dir * 9, 3),
+        ...cScale(1.13, 0.87),
         ...defOff(0, 0),
         showEffect: true,
         showBehindEffect: true,
         moveStep: 1,
         effectProgress: 1.00,
         chargeProgress: 1.00,
-        dimAlpha: 0.32,
-        phaseId: "aeroblast-charge-2",
-        phaseName: "1. 초고압 에어로 볼텍스 구체 응결",
+        isFullyCharged: true,
+        holdProgress: 0.33,
+        dimAlpha: 0.82,
+        phaseId: "aeroblast-hold-1",
+        phaseName: "1. [기체 다 모임] 칠흑 같은 암전 속 순백 구체 완성 & 초고압 맥동",
       },
-
-      // =======================================================================
-      // Step 2: 초고속 3D 나선형 볼텍스 캐논 발사 (160ms)
-      // =======================================================================
       {
         ...baseFrame,
-        delay: 80,
-        ...cOff(dir * 5, -2),
-        ...cScale(0.92, 1.08),
+        delay: 110,
+        ...cOff(-dir * 10, 4), // 시전자 최대 웅크림 & 팽팽한 떨림
+        ...cScale(1.14, 0.86),
         ...defOff(0, 0),
         showEffect: true,
         showBehindEffect: true,
-        moveStep: 2,
-        effectProgress: 0.50,
-        beamProgress: 0.52,
-        dimAlpha: 0.25,
-        phaseId: "aeroblast-launch-1",
-        phaseName: "2. 에어로 볼텍스 캐논 폭발적 사출",
+        moveStep: 1,
+        effectProgress: 1.00,
+        chargeProgress: 1.00,
+        isFullyCharged: true,
+        holdProgress: 0.66,
+        dimAlpha: 0.88,
+        phaseId: "aeroblast-hold-2",
+        phaseName: "1. [기체 다 모임] 극한의 대기압 암전 & 볼텍스 기체선 초고속 회전",
       },
       {
         ...baseFrame,
-        delay: 80,
-        ...cOff(dir * 3, -1),
-        ...cScale(0.97, 1.03),
+        delay: 115,
+        ...cOff(-dir * 9, 3),
+        ...cScale(1.12, 0.88),
         ...defOff(0, 0),
+        showEffect: true,
+        showBehindEffect: true,
+        moveStep: 1,
+        effectProgress: 1.00,
+        chargeProgress: 1.00,
+        isFullyCharged: true,
+        holdProgress: 1.00,
+        dimAlpha: 0.92,
+        phaseId: "aeroblast-hold-3",
+        phaseName: "1. [발포 직전] 92% 완전 암전! 기체 응축 임계점 도달",
+      },
+
+      // =======================================================================
+      // Step 2: 겹쳐진 회오리바람 연쇄 폭풍 사출 (3프레임 - 255ms)
+      // =======================================================================
+      {
+        ...baseFrame,
+        delay: 80,
+        ...cOff(dir * 6, -3), // 시전자 전방 방출 강한 반동
+        ...cScale(0.90, 1.10),
+        ...defOff(0, 0),
+        targetBlueTint: true,
+        showEffect: true,
+        showBehindEffect: true,
+        moveStep: 2,
+        effectProgress: 0.35,
+        beamProgress: 0.40,
+        dimAlpha: 0.20,
+        phaseId: "aeroblast-launch-1",
+        phaseName: "2. [사출] 각기 다른 크기·회전의 회오리바람 연쇄 폭풍 사출",
+      },
+      {
+        ...baseFrame,
+        delay: 85,
+        ...cOff(dir * 4, -2),
+        ...cScale(0.95, 1.05),
+        ...defOff(0, 0),
+        targetBlueTint: true,
+        showEffect: true,
+        showBehindEffect: true,
+        moveStep: 2,
+        effectProgress: 0.70,
+        beamProgress: 0.75,
+        dimAlpha: 0.18,
+        phaseId: "aeroblast-launch-2",
+        phaseName: "2. [쇄도] 10개 회오리 노드 겹침 회전 & 48가닥 회전선 배경 폭풍",
+      },
+      {
+        ...baseFrame,
+        delay: 90,
+        ...cOff(dir * 2, -1),
+        ...cScale(0.98, 1.02),
+        ...defOff(0, 0),
+        targetBlueTint: true,
         showEffect: true,
         showBehindEffect: true,
         moveStep: 2,
         effectProgress: 1.00,
-        beamProgress: 0.96,
-        dimAlpha: 0.20,
-        phaseId: "aeroblast-launch-2",
-        phaseName: "2. 이중 나선 바람 리본 & 마하 충격파 링 쇄도",
+        beamProgress: 1.45,
+        dimAlpha: 0.15,
+        phaseId: "aeroblast-launch-3",
+        phaseName: "2. [관통] 대상 정면 관통 도달 & 등 뒤로 뻗어나가는 소용돌이",
       },
 
       // =======================================================================
-      // Step 3: 상대 직격 착탄 & 거대 회오리바람 기둥 분출 (270ms)
+      // Step 3: 상대 직격 착탄 & 관통 볼텍스 빔 폭풍 작렬 (270ms)
       // =======================================================================
       {
         ...baseFrame,
@@ -172,7 +290,7 @@ export const aeroblastMove: BattleMoveAnimation = {
         tornadoProgress: 0.35,
         dimAlpha: 0.18,
         phaseId: "aeroblast-impact-1",
-        phaseName: "3. [직격] 상대 정면 착탄 & 회오리바람 분출",
+        phaseName: "3. [직격] 대상 정면 빔 관통 & 14가닥 볼텍스 폭풍 작렬",
       },
       {
         ...baseFrame,
@@ -188,7 +306,7 @@ export const aeroblastMove: BattleMoveAnimation = {
         tornadoProgress: 0.70,
         dimAlpha: 0.16,
         phaseId: "aeroblast-impact-2",
-        phaseName: "3. 거대 회오리바람 기둥 포효 & 진공 참격 1차 난타",
+        phaseName: "3. [관통] 바람의 볼텍스 빔 대기 파열 & 14가닥 볼텍스 폭풍",
       },
       {
         ...baseFrame,
@@ -204,11 +322,11 @@ export const aeroblastMove: BattleMoveAnimation = {
         tornadoProgress: 1.00,
         dimAlpha: 0.14,
         phaseId: "aeroblast-impact-3",
-        phaseName: "3. 초고속 진공 회전 폭풍 타격 & 진공 참격 2차 난타",
+        phaseName: "3. [유지] 선 끝까지 빔 관통 유지 & 맹렬한 볼텍스 회전",
       },
 
       // =======================================================================
-      // Step 4: 대기 파열 십자 섬광 & 초고압 대폭발 (270ms)
+      // Step 4: 대기 안착 및 체력 감쇠 (선끝까지 빔 유지 - 270ms)
       // =======================================================================
       {
         ...baseFrame,
@@ -225,7 +343,7 @@ export const aeroblastMove: BattleMoveAnimation = {
         burstProgress: 0.35,
         dimAlpha: 0.12,
         phaseId: "aeroblast-rupture-1",
-        phaseName: "4. [급소] 대기 파열 십자 섬광 & 1차 충격파 방사",
+        phaseName: "4. [안착] 체력 감쇠 & 선 끝까지 관통 빔 회전 유지",
       },
       {
         ...baseFrame,
@@ -242,7 +360,7 @@ export const aeroblastMove: BattleMoveAnimation = {
         burstProgress: 0.70,
         dimAlpha: 0.08,
         phaseId: "aeroblast-rupture-2",
-        phaseName: "4. 초거대 공기 충격파 도넛 링 팽창 & 바람 스파크 비산",
+        phaseName: "4. [안착] 볼텍스 회전 지속 & 대기 진동",
       },
       {
         ...baseFrame,

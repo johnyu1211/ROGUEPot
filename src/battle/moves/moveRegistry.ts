@@ -190,7 +190,28 @@ import { flameWheelMove } from "./definitions/172_flame_wheel.js";
 import { snoreMove } from "./definitions/173_snore.js";
 import { curseMove, curseNormalMove, curseGhostMove, curseDamageMove } from "./definitions/174_curse.js";
 import { flailMove } from "./definitions/175_flail.js";
+import { conversion2Move } from "./definitions/176_conversion_2.js";
 import { aeroblastMove } from "./definitions/177_aeroblast.js";
+import { cottonSporeMove } from "./definitions/178_cotton_spore.js";
+import { reversalMove } from "./definitions/179_reversal.js";
+import { spiteMove } from "./definitions/180_spite.js";
+import { powderSnowMove } from "./definitions/181_powder_snow.js";
+import { protectMove } from "./definitions/182_protect.js";
+import { machPunchMove } from "./definitions/183_mach_punch.js";
+import { scaryFaceMove } from "./definitions/184_scary_face.js";
+import { feintAttackMove } from "./definitions/185_feint_attack.js";
+import { sweetKissMove } from "./definitions/186_sweet_kiss.js";
+import { bellyDrumMove } from "./definitions/187_belly_drum.js";
+import { sludgeBombMove } from "./definitions/188_sludge_bomb.js";
+import { mudSlapMove } from "./definitions/189_mud_slap.js";
+import { octazookaMove } from "./definitions/190_octazooka.js";
+import { spikesMove } from "./definitions/191_spikes.js";
+import { zapCannonMove } from "./definitions/192_zap_cannon.js";
+import { foresightMove } from "./definitions/193_foresight.js";
+import { destinyBondMove } from "./definitions/194_destiny_bond.js";
+import { perishSongMove } from "./definitions/195_perish_song.js";
+import { icyWindMove } from "./definitions/196_icy_wind.js";
+import { frostBreathMove } from "./definitions/524_frost_breath.js";
 import { statusMove } from "./definitions/status.js";
 import { defaultMove } from "./definitions/default.js";
 import { hugMove } from "./definitions/hug.js";
@@ -736,9 +757,104 @@ export const MOVE_REGISTRY: Record<string, BattleMoveAnimation> = {
   "175": flailMove,
   "바둥바둥": flailMove,
   "버둥거리기": flailMove,
+  "conversion-2": conversion2Move,
+  "conversion2": conversion2Move,
+  "176": conversion2Move,
+  "텍스처2": conversion2Move,
+  "텍스쳐2": conversion2Move,
   "aeroblast": aeroblastMove,
   "177": aeroblastMove,
   "에어로블라스트": aeroblastMove,
+  "cotton-spore": cottonSporeMove,
+  "cottonspore": cottonSporeMove,
+  "178": cottonSporeMove,
+  "목화포자": cottonSporeMove,
+  "코튼포자": cottonSporeMove,
+  "reversal": reversalMove,
+  "179": reversalMove,
+  "기사회생": reversalMove,
+  "spite": spiteMove,
+  "180": spiteMove,
+  "원한": spiteMove,
+  "powder-snow": powderSnowMove,
+  "powder_snow": powderSnowMove,
+  "powdersnow": powderSnowMove,
+  "181": powderSnowMove,
+  "눈싸라기": powderSnowMove,
+  "protect": protectMove,
+  "182": protectMove,
+  "방어": protectMove,
+  "mach-punch": machPunchMove,
+  "mach_punch": machPunchMove,
+  "machpunch": machPunchMove,
+  "183": machPunchMove,
+  "마하펀치": machPunchMove,
+  "scary-face": scaryFaceMove,
+  "scary_face": scaryFaceMove,
+  "scaryface": scaryFaceMove,
+  "184": scaryFaceMove,
+  "겁나는얼굴": scaryFaceMove,
+  "feint-attack": feintAttackMove,
+  "feint_attack": feintAttackMove,
+  "feintattack": feintAttackMove,
+  "185": feintAttackMove,
+  "속여때리기": feintAttackMove,
+  "sweet-kiss": sweetKissMove,
+  "sweet_kiss": sweetKissMove,
+  "sweetkiss": sweetKissMove,
+  "186": sweetKissMove,
+  "천사의키스": sweetKissMove,
+  "belly-drum": bellyDrumMove,
+  "belly_drum": bellyDrumMove,
+  "bellydrum": bellyDrumMove,
+  "187": bellyDrumMove,
+  "배북": bellyDrumMove,
+  "sludge-bomb": sludgeBombMove,
+  "sludge_bomb": sludgeBombMove,
+  "sludgebomb": sludgeBombMove,
+  "188": sludgeBombMove,
+  "오물폭탄": sludgeBombMove,
+  "mud-slap": mudSlapMove,
+  "mud_slap": mudSlapMove,
+  "mudslap": mudSlapMove,
+  "189": mudSlapMove,
+  "진흙뿌리기": mudSlapMove,
+  "octazooka": octazookaMove,
+  "190": octazookaMove,
+  "대포무노포": octazookaMove,
+  "spikes": spikesMove,
+  "191": spikesMove,
+  "압정뿌리기": spikesMove,
+  "zap-cannon": zapCannonMove,
+  "zap_cannon": zapCannonMove,
+  "zapcannon": zapCannonMove,
+  "192": zapCannonMove,
+  "전자포": zapCannonMove,
+  "foresight": foresightMove,
+  "193": foresightMove,
+  "꿰뚫어보기": foresightMove,
+  "destiny-bond": destinyBondMove,
+  "destiny_bond": destinyBondMove,
+  "destinybond": destinyBondMove,
+  "194": destinyBondMove,
+  "길동무": destinyBondMove,
+  "perish-song": perishSongMove,
+  "perish_song": perishSongMove,
+  "perishsong": perishSongMove,
+  "195": perishSongMove,
+  "멸망의노래": perishSongMove,
+  "멸망의 노래": perishSongMove,
+  "icy-wind": icyWindMove,
+  "icy_wind": icyWindMove,
+  "icywind": icyWindMove,
+  "196": icyWindMove,
+  "얼어붙은바람": icyWindMove,
+  "얼어붙은 바람": icyWindMove,
+  "frost-breath": frostBreathMove,
+  "frost_breath": frostBreathMove,
+  "frostbreath": frostBreathMove,
+  "524": frostBreathMove,
+  "얼음숨결": frostBreathMove,
   "status": statusMove,
   "default": defaultMove,
   "perk-hug": hugMove,

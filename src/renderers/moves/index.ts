@@ -98,6 +98,7 @@ import {
   drawCurseGhostBehindEffect,
 } from "./gen1/move173_176.js";
 import { drawAeroblastEffect, drawAeroblastBehindEffect } from "./gen1/move177_180.js";
+import { drawZapCannonEffect, drawZapCannonBehindEffect } from "./gen1/move189_192.js";
 
 import { getMoveKey, MOVES_DATA } from "../../data/movesKo.js";
 
@@ -169,6 +170,11 @@ export * from "./gen1/move165_168.js";
 export * from "./gen1/move169_172.js";
 export * from "./gen1/move173_176.js";
 export * from "./gen1/move177_180.js";
+export * from "./gen1/move181_184.js";
+export * from "./gen1/move185_188.js";
+export * from "./gen1/move189_192.js";
+export * from "./gen1/move193_196.js";
+export * from "./gen1/move521_524.js";
 
 /**
  * Central Dispatcher for rendering Pokémon move visual effects onto the battle canvas
@@ -256,6 +262,12 @@ export function renderMoveEffect(
     drawGenericHyperBeamEffect(ctx, startPos, targetPos, angle, dx, dy);
   } else if (moveKey === "shadow-ball" || moveKey === "dark-pulse") {
     drawShadowBallEffect(ctx, startPos, targetPos, angle);
+  } else if (moveKey === "zap-cannon" || moveKey === "zapcannon") {
+    if (info.layer === "behind") {
+      drawZapCannonBehindEffect(ctx, startPos, targetPos, info.step ?? 3);
+    } else {
+      drawZapCannonEffect(ctx, startPos, targetPos, info.step ?? 3);
+    }
   } else if (moveKey === "thunderbolt" || moveKey === "thunder" || moveKey === "spark" || type === "electric") {
     drawElectricEffect(ctx, startPos, targetPos, info.isSpecial);
   } else if (moveKey === "flamethrower" || moveKey === "fire-blast" || moveKey === "ember" || type === "fire") {
