@@ -337,6 +337,41 @@
       letter-spacing: 0.3px;
     }
 
+    .btn-group-export-video {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      cursor: pointer;
+      font-size: 13px;
+      line-height: 1;
+      padding: 2px 4px;
+      margin-right: 2px;
+      border-radius: 4px;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: inherit;
+    }
+    .btn-group-export-video:hover {
+      transform: scale(1.25);
+      background: rgba(255, 255, 255, 0.22);
+      border-color: #60A5FA;
+      filter: drop-shadow(0 0 6px rgba(96, 165, 250, 0.7));
+    }
+    .btn-group-export-video:active {
+      transform: scale(0.92);
+    }
+    .btn-group-export-video.loading {
+      animation: export-spin 0.8s infinite linear;
+      pointer-events: none;
+      opacity: 0.85;
+      border-color: #F59E0B;
+    }
+    @keyframes export-spin {
+      0% { transform: scale(1.1) rotate(0deg); }
+      100% { transform: scale(1.1) rotate(360deg); }
+    }
+
     .move-group-meta {
       display: flex;
       align-items: center;
@@ -1951,8 +1986,12 @@
           <span>내 포켓몬 (A):</span>
           <select class="picker-select" id="player-pokemon-select" onchange="replayActiveMove()">
             <option value="custom">커스텀</option>
-            <option value="bulbasaur" selected>이상해씨 (Bulbasaur)</option>
+            <option value="vulpix" selected>식스테일 (Vulpix)</option>
+            <option value="bulbasaur">이상해씨 (Bulbasaur)</option>
+            <option value="grovyle">나무돌이 (Grovyle)</option>
+            <option value="treecko">나무지기 (Treecko)</option>
             <option value="lugia">루기아 (Lugia)</option>
+            <option value="tangela">덩쿠리 (Tangela)</option>
             <option value="lucario">루카리오 (Lucario)</option>
             <option value="cinderace">에이스번 (Cinderace)</option>
             <option value="jellicent">탱탱겔 (Jellicent)</option>
@@ -1962,15 +2001,21 @@
             <option value="gengar">팬텀 (Gengar)</option>
             <option value="dragonite">망나뇽 (Dragonite)</option>
             <option value="pikachu">피카츄 (Pikachu)</option>
+            <option value="mareep">메리프 (Mareep)</option>
             <option value="bidoof">비버니 (Bidoof)</option>
           </select>
         </div>
         <div class="picker-group">
           <span>적대 포켓몬 (B):</span>
           <select class="picker-select" id="enemy-pokemon-select" onchange="replayActiveMove()">
-            <option value="lugia" selected>루기아 (Lugia)</option>
+            <option value="charizard" selected>리자몽 (Charizard)</option>
+            <option value="grovyle">나무돌이 (Grovyle)</option>
+            <option value="treecko">나무지기 (Treecko)</option>
+            <option value="tangela">덩쿠리 (Tangela)</option>
+            <option value="lugia">루기아 (Lugia)</option>
             <option value="onix">롱스톤 (Onix)</option>
             <option value="bidoof">비버니 (Bidoof)</option>
+            <option value="mareep">메리프 (Mareep)</option>
             <option value="cinderace">에이스번 (Cinderace)</option>
             <option value="lucario">루카리오 (Lucario)</option>
             <option value="jellicent">탱탱겔 (Jellicent)</option>
@@ -1980,6 +2025,28 @@
             <option value="machamp">괴력몬 (Machamp)</option>
             <option value="blastoise">거북왕 (Blastoise)</option>
             <option value="gengar">팬텀 (Gengar)</option>
+            <option value="vulpix">식스테일 (Vulpix)</option>
+          </select>
+        </div>
+        <div class="picker-group">
+          <span>배경 (아레나):</span>
+          <select class="picker-select" id="biome-select" onchange="replayActiveMove()">
+            <option value="cave" selected>동굴 (Cave)</option>
+            <option value="town">마을 (Town)</option>
+            <option value="plains">평원 (Plains)</option>
+            <option value="grass">풀숲 (Grass)</option>
+            <option value="forest">숲 (Forest)</option>
+            <option value="sea">바다 (Sea)</option>
+            <option value="metropolis">대도시 (Metropolis)</option>
+            <option value="dojo">도장 (Dojo)</option>
+            <option value="volcano">화산 (Volcano)</option>
+            <option value="mountain">산 (Mountain)</option>
+            <option value="desert">사막 (Desert)</option>
+            <option value="snowy_forest">설원 (Snowy Forest)</option>
+            <option value="power_plant">발전소 (Power Plant)</option>
+            <option value="graveyard">묘지 (Graveyard)</option>
+            <option value="space">우주 (Space)</option>
+            <option value="abyss">심연 (Abyss)</option>
           </select>
         </div>
       </div>
@@ -2003,6 +2070,7 @@
           <div id="loading-text">0.0s</div>
         </div>
         <img class="viewport-gif" id="move-gif-preview" src="" alt="Move Preview">
+        <video class="viewport-gif" id="move-video-preview" controls autoplay loop playsinline style="display:none; width: 100%; height: 100%; object-fit: contain;"></video>
       </div>
 
       <!-- Full Animation Frame Inspector (모든 프레임 순차 검수 타임라인 & 썸네일 스트립) -->
@@ -2222,6 +2290,8 @@
     let allMoves = EMBEDDED_MOVES;
     let currentMoveIndex = 0;
     let isRendering = false;
+    let isExportingVideo = false;
+    let renderedMoveGroups = [];
     let savedSidebarScrollTop = 0;
 
     const TYPE_COLORS = {
@@ -2308,12 +2378,14 @@
         return {
           title: '특수 조우 연출 (No.000)',
           file: 'encounter',
+          filename: 'No.000_encounter.mp4',
         };
       }
       if (m.num >= 999) {
         return {
           title: '특수 연출 (No.999)',
           file: 'special',
+          filename: 'No.999_special.mp4',
         };
       }
       const groupIdx = Math.floor((m.num - 1) / 4);
@@ -2324,6 +2396,7 @@
       return {
         title: `SET No.${startPad} ~ ${endPad}`,
         file: `move${startPad}_${endPad}.ts`,
+        filename: `No.${startPad}_${endPad}.mp4`,
       };
     }
 
@@ -2405,6 +2478,7 @@
         }
         groupMap.get(gKey).items.push(m);
       });
+      renderedMoveGroups = groups;
 
       groups.forEach((g) => {
         const groupBox = document.createElement('div');
@@ -2421,7 +2495,7 @@
         groupHeader.className = 'move-group-header';
         groupHeader.innerHTML = `
           <span class="move-group-title">
-            <span>📦</span>
+            <button class="btn-group-export-video" id="btn-export-${g.key}" onclick="exportGroupVideo('${g.key}', event)" title="📦 ${g.meta.title} 비디오 추출 (${g.meta.filename})">📦</button>
             <span>${g.meta.title}</span>
           </span>
           <div class="move-group-meta">
@@ -2564,6 +2638,30 @@
           t2Btn?.classList.toggle('active', currentFlyPhase === '2');
           t1Btn?.classList.toggle('active', currentFlyPhase === '1');
           fullBtn?.classList.toggle('active', currentFlyPhase === 'full');
+        }
+      }
+
+      if (move.id === 'aeroblast' || move.id === 'aeroblast-enemy') {
+        const pSel = document.getElementById('player-pokemon-select');
+        const eSel = document.getElementById('enemy-pokemon-select');
+        if (move.id === 'aeroblast') {
+          if (pSel) pSel.value = 'lugia';
+          if (eSel) eSel.value = 'grovyle';
+        } else {
+          if (pSel) pSel.value = 'grovyle';
+          if (eSel) eSel.value = 'lugia';
+        }
+      }
+
+      if (move.id === 'cotton-spore' || move.id === 'cotton-spore-enemy') {
+        const pSel = document.getElementById('player-pokemon-select');
+        const eSel = document.getElementById('enemy-pokemon-select');
+        if (move.id === 'cotton-spore') {
+          if (pSel) pSel.value = 'mareep';
+          if (eSel) eSel.value = 'pikachu';
+        } else {
+          if (pSel) pSel.value = 'pikachu';
+          if (eSel) eSel.value = 'mareep';
         }
       }
 
@@ -2861,8 +2959,17 @@
       const fullBtn = document.getElementById('btn-full-gif');
       if (fullBtn) fullBtn.classList.remove('primary');
 
+      const videoEl = document.getElementById('move-video-preview');
+      if (videoEl) {
+        videoEl.pause();
+        videoEl.style.display = 'none';
+      }
+
       const img = document.getElementById('move-gif-preview');
-      img.src = f.dataUrl;
+      if (img) {
+        img.style.display = 'block';
+        img.src = f.dataUrl;
+      }
 
       updatePhaseHud();
     }
@@ -2872,8 +2979,15 @@
     }
 
     function setPreviewImageSrc(srcUrl, isFreshGif = false) {
+      const videoEl = document.getElementById('move-video-preview');
+      if (videoEl) {
+        videoEl.pause();
+        videoEl.style.display = 'none';
+      }
+
       const oldImg = document.getElementById('move-gif-preview');
       if (!oldImg) return;
+      oldImg.style.display = 'block';
 
       if (isFreshGif) {
         // [유저 버그 제보 해결] 브라우저(크롬/엣지)가 이전 GIF의 마지막 프레임(데미지 입은 결과)을
@@ -2965,11 +3079,12 @@
 
       const playerMon = document.getElementById('player-pokemon-select').value;
       const enemyMon = document.getElementById('enemy-pokemon-select').value;
+      const biome = document.getElementById('biome-select')?.value || 'cave';
 
       try {
         const baseUrl = window.location.origin.includes('http') ? window.location.origin : 'http://localhost:3456';
         const nocacheParam = forceNoCache ? '&nocache=1' : '';
-        const res = await fetch(`${baseUrl}/api/render-move?moveKey=${moveKey}&playerSpecies=${playerMon}&enemySpecies=${enemyMon}&hitMode=${currentHitMode}&flyPhase=${currentFlyPhase}&actMode=${currentActMode}${nocacheParam}`);
+        const res = await fetch(`${baseUrl}/api/render-move?moveKey=${moveKey}&playerSpecies=${playerMon}&enemySpecies=${enemyMon}&biome=${biome}&hitMode=${currentHitMode}&flyPhase=${currentFlyPhase}&actMode=${currentActMode}${nocacheParam}`);
         const data = await res.json();
 
         if (data.gif) {
@@ -3052,6 +3167,129 @@
     // 하위 호환성 유지
     function clearViewerCacheAndRestart() {
       return clearViewerCacheOnly();
+    }
+
+    async function exportGroupVideo(groupKey, event) {
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+      if (isExportingVideo) {
+        showRealtimeToast('⏳ 이미 비디오 추출이 진행 중입니다. 잠시만 기다려주세요.', false);
+        return;
+      }
+
+      const group = (renderedMoveGroups || []).find(g => g.key === groupKey);
+      if (!group || !group.items || group.items.length === 0) {
+        showRealtimeToast('❌ 추출할 기술 목록이 없습니다.', false);
+        return;
+      }
+
+      const moveKeys = group.items.map(m => m.id);
+      const filename = group.meta?.filename || `${groupKey}.mp4`;
+      const btn = document.getElementById(`btn-export-${groupKey}`);
+      if (btn) btn.classList.add('loading');
+
+      isExportingVideo = true;
+      const overlay = document.getElementById('loading-overlay');
+      const loadingText = document.getElementById('loading-text');
+      if (overlay) overlay.classList.add('active');
+
+      const startTime = Date.now();
+      let timerInterval = null;
+      if (loadingText) {
+        loadingText.innerText = `🎬 [${filename}] 인코딩 중... 0.0s`;
+        timerInterval = setInterval(() => {
+          const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+          loadingText.innerText = `🎬 [${filename}] 인코딩 중... ${elapsed}s`;
+        }, 100);
+      }
+
+      const playerMon = document.getElementById('player-pokemon-select')?.value || 'bulbasaur';
+      const enemyMon = document.getElementById('enemy-pokemon-select')?.value || 'grovyle';
+      const biome = document.getElementById('biome-select')?.value || 'cave';
+
+      try {
+        showRealtimeToast(`🎬 ${group.meta.title} (${moveKeys.length}개 기술) MP4 영상 추출 시작...`, true);
+
+        const baseUrl = window.location.origin.includes('http') ? window.location.origin : 'http://localhost:3456';
+        const res = await fetch(`${baseUrl}/api/export-set-video`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            moveKeys,
+            filename,
+            playerSpecies: playerMon,
+            enemySpecies: enemyMon,
+            biome,
+            hitMode: currentHitMode,
+            actMode: currentActMode,
+            flyPhase: currentFlyPhase
+          })
+        });
+
+        if (!res.ok) {
+          let errMsg = `HTTP ${res.status}`;
+          try {
+            const errData = await res.json();
+            if (errData && errData.error) errMsg = errData.error;
+          } catch (_) {}
+          throw new Error(errMsg);
+        }
+
+        const headerFilename = res.headers.get('X-Export-Filename');
+        let finalFilename = filename;
+        if (headerFilename) {
+          try {
+            finalFilename = decodeURIComponent(headerFilename);
+          } catch (_) {
+            finalFilename = headerFilename;
+          }
+        }
+
+        const blob = await res.blob();
+        const videoBlobUrl = URL.createObjectURL(blob);
+
+        // 1. 브라우저 파일 다운로드 트리거
+        const a = document.createElement('a');
+        a.href = videoBlobUrl;
+        a.download = finalFilename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        // 2. 뷰포트 카드에 즉시 비디오 재생
+        const gifImg = document.getElementById('move-gif-preview');
+        if (gifImg) gifImg.style.display = 'none';
+
+        const videoEl = document.getElementById('move-video-preview');
+        if (videoEl) {
+          videoEl.src = videoBlobUrl;
+          videoEl.style.display = 'block';
+          videoEl.currentTime = 0;
+          videoEl.play().catch(e => console.warn('Video auto-play prevented:', e));
+        }
+
+        const totalSec = ((Date.now() - startTime) / 1000).toFixed(1);
+        showRealtimeToast(`✅ ${finalFilename} 영상 추출 및 다운로드 완료! (${totalSec}초)`, true);
+
+        const descEl = document.getElementById('phase-hud-desc');
+        const metaEl = document.getElementById('phase-hud-meta');
+        if (descEl) descEl.innerHTML = `🎬 <strong>${finalFilename}</strong> 연속 비디오 재생 중`;
+        if (metaEl) {
+          metaEl.innerHTML = `● VIDEO MP4 (${totalSec}s)`;
+          metaEl.style.color = '#38BDF8';
+        }
+      } catch (err) {
+        console.error('Export group video failed:', err);
+        showRealtimeToast(`❌ 영상 추출 실패: ${err.message}`, false);
+      } finally {
+        if (timerInterval) clearInterval(timerInterval);
+        if (overlay) overlay.classList.remove('active');
+        if (loadingText) loadingText.innerText = '0.0s';
+        if (btn) btn.classList.remove('loading');
+        isExportingVideo = false;
+      }
     }
 
     function replayActiveMove(forceNoCache = false) {
@@ -3596,8 +3834,9 @@
 
       // Load initial idle / preview image
       if (pMon && eMon) {
-        const firstMove = pMon.moves[0] ? pMon.moves[0].key : 'tackle';
-        const initialImgUrl = `/api/render-move?moveKey=${firstMove}&playerSpecies=${pMon.id}&enemySpecies=${eMon.id}&playerHp=${pMon.hp}&enemyHp=${eMon.hp}&playerMaxHp=${pMon.hp}&enemyMaxHp=${eMon.hp}&actMode=single`;
+        const firstMove = pMon.moves[0] ? pMon.moves[0].key : 'flamethrower';
+        const biome = document.getElementById('biome-select')?.value || 'cave';
+        const initialImgUrl = `/api/render-move?moveKey=${firstMove}&playerSpecies=${pMon.id}&enemySpecies=${eMon.id}&biome=${biome}&playerHp=${pMon.hp}&enemyHp=${eMon.hp}&playerMaxHp=${pMon.hp}&enemyMaxHp=${eMon.hp}&actMode=single`;
         loadBattleActionGif(initialImgUrl, '🏟️ 3VS3 배틀 필드 준비 중...');
       }
     }
@@ -3750,6 +3989,7 @@
           enemyMove: null,
           trapTurns: battleState.boundTurns || 0,
           usedNewMoves: battleState.usedNewMoves,
+          biome: document.getElementById('biome-select')?.value || 'cave',
         };
 
         const res = await fetch('/api/battle-turn', {
