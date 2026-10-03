@@ -1,7 +1,8 @@
 import { BattlePokemon, BattleState, StatStages } from "../../engine/types.js";
-import { MoveData, getMoveData, MOVES_DATA } from "../../../data/movesKo.js";
+import { MoveData, getMoveData, getMoveKey, MOVES_DATA } from "../../../data/movesKo.js";
 import { applyStatChange } from "../../mechanics/statModifier.js";
 import { createPlayerBattleMon } from "../../entities/pokemonFactory.js";
+import { getTypeEffectiveness } from "../../mechanics/typeChart.js";
 
 export interface StatusMoveContext {
   actor: BattlePokemon;
@@ -17,7 +18,8 @@ export interface StatusMoveContext {
  * Checks whether a status move targets self (rather than opponent).
  */
 export function isSelfTargetStatusMove(moveName: string, actor?: BattlePokemon): boolean {
-  const k = moveName.toLowerCase().replace(/[\s_]+/g, "-");
+  const rawKey = moveName.toLowerCase().replace(/[\s_]+/g, "-");
+  const k = getMoveKey(rawKey) || rawKey;
   if (k === "curse-ghost") return false;
   if (k === "curse-normal") return true;
   if (k === "curse" || k === "174" || k === "저주") {
@@ -38,7 +40,9 @@ export function isSelfTargetStatusMove(moveName: string, actor?: BattlePokemon):
     "rain-dance", "sunny-day", "sandstorm", "snowscape", "hail", "electric-terrain",
     "grassy-terrain", "misty-terrain", "psychic-terrain", "tailwind", "trick-room",
     "reflect", "light-screen", "aurora-veil", "safeguard", "mist", "haze", "refresh",
-    "heal-bell", "aromatherapy", "splash", "teleport", "focus-energy", "conversion"
+    "heal-bell", "aromatherapy", "splash", "teleport", "focus-energy", "conversion", "conversion-2", "conversion2",
+    "destiny-bond", "destinybond", "194", "길동무",
+    "perish-song", "perish_song", "perishsong", "195", "멸망의노래", "멸망의 노래"
   ]);
   return selfMoves.has(k);
 }
@@ -95,6 +99,22 @@ export function executeStatusMove(ctx: StatusMoveContext): string {
       return isKo
         ? `[흰안개 효과!] ${monName}의 능력치는 떨어지지 않는다!`
         : `[Mist!] ${monName}'s stats cannot be lowered!`;
+    }
+
+    // Ability protection (Clear Body, White Smoke)
+    if (delta < 0 && subject === "target") {
+      const monAbility = (mon.ability || "").toLowerCase().replace(/[\s_]+/g, "-");
+      const monPassive = (mon.passiveAbility || "").toLowerCase().replace(/[\s_]+/g, "-");
+      if (monAbility === "clear-body" || monPassive === "clear-body") {
+        return isKo
+          ? `[특성 클리어바디] ${monName}의 능력치는 떨어지지 않는다!`
+          : `[Clear Body] ${monName}'s stats cannot be lowered!`;
+      }
+      if (monAbility === "white-smoke" || monPassive === "white-smoke") {
+        return isKo
+          ? `[특성 하얀연기] ${monName}의 능력치는 떨어지지 않는다!`
+          : `[White Smoke] ${monName}'s stats cannot be lowered!`;
+      }
     }
 
     const res = applyStatChange(
@@ -177,7 +197,18 @@ export function executeStatusMove(ctx: StatusMoveContext): string {
   }
 
   // 4. Protect / Detect / Spiky Shield
-  if (["protect", "detect", "spiky-shield"].includes(mName)) {
+  if (["protect", "detect", "spiky-shield", "baneful-bunker", "burning-bulwark", "182"].includes(mName) || move.nameKo === "방어") {
+    const count = actor.protectCounter || 0;
+    if (count > 0) {
+      // Official formula: success chance is (1/3)^count in Gen 6+
+      const successChance = Math.pow(1 / 3, count);
+      if (Math.random() > successChance) {
+        actor.protectCounter = 0;
+        actor.isProtected = false;
+        return isKo ? `하지만 기술은 실패했다!` : `But it failed!`;
+      }
+    }
+    actor.protectCounter = count + 1;
     actor.isProtected = true;
     return isKo ? `${actorName}(은)는 방어 자세를 취했다!` : `${actorName} protected itself!`;
   }
@@ -547,7 +578,15 @@ export function executeStatusMove(ctx: StatusMoveContext): string {
   if (["tail-whip", "leer"].includes(mName)) return applyStage("target", "def", "방어", "Defense", -1);
   if (mName === "screech") return applyStage("target", "def", "방어", "Defense", -2);
   if (["fake-tears", "metal-sound"].includes(mName)) return applyStage("target", "spd", "특수방어", "Sp. Def", -2);
-  if (["string-shot", "scary-face", "cotton-spore"].includes(mName)) return applyStage("target", "spe", "스피드", "Speed", -2);
+  if (["cotton-spore", "cottonspore", "178", "목화포자", "코튼포자"].includes(mName)) {
+    const isGrass = target.types?.some(t => t.toLowerCase() === "grass");
+    const hasOvercoat = target.ability?.toLowerCase() === "overcoat" || target.passiveAbility?.toLowerCase() === "overcoat";
+    if (isGrass || hasOvercoat) {
+      return isKo ? `하지만 ${targetName}에게는 효과가 없는 것 같다...` : `It doesn't affect ${targetName}...`;
+    }
+    return applyStage("target", "spe", "스피드", "Speed", -2);
+  }
+  if (["string-shot", "scary-face", "scary_face", "scaryface", "184", "겁나는얼굴"].includes(mName)) return applyStage("target", "spe", "스피드", "Speed", -2);
   if (["flash", "sand-attack", "smokescreen", "kinesis"].includes(mName)) return applyStage("target", "acc", "명중률", "Accuracy", -1);
   if (mName === "sweet-scent") return applyStage("target", "eva", "회피율", "Evasiveness", -2);
   if (["spider-web", "mean-look", "block"].includes(mName)) {
@@ -671,6 +710,226 @@ export function executeStatusMove(ctx: StatusMoveContext): string {
     return isKo
       ? `${actorName}(은)는 [${typeKo}] 타입으로 텍스처를 변환했다!`
       : `${actorName}'s type converted to [${typeEn}]!`;
+  }
+
+  if (mName === "conversion-2" || mName === "conversion2") {
+    const TYPE_KO: Record<string, string> = {
+      normal: "노말", fire: "불꽃", water: "물", electric: "전기", grass: "풀",
+      ice: "얼음", fighting: "격투", poison: "독", ground: "땅", flying: "비행",
+      psychic: "에스퍼", bug: "벌레", rock: "바위", ghost: "고스트", dragon: "드래곤",
+      steel: "강철", dark: "악", fairy: "페어리"
+    };
+
+    // 대상이 마지막으로 사용한 기술의 타입 탐색
+    const lastMoveKey = target.lastMoveUsed;
+    if (!lastMoveKey) {
+      return isKo ? `하지만 아무 일도 일어나지 않았다!` : `But it failed!`;
+    }
+
+    const mData = getMoveData(lastMoveKey);
+    const lastMoveType = mData?.type?.toLowerCase() || "normal";
+
+    // 상대 기술 타입에 저항(0.5배 이하: 반감 또는 무효)하는 타입들 탐색 (자신의 현재 타입 제외)
+    const ALL_TYPES = Object.keys(TYPE_KO);
+    const validResistTypes: string[] = [];
+
+    for (const candidateType of ALL_TYPES) {
+      if (actor.types.includes(candidateType)) continue;
+      const eff = getTypeEffectiveness(lastMoveType, [candidateType]);
+      if (eff < 1.0) {
+        validResistTypes.push(candidateType);
+      }
+    }
+
+    if (validResistTypes.length === 0) {
+      return isKo ? `하지만 아무 일도 일어나지 않았다!` : `But it failed!`;
+    }
+
+    // 후보 타입 중 하나 무작위 선택
+    const chosenType = validResistTypes[Math.floor(Math.random() * validResistTypes.length)];
+    actor.types = [chosenType];
+    const typeKo = TYPE_KO[chosenType] || chosenType;
+    const typeEn = chosenType.toUpperCase();
+    return isKo
+      ? `${actorName}(은)는 [${typeKo}] 타입으로 텍스처를 변환했다!`
+      : `${actorName}'s type converted to [${typeEn}]!`;
+  }
+
+  // 180. Spite (원한) - 상대가 마지막으로 사용한 기술의 PP를 4 감소
+  if (mName === "spite" || mName === "180" || move.nameKo === "원한") {
+    // 대상이 마지막으로 사용한 기술 확인
+    const lastMoveKey = target.lastMoveUsed || battle?.lastMoveEffect?.moveKey;
+    if (!lastMoveKey) {
+      return isKo ? `하지만 아무 일도 일어나지 않았다!` : `But it failed!`;
+    }
+
+    // 대상의 기술 목록 유효성 검사
+    if (!target.moves || target.moves.length === 0) {
+      return isKo ? `하지만 아무 일도 일어나지 않았다!` : `But it failed!`;
+    }
+
+    // PP 배열이 없거나 크기가 다르면 기본 PP로 초기화
+    if (!target.movePps || target.movePps.length !== target.moves.length) {
+      target.movePps = target.moves.map((m) => getMoveData(m)?.pp || 20);
+    }
+
+    // 대상의 기술 목록에서 lastMoveKey 탐색 (정규화된 키 비교)
+    const cleanLastMove = lastMoveKey.toLowerCase().replace(/[\s_]+/g, "-");
+    const targetMoveIdx = target.moves.findIndex((m) => {
+      const cleanM = m.toLowerCase().replace(/[\s_]+/g, "-");
+      return cleanM === cleanLastMove || getMoveKey(cleanM) === getMoveKey(cleanLastMove);
+    });
+
+    // 대상이 현재 배우고 있는 기술이 아니면 실패
+    if (targetMoveIdx === -1) {
+      return isKo ? `하지만 아무 일도 일어나지 않았다!` : `But it failed!`;
+    }
+
+    const curPp = target.movePps[targetMoveIdx];
+    // 이미 PP가 0이면 실패
+    if (curPp <= 0) {
+      return isKo ? `하지만 아무 일도 일어나지 않았다!` : `But it failed!`;
+    }
+
+    // PP를 최대 4만큼 감소 (남은 PP가 4 미만이면 전부 소진)
+    const reduceAmount = Math.min(curPp, 4);
+    target.movePps[targetMoveIdx] -= reduceAmount;
+
+    // 대상이 플레이어 포켓몬인 경우 파티 데이터 동기화
+    if (battle && battle.playerBattleMon === target && battle.playerParty?.[battle.playerActiveIndex]) {
+      battle.playerParty[battle.playerActiveIndex].movePps = [...target.movePps];
+    }
+
+    const targetMoveData = getMoveData(target.moves[targetMoveIdx]) || MOVES_DATA[cleanLastMove];
+    const targetMoveNameKo = targetMoveData?.nameKo || cleanLastMove;
+    const targetMoveNameEn = (targetMoveData?.name || cleanLastMove).toUpperCase();
+
+    return isKo
+      ? `${targetName}의 [${targetMoveNameKo}]의 PP가 ${reduceAmount} 깎였다! (남은 PP: ${target.movePps[targetMoveIdx]})`
+      : `It reduced the PP of ${targetName}'s [${targetMoveNameEn}] by ${reduceAmount}! (${target.movePps[targetMoveIdx]} PP left)`;
+  }
+
+  // 191. Spikes (압정뿌리기) - 상대 진영의 발밑에 압정 설치 (최대 3겹)
+  if (mName === "spikes" || mName === "191" || move.nameKo === "압정뿌리기") {
+    const isPlayerActor = actor === battle?.playerBattleMon || actor === battle?.playerParty?.[battle?.playerActiveIndex || 0];
+    if (battle) {
+      if (isPlayerActor) {
+        if ((battle.enemySpikesLayers || 0) >= 3) {
+          return isKo ? `하지만 상대 진영에는 이미 압정이 가득 뿌려져 있다!` : `Spikes are already scattered all over the opposing team's feet!`;
+        }
+        battle.enemySpikesLayers = (battle.enemySpikesLayers || 0) + 1;
+        const layers = battle.enemySpikesLayers;
+        return isKo
+          ? `상대 진영의 발밑에 압정이 흩뿌려졌다! (${layers}겹)`
+          : `Spikes were scattered all around the opposing team's feet! (${layers} layers)`;
+      } else {
+        if ((battle.playerSpikesLayers || 0) >= 3) {
+          return isKo ? `하지만 우리 진영에는 이미 압정이 가득 뿌려져 있다!` : `Spikes are already scattered all over our team's feet!`;
+        }
+        battle.playerSpikesLayers = (battle.playerSpikesLayers || 0) + 1;
+        const layers = battle.playerSpikesLayers;
+        return isKo
+          ? `우리 진영의 발밑에 압정이 흩뿌려졌다! (${layers}겹)`
+          : `Spikes were scattered all around our team's feet! (${layers} layers)`;
+      }
+    }
+    // Standalone unit test environment without full BattleState
+    const targetObj = target as any;
+    targetObj.spikesLayers = targetObj.spikesLayers || 0;
+    if (targetObj.spikesLayers >= 3) {
+      return isKo ? `하지만 상대 진영에는 이미 압정이 가득 뿌려져 있다!` : `Spikes are already scattered all over the opposing team's feet!`;
+    }
+    targetObj.spikesLayers += 1;
+    return isKo
+      ? `상대 진영의 발밑에 압정이 흩뿌려졌다! (${targetObj.spikesLayers}겹)`
+      : `Spikes were scattered all around the opposing team's feet! (${targetObj.spikesLayers} layers)`;
+  }
+
+  // 193. Foresight (꿰뚫어보기) - 상대의 움직임을 꿰뚫어봄 (회피율 무시 및 고스트 실체화)
+  if (mName === "foresight" || mName === "193" || move.nameKo === "꿰뚫어보기") {
+    if (target.isForesight || target.isIdentified) {
+      return isKo ? `하지만 ${targetName}에게는 이미 효과가 적용 중이다!` : `But it had no effect on ${targetName}!`;
+    }
+    target.isForesight = true;
+    target.isIdentified = true;
+    return isKo
+      ? `${actorName}(은)는 ${targetName}의 움직임을 꿰뚫어보았다!`
+      : `${actorName} identified ${targetName}!`;
+  }
+
+  // 194. Destiny Bond (길동무) - 시전 포켓몬에게 길동무 상태 부여
+  if (mName === "destiny-bond" || mName === "destinybond" || mName === "194" || move.nameKo === "길동무") {
+    actor.isDestinyBond = true;
+    return isKo
+      ? `${actorName}(은)는 상대를 길동무로 삼으려 한다!`
+      : `${actorName} is trying to take its opponent with it!`;
+  }
+
+  // 195. Perish Song (멸망의노래) - 노래를 들은 모든 활성 포켓몬에게 멸망 카운트 부여
+  if (
+    mName === "perish-song" ||
+    mName === "perish_song" ||
+    mName === "perishsong" ||
+    mName === "195" ||
+    move.nameKo === "멸망의노래" ||
+    move.nameKo === "멸망의 노래"
+  ) {
+    const isActorImmune = Boolean(
+      actor.ability?.toLowerCase() === "soundproof" ||
+      actor.passiveAbility?.toLowerCase() === "soundproof"
+    );
+    const isTargetImmune = Boolean(
+      target.ability?.toLowerCase() === "soundproof" ||
+      target.passiveAbility?.toLowerCase() === "soundproof"
+    );
+
+    const actorAlready = Boolean(actor.perishCount && actor.perishCount > 0);
+    const targetAlready = Boolean(target.perishCount && target.perishCount > 0);
+
+    const actorAffected = !isActorImmune && !actorAlready;
+    const targetAffected = !isTargetImmune && !targetAlready;
+
+    if (!actorAffected && !targetAffected) {
+      if (isActorImmune && isTargetImmune) {
+        return isKo
+          ? "하지만 방음 특성으로 인해 노래가 전혀 통하지 않았다!"
+          : "But Soundproof kept everyone from hearing the song!";
+      }
+      return isKo
+        ? "하지만 이미 모든 포켓몬에게 효과가 적용 중이다!"
+        : "But it had no effect on anyone!";
+    }
+
+    if (actorAffected) {
+      actor.perishCount = 4;
+    }
+    if (targetAffected) {
+      target.perishCount = 4;
+    }
+
+    const logs: string[] = [];
+    logs.push(
+      isKo
+        ? "노래를 들은 모든 포켓몬은 3턴 뒤에 기절한다!"
+        : "All Pokémon hearing the song will faint in three turns!"
+    );
+
+    if (isActorImmune) {
+      logs.push(
+        isKo
+          ? `${actorName}(은)는 방음 특성으로 노래가 들리지 않는다!`
+          : `${actorName}'s Soundproof blocks the song!`
+      );
+    }
+    if (isTargetImmune) {
+      logs.push(
+        isKo
+          ? `${targetName}(은)는 방음 특성으로 노래가 들리지 않는다!`
+          : `${targetName}'s Soundproof blocks the song!`
+      );
+    }
+
+    return logs.join("\n");
   }
 
   return isKo ? `기술의 효과가 발동했다!` : `The move took effect!`;

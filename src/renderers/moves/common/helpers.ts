@@ -10,6 +10,7 @@ export let firePunchFistCanvas: any = null;
 export let icePunchFistCanvas: any = null;
 export let thunderPunchFistCanvas: any = null;
 export let kickFootprintImg: any = null;
+export let scaryFaceImg: any = null;
 
 export function createTintedFistCanvas(img: any, fillHex: string) {
   if (!img || !img.width || !img.height) return null;
@@ -61,8 +62,15 @@ try {
 
   const kPath = path.resolve(process.cwd(), "assets/effects/kick_footprint.png");
   if (fs.existsSync(kPath)) kickFootprintImg = await loadImage(kPath);
+
+  const sfPath = path.resolve(process.cwd(), "assets/effects/scary_face.png");
+  if (fs.existsSync(sfPath)) scaryFaceImg = await loadImage(sfPath);
 } catch (err) {
   // Ignore error
+}
+
+export function getScaryFaceImg(): any {
+  return scaryFaceImg;
 }
 
 export function getKickFootprintImg(): any {

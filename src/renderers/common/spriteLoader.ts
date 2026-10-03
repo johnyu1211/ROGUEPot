@@ -406,7 +406,8 @@ export function drawFittedBattleSprite(
   targetY: number,
   targetSize: number,
   tintColor?: string | null,
-  bottomSpread?: number
+  bottomSpread?: number,
+  waveShift?: { amp: number; freq?: number; phase?: number }
 ) {
   if (!sprite || !sprite.width || !sprite.height) return;
 
@@ -457,15 +458,19 @@ export function drawFittedBattleSprite(
       const drawX = targetX - drawW / 2;
       const drawY = targetY - drawH; // bottom-aligned on surface
 
-      if (bottomSpread && bottomSpread !== 1.0) {
-        const numSlices = 24;
+      if ((bottomSpread && bottomSpread !== 1.0) || (waveShift && waveShift.amp !== 0)) {
+        const numSlices = 28;
         const sliceSrcH = actH / numSlices;
         const sliceDstH = drawH / numSlices;
+        const amp = waveShift?.amp ?? 0;
+        const freq = waveShift?.freq ?? (Math.PI * 3.5);
+        const phase = waveShift?.phase ?? 0;
         for (let i = 0; i < numSlices; i++) {
           const t = (i + 0.5) / numSlices; // 0.0 (머리) ~ 1.0 (바닥)
-          const sliceSpread = 1.0 + (bottomSpread - 1.0) * t;
+          const sliceSpread = bottomSpread ? (1.0 + (bottomSpread - 1.0) * t) : 1.0;
           const curDrawW = drawW * sliceSpread;
-          const curDrawX = targetX - curDrawW / 2;
+          const shiftX = amp !== 0 ? Math.sin(t * freq + phase) * amp : 0;
+          const curDrawX = targetX - curDrawW / 2 + shiftX;
           const sy = minY + i * sliceSrcH;
           const dy = drawY + i * sliceDstH;
           ctx.drawImage(
@@ -489,15 +494,19 @@ export function drawFittedBattleSprite(
   } catch {}
 
   const fallbackSprite = tintColor ? getTintedSprite(sprite, tintColor) : sprite;
-  if (bottomSpread && bottomSpread !== 1.0) {
-    const numSlices = 24;
+  if ((bottomSpread && bottomSpread !== 1.0) || (waveShift && waveShift.amp !== 0)) {
+    const numSlices = 28;
     const sliceSrcH = sprite.height / numSlices;
     const sliceDstH = targetSize / numSlices;
+    const amp = waveShift?.amp ?? 0;
+    const freq = waveShift?.freq ?? (Math.PI * 3.5);
+    const phase = waveShift?.phase ?? 0;
     for (let i = 0; i < numSlices; i++) {
       const t = (i + 0.5) / numSlices;
-      const sliceSpread = 1.0 + (bottomSpread - 1.0) * t;
+      const sliceSpread = bottomSpread ? (1.0 + (bottomSpread - 1.0) * t) : 1.0;
       const curDrawW = targetSize * sliceSpread;
-      const curDrawX = targetX - curDrawW / 2;
+      const shiftX = amp !== 0 ? Math.sin(t * freq + phase) * amp : 0;
+      const curDrawX = targetX - curDrawW / 2 + shiftX;
       const sy = i * sliceSrcH;
       const dy = targetY - targetSize + i * sliceDstH;
       ctx.drawImage(fallbackSprite, 0, sy, sprite.width, sliceSrcH, curDrawX, dy, curDrawW, sliceDstH + 0.5);

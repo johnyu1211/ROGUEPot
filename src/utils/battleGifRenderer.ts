@@ -43,6 +43,13 @@ export interface BattleAnimationOptions {
   isSwitch?: boolean;
   prevEnemy?: BattlePokemon;
   prevPlayer?: BattlePokemon;
+  // Video and sequence options
+  skipLeadingBlur?: boolean;
+  fastTurnTransition?: boolean;
+  finalHoldDelay?: number;
+  renderScale?: number;
+  onRenderFrame?: (canvas: any, ctx: any, delay: number, frame: any) => Promise<void> | void;
+  skipGifEncoding?: boolean;
 }
 
 export interface FramePreviewItem {
@@ -974,9 +981,9 @@ function drawHighSkyCutscene(
 export async function renderBattleMoveGif(options: BattleAnimationOptions): Promise<RenderGifResult> {
   const logicalWidth = 560;
   const logicalHeight = 380;
-  const renderScale = 0.75; // 420x285 (44% pixel reduction, 2.3x faster encoding!)
-  const width = Math.round(logicalWidth * renderScale);   // 420
-  const height = Math.round(logicalHeight * renderScale); // 285
+  const renderScale = options.renderScale !== undefined ? options.renderScale : 0.75; // 420x285 default, or 1.0 (560x380) for HD video
+  const width = Math.round(logicalWidth * renderScale);   // 420 or 560
+  const height = Math.round(logicalHeight * renderScale); // 285 or 380
   const isKo = options.lang === "ko";
   const battle = options.battle;
   const enemy = battle.enemy;
@@ -1025,10 +1032,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
   // - 기술 제작 기준: 256색 팔레트 재사용 환경을 표준으로 제작하며,
   //   30 FPS 부드러운 애니메이션과 반투명 이펙트를 온전히 유지하면서 고속 렌더링 지원
   // ============================================================================
-  const encoder = new GIFEncoder(width, height, "octree", true);
-  encoder.setThreshold(30);
-  encoder.setRepeat(-1);
-  encoder.start();
+  let encoder: any = null;
+  if (!options.skipGifEncoding) {
+    encoder = new GIFEncoder(width, height, "octree", true);
+    encoder.setThreshold(30);
+    encoder.setRepeat(-1);
+    encoder.start();
+  }
 
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
@@ -1516,7 +1526,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
 
     framesConfig = [
       // Frame 0: Leading Cinematic Soft-Blur Loading Frame (1000ms for Fly glide, 800ms for others) - Field Blur
-      {
+      ...(options.skipLeadingBlur ? [] : [{
         delay: leadingBlurDelay,
         pOffset: isPlayerStartingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
         eOffset: isEnemyStartingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
@@ -1534,7 +1544,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         textLineIdx: 0,
         statProgress: undefined,
         isBlur: true,
-      },
+      }]),
       // === HUG CUTSCENE (If triggered!) ===
       ...hugFrames,
       // === ACT 1 ===
@@ -1551,9 +1561,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           : (isEnemyEvadingDuringAct1 ? { ...f, eOffset: { x: 0, y: -9999 }, hideEnemy: true, hideEShadow: true, eAlpha: 0.0 } : f);
         return { ...base, useTransformedSprite: isAct1Transformed, transformedWho: act1TransformedWho, useSubstituteSprite: isAct1Substituted, substituteWho: act1SubstitutedWho, dialogueLines: a1Lines, textLineIdx: 99 };
       })) : []),
-      // Frame 4: Natural Breathing Room Pause between Turns (850ms - comfortable reading pause!)
+      // Frame 4: Natural Breathing Room Pause between Turns (850ms - comfortable reading pause!, or 180ms for snappy video)
       {
-        delay: 850,
+        delay: options.fastTurnTransition ? 180 : 850,
         pOffset: isPlayerMidTurnEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
         eOffset: isEnemyMidTurnEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
         pAlpha: isPlayerMidTurnEvading ? 0.0 : 1.0,
@@ -1639,9 +1649,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       ...(residualFrames.map(f => ({ ...f, useTransformedSprite: isAct2Transformed, transformedWho: act2TransformedWho, useSubstituteSprite: isAct2Substituted, substituteWho: act2SubstitutedWho, dialogueLines: lastActionLines, textLineIdx: 99 }))),
       // Sinking Faint Collapse Animation (if someone fainted)
       ...(faintFrames.map(f => ({ ...f, useTransformedSprite: isAct2Transformed, transformedWho: act2TransformedWho, useSubstituteSprite: isAct2Substituted, substituteWho: act2SubstitutedWho, dialogueLines: lastActionLines, textLineIdx: 99 }))),
-      // Final 11-Minute Static Hold Frame (655,000ms) - completely neutral with NO statProgress
+      // Final 11-Minute Static Hold Frame (655,000ms, or options.finalHoldDelay for video) - completely neutral with NO statProgress
       {
-        delay: 655000,
+        delay: options.finalHoldDelay !== undefined ? options.finalHoldDelay : 655000,
         pOffset: isPlayerEndingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
         eOffset: isEnemyEndingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
         pAlpha: (isPlayerFainted || (!isP2 && isWhirlwindHit2) || (!isP1 && isWhirlwindHit1)) ? 0.0 : 1.0,
@@ -1806,7 +1816,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
 
     framesConfig = [
       // Frame 0: Leading Cinematic Soft-Blur Loading Frame (1000ms for Fly glide, 800ms for others) - Field Blur
-      {
+      ...(options.skipLeadingBlur ? [] : [{
         delay: singleLeadingBlurDelay,
         pOffset: isPlayerStartingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
         eOffset: isEnemyStartingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
@@ -1824,7 +1834,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         textLineIdx: 0,
         statProgress: undefined,
         isBlur: true,
-      },
+      }]),
       // === HUG CUTSCENE (If triggered!) ===
       ...hugFramesSingle,
       // Act 1 Move Animation (Fully executed with all sub-frames!)
@@ -1845,9 +1855,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       ...(residualFramesSingle.map(f => ({ ...f, useTransformedSprite: isTransformedHold, transformedWho: transformedWhoHold, useSubstituteSprite: isSubstitutedHold, substituteWho: substituteWhoHold, dialogueLines: a1SingleLines, textLineIdx: 99 }))),
       // Sinking Faint Collapse Animation (if fainted)
       ...(faintFrames.map(f => ({ ...f, useTransformedSprite: isTransformedHold, transformedWho: transformedWhoHold, useSubstituteSprite: isSubstitutedHold, substituteWho: substituteWhoHold, dialogueLines: a1SingleLines, textLineIdx: 99 }))),
-      // Final 11-Minute Static Hold Frame (655,000ms) - completely neutral with NO statProgress
+      // Final 11-Minute Static Hold Frame (655,000ms, or options.finalHoldDelay for video) - completely neutral with NO statProgress
       {
-        delay: 655000,
+        delay: options.finalHoldDelay !== undefined ? options.finalHoldDelay : 655000,
         pOffset: isPlayerEndingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
         eOffset: isEnemyEndingEvading ? { x: 0, y: -9999 } : { x: 0, y: 0 },
         pAlpha: (isPlayerFainted || (!isP1 && isWhirlwindSuccess)) ? 0.0 : 1.0,
@@ -2177,6 +2187,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           const eWhiteAlpha = f.eWhiteAlpha ?? (!isAttackingPlayer ? f.whiteFilterAlpha : 0) ?? 0;
           const isPureWhite = f.eWhite || (f.casterWhite && !isAttackingPlayer) || eWhiteAlpha >= 0.99;
           const eBottomSpread = f.eBottomSpread ?? (!isAttackingPlayer ? f.bottomSpread : undefined);
+          const eWaveShift = f.eWaveShift ?? (eTarget ? f.targetWaveShift : undefined);
 
           if (isPureWhite) {
             targetCtx.filter = "brightness(0) invert(1)";
@@ -2220,7 +2231,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           const eTintColor = getStatusTintColor(curRenderEnemyStatus);
           if (isWhiteAura) {
             // 1. [아래 레이어] 원본 스프라이트는 제자리에 그대로 유지 (오프셋 0, 스케일 1.0, 원본 색상)
-            drawFittedBattleSprite(targetCtx, eSpriteToDraw, em.x, em.y, em.size, eTintColor, eBottomSpread);
+            drawFittedBattleSprite(targetCtx, eSpriteToDraw, em.x, em.y, em.size, eTintColor, eBottomSpread, eWaveShift);
 
             // 2. [위 레이어] 반투명 흰색 스프라이트는 위에 뜨며(이동/진동/팽창) 렌더링
             targetCtx.save();
@@ -2236,12 +2247,12 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
                 if (pivotY) targetCtx.translate(0, pivotY);
               }
               if (f.eScale) targetCtx.scale(f.eScale.x, f.eScale.y);
-              drawFittedBattleSprite(targetCtx, eSpriteToDraw, 0, 0, em.size, eTintColor, eBottomSpread);
+              drawFittedBattleSprite(targetCtx, eSpriteToDraw, 0, 0, em.size, eTintColor, eBottomSpread, eWaveShift);
             } else {
-              drawFittedBattleSprite(targetCtx, eSpriteToDraw, ex, ey, em.size, eTintColor, eBottomSpread);
+              drawFittedBattleSprite(targetCtx, eSpriteToDraw, ex, ey, em.size, eTintColor, eBottomSpread, eWaveShift);
             }
             targetCtx.restore();
-          } else if (f.eScale || f.eRot || eBottomSpread) {
+          } else if (f.eScale || f.eRot || eBottomSpread || eWaveShift) {
             targetCtx.translate(ex, ey);
             if (f.eRot) {
               const pivotY = (f.rotateFromCenter || f.eRotCenter) ? (f.eRotPivotY ?? 26) : 0;
@@ -2250,21 +2261,21 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
               if (pivotY) targetCtx.translate(0, pivotY);
             }
             if (f.eScale) targetCtx.scale(f.eScale.x, f.eScale.y);
-            drawFittedBattleSprite(targetCtx, eSpriteToDraw, 0, 0, em.size, eTintColor, eBottomSpread);
+            drawFittedBattleSprite(targetCtx, eSpriteToDraw, 0, 0, em.size, eTintColor, eBottomSpread, eWaveShift);
             if (!isPureWhite && eWhiteAlpha > 0.01) {
               targetCtx.save();
               targetCtx.filter = "brightness(0) invert(1)";
               targetCtx.globalAlpha = eAlpha * eWhiteAlpha;
-              drawFittedBattleSprite(targetCtx, eSpriteToDraw, 0, 0, em.size, eTintColor, eBottomSpread);
+              drawFittedBattleSprite(targetCtx, eSpriteToDraw, 0, 0, em.size, eTintColor, eBottomSpread, eWaveShift);
               targetCtx.restore();
             }
           } else {
-            drawFittedBattleSprite(targetCtx, eSpriteToDraw, ex, ey, em.size, eTintColor, eBottomSpread);
+            drawFittedBattleSprite(targetCtx, eSpriteToDraw, ex, ey, em.size, eTintColor, eBottomSpread, eWaveShift);
             if (!isPureWhite && eWhiteAlpha > 0.01) {
               targetCtx.save();
               targetCtx.filter = "brightness(0) invert(1)";
               targetCtx.globalAlpha = eAlpha * eWhiteAlpha;
-              drawFittedBattleSprite(targetCtx, eSpriteToDraw, ex, ey, em.size, eTintColor, eBottomSpread);
+              drawFittedBattleSprite(targetCtx, eSpriteToDraw, ex, ey, em.size, eTintColor, eBottomSpread, eWaveShift);
               targetCtx.restore();
             }
           }
@@ -2290,6 +2301,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           const pWhiteAlpha = f.pWhiteAlpha ?? (isAttackingPlayer ? f.whiteFilterAlpha : 0) ?? 0;
           const isPureWhite = f.pWhite || (f.casterWhite && isAttackingPlayer) || pWhiteAlpha >= 0.99;
           const pBottomSpread = f.pBottomSpread ?? (isAttackingPlayer ? f.bottomSpread : undefined);
+          const pWaveShift = f.pWaveShift ?? (pTarget ? f.targetWaveShift : undefined);
 
           if (isPureWhite) {
             targetCtx.filter = "brightness(0) invert(1)";
@@ -2333,7 +2345,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           const pTintColor = getStatusTintColor(curRenderPlayerStatus);
           if (isWhiteAura) {
             // 1. [아래 레이어] 원본 스프라이트는 제자리에 그대로 유지 (오프셋 0, 스케일 1.0, 원본 색상)
-            drawFittedBattleSprite(targetCtx, pSpriteToDraw, pm.x, pm.y, pm.size, pTintColor, pBottomSpread);
+            drawFittedBattleSprite(targetCtx, pSpriteToDraw, pm.x, pm.y, pm.size, pTintColor, pBottomSpread, pWaveShift);
 
             // 2. [위 레이어] 반투명 흰색 스프라이트는 위에 뜨며(이동/진동/팽창) 렌더링
             targetCtx.save();
@@ -2349,12 +2361,12 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
                 if (pivotY) targetCtx.translate(0, pivotY);
               }
               if (f.pScale) targetCtx.scale(f.pScale.x, f.pScale.y);
-              drawFittedBattleSprite(targetCtx, pSpriteToDraw, 0, 0, pm.size, pTintColor, pBottomSpread);
+              drawFittedBattleSprite(targetCtx, pSpriteToDraw, 0, 0, pm.size, pTintColor, pBottomSpread, pWaveShift);
             } else {
-              drawFittedBattleSprite(targetCtx, pSpriteToDraw, px, py, pm.size, pTintColor, pBottomSpread);
+              drawFittedBattleSprite(targetCtx, pSpriteToDraw, px, py, pm.size, pTintColor, pBottomSpread, pWaveShift);
             }
             targetCtx.restore();
-          } else if (f.pScale || f.pRot || pBottomSpread) {
+          } else if (f.pScale || f.pRot || pBottomSpread || pWaveShift) {
             targetCtx.translate(px, py);
             if (f.pRot) {
               const pivotY = (f.rotateFromCenter || f.pRotCenter) ? (f.pRotPivotY ?? 36) : 0;
@@ -2363,21 +2375,21 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
               if (pivotY) targetCtx.translate(0, pivotY);
             }
             if (f.pScale) targetCtx.scale(f.pScale.x, f.pScale.y);
-            drawFittedBattleSprite(targetCtx, pSpriteToDraw, 0, 0, pm.size, pTintColor, pBottomSpread);
+            drawFittedBattleSprite(targetCtx, pSpriteToDraw, 0, 0, pm.size, pTintColor, pBottomSpread, pWaveShift);
             if (!isPureWhite && pWhiteAlpha > 0.01) {
               targetCtx.save();
               targetCtx.filter = "brightness(0) invert(1)";
               targetCtx.globalAlpha = pAlpha * pWhiteAlpha;
-              drawFittedBattleSprite(targetCtx, pSpriteToDraw, 0, 0, pm.size, pTintColor, pBottomSpread);
+              drawFittedBattleSprite(targetCtx, pSpriteToDraw, 0, 0, pm.size, pTintColor, pBottomSpread, pWaveShift);
               targetCtx.restore();
             }
           } else {
-            drawFittedBattleSprite(targetCtx, pSpriteToDraw, px, py, pm.size, pTintColor, pBottomSpread);
+            drawFittedBattleSprite(targetCtx, pSpriteToDraw, px, py, pm.size, pTintColor, pBottomSpread, pWaveShift);
             if (!isPureWhite && pWhiteAlpha > 0.01) {
               targetCtx.save();
               targetCtx.filter = "brightness(0) invert(1)";
               targetCtx.globalAlpha = pAlpha * pWhiteAlpha;
-              drawFittedBattleSprite(targetCtx, pSpriteToDraw, px, py, pm.size, pTintColor, pBottomSpread);
+              drawFittedBattleSprite(targetCtx, pSpriteToDraw, px, py, pm.size, pTintColor, pBottomSpread, pWaveShift);
               targetCtx.restore();
             }
           }
@@ -2469,6 +2481,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         if (!f.drawPlayerAboveHud) drawPlayerSprite();
       }
 
+      // Atmospheric Black Fade (Dims arena & pokemon sprites, but front move effects glow above it)
+      if (f.blackFadeAlpha !== undefined && f.blackFadeAlpha > 0) {
+        targetCtx.save();
+        targetCtx.globalAlpha = f.blackFadeAlpha;
+        targetCtx.fillStyle = "#000000";
+        targetCtx.fillRect(-logicalWidth * 4, -3000, logicalWidth * 9, 6000);
+        targetCtx.restore();
+      }
+
       // Front-Sprite Move Effect Layer:
       // Uses the move's own self-contained drawEffect method
       if (f.showEffect !== false && (f.showEffect || f.moveStep)) {
@@ -2504,14 +2525,6 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         }
       }
 
-      if (f.blackFadeAlpha !== undefined && f.blackFadeAlpha > 0) {
-        targetCtx.save();
-        targetCtx.globalAlpha = f.blackFadeAlpha;
-        targetCtx.fillStyle = "#000000";
-        targetCtx.fillRect(-logicalWidth * 4, -3000, logicalWidth * 9, 6000);
-        targetCtx.restore();
-      }
-
       // Stat Boost / Drop Arrow Particles (Rendered within Pokémon coordinate space so they always attach perfectly!)
       // ⚠️ 커스텀 기술(customStatParticles)이 자체 drawEffect에서 스탯 연출을 그리는 경우, 기본 파티클은 스킵하여 시각적 중복을 방지.
       //    (배틀 로직의 statProgress 값/흐름은 그대로 유지 — 순수 렌더링 분기)
@@ -2522,7 +2535,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           const moveKey = (activeEffect?.moveKey || (f.moveEffect as any)?.moveKey || "").toLowerCase().replace(/[\s_]+/g, "-");
           const moveData = getMoveData(moveKey);
           const desc = moveData?.description || "";
-          const isDebuffMove = moveKey.includes("growl") || moveKey.includes("tail-whip") || moveKey.includes("tailwhip") || moveKey.includes("leer") || moveKey.includes("screech") || moveKey.includes("charm") || moveKey.includes("fake-tears") || moveKey.includes("string-shot") || moveKey.includes("sand-attack") || desc.includes("떨어뜨") || desc.includes("낮춘") || desc.includes("감소") || desc.includes("하락");
+          const isDebuffMove = moveKey.includes("growl") || moveKey.includes("tail-whip") || moveKey.includes("tailwhip") || moveKey.includes("leer") || moveKey.includes("screech") || moveKey.includes("charm") || moveKey.includes("fake-tears") || moveKey.includes("string-shot") || moveKey.includes("sand-attack") || moveKey.includes("cotton-spore") || moveKey.includes("cottonspore") || moveKey.includes("mud-slap") || moveKey.includes("mudslap") || moveKey.includes("icy-wind") || moveKey.includes("icywind") || desc.includes("떨어뜨") || desc.includes("낮춘") || desc.includes("감소") || desc.includes("하락");
           if (isDebuffMove) {
             statChanges = [{ target: isAttackingPlayer ? "enemy" : "player", direction: "down" }];
           } else {
@@ -2690,13 +2703,19 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       (prevBattleFrame && f.phaseId && prevBattleFrame.phaseId ? f.phaseId !== prevBattleFrame.phaseId : (prevBattleFrame && f.moveStep !== undefined && prevBattleFrame.moveStep !== undefined && f.moveStep !== prevBattleFrame.moveStep))
     );
 
-    if (isVisualStateShift) {
+    if (encoder && isVisualStateShift) {
       (encoder as any).reuseTab = false;
       (encoder as any).prevImage = null;
     }
 
-    encoder.setDelay(effectiveDelay);
-    encoder.addFrame(ctx);
+    if (options.onRenderFrame) {
+      await options.onRenderFrame(canvas, ctx, effectiveDelay, f);
+    }
+
+    if (encoder) {
+      encoder.setDelay(effectiveDelay);
+      encoder.addFrame(ctx);
+    }
     prevBattleFrame = f;
 
     if (options.includeFramePreviews) {
@@ -2722,9 +2741,11 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     .filter(f => f.delay < 10000)
     .reduce((sum, f) => sum + (f.isBlur ? (f.delay || 800) : (f.delay || 33)), 0);
 
-  encoder.finish();
+  if (encoder) {
+    encoder.finish();
+  }
   return {
-    buffer: encoder.out.getData(),
+    buffer: encoder ? encoder.out.getData() : Buffer.alloc(0),
     motionDurationMs: totalMotionMs,
     phases: options.includeFramePreviews ? phases : undefined,
   };

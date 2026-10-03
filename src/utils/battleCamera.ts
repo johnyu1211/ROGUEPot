@@ -28,7 +28,7 @@ export function createSmoothCameraReturnFrames(
   frameDelayMs: number = 50
 ): BattleFrame[] {
   const result: BattleFrame[] = [];
-  const fadeEffect = Boolean(lastFrame.fadeEffectOnCameraReturn);
+  const fadeEffect = Boolean(lastFrame.fadeEffectOnCameraReturn || lastFrame.orbAngle !== undefined);
 
   for (let i = 1; i <= frameCount; i++) {
     const u = i / frameCount;
@@ -50,6 +50,7 @@ export function createSmoothCameraReturnFrames(
 
     // fadeEffectOnCameraReturn: 0.20 -> 0.98로 점진적 소멸 (마지막 프레임에서 잔향 극미세/완전 투명화)
     const effectProg = fadeEffect ? Number((0.20 + 0.78 * (i / frameCount)).toFixed(4)) : undefined;
+    const nextOrbAngle = lastFrame.orbAngle !== undefined ? lastFrame.orbAngle + i * 0.52 : undefined;
 
     result.push({
       ...lastFrame,
@@ -65,8 +66,12 @@ export function createSmoothCameraReturnFrames(
       hidePlatform: false,
       showEffect: fadeEffect,
       showBehindEffect: fadeEffect,
+      showYellowAura: fadeEffect ? (lastFrame.showYellowAura ?? true) : false,
+      orbAngle: nextOrbAngle,
+      orbCount: lastFrame.orbCount,
       moveStep: fadeEffect ? lastFrame.moveStep : undefined,
       effectProgress: effectProg,
+      disperseProgress: undefined,
       fadeEffectOnCameraReturn: fadeEffect,
       hitFlash: false,
       blackoutScreen: false,
@@ -925,16 +930,16 @@ export const casterToTargetCameraHandler: CameraHandler = (
   const neutralX = 280;
   const neutralY = 190;
 
-  // 1. Attacker Focal Point (시전자 포커싱)
+    // 1. Attacker Focal Point (시전자 포커싱)
   const isAttackerPlayer = !isTargetPlayer;
-  const attackerRatio = isAttackerPlayer ? 1.0 : 0.52;
+  const attackerRatio = isAttackerPlayer ? 1.0 : (cfg.focalRatio ?? 0.52);
   const attackerFocal: CameraFocalPoint = {
     x: Math.round(neutralX + (attackerPos.x - neutralX) * attackerRatio),
     y: Math.round(neutralY + (attackerPos.y - neutralY) * attackerRatio),
   };
 
   // 2. Defender Focal Point (상대방 피격 포커싱)
-  const defenderRatio = isTargetPlayer ? 1.0 : 0.52;
+  const defenderRatio = isTargetPlayer ? 1.0 : (cfg.focalRatio ?? 0.52);
   const defenderFocal: CameraFocalPoint = {
     x: Math.round(neutralX + (defenderPos.x - neutralX) * defenderRatio),
     y: Math.round(neutralY + (defenderPos.y - neutralY) * defenderRatio),
@@ -1034,12 +1039,16 @@ export const casterToTargetCameraHandler: CameraHandler = (
     }
   } else {
     // 2-frame glide-in to Attacker
+    const hasBaseOrb = base.orbAngle !== undefined;
     const start1: BattleFrame = {
       ...base,
       delay: 45,
       pOffset: { x: 0, y: 0 },
       eOffset: { x: 0, y: 0 },
-      showEffect: false,
+      showEffect: base.showEffect ?? false,
+      showBehindEffect: base.showBehindEffect ?? false,
+      showYellowAura: base.showYellowAura ?? false,
+      orbAngle: hasBaseOrb ? base.orbAngle! - 0.78 : undefined,
       hitFlash: false,
       cameraZoom: 1.0 + (targetZoom - 1.0) * 0.45,
       cameraFocal: {
@@ -1055,7 +1064,10 @@ export const casterToTargetCameraHandler: CameraHandler = (
       delay: 45,
       pOffset: { x: 0, y: 0 },
       eOffset: { x: 0, y: 0 },
-      showEffect: false,
+      showEffect: base.showEffect ?? false,
+      showBehindEffect: base.showBehindEffect ?? false,
+      showYellowAura: base.showYellowAura ?? false,
+      orbAngle: hasBaseOrb ? base.orbAngle! - 0.39 : undefined,
       hitFlash: false,
       cameraZoom: targetZoom,
       cameraFocal: attackerFocal,
@@ -1066,12 +1078,13 @@ export const casterToTargetCameraHandler: CameraHandler = (
     frames.unshift(start1, start2);
   }
 
-  // Camera Return (Glide-Out) from DEFENDER to neutral arena
+  // Camera Return (Glide-Out) from last focal point (Attacker or Defender) to neutral arena
   const lastFrame = frames[frames.length - 1];
+  const returnFocal = lastFrame.cameraFocal || (activeStep < delayStep ? attackerFocal : defenderFocal);
   if (hasNextTarget) {
-    frames.push(...createSmoothCameraReturnFrames(lastFrame, targetZoom, defenderFocal, neutralX, neutralY, 3, 40));
+    frames.push(...createSmoothCameraReturnFrames(lastFrame, targetZoom, returnFocal, neutralX, neutralY, 3, 40));
   } else {
-    frames.push(...createSmoothCameraReturnFrames(lastFrame, targetZoom, defenderFocal, neutralX, neutralY, 7, 50));
+    frames.push(...createSmoothCameraReturnFrames(lastFrame, targetZoom, returnFocal, neutralX, neutralY, 7, 50));
   }
 
   // Post-Camera Frames

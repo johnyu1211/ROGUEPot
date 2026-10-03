@@ -27,6 +27,10 @@ export function checkSpecialDamage(ctx: SpecialDamageContext): SpecialDamageResu
   const actorName = isKo ? (actor.nameKo || actor.name) : (actor.name || actor.nameKo);
   const targetName = isKo ? (target.nameKo || target.name) : (target.name || target.nameKo);
   const moveName = isKo ? move.nameKo : move.name.toUpperCase();
+  const effectiveTargetTypes = (target.isForesight || target.isIdentified) &&
+    (move.type.toLowerCase() === "normal" || move.type.toLowerCase() === "fighting")
+      ? target.types.filter(t => t.toLowerCase() !== "ghost")
+      : target.types;
 
   // 1. One-Hit KO Moves (Horn Drill, Guillotine, Fissure, Sheer Cold)
   if (["horn-drill", "guillotine", "fissure", "sheer-cold"].includes(moveKey)) {
@@ -98,7 +102,7 @@ export function checkSpecialDamage(ctx: SpecialDamageContext): SpecialDamageResu
 
   // 2. Fixed Damage based on Level (Seismic Toss, Night Shade)
   if (moveKey === "seismic-toss" || moveKey === "night-shade") {
-    const typeMod = getTypeEffectiveness(move.type, target.types);
+    const typeMod = getTypeEffectiveness(move.type, effectiveTargetTypes);
     if (typeMod === 0) {
       return {
         handled: true,
@@ -116,7 +120,7 @@ export function checkSpecialDamage(ctx: SpecialDamageContext): SpecialDamageResu
 
   // 3. Constant 40 Damage (Dragon Rage)
   if (moveKey === "dragon-rage") {
-    const typeMod = getTypeEffectiveness(move.type, target.types);
+    const typeMod = getTypeEffectiveness(move.type, effectiveTargetTypes);
     if (typeMod === 0) {
       return {
         handled: true,
@@ -134,7 +138,7 @@ export function checkSpecialDamage(ctx: SpecialDamageContext): SpecialDamageResu
 
   // 4. Constant 20 Damage (Sonic Boom)
   if (moveKey === "sonic-boom") {
-    const typeMod = getTypeEffectiveness(move.type, target.types);
+    const typeMod = getTypeEffectiveness(move.type, effectiveTargetTypes);
     if (typeMod === 0) {
       return {
         handled: true,
@@ -152,7 +156,7 @@ export function checkSpecialDamage(ctx: SpecialDamageContext): SpecialDamageResu
 
   // 5. Half of Current HP (Super Fang, Nature's Madness)
   if (moveKey === "super-fang" || moveKey === "natures-madness") {
-    const typeMod = getTypeEffectiveness(move.type, target.types);
+    const typeMod = getTypeEffectiveness(move.type, effectiveTargetTypes);
     if (typeMod === 0) {
       return {
         handled: true,
@@ -187,7 +191,7 @@ export function checkSpecialDamage(ctx: SpecialDamageContext): SpecialDamageResu
 
   // 7. Physical Damage Counter (Counter)
   if (moveKey === "counter") {
-    const typeMod = getTypeEffectiveness(move.type, target.types);
+    const typeMod = getTypeEffectiveness(move.type, effectiveTargetTypes);
     if (typeMod === 0) {
       return {
         handled: true,
@@ -215,7 +219,7 @@ export function checkSpecialDamage(ctx: SpecialDamageContext): SpecialDamageResu
 
   // 8. Bide (참기)
   if (moveKey === "bide" || moveKey === "bide-charge") {
-    const typeMod = getTypeEffectiveness(move.type, target.types);
+    const typeMod = getTypeEffectiveness(move.type, effectiveTargetTypes);
     if (typeMod === 0) {
       return {
         handled: true,
@@ -249,7 +253,7 @@ export function checkSpecialDamage(ctx: SpecialDamageContext): SpecialDamageResu
 
   // 10. Psywave (사이코웨이브) - Variable damage based on user level: level * (50 ~ 150) / 100, min 1 HP
   if (moveKey === "psywave") {
-    const typeMod = getTypeEffectiveness(move.type, target.types);
+    const typeMod = getTypeEffectiveness(move.type, effectiveTargetTypes);
     if (typeMod === 0) {
       return {
         handled: true,
@@ -300,13 +304,16 @@ export function getDynamicMovePower(moveKey: string, actor: BattlePokemon, targe
   }
 
   // Low HP High Power Moves (Reversal, Flail)
-  if (cleanKey === "reversal" || cleanKey === "flail") {
-    const hpRatio = actor.hp / Math.max(1, actor.maxHp);
-    if (hpRatio < 0.0417) return 200;
-    if (hpRatio < 0.1042) return 150;
-    if (hpRatio < 0.2083) return 100;
-    if (hpRatio < 0.3542) return 80;
-    if (hpRatio < 0.6875) return 40;
+  // Gen 5+ official formula: P = floor(48 * CurrentHP / MaxHP)
+  // P: 0..1 => 200, 2..4 => 150, 5..9 => 100, 10..16 => 80, 17..32 => 40, >= 33 => 20
+  if (["reversal", "flail", "179", "175", "기사회생", "바둥바둥", "버둥거리기"].includes(cleanKey)) {
+    const maxHp = Math.max(1, actor.maxHp);
+    const p = Math.floor((48 * Math.max(1, actor.hp)) / maxHp);
+    if (p <= 1) return 200;
+    if (p <= 4) return 150;
+    if (p <= 9) return 100;
+    if (p <= 16) return 80;
+    if (p <= 32) return 40;
     return 20;
   }
 

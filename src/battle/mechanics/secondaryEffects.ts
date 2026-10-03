@@ -80,18 +80,21 @@ export function applySecondaryAttackEffects(
         target.status = "brn";
         log += isKo ? `\n${target.name}(은)는 화상을 입었다!` : `\n${target.name} was burned!`;
       }
-    } else if (["ice-beam", "blizzard", "ice-punch", "powder-snow"].includes(mName)) {
+    } else if (["ice-beam", "blizzard", "ice-punch", "powder-snow", "powder_snow", "powdersnow", "181", "눈싸라기"].includes(mName)) {
       if (Math.random() < 0.1 && !target.types.map(t => t.toLowerCase()).includes("ice")) {
         target.status = "frz";
         log += isKo ? `\n${target.name}(은)는 꽁꽁 얼어붙었다!` : `\n${target.name} was frozen solid!`;
       }
-    } else if (["thunderbolt", "thunder-shock", "thundershock", "discharge", "spark", "thunder", "thunder-punch", "body-slam", "lick"].includes(mName)) {
-      const parChance = (mName === "thunder" || mName === "body-slam" || mName === "lick") ? 0.3 : 0.1;
-      if (Math.random() < parChance && !target.types.map(t => t.toLowerCase()).includes("electric")) {
+    } else if (["thunderbolt", "thunder-shock", "thundershock", "discharge", "spark", "thunder", "thunder-punch", "body-slam", "lick", "zap-cannon", "zap_cannon", "zapcannon", "192", "전자포", "nuzzle"].includes(mName)) {
+      const isGuaranteedPar = ["zap-cannon", "zap_cannon", "zapcannon", "192", "전자포", "nuzzle"].includes(mName);
+      const parChance = isGuaranteedPar ? 1.0 : ((mName === "thunder" || mName === "body-slam" || mName === "lick") ? 0.3 : 0.1);
+      const isLimber = target.ability?.toLowerCase() === "limber" || target.passiveAbility?.toLowerCase() === "limber";
+      if (Math.random() < parChance && !target.types.map(t => t.toLowerCase()).includes("electric") && !isLimber) {
         target.status = "par";
-        log += isKo ? `\n${target.name}(은)는 마비에 걸렸다!` : `\n${target.name} is paralyzed!`;
+        const tName = isKo ? (target.nameKo || target.name) : (target.name || target.nameKo);
+        log += isKo ? `\n${tName}(은)는 마비에 걸렸다!` : `\n${tName} is paralyzed!`;
       }
-    } else if (["poison-sting", "twineedle", "sludge-bomb", "poison-jab", "smog", "sludge"].includes(mName)) {
+    } else if (["poison-sting", "twineedle", "sludge-bomb", "sludgebomb", "188", "오물폭탄", "poison-jab", "smog", "sludge"].includes(mName)) {
       const psnChance = mName === "smog" ? 0.4 : (mName === "poison-sting" ? 0.3 : (mName === "twineedle" ? 0.2 : 0.3));
       const isTargetPoisonOrSteel = target.types.some(t => ["poison", "steel"].includes(t.toLowerCase()));
       if (Math.random() < psnChance && !isTargetPoisonOrSteel) {
@@ -130,8 +133,9 @@ export function applySecondaryAttackEffects(
 
   // 8. Target Stat Drops from Attacks
   if (target.hp > 0) {
-    if (["bubble-beam", "bubble", "constrict", "icy-wind"].includes(mName)) {
-      const dropChance = mName === "icy-wind" ? 1.0 : 0.1;
+    const isIcyWind = ["icy-wind", "icy_wind", "icywind", "196", "얼어붙은바람", "얼어붙은 바람"].includes(mName) || move.id === 196;
+    if (isIcyWind || ["bubble-beam", "bubble", "constrict"].includes(mName)) {
+      const dropChance = isIcyWind ? 1.0 : 0.1;
       if (Math.random() < dropChance && target.stages.spe > -6) {
         target.stages.spe = Math.max(-6, target.stages.spe - 1);
         log += isKo ? `\n${target.name}의 스피드가 떨어졌다! (-1)` : `\n${target.name}'s Speed fell! (-1)`;
@@ -152,6 +156,13 @@ export function applySecondaryAttackEffects(
       if (Math.random() < dropChance && target.stages.spd > -6) {
         target.stages.spd = Math.max(-6, target.stages.spd - 1);
         log += isKo ? `\n${target.name}의 특수방어가 떨어졌다! (-1)` : `\n${target.name}'s Sp. Def fell! (-1)`;
+      }
+    } else if (["mud-slap", "mud_slap", "mudslap", "189", "진흙뿌리기", "octazooka", "190", "옥타주카", "대포무노포", "muddy-water", "mirror-shot"].includes(mName)) {
+      const dropChance = (mName === "mud-slap" || mName === "mud_slap" || mName === "mudslap" || mName === "189" || mName === "진흙뿌리기") ? 1.0 : (["octazooka", "190", "옥타주카", "대포무노포"].includes(mName) ? 0.5 : 0.3);
+      if (Math.random() < dropChance && target.stages.acc > -6) {
+        target.stages.acc = Math.max(-6, target.stages.acc - 1);
+        const tName = isKo ? (target.nameKo || target.name) : (target.name || target.nameKo);
+        log += isKo ? `\n${tName}의 명중률이 떨어졌다! (-1)` : `\n${tName}'s Accuracy fell! (-1)`;
       }
     }
   }

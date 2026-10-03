@@ -27,6 +27,13 @@ export interface StatChangeResult {
   logEn: string;
 }
 
+function getSubjectParticle(word: string): string {
+  if (!word) return "이";
+  const lastCode = word.charCodeAt(word.length - 1);
+  if (lastCode < 0xac00 || lastCode > 0xd7a3) return "이";
+  return (lastCode - 0xac00) % 28 > 0 ? "이" : "가";
+}
+
 /**
  * Applies a stat change (-6 to +6 bounded) to a Pokémon.
  */
@@ -40,6 +47,7 @@ export function applyStatChange(
   statNameEn: string
 ): StatChangeResult {
   const current = stages[statKey] || 0;
+  const josa = getSubjectParticle(statNameKo);
 
   if (delta > 0) {
     if (current >= 6) {
@@ -57,7 +65,7 @@ export function applyStatChange(
     return {
       success: true,
       actualDelta,
-      logKo: `${monNameKo}의 ${statNameKo}이${sharply} 올랐다! (+${actualDelta})`,
+      logKo: `${monNameKo}의 ${statNameKo}${josa}${sharply} 올랐다! (+${actualDelta})`,
       logEn: `${monNameEn}'s ${statNameEn}${sharplyEn} rose! (+${actualDelta})`,
     };
   } else {
@@ -76,7 +84,7 @@ export function applyStatChange(
     return {
       success: true,
       actualDelta,
-      logKo: `${monNameKo}의 ${statNameKo}이${harshly} 떨어졌다! (${actualDelta})`,
+      logKo: `${monNameKo}의 ${statNameKo}${josa}${harshly} 떨어졌다! (${actualDelta})`,
       logEn: `${monNameEn}'s ${statNameEn}${harshlyEn} fell! (${actualDelta})`,
     };
   }
