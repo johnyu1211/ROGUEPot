@@ -530,6 +530,26 @@ export class BattleService {
         : `\n[Intimidate!] Foe ${battle.enemy.name}'s Attack fell! (-1)`;
     }
 
+    // 191: 압정뿌리기(Spikes) 교체 피격 데미지 판정
+    if (battle.playerSpikesLayers && battle.playerSpikesLayers > 0) {
+      const mon = battle.playerBattleMon;
+      const isFlying = mon.types.map(t => t.toLowerCase()).includes("flying");
+      const hasLevitate = mon.ability?.toLowerCase() === "levitate" || mon.passiveAbility?.toLowerCase() === "levitate";
+      if (!isFlying && !hasLevitate) {
+        // 1겹: 1/8 (12.5%), 2겹: 1/6 (16.6%), 3겹: 1/4 (25%)
+        const fraction = battle.playerSpikesLayers === 1 ? (1 / 8) : (battle.playerSpikesLayers === 2 ? (1 / 6) : (1 / 4));
+        const spikesDmg = Math.max(1, Math.floor(mon.maxHp * fraction));
+        mon.hp = Math.max(0, mon.hp - spikesDmg);
+        targetMon.hp = mon.hp;
+        switchLog += isKo
+          ? `\n${tName}(은)는 흩뿌려진 압정에 찔려 상처를 입었다! (-${spikesDmg})`
+          : `\n${targetMon.name} was hurt by the spikes! (-${spikesDmg})`;
+        if (mon.hp === 0) {
+          switchLog += isKo ? `\n${tName}(은)는 쓰러졌다!` : `\n${targetMon.name} fainted!`;
+        }
+      }
+    }
+
     battle.dialogueText = switchLog;
     return battle;
   }

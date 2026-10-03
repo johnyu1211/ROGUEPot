@@ -15,6 +15,7 @@ export interface MoveTraitDefinition {
   drainRatio?: number; // e.g. 0.5 (Giga Drain), 0.75 (Oblivion Wing)
   recoilRatio?: number; // e.g. 0.33 (Take Down), 0.5 (Head Smash), 0.25 (Submission)
   critBonus?: boolean; // High critical hit ratio (Slash, Karate Chop, etc.)
+  alwaysCrit?: boolean; // Guaranteed critical hit (Frost Breath, Storm Throw, Wicked Blow, Flower Trick)
   chargeTrait?: MoveChargeTrait;
   fixedMultiHit?: number; // e.g. 2 for Double Kick, 3 for Triple Dive
   randomMultiHit?: boolean; // 2~5 hits standard distribution
@@ -28,7 +29,12 @@ export interface MoveTraitDefinition {
 }
 
 export const MOVE_TRAITS_REGISTRY: Record<string, MoveTraitDefinition> = {
-  // --- High Critical Ratio Moves ---
+  // --- High Critical / Always Critical Ratio Moves ---
+  "frost-breath": { alwaysCrit: true },
+  "frostbreath": { alwaysCrit: true },
+  "524": { alwaysCrit: true },
+  "얼음숨결": { alwaysCrit: true },
+  "storm-throw": { alwaysCrit: true },
   "karate-chop": { critBonus: true },
   "razor-wind": {
     critBonus: true,
@@ -221,6 +227,8 @@ export const MOVE_TRAITS_REGISTRY: Record<string, MoveTraitDefinition> = {
 
   // --- Priority Moves ---
   "protect": { priority: 4 },
+  "182": { priority: 4 },
+  "방어": { priority: 4 },
   "detect": { priority: 4 },
   "spiky-shield": { priority: 4 },
   "burning-bulwark": { priority: 4 },
@@ -233,6 +241,9 @@ export const MOVE_TRAITS_REGISTRY: Record<string, MoveTraitDefinition> = {
   "bullet-punch": { priority: 1 },
   "ice-shard": { priority: 1 },
   "mach-punch": { priority: 1 },
+  "183": { priority: 1 },
+  "마하펀치": { priority: 1 },
+  "machpunch": { priority: 1 },
   "shadow-sneak": { priority: 1 },
   "sucker-punch": { priority: 1 },
   "vacuum-wave": { priority: 1 },

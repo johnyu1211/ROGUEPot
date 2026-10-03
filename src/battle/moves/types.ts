@@ -78,6 +78,8 @@ export interface BattleFrame {
   hitFlash?: boolean;
   moveStep?: number; // Phase: 1 = Windup, 2 = Impact/Strike, 3 = Reaction/Afterglow, 4 = Recovery
   effectProgress?: number; // 0.0 ~ 1.0 progress within a step or camera return fadeout
+  disperseProgress?: number; // 0.0 ~ 1.0 energy disperses into the air before camera zoom-out
+  hitProgress?: number; // 0.0 ~ 1.0 strike impact progress on defender
   fadeEffectOnCameraReturn?: boolean; // When true, effect continues fading out across camera return frames
   enemyHp?: number;
   playerHp?: number;
@@ -104,6 +106,8 @@ export interface BattleFrame {
   stormProg?: number;
   stormIntensity?: number;
   _gen5Camera?: boolean;
+  isFullyCharged?: boolean;
+  holdProgress?: number;
   radiusScale?: number;
   absorptionGlow?: number;
   skyFilterAlpha?: number;
@@ -149,11 +153,15 @@ export interface BattleFrame {
   usePlayerSubstitute?: boolean;
   useEnemySubstitute?: boolean;
   whiteFilterAlpha?: number;
+  blackFadeAlpha?: number;
   pWhiteAlpha?: number;
   eWhiteAlpha?: number;
   bottomSpread?: number;
   pBottomSpread?: number;
   eBottomSpread?: number;
+  targetWaveShift?: { amp: number; freq?: number; phase?: number };
+  pWaveShift?: { amp: number; freq?: number; phase?: number };
+  eWaveShift?: { amp: number; freq?: number; phase?: number };
   phaseId?: string;
   phaseName?: string;
   statProgress?: any;

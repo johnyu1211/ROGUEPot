@@ -71,7 +71,11 @@ export function checkMoveHit(ctx: AccuracyCheckContext): { isHit: boolean; reaso
   }
 
   // 6. Accuracy & Evasiveness stage modifier (-6 to +6)
-  const accStage = Math.max(-6, Math.min(6, (actor.stages.acc || 0) - (target.stages.eva || 0)));
+  // 꿰뚫어보기(Foresight) 상태에서는 대상의 양수 회피율(+랭크)을 무시함
+  const targetEva = (target.isForesight || target.isIdentified)
+    ? Math.min(0, target.stages.eva || 0)
+    : (target.stages.eva || 0);
+  const accStage = Math.max(-6, Math.min(6, (actor.stages.acc || 0) - targetEva));
   const stageMult = getAccuracyMultiplier(accStage);
   const finalAcc = baseAcc * stageMult;
 

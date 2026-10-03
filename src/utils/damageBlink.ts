@@ -50,8 +50,32 @@ export function applyDamageBlinkFrames(
   const afterEnemyStatus = action.enemyStatusAfter !== undefined ? action.enemyStatusAfter : initEnemyStatus;
   const afterPlayerStatus = action.playerStatusAfter !== undefined ? action.playerStatusAfter : initPlayerStatus;
 
-  let insertIdx = frames.findIndex(f => f.afterCameraReturn);
-  if (insertIdx === -1) {
+  // 타격(Hit/Strike) 이후 데미지 피격 깜빡임(Blink) 및 HP 감소 애니메이션 삽입 위치 결정:
+  // 1. 반동기(Take Down, Double-Edge 등)의 경우: 기술 타격이 끝난 후 시전자가 반동 데미지를 받는 프레임('recoil-blink') 직전에 피격자의 깜빡임 삽입
+  // 2. 그 외 일반 공격(클로즈아웃 후 타격하는 기사회생 포함): 기술의 모든 돌진/타격/복귀 프레임이 완전히 끝난 후(frames.length)에 깜빡임 삽입
+  let insertIdx = -1;
+  const recoilIdx = frames.findIndex(f =>
+    f.phaseId?.includes("recoil-blink") ||
+    f.phaseId?.includes("recoil_blink") ||
+    (f.afterCameraReturn && (f.phaseId?.includes("recoil") || f.phaseName?.includes("반동 데미지")))
+  );
+
+  if (recoilIdx !== -1) {
+    insertIdx = recoilIdx;
+  } else {
+    insertIdx = frames.length;
+  }
+
+  // 만약 insertIdx 앞에 아직 타격/격돌 프레임(hitFlash, hit, strike)이 남아있다면, 깜빡임은 무조건 타격 완료 후로 이동
+  let lastHitIdx = -1;
+  for (let i = frames.length - 1; i >= 0; i--) {
+    const f = frames[i];
+    if (f.hitFlash || f.hitProgress !== undefined || f.phaseId?.includes("hit") || f.phaseId?.includes("strike") || f.phaseId?.includes("impact")) {
+      lastHitIdx = i;
+      break;
+    }
+  }
+  if (lastHitIdx !== -1 && insertIdx <= lastHitIdx) {
     insertIdx = frames.length;
   }
 

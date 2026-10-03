@@ -216,6 +216,26 @@ export function processTurnEndEffects(
     }
   }
 
+  // 7-3. Perish Song (멸망의 노래) countdown & faint
+  if (mon.perishCount && mon.perishCount > 0 && mon.hp > 0) {
+    mon.perishCount -= 1;
+    if (mon.perishCount > 0) {
+      logs.push(
+        isKo
+          ? `${name}의 멸망의 노래 카운트가 ${mon.perishCount}(이)가 되었다!`
+          : `${name}'s perish count fell to ${mon.perishCount}!`
+      );
+    } else {
+      mon.hp = 0;
+      mon.perishCount = 0;
+      logs.push(
+        isKo
+          ? `${name}(은)는 멸망의 노래로 인해 기절했다!`
+          : `${name} perished!`
+      );
+    }
+  }
+
   // 8. Moody Ability
   if (mon.ability === "Moody" || mon.passiveAbility === "Moody") {
     const statsList: (keyof StatStages)[] = ["atk", "def", "spa", "spd", "spe"];

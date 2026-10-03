@@ -54,7 +54,11 @@ export function calculateDamage(
   const specialResult = checkSpecialDamage({ actor, target, move, isActorPlayer, isKo });
   if (specialResult.handled) {
     const isFixedOrOHKO = specialResult.isOHKO || ["seismic-toss", "night-shade", "dragon-rage", "sonic-boom", "super-fang", "natures-madness", "endeavor", "counter", "mirror-coat", "psywave", "bide"].includes(moveKey);
-    const rawTypeMod = getTypeEffectiveness(move.type, target.types);
+    const effectiveTargetTypes = (target.isForesight || target.isIdentified) &&
+      (move.type.toLowerCase() === "normal" || move.type.toLowerCase() === "fighting")
+        ? target.types.filter(t => t.toLowerCase() !== "ghost")
+        : target.types;
+    const rawTypeMod = getTypeEffectiveness(move.type, effectiveTargetTypes);
     const typeMod = isFixedOrOHKO ? (rawTypeMod === 0 || specialResult.damage === 0 ? 0 : 1.0) : rawTypeMod;
     return {
       damage: specialResult.damage ?? 0,
@@ -121,13 +125,20 @@ export function calculateDamage(
   // 6. STAB and Type Effectiveness
   const isStab = actor.types.map(t => t.toLowerCase()).includes(move.type.toLowerCase());
   const stabMod = isStab ? 1.5 : 1.0;
-  const typeMod = getTypeEffectiveness(move.type, target.types);
+  const effectiveTargetTypes = (target.isForesight || target.isIdentified) &&
+    (move.type.toLowerCase() === "normal" || move.type.toLowerCase() === "fighting")
+      ? target.types.filter(t => t.toLowerCase() !== "ghost")
+      : target.types;
+  const typeMod = getTypeEffectiveness(move.type, effectiveTargetTypes);
 
   // 7. Critical Hit
+  const isAlwaysCrit = Boolean(trait?.alwaysCrit);
   const isHighCrit = Boolean(trait?.critBonus);
   const hasFocusEnergy = Boolean(actor.hasFocusEnergy);
   let critChance = 0.08;
-  if (hasFocusEnergy && isHighCrit) {
+  if (isAlwaysCrit) {
+    critChance = 1.0; // Guaranteed 100% Critical Hit (Frost Breath, Storm Throw)!
+  } else if (hasFocusEnergy && isHighCrit) {
     critChance = 1.0; // Focus Energy + High Crit move = Guaranteed 100% Critical Hit!
   } else if (hasFocusEnergy) {
     critChance = 0.50; // Focus Energy alone = 50% Critical Hit!

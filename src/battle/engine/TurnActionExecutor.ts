@@ -53,6 +53,11 @@ export function executeSingleAction(
   }
   const validationPrefix = validation.log ? `${validation.log}\n` : "";
 
+  // If the actor had Destiny Bond active from a previous turn, starting a new action removes the effect
+  if (actor.isDestinyBond) {
+    actor.isDestinyBond = false;
+  }
+
   // 2. Metronome (손가락흔들기) resolution
   let activeMove = move;
   let metronomePrefix = "";
@@ -163,6 +168,12 @@ export function executeSingleAction(
     actor.isRaging = true;
   } else {
     actor.isRaging = false;
+  }
+
+  // Protect counter tracking: Using a non-protect move resets consecutive protect count
+  const isProtectFamily = ["protect", "detect", "spiky-shield", "baneful-bunker", "burning-bulwark", "182", "방어"].includes(moveKey);
+  if (!isProtectFamily) {
+    actor.protectCounter = 0;
   }
 
   // 3. Status Moves Pipeline
@@ -479,6 +490,16 @@ export function executeSingleAction(
       target.isRaging = false;
       target.bideDamageTaken = 0;
       target.rampageState = null;
+
+      // Destiny Bond (길동무) 효과: 상대의 직접 공격 데미지로 쓰러졌을 때, 공격자도 함께 쓰러뜨림
+      if (target.isDestinyBond && actor.hp > 0 && damage > 0) {
+        actor.hp = 0;
+        actor.chargingMove = null;
+        actor.rampageState = null;
+        damageLog += isKo
+          ? `\n${targetName}(은)는 ${actorName}(을)를 길동무로 삼았다!`
+          : `\n${targetName} took ${actorName} down with it!`;
+      }
     }
 
     if (activeMove.category === "physical" && damage > 0) {

@@ -43,6 +43,7 @@ export interface BattlePokemon {
   confusionTurns?: number;
   substituteHp?: number;
   isProtected?: boolean;
+  protectCounter?: number;
   isTaunted?: boolean;
   tauntTurns?: number;
   isAttracted?: boolean;
@@ -51,6 +52,10 @@ export interface BattlePokemon {
   isCursed?: boolean;
   mindReaderTargetId?: string | null;
   mindReaderTurnsLeft?: number;
+  isForesight?: boolean;
+  isIdentified?: boolean;
+  isDestinyBond?: boolean;
+  perishCount?: number;
   lastPhysicalDamageTakenThisTurn?: number;
   disabledMove?: string | null;
   disabledTurns?: number;
@@ -177,6 +182,8 @@ export interface BattleState {
   heatTimer?: number;
   overchargeTurnCount?: number;
   downfallTurnCount?: number;
+  playerSpikesLayers?: number;
+  enemySpikesLayers?: number;
   hugTriggered?: boolean;
   messageId?: string;
 }
