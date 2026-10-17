@@ -194,7 +194,7 @@ export interface BattleState {
   playerParty: PartyPokemon[];
   playerBattleMon: BattlePokemon;
   dialogueText: string;
-  phase: "MAIN" | "FIGHT" | "BAG" | "PARTY" | "VICTORY" | "DEFEAT" | "SWITCH";
+  phase: "MAIN" | "FIGHT" | "BAG" | "PARTY" | "VICTORY" | "DEFEAT" | "SWITCH" | "HEAL_PARTY";
   turnCount: number;
   money: number;
   score: number;

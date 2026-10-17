@@ -766,6 +766,110 @@ export class BattleService {
       }
     }
   }
+
+  public levelUpActivePokemon(userId: string, slotId: number, lang: "ko" | "en" = "ko"): BattleState {
+    const battle = this.getOrCreateBattle(userId, slotId);
+    const isKo = lang === "ko";
+    const playerMon = battle.playerBattleMon;
+    if (!playerMon) return battle;
+
+    playerMon.level += 1;
+    const oldMaxHp = playerMon.maxHp;
+    const newStats = calculateStats(playerMon.speciesId, playerMon.level);
+    playerMon.maxHp = newStats.maxHp;
+    const hpGain = Math.max(0, newStats.maxHp - oldMaxHp);
+    if (playerMon.hp > 0) {
+      playerMon.hp = Math.min(playerMon.maxHp, playerMon.hp + hpGain);
+    }
+    playerMon.atk = newStats.atk;
+    playerMon.def = newStats.def;
+    playerMon.spAtk = newStats.spAtk;
+    playerMon.spDef = newStats.spDef;
+    playerMon.speed = newStats.speed;
+    battle.playerMaxExp = playerMon.level * 15;
+
+    const partyMon = battle.playerParty[battle.playerActiveIndex];
+    if (partyMon) {
+      partyMon.level = playerMon.level;
+      partyMon.hp = playerMon.hp;
+      partyMon.maxHp = playerMon.maxHp;
+    }
+
+    const pName = isKo ? (playerMon.nameKo || playerMon.name) : playerMon.name;
+    battle.dialogueText = isKo
+      ? `⚠️ ${pName}의 레벨이 Lv.${playerMon.level}(으)로 올랐다! (최대 HP +${hpGain})`
+      : `⚠️ ${pName} grew to Lv.${playerMon.level}! (Max HP +${hpGain})`;
+
+    saveService.updateSlot(userId, slotId, {
+      party: battle.playerParty,
+    });
+
+    return battle;
+  }
+
+  public restorePpActiveBattle(userId: string, slotId: number, lang: "ko" | "en" = "ko"): BattleState {
+    const battle = this.getOrCreateBattle(userId, slotId);
+    const isKo = lang === "ko";
+
+    if (battle.playerParty) {
+      for (const mon of battle.playerParty) {
+        if (mon.moves && Array.isArray(mon.moves)) {
+          mon.movePps = mon.moves.map((m) => getMoveData(m)?.pp || 20);
+          mon.maxMovePps = [...mon.movePps];
+        }
+      }
+    }
+
+    const playerMon = battle.playerBattleMon;
+    if (playerMon && playerMon.moves) {
+      playerMon.movePps = playerMon.moves.map((m) => getMoveData(m)?.pp || 20);
+    }
+
+    const pName = isKo ? (playerMon?.nameKo || playerMon?.name || "포켓몬") : (playerMon?.name || "Pokémon");
+    battle.dialogueText = isKo
+      ? `⚠️ ${pName} 및 파티의 모든 기술 PP가 최대로 회복되었다!`
+      : `⚠️ Restored all move PP for ${pName} and your party!`;
+
+    saveService.updateSlot(userId, slotId, {
+      party: battle.playerParty,
+    });
+
+    return battle;
+  }
+
+  public healPartyPokemon(userId: string, slotId: number, targetIndex: number, lang: "ko" | "en" = "ko"): BattleState {
+    const battle = this.getOrCreateBattle(userId, slotId);
+    const isKo = lang === "ko";
+    const targetMon = battle.playerParty[targetIndex];
+    if (!targetMon) {
+      battle.phase = "MAIN";
+      return battle;
+    }
+
+    targetMon.hp = targetMon.maxHp || targetMon.hp;
+
+    if (targetIndex === battle.playerActiveIndex && battle.playerBattleMon) {
+      battle.playerBattleMon.hp = battle.playerBattleMon.maxHp;
+      battle.playerBattleMon.status = null;
+      battle.playerBattleMon.isConfused = false;
+      battle.playerBattleMon.confusionTurns = 0;
+      battle.playerBattleMon.hasNightmare = false;
+      battle.playerBattleMon.isCursed = false;
+      battle.playerBattleMon.yawnTurns = undefined;
+    }
+
+    const tName = isKo ? (targetMon.nameKo || targetMon.name) : targetMon.name;
+    battle.phase = "MAIN";
+    battle.dialogueText = isKo
+      ? `⚠️ ${tName}의 체력(HP)과 상태이상이 완전히 회복되었다! (${targetMon.hp}/${targetMon.maxHp})`
+      : `⚠️ Fully restored ${tName}'s HP and status! (${targetMon.hp}/${targetMon.maxHp})`;
+
+    saveService.updateSlot(userId, slotId, {
+      party: battle.playerParty,
+    });
+
+    return battle;
+  }
 }
 
 export const battleService = BattleService.getInstance();

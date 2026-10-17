@@ -218,7 +218,7 @@ export const scheduleBattleStaticization = scheduleBattleButtonUnlock;
 export async function renderBattleMessageData(
   userId: string,
   slotId: number,
-  overridePhase?: "MAIN" | "FIGHT" | "BAG" | "PARTY" | "SWITCH",
+  overridePhase?: "MAIN" | "FIGHT" | "BAG" | "PARTY" | "SWITCH" | "HEAL_PARTY",
   isEntryTransition?: boolean,
   prevPlayer?: BattlePokemon
 ) {
@@ -539,6 +539,51 @@ export function buildBattleComponents(
         )
       );
     }
+  } else if (battle.phase === "HEAL_PARTY") {
+    let currentRow = new ActionRowBuilder<ButtonBuilder>();
+    battle.playerParty.forEach((p, idx) => {
+      if (currentRow.components.length >= 3) {
+        components.push(currentRow);
+        currentRow = new ActionRowBuilder<ButtonBuilder>();
+      }
+      const pName = isKo ? (p.nameKo || p.name) : p.name;
+      const isCurrent = idx === battle.playerActiveIndex;
+      const curHp = isCurrent && battle.playerBattleMon ? battle.playerBattleMon.hp : p.hp;
+      const maxHp = isCurrent && battle.playerBattleMon ? battle.playerBattleMon.maxHp : p.maxHp;
+      const hasStatus = isCurrent && Boolean(
+        battle.playerBattleMon?.status ||
+        battle.playerBattleMon?.isConfused ||
+        battle.playerBattleMon?.hasNightmare ||
+        battle.playerBattleMon?.isCursed
+      );
+      const isFull = curHp >= maxHp && !hasStatus;
+      currentRow.addComponents(
+        new ButtonBuilder()
+          .setCustomId(`battle_tool_healmon_${idx}_${slotId}_${userId}`)
+          .setLabel(`⚠️ ${idx + 1}. ${pName} (${curHp}/${maxHp})`)
+          .setStyle(ButtonStyle.Danger)
+          .setDisabled(isFull)
+      );
+    });
+    if (currentRow.components.length < 5) {
+      currentRow.addComponents(
+        new ButtonBuilder()
+          .setCustomId(`battle_cancel_${slotId}_${userId}`)
+          .setLabel(isKo ? "↩️ 뒤로" : "↩️ Back")
+          .setStyle(ButtonStyle.Secondary)
+      );
+      components.push(currentRow);
+    } else {
+      components.push(currentRow);
+      components.push(
+        new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`battle_cancel_${slotId}_${userId}`)
+            .setLabel(isKo ? "↩️ 뒤로" : "↩️ Back")
+            .setStyle(ButtonStyle.Secondary)
+        )
+      );
+    }
   } else {
     // MAIN Action Rows
     const isCharging = Boolean(combatMon?.chargingMove || combatMon?.rampageState || combatMon?.rolloutState);
@@ -573,6 +618,23 @@ export function buildBattleComponents(
         .setDisabled(isCharging || isTrapped)
     );
     components.push(mainRow2);
+
+    // Row 3: [⚠️ LevelUp] + [⚠️ PP회복] + [⚠️ HP회복] (진행 보조 도구 - 빨간색 버튼)
+    const toolRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`battle_tool_levelup_${slotId}_${userId}`)
+        .setLabel("⚠️ LevelUp")
+        .setStyle(ButtonStyle.Danger),
+      new ButtonBuilder()
+        .setCustomId(`battle_tool_pp_${slotId}_${userId}`)
+        .setLabel(isKo ? "⚠️ PP회복" : "⚠️ PP Restore")
+        .setStyle(ButtonStyle.Danger),
+      new ButtonBuilder()
+        .setCustomId(`battle_tool_hp_${slotId}_${userId}`)
+        .setLabel(isKo ? "⚠️ HP회복" : "⚠️ HP Heal")
+        .setStyle(ButtonStyle.Danger)
+    );
+    components.push(toolRow);
   }
 
   return components;
@@ -4175,6 +4237,65 @@ export const interactionCreateEvent: BotEvent = {
           cleanupBattlePerkReactions(interaction, interaction.user.id, slotId);
           const retryBattle = battleService.getOrCreateBattle(interaction.user.id, slotId);
           battlePreloadService.schedulePreload(interaction.user.id, slotId, retryBattle, profile.language);
+          return;
+        }
+
+        // 2-7-K. Dev Progression Tools (⚠️ LevelUp / ⚠️ PP회복 / ⚠️ HP회복)
+        if (customId.startsWith("battle_tool_levelup_")) {
+          const slotId = parseInt(parts[3], 10) || 1;
+          clearBattleStaticization(interaction.user.id, slotId);
+          await interaction.deferUpdate().catch(() => null);
+          const profile = saveService.getProfile(interaction.user.id);
+          battlePreloadService.invalidate(interaction.user.id, slotId);
+          battleService.levelUpActivePokemon(interaction.user.id, slotId, profile.language);
+          const battleData = await renderBattleMessageData(interaction.user.id, slotId, "MAIN");
+          await safeInteractionUpdate(interaction, battleData);
+          const updatedBattle = battleService.getOrCreateBattle(interaction.user.id, slotId);
+          battlePreloadService.schedulePreload(interaction.user.id, slotId, updatedBattle, profile.language);
+          return;
+        }
+
+        if (customId.startsWith("battle_tool_pp_")) {
+          const slotId = parseInt(parts[3], 10) || 1;
+          clearBattleStaticization(interaction.user.id, slotId);
+          await interaction.deferUpdate().catch(() => null);
+          const profile = saveService.getProfile(interaction.user.id);
+          battlePreloadService.invalidate(interaction.user.id, slotId);
+          battleService.restorePpActiveBattle(interaction.user.id, slotId, profile.language);
+          const battleData = await renderBattleMessageData(interaction.user.id, slotId, "MAIN");
+          await safeInteractionUpdate(interaction, battleData);
+          const updatedBattle = battleService.getOrCreateBattle(interaction.user.id, slotId);
+          battlePreloadService.schedulePreload(interaction.user.id, slotId, updatedBattle, profile.language);
+          return;
+        }
+
+        if (customId.startsWith("battle_tool_hp_")) {
+          const slotId = parseInt(parts[3], 10) || 1;
+          clearBattleStaticization(interaction.user.id, slotId);
+          await interaction.deferUpdate().catch(() => null);
+          const profile = saveService.getProfile(interaction.user.id);
+          const isKo = profile.language === "ko";
+          const battle = battleService.getOrCreateBattle(interaction.user.id, slotId);
+          battle.dialogueText = isKo
+            ? "⚠️ HP를 회복할 파티 포켓몬을 선택하세요."
+            : "⚠️ Select a party Pokémon to restore HP.";
+          const battleData = await renderBattleMessageData(interaction.user.id, slotId, "HEAL_PARTY");
+          await safeInteractionUpdate(interaction, battleData);
+          return;
+        }
+
+        if (customId.startsWith("battle_tool_healmon_")) {
+          const targetIdx = parseInt(parts[3], 10) || 0;
+          const slotId = parseInt(parts[4], 10) || 1;
+          clearBattleStaticization(interaction.user.id, slotId);
+          await interaction.deferUpdate().catch(() => null);
+          const profile = saveService.getProfile(interaction.user.id);
+          battlePreloadService.invalidate(interaction.user.id, slotId);
+          battleService.healPartyPokemon(interaction.user.id, slotId, targetIdx, profile.language);
+          const battleData = await renderBattleMessageData(interaction.user.id, slotId, "MAIN");
+          await safeInteractionUpdate(interaction, battleData);
+          const updatedBattle = battleService.getOrCreateBattle(interaction.user.id, slotId);
+          battlePreloadService.schedulePreload(interaction.user.id, slotId, updatedBattle, profile.language);
           return;
         }
       } finally {
