@@ -21,11 +21,8 @@
 | 커맨드 | 설명 |
 | :--- | :--- |
 | `/open` | ROGUEPot 메인 타이틀 화면 열기 및 게임 시작/이어하기 |
-| `/battleact` | 진행 중인 배틀에서 기술 사용, 교체 등의 행동 수행 |
 | `/setmoves` | 파티 포켓몬의 기술 배치 설정 (테스트/디버그 지원) |
 | `/heal` | 현재 파티 포켓몬 체력 및 상태 회복 |
-| `/test` | 특정 기능 및 화면 렌더링 테스트 |
-| `/ping` | 봇 응답 속도 및 연결 상태 확인 |
 
 ---
 
@@ -48,7 +45,7 @@ ROGUEPot/
     ├── battle/
     │   ├── mechanics/      # 데미지 계산, 상성표, 랭크 보정, 행동 검증 등 배틀 코어
     │   └── moves/          # 기술별 정의(definitions/), 특성/상태 레지스트리(traits/)
-    ├── commands/           # 슬래시 커맨드 핸들러 (/open, /battleact, /heal 등)
+    ├── commands/           # 슬래시 커맨드 핸들러 (/open, /setmoves, /heal 등)
     ├── config/             # 환경변수 로더 및 유효성 검증
     ├── core/               # Discord Client 인스턴스화 및 이벤트/커맨드 바인딩
     ├── data/               # 포켓몬 스탯, 한글/영문 기술명, 아이템, 스타터 코스트 데이터
