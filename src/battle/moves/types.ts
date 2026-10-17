@@ -40,6 +40,7 @@ export interface MoveContext {
 }
 
 export interface BattleFrame {
+  actionActor?: "me" | "enim";
   delay: number;
   pOffset?: { x: number; y: number };
   eOffset?: { x: number; y: number };
@@ -78,6 +79,7 @@ export interface BattleFrame {
   hitFlash?: boolean;
   moveStep?: number; // Phase: 1 = Windup, 2 = Impact/Strike, 3 = Reaction/Afterglow, 4 = Recovery
   effectProgress?: number; // 0.0 ~ 1.0 progress within a step or camera return fadeout
+  endureProgress?: number; // 0.0 ~ 1.0 continuous progress for rising yellow orbs across the entire move
   disperseProgress?: number; // 0.0 ~ 1.0 energy disperses into the air before camera zoom-out
   hitProgress?: number; // 0.0 ~ 1.0 strike impact progress on defender
   fadeEffectOnCameraReturn?: boolean; // When true, effect continues fading out across camera return frames
@@ -109,6 +111,8 @@ export interface BattleFrame {
   isFullyCharged?: boolean;
   holdProgress?: number;
   radiusScale?: number;
+  whirlpoolRot?: number;
+  twisterRot?: number;
   absorptionGlow?: number;
   skyFilterAlpha?: number;
   birdAlpha?: number;
@@ -118,6 +122,7 @@ export interface BattleFrame {
   showSlashCut?: boolean;
   drawEnemyOnTop?: boolean;
   drawPlayerAboveHud?: boolean;
+  drawCasterAboveFade?: boolean;
   casterYellowAura?: boolean;
   pYellowAura?: boolean;
   eYellowAura?: boolean;
@@ -135,6 +140,8 @@ export interface BattleFrame {
   pRedLevel?: number;
   eRedLevel?: number;
   casterRedLevel?: number;
+  pTintColor?: string | null;
+  eTintColor?: string | null;
   pWhiteTint?: boolean;
   eWhiteTint?: boolean;
   pWhite?: boolean;
@@ -144,6 +151,9 @@ export interface BattleFrame {
   targetBlueTint?: boolean;
   pBlueTint?: boolean;
   eBlueTint?: boolean;
+  targetDarkLevel?: number;
+  pDarkLevel?: number;
+  eDarkLevel?: number;
   pGreyTint?: boolean;
   eGreyTint?: boolean;
   useTransformedSprite?: boolean;
@@ -153,6 +163,9 @@ export interface BattleFrame {
   usePlayerSubstitute?: boolean;
   useEnemySubstitute?: boolean;
   whiteFilterAlpha?: number;
+  whiteFilterClipTopRatio?: number;
+  pWhiteClipTopRatio?: number;
+  eWhiteClipTopRatio?: number;
   blackFadeAlpha?: number;
   pWhiteAlpha?: number;
   eWhiteAlpha?: number;

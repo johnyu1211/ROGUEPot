@@ -2,6 +2,7 @@
  * Declarative Move Traits and Behaviors
  * Automatically mapped to moves without giant if-else chains.
  */
+import { getMoveKey } from "../../../data/movesKo.js";
 
 export interface MoveChargeTrait {
   semiInvulnerable?: "air" | "underground" | "underwater" | "shadow";
@@ -21,10 +22,12 @@ export interface MoveTraitDefinition {
   randomMultiHit?: boolean; // 2~5 hits standard distribution
   populationBomb?: boolean; // Up to 10 hits at 90% accuracy
   tripleKick?: boolean; // Up to 3 hits at 90% accuracy per hit (power increases each hit)
+  beatUp?: boolean; // Multi-hit based on unfainted party members
   isSelfDestruct?: boolean; // Explosion, Self-Destruct
   rechargeRequired?: boolean; // Hyper Beam, Giga Impact
   trapMove?: boolean; // Bind, Wrap, Fire Spin, Sand Tomb, Whirlpool (4~5 turns)
   rampageMove?: boolean; // Thrash, Petal Dance, Outrage (2~3 turns then confusion)
+  rolloutMove?: boolean; // Rollout, Ice Ball (up to 5 turns, power doubles each hit, 2x if Defense Curl)
   priority?: number; // Move priority (-7 to +4)
 }
 
@@ -55,6 +58,10 @@ export const MOVE_TRAITS_REGISTRY: Record<string, MoveTraitDefinition> = {
   "drill-run": { critBonus: true },
   "blaze-kick": { critBonus: true },
   "aeroblast": { critBonus: true },
+  "cross-chop": { critBonus: true },
+  "crosschop": { critBonus: true },
+  "238": { critBonus: true },
+  "크로스촙": { critBonus: true },
 
   // --- Multi-Hit Moves ---
   "double-slap": { randomMultiHit: true },
@@ -68,6 +75,9 @@ export const MOVE_TRAITS_REGISTRY: Record<string, MoveTraitDefinition> = {
   "spike-cannon": { randomMultiHit: true },
   "barrage": { randomMultiHit: true },
   "bone-rush": { randomMultiHit: true },
+  "bonerush": { randomMultiHit: true },
+  "198": { randomMultiHit: true },
+  "본러시": { randomMultiHit: true },
   "arm-thrust": { randomMultiHit: true },
   "bullet-seed": { randomMultiHit: true },
   "icicle-spear": { randomMultiHit: true },
@@ -84,6 +94,10 @@ export const MOVE_TRAITS_REGISTRY: Record<string, MoveTraitDefinition> = {
   "population-bomb": { populationBomb: true },
   "triple-kick": { tripleKick: true },
   "triple-axel": { tripleKick: true },
+  "beat-up": { beatUp: true },
+  "beatup": { beatUp: true },
+  "251": { beatUp: true },
+  "집단구타": { beatUp: true },
 
   // --- Two-Turn Charging Moves ---
   "fly": {
@@ -214,6 +228,9 @@ export const MOVE_TRAITS_REGISTRY: Record<string, MoveTraitDefinition> = {
   "fire-spin": { trapMove: true },
   "clamp": { trapMove: true },
   "whirlpool": { trapMove: true },
+  "whirl_pool": { trapMove: true },
+  "250": { trapMove: true },
+  "바다회오리": { trapMove: true },
   "sand-tomb": { trapMove: true },
   "magma-storm": { trapMove: true },
   "infestation": { trapMove: true },
@@ -224,17 +241,54 @@ export const MOVE_TRAITS_REGISTRY: Record<string, MoveTraitDefinition> = {
   "thrash": { rampageMove: true },
   "petal-dance": { rampageMove: true },
   "outrage": { rampageMove: true },
+  "200": { rampageMove: true },
+  "역린": { rampageMove: true },
+
+  // --- Rollout Moves (up to 5 turns, power doubles each hit, 2x with Defense Curl) ---
+  "rollout": { rolloutMove: true },
+  "205": { rolloutMove: true },
+  "구르기": { rolloutMove: true },
+  "ice-ball": { rolloutMove: true },
+  "iceball": { rolloutMove: true },
+  "301": { rolloutMove: true },
+  "아이스볼": { rolloutMove: true },
 
   // --- Priority Moves ---
+  "helping-hand": { priority: 5 },
+  "helpinghand": { priority: 5 },
+  "270": { priority: 5 },
+  "도우미": { priority: 5 },
   "protect": { priority: 4 },
   "182": { priority: 4 },
   "방어": { priority: 4 },
   "detect": { priority: 4 },
+  "197": { priority: 4 },
+  "판별": { priority: 4 },
+  "endure": { priority: 4 },
+  "203": { priority: 4 },
+  "버티기": { priority: 4 },
+  "magic-coat": { priority: 4 },
+  "magic_coat": { priority: 4 },
+  "magiccoat": { priority: 4 },
+  "277": { priority: 4 },
+  "매직코트": { priority: 4 },
   "spiky-shield": { priority: 4 },
   "burning-bulwark": { priority: 4 },
   "fake-out": { priority: 3 },
+  "fake_out": { priority: 3 },
+  "fakeout": { priority: 3 },
+  "252": { priority: 3 },
+  "속이기": { priority: 3 },
   "quick-guard": { priority: 3 },
+  "follow-me": { priority: 2 },
+  "follow_me": { priority: 2 },
+  "followme": { priority: 2 },
+  "266": { priority: 2 },
+  "날따름": { priority: 2 },
   "extreme-speed": { priority: 2 },
+  "extremespeed": { priority: 2 },
+  "245": { priority: 2 },
+  "신속": { priority: 2 },
   "feint": { priority: 2 },
   "quick-attack": { priority: 1 },
   "aqua-jet": { priority: 1 },
@@ -250,14 +304,32 @@ export const MOVE_TRAITS_REGISTRY: Record<string, MoveTraitDefinition> = {
   "jet-punch": { priority: 1 },
   "thunderclap": { priority: 1 },
   "accelerock": { priority: 1 },
+  "revenge": { priority: -4 },
+  "279": { priority: -4 },
+  "리벤지": { priority: -4 },
   "counter": { priority: -5 },
   "mirror-coat": { priority: -5 },
+  "mirrorcoat": { priority: -5 },
+  "243": { priority: -5 },
+  "미러코트": { priority: -5 },
   "roar": { priority: -6 },
   "whirlwind": { priority: -6 },
   "dragon-tail": { priority: -6 },
   "circle-throw": { priority: -6 },
   "teleport": { priority: -6 },
   "trick-room": { priority: -7 },
+  "pursuit": { priority: 0 },
+  "228": { priority: 0 },
+  "따라가때리기": { priority: 0 },
+  "따라가 때리기": { priority: 0 },
+  "vital-throw": { priority: -1 },
+  "vitalthrow": { priority: -1 },
+  "233": { priority: -1 },
+  "받아던지기": { priority: -1 },
+  "focus-punch": { priority: -3 },
+  "focuspunch": { priority: -3 },
+  "264": { priority: -3 },
+  "힘껏펀치": { priority: -3 },
 };
 
 /**
@@ -265,13 +337,21 @@ export const MOVE_TRAITS_REGISTRY: Record<string, MoveTraitDefinition> = {
  */
 export function getMoveTrait(moveKey: string): MoveTraitDefinition | undefined {
   const cleanKey = moveKey.toLowerCase().replace(/[\s_]+/g, "-");
-  return MOVE_TRAITS_REGISTRY[cleanKey];
+  if (MOVE_TRAITS_REGISTRY[cleanKey]) {
+    return MOVE_TRAITS_REGISTRY[cleanKey];
+  }
+  const canonical = getMoveKey(moveKey);
+  return MOVE_TRAITS_REGISTRY[canonical];
 }
 
 /**
  * Rolls multi-hit count based on move traits
  */
-export function calculateMultiHitCount(moveKey: string): number {
+export function calculateMultiHitCount(
+  moveKey: string,
+  actor?: { ability?: string; passiveAbility?: string },
+  battle?: any
+): number {
   const trait = getMoveTrait(moveKey);
   if (!trait) return 1;
 
@@ -279,13 +359,44 @@ export function calculateMultiHitCount(moveKey: string): number {
     return trait.fixedMultiHit;
   }
 
+  const hasSkillLink =
+    actor?.ability?.toLowerCase().replace(/[\s_-]+/g, "") === "skilllink" ||
+    actor?.passiveAbility?.toLowerCase().replace(/[\s_-]+/g, "") === "skilllink";
+
+  if (trait.beatUp) {
+    if (battle) {
+      const isActorPlayer =
+        actor === battle.playerBattleMon ||
+        actor === battle.playerParty?.[battle.playerActiveIndex];
+      if (isActorPlayer && Array.isArray(battle.playerParty) && battle.playerParty.length > 0) {
+        const aliveCount = battle.playerParty.filter((p: any) => p && p.hp > 0).length;
+        return Math.max(1, aliveCount);
+      }
+      if (!isActorPlayer && Array.isArray(battle.enemyParty) && battle.enemyParty.length > 0) {
+        const aliveCount = battle.enemyParty.filter((p: any) => p && p.hp > 0).length;
+        return Math.max(1, aliveCount);
+      }
+      if (!isActorPlayer) {
+        return 1;
+      }
+    }
+    // Default fallback party count (6)
+    return 6;
+  }
+
   if (trait.randomMultiHit) {
+    if (hasSkillLink) {
+      return 5;
+    }
     // Official 2~5 hit probability distribution
     const rolls = [2, 2, 3, 3, 4, 5];
     return rolls[Math.floor(Math.random() * rolls.length)];
   }
 
   if (trait.populationBomb) {
+    if (hasSkillLink) {
+      return 10;
+    }
     let hits = 0;
     for (let i = 0; i < 10; i++) {
       if (Math.random() < 0.9) hits++;

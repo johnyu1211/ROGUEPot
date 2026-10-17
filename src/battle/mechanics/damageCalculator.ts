@@ -3,7 +3,7 @@ import { MoveData } from "../../data/movesKo.js";
 import { getTypeEffectiveness } from "./typeChart.js";
 import { getStageMultiplier } from "./statModifier.js";
 import { checkSemiInvulnerableVulnerability } from "./vulnerabilityRules.js";
-import { checkSpecialDamage, getDynamicMovePower } from "../moves/traits/specialDamageRegistry.js";
+import { checkSpecialDamage, getDynamicMovePower, getHiddenPowerType } from "../moves/traits/specialDamageRegistry.js";
 import { getMoveTrait, calculateMultiHitCount } from "../moves/traits/moveTraits.js";
 
 export interface DamageCalculationResult {
@@ -54,12 +54,18 @@ export function calculateDamage(
   const specialResult = checkSpecialDamage({ actor, target, move, isActorPlayer, isKo });
   if (specialResult.handled) {
     const isFixedOrOHKO = specialResult.isOHKO || ["seismic-toss", "night-shade", "dragon-rage", "sonic-boom", "super-fang", "natures-madness", "endeavor", "counter", "mirror-coat", "psywave", "bide"].includes(moveKey);
-    const effectiveTargetTypes = (target.isForesight || target.isIdentified) &&
+    let effectiveTargetTypes = (target.isForesight || target.isIdentified) &&
       (move.type.toLowerCase() === "normal" || move.type.toLowerCase() === "fighting")
         ? target.types.filter(t => t.toLowerCase() !== "ghost")
         : target.types;
+    if (target.isIngrained && move.type.toLowerCase() === "ground") {
+      effectiveTargetTypes = effectiveTargetTypes.filter(t => t.toLowerCase() !== "flying");
+    }
     const rawTypeMod = getTypeEffectiveness(move.type, effectiveTargetTypes);
-    const typeMod = isFixedOrOHKO ? (rawTypeMod === 0 || specialResult.damage === 0 ? 0 : 1.0) : rawTypeMod;
+    const isPresentHeal = (moveKey === "present" || move.nameKo === "프레젠트" || moveKey === "217") && (specialResult.damage ?? 0) === 0;
+    const typeMod = isPresentHeal
+      ? 1.0
+      : (isFixedOrOHKO ? (rawTypeMod === 0 || specialResult.damage === 0 ? 0 : 1.0) : rawTypeMod);
     return {
       damage: specialResult.damage ?? 0,
       typeMod,
@@ -73,9 +79,10 @@ export function calculateDamage(
 
   // 3. Stats and Stage Multipliers
   const isSpecial = move.category === "special";
+  const isFacade = ["facade", "263", "객기"].includes(moveKey) || move.id === 263 || move.nameKo === "객기";
   const atkStat = isSpecial
     ? actor.spAtk * getStageMultiplier(actor.stages.spa)
-    : actor.atk * getStageMultiplier(actor.stages.atk) * (actor.status === "brn" ? 0.5 : 1.0);
+    : actor.atk * getStageMultiplier(actor.stages.atk) * (actor.status === "brn" && !isFacade ? 0.5 : 1.0);
 
   let defStat = isSpecial
     ? target.spDef * getStageMultiplier(target.stages.spd)
@@ -109,27 +116,48 @@ export function calculateDamage(
     power = moveKey === "explosion" ? 250 : (moveKey === "self-destruct" ? 200 : 100);
   }
 
+  // Dynamic move type determination (e.g. Hidden Power based on IVs)
+  let moveType = move.type.toLowerCase();
+  if (["hidden-power", "hidden_power", "hiddenpower", "237", "잠재파워"].includes(moveKey) || move.id === 237 || move.nameKo === "잠재파워") {
+    moveType = getHiddenPowerType(actor).toLowerCase();
+  }
+
+  // Charge effect: Doubles power of next Electric-type attack
+  const isChargeBoosted = Boolean(actor.isCharged && moveType === "electric" && !["charge", "268", "충전"].includes(moveKey));
+  if (isChargeBoosted) {
+    power *= 2;
+  }
+
+  // Helping Hand effect: 1.5x power multiplier for damaging moves
+  const isHelpingHand = Boolean(actor.isHelpingHandBoosted && move.category !== "status");
+  if (isHelpingHand) {
+    power = Math.floor(power * 1.5);
+  }
+
   // 5. Weather Modifiers
   let weatherMod = 1.0;
   if (battle?.weather === "sun") {
-    if (move.type.toLowerCase() === "fire") weatherMod = 1.5;
-    else if (move.type.toLowerCase() === "water") weatherMod = 0.5;
+    if (moveType === "fire") weatherMod = 1.5;
+    else if (moveType === "water") weatherMod = 0.5;
   } else if (battle?.weather === "rain") {
-    if (move.type.toLowerCase() === "water") weatherMod = 1.5;
-    else if (move.type.toLowerCase() === "fire") weatherMod = 0.5;
+    if (moveType === "water") weatherMod = 1.5;
+    else if (moveType === "fire") weatherMod = 0.5;
     if (moveKey === "solar-beam" || moveKey === "solar-blade") weatherMod = 0.5;
   } else if (battle?.weather === "sand" || battle?.weather === "snow") {
     if (moveKey === "solar-beam" || moveKey === "solar-blade") weatherMod = 0.5;
   }
 
   // 6. STAB and Type Effectiveness
-  const isStab = actor.types.map(t => t.toLowerCase()).includes(move.type.toLowerCase());
+  const isStab = actor.types.map(t => t.toLowerCase()).includes(moveType);
   const stabMod = isStab ? 1.5 : 1.0;
-  const effectiveTargetTypes = (target.isForesight || target.isIdentified) &&
-    (move.type.toLowerCase() === "normal" || move.type.toLowerCase() === "fighting")
+  let effectiveTargetTypes = (target.isForesight || target.isIdentified) &&
+    (moveType === "normal" || moveType === "fighting")
       ? target.types.filter(t => t.toLowerCase() !== "ghost")
       : target.types;
-  const typeMod = getTypeEffectiveness(move.type, effectiveTargetTypes);
+  if (target.isIngrained && moveType === "ground") {
+    effectiveTargetTypes = effectiveTargetTypes.filter(t => t.toLowerCase() !== "flying");
+  }
+  const typeMod = getTypeEffectiveness(moveType, effectiveTargetTypes);
 
   // 7. Critical Hit
   const isAlwaysCrit = Boolean(trait?.alwaysCrit);
@@ -164,8 +192,25 @@ export function calculateDamage(
   );
   singleHitDamage = Math.max(typeMod > 0 ? 1 : 0, singleHitDamage);
 
-  // Light Screen / Reflect reduction (50% reduction, ignored by critical hits)
+  // Brick Break (깨뜨리다): Removes Reflect and Light Screen on target's side before damage reduction if not immune
   let screenLog = "";
+  const isBrickBreak =
+    ["brick-break", "brick_break", "brickbreak", "280", "깨뜨리다"].includes(moveKey) ||
+    move.id === 280 ||
+    move.nameKo === "깨뜨리다";
+  if (isBrickBreak && typeMod > 0) {
+    const hadReflect = Boolean(target.reflectTurns && target.reflectTurns > 0);
+    const hadLightScreen = Boolean(target.lightScreenTurns && target.lightScreenTurns > 0);
+    if (hadReflect || hadLightScreen) {
+      target.reflectTurns = 0;
+      target.lightScreenTurns = 0;
+      screenLog = isKo
+        ? "\n벽을 깨뜨려 리플렉터와 빛의장막을 파괴했다!"
+        : "\nIt shattered the barrier!";
+    }
+  }
+
+  // Light Screen / Reflect reduction (50% reduction, ignored by critical hits)
   if (!isCrit && typeMod > 0) {
     if (isSpecial && target.lightScreenTurns && target.lightScreenTurns > 0) {
       singleHitDamage = Math.max(1, Math.floor(singleHitDamage * 0.5));
@@ -177,7 +222,7 @@ export function calculateDamage(
   }
 
   // 10. Multi-Hit Calculation
-  const hitCount = calculateMultiHitCount(moveKey);
+  const hitCount = calculateMultiHitCount(moveKey, actor, battle);
   let totalDamage = singleHitDamage * hitCount;
   if (moveKey === "triple-kick") {
     // 1st hit: 10 power (1x), 2nd hit: 20 power (2x), 3rd hit: 30 power (3x)
@@ -218,7 +263,13 @@ export function calculateDamage(
   else if (typeMod <= 0.5) effLog = isKo ? " 효과가 별로인 듯하다..." : " It's not very effective...";
 
   if (isUndergroundHit && typeMod > 0) {
-    effLog += isKo ? "\n(땅속에 숨은 상대에게 2배의 지진 피해!)" : "\n(Dealt double damage to underground target!)";
+    if (target.semiInvulnerableState === "underwater") {
+      effLog += isKo ? "\n(물속에 숨은 상대에게 2배의 피해!)" : "\n(Dealt double damage to underwater target!)";
+    } else if (target.semiInvulnerableState === "air") {
+      effLog += isKo ? "\n(공중에 뜬 상대에게 2배의 피해!)" : "\n(Dealt double damage to target in the air!)";
+    } else {
+      effLog += isKo ? "\n(땅속에 숨은 상대에게 2배의 피해!)" : "\n(Dealt double damage to underground target!)";
+    }
   }
 
   if (isCrit && typeMod > 0) {
@@ -231,9 +282,21 @@ export function calculateDamage(
     effLog += isKo ? ` (${hitCount}회 명중!)` : ` (Hit ${hitCount} times!)`;
   }
 
+  const magLog = ((moveKey === "magnitude" || moveKey === "222" || move.nameKo === "매그니튜드") && actor.lastMagnitude)
+    ? (isKo ? `\n매그니튜드 ${actor.lastMagnitude}!` : `\nMagnitude ${actor.lastMagnitude}!`)
+    : "";
+
+  const chargeLog = isChargeBoosted
+    ? (isKo ? "\n[충전 효과!] 충전된 전력으로 위력이 2배로 상승했다!" : "\n[Charge!] Electric power was doubled by Charge!")
+    : "";
+
+  const helpingHandLog = isHelpingHand
+    ? (isKo ? "\n[도우미 효과!] 아군의 응원으로 기술의 위력이 1.5배 증가했다!" : "\n[Helping Hand!] Power was boosted by 1.5x by Helping Hand!")
+    : "";
+
   const mainLog = isKo
-    ? `${actorName}의 ${moveName}! ${finalDamage > 0 ? `${finalDamage} 데미지!` : ""}${effLog}`
-    : `${actorName}'s ${moveName}! ${finalDamage > 0 ? `${finalDamage} damage!` : ""}${effLog}`;
+    ? `${actorName}의 ${moveName}!${chargeLog}${helpingHandLog}${magLog} ${finalDamage > 0 ? `${finalDamage} 데미지!` : ""}${effLog}`
+    : `${actorName}'s ${moveName}!${chargeLog}${helpingHandLog}${magLog} ${finalDamage > 0 ? `${finalDamage} damage!` : ""}${effLog}`;
 
   return {
     damage: finalDamage,

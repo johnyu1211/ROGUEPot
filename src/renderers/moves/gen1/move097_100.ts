@@ -685,7 +685,7 @@ export function drawRageEffect(
     const phaseId = frame?.phaseId;
 
     if (phaseId === "rage-red-1" || p < 0.45) {
-      // 1. [1차 붉어짐 (#5 in viewer)]: 김이 처음 발생! (낮은 높이, 짙고 선명한 농밀 증기, 불투명도 0.95)
+      // 1. [1차 붉어짐 (#5)]: 김이 처음 발생! (낮은 높이, 짙고 선명한 농밀 증기, 불투명도 0.95)
       const streamY = cy - 14;
       const h = 26;
 
@@ -698,7 +698,7 @@ export function drawRageEffect(
       // 콧김 제트 (💨)
       drawSnortJet(ctx, cx + dirX * 14, cy - 8, dirX, 16, 0.85);
     } else if (phaseId === "rage-normal" || p < 0.75) {
-      // 2. [원래대로 복귀(숨고르기) (#6 in viewer)]: 그 김이 중간 높이로 상승하며 반투명해짐 (불투명도 0.55)
+      // 2. [원래대로 복귀(숨고르기) (#6)]: 그 김이 중간 높이로 상승하며 반투명해짐 (불투명도 0.55)
       const streamY = cy - 28;
       const h = 28;
 
@@ -711,7 +711,7 @@ export function drawRageEffect(
       // 콧김 잔향도 전방으로 퍼지며 흩어짐
       drawSnortJet(ctx, cx + dirX * 20, cy - 12, dirX, 22, 0.40);
     } else {
-      // 3. [2차 붉어짐 (#7 in viewer)]: 그 김이 높은 상공으로 올라가며 거의 투명하게 소멸 (불투명도 0.20)
+      // 3. [2차 붉어짐 (#7)]: 그 김이 높은 상공으로 올라가며 거의 투명하게 소멸 (불투명도 0.20)
       const streamY = cy - 46;
       const h = 30;
 

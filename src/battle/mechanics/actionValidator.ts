@@ -40,7 +40,14 @@ export function validateAction(
   // 3. Sleep condition
   if (actor.status === "slp") {
     const mKey = move.name.toLowerCase().replace(/[\s_]+/g, "-");
-    const isSleepMove = mKey === "snore" || mKey === "sleep-talk" || move.nameKo === "코골기" || move.nameKo === "잠꼬대";
+    const isSleepMove =
+      mKey === "snore" ||
+      mKey === "sleep-talk" ||
+      mKey === "sleeptalk" ||
+      move.id === 173 ||
+      move.id === 214 ||
+      move.nameKo === "코골기" ||
+      move.nameKo === "잠꼬대";
 
     // 같은 턴에 방금 잠든 직후(sleepTurns === 0)라면 절대 즉시 깰 수 없음!
     if ((actor.sleepTurns || 0) === 0) {
@@ -121,13 +128,18 @@ export function validateAction(
   }
 
   // 6. Attract condition (50% immobilized by love)
-  if (actor.isAttracted && Math.random() < 0.5) {
-    return {
-      canAct: false,
-      log: isKo
-        ? `${actorName}(은)는 헤롱헤롱 상태에 빠져 몸을 움직일 수 없다!`
-        : `${actorName} is immobilized by love!`,
-    };
+  if (actor.isAttracted) {
+    if (actor.ability?.toLowerCase() === "oblivious" || actor.passiveAbility?.toLowerCase() === "oblivious") {
+      actor.isAttracted = false;
+      delete actor.attractedBy;
+    } else if (Math.random() < 0.5) {
+      return {
+        canAct: false,
+        log: isKo
+          ? `${actorName}(은)는 헤롱헤롱 상태에 빠져 몸을 움직일 수 없다!`
+          : `${actorName} is immobilized by love!`,
+      };
+    }
   }
 
   // 7. Confusion condition
@@ -175,6 +187,26 @@ export function validateAction(
       log: isKo
         ? `${actorName}의 ${moveName}!\n하지만 사슬에 묶여 기술을 쓸 수 없다!`
         : `${actorName}'s ${moveName}!\nDisabled by chains and cannot be used!`,
+    };
+  }
+
+  // 10. Encore restriction (Forced to repeat last move)
+  if (actor.encoreMove && (actor.encoreTurns ?? 0) > 0 && cleanMoveKey !== actor.encoreMove) {
+    return {
+      canAct: false,
+      log: isKo
+        ? `${actorName}(은)는 앙코르에 걸려 다른 기술을 쓸 수 없다!`
+        : `${actorName} is encored and cannot use this move!`,
+    };
+  }
+
+  // 11. Torment restriction (Cannot use the same move twice in a row)
+  if (actor.isTormented && actor.lastMoveUsed && cleanMoveKey === actor.lastMoveUsed) {
+    return {
+      canAct: false,
+      log: isKo
+        ? `${actorName}(은)는 트집을 잡혀 같은 기술을 연속으로 쓸 수 없다!`
+        : `${actorName} is tormented and cannot use the same move in a row!`,
     };
   }
 

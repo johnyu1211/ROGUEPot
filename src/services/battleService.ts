@@ -8,6 +8,7 @@ import type {
 } from "../battle/engine/types.js";
 import { createDefaultStages } from "../battle/engine/types.js";
 import { TYPE_CHART, getTypeEffectiveness } from "../battle/mechanics/typeChart.js";
+import { calculateDamage } from "../battle/mechanics/damageCalculator.js";
 import { getStageMultiplier, getAccuracyMultiplier } from "../battle/mechanics/statModifier.js";
 import {
   BIOME_ENCOUNTERS,
@@ -25,7 +26,7 @@ import { STARTER_DATABASE } from "../data/starterCosts.js";
 import { POKEMON_SPECIES_DATA } from "../data/pokemonStats.js";
 import type { SpeciesBaseData } from "../data/pokemonStats.js";
 import { POKEMON_NAMES_KO } from "../data/pokemonNamesKo.js";
-import { getMoveData } from "../data/movesKo.js";
+import { getMoveData, getMoveKey } from "../data/movesKo.js";
 import { withSubjectMarker, withObjectMarker } from "../renderers/common/textHelpers.js";
 
 // Re-export common types and constants for backwards compatibility
@@ -506,14 +507,119 @@ export class BattleService {
     if (!targetMon || targetMon.hp <= 0) return battle;
 
     const isKo = lang === "ko";
+    const oldMon = battle.playerBattleMon;
+    const isBatonPass = Boolean(oldMon?.batonPassPending);
+    const isVoluntarySwitch = battle.phase !== "SWITCH" && oldMon && oldMon.hp > 0 && !isBatonPass;
+
+    // 🗡️ 228: 따라가때리기 (Pursuit) 교체 요격 판정
+    let pursuitInterceptionLog = "";
+    if (isVoluntarySwitch && battle.enemy && battle.enemy.hp > 0) {
+      const enemyKnowsPursuit = (battle.enemy.moves || []).some((m: string) => {
+        const k = getMoveKey(m);
+        return k === "pursuit" || k === "228" || k === "따라가때리기" || k === "따라가-때리기" || k === "따라가 때리기";
+      });
+
+      if (enemyKnowsPursuit) {
+        (oldMon as any).isSwitchingOut = true;
+        const pursuitData = getMoveData("pursuit") || {
+          id: 228,
+          name: "pursuit",
+          nameKo: "따라가때리기",
+          type: "dark",
+          category: "physical",
+          power: 40,
+          accuracy: 100,
+          pp: 20,
+        };
+        const pDmgRes = calculateDamage(battle.enemy, oldMon, pursuitData as any, false, isKo, battle);
+        (oldMon as any).isSwitchingOut = false;
+        const pDmg = pDmgRes.damage;
+        oldMon.hp = Math.max(0, oldMon.hp - pDmg);
+        if (battle.playerParty[battle.playerActiveIndex]) {
+          battle.playerParty[battle.playerActiveIndex].hp = oldMon.hp;
+        }
+
+        const eName = isKo ? (battle.enemy.nameKo || battle.enemy.name) : battle.enemy.name;
+        const oldName = isKo ? (oldMon.nameKo || oldMon.name) : oldMon.name;
+        if (oldMon.hp === 0) {
+          pursuitInterceptionLog = isKo
+            ? `[상대 따라가때리기!] 상대 ${eName}(은)는 교체하려는 ${withObjectMarker(oldName)} 따라가때리기로 요격했다! (-${pDmg})\n${withSubjectMarker(oldName)} 쓰러졌다!\n`
+            : `[Foe Pursuit!] Foe ${eName} pursued and knocked out ${oldName}! (-${pDmg})\n${oldName} fainted!\n`;
+        } else {
+          pursuitInterceptionLog = isKo
+            ? `[상대 따라가때리기!] 상대 ${eName}(은)는 교체하려는 ${withObjectMarker(oldName)} 따라가때리기로 요격했다! (-${pDmg})\n`
+            : `[Foe Pursuit!] Foe ${eName} pursued and struck ${oldName}! (-${pDmg})\n`;
+        }
+      }
+    }
+
     battle.playerActiveIndex = targetIndex;
     battle.playerBattleMon = this.createPlayerBattleMon(targetMon, battle.playerParty);
     battle.phase = "MAIN";
+    if (battle.enemy.cannotEscape && !battle.enemy.isIngrained && !isBatonPass) {
+      battle.enemy.cannotEscape = false;
+    }
+    if (battle.enemy.mindReaderTargetId && !isBatonPass) {
+      battle.enemy.mindReaderTargetId = null;
+      battle.enemy.mindReaderTurnsLeft = 0;
+    }
 
     const tName = isKo ? (targetMon.nameKo || targetMon.name) : targetMon.name;
-    let switchLog = isKo
+    let switchLog = pursuitInterceptionLog + (isKo
       ? `가랏, ${tName}!`
-      : `Go, ${targetMon.name}!`;
+      : `Go, ${targetMon.name}!`);
+
+    // 🏃 226: 배턴터치 (Baton Pass) 능력 변화 및 전투 효과 온전 계승
+    if (isBatonPass && oldMon) {
+      battle.playerBattleMon.stages = { ...oldMon.stages };
+      if (oldMon.substituteHp && oldMon.substituteHp > 0) {
+        battle.playerBattleMon.substituteHp = oldMon.substituteHp;
+      }
+      if (oldMon.hasFocusEnergy) {
+        battle.playerBattleMon.hasFocusEnergy = true;
+      }
+      if (oldMon.isConfused) {
+        battle.playerBattleMon.isConfused = true;
+        battle.playerBattleMon.confusionTurns = oldMon.confusionTurns;
+      }
+      if (oldMon.isSeeded) {
+        battle.playerBattleMon.isSeeded = true;
+      }
+      if (oldMon.perishCount !== undefined) {
+        battle.playerBattleMon.perishCount = oldMon.perishCount;
+      }
+      if (oldMon.cannotEscape) {
+        battle.playerBattleMon.cannotEscape = true;
+      }
+      if (oldMon.isIngrained) {
+        battle.playerBattleMon.isIngrained = true;
+        battle.playerBattleMon.cannotEscape = true;
+      }
+      if (oldMon.trapState) {
+        battle.playerBattleMon.trapState = { ...oldMon.trapState };
+      }
+      if (oldMon.hasUsedDefenseCurl) {
+        battle.playerBattleMon.hasUsedDefenseCurl = true;
+      }
+      if (oldMon.hasMinimized) {
+        battle.playerBattleMon.hasMinimized = true;
+      }
+      if (oldMon.mindReaderTargetId) {
+        battle.playerBattleMon.mindReaderTargetId = oldMon.mindReaderTargetId;
+        battle.playerBattleMon.mindReaderTurnsLeft = oldMon.mindReaderTurnsLeft;
+      }
+      if (oldMon.isCharged) {
+        battle.playerBattleMon.isCharged = true;
+      }
+
+      oldMon.batonPassPending = false;
+      battle.playerBattleMon.batonPassPending = false;
+
+      const oldName = isKo ? (oldMon.nameKo || oldMon.name) : oldMon.name;
+      switchLog += isKo
+        ? `\n${oldName}(으)로부터 건네받은 배턴으로 능력 변화와 효과를 온전히 이어받았다!`
+        : `\nInherited stat boosts and battle effects passed by ${oldName}!`;
+    }
 
     if (battle.playerBattleMon.ability === "Imposter" || battle.playerBattleMon.passiveAbility === "Imposter") {
       this.applyTransform(battle.playerBattleMon, battle.enemy);
@@ -535,7 +641,7 @@ export class BattleService {
       const mon = battle.playerBattleMon;
       const isFlying = mon.types.map(t => t.toLowerCase()).includes("flying");
       const hasLevitate = mon.ability?.toLowerCase() === "levitate" || mon.passiveAbility?.toLowerCase() === "levitate";
-      if (!isFlying && !hasLevitate) {
+      if ((!isFlying && !hasLevitate) || mon.isIngrained) {
         // 1겹: 1/8 (12.5%), 2겹: 1/6 (16.6%), 3겹: 1/4 (25%)
         const fraction = battle.playerSpikesLayers === 1 ? (1 / 8) : (battle.playerSpikesLayers === 2 ? (1 / 6) : (1 / 4));
         const spikesDmg = Math.max(1, Math.floor(mon.maxHp * fraction));
@@ -653,6 +759,7 @@ export class BattleService {
         battle.playerBattleMon.confusionTurns = 0;
         battle.playerBattleMon.hasNightmare = false;
         battle.playerBattleMon.isCursed = false;
+        battle.playerBattleMon.stockpileCount = 0;
         if (battle.playerBattleMon.moves) {
           battle.playerBattleMon.movePps = battle.playerBattleMon.moves.map((m) => getMoveData(m)?.pp || 20);
         }

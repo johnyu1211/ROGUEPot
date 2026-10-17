@@ -10,27 +10,55 @@
 
 ---
 
+## ✨ 주요 기능 및 슬래시 커맨드
+
+### 주요 시스템
+- **캔버스 & GIF 렌더링**: `@napi-rs/canvas` 및 `gif-encoder-2` 기반으로 타이틀, 스타터 선택, 세이브 슬롯, 도감, 가방, 알 뽑기 및 배틀 애니메이션을 디스코드 내에서 직접 렌더링
+- **배틀 엔진 & 기술 구현**: 상성 계산, 랭크 변화, 상태이상, 날씨/필드 효과, 다회 공격, 반동/회복 등 포켓몬 배틀 메커니즘 및 세대별 기술 연출 구현
+- **세이브 데이터 관리**: `better-sqlite3` 기반 유저별 다중 세이브 슬롯 및 진행 상태 저장
+
+### 슬래시 커맨드 (`/`)
+| 커맨드 | 설명 |
+| :--- | :--- |
+| `/open` | ROGUEPot 메인 타이틀 화면 열기 및 게임 시작/이어하기 |
+| `/battleact` | 진행 중인 배틀에서 기술 사용, 교체 등의 행동 수행 |
+| `/setmoves` | 파티 포켓몬의 기술 배치 설정 (테스트/디버그 지원) |
+| `/heal` | 현재 파티 포켓몬 체력 및 상태 회복 |
+| `/test` | 특정 기능 및 화면 렌더링 테스트 |
+| `/ping` | 봇 응답 속도 및 연결 상태 확인 |
+
+---
+
 ## 📁 프로젝트 구조
 
 ```
 ROGUEPot/
 ├── .env.example            # 환경변수 템플릿
-├── .env                    # 환경변수 설정 파일
+├── .env                    # 환경변수 설정 파일 (Git 제외)
 ├── LICENSE                 # GNU AGPL v3 라이선스 파일
-├── package.json            # Node.js 패키지 정의
-├── tsconfig.json           # TypeScript 설정
-├── pokerogue-source/       # Pokerogue 원본 소스코드
+├── TERMS.md                # 서비스 이용약관
+├── PRIVACY.md              # 개인정보처리방침
+├── package.json            # Node.js 패키지 및 스크립트 정의
+├── tsconfig.json           # TypeScript 컴파일 설정
+├── pokerogue-source/       # PokeRogue 원본 레퍼런스 소스코드 (Git 제외)
 ├── scripts/
-│   └── deploy-commands.ts  # 슬래시 커맨드(/) 등록 스크립트
+│   └── deploy-commands.ts  # 슬래시 커맨드(/) 디스코드 등록 스크립트
 └── src/
-    ├── index.ts            # 봇 진입점
-    ├── config/             # 환경변수 로더 및 검증
-    ├── core/               # Discord Client 인스턴스화 및 핸들러 등록
-    ├── commands/           # 슬래시 커맨드 핸들러 목록
-    ├── events/             # 디스코드 이벤트 핸들러 (ready, interaction 등)
-    ├── services/           # Pokerogue 게임 엔진 & 데이터 서비스
+    ├── index.ts            # 봇 진입점 (초기화 및 로그인 재시도 처리)
+    ├── battle/
+    │   ├── mechanics/      # 데미지 계산, 상성표, 랭크 보정, 행동 검증 등 배틀 코어
+    │   └── moves/          # 기술별 정의(definitions/), 특성/상태 레지스트리(traits/)
+    ├── commands/           # 슬래시 커맨드 핸들러 (/open, /battleact, /heal 등)
+    ├── config/             # 환경변수 로더 및 유효성 검증
+    ├── core/               # Discord Client 인스턴스화 및 이벤트/커맨드 바인딩
+    ├── data/               # 포켓몬 스탯, 한글/영문 기술명, 아이템, 스타터 코스트 데이터
+    ├── events/             # 디스코드 이벤트 핸들러 (ready, interactionCreate 등)
+    ├── renderers/
+    │   ├── screens/        # 타이틀, 스타터 선택, 배틀, 가방, 도감, 알 뽑기 화면 렌더러
+    │   └── moves/          # 세대별 기술 이펙트 프레임 렌더러
+    ├── services/           # 배틀 서비스, 세이브(SQLite), 스타터, 알 뽑기, 데이터 프리로드
     ├── types/              # TypeScript 인터페이스 및 타입 정의
-    └── utils/              # Embed 생성기 및 유틸리티
+    └── utils/              # 캔버스/GIF/비디오 렌더러, 카메라 연출, 프레임 보간 유틸리티
 ```
 
 ---
@@ -41,12 +69,12 @@ ROGUEPot/
 2. **New Application**을 클릭하여 **`ROGUEPot`** 애플리케이션을 생성합니다.
 3. 좌측 메뉴 **Bot** 탭:
    - **Reset Token**을 눌러 토큰을 복사하여 `.env` 파일의 `DISCORD_TOKEN`에 입력합니다.
-4. 좌측 메뉴 **General Information** 또는 **OAuth2** 탭:
-   - **Application ID (Client ID)** 를 복사하여 `.env`의 `CLIENT_ID`에 입력합니다.
-5. (선택사항) 개발/테스트용 디스코드 서버 ID를 `.env`의 `GUILD_ID`에 입력하면 커맨드가 즉각 반영됩니다.
+4. (선택사항) 좌측 메뉴 **General Information** 또는 **OAuth2** 탭:
+   - **Application ID (Client ID)** 를 `.env`의 `CLIENT_ID`에 입력할 수 있습니다. (생략 시 `deploy-commands` 실행 과정에서 토큰을 통해 자동으로 Application ID를 조회합니다.)
+5. (선택사항) 개발/테스트용 디스코드 서버 ID를 `.env`의 `GUILD_ID`에 입력하면 길드 전용 커맨드로 등록되어 즉각 반영됩니다.
 6. **OAuth2 -> URL Generator**에서:
    - Scopes: `bot`, `applications.commands`
-   - Bot Permissions: `Send Messages`, `Embed Links`, `Use Slash Commands` 등 선택
+   - Bot Permissions: `Send Messages`, `Embed Links`, `Attach Files`, `Use Slash Commands` 등 선택
    - 생성된 URL로 봇을 서버에 초대합니다.
 
 ---
@@ -73,8 +101,6 @@ npm run deploy-commands
   npm run build
   npm start
   ```
-
----
 
 ---
 

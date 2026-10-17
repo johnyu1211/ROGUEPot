@@ -95,11 +95,21 @@ export function applyDamageBlinkFrames(
     statusChangeIdx = foundIdx !== -1 ? foundIdx : Math.max(1, Math.floor(frames.length * 0.5));
   }
 
-  // 효과가 없는 경우 (0x / 무효 / 미스 / 데미지 0): 깜빡임 및 체력 변동 X (단, 기술 정의에서 오염된 HP 값은 시작 체력으로 완전 복구)
+  // 효과가 없는 경우 (0x / 무효 / 미스 / 데미지 0): 깜빡임 없음
+  // 단, 회복기(뿌리박기, 희망사항, HP회복 등)나 체력 변동 변화기가 프레임별 HP 보간을 수행한 경우에는 이를 보존!
   if (!isHit || damage <= 0 || typeMod === 0 || hpLoss <= 0) {
+    const hasEnemyHpChange = isHit && afterEnemyHp !== initEnemyHp;
+    const hasPlayerHpChange = isHit && afterPlayerHp !== initPlayerHp;
+    const framesHaveEnemyInterp = hasEnemyHpChange && frames.some(f => f.enemyHp !== undefined && f.enemyHp !== initEnemyHp);
+    const framesHavePlayerInterp = hasPlayerHpChange && frames.some(f => f.playerHp !== undefined && f.playerHp !== initPlayerHp);
+
     for (let i = 0; i < frames.length; i++) {
-      if (frames[i].enemyHp !== undefined) frames[i].enemyHp = initEnemyHp;
-      if (frames[i].playerHp !== undefined) frames[i].playerHp = initPlayerHp;
+      if (frames[i].enemyHp !== undefined && !framesHaveEnemyInterp) {
+        frames[i].enemyHp = (hasEnemyHpChange && i >= statusChangeIdx) ? afterEnemyHp : initEnemyHp;
+      }
+      if (frames[i].playerHp !== undefined && !framesHavePlayerInterp) {
+        frames[i].playerHp = (hasPlayerHpChange && i >= statusChangeIdx) ? afterPlayerHp : initPlayerHp;
+      }
       if (frames[i].enemyStatus === undefined) {
         frames[i].enemyStatus = (i < statusChangeIdx ? initEnemyStatus : afterEnemyStatus);
       }
@@ -173,6 +183,10 @@ export function applyDamageBlinkFrames(
       ...lastActionFrame,
       delay: cycleDuration,
       showEffect: false,
+      showBehindEffect: false,
+      moveStep: undefined,
+      effectProgress: undefined,
+      lineAlpha: undefined,
       hitFlash: false,
       afterCameraReturn: true, // 카메라가 원상태로 돌아온 후에 깜빡임
       hideUI: false, // 피격 중 체력바 및 메시지창 표시
@@ -196,6 +210,10 @@ export function applyDamageBlinkFrames(
       ...lastActionFrame,
       delay: cycleDuration,
       showEffect: false,
+      showBehindEffect: false,
+      moveStep: undefined,
+      effectProgress: undefined,
+      lineAlpha: undefined,
       hitFlash: false,
       afterCameraReturn: true,
       hideUI: false, // 피격 중 체력바 및 메시지창 표시
@@ -231,6 +249,10 @@ export function applyDamageBlinkFrames(
       ...lastActionFrame,
       delay: isLast ? 220 : 90, // 단계당 90ms, 마지막 안착 220ms로 편안하게 인지
       showEffect: false,
+      showBehindEffect: false,
+      moveStep: undefined,
+      effectProgress: undefined,
+      lineAlpha: undefined,
       hitFlash: false,
       afterCameraReturn: true,
       hideUI: false, // 체력 게이지 감소 애니메이션 재생 중 체력바 및 메시지창 표시
@@ -250,7 +272,49 @@ export function applyDamageBlinkFrames(
     });
   }
 
-  // 6. 깜빡임 및 체력 감소 이후의 후속 프레임(예: 돌진 반동 프레임 등)은 대상은 최종 HP, 시전자는 초기 HP(반동 전) 유지
+  // 5-B. [유저 요구사항] 흡수기/드레인기 시전자 체력 회복 애니메이션 (HP Recovery)
+  const hpRecoveryFrames: BattleFrame[] = [];
+  const attackerInitialHp = isAttackerPlayer ? initPlayerHp : initEnemyHp;
+  const attackerFinalHp = isAttackerPlayer ? afterPlayerHp : afterEnemyHp;
+  const attackerHpGain = attackerFinalHp - attackerInitialHp;
+
+  if (attackerHpGain > 0 && isHit) {
+    const recoverySteps = 3;
+    for (let s = 1; s <= recoverySteps; s++) {
+      const progress = s / recoverySteps;
+      const t = Math.sin((progress * Math.PI) / 2);
+      const curRecHp = Math.min(attackerFinalHp, Math.round(attackerInitialHp + attackerHpGain * t));
+      const isLast = (s === recoverySteps);
+
+      hpRecoveryFrames.push({
+        ...lastActionFrame,
+        delay: isLast ? 200 : 85,
+        showEffect: false,
+        showBehindEffect: false,
+        moveStep: undefined,
+        effectProgress: undefined,
+        lineAlpha: undefined,
+        hitFlash: false,
+        afterCameraReturn: true,
+        hideUI: false,
+        targetAlpha: 1.0,
+        hidePlayer: isAttackerPlayer ? false : isDefenderEvading,
+        hideEnemy: !isAttackerPlayer ? false : isDefenderEvading,
+        pAlpha: isAttackerPlayer ? 1.0 : undefined,
+        eAlpha: !isAttackerPlayer ? 1.0 : undefined,
+        enemyHp: isAttackerPlayer ? targetFinalHp : curRecHp,
+        playerHp: isAttackerPlayer ? curRecHp : targetFinalHp,
+        enemyStatus: afterEnemyStatus,
+        playerStatus: afterPlayerStatus,
+        eOffset: { x: 0, y: 0 },
+        pOffset: { x: 0, y: 0 },
+        phaseId: `hp-recovery-${s}`,
+        phaseName: `체력 게이지 회복 (${Math.round(progress * 100)}%)`,
+      });
+    }
+  }
+
+  // 6. 깜빡임 및 체력 감소 이후의 후속 프레임(예: 돌진 반동 프레임 등)
   for (let i = insertIdx; i < frames.length; i++) {
     if (frames[i].enemyStatus === undefined) {
       frames[i].enemyStatus = afterEnemyStatus;
@@ -261,12 +325,12 @@ export function applyDamageBlinkFrames(
     if (isAttackerPlayer) {
       frames[i].enemyHp = targetFinalHp;
       if (frames[i].playerHp === undefined) {
-        frames[i].playerHp = initPlayerHp;
+        frames[i].playerHp = attackerFinalHp;
       }
     } else {
       frames[i].playerHp = targetFinalHp;
       if (frames[i].enemyHp === undefined) {
-        frames[i].enemyHp = initEnemyHp;
+        frames[i].enemyHp = attackerFinalHp;
       }
     }
   }
@@ -275,6 +339,7 @@ export function applyDamageBlinkFrames(
     ...frames.slice(0, insertIdx),
     ...blinkFrames,
     ...hpDrainFrames,
+    ...hpRecoveryFrames,
     ...frames.slice(insertIdx),
   ];
 

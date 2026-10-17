@@ -70,12 +70,65 @@ export function calculateStats(speciesId: string, level: number, isBoss: boolean
   return { maxHp, atk, def, spAtk, spDef, speed, types };
 }
 
+export const GENDERLESS_SPECIES = new Set([
+  "magnemite", "magneton", "magnezone", "voltorb", "electrode", "electrode-hisui",
+  "porygon", "porygon2", "porygon-z", "staryu", "starmie", "ditto", "unown",
+  "shedinja", "lunatone", "solrock", "baltoy", "claydol", "beldum", "metang", "metagross",
+  "bronzor", "bronzong", "rotom", "phione", "manaphy", "klink", "klang", "klinklang",
+  "cryogonal", "golett", "golurk", "carbink", "minior", "dhelmise",
+  "sinistea", "polteageist", "sinistcha", "poltchageist", "falinks",
+  "articuno", "articuno-galar", "zapdos", "zapdos-galar", "moltres", "moltres-galar",
+  "mewtwo", "mew", "raikou", "entei", "suicune", "lugia", "ho-oh", "celebi",
+  "regirock", "regice", "registeel", "kyogre", "groudon", "rayquaza", "jirachi", "deoxys",
+  "uxie", "mesprit", "azelf", "dialga", "palkia", "giratina", "regigigas", "darkrai", "shaymin", "arceus",
+  "victini", "cobalion", "terrakion", "virizion", "reshiram", "zekrom", "kyurem", "keldeo", "meloetta", "genesect",
+  "xerneas", "yveltal", "zygarde", "diancie", "hoopa", "volcanion", "type-null", "silvally",
+  "tapu-koko", "tapu-lele", "tapu-bulu", "tapu-fini", "cosmog", "cosmoem", "solgaleo", "lunala",
+  "nihilego", "buzzwole", "pheromosa", "xurkitree", "celesteela", "kartana", "guzzlord", "necrozma",
+  "magearna", "marshadow", "poipole", "naganadel", "stakataka", "blacephalon", "zeraora", "meltan", "melmetal",
+  "zacian", "zamazenta", "eternatus", "zarude", "regieleki", "regidrago", "glastrier", "spectrier", "calyrex",
+  "ting-lu", "chien-pao", "wo-chien", "chi-yu", "koraidon", "miraidon", "walking-wake", "iron-leaves",
+  "gouging-fire", "raging-bolt", "iron-boulder", "iron-crown", "terapagos", "pecharunt"
+]);
+
+export const FEMALE_ONLY_SPECIES = new Set([
+  "nidoran-f", "nidoranf", "nidorina", "nidoqueen", "happiny", "chansey", "blissey", "kangaskhan",
+  "smoochum", "jynx", "miltank", "illumise", "wormadam", "vespiquen", "froslass", "cresselia",
+  "petilil", "lilligant", "lilligant-hisui", "vullaby", "mandibuzz", "flabebe", "floette", "florges",
+  "bounsweet", "steenee", "tsareena", "hatenna", "hattrem", "hatterene", "milcery", "alcremie",
+  "enamorus", "tinkatink", "tinkatuff", "tinkaton", "ogerpon"
+]);
+
+export const MALE_ONLY_SPECIES = new Set([
+  "nidoran-m", "nidoranm", "nidorino", "nidoking", "tyrogue", "hitmonlee", "hitmonchan", "hitmontop",
+  "tauros", "tauros-paldea", "latios", "mothim", "gallade", "throh", "sawk", "rufflet", "braviary",
+  "braviary-hisui", "tornadus", "thundurus", "landorus", "impidimp", "morgrem", "grimmsnarl"
+]);
+
+export function determineSpeciesGender(speciesId: string): "M" | "F" | "genderless" {
+  const clean = speciesId.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  if (GENDERLESS_SPECIES.has(clean)) return "genderless";
+  if (FEMALE_ONLY_SPECIES.has(clean)) return "F";
+  if (MALE_ONLY_SPECIES.has(clean)) return "M";
+  // Default general: 50% M, 50% F
+  return Math.random() < 0.5 ? "M" : "F";
+}
+
+export function getPokemonGender(mon: BattlePokemon): "M" | "F" | "genderless" {
+  if (mon.gender) return mon.gender;
+  const determined = determineSpeciesGender(mon.speciesId);
+  mon.gender = determined;
+  return determined;
+}
+
+
 export function spawnWildPokemon(
   wave: number,
   biome: string,
   forcedSpecies?: string,
   forcedLevel?: number,
-  forcedAbility?: string
+  forcedAbility?: string,
+  forcedGender?: "M" | "F" | "genderless"
 ): BattlePokemon {
   const isBoss = forcedSpecies?.includes("gmax") || forcedSpecies?.includes("mega") || (wave % 10 === 0 && !forcedSpecies);
   const pool = isBoss ? (BOSS_ENCOUNTERS[wave] || BOSS_ENCOUNTERS[10]) : (BIOME_ENCOUNTERS[biome] || BIOME_ENCOUNTERS["Town"]);
@@ -109,6 +162,8 @@ export function spawnWildPokemon(
     moves = ["Snipe Shot", "Hydro Pump", "Ice Beam", "Dark Pulse"];
   }
 
+  const gender = forcedGender || determineSpeciesGender(speciesId);
+
   return {
     speciesId,
     name,
@@ -129,11 +184,13 @@ export function spawnWildPokemon(
     }),
     ability: forcedAbility || sData.abilities["0"] || "Limber",
     stages: createDefaultStages(),
+    gender,
     isShiny,
     isBoss,
     bossShields: isBoss ? 2 : undefined,
     bossMaxShields: isBoss ? 2 : undefined,
     heldItems: [],
+    turnsOnField: 0,
   };
 }
 
@@ -201,10 +258,13 @@ export function createPlayerBattleMon(partyMon: PartyPokemon, fullParty: PartyPo
     ability,
     passiveAbility,
     stages: createDefaultStages(),
+    gender: (partyMon as any).gender || determineSpeciesGender(speciesId),
+    ivs: partyMon.ivs ? { ...partyMon.ivs } : undefined,
     isShiny: partyMon.isShiny,
     hasIllusion,
     illusionTarget,
     heldItems: partyMon.heldItems ? [...partyMon.heldItems] : [],
+    turnsOnField: 0,
   };
 }
 

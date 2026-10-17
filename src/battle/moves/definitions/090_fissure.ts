@@ -321,7 +321,7 @@ export const fissureMove: BattleMoveAnimation = {
       // =========================================================================
       // Phase 4: 대상 포켓몬의 심연 나락 추락 (#13 ~ #16)
       // =========================================================================
-      // #13 in code / Frame #14 in viewer: 지반 붕괴 & 대상 허공 추락 시작 (반투명화 진행)
+      // #13 (Frame #14): 지반 붕괴 & 대상 허공 추락 시작 (반투명화 진행)
       {
         ...baseFrame,
         delay: 85,
@@ -344,7 +344,7 @@ export const fissureMove: BattleMoveAnimation = {
         phaseName: "#13. 지반 붕괴 & 대상 추락 (반투명화)",
       },
 
-      // #14 in code / Frame #15 in viewer: [유저 요청] 투명도 100% (완전 투명 소멸)
+      // #14 (Frame #15): [유저 요청] 투명도 100% (완전 투명 소멸)
       {
         ...baseFrame,
         delay: 85,

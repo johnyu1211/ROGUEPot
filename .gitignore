@@ -38,7 +38,8 @@ Thumbs.db
 data/*.sqlite
 data/*.sqlite-*
 
-# Temporary Dumps, Previews & Scratch Artifacts
+# Temporary Dumps, Previews, Tests & Scratch Artifacts
+tests/
 dump_frames/
 scratch/
 scratch_*
@@ -61,9 +62,8 @@ memoforme*
 moves_all_list.csv
 moves_all_list*
 
-# Custom Viewer Assets & Configs (Local Only - Never Commit to Git)
+# Local Only
 data/custom_*
-viewer/custom_*
 custom_player*
 custom_config*
 

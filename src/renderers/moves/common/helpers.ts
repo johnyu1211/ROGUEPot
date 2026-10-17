@@ -3,14 +3,51 @@ import path from "path";
 import fs from "fs";
 
 export let karateBlackImg: any = null;
+export let karateWhiteCanvas: any = null;
 export let karateRedImg: any = null;
 export let doubleSlapWhiteImg: any = null;
 export let cometPunchFistImg: any = null;
 export let firePunchFistCanvas: any = null;
 export let icePunchFistCanvas: any = null;
 export let thunderPunchFistCanvas: any = null;
+export let beatUpFistCanvas: any = null;
+export let focusPunchRedFistCanvas: any = null;
 export let kickFootprintImg: any = null;
 export let scaryFaceImg: any = null;
+
+export function createKarateWhiteCanvas(img: any) {
+  if (!img || !img.width || !img.height) return null;
+  const canvas = createCanvas(img.width, img.height);
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0);
+
+  const imgData = ctx.getImageData(0, 0, img.width, img.height);
+  const data = imgData.data;
+
+  // [유저 요청 완벽 반영]: 손 바닥부분을 흰색으로 반전!
+  // karate_chop_black:
+  // - 내부 손바닥/몸통: (10, 10, 15) -> 순백색 (255, 255, 255)
+  // - 외곽 윤곽선: (255, 255, 255) -> 짙은 남색 윤곽선 (15, 23, 42)
+  for (let i = 0; i < data.length; i += 4) {
+    const alpha = data[i + 3];
+    if (alpha > 30) {
+      const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
+      if (brightness < 60) {
+        // 손바닥 내부 -> 순백색
+        data[i] = 255;
+        data[i + 1] = 255;
+        data[i + 2] = 255;
+      } else {
+        // 외곽선 -> 짙은 윤곽선 (15, 23, 42)
+        data[i] = 15;
+        data[i + 1] = 23;
+        data[i + 2] = 42;
+      }
+    }
+  }
+  ctx.putImageData(imgData, 0, 0);
+  return canvas;
+}
 
 export function createTintedFistCanvas(img: any, fillHex: string) {
   if (!img || !img.width || !img.height) return null;
@@ -41,10 +78,42 @@ export function createTintedFistCanvas(img: any, fillHex: string) {
   return canvas;
 }
 
+export function createBeatUpTintedFistCanvas(img: any) {
+  if (!img || !img.width || !img.height) return null;
+  const canvas = createCanvas(img.width, img.height);
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0);
+
+  const imgData = ctx.getImageData(0, 0, img.width, img.height);
+  const data = imgData.data;
+
+  // [유저 요청 완벽 반영]: 지정 색상 #946394 (R: 148, G: 99, B: 148) 기반 틴팅
+  // 흰색 완전 배제 & #946394 고유의 세련된 뮤티드 퍼플 그레이 톤 매핑
+  for (let i = 0; i < data.length; i += 4) {
+    const alpha = data[i + 3];
+    if (alpha > 20) {
+      const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
+      const factor = brightness / 255;
+      // 섀도우: 딥 톤 (50, 33, 50), 미드톤: #946394 (148, 99, 148), 하이라이트: (170, 118, 170)
+      const r = Math.min(255, Math.round(50 + factor * 120));
+      const g = Math.min(255, Math.round(33 + factor * 85));
+      const b = Math.min(255, Math.round(50 + factor * 120));
+      data[i] = r;
+      data[i + 1] = g;
+      data[i + 2] = b;
+    }
+  }
+  ctx.putImageData(imgData, 0, 0);
+  return canvas;
+}
+
 // Top-level await guarantees 100% decoded pixel buffers before any render call
 try {
   const bPath = path.resolve(process.cwd(), "assets/effects/karate_chop_black.png");
-  if (fs.existsSync(bPath)) karateBlackImg = await loadImage(bPath);
+  if (fs.existsSync(bPath)) {
+    karateBlackImg = await loadImage(bPath);
+    karateWhiteCanvas = createKarateWhiteCanvas(karateBlackImg);
+  }
 
   const rPath = path.resolve(process.cwd(), "assets/effects/karate_chop_red.png");
   if (fs.existsSync(rPath)) karateRedImg = await loadImage(rPath);
@@ -58,6 +127,8 @@ try {
     firePunchFistCanvas = createTintedFistCanvas(cometPunchFistImg, "#FF6B00");
     icePunchFistCanvas = createTintedFistCanvas(cometPunchFistImg, "#00D2FF");
     thunderPunchFistCanvas = createTintedFistCanvas(cometPunchFistImg, "#FFD700");
+    beatUpFistCanvas = createBeatUpTintedFistCanvas(cometPunchFistImg);
+    focusPunchRedFistCanvas = createTintedFistCanvas(cometPunchFistImg, "#EF4444");
   }
 
   const kPath = path.resolve(process.cwd(), "assets/effects/kick_footprint.png");
@@ -79,6 +150,10 @@ export function getKickFootprintImg(): any {
 
 export function getKarateBlackImg(): any {
   return karateBlackImg;
+}
+
+export function getKarateWhiteImg(): any {
+  return karateWhiteCanvas || karateBlackImg;
 }
 
 export function getKarateRedImg(): any {
@@ -103,6 +178,14 @@ export function getIcePunchFistCanvas(): any {
 
 export function getThunderPunchFistCanvas(): any {
   return thunderPunchFistCanvas;
+}
+
+export function getBeatUpFistCanvas(): any {
+  return beatUpFistCanvas;
+}
+
+export function getFocusPunchRedFistCanvas(): any {
+  return focusPunchRedFistCanvas;
 }
 
 export async function preloadMoveAssets() {

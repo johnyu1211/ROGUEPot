@@ -211,6 +211,94 @@ import { foresightMove } from "./definitions/193_foresight.js";
 import { destinyBondMove } from "./definitions/194_destiny_bond.js";
 import { perishSongMove } from "./definitions/195_perish_song.js";
 import { icyWindMove } from "./definitions/196_icy_wind.js";
+import { detectMove } from "./definitions/197_detect.js";
+import { boneRushMove } from "./definitions/198_bone_rush.js";
+import { lockOnMove } from "./definitions/199_lock_on.js";
+import { outrageMove } from "./definitions/200_outrage.js";
+import { sandstormMove } from "./definitions/201_sandstorm.js";
+import { gigaDrainMove } from "./definitions/202_giga_drain.js";
+import { endureMove } from "./definitions/203_endure.js";
+import { charmMove } from "./definitions/204_charm.js";
+import { rolloutMove } from "./definitions/205_rollout.js";
+import { falseSwipeMove } from "./definitions/206_false_swipe.js";
+import { swaggerMove } from "./definitions/207_swagger.js";
+import { milkDrinkMove } from "./definitions/208_milk_drink.js";
+import { sparkMove } from "./definitions/209_spark.js";
+import { furyCutterMove } from "./definitions/210_fury_cutter.js";
+import { steelWingMove } from "./definitions/211_steel_wing.js";
+import { meanLookMove } from "./definitions/212_mean_look.js";
+import { attractMove } from "./definitions/213_attract.js";
+import { sleepTalkMove } from "./definitions/214_sleep_talk.js";
+import { healBellMove } from "./definitions/215_heal_bell.js";
+import { returnMove } from "./definitions/216_return.js";
+import { presentMove } from "./definitions/217_present.js";
+import { frustrationMove } from "./definitions/218_frustration.js";
+import { safeguardMove } from "./definitions/219_safeguard.js";
+import { painSplitMove } from "./definitions/220_pain_split.js";
+import { sacredFireMove } from "./definitions/221_sacred_fire.js";
+import { magnitudeMove } from "./definitions/222_magnitude.js";
+import { dynamicPunchMove } from "./definitions/223_dynamic_punch.js";
+import { megahornMove } from "./definitions/224_megahorn.js";
+import { dragonBreathMove } from "./definitions/225_dragon_breath.js";
+import { batonPassMove } from "./definitions/226_baton_pass.js";
+import { encoreMove } from "./definitions/227_encore.js";
+import { pursuitMove } from "./definitions/228_pursuit.js";
+import { rapidSpinMove } from "./definitions/229_rapid_spin.js";
+import { sweetScentMove } from "./definitions/230_sweet_scent.js";
+import { ironTailMove } from "./definitions/231_iron_tail.js";
+import { metalClawMove } from "./definitions/232_metal_claw.js";
+import { vitalThrowMove } from "./definitions/233_vital_throw.js";
+import { morningSunMove } from "./definitions/234_morning_sun.js";
+import { synthesisMove } from "./definitions/235_synthesis.js";
+import { moonlightMove } from "./definitions/236_moonlight.js";
+import { hiddenPowerMove } from "./definitions/237_hidden_power.js";
+import { crossChopMove } from "./definitions/238_cross_chop.js";
+import { twisterMove } from "./definitions/239_twister.js";
+import { rainDanceMove } from "./definitions/240_rain_dance.js";
+import { sunnyDayMove } from "./definitions/241_sunny_day.js";
+import { crunchMove } from "./definitions/242_crunch.js";
+import { mirrorCoatMove, mirrorCoatBarrierMove } from "./definitions/243_mirror_coat.js";
+import { psychUpMove } from "./definitions/244_psych_up.js";
+import { extremeSpeedMove } from "./definitions/245_extreme_speed.js";
+import { ancientPowerMove } from "./definitions/246_ancient_power.js";
+import { shadowBallMove } from "./definitions/247_shadow_ball.js";
+import { futureSightMove, futureSightCastMove, futureSightDamageMove } from "./definitions/248_future_sight.js";
+import { rockSmashMove } from "./definitions/249_rock_smash.js";
+import { whirlpoolMove } from "./definitions/250_whirlpool.js";
+import { beatUpMove } from "./definitions/251_beat_up.js";
+import { fakeOutMove } from "./definitions/252_fake_out.js";
+import { uproarMove } from "./definitions/253_uproar.js";
+import { stockpileMove } from "./definitions/254_stockpile.js";
+import { spitUpMove } from "./definitions/255_spit_up.js";
+import { swallowMove } from "./definitions/256_swallow.js";
+import { heatWaveMove } from "./definitions/257_heat_wave.js";
+import { hailMove } from "./definitions/258_hail.js";
+import { tormentMove } from "./definitions/259_torment.js";
+import { flatterMove } from "./definitions/260_flatter.js";
+import { willOWispMove } from "./definitions/261_will_o_wisp.js";
+import { mementoMove } from "./definitions/262_memento.js";
+import { facadeMove } from "./definitions/263_facade.js";
+import { focusPunchMove } from "./definitions/264_focus_punch.js";
+import { smellingSaltsMove } from "./definitions/265_smelling_salts.js";
+import { followMeMove } from "./definitions/266_follow_me.js";
+import { naturePowerMove } from "./definitions/267_nature_power.js";
+import { chargeMove } from "./definitions/268_charge.js";
+import { tauntMove } from "./definitions/269_taunt.js";
+import { helpingHandMove } from "./definitions/270_helping_hand.js";
+import { trickMove } from "./definitions/271_trick.js";
+import { rolePlayMove } from "./definitions/272_role_play.js";
+import { wishMove } from "./definitions/273_wish.js";
+import { assistMove } from "./definitions/274_assist.js";
+import { ingrainMove } from "./definitions/275_ingrain.js";
+import { superpowerMove } from "./definitions/276_superpower.js";
+import { magicCoatMove } from "./definitions/277_magic_coat.js";
+import { recycleMove } from "./definitions/278_recycle.js";
+import { revengeMove } from "./definitions/279_revenge.js";
+import { brickBreakMove } from "./definitions/280_brick_break.js";
+import { yawnMove } from "./definitions/281_yawn.js";
+import { knockOffMove } from "./definitions/282_knock_off.js";
+import { endeavorMove } from "./definitions/283_endeavor.js";
+import { eruptionMove } from "./definitions/284_eruption.js";
 import { frostBreathMove } from "./definitions/524_frost_breath.js";
 import { statusMove } from "./definitions/status.js";
 import { defaultMove } from "./definitions/default.js";
@@ -254,7 +342,6 @@ export const MOVE_REGISTRY: Record<string, BattleMoveAnimation> = {
   "wrap": wrapMove,
   "clamp": clampMove,
   "sand-tomb": bindMove,
-  "whirlpool": bindMove,
   "infestation": bindMove,
   "snap-trap": bindMove,
   "slam": slamMove,
@@ -850,6 +937,407 @@ export const MOVE_REGISTRY: Record<string, BattleMoveAnimation> = {
   "196": icyWindMove,
   "얼어붙은바람": icyWindMove,
   "얼어붙은 바람": icyWindMove,
+  "detect": detectMove,
+  "197": detectMove,
+  "판별": detectMove,
+  "bone-rush": boneRushMove,
+  "bonerush": boneRushMove,
+  "bone_rush": boneRushMove,
+  "198": boneRushMove,
+  "본러시": boneRushMove,
+  "lock-on": lockOnMove,
+  "lockon": lockOnMove,
+  "lock_on": lockOnMove,
+  "199": lockOnMove,
+  "록온": lockOnMove,
+  "outrage": outrageMove,
+  "200": outrageMove,
+  "역린": outrageMove,
+  "sandstorm": sandstormMove,
+  "201": sandstormMove,
+  "모래바람": sandstormMove,
+  "giga-drain": gigaDrainMove,
+  "gigadrain": gigaDrainMove,
+  "giga_drain": gigaDrainMove,
+  "202": gigaDrainMove,
+  "기가드레인": gigaDrainMove,
+  "endure": endureMove,
+  "203": endureMove,
+  "버티기": endureMove,
+  "charm": charmMove,
+  "204": charmMove,
+  "애교부리기": charmMove,
+  "rollout": rolloutMove,
+  "205": rolloutMove,
+  "구르기": rolloutMove,
+  "false-swipe": falseSwipeMove,
+  "false_swipe": falseSwipeMove,
+  "falseswipe": falseSwipeMove,
+  "206": falseSwipeMove,
+  "칼등치기": falseSwipeMove,
+  "swagger": swaggerMove,
+  "207": swaggerMove,
+  "뽐내기": swaggerMove,
+  "milk-drink": milkDrinkMove,
+  "milk_drink": milkDrinkMove,
+  "milkdrink": milkDrinkMove,
+  "208": milkDrinkMove,
+  "우유마시기": milkDrinkMove,
+  "spark": sparkMove,
+  "209": sparkMove,
+  "스파크": sparkMove,
+  "fury-cutter": furyCutterMove,
+  "fury_cutter": furyCutterMove,
+  "furycutter": furyCutterMove,
+  "210": furyCutterMove,
+  "연속자르기": furyCutterMove,
+  "steel-wing": steelWingMove,
+  "steel_wing": steelWingMove,
+  "steelwing": steelWingMove,
+  "211": steelWingMove,
+  "강철날개": steelWingMove,
+  "mean-look": meanLookMove,
+  "mean_look": meanLookMove,
+  "meanlook": meanLookMove,
+  "212": meanLookMove,
+  "검은눈빛": meanLookMove,
+  "검은 눈빛": meanLookMove,
+  "attract": attractMove,
+  "attract-move": attractMove,
+  "213": attractMove,
+  "헤롱헤롱": attractMove,
+  "sleep-talk": sleepTalkMove,
+  "sleeptalk": sleepTalkMove,
+  "214": sleepTalkMove,
+  "잠꼬대": sleepTalkMove,
+  "heal-bell": healBellMove,
+  "heal_bell": healBellMove,
+  "healbell": healBellMove,
+  "215": healBellMove,
+  "치료방울": healBellMove,
+  "return": returnMove,
+  "return-move": returnMove,
+  "return_move": returnMove,
+  "216": returnMove,
+  "은혜갚기": returnMove,
+  "present": presentMove,
+  "present-move": presentMove,
+  "present_move": presentMove,
+  "217": presentMove,
+  "프레젠트": presentMove,
+  "선물": presentMove,
+  "frustration": frustrationMove,
+  "frustration-move": frustrationMove,
+  "frustration_move": frustrationMove,
+  "218": frustrationMove,
+  "화풀이": frustrationMove,
+  "safeguard": safeguardMove,
+  "safeguard-move": safeguardMove,
+  "safeguard_move": safeguardMove,
+  "219": safeguardMove,
+  "신비의부적": safeguardMove,
+  "신비의 부적": safeguardMove,
+  "pain-split": painSplitMove,
+  "pain_split": painSplitMove,
+  "painsplit": painSplitMove,
+  "220": painSplitMove,
+  "아픔나누기": painSplitMove,
+  "아픔 나누기": painSplitMove,
+  "sacred-fire": sacredFireMove,
+  "sacred_fire": sacredFireMove,
+  "sacredfire": sacredFireMove,
+  "221": sacredFireMove,
+  "성스러운불꽃": sacredFireMove,
+  "성스러운 불꽃": sacredFireMove,
+  "magnitude": magnitudeMove,
+  "222": magnitudeMove,
+  "매그니튜드": magnitudeMove,
+  "dynamic-punch": dynamicPunchMove,
+  "dynamic_punch": dynamicPunchMove,
+  "dynamicpunch": dynamicPunchMove,
+  "223": dynamicPunchMove,
+  "폭발펀치": dynamicPunchMove,
+  "폭발 펀치": dynamicPunchMove,
+  "megahorn": megahornMove,
+  "mega-horn": megahornMove,
+  "224": megahornMove,
+  "메가혼": megahornMove,
+  "dragon-breath": dragonBreathMove,
+  "dragon_breath": dragonBreathMove,
+  "dragonbreath": dragonBreathMove,
+  "225": dragonBreathMove,
+  "용의숨결": dragonBreathMove,
+  "용의 숨결": dragonBreathMove,
+  "baton-pass": batonPassMove,
+  "baton_pass": batonPassMove,
+  "batonpass": batonPassMove,
+  "226": batonPassMove,
+  "배턴터치": batonPassMove,
+  "배턴 터치": batonPassMove,
+  "바톤터치": batonPassMove,
+  "바톤 터치": batonPassMove,
+  "encore": encoreMove,
+  "227": encoreMove,
+  "앙코르": encoreMove,
+  "pursuit": pursuitMove,
+  "228": pursuitMove,
+  "따라가때리기": pursuitMove,
+  "따라가 때리기": pursuitMove,
+  "rapid-spin": rapidSpinMove,
+  "rapid_spin": rapidSpinMove,
+  "rapidspin": rapidSpinMove,
+  "229": rapidSpinMove,
+  "고속스핀": rapidSpinMove,
+  "sweet-scent": sweetScentMove,
+  "sweet_scent": sweetScentMove,
+  "sweetscent": sweetScentMove,
+  "230": sweetScentMove,
+  "달콤한향기": sweetScentMove,
+  "달콤한 향기": sweetScentMove,
+  "iron-tail": ironTailMove,
+  "iron_tail": ironTailMove,
+  "irontail": ironTailMove,
+  "231": ironTailMove,
+  "아이언테일": ironTailMove,
+  "metal-claw": metalClawMove,
+  "metal_claw": metalClawMove,
+  "metalclaw": metalClawMove,
+  "232": metalClawMove,
+  "메탈클로": metalClawMove,
+  "vital-throw": vitalThrowMove,
+  "vital_throw": vitalThrowMove,
+  "vitalthrow": vitalThrowMove,
+  "233": vitalThrowMove,
+  "받아던지기": vitalThrowMove,
+  "morning-sun": morningSunMove,
+  "morning_sun": morningSunMove,
+  "morningsun": morningSunMove,
+  "234": morningSunMove,
+  "아침햇살": morningSunMove,
+  "synthesis": synthesisMove,
+  "235": synthesisMove,
+  "광합성": synthesisMove,
+  "moonlight": moonlightMove,
+  "236": moonlightMove,
+  "달빛": moonlightMove,
+  "달의불빛": moonlightMove,
+  "hidden-power": hiddenPowerMove,
+  "hidden_power": hiddenPowerMove,
+  "hiddenpower": hiddenPowerMove,
+  "237": hiddenPowerMove,
+  "잠재파워": hiddenPowerMove,
+  "cross-chop": crossChopMove,
+  "cross_chop": crossChopMove,
+  "crosschop": crossChopMove,
+  "238": crossChopMove,
+  "크로스촙": crossChopMove,
+  "twister": twisterMove,
+  "239": twisterMove,
+  "회오리": twisterMove,
+  "rain-dance": rainDanceMove,
+  "rain_dance": rainDanceMove,
+  "raindance": rainDanceMove,
+  "240": rainDanceMove,
+  "비바라기": rainDanceMove,
+  "sunny-day": sunnyDayMove,
+  "sunny_day": sunnyDayMove,
+  "sunnyday": sunnyDayMove,
+  "241": sunnyDayMove,
+  "쾌청": sunnyDayMove,
+  "crunch": crunchMove,
+  "242": crunchMove,
+  "깨물어부수기": crunchMove,
+  "깨물어-부수기": crunchMove,
+  "깨물어 부수기": crunchMove,
+  "mirror-coat": mirrorCoatMove,
+  "mirror_coat": mirrorCoatMove,
+  "mirrorcoat": mirrorCoatMove,
+  "243": mirrorCoatMove,
+  "미러코트": mirrorCoatMove,
+  "mirror-coat-charge": mirrorCoatBarrierMove,
+  "mirror-coat-barrier": mirrorCoatBarrierMove,
+  "mirror_coat_charge": mirrorCoatBarrierMove,
+  "psych-up": psychUpMove,
+  "psych_up": psychUpMove,
+  "psychup": psychUpMove,
+  "244": psychUpMove,
+  "자기암시": psychUpMove,
+  "extreme-speed": extremeSpeedMove,
+  "extreme_speed": extremeSpeedMove,
+  "extremespeed": extremeSpeedMove,
+  "245": extremeSpeedMove,
+  "신속": extremeSpeedMove,
+  "ancient-power": ancientPowerMove,
+  "ancient_power": ancientPowerMove,
+  "ancientpower": ancientPowerMove,
+  "246": ancientPowerMove,
+  "원시의힘": ancientPowerMove,
+  "shadow-ball": shadowBallMove,
+  "shadow_ball": shadowBallMove,
+  "shadowball": shadowBallMove,
+  "247": shadowBallMove,
+  "섀도볼": shadowBallMove,
+  "쉐도우볼": shadowBallMove,
+  "future-sight": futureSightMove,
+  "future_sight": futureSightMove,
+  "futuresight": futureSightMove,
+  "248": futureSightMove,
+  "미래예지": futureSightMove,
+  "future-sight-cast": futureSightCastMove,
+  "future_sight_cast": futureSightCastMove,
+  "futuresight-cast": futureSightCastMove,
+  "미래예지-시전": futureSightCastMove,
+  "future-sight-damage": futureSightDamageMove,
+  "future_sight_damage": futureSightDamageMove,
+  "futuresight-damage": futureSightDamageMove,
+  "미래예지-대미지": futureSightDamageMove,
+  "미래예지-데미지": futureSightDamageMove,
+  "rock-smash": rockSmashMove,
+  "rock_smash": rockSmashMove,
+  "rocksmash": rockSmashMove,
+  "249": rockSmashMove,
+  "바위깨기": rockSmashMove,
+  "파워케이지": rockSmashMove,
+  "파워 케이지": rockSmashMove,
+  "파워-케이지": rockSmashMove,
+  "whirlpool": whirlpoolMove,
+  "whirl_pool": whirlpoolMove,
+  "whirl-pool": whirlpoolMove,
+  "250": whirlpoolMove,
+  "바다회오리": whirlpoolMove,
+  "beat-up": beatUpMove,
+  "beat_up": beatUpMove,
+  "beatup": beatUpMove,
+  "251": beatUpMove,
+  "집단구타": beatUpMove,
+  "fake-out": fakeOutMove,
+  "fake_out": fakeOutMove,
+  "fakeout": fakeOutMove,
+  "252": fakeOutMove,
+  "속이기": fakeOutMove,
+  "uproar": uproarMove,
+  "소란피우기": uproarMove,
+  "소란피기": uproarMove,
+  "253": uproarMove,
+  "stockpile": stockpileMove,
+  "비축하기": stockpileMove,
+  "비축": stockpileMove,
+  "254": stockpileMove,
+  "spit-up": spitUpMove,
+  "spitup": spitUpMove,
+  "토해내기": spitUpMove,
+  "255": spitUpMove,
+  "swallow": swallowMove,
+  "꿀꺽": swallowMove,
+  "256": swallowMove,
+  "heat-wave": heatWaveMove,
+  "heat_wave": heatWaveMove,
+  "heatwave": heatWaveMove,
+  "열풍": heatWaveMove,
+  "257": heatWaveMove,
+  "hail": hailMove,
+  "258": hailMove,
+  "싸라기눈": hailMove,
+  "torment": tormentMove,
+  "259": tormentMove,
+  "트집": tormentMove,
+  "flatter": flatterMove,
+  "260": flatterMove,
+  "부추기기": flatterMove,
+  "will-o-wisp": willOWispMove,
+  "will_o_wisp": willOWispMove,
+  "261": willOWispMove,
+  "도깨비불": willOWispMove,
+  "memento": mementoMove,
+  "262": mementoMove,
+  "추억의선물": mementoMove,
+  "추억의 선물": mementoMove,
+  "facade": facadeMove,
+  "263": facadeMove,
+  "객기": facadeMove,
+  "focus-punch": focusPunchMove,
+  "focuspunch": focusPunchMove,
+  "264": focusPunchMove,
+  "힘껏펀치": focusPunchMove,
+  "smelling-salts": smellingSaltsMove,
+  "smellingsalts": smellingSaltsMove,
+  "265": smellingSaltsMove,
+  "정신차리기": smellingSaltsMove,
+  "follow-me": followMeMove,
+  "followme": followMeMove,
+  "266": followMeMove,
+  "날따름": followMeMove,
+  "nature-power": naturePowerMove,
+  "naturepower": naturePowerMove,
+  "nature_power": naturePowerMove,
+  "267": naturePowerMove,
+  "자연의힘": naturePowerMove,
+  "charge": chargeMove,
+  "268": chargeMove,
+  "충전": chargeMove,
+  "taunt": tauntMove,
+  "269": tauntMove,
+  "도발": tauntMove,
+  "helping-hand": helpingHandMove,
+  "helpinghand": helpingHandMove,
+  "helping_hand": helpingHandMove,
+  "270": helpingHandMove,
+  "도우미": helpingHandMove,
+  "trick": trickMove,
+  "271": trickMove,
+  "트릭": trickMove,
+  "role-play": rolePlayMove,
+  "roleplay": rolePlayMove,
+  "role_play": rolePlayMove,
+  "272": rolePlayMove,
+  "역할놀이": rolePlayMove,
+  "wish": wishMove,
+  "273": wishMove,
+  "희망사항": wishMove,
+  "assist": assistMove,
+  "274": assistMove,
+  "조수": assistMove,
+  "ingrain": ingrainMove,
+  "275": ingrainMove,
+  "뿌리박기": ingrainMove,
+  "뿌리 박기": ingrainMove,
+  "superpower": superpowerMove,
+  "276": superpowerMove,
+  "엄청난힘": superpowerMove,
+  "엄청난 힘": superpowerMove,
+  "magic-coat": magicCoatMove,
+  "magic_coat": magicCoatMove,
+  "magiccoat": magicCoatMove,
+  "277": magicCoatMove,
+  "매직코트": magicCoatMove,
+  "매직 코트": magicCoatMove,
+  "recycle": recycleMove,
+  "278": recycleMove,
+  "리사이클": recycleMove,
+  "revenge": revengeMove,
+  "279": revengeMove,
+  "리벤지": revengeMove,
+  "brick-break": brickBreakMove,
+  "brick_break": brickBreakMove,
+  "brickbreak": brickBreakMove,
+  "280": brickBreakMove,
+  "깨뜨리다": brickBreakMove,
+  "yawn": yawnMove,
+  "281": yawnMove,
+  "하품": yawnMove,
+  "knock-off": knockOffMove,
+  "knock_off": knockOffMove,
+  "knockoff": knockOffMove,
+  "282": knockOffMove,
+  "탁쳐서떨구기": knockOffMove,
+  "탁쳐서 떨구기": knockOffMove,
+  "endeavor": endeavorMove,
+  "283": endeavorMove,
+  "죽기살기": endeavorMove,
+  "죽기 살기": endeavorMove,
+  "eruption": eruptionMove,
+  "284": eruptionMove,
+  "분화": eruptionMove,
   "frost-breath": frostBreathMove,
   "frost_breath": frostBreathMove,
   "frostbreath": frostBreathMove,
@@ -1815,4 +2303,6 @@ export function getMoveAnimation(moveKey: string, isStatus: boolean = false): Ba
   if (isStatus) return statusMove;
   return defaultMove;
 }
+
+(globalThis as any).__getMoveAnimation = getMoveAnimation;
 

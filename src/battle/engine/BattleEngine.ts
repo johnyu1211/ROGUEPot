@@ -31,6 +31,8 @@ export class BattleEngine {
       pMoveKey = playerMon.chargingMove;
     } else if (playerMon.rampageState) {
       pMoveKey = playerMon.rampageState.moveKey;
+    } else if (playerMon.rolloutState) {
+      pMoveKey = playerMon.rolloutState.moveKey;
     }
     const pMove = getMoveData(pMoveKey) || {
       id: 0,
@@ -73,6 +75,32 @@ export class BattleEngine {
         category: "physical",
         description: "기본 공격 기술",
       };
+    } else if (enemyMon.rolloutState) {
+      eMoveKey = enemyMon.rolloutState.moveKey;
+      eMove = getMoveData(eMoveKey) || {
+        id: 0,
+        name: eMoveKey,
+        nameKo: eMoveKey,
+        type: "normal",
+        power: 40,
+        accuracy: 100,
+        pp: 35,
+        category: "physical",
+        description: "기본 공격 기술",
+      };
+    } else if (enemyMon.encoreMove && (enemyMon.encoreTurns ?? 0) > 0) {
+      eMoveKey = getMoveKey(enemyMon.encoreMove);
+      eMove = getMoveData(eMoveKey) || {
+        id: 0,
+        name: eMoveKey,
+        nameKo: eMoveKey,
+        type: "normal",
+        power: 40,
+        accuracy: 100,
+        pp: 35,
+        category: "physical",
+        description: "기본 공격 기술",
+      };
     } else {
       // Smart AI: filter out redundant status moves if player already has a status condition
       let candidateMoves = enemyMon.moves;
@@ -103,13 +131,18 @@ export class BattleEngine {
     // PP consumption for non-charging moves
     const isPlayerChargingSame = playerMon.chargingMove && (playerMon.chargingMove === pMoveKey);
     const isPlayerRampagingSame = Boolean(playerMon.rampageState);
-    if (!isPlayerChargingSame && !isPlayerRampagingSame) {
+    const isPlayerRollingSame = Boolean(playerMon.rolloutState);
+    if (!isPlayerChargingSame && !isPlayerRampagingSame && !isPlayerRollingSame) {
       if (!playerMon.movePps || playerMon.movePps.length !== playerMon.moves.length) {
         playerMon.movePps = playerMon.moves.map(m => getMoveData(m)?.pp || 20);
       }
       const pMoveIdx = playerMon.moves.findIndex(m => getMoveKey(m) === pMoveKey);
       if (pMoveIdx !== -1 && playerMon.movePps && playerMon.movePps[pMoveIdx] !== undefined) {
         playerMon.movePps[pMoveIdx] = Math.max(0, playerMon.movePps[pMoveIdx] - 1);
+        if (playerMon.encoreMove && playerMon.movePps[pMoveIdx] === 0 && getMoveKey(playerMon.moves[pMoveIdx]) === playerMon.encoreMove) {
+          playerMon.encoreMove = null;
+          playerMon.encoreTurns = 0;
+        }
       }
       if (battle.playerParty[battle.playerActiveIndex]) {
         battle.playerParty[battle.playerActiveIndex].movePps = [...playerMon.movePps];
@@ -145,10 +178,16 @@ export class BattleEngine {
     // Reset turn-scoped flags
     playerMon.isProtected = false;
     enemyMon.isProtected = false;
+    playerMon.isMagicCoat = false;
+    enemyMon.isMagicCoat = false;
+    playerMon.isEnduring = false;
+    enemyMon.isEnduring = false;
     playerMon.isFlinched = false;
     enemyMon.isFlinched = false;
     playerMon.lastPhysicalDamageTakenThisTurn = 0;
     enemyMon.lastPhysicalDamageTakenThisTurn = 0;
+    playerMon.lastSpecialDamageTakenThisTurn = 0;
+    enemyMon.lastSpecialDamageTakenThisTurn = 0;
 
     // Process pending ball perks
     if (battle.pendingBallPerk) {
@@ -183,6 +222,18 @@ export class BattleEngine {
       } else if (["confuse", "flinch", "taunt", "attract", "willpower"].includes(pId)) {
         battle.pendingBallPerk = null;
       }
+    }
+
+    // Focus Punch (힘껏펀치): 턴 시작 시 집중 메시지 (원작 고증: 행동 개시 전 힘을 집중)
+    const isPFocusPunch = ["focus-punch", "focuspunch", "264", "힘껏펀치"].includes(pMoveKey);
+    const isEFocusPunch = ["focus-punch", "focuspunch", "264", "힘껏펀치"].includes(eMoveKey);
+    if (isPFocusPunch && playerMon.hp > 0) {
+      const pName = isKo ? (playerMon.nameKo || playerMon.name) : playerMon.name;
+      turnLogs.push(isKo ? `${pName}(은)는 힘을 집중하고 있다!` : `${pName} is tightening its focus!`);
+    }
+    if (isEFocusPunch && enemyMon.hp > 0) {
+      const eName = isKo ? (enemyMon.nameKo || enemyMon.name) : enemyMon.name;
+      turnLogs.push(isKo ? `${eName}(은)는 힘을 집중하고 있다!` : `${eName} is tightening its focus!`);
     }
 
     const turnActions: TurnActionInfo[] = [];
@@ -239,7 +290,17 @@ export class BattleEngine {
         canAct: false,
       });
     } else {
+      const firstMoveKey = getMoveKey(firstMove.name);
+      const secondMoveKey = getMoveKey(secondMove.name);
+      const isFirstPursuit = ["pursuit", "228", "따라가때리기", "따라가-때리기", "따라가 때리기"].includes(firstMoveKey);
+      const isSecondSwitching = ["teleport", "100", "순간이동", "u-turn", "volt-switch", "parting-shot"].includes(secondMoveKey);
+
+      if (isFirstPursuit && isSecondSwitching) {
+        (secondActor as any).isSwitchingOut = true;
+      }
+
       const res1 = executeSingleAction(firstActor, secondActor, firstMove, isFirstPlayer, isKo, battle);
+      (secondActor as any).isSwitchingOut = false;
       turnLogs.push(res1.log);
 
       if (res1.canAct === false) {
@@ -286,7 +347,9 @@ export class BattleEngine {
             ? "skull-bash-charge"
             : (rawKey1 === "sky-attack" && isTurn1Launch1)
               ? "sky-attack-charge"
-              : rawKey1;
+              : (rawKey1 === "future-sight" || rawKey1 === "미래예지")
+                ? "future-sight-cast"
+                : rawKey1;
 
         turnActions.push({
           actor: isFirstPlayer ? "player" : "enemy",
@@ -361,7 +424,17 @@ export class BattleEngine {
           wasDescentFromAir: secondActorWasAir,
         };
 
+        const firstMoveKey = getMoveKey(firstMove.name);
+        const secondMoveKey = getMoveKey(secondMove.name);
+        const isSecondPursuit = ["pursuit", "228", "따라가때리기", "따라가-때리기", "따라가 때리기"].includes(secondMoveKey);
+        const isFirstSwitching = ["teleport", "100", "순간이동", "u-turn", "volt-switch", "parting-shot"].includes(firstMoveKey);
+
+        if (isSecondPursuit && isFirstSwitching) {
+          (firstActor as any).isSwitchingOut = true;
+        }
+
         const res2 = executeSingleAction(secondActor, firstActor, secondMove, !isFirstPlayer, isKo, battle);
+        (firstActor as any).isSwitchingOut = false;
         turnLogs.push(res2.log);
 
         if (res2.canAct === false) {
@@ -408,7 +481,9 @@ export class BattleEngine {
               ? "skull-bash-charge"
               : (rawKey2 === "sky-attack" && isTurn1Launch2)
                 ? "sky-attack-charge"
-                : rawKey2;
+                : (rawKey2 === "future-sight" || rawKey2 === "미래예지")
+                  ? "future-sight-cast"
+                  : rawKey2;
 
           turnActions.push({
             actor: !isFirstPlayer ? "player" : "enemy",
@@ -449,8 +524,12 @@ export class BattleEngine {
 
     // --- End of Turn Processing ---
     if (battle.phase !== "VICTORY" && battle.phase !== "DEFEAT") {
-      processTurnEndEffects(battle.playerBattleMon, isKo, turnLogs, battle.weather, battle);
-      processTurnEndEffects(enemyMon, isKo, turnLogs, battle.weather, battle);
+      // Phase A: Turn-end actions that push to turnActions (Future Sight, Wish, Ingrain, Leech Seed, Curse)
+      processTurnEndEffects(battle.playerBattleMon, isKo, turnLogs, battle.weather, battle, "actions");
+      processTurnEndEffects(enemyMon, isKo, turnLogs, battle.weather, battle, "actions");
+      // Phase B: Residual damage/effects rendered after turnActions (weather damage, burn, poison, trap, nightmare, perish song, Moody, Speed Boost)
+      processTurnEndEffects(battle.playerBattleMon, isKo, turnLogs, battle.weather, battle, "residuals");
+      processTurnEndEffects(enemyMon, isKo, turnLogs, battle.weather, battle, "residuals");
     }
 
     if (battle.weather && battle.weatherTurns) {
@@ -599,9 +678,19 @@ export class BattleEngine {
       }
     }
 
+    // 🏃 226: 배턴터치 (Baton Pass) 교체 페이즈 전환
+    if (battle.playerBattleMon?.batonPassPending && battle.playerBattleMon.hp > 0 && battle.phase !== "VICTORY" && battle.phase !== "DEFEAT") {
+      const hasAliveTeammate = battle.playerParty.some((p, idx) => idx !== battle.playerActiveIndex && p.hp > 0);
+      if (hasAliveTeammate) {
+        battle.phase = "SWITCH";
+      } else {
+        battle.playerBattleMon.batonPassPending = false;
+      }
+    }
+
     if (battle.phase !== "VICTORY" && battle.phase !== "DEFEAT" && battle.phase !== "SWITCH") {
       const activeMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
-      if (activeMon?.chargingMove || activeMon?.rampageState) {
+      if (activeMon?.chargingMove || activeMon?.rampageState || activeMon?.rolloutState) {
         battle.phase = "FIGHT";
       } else {
         battle.phase = "MAIN";
@@ -663,25 +752,16 @@ export class BattleEngine {
         turnLogs.push(isKo ? "[PERK:downfall] 완전한 몰락으로 특수공격이 6랭크 급락했다!" : "[PERK:downfall] Utter downfall sharply plummeted Sp.Atk by 6 stages!");
       }
     }
-    if (playerMon.isTaunted && playerMon.tauntTurns) {
-      playerMon.tauntTurns -= 1;
-      if (playerMon.tauntTurns <= 0) {
-        playerMon.isTaunted = false;
-        playerMon.tauntTurns = 0;
-        turnLogs.push(isKo ? `${playerMon.nameKo || playerMon.name}의 도발 효과가 풀렸다!` : `${playerMon.name}'s taunt wore off!`);
-      }
-    }
-    if (enemyMon.isTaunted && enemyMon.tauntTurns) {
-      enemyMon.tauntTurns -= 1;
-      if (enemyMon.tauntTurns <= 0) {
-        enemyMon.isTaunted = false;
-        enemyMon.tauntTurns = 0;
-        turnLogs.push(isKo ? `${enemyMon.nameKo || enemyMon.name}의 도발 효과가 풀렸다!` : `${enemyMon.name}'s taunt wore off!`);
-      }
-    }
 
     battle.dialogueText = turnLogs.join("\n");
     battle.turnCount += 1;
+
+    if (playerMon) {
+      playerMon.turnsOnField = (playerMon.turnsOnField ?? 0) + 1;
+    }
+    if (enemyMon) {
+      enemyMon.turnsOnField = (enemyMon.turnsOnField ?? 0) + 1;
+    }
 
     if (!skipSave && battle.userId && battle.slotId) {
       saveService.updateSlot(battle.userId, battle.slotId, {

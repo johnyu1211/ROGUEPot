@@ -4,7 +4,8 @@ import { getAccuracyMultiplier } from "./statModifier.js";
 
 const NEVER_MISS_MOVES = new Set([
   "aerial-ace", "swift", "feint-attack", "aura-sphere", "magical-leaf",
-  "shock-wave", "shadow-punch", "magnet-bomb", "disarming-voice", "clear-smog"
+  "shock-wave", "shadow-punch", "magnet-bomb", "disarming-voice", "clear-smog",
+  "vital-throw", "vitalthrow", "yawn"
 ]);
 
 export interface AccuracyCheckContext {

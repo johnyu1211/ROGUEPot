@@ -38,15 +38,20 @@ export interface BattlePokemon {
   sleepTurns?: number;
   sleepDuration?: number;
   toxicCounter?: number;
+  turnsOnField?: number;
   isFlinched?: boolean;
   isConfused?: boolean;
   confusionTurns?: number;
   substituteHp?: number;
   isProtected?: boolean;
+  isEnduring?: boolean;
   protectCounter?: number;
   isTaunted?: boolean;
   tauntTurns?: number;
+  isTormented?: boolean;
+  gender?: "M" | "F" | "genderless" | null;
   isAttracted?: boolean;
+  attractedBy?: "player" | "enemy" | null;
   cannotEscape?: boolean;
   hasNightmare?: boolean;
   isCursed?: boolean;
@@ -55,17 +60,34 @@ export interface BattlePokemon {
   isForesight?: boolean;
   isIdentified?: boolean;
   isDestinyBond?: boolean;
+  isCenterOfAttention?: boolean;
   perishCount?: number;
   lastPhysicalDamageTakenThisTurn?: number;
+  lastSpecialDamageTakenThisTurn?: number;
+  ivs?: Record<string, number>;
   disabledMove?: string | null;
   disabledTurns?: number;
   mistTurns?: number;
   lightScreenTurns?: number;
   reflectTurns?: number;
+  safeguardTurns?: number;
   isRaging?: boolean;
   hasFocusEnergy?: boolean;
   bideDamageTaken?: number;
   lastMoveUsed?: string | null;
+  encoreMove?: string | null;
+  encoreTurns?: number;
+  lastMagnitude?: number;
+  batonPassPending?: boolean;
+  futureSight?: {
+    turnsLeft: number;
+    userLevel: number;
+    userSpa: number;
+    userSpaStage: number;
+    userTypes: string[];
+    isUserPlayer: boolean;
+    userName: string;
+  } | null;
 
   isTransformed?: boolean;
   originalSpeciesId?: string;
@@ -96,8 +118,17 @@ export interface BattlePokemon {
     moveKey: string;
     turnsLeft: number;
   } | null;
+  rolloutState?: {
+    moveKey: string;
+    hitCount: number;
+    defenseCurlMultiplier: boolean;
+  } | null;
+  hasUsedDefenseCurl?: boolean;
   hasMinimized?: boolean;
   isSeeded?: boolean;
+  furyCutterStreak?: number;
+  stockpileCount?: number;
+  isCharged?: boolean;
 
   isShiny?: boolean;
   shinyTier?: number;
@@ -106,6 +137,19 @@ export interface BattlePokemon {
   bossMaxShields?: number;
   hasEndurePerk?: boolean;
   heldItems?: string[];
+  isHelpingHandBoosted?: boolean;
+  heldItem?: string | null;
+  lastConsumedItem?: string | null;
+  isMagicCoat?: boolean;
+  isIngrained?: boolean;
+  yawnTurns?: number;
+  knockedOffItem?: string | null;
+  wishState?: {
+    turnsLeft: number;
+    healAmount: number;
+    userName: string;
+    userNameKo: string;
+  } | null;
 }
 
 export interface TurnActionInfo {
@@ -186,4 +230,16 @@ export interface BattleState {
   enemySpikesLayers?: number;
   hugTriggered?: boolean;
   messageId?: string;
+  playerWishState?: {
+    turnsLeft: number;
+    healAmount: number;
+    userName: string;
+    userNameKo: string;
+  } | null;
+  enemyWishState?: {
+    turnsLeft: number;
+    healAmount: number;
+    userName: string;
+    userNameKo: string;
+  } | null;
 }

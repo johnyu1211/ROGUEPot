@@ -32,7 +32,6 @@ export async function getPokemonSprite(
       }
       const candidatePaths = [
         path.resolve(process.cwd(), "data", "custom_player.png"),
-        path.resolve(process.cwd(), "viewer", "custom_player.png"),
         path.resolve(process.cwd(), "custom_player.png"),
       ];
       for (const p of candidatePaths) {
@@ -392,6 +391,30 @@ export function getTintedSprite(sprite: any, tintColor: string): any {
 
   (c as any)._pixelBounds = sprite._pixelBounds;
   sprite._tintCache.set(tintColor, c);
+  return c;
+}
+
+export function getTopDarkGradientSprite(sprite: any, alpha: number = 0.85): any {
+  if (!sprite || !sprite.width || !sprite.height) return sprite;
+  const c = createCanvas(sprite.width, sprite.height);
+  const ctx = c.getContext("2d");
+  ctx.drawImage(sprite, 0, 0);
+
+  let bounds = sprite._pixelBounds;
+  const topY = bounds ? bounds.minY : 0;
+  const h = bounds ? bounds.actH : sprite.height;
+  const midY = topY + h * 0.55;
+
+  ctx.globalCompositeOperation = "source-atop";
+  const grad = ctx.createLinearGradient(0, topY, 0, midY);
+  grad.addColorStop(0, `rgba(30, 30, 35, ${0.92 * alpha})`);
+  grad.addColorStop(0.5, `rgba(45, 45, 52, ${0.55 * alpha})`);
+  grad.addColorStop(1.0, "rgba(45, 45, 52, 0.0)");
+
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, sprite.width, sprite.height);
+
+  (c as any)._pixelBounds = bounds;
   return c;
 }
 

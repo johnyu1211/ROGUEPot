@@ -99,6 +99,66 @@ import {
 } from "./gen1/move173_176.js";
 import { drawAeroblastEffect, drawAeroblastBehindEffect } from "./gen1/move177_180.js";
 import { drawZapCannonEffect, drawZapCannonBehindEffect } from "./gen1/move189_192.js";
+import { drawHeatWaveEffect, drawHeatWaveBehindEffect } from "./gen1/move257_260.js";
+import {
+  drawWillOWispEffect,
+  drawWillOWispBehindEffect,
+  drawMementoEffect,
+  drawMementoBehindEffect,
+  drawFacadeEffect,
+  drawFacadeBehindEffect,
+} from "./gen1/move261_264.js";
+import {
+  drawSmellingSaltsEffect,
+  drawSmellingSaltsBehindEffect,
+  drawFollowMeEffect,
+  drawFollowMeBehindEffect,
+  drawChargeEffect,
+  drawChargeBehindEffect,
+} from "./gen1/move265_268.js";
+import {
+  drawTauntEffect,
+  drawTauntBehindEffect,
+  drawHelpingHandEffect,
+  drawHelpingHandBehindEffect,
+  drawTrickEffect,
+  drawTrickBehindEffect,
+  drawRolePlayEffect,
+  drawRolePlayBehindEffect,
+} from "./gen1/move269_272.js";
+
+import {
+  drawWishEffect,
+  drawWishBehindEffect,
+  drawAssistEffect,
+  drawAssistBehindEffect,
+  drawIngrainEffect,
+  drawIngrainBehindEffect,
+  drawSuperpowerEffect,
+  drawSuperpowerBehindEffect,
+} from "./gen1/move273_276.js";
+
+import {
+  drawMagicCoatEffect,
+  drawMagicCoatBehindEffect,
+  drawRecycleEffect,
+  drawRecycleBehindEffect,
+  drawRevengeEffect,
+  drawRevengeBehindEffect,
+  drawBrickBreakEffect,
+  drawBrickBreakBehindEffect,
+} from "./gen1/move277_280.js";
+
+import {
+  drawYawnEffect,
+  drawYawnBehindEffect,
+  drawKnockOffEffect,
+  drawKnockOffBehindEffect,
+  drawEndeavorEffect,
+  drawEndeavorBehindEffect,
+  drawEruptionEffect,
+  drawEruptionBehindEffect,
+} from "./gen1/move281_284.js";
 
 import { getMoveKey, MOVES_DATA } from "../../data/movesKo.js";
 
@@ -174,6 +234,28 @@ export * from "./gen1/move181_184.js";
 export * from "./gen1/move185_188.js";
 export * from "./gen1/move189_192.js";
 export * from "./gen1/move193_196.js";
+export * from "./gen1/move197_200.js";
+export * from "./gen1/move201_204.js";
+export * from "./gen1/move205_208.js";
+export * from "./gen1/move209_212.js";
+export * from "./gen1/move213_216.js";
+export * from "./gen1/move217_220.js";
+export * from "./gen1/move221_224.js";
+export * from "./gen1/move225_228.js";
+export * from "./gen1/move229_232.js";
+export * from "./gen1/move233_236.js";
+export * from "./gen1/move237_240.js";
+export * from "./gen1/move241_244.js";
+export * from "./gen1/move245_248.js";
+export * from "./gen1/move249_252.js";
+export * from "./gen1/move253_256.js";
+export * from "./gen1/move257_260.js";
+export * from "./gen1/move261_264.js";
+export * from "./gen1/move265_268.js";
+export * from "./gen1/move269_272.js";
+export * from "./gen1/move273_276.js";
+export * from "./gen1/move277_280.js";
+export * from "./gen1/move281_284.js";
 export * from "./gen1/move521_524.js";
 
 /**
@@ -201,7 +283,7 @@ export function renderMoveEffect(
 
   const moveData = MOVES_DATA[moveKey];
   const isStatus = moveData?.category === "status" || (info as any).category === "status";
-  if (isStatus && moveKey !== "swords-dance" && moveKey !== "swordsdance" && moveKey !== "whirlwind" && moveKey !== "spider-web" && moveKey !== "spiderweb" && moveKey !== "mind-reader" && moveKey !== "mindreader") {
+  if (isStatus && moveKey !== "swords-dance" && moveKey !== "swordsdance" && moveKey !== "whirlwind" && moveKey !== "spider-web" && moveKey !== "spiderweb" && moveKey !== "mind-reader" && moveKey !== "mindreader" && moveKey !== "stockpile") {
     ctx.restore();
     return;
   }
@@ -318,6 +400,138 @@ export function renderMoveEffect(
     }
   } else if (moveKey === "aeroblast") {
     drawAeroblastEffect(ctx, targetPos, info.step ?? 3);
+  } else if (moveKey === "heat-wave" || moveKey === "heatwave") {
+    if (info.layer === "behind") {
+      drawHeatWaveBehindEffect(ctx, { moveStep: info.step ?? 3, effectProgress: 0.5, heatWaveTime: 1.0, showBehindEffect: true, filterIntensity: 1.0 } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    } else {
+      drawHeatWaveEffect(ctx, { moveStep: info.step ?? 3, effectProgress: 0.5, heatWaveTime: 1.0, showEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    }
+  } else if (moveKey === "will-o-wisp" || moveKey === "will_o_wisp" || moveKey === "261" || moveKey === "도깨비불") {
+    if (info.layer === "behind") {
+      drawWillOWispBehindEffect(ctx, { moveStep: info.step ?? 3, effectProgress: 0.5, showBehindEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    } else {
+      drawWillOWispEffect(ctx, { moveStep: info.step ?? 4, effectProgress: 0.5, showEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    }
+  } else if (moveKey === "memento" || moveKey === "262" || moveKey === "추억의선물" || moveKey === "추억의 선물") {
+    if (info.layer === "behind") {
+      drawMementoBehindEffect(ctx, { moveStep: info.step ?? 2, effectProgress: 0.5, showBehindEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    } else {
+      drawMementoEffect(ctx, { moveStep: info.step ?? 2, effectProgress: 0.5, showEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    }
+  } else if (moveKey === "smelling-salts" || moveKey === "smellingsalts" || moveKey === "265" || moveKey === "정신차리기") {
+    if (info.layer === "behind") {
+      drawSmellingSaltsBehindEffect(ctx, { moveStep: info.step ?? 3, effectProgress: 0.5, showBehindEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    } else {
+      drawSmellingSaltsEffect(ctx, { moveStep: info.step ?? 3, effectProgress: 0.5, showEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    }
+  } else if (moveKey === "follow-me" || moveKey === "followme" || moveKey === "266" || moveKey === "날따름") {
+    if (info.layer === "behind") {
+      drawFollowMeBehindEffect(ctx, { moveStep: info.step ?? 1, effectProgress: 0.5, showBehindEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    } else {
+      drawFollowMeEffect(ctx, { moveStep: info.step ?? 3, effectProgress: 0.5, showEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    }
+  } else if (moveKey === "charge" || moveKey === "268" || moveKey === "충전") {
+    if (info.layer === "behind") {
+      drawChargeBehindEffect(ctx, { moveStep: info.step ?? 2, effectProgress: 0.5, showBehindEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    } else {
+      drawChargeEffect(ctx, { moveStep: info.step ?? 2, effectProgress: 0.5, showEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    }
+  } else if (moveKey === "taunt" || moveKey === "269" || moveKey === "도발") {
+    if (info.layer === "behind") {
+      drawTauntBehindEffect(ctx, { moveStep: info.step ?? 2, effectProgress: 0.5, showBehindEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    } else {
+      drawTauntEffect(ctx, { moveStep: info.step ?? 2, effectProgress: 0.5, showEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    }
+  } else if (moveKey === "helping-hand" || moveKey === "helpinghand" || moveKey === "270" || moveKey === "도우미") {
+    if (info.layer === "behind") {
+      drawHelpingHandBehindEffect(ctx, { moveStep: info.step ?? 2, effectProgress: 0.5, showBehindEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    } else {
+      drawHelpingHandEffect(ctx, { moveStep: info.step ?? 2, effectProgress: 0.5, showEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    }
+  } else if (moveKey === "trick" || moveKey === "271" || moveKey === "트릭") {
+    if (info.layer === "behind") {
+      drawTrickBehindEffect(ctx, { moveStep: info.step ?? 2, effectProgress: 0.5, showBehindEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    } else {
+      drawTrickEffect(ctx, { moveStep: info.step ?? 2, effectProgress: 0.5, showEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    }
+  } else if (moveKey === "role-play" || moveKey === "roleplay" || moveKey === "272" || moveKey === "역할놀이") {
+    if (info.layer === "behind") {
+      drawRolePlayBehindEffect(ctx, { moveStep: info.step ?? 2, effectProgress: 0.5, showBehindEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    } else {
+      drawRolePlayEffect(ctx, { moveStep: info.step ?? 2, effectProgress: 0.5, showEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    }
+  } else if (moveKey === "wish" || moveKey === "273" || moveKey === "희망사항") {
+    if (info.layer === "behind") {
+      drawWishBehindEffect(ctx, { moveStep: info.step ?? 2, effectProgress: 0.5, showBehindEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    } else {
+      drawWishEffect(ctx, { moveStep: info.step ?? 2, effectProgress: 0.5, showEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    }
+  } else if (moveKey === "assist" || moveKey === "274" || moveKey === "조수") {
+    if (info.layer === "behind") {
+      drawAssistBehindEffect(ctx, { moveStep: info.step ?? 2, effectProgress: 0.5, showBehindEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    } else {
+      drawAssistEffect(ctx, { moveStep: info.step ?? 2, effectProgress: 0.5, showEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    }
+  } else if (moveKey === "ingrain" || moveKey === "275" || moveKey === "뿌리박기") {
+    if (info.layer === "behind") {
+      drawIngrainBehindEffect(ctx, { moveStep: info.step ?? 2, effectProgress: 0.5, showBehindEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    } else {
+      drawIngrainEffect(ctx, { moveStep: info.step ?? 2, effectProgress: 0.5, showEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    }
+  } else if (moveKey === "superpower" || moveKey === "276" || moveKey === "엄청난힘") {
+    if (info.layer === "behind") {
+      drawSuperpowerBehindEffect(ctx, { moveStep: info.step ?? 3, effectProgress: 0.5, showBehindEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    } else {
+      drawSuperpowerEffect(ctx, { moveStep: info.step ?? 3, effectProgress: 0.5, showEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    }
+  } else if (moveKey === "magic-coat" || moveKey === "magiccoat" || moveKey === "277" || moveKey === "매직코트") {
+    if (info.layer === "behind") {
+      drawMagicCoatBehindEffect(ctx, { moveStep: info.step ?? 2, effectProgress: 0.5, showBehindEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    } else {
+      drawMagicCoatEffect(ctx, { moveStep: info.step ?? 2, effectProgress: 0.5, showEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    }
+  } else if (moveKey === "recycle" || moveKey === "278" || moveKey === "리사이클") {
+    if (info.layer === "behind") {
+      drawRecycleBehindEffect(ctx, { moveStep: info.step ?? 2, effectProgress: 0.5, showBehindEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    } else {
+      drawRecycleEffect(ctx, { moveStep: info.step ?? 2, effectProgress: 0.5, showEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    }
+  } else if (moveKey === "revenge" || moveKey === "279" || moveKey === "리벤지") {
+    if (info.layer === "behind") {
+      drawRevengeBehindEffect(ctx, { moveStep: info.step ?? 3, effectProgress: 0.5, showBehindEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    } else {
+      drawRevengeEffect(ctx, { moveStep: info.step ?? 3, effectProgress: 0.5, showEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    }
+  } else if (moveKey === "brick-break" || moveKey === "brickbreak" || moveKey === "280" || moveKey === "깨뜨리다") {
+    if (info.layer === "behind") {
+      drawBrickBreakBehindEffect(ctx, { moveStep: info.step ?? 3, effectProgress: 0.5, showBehindEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    } else {
+      drawBrickBreakEffect(ctx, { moveStep: info.step ?? 3, effectProgress: 0.5, showEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    }
+  } else if (moveKey === "yawn" || moveKey === "281" || moveKey === "하품") {
+    if (info.layer === "behind") {
+      drawYawnBehindEffect(ctx, { moveStep: info.step ?? 0.5, effectProgress: 0.5, showBehindEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    } else {
+      drawYawnEffect(ctx, { moveStep: info.step ?? 0.5, effectProgress: 0.5, showEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    }
+  } else if (moveKey === "knock-off" || moveKey === "knockoff" || moveKey === "282" || moveKey === "탁쳐서떨구기") {
+    if (info.layer === "behind") {
+      drawKnockOffBehindEffect(ctx, { moveStep: info.step ?? 0.35, effectProgress: 0.5, showBehindEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    } else {
+      drawKnockOffEffect(ctx, { moveStep: info.step ?? 0.35, effectProgress: 0.5, showEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    }
+  } else if (moveKey === "endeavor" || moveKey === "283" || moveKey === "죽기살기") {
+    if (info.layer === "behind") {
+      drawEndeavorBehindEffect(ctx, { moveStep: info.step ?? 0.6, effectProgress: 0.5, showBehindEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    } else {
+      drawEndeavorEffect(ctx, { moveStep: info.step ?? 0.6, effectProgress: 0.5, showEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    }
+  } else if (moveKey === "eruption" || moveKey === "284" || moveKey === "분화") {
+    if (info.layer === "behind") {
+      drawEruptionBehindEffect(ctx, { moveStep: info.step ?? 0.6, effectProgress: 0.5, showBehindEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    } else {
+      drawEruptionEffect(ctx, { moveStep: info.step ?? 0.6, effectProgress: 0.5, showEffect: true } as any, { attackerPos: startPos, targetPos, isPlayer } as any);
+    }
   } else if (type === "grass") {
     drawGrassEffect(ctx, startPos, targetPos);
   } else if (type === "psychic") {

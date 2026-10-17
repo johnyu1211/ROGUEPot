@@ -601,6 +601,21 @@ export async function renderBattleScreen(options: BattleScreenOptions): Promise<
     renderMoveEffect(ctx, battle.lastMoveEffect);
   }
 
+  // 4.6. Atmospheric Weather Filter (e.g. Sandstorm, Hail)
+  if (battle.weather === "sand") {
+    ctx.save();
+    ctx.globalAlpha = 0.14;
+    ctx.fillStyle = "#D97706";
+    ctx.fillRect(0, 0, width, height);
+    ctx.restore();
+  } else if (battle.weather === "snow") {
+    ctx.save();
+    ctx.globalAlpha = 0.08;
+    ctx.fillStyle = "#BAE6FD";
+    ctx.fillRect(0, 0, width, height);
+    ctx.restore();
+  }
+
   // 5. Top Right: Biome - Wave, Money & Weather
   const rawBiome = battle.biome || "Town";
   const biomeDisplay = isKo ? (BIOME_NAMES_KO[rawBiome.toLowerCase()] || rawBiome) : rawBiome;
@@ -637,7 +652,7 @@ export async function renderBattleScreen(options: BattleScreenOptions): Promise<
       sun: { labelKo: "쾌청", labelEn: "SUN", color: "#FB923C" },
       rain: { labelKo: "비바라기", labelEn: "RAIN", color: "#60A5FA" },
       sand: { labelKo: "모래바람", labelEn: "SAND", color: "#FBBF24" },
-      snow: { labelKo: "설경", labelEn: "SNOW", color: "#BAE6FD" },
+      snow: { labelKo: "싸라기눈", labelEn: "HAIL", color: "#BAE6FD" },
     };
     const cfg = wConfig[wType] || wConfig.sun;
     const turnsStr = battle.weatherTurns ? ` ${battle.weatherTurns}${isKo ? "턴" : "T"}` : "";

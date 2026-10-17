@@ -101,41 +101,55 @@ function drawConvergingGasStreams(
     const tailU = Math.max(0.0, headU - 0.58);  // 스트림 꼬리 (외곽 쪽, 길이 60~90px)
 
     if (headU > tailU + 0.04) {
-      const samples = 14;
+      const samples = 16;
+      const pts: { x: number; y: number }[] = [];
+      for (let s = 0; s <= samples; s++) {
+        const v = s / samples;
+        const u = tailU + v * (headU - tailU);
+        pts.push(getBezierPt(u));
+      }
 
-      for (let s = 0; s < samples; s++) {
-        const v1 = s / samples;
-        const v2 = (s + 1) / samples;
-        const vMid = (v1 + v2) * 0.5;
+      if (pts.length >= 2) {
+        const startPt = pts[0];
+        const endPt = pts[pts.length - 1];
 
-        // 양 끝(v=0 꼬리, v=1 머리)에서 0, 중간(0.5)에서 1이 되는 sin 테이퍼 팩터 (끝부분 투명하고 뾰족!)
-        const taper = Math.sin(vMid * Math.PI);
-        if (taper <= 0.01) continue;
+        ctx.save();
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
 
-        const u1 = tailU + v1 * (headU - tailU);
-        const u2 = tailU + v2 * (headU - tailU);
-        const p1 = getBezierPt(u1);
-        const p2 = getBezierPt(u2);
+        // 1. 외곽 소프트 글로우
+        const glowGrad = ctx.createLinearGradient(startPt.x, startPt.y, endPt.x, endPt.y);
+        glowGrad.addColorStop(0.0, "rgba(224, 242, 254, 0.0)");
+        glowGrad.addColorStop(0.3, "rgba(224, 242, 254, 0.45)");
+        glowGrad.addColorStop(0.7, "rgba(224, 242, 254, 0.45)");
+        glowGrad.addColorStop(1.0, "rgba(224, 242, 254, 0.0)");
 
-        // 1. 외곽 아이스 화이트 소프트 글로우 선 (끝부분 투명 감쇠)
-        const glowWidth = Math.max(0.4, 4.4 * Math.pow(taper, 0.7));
-        const glowAlpha = Math.max(0, 0.45 * taper);
-        ctx.lineWidth = glowWidth;
-        ctx.strokeStyle = `rgba(224, 242, 254, ${glowAlpha})`;
+        ctx.lineWidth = 4.2;
+        ctx.strokeStyle = glowGrad;
         ctx.beginPath();
-        ctx.moveTo(p1.x, p1.y);
-        ctx.lineTo(p2.x, p2.y);
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let j = 1; j < pts.length; j++) {
+          ctx.lineTo(pts[j].x, pts[j].y);
+        }
         ctx.stroke();
 
-        // 2. 중심 순백 코어 기체 선 (양 끝 0.3px로 뾰족 + 알파 0으로 투명하게 감쇠)
-        const coreWidth = Math.max(0.3, 2.6 * Math.pow(taper, 0.75));
-        const coreAlpha = Math.max(0, 0.98 * taper);
-        ctx.lineWidth = coreWidth;
-        ctx.strokeStyle = `rgba(255, 255, 255, ${coreAlpha})`;
+        // 2. 중심 순백 코어
+        const coreGrad = ctx.createLinearGradient(startPt.x, startPt.y, endPt.x, endPt.y);
+        coreGrad.addColorStop(0.0, "rgba(255, 255, 255, 0.0)");
+        coreGrad.addColorStop(0.2, "rgba(255, 255, 255, 0.95)");
+        coreGrad.addColorStop(0.8, "rgba(255, 255, 255, 0.95)");
+        coreGrad.addColorStop(1.0, "rgba(255, 255, 255, 0.0)");
+
+        ctx.lineWidth = 2.4;
+        ctx.strokeStyle = coreGrad;
         ctx.beginPath();
-        ctx.moveTo(p1.x, p1.y);
-        ctx.lineTo(p2.x, p2.y);
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let j = 1; j < pts.length; j++) {
+          ctx.lineTo(pts[j].x, pts[j].y);
+        }
         ctx.stroke();
+
+        ctx.restore();
       }
     }
   }
@@ -243,33 +257,36 @@ function drawWrappingSphereLines(
     // 타원 호를 따라 양 끝이 투명하고 뾰족하게 감싸는 기체선 (Tapered Sharp Orbit Arcs)
     const arcLength = Math.PI * 1.35;
     const startA = (spin) % (Math.PI * 2);
+    const arcSamples = 24;
+    const oPts: { x: number; y: number }[] = [];
 
-    const arcSamples = 16;
-    for (let s = 0; s < arcSamples; s++) {
-      const v1 = s / arcSamples;
-      const v2 = (s + 1) / arcSamples;
-      const vMid = (v1 + v2) * 0.5;
+    for (let s = 0; s <= arcSamples; s++) {
+      const a = startA + (s / arcSamples) * arcLength;
+      oPts.push({
+        x: Math.cos(a) * rx,
+        y: Math.sin(a) * ry,
+      });
+    }
 
-      // 양 끝 0, 중간 1의 sin 테이퍼
-      const taper = Math.sin(vMid * Math.PI);
-      if (taper <= 0.01) continue;
+    if (oPts.length >= 2) {
+      const startPt = oPts[0];
+      const endPt = oPts[oPts.length - 1];
+      const grad = ctx.createLinearGradient(startPt.x, startPt.y, endPt.x, endPt.y);
+      const peakA = Math.max(0, lineAlpha * 0.95);
+      grad.addColorStop(0.0, "rgba(255, 255, 255, 0.0)");
+      grad.addColorStop(0.25, `rgba(255, 255, 255, ${peakA})`);
+      grad.addColorStop(0.75, `rgba(255, 255, 255, ${peakA})`);
+      grad.addColorStop(1.0, "rgba(255, 255, 255, 0.0)");
 
-      const a1 = startA + v1 * arcLength;
-      const a2 = startA + v2 * arcLength;
-
-      const p1x = Math.cos(a1) * rx;
-      const p1y = Math.sin(a1) * ry;
-      const p2x = Math.cos(a2) * rx;
-      const p2y = Math.sin(a2) * ry;
-
-      const segWidth = Math.max(0.3, orb.width * Math.pow(taper, 0.75));
-      const segAlpha = Math.max(0, lineAlpha * 0.95 * taper);
-
-      ctx.lineWidth = segWidth;
-      ctx.strokeStyle = `rgba(255, 255, 255, ${segAlpha})`;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.lineWidth = Math.max(0.4, orb.width);
+      ctx.strokeStyle = grad;
       ctx.beginPath();
-      ctx.moveTo(p1x, p1y);
-      ctx.lineTo(p2x, p2y);
+      ctx.moveTo(oPts[0].x, oPts[0].y);
+      for (let j = 1; j < oPts.length; j++) {
+        ctx.lineTo(oPts[j].x, oPts[j].y);
+      }
       ctx.stroke();
     }
 
@@ -295,37 +312,41 @@ function drawWrappingSphereLines(
     const x3 = cx + Math.cos(endA) * rEnd;
     const y3 = cy + Math.sin(endA) * (rEnd * 0.82);
 
-    // 2차 베지어 상에서 양 끝이 투명하고 뾰족한 기체선으로 분할 렌더링
-    const swirlSamples = 12;
-    for (let s = 0; s < swirlSamples; s++) {
-      const v1 = s / swirlSamples;
-      const v2 = (s + 1) / swirlSamples;
-      const vMid = (v1 + v2) * 0.5;
-
-      const taper = Math.sin(vMid * Math.PI);
-      if (taper <= 0.01) continue;
-
-      const bPt = (u: number) => {
-        const inv = 1 - u;
-        return {
-          x: inv * inv * x1 + 2 * inv * u * x2 + u * u * x3,
-          y: inv * inv * y1 + 2 * inv * u * y2 + u * u * y3,
-        };
+    const bPt = (u: number) => {
+      const inv = 1 - u;
+      return {
+        x: inv * inv * x1 + 2 * inv * u * x2 + u * u * x3,
+        y: inv * inv * y1 + 2 * inv * u * y2 + u * u * y3,
       };
+    };
 
-      const ptA = bPt(v1);
-      const ptB = bPt(v2);
+    const swirlSamples = 16;
+    const sPts: { x: number; y: number }[] = [];
+    for (let s = 0; s <= swirlSamples; s++) {
+      const v = s / swirlSamples;
+      sPts.push(bPt(v));
+    }
 
-      const segWidth = Math.max(0.3, 1.8 * Math.pow(taper, 0.75));
-      const segAlpha = Math.max(0, lineAlpha * 0.88 * taper);
+    if (sPts.length >= 2) {
+      const startPt = sPts[0];
+      const endPt = sPts[sPts.length - 1];
+      const grad = ctx.createLinearGradient(startPt.x, startPt.y, endPt.x, endPt.y);
+      const peakA = Math.max(0, lineAlpha * 0.88);
+      const colorStr = i % 2 === 0 ? "255, 255, 255" : "240, 249, 255";
+      grad.addColorStop(0.0, `rgba(${colorStr}, 0.0)`);
+      grad.addColorStop(0.25, `rgba(${colorStr}, ${peakA})`);
+      grad.addColorStop(0.75, `rgba(${colorStr}, ${peakA})`);
+      grad.addColorStop(1.0, `rgba(${colorStr}, 0.0)`);
 
-      ctx.lineWidth = segWidth;
-      ctx.strokeStyle = i % 2 === 0 
-        ? `rgba(255, 255, 255, ${segAlpha})` 
-        : `rgba(240, 249, 255, ${segAlpha})`;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.lineWidth = 1.8;
+      ctx.strokeStyle = grad;
       ctx.beginPath();
-      ctx.moveTo(ptA.x, ptA.y);
-      ctx.lineTo(ptB.x, ptB.y);
+      ctx.moveTo(sPts[0].x, sPts[0].y);
+      for (let j = 1; j < sPts.length; j++) {
+        ctx.lineTo(sPts[j].x, sPts[j].y);
+      }
       ctx.stroke();
     }
   }
@@ -406,35 +427,41 @@ function drawTargetVortexRotationLines(
     // 호의 길이 (1.4 파이 ~ 250도)
     const arcLen = Math.PI * 1.40;
     const startA = spin;
-    const arcSamples = 20;
+    const arcSamples = 28;
 
-    for (let s = 0; s < arcSamples; s++) {
-      const v1 = s / arcSamples;
-      const v2 = (s + 1) / arcSamples;
-      const vMid = (v1 + v2) * 0.5;
+    // 점들을 수집한 뒤 단 1회의 path stroke로 렌더링 (이음새 구슬 뭉침 원천 차단)
+    const pts: { x: number; y: number }[] = [];
+    for (let s = 0; s <= arcSamples; s++) {
+      const v = s / arcSamples;
+      const a = startA + v * arcLen;
+      pts.push({
+        x: Math.cos(a) * orb.rx,
+        y: Math.sin(a) * orb.ry,
+      });
+    }
 
-      // 양 끝부분 0.2px로 극도로 날카롭게 뾰족 & 투명 감쇠
-      const taper = Math.sin(vMid * Math.PI);
-      if (taper <= 0.005) continue;
-
-      const a1 = startA + v1 * arcLen;
-      const a2 = startA + v2 * arcLen;
-
-      const p1x = Math.cos(a1) * orb.rx;
-      const p1y = Math.sin(a1) * orb.ry;
-      const p2x = Math.cos(a2) * orb.rx;
-      const p2y = Math.sin(a2) * orb.ry;
-
+    if (pts.length >= 2) {
+      const startPt = pts[0];
+      const endPt = pts[pts.length - 1];
       const isBlue = orb.color !== AERO_WHITE;
-      const finalWidth = isBlue ? Math.max(0.2, orb.width * 0.75 * Math.pow(taper, 0.70)) : Math.max(0.2, orb.width * Math.pow(taper, 0.70));
-      const segAlpha = Math.max(0, lineAlpha * taper * (isBlue ? 0.35 : 1.0));
+      const maxA = Math.max(0, lineAlpha * (isBlue ? 0.40 : 1.0));
 
-      // 메인 회전선 (순백색은 선명하고, 파란선은 투명하고 은은하게)
-      ctx.lineWidth = finalWidth;
-      ctx.strokeStyle = hexToRgba(orb.color, segAlpha);
+      // 양 끝이 0.0으로 투명하게 페이드아웃되는 선형 그라데이션
+      const arcGrad = ctx.createLinearGradient(startPt.x, startPt.y, endPt.x, endPt.y);
+      arcGrad.addColorStop(0.0, hexToRgba(orb.color, 0.0));
+      arcGrad.addColorStop(0.2, hexToRgba(orb.color, maxA));
+      arcGrad.addColorStop(0.8, hexToRgba(orb.color, maxA));
+      arcGrad.addColorStop(1.0, hexToRgba(orb.color, 0.0));
+
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.lineWidth = Math.max(0.4, orb.width * (isBlue ? 0.8 : 1.0));
+      ctx.strokeStyle = arcGrad;
       ctx.beginPath();
-      ctx.moveTo(p1x, p1y);
-      ctx.lineTo(p2x, p2y);
+      ctx.moveTo(pts[0].x, pts[0].y);
+      for (let j = 1; j < pts.length; j++) {
+        ctx.lineTo(pts[j].x, pts[j].y);
+      }
       ctx.stroke();
     }
 
@@ -547,69 +574,63 @@ function drawSwirlingVortexBackground(
   }
 
   // 3. [거대한 입체 에어로 리본 - 8개]
-  // - [유저 지시]: 배경 소용돌이 선이 훨씬 더 급격하게 나선형으로 꺾이며 회전 (Curvature 대폭 강화)
   const numRibbons = 8;
   for (let r = 0; r < numRibbons; r++) {
     const baseA = (r / numRibbons) * Math.PI * 2 + rotAngle;
     const rIn = 30 + ((r * 19) % 25);
     const rOut = 440 + ((r * 37) % 220);
 
-    // 나선 회전각을 1.15 -> 3.14(180도)로 대폭 꺾어 거대한 와류 곡률 형성
     const midA = baseA + dir * 1.45;
     const endA = baseA + dir * 3.14;
     const midR = (rIn + rOut) * 0.38;
 
-    const rColor = r % 2 === 0 ? "rgba(56, 189, 248," : "rgba(224, 242, 254,";
+    const rColor = r % 2 === 0 ? "56, 189, 248" : "224, 242, 254";
     const ribbonSamples = 24;
+    const rPts: { x: number; y: number }[] = [];
 
-    for (let s = 0; s < ribbonSamples; s++) {
-      const u1 = s / ribbonSamples;
-      const u2 = (s + 1) / ribbonSamples;
-      const uMid = (u1 + u2) * 0.5;
+    for (let s = 0; s <= ribbonSamples; s++) {
+      const u = s / ribbonSamples;
+      const b0 = (1 - u) * (1 - u);
+      const b1 = 2 * (1 - u) * u;
+      const b2 = u * u;
+      rPts.push({
+        x: b0 * (cx + Math.cos(baseA) * rIn) + b1 * (cx + Math.cos(midA) * midR) + b2 * (cx + Math.cos(endA) * rOut),
+        y: b0 * (cy + Math.sin(baseA) * (rIn * 0.72)) + b1 * (cy + Math.sin(midA) * (midR * 0.72)) + b2 * (cy + Math.sin(endA) * (rOut * 0.72)),
+      });
+    }
 
-      const taper = Math.sin(uMid * Math.PI);
-      if (taper <= 0.01) continue;
-
-      // 2차 베지어 곡선 보간
-      const b0 = (1 - u1) * (1 - u1);
-      const b1 = 2 * (1 - u1) * u1;
-      const b2 = u1 * u1;
-      const px1 = b0 * (cx + Math.cos(baseA) * rIn) + b1 * (cx + Math.cos(midA) * midR) + b2 * (cx + Math.cos(endA) * rOut);
-      const py1 = b0 * (cy + Math.sin(baseA) * (rIn * 0.72)) + b1 * (cy + Math.sin(midA) * (midR * 0.72)) + b2 * (cy + Math.sin(endA) * (rOut * 0.72));
-
-      const c0 = (1 - u2) * (1 - u2);
-      const c1 = 2 * (1 - u2) * u2;
-      const c2 = u2 * u2;
-      const px2 = c0 * (cx + Math.cos(baseA) * rIn) + c1 * (cx + Math.cos(midA) * midR) + c2 * (cx + Math.cos(endA) * rOut);
-      const py2 = c0 * (cy + Math.sin(baseA) * (rIn * 0.72)) + c1 * (cy + Math.sin(midA) * (midR * 0.72)) + c2 * (cy + Math.sin(endA) * (rOut * 0.72));
-
-      const segWidth = Math.max(0.5, (10 + (r % 3) * 4) * Math.pow(taper, 0.65));
-      const segAlpha = (0.28 + (r % 3) * 0.12) * taper * intensity;
+    if (rPts.length >= 2) {
+      const startPt = rPts[0];
+      const endPt = rPts[rPts.length - 1];
+      const grad = ctx.createLinearGradient(startPt.x, startPt.y, endPt.x, endPt.y);
+      const peakA = (0.28 + (r % 3) * 0.12) * intensity;
+      grad.addColorStop(0.0, `rgba(${rColor}, 0.0)`);
+      grad.addColorStop(0.3, `rgba(${rColor}, ${peakA})`);
+      grad.addColorStop(0.7, `rgba(${rColor}, ${peakA})`);
+      grad.addColorStop(1.0, `rgba(${rColor}, 0.0)`);
 
       ctx.save();
       ctx.lineCap = "round";
-      ctx.lineWidth = segWidth;
-      ctx.strokeStyle = `${rColor} ${segAlpha})`;
+      ctx.lineJoin = "round";
+      ctx.lineWidth = Math.max(0.5, (10 + (r % 3) * 4) * 0.75);
+      ctx.strokeStyle = grad;
       ctx.beginPath();
-      ctx.moveTo(px1, py1);
-      ctx.lineTo(px2, py2);
+      ctx.moveTo(rPts[0].x, rPts[0].y);
+      for (let j = 1; j < rPts.length; j++) {
+        ctx.lineTo(rPts[j].x, rPts[j].y);
+      }
       ctx.stroke();
       ctx.restore();
     }
   }
 
   // 4. [48가닥의 초고속 쐐기형 나선 스피드라인 (Manga Cyclone Speedlines)]
-  // - [유저 지시]: 화면 전체를 휘감아 도는 나선형 꺾임 곡률 대폭 강화 (endAngle 1.05 -> 2.75)
   const numLines = 48;
-  ctx.lineCap = "round";
-
   for (let i = 0; i < numLines; i++) {
     const baseAngle = (i / numLines) * Math.PI * 2 + rotAngle;
-
     const rInner = 20 + ((i * 13) % 45);
     const rOuter = 360 + ((i * 47) % 360);
 
-    // 나선 꺾임각 2.5배 강화 (더 가파르게 휘어지는 사이클론 곡선)
     const midAngle = baseAngle + dir * 1.25;
     const endAngle = baseAngle + dir * 2.75;
     const midR = (rInner + rOuter) * 0.36;
@@ -627,35 +648,40 @@ function drawSwirlingVortexBackground(
       : AERO_CYAN;
 
     const lineSamples = 20;
-    for (let s = 0; s < lineSamples; s++) {
-      const u1 = s / lineSamples;
-      const u2 = (s + 1) / lineSamples;
-      const uMid = (u1 + u2) * 0.5;
+    const lPts: { x: number; y: number }[] = [];
 
-      const taper = Math.sin(uMid * Math.PI);
-      if (taper <= 0.01) continue;
+    for (let s = 0; s <= lineSamples; s++) {
+      const u = s / lineSamples;
+      const b0 = (1 - u) * (1 - u);
+      const b1 = 2 * (1 - u) * u;
+      const b2 = u * u;
+      lPts.push({
+        x: b0 * (cx + Math.cos(baseAngle) * rInner) + b1 * (cx + Math.cos(midAngle) * midR) + b2 * (cx + Math.cos(endAngle) * rOuter),
+        y: b0 * (cy + Math.sin(baseAngle) * (rInner * 0.72)) + b1 * (cy + Math.sin(midAngle) * (midR * 0.72)) + b2 * (cy + Math.sin(endAngle) * (rOuter * 0.72)),
+      });
+    }
 
-      const b0 = (1 - u1) * (1 - u1);
-      const b1 = 2 * (1 - u1) * u1;
-      const b2 = u1 * u1;
-      const px1 = b0 * (cx + Math.cos(baseAngle) * rInner) + b1 * (cx + Math.cos(midAngle) * midR) + b2 * (cx + Math.cos(endAngle) * rOuter);
-      const py1 = b0 * (cy + Math.sin(baseAngle) * (rInner * 0.72)) + b1 * (cy + Math.sin(midAngle) * (midR * 0.72)) + b2 * (cy + Math.sin(endAngle) * (rOuter * 0.72));
+    if (lPts.length >= 2) {
+      const startPt = lPts[0];
+      const endPt = lPts[lPts.length - 1];
+      const grad = ctx.createLinearGradient(startPt.x, startPt.y, endPt.x, endPt.y);
+      grad.addColorStop(0.0, hexToRgba(strokeColor, 0.0));
+      grad.addColorStop(0.25, hexToRgba(strokeColor, lineBaseAlpha));
+      grad.addColorStop(0.75, hexToRgba(strokeColor, lineBaseAlpha));
+      grad.addColorStop(1.0, hexToRgba(strokeColor, 0.0));
 
-      const c0 = (1 - u2) * (1 - u2);
-      const c1 = 2 * (1 - u2) * u2;
-      const c2 = u2 * u2;
-      const px2 = c0 * (cx + Math.cos(baseAngle) * rInner) + c1 * (cx + Math.cos(midAngle) * midR) + c2 * (cx + Math.cos(endAngle) * rOuter);
-      const py2 = c0 * (cy + Math.sin(baseAngle) * (rInner * 0.72)) + c1 * (cy + Math.sin(midAngle) * (midR * 0.72)) + c2 * (cy + Math.sin(endAngle) * (rOuter * 0.72));
-
-      const segWidth = Math.max(0.2, maxW * Math.pow(taper, 0.70));
-      const segAlpha = lineBaseAlpha * taper;
-
-      ctx.lineWidth = segWidth;
-      ctx.strokeStyle = hexToRgba(strokeColor, segAlpha);
+      ctx.save();
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.lineWidth = maxW;
+      ctx.strokeStyle = grad;
       ctx.beginPath();
-      ctx.moveTo(px1, py1);
-      ctx.lineTo(px2, py2);
+      ctx.moveTo(lPts[0].x, lPts[0].y);
+      for (let j = 1; j < lPts.length; j++) {
+        ctx.lineTo(lPts[j].x, lPts[j].y);
+      }
       ctx.stroke();
+      ctx.restore();
     }
   }
 
@@ -741,36 +767,37 @@ function draw3DAeroblastWindSpiral(
   for (let b = 0; b < numBlades; b++) {
     const bladeOffset = b * ((Math.PI * 2) / numBlades);
     const startA = spinAngle * dir + bladeOffset;
+    const bPts: { x: number; y: number }[] = [];
 
-    for (let s = 0; s < samples; s++) {
-      const u1 = s / samples;
-      const u2 = (s + 1) / samples;
-      const uMid = (u1 + u2) * 0.5;
+    for (let s = 0; s <= samples; s++) {
+      const u = s / samples;
+      const r = radius * Math.pow(u, 0.82);
+      const th = startA + u * maxTheta * dir;
+      bPts.push({
+        x: Math.cos(th) * r,
+        y: Math.sin(th) * r,
+      });
+    }
 
-      // 양 끝 테이퍼링 (중심과 외곽 끝 0.2px로 날카롭게 뾰족)
-      const taper = Math.sin(uMid * Math.PI);
-      if (taper <= 0.01) continue;
+    if (bPts.length >= 2) {
+      const pStart = bPts[0];
+      const pEnd = bPts[bPts.length - 1];
+      const bladeGrad = ctx.createLinearGradient(pStart.x, pStart.y, pEnd.x, pEnd.y);
+      const peakA = alpha * 0.95;
+      bladeGrad.addColorStop(0.0, "rgba(255, 255, 255, 0.0)");
+      bladeGrad.addColorStop(0.25, `rgba(255, 255, 255, ${peakA})`);
+      bladeGrad.addColorStop(0.75, `rgba(255, 255, 255, ${peakA})`);
+      bladeGrad.addColorStop(1.0, "rgba(255, 255, 255, 0.0)");
 
-      const r1 = radius * Math.pow(u1, 0.82);
-      const r2 = radius * Math.pow(u2, 0.82);
-
-      const th1 = startA + u1 * maxTheta * dir;
-      const th2 = startA + u2 * maxTheta * dir;
-
-      const p1x = Math.cos(th1) * r1;
-      const p1y = Math.sin(th1) * r1;
-      const p2x = Math.cos(th2) * r2;
-      const p2y = Math.sin(th2) * r2;
-
-      const width = Math.max(0.3, (1.8 + 1.8 * Math.min(1.5, radius / 30)) * Math.pow(taper, 0.70));
-      const segAlpha = alpha * taper;
-
-      // 메인 순백 바람선 (100% 순백색, 회색 글로우 없음)
-      ctx.lineWidth = width;
-      ctx.strokeStyle = `rgba(255, 255, 255, ${segAlpha * 0.95})`;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.lineWidth = Math.max(0.4, 2.0 + 1.2 * Math.min(1.5, radius / 30));
+      ctx.strokeStyle = bladeGrad;
       ctx.beginPath();
-      ctx.moveTo(p1x, p1y);
-      ctx.lineTo(p2x, p2y);
+      ctx.moveTo(bPts[0].x, bPts[0].y);
+      for (let j = 1; j < bPts.length; j++) {
+        ctx.lineTo(bPts[j].x, bPts[j].y);
+      }
       ctx.stroke();
     }
   }
@@ -779,27 +806,37 @@ function draw3DAeroblastWindSpiral(
   for (let k = 0; k < 2; k++) {
     const arcOffset = k * Math.PI + spinAngle * dir * 1.2;
     const arcLen = Math.PI * 0.85;
-    const arcSamples = 12;
+    const arcSamples = 16;
+    const aPts: { x: number; y: number }[] = [];
 
-    for (let s = 0; s < arcSamples; s++) {
-      const vMid = (s + 0.5) / arcSamples;
-      const taper = Math.sin(vMid * Math.PI);
-      if (taper <= 0.01) continue;
-
-      const a1 = arcOffset + (s / arcSamples) * arcLen;
-      const a2 = arcOffset + ((s + 1) / arcSamples) * arcLen;
-
+    for (let s = 0; s <= arcSamples; s++) {
+      const a = arcOffset + (s / arcSamples) * arcLen;
       const r = radius * 0.95;
-      const x1 = Math.cos(a1) * r;
-      const y1 = Math.sin(a1) * r;
-      const x2 = Math.cos(a2) * r;
-      const y2 = Math.sin(a2) * r;
+      aPts.push({
+        x: Math.cos(a) * r,
+        y: Math.sin(a) * r,
+      });
+    }
 
-      ctx.lineWidth = Math.max(0.3, 2.0 * taper);
-      ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.85 * taper})`;
+    if (aPts.length >= 2) {
+      const pStart = aPts[0];
+      const pEnd = aPts[aPts.length - 1];
+      const arcGrad = ctx.createLinearGradient(pStart.x, pStart.y, pEnd.x, pEnd.y);
+      const peakA = alpha * 0.85;
+      arcGrad.addColorStop(0.0, "rgba(255, 255, 255, 0.0)");
+      arcGrad.addColorStop(0.25, `rgba(255, 255, 255, ${peakA})`);
+      arcGrad.addColorStop(0.75, `rgba(255, 255, 255, ${peakA})`);
+      arcGrad.addColorStop(1.0, "rgba(255, 255, 255, 0.0)");
+
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.lineWidth = Math.max(0.4, 1.8);
+      ctx.strokeStyle = arcGrad;
       ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
+      ctx.moveTo(aPts[0].x, aPts[0].y);
+      for (let j = 1; j < aPts.length; j++) {
+        ctx.lineTo(aPts[j].x, aPts[j].y);
+      }
       ctx.stroke();
     }
   }
@@ -974,53 +1011,71 @@ function drawAeroblastConnectedCyclones(
   }
 
   // 1. 소용돌이 외곽을 3D 나선형으로 꼬며 감싸 이어주는 연쇄 결합 기류선 (3D Helical Binders)
+  // [연속 패스 렌더링]: 세그먼트 분절 stroke를 폐기하고 연속 단일 패스로 그려 이음새 구체 뭉침 원천 차단
   const numHelices = 4;
+  const helixSamples = 48;
+
   for (let h = 0; h < numHelices; h++) {
     const helixOffset = h * (Math.PI * 0.5);
-    const helixSamples = 38;
+    let chunkPts: { x: number; y: number; u: number }[] = [];
 
-    for (let s = 0; s < helixSamples; s++) {
-      const u1 = (s / helixSamples) * headProgress;
-      const u2 = ((s + 1) / helixSamples) * headProgress;
-      const uMid = (u1 + u2) * 0.5;
+    const flushHelixChunk = () => {
+      if (chunkPts.length < 2) {
+        chunkPts = [];
+        return;
+      }
+
+      ctx.save();
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+
+      const startPt = chunkPts[0];
+      const endPt = chunkPts[chunkPts.length - 1];
+      const midPt = chunkPts[Math.floor(chunkPts.length * 0.5)];
+      const taper = Math.sin(Math.min(1.0, midPt.u / headProgress) * Math.PI);
+      const backFade = midPt.u > 1.0 ? Math.max(0, 1.0 - (midPt.u - 1.0) / 0.48) : 1.0;
+
+      const grad = ctx.createLinearGradient(startPt.x, startPt.y, endPt.x, endPt.y);
+      const peakA = Math.max(0, 0.85 * taper * backFade);
+      grad.addColorStop(0.0, "rgba(255, 255, 255, 0.0)");
+      grad.addColorStop(0.2, `rgba(255, 255, 255, ${peakA})`);
+      grad.addColorStop(0.8, `rgba(255, 255, 255, ${peakA})`);
+      grad.addColorStop(1.0, "rgba(255, 255, 255, 0.0)");
+
+      ctx.lineWidth = Math.max(0.4, 2.0 * Math.pow(Math.max(0.1, taper), 0.70));
+      ctx.strokeStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(chunkPts[0].x, chunkPts[0].y);
+      for (let j = 1; j < chunkPts.length; j++) {
+        ctx.lineTo(chunkPts[j].x, chunkPts[j].y);
+      }
+      ctx.stroke();
+      ctx.restore();
+      chunkPts = [];
+    };
+
+    for (let s = 0; s <= helixSamples; s++) {
+      const u = (s / helixSamples) * headProgress;
 
       // 레이어 필터
-      if (layer === "front" && uMid > 1.02) continue;
-      if (layer === "behind" && uMid < 0.95) continue;
+      const inFront = layer === "front" && u <= 1.02;
+      const inBehind = layer === "behind" && u >= 0.95;
+      const inAll = layer === "all";
 
-      const taper = Math.sin(Math.min(1.0, uMid / headProgress) * Math.PI);
-      if (taper <= 0.01) continue;
-
-      // 관통 후 소산 감쇠
-      const backFade = uMid > 1.0 ? Math.max(0, 1.0 - (uMid - 1.0) / 0.48) : 1.0;
-      if (backFade <= 0.01) continue;
-
-      const rCone1 = getAeroVortexBaseRadius(u1) * 0.88;
-      const rCone2 = getAeroVortexBaseRadius(u2) * 0.88;
-
-      const phi1 = animPhase * 14.0 + helixOffset + u1 * Math.PI * 4.5;
-      const phi2 = animPhase * 14.0 + helixOffset + u2 * Math.PI * 4.5;
-
-      const dist1 = totalDist * u1;
-      const dist2 = totalDist * u2;
-
-      const p1x = ax + cosA * (dist1 + Math.cos(phi1) * rCone1 * 0.54) + perpX * (Math.sin(phi1) * rCone1);
-      const p1y = ay + sinA * (dist1 + Math.cos(phi1) * rCone1 * 0.54) + perpY * (Math.sin(phi1) * rCone1);
-
-      const p2x = ax + cosA * (dist2 + Math.cos(phi2) * rCone2 * 0.54) + perpX * (Math.sin(phi2) * rCone2);
-      const p2y = ay + sinA * (dist2 + Math.cos(phi2) * rCone2 * 0.54) + perpY * (Math.sin(phi2) * rCone2);
-
-      const segWidth = Math.max(0.3, 1.8 * Math.pow(taper, 0.70));
-      const segAlpha = 0.85 * taper * backFade;
-
-      ctx.lineWidth = segWidth;
-      ctx.strokeStyle = `rgba(255, 255, 255, ${segAlpha * 0.90})`;
-      ctx.beginPath();
-      ctx.moveTo(p1x, p1y);
-      ctx.lineTo(p2x, p2y);
-      ctx.stroke();
+      if (inFront || inBehind || inAll) {
+        const rCone = getAeroVortexBaseRadius(u) * 0.88;
+        const phi = animPhase * 14.0 + helixOffset + u * Math.PI * 4.5;
+        const dist = totalDist * u;
+        const px = ax + cosA * (dist + Math.cos(phi) * rCone * 0.54) + perpX * (Math.sin(phi) * rCone);
+        const py = ay + sinA * (dist + Math.cos(phi) * rCone * 0.54) + perpY * (Math.sin(phi) * rCone);
+        chunkPts.push({ x: px, y: py, u });
+      } else {
+        flushHelixChunk();
+      }
     }
+    flushHelixChunk();
   }
+
 
   // 2. 뒤에서 앞 순서로 렌더링
   for (let i = 0; i < numNodes; i++) {

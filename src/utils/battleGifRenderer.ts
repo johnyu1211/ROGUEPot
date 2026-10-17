@@ -12,6 +12,8 @@ import {
   getPokemonSprite,
   drawPokeRogueBattleHud,
   drawFittedBattleSprite,
+  getFittedBattleSpriteBounds,
+  getTopDarkGradientSprite,
   getStatusTintColor,
   getPokemonDisplayName,
   formatMoney,
@@ -1281,9 +1283,10 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const playerFrontHold = isP1GuillotineKill || isP2GuillotineKill;
     const enemyBackHold = isE1GuillotineKill || isE2GuillotineKill;
 
-    const a3 = turnActions[2];
-    const postActionEnemyHp = a3 ? a3.enemyHpAfter : (a2 ? a2.enemyHpAfter : a1.enemyHpAfter);
-    const postActionPlayerHp = a3 ? a3.playerHpAfter : (a2 ? a2.playerHpAfter : a1.playerHpAfter);
+    const extraActions = turnActions.slice(2);
+    const lastTurnAction = extraActions.length > 0 ? extraActions[extraActions.length - 1] : (a2 || a1);
+    const postActionEnemyHp = lastTurnAction.enemyHpAfter;
+    const postActionPlayerHp = lastTurnAction.playerHpAfter;
     const finalEnemyHp = Math.min(enemy.hp, postActionEnemyHp);
     const finalPlayerHp = Math.min(playerMon.hp, postActionPlayerHp);
 
@@ -1295,7 +1298,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const isPlayerFainted = (finalPlayerHp <= 0 || (playerMon.hp <= 0 && !hasWhirlwindSuccess) || (battle.phase === "DEFEAT" && !hasWhirlwindSuccess));
     const isAnyFainted = a1Fainted || a2Fainted || isEnemyFainted || isPlayerFainted;
 
-    const faintAction = a3 || a2 || a1;
+    const faintAction = lastTurnAction;
     const isFissureAction = ((faintAction?.moveKey || "").toLowerCase().replace(/[\s_]+/g, "-") === "fissure");
     const faintTarget = (isEnemyFainted && isPlayerFainted) ? "both" : (isPlayerFainted ? "player" : "enemy");
     const faintFrames = (isEnemyFainted || isPlayerFainted) && !isFissureAction
@@ -1373,17 +1376,21 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       enemyBackHold,
       isPlayerEndingEvading,
       isEnemyEndingEvading,
-      a3 || a2 || a1
+      lastTurnAction
     );
 
     const a1Lines = (a1?.log || "").replace(/\\n/g, "\n").split("\n").filter(Boolean);
     const a2Lines = (a2?.log || "").replace(/\\n/g, "\n").split("\n").filter(Boolean);
-    const a3Lines = (a3?.log || "").replace(/\\n/g, "\n").split("\n").filter(Boolean);
-    const lastActionLines = a3Lines.length > 0 ? a3Lines : (a2Lines.length > 0 ? a2Lines : a1Lines);
+    const lastExtraLines = extraActions.length > 0
+      ? (extraActions[extraActions.length - 1]?.log || "").replace(/\\n/g, "\n").split("\n").filter(Boolean)
+      : [];
+    const lastActionLines = lastExtraLines.length > 0 ? lastExtraLines : (a2Lines.length > 0 ? a2Lines : a1Lines);
 
     const isCameraNone1 = moveAnim1?.camera?.type === "none";
+    const act1Actor: "me" | "enim" = isP1 ? "me" : "enim";
     let processedAct1Frames = act1Frames.map(f => ({
       ...f,
+      actionActor: act1Actor,
       dialogueLines: a1Lines,
       textLineIdx: 99,
       isAttackerPlayer: isP1,
@@ -1396,8 +1403,10 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     }
 
     const isCameraNone2 = moveAnim2?.camera?.type === "none";
+    const act2Actor: "me" | "enim" = isP2 ? "me" : "enim";
     let processedAct2Frames = act2Frames.map(f => ({
       ...f,
+      actionActor: act2Actor,
       dialogueLines: a2Lines,
       textLineIdx: 99,
       isAttackerPlayer: isP2,
@@ -1417,59 +1426,6 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     }
     if (a2.canAct !== false) {
       applyMoveCameraToFrames(processedAct2Frames, moveAnim2, isP2, emBody, pmBody, false);
-    }
-
-    let processedAct3Frames: any[] = [];
-    let act3FlickerFrames: any[] = [];
-    let act3StatFrames: any[] = [];
-    let isP3 = false;
-    let moveAnim3: any = null;
-
-    if (a3) {
-      isP3 = a3.actor === "player";
-      let mKey3 = getMoveKey(a3.moveKey || a3.moveName);
-      if (mKey3 === "solar-beam" && (a3.isTurn1Launch || a3.chargingMove === "solar-beam" || a3.log?.includes("빛을 흡수") || a3.log?.includes("sunlight"))) {
-        mKey3 = "solar-beam-charge";
-      }
-      if (mKey3 === "skull-bash" && (a3.isTurn1Launch || a3.chargingMove === "skull-bash" || a3.log?.includes("고개를 숙이고") || a3.log?.includes("tucked in its head"))) {
-        mKey3 = "skull-bash-charge";
-      }
-      if (mKey3 === "sky-attack" && (a3.isTurn1Launch || a3.chargingMove === "sky-attack" || a3.log?.includes("빛에 휩싸였다") || a3.log?.includes("harsh light") || a3.log?.includes("눈부신 빛"))) {
-        mKey3 = "sky-attack-charge";
-      }
-      const moveData3 = getMoveData(mKey3);
-      const isCharging3 = isEvasionLaunch(a3) || mKey3.endsWith("-charge");
-      const isEvasionHit3 = isEvasionStrike(a3);
-      const isStatusMove3 = (moveData3?.category === "status" || (a3 as any).category === "status" || ((a3.damage ?? 0) === 0 && !isCharging3 && !isEvasionHit3));
-      const isHit3 = a3.isHit !== undefined ? a3.isHit : ((a3.damage ?? 0) > 0 || (!a3.log?.includes("빗나갔다") && !a3.log?.includes("missed") && !a3.log?.includes("빗나가")));
-      const isMiss3 = !isHit3;
-
-      moveAnim3 = getMoveAnimation(mKey3, isStatusMove3);
-      let act3Frames: any[] = moveAnim3.buildFrames({
-        action: a3,
-        isPlayer: isP3,
-        isHit: isHit3,
-        isMiss: isMiss3,
-        enemyHp: a3.enemyHpBefore !== undefined ? a3.enemyHpBefore : (a2 ? a2.enemyHpAfter : a1.enemyHpAfter),
-        playerHp: a3.playerHpBefore !== undefined ? a3.playerHpBefore : (a2 ? a2.playerHpAfter : a1.playerHpAfter),
-        textLineIdx: 99,
-        usePlayerFront: false,
-        useEnemyBack: false,
-      });
-      act3Frames = applyDamageBlinkFrames(act3Frames, a3, isP3);
-      const isCameraNone3 = moveAnim3?.camera?.type === "none";
-      processedAct3Frames = act3Frames.map(f => ({
-        ...f,
-        dialogueLines: a3Lines,
-        textLineIdx: 99,
-        isAttackerPlayer: isP3,
-        hideUI: f.hideUI !== undefined ? f.hideUI : (isCameraNone3 ? false : (!f.afterCameraReturn && (f.delay === undefined || f.delay < 10000))),
-      }));
-      if (a3.canAct !== false) {
-        applyMoveCameraToFrames(processedAct3Frames, moveAnim3, isP3, emBody, pmBody, false);
-      }
-      act3FlickerFrames = createEffectivenessFlickerFrames(a3, isP3, false, playerFrontHold, enemyBackHold).map(f => ({ ...f, dialogueLines: a3Lines, textLineIdx: 99 }));
-      act3StatFrames = createStatChangeFrames(a3, isP3, 6, playerFrontHold, enemyBackHold).map(f => ({ ...f, dialogueLines: a3Lines, textLineIdx: 99 }));
     }
 
     const isFlyGlide1 = (mKey1 === "fly" && !isEvasionLaunch(a1));
@@ -1514,14 +1470,104 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       ? (processedAct2Frames.find(f => f.substituteWho)?.substituteWho || act1SubstitutedWho || (isP2 ? "player" : "enemy"))
       : undefined;
 
-    if ((isAct2Transformed || isAct2Substituted) && a3) {
-      processedAct3Frames = processedAct3Frames.map(f => ({
+    const extraActionFrameBlocks: any[] = [];
+    for (let idx = 0; idx < extraActions.length; idx++) {
+      const aExtra = extraActions[idx];
+      const prevAct = idx === 0 ? a2 : extraActions[idx - 1];
+      const prevLines = (prevAct?.log || "").replace(/\\n/g, "\n").split("\n").filter(Boolean);
+      const extraLines = (aExtra?.log || "").replace(/\\n/g, "\n").split("\n").filter(Boolean);
+      const isPExtra = aExtra.actor === "player";
+      const extraActor: "me" | "enim" = isPExtra ? "me" : "enim";
+      let mKeyExtra = getMoveKey(aExtra.moveKey || aExtra.moveName);
+      if (mKeyExtra === "solar-beam" && (aExtra.isTurn1Launch || aExtra.chargingMove === "solar-beam" || aExtra.log?.includes("빛을 흡수") || aExtra.log?.includes("sunlight"))) {
+        mKeyExtra = "solar-beam-charge";
+      }
+      if (mKeyExtra === "skull-bash" && (aExtra.isTurn1Launch || aExtra.chargingMove === "skull-bash" || aExtra.log?.includes("고개를 숙이고") || aExtra.log?.includes("tucked in its head"))) {
+        mKeyExtra = "skull-bash-charge";
+      }
+      if (mKeyExtra === "sky-attack" && (aExtra.isTurn1Launch || aExtra.chargingMove === "sky-attack" || aExtra.log?.includes("빛에 휩싸였다") || aExtra.log?.includes("harsh light") || aExtra.log?.includes("눈부신 빛"))) {
+        mKeyExtra = "sky-attack-charge";
+      }
+      const moveDataExtra = getMoveData(mKeyExtra);
+      const isChargingExtra = isEvasionLaunch(aExtra) || mKeyExtra.endsWith("-charge");
+      const isEvasionHitExtra = isEvasionStrike(aExtra);
+      const isStatusMoveExtra = (moveDataExtra?.category === "status" || (aExtra as any).category === "status" || ((aExtra.damage ?? 0) === 0 && !isChargingExtra && !isEvasionHitExtra));
+      const isHitExtra = aExtra.isHit !== undefined ? aExtra.isHit : ((aExtra.damage ?? 0) > 0 || (!aExtra.log?.includes("빗나갔다") && !aExtra.log?.includes("missed") && !aExtra.log?.includes("빗나가")));
+      const isMissExtra = !isHitExtra;
+
+      const moveAnimExtra = getMoveAnimation(mKeyExtra, isStatusMoveExtra);
+      let actExtraFrames: any[] = moveAnimExtra.buildFrames({
+        action: aExtra,
+        isPlayer: isPExtra,
+        isHit: isHitExtra,
+        isMiss: isMissExtra,
+        enemyHp: aExtra.enemyHpBefore !== undefined ? aExtra.enemyHpBefore : prevAct.enemyHpAfter,
+        playerHp: aExtra.playerHpBefore !== undefined ? aExtra.playerHpBefore : prevAct.playerHpAfter,
+        textLineIdx: 99,
+        usePlayerFront: false,
+        useEnemyBack: false,
+      });
+      actExtraFrames = applyDamageBlinkFrames(actExtraFrames, aExtra, isPExtra);
+      const isCameraNoneExtra = moveAnimExtra?.camera?.type === "none";
+      let processedExtraFrames = actExtraFrames.map(f => ({
         ...f,
-        useTransformedSprite: isAct2Transformed ? (f.useTransformedSprite ?? true) : f.useTransformedSprite,
-        transformedWho: isAct2Transformed ? (f.transformedWho ?? act2TransformedWho) : f.transformedWho,
-        usePlayerSubstitute: (act2SubstitutedWho === "player" || act1SubstitutedWho === "player") ? true : f.usePlayerSubstitute,
-        useEnemySubstitute: (act2SubstitutedWho === "enemy" || act1SubstitutedWho === "enemy") ? true : f.useEnemySubstitute,
+        actionActor: extraActor,
+        dialogueLines: extraLines,
+        textLineIdx: 99,
+        isAttackerPlayer: isPExtra,
+        hideUI: f.hideUI !== undefined ? f.hideUI : (isCameraNoneExtra ? false : (!f.afterCameraReturn && (f.delay === undefined || f.delay < 10000))),
       }));
+      if (aExtra.canAct !== false) {
+        applyMoveCameraToFrames(processedExtraFrames, moveAnimExtra, isPExtra, emBody, pmBody, false);
+      }
+      if (isAct2Transformed || isAct2Substituted) {
+        processedExtraFrames = processedExtraFrames.map(f => ({
+          ...f,
+          useTransformedSprite: isAct2Transformed ? (f.useTransformedSprite ?? true) : f.useTransformedSprite,
+          transformedWho: isAct2Transformed ? (f.transformedWho ?? act2TransformedWho) : f.transformedWho,
+          usePlayerSubstitute: (act2SubstitutedWho === "player" || act1SubstitutedWho === "player") ? true : f.usePlayerSubstitute,
+          useEnemySubstitute: (act2SubstitutedWho === "enemy" || act1SubstitutedWho === "enemy") ? true : f.useEnemySubstitute,
+        }));
+      }
+      const extraFlickerFrames = createEffectivenessFlickerFrames(aExtra, isPExtra, false, playerFrontHold, enemyBackHold).map(f => ({ ...f, actionActor: extraActor, dialogueLines: extraLines, textLineIdx: 99 }));
+      const extraStatFrames = createStatChangeFrames(aExtra, isPExtra, 6 + idx * 2, playerFrontHold, enemyBackHold).map(f => ({ ...f, actionActor: extraActor, dialogueLines: extraLines, textLineIdx: 99 }));
+
+      extraActionFrameBlocks.push(
+        // Natural Breathing Room Pause before Extra Action (850ms, or 180ms for snappy video)
+        {
+          delay: options.fastTurnTransition ? 180 : 850,
+          pOffset: { x: 0, y: 0 },
+          eOffset: { x: 0, y: 0 },
+          pAlpha: 1.0,
+          eAlpha: 1.0,
+          hidePShadow: false,
+          hideEShadow: false,
+          hidePlayer: false,
+          hideEnemy: false,
+          hideUI: false,
+          hideHud: false,
+          hideDialogue: false,
+          showEffect: false,
+          hitFlash: false,
+          usePlayerFront: false,
+          useEnemyBack: false,
+          useTransformedSprite: isAct2Transformed,
+          transformedWho: act2TransformedWho,
+          useSubstituteSprite: isAct2Substituted,
+          substituteWho: act2SubstitutedWho,
+          targetAlpha: 1.0,
+          enemyHp: prevAct.enemyHpAfter,
+          playerHp: prevAct.playerHpAfter,
+          dialogueLines: prevLines,
+          textLineIdx: 99,
+          statProgress: undefined,
+          isBlur: false,
+          moveEffect: prevAct,
+        },
+        ...processedExtraFrames,
+        ...(aExtra.canAct === false ? [] : extraFlickerFrames),
+        ...extraStatFrames
+      );
     }
 
     framesConfig = [
@@ -1553,13 +1599,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       ...(createEffectivenessFlickerFrames(a1, isP1, true, isP1GuillotineKill, isE1GuillotineKill).map(f => {
         const base = isPlayerEvadingDuringAct1 ? { ...f, pOffset: { x: 0, y: -9999 }, hidePlayer: true, hidePShadow: true, pAlpha: 0.0 }
           : (isEnemyEvadingDuringAct1 ? { ...f, eOffset: { x: 0, y: -9999 }, hideEnemy: true, hideEShadow: true, eAlpha: 0.0 } : f);
-        return { ...base, useTransformedSprite: isAct1Transformed, transformedWho: act1TransformedWho, useSubstituteSprite: isAct1Substituted, substituteWho: act1SubstitutedWho, dialogueLines: a1Lines, textLineIdx: 99 };
+        return { ...base, actionActor: act1Actor, useTransformedSprite: isAct1Transformed, transformedWho: act1TransformedWho, useSubstituteSprite: isAct1Substituted, substituteWho: act1SubstitutedWho, dialogueLines: a1Lines, textLineIdx: 99 };
       })),
       // Dedicated Post-Move Stat Change Phase for Action 1 (if stat changes exist and not already in act1 frames!)
       ...(!act1HasStatFrames ? (createStatChangeFrames(a1, isP1, 2, isP1GuillotineKill, isE1GuillotineKill).map(f => {
         const base = isPlayerEvadingDuringAct1 ? { ...f, pOffset: { x: 0, y: -9999 }, hidePlayer: true, hidePShadow: true, pAlpha: 0.0 }
           : (isEnemyEvadingDuringAct1 ? { ...f, eOffset: { x: 0, y: -9999 }, hideEnemy: true, hideEShadow: true, eAlpha: 0.0 } : f);
-        return { ...base, useTransformedSprite: isAct1Transformed, transformedWho: act1TransformedWho, useSubstituteSprite: isAct1Substituted, substituteWho: act1SubstitutedWho, dialogueLines: a1Lines, textLineIdx: 99 };
+        return { ...base, actionActor: act1Actor, useTransformedSprite: isAct1Transformed, transformedWho: act1TransformedWho, useSubstituteSprite: isAct1Substituted, substituteWho: act1SubstitutedWho, dialogueLines: a1Lines, textLineIdx: 99 };
       })) : []),
       // Frame 4: Natural Breathing Room Pause between Turns (850ms - comfortable reading pause!, or 180ms for snappy video)
       {
@@ -1600,51 +1646,16 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       ...(a2.canAct === false ? [] : (createEffectivenessFlickerFrames(a2, isP2, false, playerFrontHold, enemyBackHold).map(f => {
         const base = isPlayerEvadingDuringAct2 ? { ...f, pOffset: { x: 0, y: -9999 }, hidePlayer: true, hidePShadow: true, pAlpha: 0.0 }
           : (isEnemyEvadingDuringAct2 ? { ...f, eOffset: { x: 0, y: -9999 }, hideEnemy: true, hideEShadow: true, eAlpha: 0.0 } : f);
-        return { ...base, useTransformedSprite: isAct2Transformed, transformedWho: act2TransformedWho, useSubstituteSprite: isAct2Substituted, substituteWho: act2SubstitutedWho, dialogueLines: a2Lines, textLineIdx: 99 };
+        return { ...base, actionActor: act2Actor, useTransformedSprite: isAct2Transformed, transformedWho: act2TransformedWho, useSubstituteSprite: isAct2Substituted, substituteWho: act2SubstitutedWho, dialogueLines: a2Lines, textLineIdx: 99 };
       }))),
       // Dedicated Post-Move Stat Change Phase for Action 2 (if stat changes exist and not already in act2 frames!)
       ...(!act2HasStatFrames && a2.canAct !== false ? (createStatChangeFrames(a2, isP2, 4, playerFrontHold, enemyBackHold).map(f => {
         const base = isPlayerEvadingDuringAct2 ? { ...f, pOffset: { x: 0, y: -9999 }, hidePlayer: true, hidePShadow: true, pAlpha: 0.0 }
           : (isEnemyEvadingDuringAct2 ? { ...f, eOffset: { x: 0, y: -9999 }, hideEnemy: true, hideEShadow: true, eAlpha: 0.0 } : f);
-        return { ...base, useTransformedSprite: isAct2Transformed, transformedWho: act2TransformedWho, useSubstituteSprite: isAct2Substituted, substituteWho: act2SubstitutedWho, dialogueLines: a2Lines, textLineIdx: 99 };
+        return { ...base, actionActor: act2Actor, useTransformedSprite: isAct2Transformed, transformedWho: act2TransformedWho, useSubstituteSprite: isAct2Substituted, substituteWho: act2SubstitutedWho, dialogueLines: a2Lines, textLineIdx: 99 };
       })) : []),
-      // === ACT 3 (If present!) ===
-      ...(a3 ? [
-        // Natural Breathing Room Pause between Act 2 and Act 3 (850ms)
-        {
-          delay: 850,
-          pOffset: { x: 0, y: 0 },
-          eOffset: { x: 0, y: 0 },
-          pAlpha: 1.0,
-          eAlpha: 1.0,
-          hidePShadow: false,
-          hideEShadow: false,
-          hidePlayer: false,
-          hideEnemy: false,
-          hideUI: false,
-          hideHud: false,
-          hideDialogue: false,
-          showEffect: false,
-          hitFlash: false,
-          usePlayerFront: false,
-          useEnemyBack: false,
-          useTransformedSprite: isAct2Transformed,
-          transformedWho: act2TransformedWho,
-          useSubstituteSprite: isAct2Substituted,
-          substituteWho: act2SubstitutedWho,
-          targetAlpha: 1.0,
-          enemyHp: a2.enemyHpAfter,
-          playerHp: a2.playerHpAfter,
-          dialogueLines: a2Lines,
-          textLineIdx: 99,
-          statProgress: undefined,
-          isBlur: false,
-          moveEffect: a2,
-        },
-        ...processedAct3Frames,
-        ...(a3.canAct === false ? [] : act3FlickerFrames),
-        ...act3StatFrames,
-      ] : []),
+      // === EXTRA TURN-END ACTIONS (Act 3, Act 4, ... e.g., Wish, Ingrain, Leech Seed, Future Sight, Curse) ===
+      ...extraActionFrameBlocks,
       // Turn-End Residual Damage (poison, burn, trap, weather)
       ...(residualFrames.map(f => ({ ...f, useTransformedSprite: isAct2Transformed, transformedWho: act2TransformedWho, useSubstituteSprite: isAct2Substituted, substituteWho: act2SubstitutedWho, dialogueLines: lastActionLines, textLineIdx: 99 }))),
       // Sinking Faint Collapse Animation (if someone fainted)
@@ -1673,13 +1684,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         substituteWho: act2SubstitutedWho,
         enemyHp: finalEnemyHp,
         playerHp: finalPlayerHp,
-        enemyStatus: (a3 || a2)?.enemyStatusAfter !== undefined ? (a3 || a2).enemyStatusAfter : a1.enemyStatusAfter,
-        playerStatus: (a3 || a2)?.playerStatusAfter !== undefined ? (a3 || a2).playerStatusAfter : a1.playerStatusAfter,
+        enemyStatus: lastTurnAction?.enemyStatusAfter !== undefined ? lastTurnAction.enemyStatusAfter : a1.enemyStatusAfter,
+        playerStatus: lastTurnAction?.playerStatusAfter !== undefined ? lastTurnAction.playerStatusAfter : a1.playerStatusAfter,
         dialogueLines: lastActionLines,
         textLineIdx: 99,
         statProgress: undefined,
         isBlur: false,
-        moveEffect: a3 || a2,
+        moveEffect: lastTurnAction,
       }
     ];
   } else {
@@ -1775,8 +1786,10 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
     const a1SingleLines = (eff?.log || "").replace(/\\n/g, "\n").split("\n").filter(Boolean);
 
     const isCameraNoneSingle = moveAnim1?.camera?.type === "none";
+    const singleActor: "me" | "enim" = isP1 ? "me" : "enim";
     let processedSingleActFrames = act1Frames.map(f => ({
       ...f,
+      actionActor: singleActor,
       dialogueLines: a1SingleLines,
       textLineIdx: 99,
       isAttackerPlayer: isP1,
@@ -1843,13 +1856,13 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       ...(createEffectivenessFlickerFrames(eff, isP1, true, playerFrontHold, enemyBackHold).map(f => {
         const base = isPlayerStartingEvading && !isP1 ? { ...f, pOffset: { x: 0, y: -9999 }, hidePlayer: true, hidePShadow: true, pAlpha: 0.0 }
           : (isEnemyStartingEvading && isP1 ? { ...f, eOffset: { x: 0, y: -9999 }, hideEnemy: true, hideEShadow: true, eAlpha: 0.0 } : f);
-        return { ...base, useTransformedSprite: isTransformedHold, transformedWho: transformedWhoHold, useSubstituteSprite: isSubstitutedHold, substituteWho: substituteWhoHold, dialogueLines: a1SingleLines, textLineIdx: 99 };
+        return { ...base, actionActor: singleActor, useTransformedSprite: isTransformedHold, transformedWho: transformedWhoHold, useSubstituteSprite: isSubstitutedHold, substituteWho: substituteWhoHold, dialogueLines: a1SingleLines, textLineIdx: 99 };
       })),
       // Dedicated Post-Move Stat Change Phase (if stat changes exist and not already in single act frames!)
       ...(!singleHasStatFrames ? (createStatChangeFrames(eff, isP1, 2, playerFrontHold, enemyBackHold).map(f => {
         const base = isPlayerStartingEvading && !isP1 ? { ...f, pOffset: { x: 0, y: -9999 }, hidePlayer: true, hidePShadow: true, pAlpha: 0.0 }
           : (isEnemyStartingEvading && isP1 ? { ...f, eOffset: { x: 0, y: -9999 }, hideEnemy: true, hideEShadow: true, eAlpha: 0.0 } : f);
-        return { ...base, useTransformedSprite: isTransformedHold, transformedWho: transformedWhoHold, useSubstituteSprite: isSubstitutedHold, substituteWho: substituteWhoHold, dialogueLines: a1SingleLines, textLineIdx: 99 };
+        return { ...base, actionActor: singleActor, useTransformedSprite: isTransformedHold, transformedWho: transformedWhoHold, useSubstituteSprite: isSubstitutedHold, substituteWho: substituteWhoHold, dialogueLines: a1SingleLines, textLineIdx: 99 };
       })) : []),
       // Turn-End Residual Damage (poison, burn, trap, weather)
       ...(residualFramesSingle.map(f => ({ ...f, useTransformedSprite: isTransformedHold, transformedWho: transformedWhoHold, useSubstituteSprite: isSubstitutedHold, substituteWho: substituteWhoHold, dialogueLines: a1SingleLines, textLineIdx: 99 }))),
@@ -2170,11 +2183,14 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       }
 
       const drawEnemySprite = () => {
-        const eSpriteToDraw = isEnemySubstituted
+        const rawESprite = isEnemySubstituted
           ? (subFrontSprite || enemySprite)
           : (isEnemyTransformed
             ? (playerFrontSprite || playerSprite)
             : (f.useEnemyBack ? (enemyBackSprite || enemySprite) : enemySprite));
+        const eSpriteToDraw = (f.targetTopDarkGradient && eTarget && rawESprite)
+          ? getTopDarkGradientSprite(rawESprite, f.targetTopDarkAlpha ?? 0.85)
+          : rawESprite;
         const isEnemySpriteHidden = (f.eOffset && (f.eOffset.y <= -500 || f.eOffset.y >= 9000)) || f.hideEnemy || (eAlpha <= 0.01);
         if (eSpriteToDraw && !isEnemySpriteHidden) {
           targetCtx.save();
@@ -2196,8 +2212,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             targetCtx.filter = `brightness(1.50) drop-shadow(0px 0px ${rad}px rgba(255,255,255,0.92))`;
           } else if (f.eGreyTint || (f.targetGreyTint && eTarget)) {
             targetCtx.filter = "grayscale(1) brightness(0.98) contrast(1.15)";
-          } else if (f.targetDarkLevel !== undefined && f.targetDarkLevel > 0 && eTarget) {
-            const lvl = Math.min(1.0, f.targetDarkLevel);
+          } else if ((f.targetDarkLevel !== undefined && f.targetDarkLevel > 0 && eTarget) || (f.eDarkLevel !== undefined && f.eDarkLevel > 0)) {
+            const rawLvl = f.eDarkLevel ?? f.targetDarkLevel ?? 0;
+            const lvl = Math.min(1.0, rawLvl);
             const bri = Math.max(0.04, 1.0 - lvl * 0.94);
             const sat = Math.max(0.0, 1.0 - lvl * 0.85);
             targetCtx.filter = `brightness(${bri.toFixed(2)}) saturate(${sat.toFixed(2)}) drop-shadow(0px 0px ${Math.round(lvl * 6)}px rgba(0, 0, 0, ${lvl.toFixed(2)}))`;
@@ -2228,7 +2245,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           }
           const ex = em.x + (f.eOffset?.x ?? 0);
           const ey = em.y + (f.eOffset?.y ?? 0);
-          const eTintColor = getStatusTintColor(curRenderEnemyStatus);
+          const eTintColor = f.eTintColor !== undefined ? f.eTintColor : getStatusTintColor(curRenderEnemyStatus);
           if (isWhiteAura) {
             // 1. [아래 레이어] 원본 스프라이트는 제자리에 그대로 유지 (오프셋 0, 스케일 1.0, 원본 색상)
             drawFittedBattleSprite(targetCtx, eSpriteToDraw, em.x, em.y, em.size, eTintColor, eBottomSpread, eWaveShift);
@@ -2263,20 +2280,42 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             if (f.eScale) targetCtx.scale(f.eScale.x, f.eScale.y);
             drawFittedBattleSprite(targetCtx, eSpriteToDraw, 0, 0, em.size, eTintColor, eBottomSpread, eWaveShift);
             if (!isPureWhite && eWhiteAlpha > 0.01) {
-              targetCtx.save();
-              targetCtx.filter = "brightness(0) invert(1)";
-              targetCtx.globalAlpha = eAlpha * eWhiteAlpha;
-              drawFittedBattleSprite(targetCtx, eSpriteToDraw, 0, 0, em.size, eTintColor, eBottomSpread, eWaveShift);
-              targetCtx.restore();
+              const clipTop = f.eWhiteClipTopRatio ?? (!isAttackingPlayer ? f.whiteFilterClipTopRatio : undefined);
+              if (clipTop === undefined || clipTop < 1.0) {
+                targetCtx.save();
+                if (clipTop !== undefined && clipTop > 0) {
+                  const b = getFittedBattleSpriteBounds(eSpriteToDraw, em.size);
+                  const sH = b.drawH || em.size;
+                  const sW = b.drawW || em.size;
+                  targetCtx.beginPath();
+                  targetCtx.rect(-sW, -sH + sH * clipTop, sW * 2, sH * (1 - clipTop) + 10);
+                  targetCtx.clip();
+                }
+                targetCtx.filter = "brightness(0) invert(1)";
+                targetCtx.globalAlpha = eAlpha * eWhiteAlpha;
+                drawFittedBattleSprite(targetCtx, eSpriteToDraw, 0, 0, em.size, eTintColor, eBottomSpread, eWaveShift);
+                targetCtx.restore();
+              }
             }
           } else {
             drawFittedBattleSprite(targetCtx, eSpriteToDraw, ex, ey, em.size, eTintColor, eBottomSpread, eWaveShift);
             if (!isPureWhite && eWhiteAlpha > 0.01) {
-              targetCtx.save();
-              targetCtx.filter = "brightness(0) invert(1)";
-              targetCtx.globalAlpha = eAlpha * eWhiteAlpha;
-              drawFittedBattleSprite(targetCtx, eSpriteToDraw, ex, ey, em.size, eTintColor, eBottomSpread, eWaveShift);
-              targetCtx.restore();
+              const clipTop = f.eWhiteClipTopRatio ?? (!isAttackingPlayer ? f.whiteFilterClipTopRatio : undefined);
+              if (clipTop === undefined || clipTop < 1.0) {
+                targetCtx.save();
+                if (clipTop !== undefined && clipTop > 0) {
+                  const b = getFittedBattleSpriteBounds(eSpriteToDraw, em.size);
+                  const sH = b.drawH || em.size;
+                  const sW = b.drawW || em.size;
+                  targetCtx.beginPath();
+                  targetCtx.rect(ex - sW, ey - sH + sH * clipTop, sW * 2, sH * (1 - clipTop) + 10);
+                  targetCtx.clip();
+                }
+                targetCtx.filter = "brightness(0) invert(1)";
+                targetCtx.globalAlpha = eAlpha * eWhiteAlpha;
+                drawFittedBattleSprite(targetCtx, eSpriteToDraw, ex, ey, em.size, eTintColor, eBottomSpread, eWaveShift);
+                targetCtx.restore();
+              }
             }
           }
           targetCtx.restore();
@@ -2284,11 +2323,14 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       };
 
       const drawPlayerSprite = () => {
-        const pSpriteToDraw = isPlayerSubstituted
+        const rawPSprite = isPlayerSubstituted
           ? (subBackSprite || playerSprite)
           : (isPlayerTransformed
             ? (enemyBackSprite || enemySprite)
             : (f.usePlayerFront ? (playerFrontSprite || playerSprite) : playerSprite));
+        const pSpriteToDraw = (f.targetTopDarkGradient && pTarget && rawPSprite)
+          ? getTopDarkGradientSprite(rawPSprite, f.targetTopDarkAlpha ?? 0.85)
+          : rawPSprite;
         const isPlayerSpriteHidden = (f.pOffset && (f.pOffset.y <= -500 || f.pOffset.y >= 9000)) || f.hidePlayer || (pAlpha <= 0.01);
         if (pSpriteToDraw && !isPlayerSpriteHidden && (playerMon.hp > 0 || f.playerHp > 0 || pAlpha > 0.01)) {
           targetCtx.save();
@@ -2310,8 +2352,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             targetCtx.filter = `brightness(1.50) drop-shadow(0px 0px ${rad}px rgba(255,255,255,0.92))`;
           } else if (f.pGreyTint || (f.targetGreyTint && pTarget)) {
             targetCtx.filter = "grayscale(1) brightness(0.98) contrast(1.15)";
-          } else if (f.targetDarkLevel !== undefined && f.targetDarkLevel > 0 && pTarget) {
-            const lvl = Math.min(1.0, f.targetDarkLevel);
+          } else if ((f.targetDarkLevel !== undefined && f.targetDarkLevel > 0 && pTarget) || (f.pDarkLevel !== undefined && f.pDarkLevel > 0)) {
+            const rawLvl = f.pDarkLevel ?? f.targetDarkLevel ?? 0;
+            const lvl = Math.min(1.0, rawLvl);
             const bri = Math.max(0.04, 1.0 - lvl * 0.94);
             const sat = Math.max(0.0, 1.0 - lvl * 0.85);
             targetCtx.filter = `brightness(${bri.toFixed(2)}) saturate(${sat.toFixed(2)}) drop-shadow(0px 0px ${Math.round(lvl * 6)}px rgba(0, 0, 0, ${lvl.toFixed(2)}))`;
@@ -2342,7 +2385,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           }
           const px = pm.x + (f.pOffset?.x ?? 0);
           const py = pm.y + (f.pOffset?.y ?? 0);
-          const pTintColor = getStatusTintColor(curRenderPlayerStatus);
+          const pTintColor = f.pTintColor !== undefined ? f.pTintColor : getStatusTintColor(curRenderPlayerStatus);
           if (isWhiteAura) {
             // 1. [아래 레이어] 원본 스프라이트는 제자리에 그대로 유지 (오프셋 0, 스케일 1.0, 원본 색상)
             drawFittedBattleSprite(targetCtx, pSpriteToDraw, pm.x, pm.y, pm.size, pTintColor, pBottomSpread, pWaveShift);
@@ -2377,20 +2420,42 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
             if (f.pScale) targetCtx.scale(f.pScale.x, f.pScale.y);
             drawFittedBattleSprite(targetCtx, pSpriteToDraw, 0, 0, pm.size, pTintColor, pBottomSpread, pWaveShift);
             if (!isPureWhite && pWhiteAlpha > 0.01) {
-              targetCtx.save();
-              targetCtx.filter = "brightness(0) invert(1)";
-              targetCtx.globalAlpha = pAlpha * pWhiteAlpha;
-              drawFittedBattleSprite(targetCtx, pSpriteToDraw, 0, 0, pm.size, pTintColor, pBottomSpread, pWaveShift);
-              targetCtx.restore();
+              const clipTop = f.pWhiteClipTopRatio ?? (isAttackingPlayer ? f.whiteFilterClipTopRatio : undefined);
+              if (clipTop === undefined || clipTop < 1.0) {
+                targetCtx.save();
+                if (clipTop !== undefined && clipTop > 0) {
+                  const b = getFittedBattleSpriteBounds(pSpriteToDraw, pm.size);
+                  const sH = b.drawH || pm.size;
+                  const sW = b.drawW || pm.size;
+                  targetCtx.beginPath();
+                  targetCtx.rect(-sW, -sH + sH * clipTop, sW * 2, sH * (1 - clipTop) + 10);
+                  targetCtx.clip();
+                }
+                targetCtx.filter = "brightness(0) invert(1)";
+                targetCtx.globalAlpha = pAlpha * pWhiteAlpha;
+                drawFittedBattleSprite(targetCtx, pSpriteToDraw, 0, 0, pm.size, pTintColor, pBottomSpread, pWaveShift);
+                targetCtx.restore();
+              }
             }
           } else {
             drawFittedBattleSprite(targetCtx, pSpriteToDraw, px, py, pm.size, pTintColor, pBottomSpread, pWaveShift);
             if (!isPureWhite && pWhiteAlpha > 0.01) {
-              targetCtx.save();
-              targetCtx.filter = "brightness(0) invert(1)";
-              targetCtx.globalAlpha = pAlpha * pWhiteAlpha;
-              drawFittedBattleSprite(targetCtx, pSpriteToDraw, px, py, pm.size, pTintColor, pBottomSpread, pWaveShift);
-              targetCtx.restore();
+              const clipTop = f.pWhiteClipTopRatio ?? (isAttackingPlayer ? f.whiteFilterClipTopRatio : undefined);
+              if (clipTop === undefined || clipTop < 1.0) {
+                targetCtx.save();
+                if (clipTop !== undefined && clipTop > 0) {
+                  const b = getFittedBattleSpriteBounds(pSpriteToDraw, pm.size);
+                  const sH = b.drawH || pm.size;
+                  const sW = b.drawW || pm.size;
+                  targetCtx.beginPath();
+                  targetCtx.rect(px - sW, py - sH + sH * clipTop, sW * 2, sH * (1 - clipTop) + 10);
+                  targetCtx.clip();
+                }
+                targetCtx.filter = "brightness(0) invert(1)";
+                targetCtx.globalAlpha = pAlpha * pWhiteAlpha;
+                drawFittedBattleSprite(targetCtx, pSpriteToDraw, px, py, pm.size, pTintColor, pBottomSpread, pWaveShift);
+                targetCtx.restore();
+              }
             }
           }
           targetCtx.restore();
@@ -2471,14 +2536,43 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         }
       };
 
-      if (f.drawEnemyOnTop) {
-        if (!f.drawPlayerAboveHud) drawPlayerSprite();
-        invokeMiddleEffect();
-        drawEnemySprite();
+      const shouldDrawCasterAboveFade = Boolean(
+        f.drawCasterAboveFade ||
+        (f.blackFadeAlpha && f.blackFadeAlpha > 0 && ((f.whiteFilterAlpha && f.whiteFilterAlpha > 0) || f.pWhiteAlpha || f.eWhiteAlpha || f.pWhite || f.eWhite))
+      );
+
+      if (shouldDrawCasterAboveFade) {
+        if (isAttackingPlayer) {
+          drawEnemySprite();
+          invokeMiddleEffect();
+        } else {
+          if (!f.drawPlayerAboveHud) drawPlayerSprite();
+          invokeMiddleEffect();
+        }
       } else {
-        drawEnemySprite();
-        invokeMiddleEffect();
-        if (!f.drawPlayerAboveHud) drawPlayerSprite();
+        if (f.drawEnemyOnTop) {
+          if (!f.drawPlayerAboveHud) drawPlayerSprite();
+          invokeMiddleEffect();
+          drawEnemySprite();
+        } else {
+          drawEnemySprite();
+          invokeMiddleEffect();
+          if (!f.drawPlayerAboveHud) drawPlayerSprite();
+        }
+      }
+
+      // Atmospheric Weather Filter (e.g. Sandstorm)
+      // Maintains weather ambient tint throughout turn and holds across other moves and fades
+      const isSandstormActive = battle?.weather === "sand" || (activeKey === "sandstorm" && ((f.moveStep && f.moveStep >= 5) || f.showEffect === false));
+      if (isSandstormActive && !f.blackoutScreen) {
+        const isSelfHandledStep = activeKey === "sandstorm" && f.moveStep && f.moveStep < 5;
+        if (!isSelfHandledStep) {
+          targetCtx.save();
+          targetCtx.globalAlpha = 0.14;
+          targetCtx.fillStyle = "#D97706";
+          targetCtx.fillRect(-logicalWidth * 4, -3000, logicalWidth * 9, 6000);
+          targetCtx.restore();
+        }
       }
 
       // Atmospheric Black Fade (Dims arena & pokemon sprites, but front move effects glow above it)
@@ -2488,6 +2582,15 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
         targetCtx.fillStyle = "#000000";
         targetCtx.fillRect(-logicalWidth * 4, -3000, logicalWidth * 9, 6000);
         targetCtx.restore();
+      }
+
+      // If caster is spotlighted above the fade, render caster on top of the darkened battlefield
+      if (shouldDrawCasterAboveFade) {
+        if (isAttackingPlayer) {
+          if (!f.drawPlayerAboveHud) drawPlayerSprite();
+        } else {
+          drawEnemySprite();
+        }
       }
 
       // Front-Sprite Move Effect Layer:
@@ -2536,7 +2639,9 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
           const moveData = getMoveData(moveKey);
           const desc = moveData?.description || "";
           const isDebuffMove = moveKey.includes("growl") || moveKey.includes("tail-whip") || moveKey.includes("tailwhip") || moveKey.includes("leer") || moveKey.includes("screech") || moveKey.includes("charm") || moveKey.includes("fake-tears") || moveKey.includes("string-shot") || moveKey.includes("sand-attack") || moveKey.includes("cotton-spore") || moveKey.includes("cottonspore") || moveKey.includes("mud-slap") || moveKey.includes("mudslap") || moveKey.includes("icy-wind") || moveKey.includes("icywind") || desc.includes("떨어뜨") || desc.includes("낮춘") || desc.includes("감소") || desc.includes("하락");
-          if (isDebuffMove) {
+          if (moveKey.includes("swagger") || moveKey.includes("뽐내기") || moveKey.includes("flatter") || moveKey.includes("부추기기")) {
+            statChanges = [{ target: isAttackingPlayer ? "enemy" : "player", direction: "up" }];
+          } else if (isDebuffMove) {
             statChanges = [{ target: isAttackingPlayer ? "enemy" : "player", direction: "down" }];
           } else {
             statChanges = [{ target: isAttackingPlayer ? "player" : "enemy", direction: "up" }];
@@ -2685,6 +2790,8 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       (prevBattleFrame && f.pRedLevel !== prevBattleFrame.pRedLevel) ||
       (prevBattleFrame && f.eRedLevel !== prevBattleFrame.eRedLevel) ||
       (prevBattleFrame && f.casterRedLevel !== prevBattleFrame.casterRedLevel) ||
+      (prevBattleFrame && f.pTintColor !== prevBattleFrame.pTintColor) ||
+      (prevBattleFrame && f.eTintColor !== prevBattleFrame.eTintColor) ||
       (prevBattleFrame && Boolean(f.targetPurpleLevel) !== Boolean(prevBattleFrame.targetPurpleLevel)) ||
       (prevBattleFrame && Boolean(f.eWhite) !== Boolean(prevBattleFrame.eWhite)) ||
       (prevBattleFrame && Boolean(f.pWhite) !== Boolean(prevBattleFrame.pWhite)) ||
@@ -2700,6 +2807,7 @@ export async function renderBattleMoveGif(options: BattleAnimationOptions): Prom
       (prevBattleFrame && Boolean(f.usePlayerSubstitute) !== Boolean(prevBattleFrame.usePlayerSubstitute)) ||
       (prevBattleFrame && Boolean(f.useEnemySubstitute) !== Boolean(prevBattleFrame.useEnemySubstitute)) ||
       (prevBattleFrame && (f.whiteFilterAlpha !== undefined || prevBattleFrame.whiteFilterAlpha !== undefined) && f.whiteFilterAlpha !== prevBattleFrame.whiteFilterAlpha) ||
+      (prevBattleFrame && (f.whiteFilterClipTopRatio !== undefined || prevBattleFrame.whiteFilterClipTopRatio !== undefined) && f.whiteFilterClipTopRatio !== prevBattleFrame.whiteFilterClipTopRatio) ||
       (prevBattleFrame && f.phaseId && prevBattleFrame.phaseId ? f.phaseId !== prevBattleFrame.phaseId : (prevBattleFrame && f.moveStep !== undefined && prevBattleFrame.moveStep !== undefined && f.moveStep !== prevBattleFrame.moveStep))
     );
 

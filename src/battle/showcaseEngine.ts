@@ -258,11 +258,28 @@ export async function executeShowcaseTurn(
     const prevPlayer = (switchType === "player" || switchType === "both") ? battle.playerBattleMon : undefined;
 
     if (switchType === "player" || switchType === "both") {
-      const nextAliveIdx = battle.playerParty.findIndex((p) => p.hp > 0);
+      const nextAliveIdx = battle.playerParty.findIndex((p, idx) => idx !== battle.playerActiveIndex && p.hp > 0) >= 0
+        ? battle.playerParty.findIndex((p, idx) => idx !== battle.playerActiveIndex && p.hp > 0)
+        : battle.playerParty.findIndex((p) => p.hp > 0);
       if (nextAliveIdx >= 0) {
+        const isBatonPass = Boolean(prevPlayer?.batonPassPending);
         battle.playerActiveIndex = nextAliveIdx;
         battle.playerBattleMon = createPlayerBattleMon(battle.playerParty[nextAliveIdx], battle.playerParty);
         battle.phase = "MAIN";
+
+        if (isBatonPass && prevPlayer) {
+          battle.playerBattleMon.stages = { ...prevPlayer.stages };
+          if (prevPlayer.substituteHp) battle.playerBattleMon.substituteHp = prevPlayer.substituteHp;
+          if (prevPlayer.hasFocusEnergy) battle.playerBattleMon.hasFocusEnergy = true;
+          if (prevPlayer.isConfused) {
+            battle.playerBattleMon.isConfused = true;
+            battle.playerBattleMon.confusionTurns = prevPlayer.confusionTurns;
+          }
+          if (prevPlayer.isSeeded) battle.playerBattleMon.isSeeded = true;
+          if (prevPlayer.perishCount !== undefined) battle.playerBattleMon.perishCount = prevPlayer.perishCount;
+          prevPlayer.batonPassPending = false;
+          battle.playerBattleMon.batonPassPending = false;
+        }
       }
     }
 
@@ -285,7 +302,11 @@ export async function executeShowcaseTurn(
     } else if (switchType === "enemy") {
       battle.dialogueText = `상대는 [${battle.enemy.nameKo}]을(를) 내보냈다!`;
     } else {
-      battle.dialogueText = `가랏, ${battle.playerBattleMon.nameKo}!`;
+      if (prevPlayer?.batonPassPending) {
+        battle.dialogueText = `[${prevPlayer.nameKo}](으)로부터 건네받은 배턴으로 능력 변화를 이어받았다!\n가랏, ${battle.playerBattleMon.nameKo}!`;
+      } else {
+        battle.dialogueText = `가랏, ${battle.playerBattleMon.nameKo}!`;
+      }
     }
 
     const { buffer } = await renderBattleEntryGif({
@@ -369,9 +390,10 @@ export async function executeShowcaseTurn(
     const moves: string[] = mon.moves || [];
     if (moves.length === 0) return "tackle";
 
-    // If charging move or rampage move is active, must execute it!
+    // If charging move, rampage move, or rollout move is active, must execute it!
     if (mon.chargingMove) return mon.chargingMove;
     if (mon.rampageState) return mon.rampageState.moveKey;
+    if (mon.rolloutState) return mon.rolloutState.moveKey;
 
     // Helper to filter out invalid / anti-pattern moves
     const isMoveValid = (mKey: string): boolean => {
@@ -444,6 +466,10 @@ export async function executeShowcaseTurn(
     playerMoveKey = pMon.chargingMove;
   } else if (pMon.rampageState) {
     playerMoveKey = pMon.rampageState.moveKey;
+  } else if (pMon.rolloutState) {
+    playerMoveKey = pMon.rolloutState.moveKey;
+  } else if (pMon.encoreMove && (pMon.encoreTurns ?? 0) > 0) {
+    playerMoveKey = pMon.encoreMove;
   } else {
     playerMoveKey = selectSmartShowcaseMove(pMon, eMon, session.usedNewMoves);
   }
@@ -455,6 +481,10 @@ export async function executeShowcaseTurn(
     enemyMoveKey = eMon.chargingMove;
   } else if (eMon.rampageState) {
     enemyMoveKey = eMon.rampageState.moveKey;
+  } else if (eMon.rolloutState) {
+    enemyMoveKey = eMon.rolloutState.moveKey;
+  } else if (eMon.encoreMove && (eMon.encoreTurns ?? 0) > 0) {
+    enemyMoveKey = eMon.encoreMove;
   } else {
     enemyMoveKey = selectSmartShowcaseMove(eMon, pMon, session.usedNewMoves);
   }
@@ -575,6 +605,9 @@ export async function executeShowcaseTurn(
   } else if (playerFainted) {
     session.pendingSwitch = "player";
     switches.push(`아군 [${currentActiveMon.nameKo || currentActiveMon.name}]이(가) 쓰러졌다!`);
+  } else if (battle.playerBattleMon?.batonPassPending) {
+    session.pendingSwitch = "player";
+    switches.push(`[${currentActiveMon.nameKo || currentActiveMon.name}]이(가) 배턴을 건네며 교대했다!`);
   }
 
   const currentTurn = session.turnNumber;

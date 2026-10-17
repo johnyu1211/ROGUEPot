@@ -193,47 +193,23 @@ export function clearBattleStaticization(userId: string, slotId: number) {
   }
 }
 
+export function cleanupBattlePerkReactions(interaction: any, userId: string, slotId: number) {
+  clearBattleStaticization(userId, slotId);
+  const targetMsg = interaction.message;
+  if (targetMsg) {
+    clearAllPerkReactions(targetMsg, interaction.client?.user).catch(() => null);
+    ensureClickItReaction(targetMsg, interaction.client?.user).catch(() => null);
+  }
+}
+
 export function scheduleBattleButtonUnlock(
   interaction: any,
   userId: string,
   slotId: number,
-  motionDurationMs: number,
-  enabledComponents?: ActionRowBuilder<ButtonBuilder>[]
+  _motionDurationMs?: number,
+  _enabledComponents?: ActionRowBuilder<ButtonBuilder>[]
 ) {
-  clearBattleStaticization(userId, slotId);
-
-  if (!motionDurationMs || motionDurationMs <= 0 || !enabledComponents || enabledComponents.length === 0) return;
-
-  const timerKey = `${userId}_${slotId}`;
-  // 150ms buffer for Discord network transfer latency
-  const effectiveDelay = motionDurationMs + 150;
-
-  const timer = setTimeout(async () => {
-    activeBattleTimers.delete(timerKey);
-    try {
-      // ONLY unlock buttons on Discord! Do NOT convert GIF to static PNG!
-      const targetMsg = interaction.message || await interaction.fetchReply?.().catch(() => null);
-      let unlocked = false;
-      if (interaction.editReply) {
-        try {
-          await interaction.editReply({ components: enabledComponents });
-          unlocked = true;
-        } catch {}
-      }
-      if (!unlocked && targetMsg?.edit) {
-        await targetMsg.edit({ components: enabledComponents }).catch(() => null);
-      }
-      if (targetMsg) {
-        // Clear used perk reactions from message once turn finishes
-        clearAllPerkReactions(targetMsg, interaction.client?.user).catch(() => null);
-        ensureClickItReaction(targetMsg, interaction.client?.user).catch(() => null);
-      }
-    } catch (e) {
-      console.error("[scheduleBattleButtonUnlock error]:", e);
-    }
-  }, effectiveDelay);
-
-  activeBattleTimers.set(timerKey, timer);
+  cleanupBattlePerkReactions(interaction, userId, slotId);
 }
 
 // Alias for backward compatibility
@@ -340,10 +316,15 @@ export function buildBattleComponents(
       combatMon.movePps = moves.map(m => getMoveData(m)?.pp || 20);
     }
 
-    const isCharging = Boolean(combatMon?.chargingMove || combatMon?.rampageState);
+    const isCharging = Boolean(combatMon?.chargingMove || combatMon?.rampageState || combatMon?.rolloutState);
     const chargeKey = combatMon?.chargingMove
       ? getMoveKey(combatMon.chargingMove)
-      : (combatMon?.rampageState ? getMoveKey(combatMon.rampageState.moveKey) : null);
+      : (combatMon?.rampageState
+          ? getMoveKey(combatMon.rampageState.moveKey)
+          : (combatMon?.rolloutState ? getMoveKey(combatMon.rolloutState.moveKey) : null));
+
+    const isEncored = Boolean(combatMon?.encoreMove && (combatMon.encoreTurns ?? 0) > 0);
+    const encoreKey = isEncored ? getMoveKey(combatMon!.encoreMove!) : null;
 
     // Row 1: Moves 1, 2
     const row1 = new ActionRowBuilder<ButtonBuilder>();
@@ -357,22 +338,38 @@ export function buildBattleComponents(
       const maxPp = mData.pp || 20;
 
       const isThisChargingMove = isCharging && (cleanKey === chargeKey);
-      const btnStyle = isCharging
-        ? (isThisChargingMove ? ButtonStyle.Primary : ButtonStyle.Secondary)
-        : ButtonStyle.Primary;
+      const isThisEncoredMove = isEncored && (cleanKey === encoreKey);
 
-      const btnLabel = isThisChargingMove
-        ? (combatMon?.rampageState
-            ? `${i + 1}. 🔥 ${mName} (난동 중!) [${typeName}] (${curPp}/${maxPp})`
-            : `${i + 1}. ⚔️ ${mName} 공격! [${typeName}] (${curPp}/${maxPp})`)
-        : `${i + 1}. ${mName} [${typeName}] (${curPp}/${maxPp})`;
+      let btnStyle = ButtonStyle.Primary;
+      if (isCharging) {
+        btnStyle = isThisChargingMove ? ButtonStyle.Primary : ButtonStyle.Secondary;
+      } else if (isEncored) {
+        btnStyle = isThisEncoredMove ? ButtonStyle.Primary : ButtonStyle.Secondary;
+      }
+
+      let btnLabel: string;
+      if (isThisChargingMove) {
+        btnLabel = combatMon?.rampageState
+          ? `${i + 1}. 🔥 ${mName} (난동 중!) [${typeName}] (${curPp}/${maxPp})`
+          : combatMon?.rolloutState
+            ? `${i + 1}. 🌀 ${mName} (${combatMon.rolloutState.hitCount}회차 구르기!) [${typeName}] (${curPp}/${maxPp})`
+            : `${i + 1}. ⚔️ ${mName} 공격! [${typeName}] (${curPp}/${maxPp})`;
+      } else if (isEncored && isThisEncoredMove) {
+        btnLabel = `${i + 1}. 👏 ${mName} (앙코르!) [${typeName}] (${curPp}/${maxPp})`;
+      } else {
+        btnLabel = `${i + 1}. ${mName} [${typeName}] (${curPp}/${maxPp})`;
+      }
+
+      const isBtnDisabled = isCharging
+        ? !isThisChargingMove
+        : (isEncored ? !isThisEncoredMove : curPp <= 0);
 
       row1.addComponents(
         new ButtonBuilder()
           .setCustomId(`battle_move_${i}_${encodeURIComponent(cleanKey)}_${slotId}_${userId}`)
           .setLabel(btnLabel)
           .setStyle(btnStyle)
-          .setDisabled(isCharging ? !isThisChargingMove : curPp <= 0)
+          .setDisabled(isBtnDisabled)
       );
     }
     components.push(row1);
@@ -389,22 +386,38 @@ export function buildBattleComponents(
       const maxPp = mData.pp || 20;
 
       const isThisChargingMove = isCharging && (cleanKey === chargeKey);
-      const btnStyle = isCharging
-        ? (isThisChargingMove ? ButtonStyle.Primary : ButtonStyle.Secondary)
-        : ButtonStyle.Primary;
+      const isThisEncoredMove = isEncored && (cleanKey === encoreKey);
 
-      const btnLabel = isThisChargingMove
-        ? (combatMon?.rampageState
-            ? `${i + 1}. 🔥 ${mName} (난동 중!) [${typeName}] (${curPp}/${maxPp})`
-            : `${i + 1}. ⚔️ ${mName} 공격! [${typeName}] (${curPp}/${maxPp})`)
-        : `${i + 1}. ${mName} [${typeName}] (${curPp}/${maxPp})`;
+      let btnStyle = ButtonStyle.Primary;
+      if (isCharging) {
+        btnStyle = isThisChargingMove ? ButtonStyle.Primary : ButtonStyle.Secondary;
+      } else if (isEncored) {
+        btnStyle = isThisEncoredMove ? ButtonStyle.Primary : ButtonStyle.Secondary;
+      }
+
+      let btnLabel: string;
+      if (isThisChargingMove) {
+        btnLabel = combatMon?.rampageState
+          ? `${i + 1}. 🔥 ${mName} (난동 중!) [${typeName}] (${curPp}/${maxPp})`
+          : combatMon?.rolloutState
+            ? `${i + 1}. 🌀 ${mName} (${combatMon.rolloutState.hitCount}회차 구르기!) [${typeName}] (${curPp}/${maxPp})`
+            : `${i + 1}. ⚔️ ${mName} 공격! [${typeName}] (${curPp}/${maxPp})`;
+      } else if (isEncored && isThisEncoredMove) {
+        btnLabel = `${i + 1}. 👏 ${mName} (앙코르!) [${typeName}] (${curPp}/${maxPp})`;
+      } else {
+        btnLabel = `${i + 1}. ${mName} [${typeName}] (${curPp}/${maxPp})`;
+      }
+
+      const isBtnDisabled = isCharging
+        ? !isThisChargingMove
+        : (isEncored ? !isThisEncoredMove : curPp <= 0);
 
       row2.addComponents(
         new ButtonBuilder()
           .setCustomId(`battle_move_${i}_${encodeURIComponent(cleanKey)}_${slotId}_${userId}`)
           .setLabel(btnLabel)
           .setStyle(btnStyle)
-          .setDisabled(isCharging ? !isThisChargingMove : curPp <= 0)
+          .setDisabled(isBtnDisabled)
       );
     }
     components.push(row2);
@@ -528,7 +541,7 @@ export function buildBattleComponents(
     }
   } else {
     // MAIN Action Rows
-    const isCharging = Boolean(combatMon?.chargingMove || combatMon?.rampageState);
+    const isCharging = Boolean(combatMon?.chargingMove || combatMon?.rampageState || combatMon?.rolloutState);
 
     // Row 1: [⚔️ 싸운다] + [⚪ 몬스터볼] + [⚪] (같은 더미 버튼)
     const mainRow1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -546,17 +559,18 @@ export function buildBattleComponents(
     components.push(mainRow1);
 
     // Row 2: [🔄 교체] + [🏃 도망치기] (한 줄 아래로 내림)
+    const isTrapped = Boolean(combatMon?.cannotEscape);
     const mainRow2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
         .setCustomId(`battle_menu_party_${slotId}_${userId}`)
-        .setLabel(isKo ? "🔄 교체 (Party)" : "🔄 Party")
-        .setStyle(ButtonStyle.Primary)
-        .setDisabled(battle.playerParty.length <= 1 || isCharging),
+        .setLabel(isTrapped ? (isKo ? "🔒 교체 불가" : "🔒 Trapped") : (isKo ? "🔄 교체 (Party)" : "🔄 Party"))
+        .setStyle(isTrapped ? ButtonStyle.Secondary : ButtonStyle.Primary)
+        .setDisabled(battle.playerParty.length <= 1 || isCharging || isTrapped),
       new ButtonBuilder()
         .setCustomId(`battle_menu_run_${slotId}_${userId}`)
-        .setLabel(isKo ? "🏃 도망치기 (Run)" : "🏃 Run")
+        .setLabel(isTrapped ? (isKo ? "🔒 도망 불가" : "🔒 Trapped") : (isKo ? "🏃 도망치기 (Run)" : "🏃 Run"))
         .setStyle(ButtonStyle.Secondary)
-        .setDisabled(isCharging)
+        .setDisabled(isCharging || isTrapped)
     );
     components.push(mainRow2);
   }
@@ -3831,13 +3845,8 @@ export const interactionCreateEvent: BotEvent = {
           await interaction.deferUpdate().catch(() => null);
           saveService.setActiveSlot(interaction.user.id, slotNum);
           const battleData = await renderBattleMessageData(interaction.user.id, slotNum, undefined, true);
-          if (battleData.motionDurationMs && battleData.motionDurationMs > 0) {
-            const disabledComponents = disableComponentsList(battleData.components);
-            await safeInteractionUpdate(interaction, { ...battleData, components: disabledComponents });
-            scheduleBattleStaticization(interaction, interaction.user.id, slotNum, battleData.motionDurationMs, battleData.components);
-          } else {
-            await safeInteractionUpdate(interaction, battleData);
-          }
+          await safeInteractionUpdate(interaction, battleData);
+          cleanupBattlePerkReactions(interaction, interaction.user.id, slotNum);
           const currentBattle = battleService.getOrCreateBattle(interaction.user.id, slotNum);
           battlePreloadService.schedulePreload(interaction.user.id, slotNum, currentBattle, profile.language);
         }
@@ -3889,8 +3898,8 @@ export const interactionCreateEvent: BotEvent = {
             return;
           }
           const combatMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
-          if (combatMon?.chargingMove || combatMon?.rampageState) {
-            // Cannot use Bag while charging or rampaging! Keep in FIGHT phase
+          if (combatMon?.chargingMove || combatMon?.rampageState || combatMon?.rolloutState) {
+            // Cannot use Bag while charging, rampaging, or rolling! Keep in FIGHT phase
             const battleData = await renderBattleMessageData(interaction.user.id, slotId, "FIGHT");
             await safeInteractionUpdate(interaction, battleData);
             return;
@@ -3912,9 +3921,15 @@ export const interactionCreateEvent: BotEvent = {
             return;
           }
           const combatMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
-          if (combatMon?.chargingMove || combatMon?.rampageState) {
-            // Cannot switch party while charging or rampaging! Keep in FIGHT phase
+          if (combatMon?.chargingMove || combatMon?.rampageState || combatMon?.rolloutState) {
+            // Cannot switch party while charging, rampaging, or rolling! Keep in FIGHT phase
             const battleData = await renderBattleMessageData(interaction.user.id, slotId, "FIGHT");
+            await safeInteractionUpdate(interaction, battleData);
+            return;
+          }
+          if (combatMon?.cannotEscape) {
+            // Cannot switch when trapped by Spider Web, Mean Look, etc.
+            const battleData = await renderBattleMessageData(interaction.user.id, slotId, "MAIN");
             await safeInteractionUpdate(interaction, battleData);
             return;
           }
@@ -3935,9 +3950,15 @@ export const interactionCreateEvent: BotEvent = {
             return;
           }
           const combatMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
-          if (combatMon?.chargingMove || combatMon?.rampageState) {
-            // Cannot run while charging or rampaging! Keep in FIGHT phase
+          if (combatMon?.chargingMove || combatMon?.rampageState || combatMon?.rolloutState) {
+            // Cannot run while charging, rampaging, or rolling! Keep in FIGHT phase
             const battleData = await renderBattleMessageData(interaction.user.id, slotId, "FIGHT");
+            await safeInteractionUpdate(interaction, battleData);
+            return;
+          }
+          if (combatMon?.cannotEscape) {
+            // Cannot escape when trapped!
+            const battleData = await renderBattleMessageData(interaction.user.id, slotId, "MAIN");
             await safeInteractionUpdate(interaction, battleData);
             return;
           }
@@ -3958,8 +3979,8 @@ export const interactionCreateEvent: BotEvent = {
             return;
           }
           const combatMon = battle.playerBattleMon || battle.playerParty[battle.playerActiveIndex];
-          if (combatMon?.chargingMove || combatMon?.rampageState) {
-            // Cannot exit FIGHT while charging or rampaging! Keep in FIGHT phase
+          if (combatMon?.chargingMove || combatMon?.rampageState || combatMon?.rolloutState) {
+            // Cannot exit FIGHT while charging, rampaging, or rolling! Keep in FIGHT phase
             const battleData = await renderBattleMessageData(interaction.user.id, slotId, "FIGHT");
             await safeInteractionUpdate(interaction, battleData);
             return;
@@ -4013,13 +4034,8 @@ export const interactionCreateEvent: BotEvent = {
               battleData = await renderBattleMessageData(interaction.user.id, slotId);
             }
 
-            if (battleData.motionDurationMs && battleData.motionDurationMs > 0) {
-              const disabledComponents = disableComponentsList(battleData.components);
-              await safeInteractionUpdate(interaction, { ...battleData, components: disabledComponents });
-              scheduleBattleStaticization(interaction, interaction.user.id, slotId, battleData.motionDurationMs, battleData.components);
-            } else {
-              await safeInteractionUpdate(interaction, battleData);
-            }
+            await safeInteractionUpdate(interaction, battleData);
+            cleanupBattlePerkReactions(interaction, interaction.user.id, slotId);
 
             // Immediately schedule background preload for the next turn or wave!
             const updatedBattle = battleService.getOrCreateBattle(interaction.user.id, slotId);
@@ -4055,13 +4071,8 @@ export const interactionCreateEvent: BotEvent = {
           battlePreloadService.invalidate(interaction.user.id, slotId);
           battleService.attemptCatch(interaction.user.id, slotId, ballType, profile.language);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId);
-          if (battleData.motionDurationMs && battleData.motionDurationMs > 0) {
-            const disabledComponents = disableComponentsList(battleData.components);
-            await safeInteractionUpdate(interaction, { ...battleData, components: disabledComponents });
-            scheduleBattleStaticization(interaction, interaction.user.id, slotId, battleData.motionDurationMs, battleData.components);
-          } else {
-            await safeInteractionUpdate(interaction, battleData);
-          }
+          await safeInteractionUpdate(interaction, battleData);
+          cleanupBattlePerkReactions(interaction, interaction.user.id, slotId);
           const updatedBattle = battleService.getOrCreateBattle(interaction.user.id, slotId);
           battlePreloadService.schedulePreload(interaction.user.id, slotId, updatedBattle, profile.language);
           return;
@@ -4081,16 +4092,16 @@ export const interactionCreateEvent: BotEvent = {
           battlePreloadService.invalidate(interaction.user.id, slotId);
           const prevBattle = battleService.getOrCreateBattle(interaction.user.id, slotId);
           const rawPrev = prevBattle.playerBattleMon || prevBattle.playerParty[prevBattle.playerActiveIndex];
+          if (rawPrev?.cannotEscape && prevBattle.phase !== "SWITCH") {
+            const battleData = await renderBattleMessageData(interaction.user.id, slotId, "MAIN");
+            await safeInteractionUpdate(interaction, battleData);
+            return;
+          }
           const prevPlayer = rawPrev ? { ...rawPrev } : undefined;
           battleService.switchPlayerPokemon(interaction.user.id, slotId, targetIdx, profile.language);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId, undefined, true, prevPlayer);
-          if (battleData.motionDurationMs && battleData.motionDurationMs > 0) {
-            const disabledComponents = disableComponentsList(battleData.components);
-            await safeInteractionUpdate(interaction, { ...battleData, components: disabledComponents });
-            scheduleBattleStaticization(interaction, interaction.user.id, slotId, battleData.motionDurationMs, battleData.components);
-          } else {
-            await safeInteractionUpdate(interaction, battleData);
-          }
+          await safeInteractionUpdate(interaction, battleData);
+          cleanupBattlePerkReactions(interaction, interaction.user.id, slotId);
           const updatedBattle = battleService.getOrCreateBattle(interaction.user.id, slotId);
           battlePreloadService.schedulePreload(interaction.user.id, slotId, updatedBattle, profile.language);
           return;
@@ -4134,13 +4145,8 @@ export const interactionCreateEvent: BotEvent = {
             battleData = await renderBattleMessageData(interaction.user.id, slotId, undefined, true);
           }
 
-          if (battleData.motionDurationMs && battleData.motionDurationMs > 0) {
-            const disabledComponents = disableComponentsList(battleData.components);
-            await safeInteractionUpdate(interaction, { ...battleData, components: disabledComponents });
-            scheduleBattleStaticization(interaction, interaction.user.id, slotId, battleData.motionDurationMs, battleData.components);
-          } else {
-            await safeInteractionUpdate(interaction, battleData);
-          }
+          await safeInteractionUpdate(interaction, battleData);
+          cleanupBattlePerkReactions(interaction, interaction.user.id, slotId);
 
           // Immediately schedule background preload for turn 1 of the new wave!
           const newBattle = battleService.getOrCreateBattle(interaction.user.id, slotId);
@@ -4165,13 +4171,8 @@ export const interactionCreateEvent: BotEvent = {
           battlePreloadService.invalidate(interaction.user.id, slotId);
           battleService.restartRunFromDefeat(interaction.user.id, slotId, profile.language);
           const battleData = await renderBattleMessageData(interaction.user.id, slotId);
-          if (battleData.motionDurationMs && battleData.motionDurationMs > 0) {
-            const disabledComponents = disableComponentsList(battleData.components);
-            await safeInteractionUpdate(interaction, { ...battleData, components: disabledComponents });
-            scheduleBattleStaticization(interaction, interaction.user.id, slotId, battleData.motionDurationMs, battleData.components);
-          } else {
-            await safeInteractionUpdate(interaction, battleData);
-          }
+          await safeInteractionUpdate(interaction, battleData);
+          cleanupBattlePerkReactions(interaction, interaction.user.id, slotId);
           const retryBattle = battleService.getOrCreateBattle(interaction.user.id, slotId);
           battlePreloadService.schedulePreload(interaction.user.id, slotId, retryBattle, profile.language);
           return;

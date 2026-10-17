@@ -680,7 +680,7 @@ export function drawLeerEffect(
  * Helper: 가로로 길고 위아래로는 얇은 상악(위쪽 턱) 이빨
  * - 유저 피드백 반영: 이빨 끝을 더욱 날카롭고 예리한 쐐기/송곳니 형태로 샤프닝 (lineJoin: miter)
  */
-function drawBiteUpperJaw(
+export function drawBiteUpperJaw(
   ctx: any,
   cx: number,
   cy: number,
@@ -747,7 +747,7 @@ function drawBiteUpperJaw(
  * Helper: 가로로 길고 위아래로는 얇은 하악(아래쪽 턱) 이빨
  * - 상악과 완벽하게 맞물리는 예리한 하악 송곳니 및 앞니
  */
-function drawBiteLowerJaw(
+export function drawBiteLowerJaw(
   ctx: any,
   cx: number,
   cy: number,
