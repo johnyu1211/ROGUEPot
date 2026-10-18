@@ -37,9 +37,15 @@ Thumbs.db
 
 data/*.sqlite
 data/*.sqlite-*
+data/*.db
+data/*.db-*
 
 # Temporary Dumps, Previews, Tests & Scratch Artifacts
 tests/
+scripts/checkSlot.ts
+scripts/setupUserSlot3.ts
+scripts/testBattleMove.ts
+scripts/updateMoves.ts
 dump_frames/
 scratch/
 scratch_*
