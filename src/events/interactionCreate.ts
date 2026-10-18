@@ -122,12 +122,45 @@ function releaseBattleLock(userId: string) {
   activeBattleLocks.delete(userId);
 }
 
+let useFallbackBallEmoji = false;
+
+function replaceCustomBallEmojiWithFallback(components: any[]) {
+  if (!Array.isArray(components)) return components;
+  return components.map((row: any) => {
+    const newRow = new ActionRowBuilder<ButtonBuilder>();
+    for (const comp of row.components || []) {
+      const btn = ButtonBuilder.from(comp);
+      const emojiId = comp.data?.emoji?.id || (comp as any).emoji?.id;
+      if (emojiId === "1545110604912529498") {
+        btn.setEmoji("🔴");
+      }
+      newRow.addComponents(btn);
+    }
+    return newRow;
+  });
+}
+
 export async function safeInteractionUpdate(interaction: any, data: any) {
   try {
-    if (interaction.replied || interaction.deferred) {
-      await interaction.editReply(data);
-    } else {
-      await interaction.update(data);
+    try {
+      if (interaction.replied || interaction.deferred) {
+        await interaction.editReply(data);
+      } else {
+        await interaction.update(data);
+      }
+    } catch (sendErr: any) {
+      if (sendErr?.code === 50035 && data?.components) {
+        // Fallback for self-hosted/cloned bots that do not own custom Application Emoji 1545110604912529498
+        useFallbackBallEmoji = true;
+        data.components = replaceCustomBallEmojiWithFallback(data.components);
+        if (interaction.replied || interaction.deferred) {
+          await interaction.editReply(data);
+        } else {
+          await interaction.update(data);
+        }
+      } else {
+        throw sendErr;
+      }
     }
 
     // [유저 요구사항] ClickIt(pokeball_1) 리액션은 배틀 메시지에 상시 유지
@@ -597,7 +630,7 @@ export function buildBattleComponents(
       new ButtonBuilder()
         .setCustomId(`battle_menu_bag_${slotId}_${userId}`)
         .setLabel(isKo ? "몬스터볼 (Ball)" : "PokéBall")
-        .setEmoji("1545110604912529498")
+        .setEmoji(useFallbackBallEmoji ? "🔴" : "1545110604912529498")
         .setStyle(ButtonStyle.Success)
         .setDisabled(isCharging)
     );
@@ -3802,7 +3835,7 @@ export const interactionCreateEvent: BotEvent = {
         saveService.setActiveSlot(interaction.user.id, slotId);
 
         const battleData = await renderBattleMessageData(interaction.user.id, slotId);
-        await interaction.editReply(battleData);
+        await safeInteractionUpdate(interaction, battleData);
         return;
       }
 
@@ -3854,14 +3887,14 @@ export const interactionCreateEvent: BotEvent = {
             battleService.restartRunFromDefeat(interaction.user.id, slotId, profile.language);
           }
           const battleData = await renderBattleMessageData(interaction.user.id, slotId);
-          await interaction.update(battleData);
+          await safeInteractionUpdate(interaction, battleData);
         } else {
           // If specified slot doesn't exist, find first existing slot or open slots screen
           const firstExisting = Object.values(profile.slots).find((s) => s !== null);
           if (firstExisting) {
             saveService.setActiveSlot(interaction.user.id, firstExisting.slotId);
             const battleData = await renderBattleMessageData(interaction.user.id, firstExisting.slotId);
-            await interaction.update(battleData);
+            await safeInteractionUpdate(interaction, battleData);
           } else {
             const screenData = await renderSlotsScreenData(interaction.user.id);
             await interaction.update(screenData);
